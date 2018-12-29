@@ -1,0 +1,10 @@
+{ "id": 10, "f_timetz": time("20:00:00.000Z"), "first_value": 10, "last_value": 8 }
+{ "id": 9, "f_timetz": time("19:00:00.000Z"), "first_value": 10, "last_value": 7 }
+{ "id": 8, "f_timetz": time("18:00:00.000Z"), "first_value": 9, "last_value": 6 }
+{ "id": 7, "f_timetz": time("17:00:00.000Z"), "first_value": 8, "last_value": 5 }
+{ "id": 6, "f_timetz": time("16:00:00.000Z"), "first_value": 7, "last_value": 4 }
+{ "id": 5, "f_timetz": time("15:00:00.000Z"), "first_value": 6, "last_value": 3 }
+{ "id": 4, "f_timetz": time("14:00:00.000Z"), "first_value": 5, "last_value": 2 }
+{ "id": 3, "f_timetz": time("13:00:00.000Z"), "first_value": 4, "last_value": 1 }
+{ "id": 2, "f_timetz": time("12:00:00.000Z"), "first_value": 3, "last_value": 1 }
+{ "id": 1, "f_timetz": time("11:00:00.000Z"), "first_value": 2, "last_value": 1 }

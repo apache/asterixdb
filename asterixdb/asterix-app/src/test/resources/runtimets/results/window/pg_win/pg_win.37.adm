@@ -1,0 +1,10 @@
+{ "unique1": 3, "four": 3, "sum": null }
+{ "unique1": 7, "four": 3, "sum": null }
+{ "unique1": 2, "four": 2, "sum": 10 }
+{ "unique1": 6, "four": 2, "sum": 10 }
+{ "unique1": 1, "four": 1, "sum": 18 }
+{ "unique1": 5, "four": 1, "sum": 18 }
+{ "unique1": 9, "four": 1, "sum": 18 }
+{ "unique1": 0, "four": 0, "sum": 23 }
+{ "unique1": 4, "four": 0, "sum": 23 }
+{ "unique1": 8, "four": 0, "sum": 23 }

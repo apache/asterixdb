@@ -22,8 +22,10 @@ package org.apache.asterix.runtime.runningaggregates.std;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IWindowAggregateEvaluator;
@@ -63,6 +65,8 @@ public class NtileRunningAggregateEvaluator implements IWindowAggregateEvaluator
 
     private long count;
 
+    private boolean isNull;
+
     NtileRunningAggregateEvaluator(IScalarEvaluator evalNumGroups, FunctionIdentifier funId) {
         this.evalNumGroups = evalNumGroups;
         this.funId = funId;
@@ -76,6 +80,9 @@ public class NtileRunningAggregateEvaluator implements IWindowAggregateEvaluator
     public void initPartition(long partitionLength) {
         this.partitionLength = partitionLength;
         resultValue = 0;
+        isNull = false;
+        groupSize = 1;
+        groupRemainder = 0;
     }
 
     @Override
@@ -93,23 +100,28 @@ public class NtileRunningAggregateEvaluator implements IWindowAggregateEvaluator
             count = 1;
         }
 
-        resultStorage.reset();
-        aInt64.setValue(resultValue);
-        serde.serialize(aInt64, resultStorage.getDataOutput());
-        result.set(resultStorage);
+        if (isNull) {
+            PointableHelper.setNull(result);
+        } else {
+            resultStorage.reset();
+            aInt64.setValue(resultValue);
+            serde.serialize(aInt64, resultStorage.getDataOutput());
+            result.set(resultStorage);
+        }
     }
 
     private void evaluateGroupSize(IFrameTupleReference tuple) throws HyracksDataException {
         evalNumGroups.evaluate(tuple, argNumGroups);
         byte[] bytes = argNumGroups.getByteArray();
         int offset = argNumGroups.getStartOffset();
-        long numGroups = ATypeHierarchy.getLongValue(funId.getName(), 0, bytes, offset);
-        if (numGroups > partitionLength || numGroups <= 0) {
-            groupSize = partitionLength;
-            groupRemainder = 0;
+        if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+            isNull = true;
         } else {
-            groupSize = partitionLength / numGroups;
-            groupRemainder = partitionLength % numGroups;
+            long numGroups = ATypeHierarchy.getLongValue(funId.getName(), 0, bytes, offset);
+            if (numGroups > 0 && numGroups <= partitionLength) {
+                groupSize = partitionLength / numGroups;
+                groupRemainder = partitionLength % numGroups;
+            }
         }
     }
 }

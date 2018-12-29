@@ -414,12 +414,26 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         deepCopyExpressionRefs(op.getPartitionExpressions(), newPartitionExprs);
         List<Pair<IOrder, Mutable<ILogicalExpression>>> newOrderExprs =
                 deepCopyOrderAndExpression(op.getOrderExpressions());
-
-        ArrayList<LogicalVariable> newList = new ArrayList<>();
-        ArrayList<Mutable<ILogicalExpression>> newExpressions = new ArrayList<>();
-        newList.addAll(op.getVariables());
+        List<Pair<IOrder, Mutable<ILogicalExpression>>> newFrameValueExprs =
+                deepCopyOrderAndExpression(op.getFrameValueExpressions());
+        List<Mutable<ILogicalExpression>> newFrameStartExprs = new ArrayList<>();
+        deepCopyExpressionRefs(newFrameStartExprs, op.getFrameStartExpressions());
+        List<Mutable<ILogicalExpression>> newFrameEndExprs = new ArrayList<>();
+        deepCopyExpressionRefs(newFrameEndExprs, op.getFrameEndExpressions());
+        List<Mutable<ILogicalExpression>> newFrameExclusionExprs = new ArrayList<>();
+        deepCopyExpressionRefs(newFrameExclusionExprs, op.getFrameExcludeExpressions());
+        ILogicalExpression newFrameOffset = deepCopyExpressionRef(op.getFrameOffset()).getValue();
+        List<LogicalVariable> newVariables = new ArrayList<>();
+        deepCopyVars(newVariables, op.getVariables());
+        List<Mutable<ILogicalExpression>> newExpressions = new ArrayList<>();
         deepCopyExpressionRefs(newExpressions, op.getExpressions());
-
-        return new WindowOperator(newPartitionExprs, newOrderExprs, newList, newExpressions);
+        List<ILogicalPlan> newNestedPlans = new ArrayList<>();
+        WindowOperator newWinOp = new WindowOperator(newPartitionExprs, newOrderExprs, newFrameValueExprs,
+                newFrameStartExprs, newFrameEndExprs, newFrameExclusionExprs, op.getFrameExcludeNegationStartIdx(),
+                newFrameOffset, op.getFrameMaxObjects(), newVariables, newExpressions, newNestedPlans);
+        for (ILogicalPlan nestedPlan : op.getNestedPlans()) {
+            newNestedPlans.add(OperatorManipulationUtil.deepCopy(nestedPlan, newWinOp));
+        }
+        return newWinOp;
     }
 }

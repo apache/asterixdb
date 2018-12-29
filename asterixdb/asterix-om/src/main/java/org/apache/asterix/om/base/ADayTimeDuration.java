@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 
@@ -35,6 +36,16 @@ public class ADayTimeDuration implements IAObject {
 
     public long getMilliseconds() {
         return chrononInMillisecond;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sbder = new StringBuilder();
+        sbder.append("day_time_duration: {");
+        GregorianCalendarSystem.getInstance().getDurationExtendStringRepWithTimezoneUntilField(chrononInMillisecond, 0,
+                sbder);
+        sbder.append(" }");
+        return sbder.toString();
     }
 
     /* (non-Javadoc)

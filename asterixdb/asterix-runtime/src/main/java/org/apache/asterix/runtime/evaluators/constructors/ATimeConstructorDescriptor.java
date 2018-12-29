@@ -94,7 +94,7 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                                 // the string to be parsed should be at least 6 characters: hhmmss
                                 if (stringLength < 6) {
                                     throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
-                                            ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
+                                            ATypeTag.SERIALIZED_TIME_TYPE_TAG);
                                 }
 
                                 int chrononTimeInMs =

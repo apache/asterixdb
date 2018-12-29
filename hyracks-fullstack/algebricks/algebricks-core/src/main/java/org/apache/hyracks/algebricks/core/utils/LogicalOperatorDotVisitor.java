@@ -188,14 +188,11 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
     public String visitOrderOperator(OrderOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("order ");
-        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
-            if (op.getTopK() != -1) {
-                stringBuilder.append("(topK: ").append(op.getTopK()).append(") ");
-            }
-            stringBuilder.append("(");
-            appendOrder(p.first);
-            stringBuilder.append(", ").append(p.second.getValue().toString()).append(") ");
+        int topK = op.getTopK();
+        if (topK != -1) {
+            stringBuilder.append("(topK: ").append(topK).append(") ");
         }
+        printOrderExprList(op.getOrderExpressions());
         appendSchema(op, showDetails);
         appendAnnotations(op, showDetails);
         appendPhysicalOperatorInfo(op, showDetails);
@@ -608,10 +605,36 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
         stringBuilder.append(") partition by (");
         printExprList(op.getPartitionExpressions());
         stringBuilder.append(") order by (");
-        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
-            stringBuilder.append("(");
-            appendOrder(p.first);
-            stringBuilder.append(", ").append(p.second.getValue().toString()).append(") ");
+        printOrderExprList(op.getOrderExpressions());
+        if (op.hasNestedPlans()) {
+            stringBuilder.append(") frame on (");
+            printOrderExprList(op.getFrameValueExpressions());
+            List<Mutable<ILogicalExpression>> frameStartExpressions = op.getFrameStartExpressions();
+            if (!frameStartExpressions.isEmpty()) {
+                stringBuilder.append(") frame start (");
+                printExprList(frameStartExpressions);
+            }
+            List<Mutable<ILogicalExpression>> frameEndExpressions = op.getFrameEndExpressions();
+            if (!frameEndExpressions.isEmpty()) {
+                stringBuilder.append(") frame end (");
+                printExprList(frameEndExpressions);
+            }
+            List<Mutable<ILogicalExpression>> frameExcludeExpressions = op.getFrameExcludeExpressions();
+            if (!frameExcludeExpressions.isEmpty()) {
+                stringBuilder.append(") frame exclude (");
+                stringBuilder.append(" (negation start: ").append(op.getFrameExcludeNegationStartIdx()).append(") ");
+                printExprList(frameExcludeExpressions);
+            }
+            Mutable<ILogicalExpression> frameOffset = op.getFrameOffset();
+            if (frameOffset.getValue() != null) {
+                stringBuilder.append(") frame offset (");
+                stringBuilder.append(frameOffset.getValue());
+                stringBuilder.append(") ");
+            }
+            int frameMaxObjects = op.getFrameMaxObjects();
+            if (frameMaxObjects != -1) {
+                stringBuilder.append("(frame maxObjects: ").append(frameMaxObjects).append(") ");
+            }
         }
         stringBuilder.append(")");
         appendSchema(op, showDetails);
@@ -642,6 +665,14 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
             }
         }
         stringBuilder.append("]");
+    }
+
+    private void printOrderExprList(List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprList) {
+        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprList) {
+            stringBuilder.append("(");
+            appendOrder(p.first);
+            stringBuilder.append(", ").append(p.second.getValue().toString()).append(") ");
+        }
     }
 
     private void appendSchema(AbstractLogicalOperator op, boolean show) {

@@ -29,31 +29,32 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
 
     private static final long serialVersionUID = 1L;
 
-    protected final int[] outColumns;
+    protected final int[] runningAggOutColumns;
 
-    protected final IRunningAggregateEvaluatorFactory[] aggFactories;
+    protected final IRunningAggregateEvaluatorFactory[] runningAggFactories;
 
     /**
-     * @param outColumns
-     *            a sorted array of columns into which the result is written to
-     * @param aggFactories
-     * @param projectionList
+     * @param projectionColumns
      *            an array of columns to be projected
+     * @param runningAggOutColumns
+     *            a sorted array of columns into which the result is written to
+     * @param runningAggFactories
      */
-    public RunningAggregateRuntimeFactory(int[] outColumns, IRunningAggregateEvaluatorFactory[] aggFactories,
-            int[] projectionList) {
-        super(projectionList);
-        this.outColumns = outColumns;
-        this.aggFactories = aggFactories;
+    public RunningAggregateRuntimeFactory(int[] projectionColumns, int[] runningAggOutColumns,
+            IRunningAggregateEvaluatorFactory[] runningAggFactories) {
+        super(projectionColumns);
+        this.runningAggOutColumns = runningAggOutColumns;
+        this.runningAggFactories = runningAggFactories;
     }
 
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(IHyracksTaskContext ctx) {
-        return new RunningAggregatePushRuntime(outColumns, aggFactories, projectionList, ctx);
+        return new RunningAggregatePushRuntime(projectionList, runningAggOutColumns, runningAggFactories, ctx);
     }
 
     @Override
     public String toString() {
-        return "running-aggregate " + Arrays.toString(outColumns) + " := " + Arrays.toString(aggFactories);
+        return "running-aggregate " + Arrays.toString(runningAggOutColumns) + " := "
+                + Arrays.toString(runningAggFactories);
     }
 }

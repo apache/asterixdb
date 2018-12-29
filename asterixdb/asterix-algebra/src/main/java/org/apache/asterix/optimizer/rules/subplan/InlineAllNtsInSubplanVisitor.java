@@ -354,7 +354,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         op.getInputs().clear();
         ILogicalOperator currentOp = op;
         if (!orderingExprs.isEmpty()) {
-            OrderOperator orderOp = new OrderOperator(cloneOrderingExpression(orderingExprs));
+            OrderOperator orderOp = new OrderOperator(OperatorManipulationUtil.cloneOrderExpressions(orderingExprs));
             orderOp.setSourceLocation(sourceLoc);
             op.getInputs().add(new MutableObject<>(orderOp));
             currentOp = orderOp;
@@ -473,7 +473,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         }
 
         orderingExprs.clear();
-        orderingExprs.addAll(cloneOrderingExpression(op.getOrderExpressions()));
+        orderingExprs.addAll(OperatorManipulationUtil.cloneOrderExpressions(op.getOrderExpressions()));
 
         List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprList = new ArrayList<>();
         // Adds keyVars to the prefix of sorting columns.
@@ -762,16 +762,6 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         } else {
             varMapIntroducedByRewriting.add(new Pair<>(oldVar, newVar));
         }
-    }
-
-    private List<Pair<IOrder, Mutable<ILogicalExpression>>> cloneOrderingExpression(
-            List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs) {
-        List<Pair<IOrder, Mutable<ILogicalExpression>>> clonedOrderExprs = new ArrayList<>();
-        for (Pair<IOrder, Mutable<ILogicalExpression>> orderExpr : orderExprs) {
-            clonedOrderExprs.add(
-                    new Pair<>(orderExpr.first, new MutableObject<>(orderExpr.second.getValue().cloneExpression())));
-        }
-        return clonedOrderExprs;
     }
 
     private void addPrimaryKeys(Map<LogicalVariable, LogicalVariable> varMap) {

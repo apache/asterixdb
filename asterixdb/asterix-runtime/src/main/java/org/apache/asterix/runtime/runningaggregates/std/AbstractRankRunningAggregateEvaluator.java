@@ -51,9 +51,9 @@ public abstract class AbstractRankRunningAggregateEvaluator implements IWindowAg
 
     private IBinaryComparator[] argComparators;
 
-    private boolean first;
+    protected boolean first;
 
-    private long rank;
+    protected long rank;
 
     private long groupSize;
 
@@ -85,28 +85,28 @@ public abstract class AbstractRankRunningAggregateEvaluator implements IWindowAg
 
     @Override
     public void step(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+        resultStorage.reset();
         for (int i = 0; i < args.length; i++) {
             args[i].evaluate(tuple, argCurrValues[i]);
         }
 
         computeRank();
+        computeResult(resultStorage.getDataOutput());
+
+        result.set(resultStorage);
 
         for (int i = 0; i < args.length; i++) {
             argPrevValues[i].assign(argCurrValues[i]);
         }
-
-        resultStorage.reset();
-        writeResult(rank, resultStorage.getDataOutput());
-        result.set(resultStorage);
+        first = false;
     }
 
-    protected abstract void writeResult(long rank, DataOutput out) throws HyracksDataException;
+    protected abstract void computeResult(DataOutput out) throws HyracksDataException;
 
     private void computeRank() throws HyracksDataException {
         if (first) {
             rank = 1;
             groupSize = 1;
-            first = false;
         } else if (sameGroup()) {
             groupSize++;
         } else {

@@ -8,8 +8,8 @@
               -- ASSIGN  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- STABLE_SORT [$$18(ASC), $$17(ASC)]  |PARTITIONED|
-                      -- RANGE_PARTITION_EXCHANGE [$$18(ASC), $$17(ASC)]  |PARTITIONED|
+                    -- STABLE_SORT [$$19(ASC), $$18(ASC)]  |PARTITIONED|
+                      -- RANGE_PARTITION_EXCHANGE [$$19(ASC), $$18(ASC)]  |PARTITIONED|
                         -- FORWARD  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- REPLICATE  |PARTITIONED|

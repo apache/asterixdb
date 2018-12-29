@@ -28,15 +28,14 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 class RunningAggregatePushRuntime extends AbstractRunningAggregatePushRuntime<IRunningAggregateEvaluator> {
 
-    RunningAggregatePushRuntime(int[] outColumns, IRunningAggregateEvaluatorFactory[] aggFactories,
-            int[] projectionList, IHyracksTaskContext ctx) {
-        super(outColumns, aggFactories, projectionList, ctx, IRunningAggregateEvaluator.class);
+    RunningAggregatePushRuntime(int[] projectionColumns, int[] runningAggOutColumns,
+            IRunningAggregateEvaluatorFactory[] runningAggFactories, IHyracksTaskContext ctx) {
+        super(projectionColumns, runningAggOutColumns, runningAggFactories, IRunningAggregateEvaluator.class, ctx);
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         tAccess.reset(buffer);
-        int nTuple = tAccess.getTupleCount();
-        produceTuples(tAccess, 0, nTuple - 1);
+        produceTuples(tAccess, 0, tAccess.getTupleCount() - 1);
     }
 }

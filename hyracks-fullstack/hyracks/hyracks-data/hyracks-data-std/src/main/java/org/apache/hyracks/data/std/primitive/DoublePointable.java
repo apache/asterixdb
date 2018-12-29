@@ -120,7 +120,7 @@ public final class DoublePointable extends AbstractPointable implements IHashabl
     public int compareTo(byte[] bytes, int start, int length) {
         double v = getDouble();
         double ov = getDouble(bytes, start);
-        return v < ov ? -1 : (v > ov ? 1 : 0);
+        return Double.compare(v, ov);
     }
 
     @Override

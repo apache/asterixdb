@@ -20,6 +20,7 @@ package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -37,6 +38,7 @@ import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.CheckDatasetOnlyResolutionVisitor;
@@ -45,6 +47,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopingVisitor {
@@ -201,12 +204,36 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         return path.length == 2 && metadataProvider.findDataset(path[0], path[1]) != null;
     }
 
-    @Override
     public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         // skip variables inside SQL-92 aggregates (they will be resolved by SqlppGroupByAggregationSugarVisitor)
         if (FunctionMapUtil.isSql92AggregateFunction(callExpr.getFunctionSignature())) {
             return callExpr;
         }
         return super.visit(callExpr, arg);
+    }
+
+    @Override
+    public Expression visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
+        // skip variables inside list arguments of window functions (will be resolved by SqlppWindowExpressionVisitor)
+        FunctionSignature fs = winExpr.getFunctionSignature();
+        FunctionIdentifier winfi = FunctionMapUtil.getInternalWindowFunction(fs);
+        if (winfi != null) {
+            if (BuiltinFunctions.windowFunctionWithListArg(winfi)) {
+                visitWindowExpressionExcludingExprList(winExpr, arg);
+                List<Expression> exprList = winExpr.getExprList();
+                List<Expression> newExprList = new ArrayList<>(exprList.size());
+                Iterator<Expression> i = exprList.iterator();
+                newExprList.add(i.next()); // don't visit the list arg
+                while (i.hasNext()) {
+                    newExprList.add(visit(i.next(), arg));
+                }
+                winExpr.setExprList(newExprList);
+                return winExpr;
+            }
+        } else if (FunctionMapUtil.isSql92AggregateFunction(fs)) {
+            visitWindowExpressionExcludingExprList(winExpr, arg);
+            return winExpr;
+        }
+        return super.visit(winExpr, arg);
     }
 }

@@ -23,10 +23,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -34,6 +36,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
@@ -50,8 +53,15 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
 import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
+import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
+import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.operators.aggrun.WindowRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.operators.win.AbstractWindowRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.win.WindowNestedPlansRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.win.WindowSimpleRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.win.WindowAggregatorDescriptorFactory;
+import org.apache.hyracks.algebricks.runtime.operators.win.WindowMaterializingRuntimeFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -114,7 +124,8 @@ public class WindowPOperator extends AbstractPhysicalOperator {
         for (LogicalVariable pColumn : pcVars) {
             lopColumns.add(pIdx++, new OrderColumn(pColumn, OrderOperator.IOrder.OrderKind.ASC));
         }
-        List<ILocalStructuralProperty> localProps = Collections.singletonList(new LocalOrderProperty(lopColumns));
+        List<ILocalStructuralProperty> localProps =
+                lopColumns.isEmpty() ? null : Collections.singletonList(new LocalOrderProperty(lopColumns));
 
         return new PhysicalRequirements(
                 new StructuralPropertiesVector[] { new StructuralPropertiesVector(pp, localProps) },
@@ -132,34 +143,85 @@ public class WindowPOperator extends AbstractPhysicalOperator {
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
         WindowOperator winOp = (WindowOperator) op;
-        int[] outColumns = JobGenHelper.projectVariables(opSchema, winOp.getVariables());
-        List<Mutable<ILogicalExpression>> expressions = winOp.getExpressions();
-        IRunningAggregateEvaluatorFactory[] winFuncs = new IRunningAggregateEvaluatorFactory[expressions.size()];
-        IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
-        for (int i = 0; i < winFuncs.length; i++) {
-            StatefulFunctionCallExpression expr = (StatefulFunctionCallExpression) expressions.get(i).getValue();
-            winFuncs[i] = expressionRuntimeProvider.createRunningAggregateFunctionFactory(expr,
-                    context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
-        }
 
-        // TODO push projections into the operator
-        int[] projectionList = JobGenHelper.projectAllVariables(opSchema);
+        int[] partitionColumnsList = JobGenHelper.projectVariables(inputSchemas[0], partitionColumns);
 
-        int[] partitionColumnList = JobGenHelper.projectVariables(inputSchemas[0], partitionColumns);
-
-        IBinaryComparatorFactory[] partitionComparatorFactories = JobGenHelper
-                .variablesToAscBinaryComparatorFactories(partitionColumns, context.getTypeEnvironment(op), context);
+        IVariableTypeEnvironment opTypeEnv = context.getTypeEnvironment(op);
+        IBinaryComparatorFactory[] partitionComparatorFactories =
+                JobGenHelper.variablesToAscBinaryComparatorFactories(partitionColumns, opTypeEnv, context);
 
         //TODO not all functions need order comparators
-        IBinaryComparatorFactory[] orderComparatorFactories = JobGenHelper
-                .variablesToBinaryComparatorFactories(orderColumns, context.getTypeEnvironment(op), context);
+        IBinaryComparatorFactory[] orderComparatorFactories =
+                JobGenHelper.variablesToBinaryComparatorFactories(orderColumns, opTypeEnv, context);
 
-        WindowRuntimeFactory runtime = new WindowRuntimeFactory(outColumns, winFuncs, projectionList,
-                partitionColumnList, partitionComparatorFactories, partitionMaterialization, orderComparatorFactories);
+        IVariableTypeEnvironment inputTypeEnv = context.getTypeEnvironment(op.getInputs().get(0).getValue());
+        IExpressionRuntimeProvider exprRuntimeProvider = context.getExpressionRuntimeProvider();
+        IBinaryComparatorFactoryProvider binaryComparatorFactoryProvider = context.getBinaryComparatorFactoryProvider();
+
+        IScalarEvaluatorFactory[] frameStartExprEvals = createEvaluatorFactories(winOp.getFrameStartExpressions(),
+                inputSchemas, inputTypeEnv, exprRuntimeProvider, context);
+
+        IScalarEvaluatorFactory[] frameEndExprEvals = createEvaluatorFactories(winOp.getFrameEndExpressions(),
+                inputSchemas, inputTypeEnv, exprRuntimeProvider, context);
+
+        Pair<IScalarEvaluatorFactory[], IBinaryComparatorFactory[]> frameValueExprEvalsAndComparators =
+                createEvaluatorAndComparatorFactories(winOp.getFrameValueExpressions(), Pair::getSecond, Pair::getFirst,
+                        inputSchemas, inputTypeEnv, exprRuntimeProvider, binaryComparatorFactoryProvider, context);
+
+        Pair<IScalarEvaluatorFactory[], IBinaryComparatorFactory[]> frameExcludeExprEvalsAndComparators =
+                createEvaluatorAndComparatorFactories(winOp.getFrameExcludeExpressions(), v -> v,
+                        v -> OrderOperator.ASC_ORDER, inputSchemas, inputTypeEnv, exprRuntimeProvider,
+                        binaryComparatorFactoryProvider, context);
+
+        IScalarEvaluatorFactory frameOffsetExprEval = null;
+        ILogicalExpression frameOffsetExpr = winOp.getFrameOffset().getValue();
+        if (frameOffsetExpr != null) {
+            frameOffsetExprEval =
+                    exprRuntimeProvider.createEvaluatorFactory(frameOffsetExpr, inputTypeEnv, inputSchemas, context);
+        }
+
+        int[] projectionColumnsExcludingSubplans = JobGenHelper.projectAllVariables(opSchema);
+
+        int[] runningAggOutColumns = JobGenHelper.projectVariables(opSchema, winOp.getVariables());
+
+        List<Mutable<ILogicalExpression>> runningAggExprs = winOp.getExpressions();
+        int runningAggExprCount = runningAggExprs.size();
+        IRunningAggregateEvaluatorFactory[] runningAggFactories =
+                new IRunningAggregateEvaluatorFactory[runningAggExprCount];
+        for (int i = 0; i < runningAggExprCount; i++) {
+            StatefulFunctionCallExpression expr = (StatefulFunctionCallExpression) runningAggExprs.get(i).getValue();
+            runningAggFactories[i] = exprRuntimeProvider.createRunningAggregateFunctionFactory(expr, inputTypeEnv,
+                    inputSchemas, context);
+        }
+
+        AbstractWindowRuntimeFactory runtime;
+        if (winOp.hasNestedPlans()) {
+            int opSchemaSizePreSubplans = opSchema.getSize();
+            AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], winOp, opSchema, context);
+            int aggregatorOutputSchemaSize = opSchema.getSize() - opSchemaSizePreSubplans;
+            WindowAggregatorDescriptorFactory nestedAggFactory = new WindowAggregatorDescriptorFactory(subplans);
+            nestedAggFactory.setSourceLocation(winOp.getSourceLocation());
+            runtime = new WindowNestedPlansRuntimeFactory(partitionColumnsList, partitionComparatorFactories,
+                    orderComparatorFactories, frameValueExprEvalsAndComparators.first,
+                    frameValueExprEvalsAndComparators.second, frameStartExprEvals, frameEndExprEvals,
+                    frameExcludeExprEvalsAndComparators.first, winOp.getFrameExcludeNegationStartIdx(),
+                    frameExcludeExprEvalsAndComparators.second, frameOffsetExprEval,
+                    context.getBinaryIntegerInspectorFactory(), winOp.getFrameMaxObjects(),
+                    projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories,
+                    aggregatorOutputSchemaSize, nestedAggFactory);
+        } else if (partitionMaterialization) {
+            runtime = new WindowMaterializingRuntimeFactory(partitionColumnsList, partitionComparatorFactories,
+                    orderComparatorFactories, projectionColumnsExcludingSubplans, runningAggOutColumns,
+                    runningAggFactories);
+        } else {
+            runtime = new WindowSimpleRuntimeFactory(partitionColumnsList, partitionComparatorFactories,
+                    orderComparatorFactories, projectionColumnsExcludingSubplans, runningAggOutColumns,
+                    runningAggFactories);
+        }
         runtime.setSourceLocation(winOp.getSourceLocation());
 
         // contribute one Asterix framewriter
-        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
+        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(opTypeEnv, opSchema, context);
         builder.contributeMicroOperator(winOp, runtime, recDesc);
         // and contribute one edge from its child
         ILogicalOperator src = winOp.getInputs().get(0).getValue();
@@ -178,6 +240,44 @@ public class WindowPOperator extends AbstractPhysicalOperator {
 
     public boolean isPartitionMaterialization() {
         return partitionMaterialization;
+    }
+
+    private IScalarEvaluatorFactory[] createEvaluatorFactories(List<Mutable<ILogicalExpression>> exprList,
+            IOperatorSchema[] inputSchemas, IVariableTypeEnvironment inputTypeEnv,
+            IExpressionRuntimeProvider exprRuntimeProvider, JobGenContext context) throws AlgebricksException {
+        if (exprList.isEmpty()) {
+            return null;
+        }
+        int ln = exprList.size();
+        IScalarEvaluatorFactory[] evals = new IScalarEvaluatorFactory[ln];
+        for (int i = 0; i < ln; i++) {
+            ILogicalExpression expr = exprList.get(i).getValue();
+            evals[i] = exprRuntimeProvider.createEvaluatorFactory(expr, inputTypeEnv, inputSchemas, context);
+        }
+        return evals;
+    }
+
+    private <T> Pair<IScalarEvaluatorFactory[], IBinaryComparatorFactory[]> createEvaluatorAndComparatorFactories(
+            List<T> exprList, Function<T, Mutable<ILogicalExpression>> exprGetter,
+            Function<T, OrderOperator.IOrder> orderGetter, IOperatorSchema[] inputSchemas,
+            IVariableTypeEnvironment inputTypeEnv, IExpressionRuntimeProvider exprRuntimeProvider,
+            IBinaryComparatorFactoryProvider binaryComparatorFactoryProvider, JobGenContext context)
+            throws AlgebricksException {
+        if (exprList.isEmpty()) {
+            return new Pair<>(null, null);
+        }
+        int ln = exprList.size();
+        IScalarEvaluatorFactory[] evals = new IScalarEvaluatorFactory[ln];
+        IBinaryComparatorFactory[] comparators = new IBinaryComparatorFactory[ln];
+        for (int i = 0; i < ln; i++) {
+            T exprObj = exprList.get(i);
+            ILogicalExpression expr = exprGetter.apply(exprObj).getValue();
+            OrderOperator.IOrder order = orderGetter.apply(exprObj);
+            evals[i] = exprRuntimeProvider.createEvaluatorFactory(expr, inputTypeEnv, inputSchemas, context);
+            comparators[i] = binaryComparatorFactoryProvider.getBinaryComparatorFactory(inputTypeEnv.getType(expr),
+                    order.getKind() == OrderOperator.IOrder.OrderKind.ASC);
+        }
+        return new Pair<>(evals, comparators);
     }
 
     private boolean containsAny(List<OrderColumn> ocList, int startIdx, Set<LogicalVariable> varSet) {

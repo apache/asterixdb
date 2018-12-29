@@ -29,6 +29,7 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.CloneAndSubstituteVariablesVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
@@ -56,6 +57,17 @@ public class VariableCloneAndSubstitutionUtil {
         return veList;
     }
 
+    public static List<Pair<Expression, Identifier>> substInFieldList(List<Pair<Expression, Identifier>> fieldList,
+            VariableSubstitutionEnvironment newSubs, CloneAndSubstituteVariablesVisitor visitor)
+            throws CompilationException {
+        List<Pair<Expression, Identifier>> newFieldList = new ArrayList<>(fieldList.size());
+        for (Pair<Expression, Identifier> p : fieldList) {
+            Expression newExpr = (Expression) p.first.accept(visitor, newSubs).first;
+            newFieldList.add(new Pair<>(newExpr, p.second));
+        }
+        return newFieldList;
+    }
+
     public static VariableSubstitutionEnvironment eliminateSubstFromList(VariableExpr variableExpr,
             VariableSubstitutionEnvironment arg) {
         VariableSubstitutionEnvironment newArg = new VariableSubstitutionEnvironment(arg);
@@ -73,5 +85,4 @@ public class VariableCloneAndSubstitutionUtil {
         }
         return exprs;
     }
-
 }

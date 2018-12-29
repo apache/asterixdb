@@ -1,0 +1,10 @@
+{ "unique1": 0, "four": 0, "ten": 0, "sum": null }
+{ "unique1": 1, "four": 1, "ten": 1, "sum": null }
+{ "unique1": 2, "four": 2, "ten": 2, "sum": null }
+{ "unique1": 3, "four": 3, "ten": 3, "sum": null }
+{ "unique1": 4, "four": 0, "ten": 4, "sum": null }
+{ "unique1": 5, "four": 1, "ten": 5, "sum": null }
+{ "unique1": 6, "four": 2, "ten": 6, "sum": null }
+{ "unique1": 7, "four": 3, "ten": 7, "sum": null }
+{ "unique1": 8, "four": 0, "ten": 8, "sum": null }
+{ "unique1": 9, "four": 1, "ten": 9, "sum": null }

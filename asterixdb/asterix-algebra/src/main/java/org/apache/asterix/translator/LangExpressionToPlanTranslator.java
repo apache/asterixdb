@@ -909,6 +909,27 @@ class LangExpressionToPlanTranslator
     private AbstractFunctionCallExpression lookupBuiltinFunction(String functionName, int arity,
             List<Mutable<ILogicalExpression>> args, SourceLocation sourceLoc) {
         AbstractFunctionCallExpression f;
+        FunctionIdentifier fi = getBuiltinFunctionIdentifier(functionName, arity);
+        if (fi == null) {
+            return null;
+        }
+        if (BuiltinFunctions.isBuiltinAggregateFunction(fi)) {
+            f = BuiltinFunctions.makeAggregateFunctionExpression(fi, args);
+        } else if (BuiltinFunctions.isBuiltinUnnestingFunction(fi)) {
+            UnnestingFunctionCallExpression ufce =
+                    new UnnestingFunctionCallExpression(FunctionUtil.getFunctionInfo(fi), args);
+            ufce.setReturnsUniqueValues(BuiltinFunctions.returnsUniqueValues(fi));
+            f = ufce;
+        } else if (BuiltinFunctions.isWindowFunction(fi)) {
+            f = BuiltinFunctions.makeWindowFunctionExpression(fi, args);
+        } else {
+            f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fi), args);
+        }
+        f.setSourceLocation(sourceLoc);
+        return f;
+    }
+
+    protected FunctionIdentifier getBuiltinFunctionIdentifier(String functionName, int arity) {
         FunctionIdentifier fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, functionName, arity);
         FunctionInfo afi = BuiltinFunctions.lookupFunction(fi);
         FunctionIdentifier builtinAquafi = afi == null ? null : afi.getFunctionIdentifier();
@@ -922,20 +943,7 @@ class LangExpressionToPlanTranslator
                 return null;
             }
         }
-        if (BuiltinFunctions.isBuiltinAggregateFunction(fi)) {
-            f = BuiltinFunctions.makeAggregateFunctionExpression(fi, args);
-        } else if (BuiltinFunctions.isBuiltinUnnestingFunction(fi)) {
-            UnnestingFunctionCallExpression ufce =
-                    new UnnestingFunctionCallExpression(FunctionUtil.getFunctionInfo(fi), args);
-            ufce.setReturnsUniqueValues(BuiltinFunctions.returnsUniqueValues(fi));
-            f = ufce;
-        } else if (BuiltinFunctions.isBuiltinWindowFunction(fi)) {
-            f = BuiltinFunctions.makeWindowFunctionExpression(fi, args);
-        } else {
-            f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fi), args);
-        }
-        f.setSourceLocation(sourceLoc);
-        return f;
+        return fi;
     }
 
     @Override
@@ -950,22 +958,9 @@ class LangExpressionToPlanTranslator
         Mutable<ILogicalOperator> topOp = tupSource;
         LogicalVariable groupRecordVar = null;
         if (gc.hasGroupVar()) {
-            List<Pair<Expression, Identifier>> groupFieldList = gc.getGroupFieldList();
-            List<Mutable<ILogicalExpression>> groupRecordConstructorArgList = new ArrayList<>();
-            for (Pair<Expression, Identifier> groupField : groupFieldList) {
-                ILogicalExpression groupFieldNameExpr =
-                        langExprToAlgExpression(new LiteralExpr(new StringLiteral(groupField.second.getValue())),
-                                topOp).first;
-                groupRecordConstructorArgList.add(new MutableObject<>(groupFieldNameExpr));
-                ILogicalExpression groupFieldExpr = langExprToAlgExpression(groupField.first, topOp).first;
-                groupRecordConstructorArgList.add(new MutableObject<>(groupFieldExpr));
-            }
-            ScalarFunctionCallExpression groupRecordConstr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR),
-                    groupRecordConstructorArgList);
-            groupRecordConstr.setSourceLocation(sourceLoc);
-
             groupRecordVar = context.newVar();
+            AbstractFunctionCallExpression groupRecordConstr =
+                    createRecordConstructor(gc.getGroupFieldList(), topOp, sourceLoc);
             AssignOperator groupRecordVarAssignOp =
                     new AssignOperator(groupRecordVar, new MutableObject<>(groupRecordConstr));
             groupRecordVarAssignOp.getInputs().add(topOp);
@@ -981,12 +976,14 @@ class LangExpressionToPlanTranslator
             gOp.addGbyExpression(v, eo.first);
             topOp = eo.second;
         }
-        for (GbyVariableExpressionPair ve : gc.getDecorPairList()) {
-            VariableExpr vexpr = ve.getVar();
-            LogicalVariable v = vexpr == null ? context.newVar() : context.newVarFromExpression(vexpr);
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(ve.getExpr(), topOp);
-            gOp.addDecorExpression(v, eo.first);
-            topOp = eo.second;
+        if (gc.hasDecorList()) {
+            for (GbyVariableExpressionPair ve : gc.getDecorPairList()) {
+                VariableExpr vexpr = ve.getVar();
+                LogicalVariable v = vexpr == null ? context.newVar() : context.newVarFromExpression(vexpr);
+                Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(ve.getExpr(), topOp);
+                gOp.addDecorExpression(v, eo.first);
+                topOp = eo.second;
+            }
         }
 
         gOp.getInputs().add(topOp);
@@ -1026,7 +1023,23 @@ class LangExpressionToPlanTranslator
         return new Pair<>(gOp, null);
     }
 
-    private ILogicalPlan createNestedPlanWithAggregate(LogicalVariable aggOutputVar, FunctionIdentifier aggFunc,
+    protected AbstractFunctionCallExpression createRecordConstructor(List<Pair<Expression, Identifier>> fieldList,
+            Mutable<ILogicalOperator> inputOp, SourceLocation sourceLoc) throws CompilationException {
+        List<Mutable<ILogicalExpression>> args = new ArrayList<>();
+        for (Pair<Expression, Identifier> field : fieldList) {
+            ILogicalExpression fieldNameExpr =
+                    langExprToAlgExpression(new LiteralExpr(new StringLiteral(field.second.getValue())), inputOp).first;
+            args.add(new MutableObject<>(fieldNameExpr));
+            ILogicalExpression fieldExpr = langExprToAlgExpression(field.first, inputOp).first;
+            args.add(new MutableObject<>(fieldExpr));
+        }
+        ScalarFunctionCallExpression recordConstr = new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR), args);
+        recordConstr.setSourceLocation(sourceLoc);
+        return recordConstr;
+    }
+
+    protected ILogicalPlan createNestedPlanWithAggregate(LogicalVariable aggOutputVar, FunctionIdentifier aggFunc,
             ILogicalExpression aggFnInput, Mutable<ILogicalOperator> aggOpInput) {
         SourceLocation sourceLoc = aggFnInput.getSourceLocation();
         AggregateFunctionCallExpression aggFnCall = BuiltinFunctions.makeAggregateFunctionExpression(aggFunc,
@@ -1530,7 +1543,7 @@ class LangExpressionToPlanTranslator
         return createFunctionCallExpression(fid, sourceLoc);
     }
 
-    private static AbstractFunctionCallExpression createFunctionCallExpression(FunctionIdentifier fid,
+    protected static AbstractFunctionCallExpression createFunctionCallExpression(FunctionIdentifier fid,
             SourceLocation sourceLoc) {
         ScalarFunctionCallExpression callExpr = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fid));
         callExpr.setSourceLocation(sourceLoc);

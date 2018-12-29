@@ -37,49 +37,53 @@ import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 public abstract class AbstractRunningAggregatePushRuntime<T extends IRunningAggregateEvaluator>
         extends AbstractOneInputOneOutputOneFramePushRuntime {
     protected final IHyracksTaskContext ctx;
-    private final IRunningAggregateEvaluatorFactory[] aggFactories;
-    private final Class<T> aggEvalClass;
-    protected final List<T> aggEvals;
-    private final int[] projectionList;
+    private final IRunningAggregateEvaluatorFactory[] runningAggFactories;
+    private final Class<T> runningAggEvalClass;
+    protected final List<T> runningAggEvals;
+    private final int[] projectionColumns;
     private final int[] projectionToOutColumns;
     private final IPointable p = VoidPointable.FACTORY.createPointable();
-    private final ArrayTupleBuilder tupleBuilder;
-    private boolean first;
+    protected ArrayTupleBuilder tupleBuilder;
+    private boolean isFirst;
 
-    public AbstractRunningAggregatePushRuntime(int[] outColumns, IRunningAggregateEvaluatorFactory[] aggFactories,
-            int[] projectionList, IHyracksTaskContext ctx, Class<T> aggEvalClass) {
+    public AbstractRunningAggregatePushRuntime(int[] projectionColumns, int[] runningAggOutColumns,
+            IRunningAggregateEvaluatorFactory[] runningAggFactories, Class<T> runningAggEvalClass,
+            IHyracksTaskContext ctx) {
         this.ctx = ctx;
-        this.projectionList = projectionList;
-        this.aggFactories = aggFactories;
-        this.aggEvalClass = aggEvalClass;
-        aggEvals = new ArrayList<>(aggFactories.length);
-        tupleBuilder = new ArrayTupleBuilder(projectionList.length);
-        projectionToOutColumns = new int[projectionList.length];
-
-        for (int j = 0; j < projectionList.length; j++) {
-            projectionToOutColumns[j] = Arrays.binarySearch(outColumns, projectionList[j]);
+        this.projectionColumns = projectionColumns;
+        this.runningAggFactories = runningAggFactories;
+        this.runningAggEvalClass = runningAggEvalClass;
+        runningAggEvals = new ArrayList<>(runningAggFactories.length);
+        projectionToOutColumns = new int[projectionColumns.length];
+        for (int j = 0; j < projectionColumns.length; j++) {
+            projectionToOutColumns[j] = Arrays.binarySearch(runningAggOutColumns, projectionColumns[j]);
         }
-        first = true;
+        isFirst = true;
     }
 
     @Override
     public void open() throws HyracksDataException {
         super.open();
-        if (first) {
-            first = false;
+        if (isFirst) {
+            isFirst = false;
             init();
         }
-        for (T aggEval : aggEvals) {
-            aggEval.init();
+        for (T runningAggEval : runningAggEvals) {
+            runningAggEval.init();
         }
     }
 
     protected void init() throws HyracksDataException {
+        tupleBuilder = createOutputTupleBuilder(projectionColumns);
         initAccessAppendRef(ctx);
-        for (IRunningAggregateEvaluatorFactory aggFactory : aggFactories) {
-            IRunningAggregateEvaluator aggEval = aggFactory.createRunningAggregateEvaluator(ctx);
-            aggEvals.add(aggEvalClass.cast(aggEval));
+        for (IRunningAggregateEvaluatorFactory runningAggFactory : runningAggFactories) {
+            IRunningAggregateEvaluator runningAggEval = runningAggFactory.createRunningAggregateEvaluator(ctx);
+            runningAggEvals.add(runningAggEvalClass.cast(runningAggEval));
         }
+    }
+
+    protected ArrayTupleBuilder createOutputTupleBuilder(int[] projectionList) {
+        return new ArrayTupleBuilder(projectionList.length);
     }
 
     protected void produceTuples(IFrameTupleAccessor accessor, int beginIdx, int endIdx) throws HyracksDataException {
@@ -90,16 +94,16 @@ public abstract class AbstractRunningAggregatePushRuntime<T extends IRunningAggr
         }
     }
 
-    private void produceTuple(ArrayTupleBuilder tb, IFrameTupleAccessor accessor, int tIndex,
+    protected void produceTuple(ArrayTupleBuilder tb, IFrameTupleAccessor accessor, int tIndex,
             FrameTupleReference tupleRef) throws HyracksDataException {
         tb.reset();
-        for (int f = 0; f < projectionList.length; f++) {
+        for (int f = 0; f < projectionColumns.length; f++) {
             int k = projectionToOutColumns[f];
             if (k >= 0) {
-                aggEvals.get(k).step(tupleRef, p);
+                runningAggEvals.get(k).step(tupleRef, p);
                 tb.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
             } else {
-                tb.addField(accessor, tIndex, projectionList[f]);
+                tb.addField(accessor, tIndex, projectionColumns[f]);
             }
         }
     }

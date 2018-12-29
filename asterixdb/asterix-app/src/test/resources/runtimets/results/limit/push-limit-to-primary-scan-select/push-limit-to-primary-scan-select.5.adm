@@ -1,4 +1,4 @@
-distribute result [$$31]
+distribute result [$$33]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
@@ -6,57 +6,57 @@ distribute result [$$31]
     -- STREAM_LIMIT  |UNPARTITIONED|
       exchange
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        project ([$$31])
+        project ([$$33])
         -- STREAM_PROJECT  |PARTITIONED|
-          assign [$$31] <- [{"dblpid": $$32}]
+          assign [$$33] <- [{"dblpid": $$34}]
           -- ASSIGN  |PARTITIONED|
             limit 2
             -- STREAM_LIMIT  |PARTITIONED|
-              project ([$$32])
+              project ([$$34])
               -- STREAM_PROJECT  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  join (eq($$32, $$35))
-                  -- HYBRID_HASH_JOIN [$$32][$$35]  |PARTITIONED|
+                  join (eq($$34, $$37))
+                  -- HYBRID_HASH_JOIN [$$34][$$37]  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$32]  |PARTITIONED|
-                      project ([$$32])
+                    -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
+                      project ([$$34])
                       -- STREAM_PROJECT  |PARTITIONED|
-                        assign [$$32] <- [$$d.getField(1)]
+                        assign [$$34] <- [$$d.getField(1)]
                         -- ASSIGN  |PARTITIONED|
                           project ([$$d])
                           -- STREAM_PROJECT  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan []<-[$$33, $$d] <- test.DBLP1
+                              data-scan []<-[$$35, $$d] <- test.DBLP1
                               -- DATASOURCE_SCAN  |PARTITIONED|
                                 exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
-                      project ([$$35])
+                    -- HASH_PARTITION_EXCHANGE [$$37]  |PARTITIONED|
+                      project ([$$37])
                       -- STREAM_PROJECT  |UNPARTITIONED|
-                        assign [$$35] <- [get-item($$24, 0).getField(0).getField(1)]
+                        assign [$$37] <- [get-item($$26, 0).getField(0).getField(1)]
                         -- ASSIGN  |UNPARTITIONED|
-                          aggregate [$$24] <- [listify($$23)]
+                          aggregate [$$26] <- [listify($$25)]
                           -- AGGREGATE  |UNPARTITIONED|
                             limit 1
                             -- STREAM_LIMIT  |UNPARTITIONED|
-                              project ([$$23])
+                              project ([$$25])
                               -- STREAM_PROJECT  |PARTITIONED|
                                 exchange
-                                -- SORT_MERGE_EXCHANGE [$$34(ASC) ]  |PARTITIONED|
-                                  project ([$$34, $$23])
+                                -- SORT_MERGE_EXCHANGE [$$36(ASC) ]  |PARTITIONED|
+                                  project ([$$36, $$25])
                                   -- STREAM_PROJECT  |PARTITIONED|
-                                    assign [$$23] <- [{"d": $$d}]
+                                    assign [$$25] <- [{"d": $$d}]
                                     -- ASSIGN  |PARTITIONED|
                                       limit 1
                                       -- STREAM_LIMIT  |PARTITIONED|
                                         exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          data-scan []<-[$$34, $$d] <- test.DBLP1 condition (ends-with($$d.getField(1), "Blakeley95")) limit 1
+                                          data-scan []<-[$$36, $$d] <- test.DBLP1 condition (ends-with($$d.getField(1), "Blakeley95")) limit 1
                                           -- DATASOURCE_SCAN  |PARTITIONED|
                                             exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

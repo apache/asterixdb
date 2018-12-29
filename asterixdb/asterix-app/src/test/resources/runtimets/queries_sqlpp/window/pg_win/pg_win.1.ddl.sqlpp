@@ -1,0 +1,75 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Core window functions tests
+ * Expected Res : SUCCESS
+ */
+
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+create type tenkType as closed {
+  unique1         : integer,
+  unique2         : integer,
+  two             : integer,
+  four            : integer,
+  ten             : integer,
+  twenty          : integer,
+  hundred         : integer,
+  thousand        : integer,
+  twothousand     : integer,
+  fivethous       : integer,
+  tenthous        : integer,
+  odd             : integer,
+  even            : integer,
+  stringu1        : string,
+  stringu2        : string,
+  string4         : string
+};
+
+create dataset tenk1(tenkType) primary key unique2;
+
+create index idx_tenk1_unique1 on tenk1(unique1) type btree;
+
+create type empsalaryType as closed {
+  depname         : string,
+  empno           : bigint,
+  salary          : integer,
+  enroll_date     : date
+};
+
+create dataset empsalary(empsalaryType) primary key empno;
+
+create type numericsType as closed {
+  id              : integer,
+  f_float4        : float,
+  f_float8        : double
+};
+
+create dataset numerics(numericsType) primary key id;
+
+create type datetimesType as closed {
+  id              : integer,
+  f_timetz        : time,
+  f_timestamptz   : timestamp
+};
+
+create dataset datetimes(datetimesType) primary key id;

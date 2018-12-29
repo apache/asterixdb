@@ -1,0 +1,6 @@
+{ "x": null, "y": 42, "first_value": 42, "last_value": 42 }
+{ "x": 1, "y": 1, "first_value": 1, "last_value": 3 }
+{ "x": 2, "y": 2, "first_value": 1, "last_value": 4 }
+{ "x": 3, "y": 3, "first_value": 1, "last_value": 5 }
+{ "x": 4, "y": 4, "first_value": 2, "last_value": 5 }
+{ "x": 5, "y": 5, "first_value": 3, "last_value": 5 }

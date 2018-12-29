@@ -1,0 +1,77 @@
+DataverseUse test
+Query:
+Let Variable [ Name=$P ]
+  :=
+  LiteralExpr [LONG] [4]
+SELECT [
+Variable [ Name=$p ]
+p
+(
+  SELECT [
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=$g ]
+      Field=t1
+    ]
+    Field=c1
+  ]
+  c1
+  WINDOW test.row_number@0[
+  ]
+  OVER (
+    ORDER BY
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=$g ]
+          Field=t1
+        ]
+        Field=c2
+      ]
+      DESC
+  )
+  rn
+  ]
+  FROM [    Variable [ Name=$g ]
+    AS Variable [ Name=$g ]
+  ]
+  Orderby
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=$g ]
+        Field=t1
+      ]
+      Field=c1
+    ]
+    ASC
+
+)
+gg
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.t1]
+  ]
+  AS Variable [ Name=$t1 ]
+,
+  FunctionCall test.range@2[
+    FieldAccessor [
+      Variable [ Name=$t1 ]
+      Field=one
+    ]
+    Variable [ Name=$P ]
+  ]
+  AS Variable [ Name=$p ]
+]
+Groupby
+  Variable [ Name=$p ]
+  :=
+  Variable [ Name=$p ]
+  GROUP AS Variable [ Name=$g ]
+  (
+    t1:=Variable [ Name=$t1 ]
+    p:=Variable [ Name=$p ]
+  )
+
+Orderby
+  Variable [ Name=$p ]
+  ASC
+

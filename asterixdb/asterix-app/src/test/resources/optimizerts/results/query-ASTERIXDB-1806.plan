@@ -3,13 +3,13 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- SORT_MERGE_EXCHANGE [$$l_returnflag(ASC), $$l_linestatus(ASC) ]  |PARTITIONED|
-          -- SORT_GROUP_BY[$$149, $$150]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$161, $$162]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
-            -- HASH_PARTITION_EXCHANGE [$$149, $$150]  |PARTITIONED|
-              -- SORT_GROUP_BY[$$117, $$118]  |PARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$161, $$162]  |PARTITIONED|
+              -- SORT_GROUP_BY[$$129, $$130]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|

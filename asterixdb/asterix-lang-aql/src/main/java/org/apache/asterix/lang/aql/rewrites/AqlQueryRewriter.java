@@ -21,6 +21,7 @@ package org.apache.asterix.lang.aql.rewrites;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -46,11 +47,13 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 class AqlQueryRewriter implements IQueryRewriter {
 
@@ -176,8 +179,20 @@ class AqlQueryRewriter implements IQueryRewriter {
             for (GbyVariableExpressionPair p : gc.getGbyPairList()) {
                 p.getExpr().accept(this, arg);
             }
-            for (GbyVariableExpressionPair p : gc.getDecorPairList()) {
-                p.getExpr().accept(this, arg);
+            if (gc.hasDecorList()) {
+                for (GbyVariableExpressionPair p : gc.getDecorPairList()) {
+                    p.getExpr().accept(this, arg);
+                }
+            }
+            if (gc.hasGroupFieldList()) {
+                for (Pair<Expression, Identifier> p : gc.getGroupFieldList()) {
+                    p.first.accept(this, arg);
+                }
+            }
+            if (gc.hasWithMap()) {
+                for (Map.Entry<Expression, VariableExpr> me : gc.getWithVarMap().entrySet()) {
+                    me.getKey().accept(this, arg);
+                }
             }
             return null;
         }

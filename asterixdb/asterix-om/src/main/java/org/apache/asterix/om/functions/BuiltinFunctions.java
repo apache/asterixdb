@@ -165,9 +165,12 @@ public class BuiltinFunctions {
     private static final Map<IFunctionInfo, IFunctionInfo> scalarToAggregateFunctionMap = new HashMap<>();
     private static final Map<IFunctionInfo, IFunctionInfo> distinctToRegularScalarAggregateFunctionMap =
             new HashMap<>();
-    private static final Map<IFunctionInfo, IFunctionInfo> builtinWindowFunctions = new HashMap<>();
-    private static final Set<IFunctionInfo> builtinWindowFunctionsWithOrderArgs = new HashSet<>();
-    private static final Set<IFunctionInfo> builtinWindowFunctionsWithMaterialization = new HashSet<>();
+    private static final Map<IFunctionInfo, IFunctionInfo> sqlToWindowFunctions = new HashMap<>();
+    private static final Set<IFunctionInfo> windowFunctions = new HashSet<>();
+    private static final Set<IFunctionInfo> windowFunctionsWithListArg = new HashSet<>();
+    private static final Set<IFunctionInfo> windowFunctionsWithFrameClause = new HashSet<>();
+    private static final Set<IFunctionInfo> windowFunctionsWithOrderArgs = new HashSet<>();
+    private static final Set<IFunctionInfo> windowFunctionsWithMaterialization = new HashSet<>();
 
     private static final Map<IFunctionInfo, SpatialFilterKind> spatialFilterFunctions = new HashMap<>();
 
@@ -490,6 +493,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-first-element", 1);
     public static final FunctionIdentifier LOCAL_FIRST_ELEMENT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-first-element", 1);
+    public static final FunctionIdentifier LAST_ELEMENT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-last-element", 1);
     public static final FunctionIdentifier STDDEV =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-stddev", 1);
     public static final FunctionIdentifier GLOBAL_STDDEV =
@@ -538,6 +543,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-avg", 1);
     public static final FunctionIdentifier SCALAR_FIRST_ELEMENT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "first-element", 1);
+    public static final FunctionIdentifier SCALAR_LOCAL_FIRST_ELEMENT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-first-element", 1);
+    public static final FunctionIdentifier SCALAR_LAST_ELEMENT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "last-element", 1);
     public static final FunctionIdentifier SCALAR_STDDEV =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "stddev", 1);
     public static final FunctionIdentifier SCALAR_GLOBAL_STDDEV =
@@ -843,23 +852,43 @@ public class BuiltinFunctions {
 
     // window functions
     public static final FunctionIdentifier ROW_NUMBER =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "row-number", 0);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "row_number", 0);
     public static final FunctionIdentifier ROW_NUMBER_IMPL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "row-number-impl", 0);
     public static final FunctionIdentifier RANK = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "rank", 0);
     public static final FunctionIdentifier RANK_IMPL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "rank-impl", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier DENSE_RANK =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dense-rank", 0);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dense_rank", 0);
     public static final FunctionIdentifier DENSE_RANK_IMPL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dense-rank-impl", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier PERCENT_RANK =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "percent-rank", 0);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "percent_rank", 0);
     public static final FunctionIdentifier PERCENT_RANK_IMPL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "percent-rank-impl", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier NTILE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ntile", 1);
     public static final FunctionIdentifier NTILE_IMPL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ntile-impl", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier LEAD =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "lead", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier LEAD_IMPL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "lead-impl", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier LAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "lag", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier LAG_IMPL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "lag-impl", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier FIRST_VALUE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "first_value", 1);
+    public static final FunctionIdentifier FIRST_VALUE_IMPL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "first-value-impl", 1);
+    public static final FunctionIdentifier LAST_VALUE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "last_value", 1);
+    public static final FunctionIdentifier LAST_VALUE_IMPL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "last-value-impl", 1);
+    public static final FunctionIdentifier NTH_VALUE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "nth_value", 2);
+    public static final FunctionIdentifier NTH_VALUE_IMPL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "nth-value-impl", 2);
 
     // unnesting functions
     public static final FunctionIdentifier SCAN_COLLECTION =
@@ -1335,6 +1364,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-null", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier IF_MISSING_OR_NULL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-missing-or-null", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier IF_SYSTEM_NULL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-system-null", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier IF_INF =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-inf", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier IF_NAN =
@@ -1420,7 +1451,7 @@ public class BuiltinFunctions {
 
         // and then, Asterix builtin functions
         addPrivateFunction(CHECK_UNKNOWN, NotUnknownTypeComputer.INSTANCE, true);
-        addPrivateFunction(ANY_COLLECTION_MEMBER, CollectionMemberResultType.INSTANCE, true);
+        addPrivateFunction(ANY_COLLECTION_MEMBER, CollectionMemberResultType.INSTANCE_MISSABLE, true);
         addFunction(BOOLEAN_CONSTRUCTOR, ABooleanTypeComputer.INSTANCE, true);
         addFunction(CIRCLE_CONSTRUCTOR, ACircleTypeComputer.INSTANCE, true);
         addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE, true);
@@ -1578,6 +1609,7 @@ public class BuiltinFunctions {
         addFunction(IF_NULL, IfNullTypeComputer.INSTANCE, true);
         addFunction(IF_NAN, IfNanOrInfTypeComputer.INSTANCE_SKIP_MISSING, true);
         addFunction(IF_NAN_OR_INF, IfNanOrInfTypeComputer.INSTANCE_SKIP_MISSING, true);
+        addPrivateFunction(IF_SYSTEM_NULL, IfNullTypeComputer.INSTANCE, true);
 
         addFunction(MISSING_IF, MissingIfTypeComputer.INSTANCE, true);
         addFunction(NULL_IF, NullIfTypeComputer.INSTANCE, true);
@@ -1595,9 +1627,12 @@ public class BuiltinFunctions {
         addPrivateFunction(LOCAL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addFunction(AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_FIRST_ELEMENT, CollectionMemberResultType.INSTANCE, true);
-        addPrivateFunction(FIRST_ELEMENT, PropagateTypeComputer.INSTANCE, true);
-        addPrivateFunction(LOCAL_FIRST_ELEMENT, PropagateTypeComputer.INSTANCE, true);
+        addPrivateFunction(SCALAR_FIRST_ELEMENT, CollectionMemberResultType.INSTANCE_NULLABLE, true);
+        addPrivateFunction(SCALAR_LOCAL_FIRST_ELEMENT, CollectionMemberResultType.INSTANCE_NULLABLE, true);
+        addPrivateFunction(SCALAR_LAST_ELEMENT, CollectionMemberResultType.INSTANCE_NULLABLE, true);
+        addPrivateFunction(FIRST_ELEMENT, PropagateTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(LOCAL_FIRST_ELEMENT, PropagateTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(LAST_ELEMENT, PropagateTypeComputer.INSTANCE_NULLABLE, true);
         addPrivateFunction(LOCAL_STDDEV, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(STDDEV, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_STDDEV, NullableDoubleTypeComputer.INSTANCE, true);
@@ -1796,16 +1831,26 @@ public class BuiltinFunctions {
 
         // Window functions
 
-        addFunction(ROW_NUMBER, AInt64TypeComputer.INSTANCE, true);
-        addPrivateFunction(ROW_NUMBER_IMPL, AInt64TypeComputer.INSTANCE, true);
-        addFunction(RANK, AInt64TypeComputer.INSTANCE, true);
-        addPrivateFunction(RANK_IMPL, AInt64TypeComputer.INSTANCE, true);
-        addFunction(DENSE_RANK, AInt64TypeComputer.INSTANCE, true);
-        addPrivateFunction(DENSE_RANK_IMPL, AInt64TypeComputer.INSTANCE, true);
-        addFunction(PERCENT_RANK, ADoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(PERCENT_RANK_IMPL, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(NTILE, AInt64TypeComputer.INSTANCE, true);
-        addPrivateFunction(NTILE_IMPL, AInt64TypeComputer.INSTANCE, true);
+        addFunction(ROW_NUMBER, AInt64TypeComputer.INSTANCE, false);
+        addFunction(ROW_NUMBER_IMPL, AInt64TypeComputer.INSTANCE, false);
+        addFunction(RANK, AInt64TypeComputer.INSTANCE, false);
+        addFunction(RANK_IMPL, AInt64TypeComputer.INSTANCE, false);
+        addFunction(DENSE_RANK, AInt64TypeComputer.INSTANCE, false);
+        addFunction(DENSE_RANK_IMPL, AInt64TypeComputer.INSTANCE, false);
+        addFunction(PERCENT_RANK, ADoubleTypeComputer.INSTANCE, false);
+        addFunction(PERCENT_RANK_IMPL, ADoubleTypeComputer.INSTANCE, false);
+        addFunction(NTILE, AInt64TypeComputer.INSTANCE_NULLABLE, false);
+        addFunction(NTILE_IMPL, AInt64TypeComputer.INSTANCE_NULLABLE, false);
+        addFunction(LEAD, AnyTypeComputer.INSTANCE, false);
+        addFunction(LEAD_IMPL, AnyTypeComputer.INSTANCE, false);
+        addFunction(LAG, AnyTypeComputer.INSTANCE, false);
+        addFunction(LAG_IMPL, AnyTypeComputer.INSTANCE, false);
+        addFunction(FIRST_VALUE, CollectionMemberResultType.INSTANCE_NULLABLE, false);
+        addFunction(FIRST_VALUE_IMPL, CollectionMemberResultType.INSTANCE_NULLABLE, false);
+        addFunction(LAST_VALUE, CollectionMemberResultType.INSTANCE_NULLABLE, false);
+        addFunction(LAST_VALUE_IMPL, CollectionMemberResultType.INSTANCE_NULLABLE, false);
+        addFunction(NTH_VALUE, CollectionMemberResultType.INSTANCE_NULLABLE, false);
+        addFunction(NTH_VALUE_IMPL, CollectionMemberResultType.INSTANCE_NULLABLE, false);
 
         // Similarity functions
         addFunction(EDIT_DISTANCE_CONTAINS, OrderedListOfAnyTypeComputer.INSTANCE, true);
@@ -2261,7 +2306,7 @@ public class BuiltinFunctions {
 
         // FIRST_ELEMENT
 
-        addAgg(SCALAR_FIRST_ELEMENT);
+        addAgg(FIRST_ELEMENT);
         addAgg(LOCAL_FIRST_ELEMENT);
         addLocalAgg(FIRST_ELEMENT, LOCAL_FIRST_ELEMENT);
         addIntermediateAgg(LOCAL_FIRST_ELEMENT, FIRST_ELEMENT);
@@ -2269,6 +2314,12 @@ public class BuiltinFunctions {
         addGlobalAgg(FIRST_ELEMENT, FIRST_ELEMENT);
 
         addScalarAgg(FIRST_ELEMENT, SCALAR_FIRST_ELEMENT);
+        addScalarAgg(LOCAL_FIRST_ELEMENT, SCALAR_LOCAL_FIRST_ELEMENT);
+
+        // LAST_ELEMENT
+
+        addAgg(LAST_ELEMENT);
+        addScalarAgg(LAST_ELEMENT, SCALAR_LAST_ELEMENT);
 
         // RANGE_MAP
         addAgg(RANGE_MAP);
@@ -2574,11 +2625,16 @@ public class BuiltinFunctions {
 
     static {
         // Window functions
-        addWindowFunction(ROW_NUMBER, ROW_NUMBER_IMPL, false, false);
-        addWindowFunction(RANK, RANK_IMPL, true, false);
-        addWindowFunction(DENSE_RANK, DENSE_RANK_IMPL, true, false);
-        addWindowFunction(PERCENT_RANK, PERCENT_RANK_IMPL, true, true);
-        addWindowFunction(NTILE, NTILE_IMPL, false, true);
+        addWindowFunction(ROW_NUMBER, ROW_NUMBER_IMPL, false, false, false, false);
+        addWindowFunction(RANK, RANK_IMPL, false, false, true, false);
+        addWindowFunction(DENSE_RANK, DENSE_RANK_IMPL, false, false, true, false);
+        addWindowFunction(PERCENT_RANK, PERCENT_RANK_IMPL, false, false, true, true);
+        addWindowFunction(NTILE, NTILE_IMPL, false, false, false, true);
+        addWindowFunction(LEAD, LEAD_IMPL, false, true, false, false);
+        addWindowFunction(LAG, LAG_IMPL, false, true, false, false);
+        addWindowFunction(FIRST_VALUE, FIRST_VALUE_IMPL, true, true, false, false);
+        addWindowFunction(LAST_VALUE, LAST_VALUE_IMPL, true, true, false, false);
+        addWindowFunction(NTH_VALUE, NTH_VALUE_IMPL, true, true, false, false);
     }
 
     static {
@@ -2762,38 +2818,59 @@ public class BuiltinFunctions {
                 getAsterixFunctionInfo(regularscalarfi));
     }
 
-    public static void addWindowFunction(FunctionIdentifier fi, FunctionIdentifier implfi, boolean requiresOrderArgs,
+    public static void addWindowFunction(FunctionIdentifier sqlfi, FunctionIdentifier winfi,
+            boolean supportsFrameClause, boolean hasListArg, boolean requiresOrderArgs,
             boolean requiresMaterialization) {
-        IFunctionInfo implFinfo = getAsterixFunctionInfo(implfi);
-        builtinWindowFunctions.put(getAsterixFunctionInfo(fi), implFinfo);
+        IFunctionInfo sqlinfo = getAsterixFunctionInfo(sqlfi);
+        IFunctionInfo wininfo = getAsterixFunctionInfo(winfi);
+        sqlToWindowFunctions.put(sqlinfo, wininfo);
+        windowFunctions.add(wininfo);
+        if (supportsFrameClause) {
+            windowFunctionsWithFrameClause.add(wininfo);
+        }
+        if (hasListArg) {
+            windowFunctionsWithListArg.add(wininfo);
+        }
         if (requiresOrderArgs) {
-            builtinWindowFunctionsWithOrderArgs.add(implFinfo);
+            windowFunctionsWithOrderArgs.add(wininfo);
         }
         if (requiresMaterialization) {
-            builtinWindowFunctionsWithMaterialization.add(implFinfo);
+            windowFunctionsWithMaterialization.add(wininfo);
         }
     }
 
-    public static boolean isBuiltinWindowFunction(FunctionIdentifier fi) {
-        return builtinWindowFunctions.containsKey(getAsterixFunctionInfo(fi));
+    public static FunctionIdentifier getWindowFunction(FunctionIdentifier sqlfi) {
+        IFunctionInfo finfo = sqlToWindowFunctions.get(getAsterixFunctionInfo(sqlfi));
+        return finfo == null ? null : finfo.getFunctionIdentifier();
     }
 
-    public static boolean windowFunctionRequiresOrderArgs(FunctionIdentifier implfi) {
-        return builtinWindowFunctionsWithOrderArgs.contains(getAsterixFunctionInfo(implfi));
+    public static boolean isWindowFunction(FunctionIdentifier winfi) {
+        return windowFunctions.contains(getAsterixFunctionInfo(winfi));
     }
 
-    public static boolean windowFunctionRequiresMaterialization(FunctionIdentifier implfi) {
-        return builtinWindowFunctionsWithMaterialization.contains(getAsterixFunctionInfo(implfi));
+    public static boolean windowFunctionSupportsFrameClause(FunctionIdentifier winfi) {
+        return windowFunctionsWithFrameClause.contains(getAsterixFunctionInfo(winfi));
     }
 
-    public static AbstractFunctionCallExpression makeWindowFunctionExpression(FunctionIdentifier scalarfi,
+    public static boolean windowFunctionWithListArg(FunctionIdentifier winfi) {
+        return windowFunctionsWithListArg.contains(getAsterixFunctionInfo(winfi));
+    }
+
+    public static boolean windowFunctionRequiresOrderArgs(FunctionIdentifier winfi) {
+        return windowFunctionsWithOrderArgs.contains(getAsterixFunctionInfo(winfi));
+    }
+
+    public static boolean windowFunctionRequiresMaterialization(FunctionIdentifier winfi) {
+        return windowFunctionsWithMaterialization.contains(getAsterixFunctionInfo(winfi));
+    }
+
+    public static AbstractFunctionCallExpression makeWindowFunctionExpression(FunctionIdentifier winfi,
             List<Mutable<ILogicalExpression>> args) {
-        IFunctionInfo finfo = getAsterixFunctionInfo(scalarfi);
-        IFunctionInfo implFinfo = builtinWindowFunctions.get(finfo);
-        if (implFinfo == null) {
+        IFunctionInfo finfo = getAsterixFunctionInfo(winfi);
+        if (finfo == null) {
             throw new IllegalStateException("no implementation for window function " + finfo);
         }
-        return new StatefulFunctionCallExpression(implFinfo, UnpartitionedPropertyComputer.INSTANCE, args);
+        return new StatefulFunctionCallExpression(finfo, UnpartitionedPropertyComputer.INSTANCE, args);
     }
 
     static {

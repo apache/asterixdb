@@ -346,7 +346,15 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
 
     @Override
     public Void visitWindowOperator(WindowOperator op, Void arg) throws AlgebricksException {
-        standardLayout(op);
+        for (Mutable<ILogicalOperator> c : op.getInputs()) {
+            VariableUtilities.getLiveVariables(c.getValue(), schemaVariables);
+        }
+        for (ILogicalPlan p : op.getNestedPlans()) {
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                VariableUtilities.getLiveVariables(r.getValue(), schemaVariables);
+            }
+        }
+        schemaVariables.addAll(op.getVariables());
         return null;
     }
 }

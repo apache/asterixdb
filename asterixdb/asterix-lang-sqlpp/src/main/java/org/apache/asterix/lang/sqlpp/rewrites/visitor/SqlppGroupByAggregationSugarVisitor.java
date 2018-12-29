@@ -19,42 +19,28 @@
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
-import org.apache.asterix.lang.common.expression.CallExpr;
-import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.Identifier;
-import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
-import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.clause.SelectClause;
-import org.apache.asterix.lang.sqlpp.clause.SelectElement;
-import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
-import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
-import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -198,11 +184,14 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
                 // is not able to optimize the latter case. The following query is such an example:
                 // asterixdb/asterix-app/src/test/resources/runtimets/queries_sqlpp/dapd/q2-11
                 List<GbyVariableExpressionPair> decorList = new ArrayList<>();
+                if (groupbyClause.hasDecorList()) {
+                    decorList.addAll(groupbyClause.getDecorPairList());
+                }
                 for (VariableExpr var : decorVars) {
                     decorList.add(new GbyVariableExpressionPair((VariableExpr) SqlppRewriteUtil.deepCopy(var),
                             (Expression) SqlppRewriteUtil.deepCopy(var)));
                 }
-                groupbyClause.getDecorPairList().addAll(decorList);
+                groupbyClause.setDecorPairList(decorList);
             }
         } else {
             selectBlock.getSelectClause().accept(this, arg);
@@ -211,110 +200,15 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
     }
 
     private Map<Expression, Identifier> getGroupFieldVariables(GroupbyClause groupbyClause) {
-        Map<Expression, Identifier> fieldVars = new HashMap<>();
-        for (Pair<Expression, Identifier> groupField : groupbyClause.getGroupFieldList()) {
-            fieldVars.put(groupField.first, groupField.second);
-        }
-        return fieldVars;
+        return groupbyClause.hasGroupFieldList()
+                ? SqlppVariableUtil.createFieldVariableMap(groupbyClause.getGroupFieldList()) : Collections.emptyMap();
     }
 
     // Applying sugar rewriting for group-by.
     private void rewriteExpressionUsingGroupVariable(VariableExpr groupVar, Map<Expression, Identifier> fieldVars,
             ILangExpression expr, Set<VariableExpr> outerScopeVariables) throws CompilationException {
         Sql92AggregateFunctionVisitor visitor =
-                new Sql92AggregateFunctionVisitor(groupVar, fieldVars, outerScopeVariables);
+                new Sql92AggregateFunctionVisitor(context, groupVar, fieldVars, outerScopeVariables);
         expr.accept(visitor, null);
-    }
-
-    private final class Sql92AggregateFunctionVisitor extends AbstractSqlppSimpleExpressionVisitor {
-
-        private final Expression groupVar;
-
-        private final Map<Expression, Identifier> fieldVars;
-
-        private final Collection<VariableExpr> outerVars;
-
-        private Sql92AggregateFunctionVisitor(Expression groupVar, Map<Expression, Identifier> fieldVars,
-                Collection<VariableExpr> outerVars) {
-            this.groupVar = groupVar;
-            this.fieldVars = fieldVars;
-            this.outerVars = outerVars;
-        }
-
-        @Override
-        public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
-            List<Expression> newExprList = new ArrayList<>();
-            FunctionSignature signature = callExpr.getFunctionSignature();
-            boolean aggregate = FunctionMapUtil.isSql92AggregateFunction(signature);
-            boolean rewritten = false;
-            for (Expression expr : callExpr.getExprList()) {
-                Expression newExpr = aggregate ? wrapAggregationArgument(expr) : expr;
-                rewritten |= newExpr != expr;
-                newExprList.add(newExpr.accept(this, arg));
-            }
-            if (rewritten) {
-                // Rewrites the SQL-92 function name to core functions,
-                // e.g., SUM --> array_sum
-                callExpr.setFunctionSignature(FunctionMapUtil.sql92ToCoreAggregateFunction(signature));
-            }
-            callExpr.setExprList(newExprList);
-            return callExpr;
-        }
-
-        private Expression wrapAggregationArgument(Expression argExpr) throws CompilationException {
-            SourceLocation sourceLoc = argExpr.getSourceLocation();
-            Expression expr = argExpr;
-            Set<VariableExpr> freeVars = SqlppRewriteUtil.getFreeVariable(expr);
-
-            VariableExpr fromBindingVar = new VariableExpr(context.newVariable());
-            fromBindingVar.setSourceLocation(sourceLoc);
-            FromTerm fromTerm = new FromTerm(groupVar, fromBindingVar, null, null);
-            fromTerm.setSourceLocation(sourceLoc);
-            FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
-            fromClause.setSourceLocation(sourceLoc);
-
-            // Maps field variable expressions to field accesses.
-            Map<Expression, Expression> varExprMap = new HashMap<>();
-            for (VariableExpr usedVar : freeVars) {
-                // Reference to a field in the group variable.
-                if (fieldVars.containsKey(usedVar)) {
-                    // Rewrites to a reference to a field in the group variable.
-                    FieldAccessor fa =
-                            new FieldAccessor(fromBindingVar, new VarIdentifier(fieldVars.get(usedVar).getValue()));
-                    fa.setSourceLocation(usedVar.getSourceLocation());
-                    varExprMap.put(usedVar, fa);
-                } else if (outerVars.contains(usedVar)) {
-                    // Do nothing
-                } else if (fieldVars.size() == 1) {
-                    // Rewrites to a reference to a single field in the group variable.
-                    FieldAccessor faInner = new FieldAccessor(fromBindingVar, fieldVars.values().iterator().next());
-                    faInner.setSourceLocation(usedVar.getSourceLocation());
-                    FieldAccessor faOuter =
-                            new FieldAccessor(faInner, SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar()));
-                    faOuter.setSourceLocation(usedVar.getSourceLocation());
-                    varExprMap.put(usedVar, faOuter);
-                } else {
-                    throw new CompilationException(ErrorCode.AMBIGUOUS_IDENTIFIER, usedVar.getSourceLocation(),
-                            SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar().getValue()).getValue());
-                }
-            }
-
-            // Select clause.
-            SelectElement selectElement =
-                    new SelectElement(SqlppRewriteUtil.substituteExpression(expr, varExprMap, context));
-            selectElement.setSourceLocation(sourceLoc);
-            SelectClause selectClause = new SelectClause(selectElement, null, false);
-            selectClause.setSourceLocation(sourceLoc);
-
-            // Construct the select expression.
-            SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, null, null, null, null);
-            selectBlock.setSourceLocation(sourceLoc);
-            SelectSetOperation selectSetOperation =
-                    new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
-            selectSetOperation.setSourceLocation(sourceLoc);
-            SelectExpression selectExpr = new SelectExpression(null, selectSetOperation, null, null, true);
-            selectExpr.setSourceLocation(sourceLoc);
-            return selectExpr;
-        }
     }
 }

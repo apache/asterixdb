@@ -20,8 +20,8 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- HYBRID_HASH_JOIN [$$39][$$38]  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$39]  |PARTITIONED|
+            -- HYBRID_HASH_JOIN [$$42][$$41]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$42]  |PARTITIONED|
                 -- ASSIGN  |UNPARTITIONED|
                   -- UNNEST  |UNPARTITIONED|
                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

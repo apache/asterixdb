@@ -335,8 +335,16 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
     @Override
     public Void visit(WindowExpression windowExpr, Integer step) throws CompilationException {
         out.print(skip(step) + "window ");
-        windowExpr.getExpr().accept(this, step + 2);
-        out.print(skip(step) + " over (");
+        out.print(generateFullName(windowExpr.getFunctionSignature().getNamespace(),
+                windowExpr.getFunctionSignature().getName()) + "(");
+        printDelimitedExpressions(windowExpr.getExprList(), COMMA, step);
+        out.print(")");
+        out.print(skip(step) + " over ");
+        if (windowExpr.hasWindowVar()) {
+            windowExpr.getWindowVar().accept(this, step + 2);
+            out.print(skip(step) + "as ");
+        }
+        out.print("(");
         if (windowExpr.hasPartitionList()) {
             List<Expression> partitionList = windowExpr.getPartitionList();
             for (int i = 0, ln = partitionList.size(); i < ln; i++) {
@@ -347,8 +355,22 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
                 partExpr.accept(this, step + 2);
             }
         }
-        out.print(" order by ");
-        printDelimitedObyExpressions(windowExpr.getOrderbyList(), windowExpr.getOrderbyModifierList(), step + 2);
+        if (windowExpr.hasOrderByList()) {
+            out.print(skip(step) + " order by ");
+            printDelimitedObyExpressions(windowExpr.getOrderbyList(), windowExpr.getOrderbyModifierList(), step + 2);
+        }
+        if (windowExpr.hasFrameDefinition()) {
+            out.println(skip(step) + windowExpr.getFrameMode());
+            if (windowExpr.hasFrameStartExpr()) {
+                windowExpr.getFrameStartExpr().accept(this, step + 2);
+            }
+            out.println(skip(step) + windowExpr.getFrameStartKind());
+            if (windowExpr.hasFrameEndExpr()) {
+                windowExpr.getFrameEndExpr().accept(this, step + 2);
+            }
+            out.println(skip(step) + windowExpr.getFrameEndKind());
+            out.println(skip(step) + "exclude " + windowExpr.getFrameExclusionKind());
+        }
         out.println(skip(step) + ")");
         return null;
     }

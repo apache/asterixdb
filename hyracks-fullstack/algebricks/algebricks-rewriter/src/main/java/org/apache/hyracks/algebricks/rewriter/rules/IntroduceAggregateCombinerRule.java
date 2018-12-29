@@ -26,13 +26,38 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 
 public class IntroduceAggregateCombinerRule extends AbstractIntroduceCombinerRule {
+
+    @Override
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        if (context.checkIfInDontApplySet(this, op)) {
+            return false;
+        }
+        // Disable aggregate combiners for nested plans inside window operators
+        if (op.getOperatorTag() == LogicalOperatorTag.WINDOW) {
+            WindowOperator winOp = (WindowOperator) op;
+            if (winOp.hasNestedPlans()) {
+                for (ILogicalPlan plan : winOp.getNestedPlans()) {
+                    for (Mutable<ILogicalOperator> root : plan.getRoots()) {
+                        ILogicalOperator rootOp = root.getValue();
+                        if (rootOp.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
+                            context.addToDontApplySet(this, rootOp);
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)

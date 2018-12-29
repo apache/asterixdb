@@ -1,0 +1,10 @@
+{ "salary": 3500, "first_value": 4500, "lead": 3900, "nth_value": 4500 }
+{ "salary": 3900, "first_value": 5000, "lead": 4200, "nth_value": 5000 }
+{ "salary": 4200, "first_value": 5200, "lead": 4500, "nth_value": 5200 }
+{ "salary": 4500, "first_value": 6000, "lead": 4800, "nth_value": 6000 }
+{ "salary": 4800, "first_value": 6000, "lead": 4800, "nth_value": 6000 }
+{ "salary": 4800, "first_value": 6000, "lead": 5000, "nth_value": 6000 }
+{ "salary": 5000, "first_value": 6000, "lead": 5200, "nth_value": 6000 }
+{ "salary": 5200, "first_value": null, "lead": 5200, "nth_value": null }
+{ "salary": 5200, "first_value": null, "lead": 6000, "nth_value": null }
+{ "salary": 6000, "first_value": null, "lead": null, "nth_value": null }

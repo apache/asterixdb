@@ -99,7 +99,7 @@ public final class BytePointable extends AbstractPointable implements IHashable,
     public int compareTo(byte[] bytes, int start, int length) {
         byte b = getByte();
         byte ob = getByte(bytes, start);
-        return b < ob ? -1 : (b > ob ? 1 : 0);
+        return Byte.compare(b, ob);
     }
 
     @Override

@@ -21,9 +21,7 @@ package org.apache.hyracks.algebricks.runtime.operators.aggreg;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
-import org.apache.hyracks.algebricks.runtime.base.EnforcePushRuntime;
-import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
-import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.meta.PipelineAssembler;
 import org.apache.hyracks.algebricks.runtime.operators.std.NestedTupleSourceRuntimeFactory.NestedTupleSourceRuntime;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -37,9 +35,11 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.dataflow.std.group.AbstractAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.AggregateState;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 public class NestedPlansRunningAggregatorFactory extends AbstractAggregatorDescriptorFactory {
 
@@ -62,13 +62,14 @@ public class NestedPlansRunningAggregatorFactory extends AbstractAggregatorDescr
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults,
             final IFrameWriter writer, long memoryBudget) throws HyracksDataException {
         final RunningAggregatorOutput outputWriter =
-                new RunningAggregatorOutput(ctx, subplans, keyFieldIdx.length, decorFieldIdx.length, writer);
+                new RunningAggregatorOutput(ctx, subplans, keyFieldIdx.length + decorFieldIdx.length, writer);
         // should enforce protocol
         boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
         IFrameWriter enforcedWriter = enforce ? EnforceFrameWriter.enforce(outputWriter) : outputWriter;
         final NestedTupleSourceRuntime[] pipelines = new NestedTupleSourceRuntime[subplans.length];
         for (int i = 0; i < subplans.length; i++) {
-            pipelines[i] = (NestedTupleSourceRuntime) assemblePipeline(subplans[i], enforcedWriter, ctx);
+            pipelines[i] =
+                    (NestedTupleSourceRuntime) PipelineAssembler.assemblePipeline(subplans[i], enforcedWriter, ctx);
         }
 
         final ArrayTupleBuilder gbyTb = outputWriter.getGroupByTupleBuilder();
@@ -140,30 +141,6 @@ public class NestedPlansRunningAggregatorFactory extends AbstractAggregatorDescr
         };
     }
 
-    private IFrameWriter assemblePipeline(AlgebricksPipeline subplan, IFrameWriter writer, IHyracksTaskContext ctx)
-            throws HyracksDataException {
-        // should enforce protocol
-        boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
-        // plug the operators
-        IFrameWriter start = writer;
-        IPushRuntimeFactory[] runtimeFactories = subplan.getRuntimeFactories();
-        RecordDescriptor[] recordDescriptors = subplan.getRecordDescriptors();
-        for (int i = runtimeFactories.length - 1; i >= 0; i--) {
-            IPushRuntime newRuntime = runtimeFactories[i].createPushRuntime(ctx)[0];
-            newRuntime = enforce ? EnforcePushRuntime.enforce(newRuntime) : newRuntime;
-            start = enforce ? EnforceFrameWriter.enforce(start) : start;
-            newRuntime.setOutputFrameWriter(0, start, recordDescriptors[i]);
-            if (i > 0) {
-                newRuntime.setInputRecordDescriptor(0, recordDescriptors[i - 1]);
-            } else {
-                // the nts has the same input and output rec. desc.
-                newRuntime.setInputRecordDescriptor(0, recordDescriptors[0]);
-            }
-            start = newRuntime;
-        }
-        return start;
-    }
-
     private static class RunningAggregatorOutput implements IFrameWriter {
 
         private final FrameTupleAccessor[] tAccess;
@@ -175,8 +152,8 @@ public class NestedPlansRunningAggregatorFactory extends AbstractAggregatorDescr
         private final IFrameWriter outputWriter;
         private final FrameTupleAppender outputAppender;
 
-        public RunningAggregatorOutput(IHyracksTaskContext ctx, AlgebricksPipeline[] subplans, int numKeys,
-                int numDecors, IFrameWriter outputWriter) throws HyracksDataException {
+        public RunningAggregatorOutput(IHyracksTaskContext ctx, AlgebricksPipeline[] subplans, int numPropagatedFields,
+                IFrameWriter outputWriter) throws HyracksDataException {
             this.subplans = subplans;
             this.outputWriter = outputWriter;
 
@@ -188,8 +165,8 @@ public class NestedPlansRunningAggregatorFactory extends AbstractAggregatorDescr
                 this.inputRecDesc[i] = rd[rd.length - 1];
                 totalAggFields += subplans[i].getOutputWidth();
             }
-            tb = new ArrayTupleBuilder(numKeys + numDecors + totalAggFields);
-            gbyTb = new ArrayTupleBuilder(numKeys + numDecors);
+            tb = new ArrayTupleBuilder(numPropagatedFields + totalAggFields);
+            gbyTb = new ArrayTupleBuilder(numPropagatedFields);
 
             this.tAccess = new FrameTupleAccessor[inputRecDesc.length];
             for (int i = 0; i < inputRecDesc.length; i++) {
@@ -211,17 +188,7 @@ public class NestedPlansRunningAggregatorFactory extends AbstractAggregatorDescr
             accessor.reset(buffer);
             for (int tIndex = 0; tIndex < accessor.getTupleCount(); tIndex++) {
                 tb.reset();
-                byte[] data = gbyTb.getByteArray();
-                int[] fieldEnds = gbyTb.getFieldEndOffsets();
-                int start = 0;
-                int offset = 0;
-                for (int i = 0; i < fieldEnds.length; i++) {
-                    if (i > 0) {
-                        start = fieldEnds[i - 1];
-                    }
-                    offset = fieldEnds[i] - start;
-                    tb.addField(data, start, offset);
-                }
+                TupleUtils.addFields(gbyTb, tb);
                 for (int f = 0; f < w; f++) {
                     tb.addField(accessor, tIndex, f);
                 }

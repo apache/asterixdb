@@ -53,6 +53,17 @@ public class RunFileReader implements IFrameReader {
         readPtr = 0;
     }
 
+    public void seek(long position) {
+        if (position < 0) {
+            throw new IllegalArgumentException(String.valueOf(position));
+        }
+        readPtr = position;
+    }
+
+    public long position() {
+        return readPtr;
+    }
+
     @Override
     public boolean nextFrame(IFrame frame) throws HyracksDataException {
         if (readPtr >= size) {

@@ -48,6 +48,7 @@ import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.IntegerLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.OperatorType;
@@ -74,6 +75,7 @@ import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -91,6 +93,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -99,11 +102,13 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestNonMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestOperator;
@@ -120,6 +125,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
@@ -1027,9 +1033,17 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     public Pair<ILogicalOperator, LogicalVariable> visit(WindowExpression winExpr, Mutable<ILogicalOperator> tupSource)
             throws CompilationException {
         SourceLocation sourceLoc = winExpr.getSourceLocation();
+        List<Expression> fargs = winExpr.getExprList();
+
+        FunctionSignature fs = winExpr.getFunctionSignature();
+        FunctionIdentifier fi = getBuiltinFunctionIdentifier(fs.getName(), fs.getArity());
+        boolean isWin = BuiltinFunctions.isWindowFunction(fi);
+        boolean isWinAgg = isWin && BuiltinFunctions.windowFunctionWithListArg(fi);
+        boolean supportsFrameClause = isWin && BuiltinFunctions.windowFunctionSupportsFrameClause(fi);
+
         Mutable<ILogicalOperator> currentOpRef = tupSource;
 
-        List<Mutable<ILogicalExpression>> partExprListOut = null;
+        List<Mutable<ILogicalExpression>> partExprListOut = Collections.emptyList();
         if (winExpr.hasPartitionList()) {
             List<Expression> partExprList = winExpr.getPartitionList();
             partExprListOut = new ArrayList<>(partExprList.size());
@@ -1042,57 +1056,489 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             }
         }
 
-        List<Expression> orderExprList = winExpr.getOrderbyList();
-        List<OrderbyClause.OrderModifier> orderModifierList = winExpr.getOrderbyModifierList();
-        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprListOut =
-                new ArrayList<>(orderExprList.size());
-        for (int i = 0, ln = orderExprList.size(); i < ln; i++) {
-            Expression orderExpr = orderExprList.get(i);
-            OrderbyClause.OrderModifier orderModifier = orderModifierList.get(i);
-            Pair<ILogicalOperator, LogicalVariable> orderExprResult = orderExpr.accept(this, currentOpRef);
-            VariableReferenceExpression orderExprOut = new VariableReferenceExpression(orderExprResult.second);
-            orderExprOut.setSourceLocation(orderExpr.getSourceLocation());
-            OrderOperator.IOrder orderModifierOut = translateOrderModifier(orderModifier);
-            orderExprListOut.add(new Pair<>(orderModifierOut, new MutableObject<>(orderExprOut)));
-            currentOpRef = new MutableObject<>(orderExprResult.first);
+        int orderExprCount = 0;
+        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprListOut = Collections.emptyList();
+        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> frameValueExprRefs = null;
+        List<Mutable<ILogicalExpression>> frameStartExprRefs = null;
+        List<Mutable<ILogicalExpression>> frameEndExprRefs = null;
+        List<Mutable<ILogicalExpression>> frameExcludeExprRefs = null;
+        int frameExcludeNotStartIdx = -1;
+
+        if (winExpr.hasOrderByList()) {
+            List<Expression> orderExprList = winExpr.getOrderbyList();
+            List<OrderbyClause.OrderModifier> orderModifierList = winExpr.getOrderbyModifierList();
+            orderExprCount = orderExprList.size();
+            orderExprListOut = new ArrayList<>(orderExprCount);
+            for (int i = 0; i < orderExprCount; i++) {
+                Expression orderExpr = orderExprList.get(i);
+                OrderbyClause.OrderModifier orderModifier = orderModifierList.get(i);
+                Pair<ILogicalOperator, LogicalVariable> orderExprResult = orderExpr.accept(this, currentOpRef);
+                VariableReferenceExpression orderExprOut = new VariableReferenceExpression(orderExprResult.second);
+                orderExprOut.setSourceLocation(orderExpr.getSourceLocation());
+                OrderOperator.IOrder orderModifierOut = translateOrderModifier(orderModifier);
+                orderExprListOut.add(new Pair<>(orderModifierOut, new MutableObject<>(orderExprOut)));
+                currentOpRef = new MutableObject<>(orderExprResult.first);
+            }
+        } else if (winExpr.hasFrameDefinition()) {
+            // frame definition without ORDER BY is not allowed by the grammar
+            throw new CompilationException(ErrorCode.COMPILATION_UNEXPECTED_WINDOW_FRAME, sourceLoc);
         }
 
-        Expression expr = winExpr.getExpr();
-        Pair<ILogicalOperator, LogicalVariable> exprResult = expr.accept(this, currentOpRef);
-        ILogicalOperator exprOp = exprResult.first;
-        if (exprOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc);
+        WindowExpression.FrameMode winFrameMode = null;
+        WindowExpression.FrameExclusionKind winFrameExclusionKind = null;
+        WindowExpression.FrameBoundaryKind winFrameStartKind = null, winFrameEndKind = null;
+        Expression winFrameStartExpr = null, winFrameEndExpr = null;
+        Expression winFrameOffsetExpr = null;
+        int winFrameMaxOjbects = -1;
+
+        if (winExpr.hasFrameDefinition()) {
+            if (isWin && !supportsFrameClause) {
+                throw new CompilationException(ErrorCode.COMPILATION_UNEXPECTED_WINDOW_FRAME, sourceLoc);
+            }
+            winFrameMode = winExpr.getFrameMode();
+            winFrameStartKind = winExpr.getFrameStartKind();
+            winFrameStartExpr = winExpr.getFrameStartExpr();
+            winFrameEndKind = winExpr.getFrameEndKind();
+            winFrameEndExpr = winExpr.getFrameEndExpr();
+            winFrameExclusionKind = winExpr.getFrameExclusionKind();
+            if (!isValidWindowFrameDefinition(winFrameMode, winFrameStartKind, winFrameEndKind, orderExprCount)) {
+                throw new CompilationException(ErrorCode.COMPILATION_INVALID_WINDOW_FRAME, sourceLoc);
+            }
+        } else if (!isWin || supportsFrameClause) {
+            winFrameMode = WindowExpression.FrameMode.RANGE;
+            winFrameStartKind = WindowExpression.FrameBoundaryKind.UNBOUNDED_PRECEDING;
+            winFrameEndKind = WindowExpression.FrameBoundaryKind.CURRENT_ROW;
+            winFrameExclusionKind = WindowExpression.FrameExclusionKind.NO_OTHERS;
         }
-        AssignOperator exprAssignOp = (AssignOperator) exprOp;
-        currentOpRef = exprAssignOp.getInputs().get(0);
-        List<LogicalVariable> exprAssignVars = exprAssignOp.getVariables();
-        if (exprAssignVars.size() != 1) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc);
-        }
-        LogicalVariable exprAssignVar = exprAssignVars.get(0);
-        List<Mutable<ILogicalExpression>> exprAssignExprs = exprAssignOp.getExpressions();
-        ILogicalExpression exprAssignExpr = exprAssignExprs.get(0).getValue();
-        if (exprAssignExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            throw new CompilationException(ErrorCode.COMPILATION_EXPECTED_FUNCTION_CALL, sourceLoc);
-        }
-        AbstractFunctionCallExpression callExpr = (AbstractFunctionCallExpression) exprAssignExpr;
-        if (BuiltinFunctions.windowFunctionRequiresOrderArgs(callExpr.getFunctionIdentifier())) {
-            List<Mutable<ILogicalExpression>> callArgs = callExpr.getArguments();
-            for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprListOut) {
-                callArgs.add(new MutableObject<>(p.second.getValue().cloneExpression()));
+
+        FunctionIdentifier winAggFunc = null;
+        FunctionIdentifier winAggDefaultIfNullFunc = null;
+        Expression winAggDefaultExpr = null;
+        if (isWinAgg) {
+            if (BuiltinFunctions.LEAD_IMPL.equals(fi) || BuiltinFunctions.LAG_IMPL.equals(fi)) {
+                int argCount = fargs.size();
+                if (argCount < 1 || argCount > 3) {
+                    throw new CompilationException(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, sourceLoc, fi.getName());
+                }
+                winFrameMode = WindowExpression.FrameMode.ROWS;
+                winFrameExclusionKind = WindowExpression.FrameExclusionKind.NO_OTHERS;
+                winFrameStartKind = winFrameEndKind =
+                        BuiltinFunctions.LEAD_IMPL.equals(fi) ? WindowExpression.FrameBoundaryKind.BOUNDED_FOLLOWING
+                                : WindowExpression.FrameBoundaryKind.BOUNDED_PRECEDING;
+                winFrameStartExpr = argCount > 1 ? fargs.get(1) : new LiteralExpr(new IntegerLiteral(1));
+                winFrameEndExpr = (Expression) SqlppRewriteUtil.deepCopy(winFrameStartExpr);
+                // if lead/lag default expression is specified
+                // then use local-first-element() because it returns SYSTEM_NULL if the list is empty,
+                // otherwise (no default expression) use first-element() which returns NULL if the list is empty
+                if (argCount > 2) {
+                    winAggFunc = BuiltinFunctions.LOCAL_FIRST_ELEMENT;
+                    winAggDefaultIfNullFunc = BuiltinFunctions.IF_SYSTEM_NULL;
+                    winAggDefaultExpr = fargs.get(2);
+                } else {
+                    winAggFunc = BuiltinFunctions.FIRST_ELEMENT;
+                }
+                winFrameMaxOjbects = 1;
+            } else if (BuiltinFunctions.FIRST_VALUE_IMPL.equals(fi)) {
+                winAggFunc = BuiltinFunctions.FIRST_ELEMENT;
+                winFrameMaxOjbects = 1;
+            } else if (BuiltinFunctions.LAST_VALUE_IMPL.equals(fi)) {
+                winAggFunc = BuiltinFunctions.LAST_ELEMENT;
+            } else if (BuiltinFunctions.NTH_VALUE_IMPL.equals(fi)) {
+                winAggFunc = BuiltinFunctions.FIRST_ELEMENT;
+                winFrameMaxOjbects = 1;
+                OperatorExpr opExpr = new OperatorExpr();
+                opExpr.addOperand(fargs.get(1));
+                opExpr.addOperator(OperatorType.MINUS);
+                opExpr.addOperand(new LiteralExpr(new IntegerLiteral(1)));
+                opExpr.setSourceLocation(sourceLoc);
+                winFrameOffsetExpr = opExpr;
+            } else {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, fi.getName());
             }
         }
 
-        WindowOperator winOp = new WindowOperator(partExprListOut, orderExprListOut, exprAssignVars, exprAssignExprs);
-        winOp.setSourceLocation(sourceLoc);
-        winOp.getInputs().add(currentOpRef);
+        if (winFrameMode != null) {
+            LogicalVariable rowNumVar = context.newVar();
+            LogicalVariable denseRankVar = context.newVar();
+            ListSet<LogicalVariable> usedVars = new ListSet<>();
 
+            frameValueExprRefs = translateWindowFrameMode(winFrameMode, orderExprListOut, rowNumVar, denseRankVar,
+                    usedVars, sourceLoc);
+
+            Pair<List<Mutable<ILogicalExpression>>, Integer> frameExclusionResult =
+                    translateWindowExclusion(winFrameExclusionKind, rowNumVar, denseRankVar, usedVars, sourceLoc);
+            if (frameExclusionResult != null) {
+                frameExcludeExprRefs = frameExclusionResult.first;
+                frameExcludeNotStartIdx = frameExclusionResult.second;
+            }
+
+            if (!usedVars.isEmpty()) {
+                List<Mutable<ILogicalExpression>> partExprListClone =
+                        OperatorManipulationUtil.cloneExpressions(partExprListOut);
+                List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprListClone =
+                        OperatorManipulationUtil.cloneOrderExpressions(orderExprListOut);
+                WindowOperator helperWinOp = createHelperWindowOperator(partExprListClone, orderExprListClone,
+                        rowNumVar, denseRankVar, usedVars, sourceLoc);
+                helperWinOp.getInputs().add(currentOpRef);
+                currentOpRef = new MutableObject<>(helperWinOp);
+            }
+
+            Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> frameStartResult =
+                    translateWindowBoundary(winFrameStartKind, winFrameStartExpr, frameValueExprRefs, currentOpRef);
+            if (frameStartResult != null) {
+                frameStartExprRefs = frameStartResult.first;
+                if (frameStartResult.second != null) {
+                    currentOpRef = new MutableObject<>(frameStartResult.second);
+                }
+            }
+            Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> frameEndResult =
+                    translateWindowBoundary(winFrameEndKind, winFrameEndExpr, frameValueExprRefs, currentOpRef);
+            if (frameEndResult != null) {
+                frameEndExprRefs = frameEndResult.first;
+                if (frameEndResult.second != null) {
+                    currentOpRef = new MutableObject<>(frameEndResult.second);
+                }
+            }
+        }
+
+        AbstractLogicalExpression frameOffsetExpr = null;
+        if (winFrameOffsetExpr != null) {
+            Pair<ILogicalOperator, LogicalVariable> frameOffsetResult = winFrameOffsetExpr.accept(this, currentOpRef);
+            frameOffsetExpr = new VariableReferenceExpression(frameOffsetResult.second);
+            frameOffsetExpr.setSourceLocation(sourceLoc);
+            currentOpRef = new MutableObject<>(frameOffsetResult.first);
+        }
+
+        WindowOperator winOp = new WindowOperator(partExprListOut, orderExprListOut, frameValueExprRefs,
+                frameStartExprRefs, frameEndExprRefs, frameExcludeExprRefs, frameExcludeNotStartIdx, frameOffsetExpr,
+                winFrameMaxOjbects);
+        winOp.setSourceLocation(sourceLoc);
+
+        AbstractLogicalExpression resultExpr;
+
+        if (isWin && !isWinAgg) {
+            CallExpr callExpr = new CallExpr(new FunctionSignature(fi), fargs);
+            Pair<ILogicalOperator, LogicalVariable> callExprResult = callExpr.accept(this, currentOpRef);
+            ILogicalOperator op = callExprResult.first;
+            if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, "");
+            }
+            AssignOperator assignOp = (AssignOperator) op;
+            List<LogicalVariable> assignVars = assignOp.getVariables();
+            if (assignVars.size() != 1) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, "");
+            }
+            List<Mutable<ILogicalExpression>> assignExprs = assignOp.getExpressions();
+            if (assignExprs.size() != 1) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, "");
+            }
+            ILogicalExpression assignExpr = assignExprs.get(0).getValue();
+            if (assignExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc);
+            }
+            AbstractFunctionCallExpression fcallExpr = (AbstractFunctionCallExpression) assignExpr;
+            if (fcallExpr.getKind() != AbstractFunctionCallExpression.FunctionKind.STATEFUL) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc);
+            }
+            if (BuiltinFunctions.windowFunctionRequiresOrderArgs(fi)) {
+                for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprListOut) {
+                    fcallExpr.getArguments().add(new MutableObject<>(p.second.getValue().cloneExpression()));
+                }
+            }
+
+            winOp.getInputs().add(assignOp.getInputs().get(0));
+            winOp.getVariables().addAll(assignVars);
+            winOp.getExpressions().addAll(assignExprs);
+
+            resultExpr = new VariableReferenceExpression(assignVars.get(0));
+            resultExpr.setSourceLocation(sourceLoc);
+            currentOpRef = new MutableObject<>(winOp);
+        } else {
+            LogicalVariable windowRecordVar = context.newVar();
+            ILogicalExpression windowRecordConstr =
+                    createRecordConstructor(winExpr.getWindowFieldList(), currentOpRef, sourceLoc);
+            AssignOperator assignOp = new AssignOperator(windowRecordVar, new MutableObject<>(windowRecordConstr));
+            assignOp.getInputs().add(currentOpRef);
+            assignOp.setSourceLocation(sourceLoc);
+
+            winOp.getInputs().add(new MutableObject<>(assignOp));
+
+            NestedTupleSourceOperator ntsOp = new NestedTupleSourceOperator(new MutableObject<>(winOp));
+            ntsOp.setSourceLocation(sourceLoc);
+
+            VariableReferenceExpression frameRecordVarRef = new VariableReferenceExpression(windowRecordVar);
+            frameRecordVarRef.setSourceLocation(sourceLoc);
+
+            AggregateFunctionCallExpression listifyCall = BuiltinFunctions.makeAggregateFunctionExpression(
+                    BuiltinFunctions.LISTIFY, mkSingletonArrayList(new MutableObject<>(frameRecordVarRef)));
+            listifyCall.setSourceLocation(sourceLoc);
+            LogicalVariable windowVar = context.newVar();
+            AggregateOperator aggOp = new AggregateOperator(mkSingletonArrayList(windowVar),
+                    mkSingletonArrayList(new MutableObject<>(listifyCall)));
+            aggOp.getInputs().add(new MutableObject<>(ntsOp));
+            aggOp.setSourceLocation(sourceLoc);
+
+            context.setVar(winExpr.getWindowVar(), windowVar);
+
+            if (isWinAgg) {
+                Expression listArgExpr = fargs.get(0);
+                Pair<ILogicalOperator, LogicalVariable> listArgExprResult =
+                        listArgExpr.accept(this, new MutableObject<>(aggOp));
+                VariableReferenceExpression listArgVarRef = new VariableReferenceExpression(listArgExprResult.second);
+                listArgVarRef.setSourceLocation(sourceLoc);
+
+                LogicalVariable unnestVar = context.newVar();
+                UnnestingFunctionCallExpression unnestExpr = new UnnestingFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION),
+                        mkSingletonArrayList(new MutableObject<>(listArgVarRef)));
+                unnestExpr.setSourceLocation(sourceLoc);
+                UnnestOperator unnestOp = new UnnestOperator(unnestVar, new MutableObject<>(unnestExpr));
+                unnestOp.setSourceLocation(sourceLoc);
+                unnestOp.getInputs().add(new MutableObject<>(listArgExprResult.first));
+
+                VariableReferenceExpression unnestVarRef = new VariableReferenceExpression(unnestVar);
+                unnestVarRef.setSourceLocation(sourceLoc);
+
+                AggregateFunctionCallExpression winAggCall = BuiltinFunctions.makeAggregateFunctionExpression(
+                        winAggFunc, mkSingletonArrayList(new MutableObject<>(unnestVarRef)));
+                winAggCall.setSourceLocation(sourceLoc);
+                LogicalVariable winAggVar = context.newVar();
+                AggregateOperator winAggOp = new AggregateOperator(mkSingletonArrayList(winAggVar),
+                        mkSingletonArrayList(new MutableObject<>(winAggCall)));
+                winAggOp.getInputs().add(new MutableObject<>(unnestOp));
+                winAggOp.setSourceLocation(sourceLoc);
+
+                winOp.getNestedPlans().add(new ALogicalPlanImpl(new MutableObject<>(winAggOp)));
+                currentOpRef = new MutableObject<>(winOp);
+
+                resultExpr = new VariableReferenceExpression(winAggVar);
+                resultExpr.setSourceLocation(sourceLoc);
+
+                if (winAggDefaultExpr != null) {
+                    Pair<ILogicalOperator, LogicalVariable> winAggDefaultExprResult =
+                            winAggDefaultExpr.accept(this, currentOpRef);
+                    VariableReferenceExpression winAggDefaultVarRef =
+                            new VariableReferenceExpression(winAggDefaultExprResult.second);
+                    winAggDefaultVarRef.setSourceLocation(sourceLoc);
+                    AbstractFunctionCallExpression ifNullExpr =
+                            createFunctionCallExpression(winAggDefaultIfNullFunc, sourceLoc);
+                    ifNullExpr.getArguments().add(new MutableObject<>(resultExpr));
+                    ifNullExpr.getArguments().add(new MutableObject<>(winAggDefaultVarRef));
+                    resultExpr = ifNullExpr;
+                    currentOpRef = new MutableObject<>(winAggDefaultExprResult.first);
+                }
+            } else {
+                CallExpr callExpr = new CallExpr(new FunctionSignature(fi), fargs);
+                Pair<ILogicalOperator, LogicalVariable> exprResult = callExpr.accept(this, new MutableObject<>(aggOp));
+                winOp.getNestedPlans().add(new ALogicalPlanImpl(new MutableObject<>(exprResult.first)));
+                resultExpr = new VariableReferenceExpression(exprResult.second);
+                resultExpr.setSourceLocation(sourceLoc);
+                currentOpRef = new MutableObject<>(winOp);
+            }
+        }
         // must return ASSIGN
-        LogicalVariable assignVar = context.newVar();
-        AssignOperator assignOp =
-                new AssignOperator(assignVar, new MutableObject<>(new VariableReferenceExpression(exprAssignVar)));
+        LogicalVariable resultVar = context.newVar();
+        AssignOperator resultOp = new AssignOperator(resultVar, new MutableObject<>(resultExpr));
+        resultOp.setSourceLocation(sourceLoc);
+        resultOp.getInputs().add(currentOpRef);
+        return new Pair<>(resultOp, resultVar);
+    }
+
+    private List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> translateWindowFrameMode(
+            WindowExpression.FrameMode frameMode,
+            List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprList, LogicalVariable rowNumVar,
+            LogicalVariable denseRankVar, Set<LogicalVariable> outUsedVars, SourceLocation sourceLoc)
+            throws CompilationException {
+        switch (frameMode) {
+            case RANGE:
+                List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> result =
+                        new ArrayList<>(orderExprList.size());
+                for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprList) {
+                    result.add(new Pair<>(p.first, new MutableObject<>(p.second.getValue().cloneExpression())));
+                }
+                return result;
+            case ROWS:
+                outUsedVars.add(rowNumVar);
+                VariableReferenceExpression rowNumRefExpr = new VariableReferenceExpression(rowNumVar);
+                rowNumRefExpr.setSourceLocation(sourceLoc);
+                return mkSingletonArrayList(new Pair<>(OrderOperator.ASC_ORDER, new MutableObject<>(rowNumRefExpr)));
+            case GROUPS:
+                outUsedVars.add(denseRankVar);
+                VariableReferenceExpression denseRankRefExpr = new VariableReferenceExpression(denseRankVar);
+                denseRankRefExpr.setSourceLocation(sourceLoc);
+                return mkSingletonArrayList(new Pair<>(OrderOperator.ASC_ORDER, new MutableObject<>(denseRankRefExpr)));
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, frameMode.toString());
+        }
+    }
+
+    private boolean isValidWindowFrameDefinition(WindowExpression.FrameMode frameMode,
+            WindowExpression.FrameBoundaryKind startKind, WindowExpression.FrameBoundaryKind endKind,
+            int orderExprCount) {
+        switch (startKind) {
+            case UNBOUNDED_FOLLOWING:
+                return false;
+            case BOUNDED_FOLLOWING:
+                switch (endKind) {
+                    case BOUNDED_FOLLOWING:
+                    case UNBOUNDED_FOLLOWING:
+                        break;
+                    default:
+                        return false;
+                }
+                break;
+        }
+        switch (endKind) {
+            case UNBOUNDED_PRECEDING:
+                return false;
+            case BOUNDED_PRECEDING:
+                switch (startKind) {
+                    case BOUNDED_PRECEDING:
+                    case UNBOUNDED_PRECEDING:
+                        break;
+                    default:
+                        return false;
+                }
+        }
+        if (frameMode == WindowExpression.FrameMode.RANGE && orderExprCount != 1) {
+            switch (startKind) {
+                case CURRENT_ROW:
+                case UNBOUNDED_PRECEDING:
+                    switch (endKind) {
+                        case CURRENT_ROW:
+                        case UNBOUNDED_FOLLOWING:
+                            break;
+                        default:
+                            return false;
+                    }
+                    break;
+                default:
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    private Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> translateWindowBoundary(
+            WindowExpression.FrameBoundaryKind boundaryKind, Expression boundaryExpr,
+            List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> valueExprs,
+            Mutable<ILogicalOperator> tupSource) throws CompilationException {
+        switch (boundaryKind) {
+            case CURRENT_ROW:
+                List<Mutable<ILogicalExpression>> resultExprs = new ArrayList<>(valueExprs.size());
+                for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : valueExprs) {
+                    resultExprs.add(new MutableObject<>(p.second.getValue().cloneExpression()));
+                }
+                return new Pair<>(resultExprs, null);
+            case BOUNDED_PRECEDING:
+                OperatorType opTypePreceding = valueExprs.get(0).first.getKind() == OrderOperator.IOrder.OrderKind.ASC
+                        ? OperatorType.MINUS : OperatorType.PLUS;
+                return translateWindowBoundaryExpr(boundaryExpr, valueExprs, tupSource, opTypePreceding);
+            case BOUNDED_FOLLOWING:
+                OperatorType opTypeFollowing = valueExprs.get(0).first.getKind() == OrderOperator.IOrder.OrderKind.ASC
+                        ? OperatorType.PLUS : OperatorType.MINUS;
+                return translateWindowBoundaryExpr(boundaryExpr, valueExprs, tupSource, opTypeFollowing);
+            case UNBOUNDED_PRECEDING:
+            case UNBOUNDED_FOLLOWING:
+                return null;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, boundaryExpr.getSourceLocation(),
+                        boundaryKind.toString());
+        }
+    }
+
+    private Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> translateWindowBoundaryExpr(
+            Expression boundaryExpr, List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> valueExprs,
+            Mutable<ILogicalOperator> tupSource, OperatorType boundaryOperator) throws CompilationException {
+        SourceLocation sourceLoc = boundaryExpr.getSourceLocation();
+        if (valueExprs.size() != 1) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, valueExprs.size());
+        }
+        ILogicalExpression valueExpr = valueExprs.get(0).second.getValue();
+
+        AbstractFunctionCallExpression resultExpr =
+                createFunctionCallExpressionForBuiltinOperator(boundaryOperator, sourceLoc);
+        resultExpr.getArguments().add(new MutableObject<>(valueExpr.cloneExpression()));
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(boundaryExpr, tupSource);
+        resultExpr.getArguments().add(new MutableObject<>(eo.first));
+
+        LogicalVariable resultVar = context.newVar();
+        AssignOperator assignOp = new AssignOperator(resultVar, new MutableObject<>(resultExpr));
         assignOp.setSourceLocation(sourceLoc);
-        assignOp.getInputs().add(new MutableObject<>(winOp));
-        return new Pair<>(assignOp, assignVar);
+        assignOp.getInputs().add(eo.second);
+
+        VariableReferenceExpression resultVarRefExpr = new VariableReferenceExpression(resultVar);
+        resultVarRefExpr.setSourceLocation(sourceLoc);
+
+        return new Pair<>(mkSingletonArrayList(new MutableObject<>(resultVarRefExpr)), assignOp);
+    }
+
+    private Pair<List<Mutable<ILogicalExpression>>, Integer> translateWindowExclusion(
+            WindowExpression.FrameExclusionKind frameExclusionKind, LogicalVariable rowNumVar,
+            LogicalVariable denseRankVar, Set<LogicalVariable> outUsedVars, SourceLocation sourceLoc)
+            throws CompilationException {
+        VariableReferenceExpression rowNumVarRefExpr, denseRankVarRefExpr;
+        List<Mutable<ILogicalExpression>> resultExprs;
+        switch (frameExclusionKind) {
+            case CURRENT_ROW:
+                rowNumVarRefExpr = new VariableReferenceExpression(rowNumVar);
+                rowNumVarRefExpr.setSourceLocation(sourceLoc);
+                resultExprs = new ArrayList<>(1);
+                resultExprs.add(new MutableObject<>(rowNumVarRefExpr));
+                outUsedVars.add(rowNumVar);
+                return new Pair<>(resultExprs, 1);
+            case GROUP:
+                denseRankVarRefExpr = new VariableReferenceExpression(denseRankVar);
+                denseRankVarRefExpr.setSourceLocation(sourceLoc);
+                resultExprs = new ArrayList<>(1);
+                resultExprs.add(new MutableObject<>(denseRankVarRefExpr));
+                outUsedVars.add(denseRankVar);
+                return new Pair<>(resultExprs, 1);
+            case TIES:
+                denseRankVarRefExpr = new VariableReferenceExpression(denseRankVar);
+                denseRankVarRefExpr.setSourceLocation(sourceLoc);
+                rowNumVarRefExpr = new VariableReferenceExpression(rowNumVar);
+                rowNumVarRefExpr.setSourceLocation(sourceLoc);
+                resultExprs = new ArrayList<>(2);
+                resultExprs.add(new MutableObject<>(denseRankVarRefExpr));
+                outUsedVars.add(denseRankVar);
+                resultExprs.add(new MutableObject<>(rowNumVarRefExpr));
+                outUsedVars.add(rowNumVar);
+                return new Pair<>(resultExprs, 1); // exclude if same denseRank but different rowNumber
+            case NO_OTHERS:
+                return null;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                        frameExclusionKind.toString());
+        }
+    }
+
+    private WindowOperator createHelperWindowOperator(List<Mutable<ILogicalExpression>> partExprList,
+            List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprList, LogicalVariable rowNumVar,
+            LogicalVariable denseRankVar, ListSet<LogicalVariable> usedVars, SourceLocation sourceLoc)
+            throws CompilationException {
+        WindowOperator winOp = new WindowOperator(partExprList, orderExprList);
+        winOp.setSourceLocation(sourceLoc);
+        for (LogicalVariable usedVar : usedVars) {
+            FunctionIdentifier fid;
+            if (usedVar.equals(rowNumVar)) {
+                fid = BuiltinFunctions.ROW_NUMBER_IMPL;
+            } else if (usedVar.equals(denseRankVar)) {
+                fid = BuiltinFunctions.DENSE_RANK_IMPL;
+            } else {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, usedVar.toString());
+            }
+            AbstractFunctionCallExpression valueExpr =
+                    BuiltinFunctions.makeWindowFunctionExpression(fid, new ArrayList<>());
+            if (BuiltinFunctions.windowFunctionRequiresOrderArgs(valueExpr.getFunctionIdentifier())) {
+                for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprList) {
+                    valueExpr.getArguments().add(new MutableObject<>(p.second.getValue().cloneExpression()));
+                }
+            }
+            valueExpr.setSourceLocation(winOp.getSourceLocation());
+            winOp.getVariables().add(usedVar);
+            winOp.getExpressions().add(new MutableObject<>(valueExpr));
+        }
+        return winOp;
     }
 }

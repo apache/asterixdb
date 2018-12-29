@@ -100,6 +100,7 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     public Void visitWindowOperator(WindowOperator op, ILogicalOperator arg) throws AlgebricksException {
         mapChildren(op, arg);
         mapVariablesForAbstractAssign(op, arg);
+        mapVariablesInNestedPlans(op, arg);
         return null;
     }
 
@@ -417,8 +418,8 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
         }
     }
 
-    private void mapVariablesInNestedPlans(ILogicalOperator opOrigin, ILogicalOperator arg) throws AlgebricksException {
-        AbstractOperatorWithNestedPlans op = (AbstractOperatorWithNestedPlans) opOrigin;
+    private void mapVariablesInNestedPlans(AbstractOperatorWithNestedPlans op, ILogicalOperator arg)
+            throws AlgebricksException {
         AbstractOperatorWithNestedPlans argOp = (AbstractOperatorWithNestedPlans) arg;
         List<ILogicalPlan> plans = op.getNestedPlans();
         List<ILogicalPlan> plansArg = argOp.getNestedPlans();

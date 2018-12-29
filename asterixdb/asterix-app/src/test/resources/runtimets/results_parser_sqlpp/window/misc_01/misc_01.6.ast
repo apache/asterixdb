@@ -1,0 +1,50 @@
+DataverseUse test
+Query:
+SELECT [
+FunctionCall asterix.field-access-by-name@2[
+  Variable [ Name=$t1 ]
+  LiteralExpr [STRING] [c1]
+]
+c1
+WINDOW test.array_sum@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=$w ]
+        Field=t1
+      ]
+      Field=c1
+    ]
+    ]
+    FROM [      Variable [ Name=$w ]
+      AS Variable [ Name=$w ]
+    ]
+  )
+]
+  AS Variable [ Name=$w ]
+OVER (
+  PARTITION BY
+    OperatorExpr [
+      FunctionCall asterix.field-access-by-name@2[
+        Variable [ Name=$t1 ]
+        LiteralExpr [STRING] [c2]
+      ]
+      mod
+      LiteralExpr [LONG] [2]
+    ]
+)
+sum
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.t1]
+  ]
+  AS Variable [ Name=$t1 ]
+]
+Orderby
+  FunctionCall asterix.field-access-by-name@2[
+    Variable [ Name=$t1 ]
+    LiteralExpr [STRING] [c1]
+  ]
+  ASC
+

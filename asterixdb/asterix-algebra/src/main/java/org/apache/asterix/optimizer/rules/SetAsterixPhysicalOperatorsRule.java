@@ -363,19 +363,22 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
             LogicalVariable var = ((VariableReferenceExpression) orderExpr).getVariableReference();
             orderColumns.add(new OrderColumn(var, p.first.getKind()));
         }
-        boolean partitionMaterialization = false;
-        for (Mutable<ILogicalExpression> exprRef : winOp.getExpressions()) {
-            ILogicalExpression expr = exprRef.getValue();
-            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, winOp.getSourceLocation(),
-                        expr.getExpressionTag());
-            }
-            AbstractFunctionCallExpression callExpr = (AbstractFunctionCallExpression) expr;
-            if (BuiltinFunctions.windowFunctionRequiresMaterialization(callExpr.getFunctionIdentifier())) {
-                partitionMaterialization = true;
-                break;
+        boolean partitionMaterialization = winOp.hasNestedPlans();
+        if (!partitionMaterialization) {
+            for (Mutable<ILogicalExpression> exprRef : winOp.getExpressions()) {
+                ILogicalExpression expr = exprRef.getValue();
+                if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, winOp.getSourceLocation(),
+                            expr.getExpressionTag());
+                }
+                AbstractFunctionCallExpression callExpr = (AbstractFunctionCallExpression) expr;
+                if (BuiltinFunctions.windowFunctionRequiresMaterialization(callExpr.getFunctionIdentifier())) {
+                    partitionMaterialization = true;
+                    break;
+                }
             }
         }
+
         return new WindowPOperator(partitionColumns, partitionMaterialization, orderColumns);
     }
 }

@@ -2,8 +2,8 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- STABLE_SORT [$$14(ASC)]  |PARTITIONED|
-          -- RANGE_PARTITION_EXCHANGE [$$14(ASC)]  |PARTITIONED|
+        -- STABLE_SORT [$$15(ASC)]  |PARTITIONED|
+          -- RANGE_PARTITION_EXCHANGE [$$15(ASC)]  |PARTITIONED|
             -- FORWARD  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 -- REPLICATE  |PARTITIONED|
@@ -12,7 +12,7 @@
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- BTREE_SEARCH  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- STABLE_SORT [$$18(ASC)]  |PARTITIONED|
+                            -- STABLE_SORT [$$19(ASC)]  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -30,7 +30,7 @@
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- BTREE_SEARCH  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- STABLE_SORT [$$18(ASC)]  |PARTITIONED|
+                                      -- STABLE_SORT [$$19(ASC)]  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

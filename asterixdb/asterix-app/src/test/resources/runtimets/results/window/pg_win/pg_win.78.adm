@@ -1,0 +1,10 @@
+{ "lead": 0, "ten": 0, "four": 0 }
+{ "lead": 4, "ten": 0, "four": 0 }
+{ "lead": null, "ten": 4, "four": 0 }
+{ "lead": 1, "ten": 1, "four": 1 }
+{ "lead": 7, "ten": 1, "four": 1 }
+{ "lead": 9, "ten": 7, "four": 1 }
+{ "lead": null, "ten": 9, "four": 1 }
+{ "lead": null, "ten": 0, "four": 2 }
+{ "lead": 3, "ten": 1, "four": 3 }
+{ "lead": null, "ten": 3, "four": 3 }

@@ -31,12 +31,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
-import org.apache.hyracks.algebricks.core.algebra.properties.TypePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
-import org.apache.hyracks.algebricks.core.algebra.typing.ITypeEnvPointer;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
-import org.apache.hyracks.algebricks.core.algebra.typing.OpRefTypeEnvPointer;
-import org.apache.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
@@ -94,21 +90,6 @@ public class SubplanOperator extends AbstractOperatorWithNestedPlans {
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        int n = 0;
-        for (ILogicalPlan p : nestedPlans) {
-            n += p.getRoots().size();
-        }
-        ITypeEnvPointer[] envPointers = new ITypeEnvPointer[n + 1];
-        envPointers[0] = new OpRefTypeEnvPointer(inputs.get(0), ctx);
-        int i = 1;
-        for (ILogicalPlan p : nestedPlans) {
-            for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                envPointers[i] = new OpRefTypeEnvPointer(r, ctx);
-                i++;
-            }
-        }
-        return new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMissableTypeComputer(),
-                ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
+        return createNestedPlansPropagatingTypeEnvironment(ctx, true);
     }
-
 }

@@ -1,0 +1,10 @@
+{ "ten": 0, "two": 0, "gsum": 45000, "wsum": 45000 }
+{ "ten": 2, "two": 0, "gsum": 47000, "wsum": 92000 }
+{ "ten": 4, "two": 0, "gsum": 49000, "wsum": 141000 }
+{ "ten": 6, "two": 0, "gsum": 51000, "wsum": 192000 }
+{ "ten": 8, "two": 0, "gsum": 53000, "wsum": 245000 }
+{ "ten": 1, "two": 1, "gsum": 46000, "wsum": 46000 }
+{ "ten": 3, "two": 1, "gsum": 48000, "wsum": 94000 }
+{ "ten": 5, "two": 1, "gsum": 50000, "wsum": 144000 }
+{ "ten": 7, "two": 1, "gsum": 52000, "wsum": 196000 }
+{ "ten": 9, "two": 1, "gsum": 54000, "wsum": 250000 }

@@ -145,7 +145,13 @@ public class OperatorResourcesComputer {
 
     private long getWindowRequiredMemory(WindowOperator op) {
         WindowPOperator physOp = (WindowPOperator) op.getPhysicalOperator();
-        int frameCount = physOp.isPartitionMaterialization() ? 3 : 2;
+        int frameCount = 2;
+        if (physOp.isPartitionMaterialization()) {
+            frameCount++;
+        }
+        if (op.hasNestedPlans()) {
+            frameCount += 2;
+        }
         return getOperatorRequiredMemory(op, frameSize * frameCount);
     }
 }

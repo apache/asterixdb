@@ -21,9 +21,7 @@ package org.apache.hyracks.algebricks.runtime.operators.aggreg;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
-import org.apache.hyracks.algebricks.runtime.base.EnforcePushRuntime;
-import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
-import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.meta.PipelineAssembler;
 import org.apache.hyracks.algebricks.runtime.operators.std.NestedTupleSourceRuntimeFactory.NestedTupleSourceRuntime;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -31,9 +29,9 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.dataflow.std.group.AbstractAccumulatingAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.AggregateState;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor;
@@ -56,10 +54,11 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
             RecordDescriptor outRecordDescriptor, int[] keys, int[] partialKeys, long memoryBudget)
             throws HyracksDataException {
-        final AggregatorOutput outputWriter = new AggregatorOutput(subplans, keyFieldIdx.length, decorFieldIdx.length);
+        final AggregatorOutput outputWriter = new AggregatorOutput(subplans, keyFieldIdx.length + decorFieldIdx.length);
         final NestedTupleSourceRuntime[] pipelines = new NestedTupleSourceRuntime[subplans.length];
         for (int i = 0; i < subplans.length; i++) {
-            pipelines[i] = (NestedTupleSourceRuntime) assemblePipeline(subplans[i], outputWriter, ctx);
+            pipelines[i] =
+                    (NestedTupleSourceRuntime) PipelineAssembler.assemblePipeline(subplans[i], outputWriter, ctx);
         }
 
         return new IAggregatorDescriptor() {
@@ -78,7 +77,6 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
                 for (int i = 0; i < pipelines.length; ++i) {
                     pipelines[i].open();
                 }
-
                 // aggregate the first tuple
                 for (int i = 0; i < pipelines.length; i++) {
                     pipelines[i].writeTuple(accessor.getBuffer(), tIndex);
@@ -108,18 +106,8 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
                 memoryUsageCheck();
 
                 tupleBuilder.reset();
-                ArrayTupleBuilder tb = outputWriter.getTupleBuilder();
-                byte[] data = tb.getByteArray();
-                int[] fieldEnds = tb.getFieldEndOffsets();
-                int start = 0;
-                int offset;
-                for (int i = 0; i < fieldEnds.length; i++) {
-                    if (i > 0) {
-                        start = fieldEnds[i - 1];
-                    }
-                    offset = fieldEnds[i] - start;
-                    tupleBuilder.addField(data, start, offset);
-                }
+                TupleUtils.addFields(outputWriter.getTupleBuilder(), tupleBuilder);
+
                 return true;
             }
 
@@ -159,34 +147,10 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
         };
     }
 
-    private IFrameWriter assemblePipeline(AlgebricksPipeline subplan, IFrameWriter writer, IHyracksTaskContext ctx)
-            throws HyracksDataException {
-        // plug the operators
-        IFrameWriter start = writer;
-        IPushRuntimeFactory[] runtimeFactories = subplan.getRuntimeFactories();
-        RecordDescriptor[] recordDescriptors = subplan.getRecordDescriptors();
-        // should enforce protocol
-        boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
-        for (int i = runtimeFactories.length - 1; i >= 0; i--) {
-            IPushRuntime newRuntime = runtimeFactories[i].createPushRuntime(ctx)[0];
-            newRuntime = enforce ? EnforcePushRuntime.enforce(newRuntime) : newRuntime;
-            start = enforce ? EnforcePushRuntime.enforce(start) : start;
-            newRuntime.setOutputFrameWriter(0, start, recordDescriptors[i]);
-            if (i > 0) {
-                newRuntime.setInputRecordDescriptor(0, recordDescriptors[i - 1]);
-            } else {
-                // the nts has the same input and output rec. desc.
-                newRuntime.setInputRecordDescriptor(0, recordDescriptors[0]);
-            }
-            start = newRuntime;
-        }
-        return start;
-    }
-
     /**
      * We suppose for now, that each subplan only produces one tuple.
      */
-    private static class AggregatorOutput implements IFrameWriter {
+    public static class AggregatorOutput implements IFrameWriter {
 
         // private ByteBuffer frame;
         private FrameTupleAccessor[] tAccess;
@@ -195,9 +159,8 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
         private ArrayTupleBuilder tb;
         private AlgebricksPipeline[] subplans;
 
-        public AggregatorOutput(AlgebricksPipeline[] subplans, int numKeys, int numDecors) {
+        public AggregatorOutput(AlgebricksPipeline[] subplans, int numPropagatedFields) {
             this.subplans = subplans;
-            // this.keyFieldIndexes = keyFieldIndexes;
             int totalAggFields = 0;
             this.inputRecDesc = new RecordDescriptor[subplans.length];
             for (int i = 0; i < subplans.length; i++) {
@@ -205,7 +168,7 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
                 this.inputRecDesc[i] = rd[rd.length - 1];
                 totalAggFields += subplans[i].getOutputWidth();
             }
-            tb = new ArrayTupleBuilder(numKeys + numDecors + totalAggFields);
+            tb = new ArrayTupleBuilder(numPropagatedFields + totalAggFields);
 
             this.tAccess = new FrameTupleAccessor[inputRecDesc.length];
             for (int i = 0; i < inputRecDesc.length; i++) {
@@ -250,5 +213,4 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
         public void fail() throws HyracksDataException {
         }
     }
-
 }

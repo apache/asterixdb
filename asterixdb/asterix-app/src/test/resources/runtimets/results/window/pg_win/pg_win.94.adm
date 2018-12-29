@@ -1,0 +1,10 @@
+{ "unique1": 0, "four": 0, "last_value": 0 }
+{ "unique1": 8, "four": 0, "last_value": 5 }
+{ "unique1": 4, "four": 0, "last_value": 9 }
+{ "unique1": 5, "four": 1, "last_value": 5 }
+{ "unique1": 9, "four": 1, "last_value": 6 }
+{ "unique1": 1, "four": 1, "last_value": 2 }
+{ "unique1": 6, "four": 2, "last_value": 7 }
+{ "unique1": 2, "four": 2, "last_value": 3 }
+{ "unique1": 7, "four": 3, "last_value": 7 }
+{ "unique1": 3, "four": 3, "last_value": 3 }

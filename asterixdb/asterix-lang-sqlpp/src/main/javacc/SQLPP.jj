@@ -186,6 +186,21 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 
 class SQLPPParser extends ScopeChecker implements IParser {
 
+    // tokens parsed as identifiers
+    private static final String CURRENT = "CURRENT";
+    private static final String EXCLUDE = "EXCLUDE";
+    private static final String FOLLOWING = "FOLLOWING";
+    private static final String GROUPS = "GROUPS";
+    private static final String NO = "NO";
+    private static final String OTHERS = "OTHERS";
+    private static final String PARTITION = "PARTITION";
+    private static final String PRECEDING = "PRECEDING";
+    private static final String RANGE = "RANGE";
+    private static final String ROW = "ROW";
+    private static final String ROWS = "ROWS";
+    private static final String TIES = "TIES";
+    private static final String UNBOUNDED = "UNBOUNDED";
+
     // optimizer hints
     private static final String AUTO_HINT = "auto";
     private static final String BROADCAST_JOIN_HINT = "bcast";
@@ -371,6 +386,33 @@ class SQLPPParser extends ScopeChecker implements IParser {
     protected static <T extends AbstractLangExpression> T addSourceLocation(T expr, Token token) {
         expr.setSourceLocation(getSourceLocation(token));
         return expr;
+    }
+
+    private boolean isToken(String image) {
+      return token.image.equalsIgnoreCase(image);
+    }
+
+    private void expectToken(String image) throws SqlppParseException {
+      if (!isToken(image)) {
+        throw createUnexpectedTokenError();
+      }
+    }
+
+    private SqlppParseException createUnexpectedTokenError() {
+      return new SqlppParseException(getSourceLocation(token), "Unexpected token: " + token.image);
+    }
+
+    private boolean laToken(int idx, int kind, String image) {
+      Token t = getToken(idx);
+      return t.kind == kind && t.image.equalsIgnoreCase(image);
+    }
+
+    private boolean laIdentifier(int idx, String image) {
+      return laToken(idx, IDENTIFIER, image);
+    }
+
+    private boolean laIdentifier(String image) {
+      return laIdentifier(1, image);
     }
 }
 
@@ -2489,6 +2531,36 @@ VariableExpr Variable() throws ParseException:
     }
 }
 
+Pair<VariableExpr, List<Pair<Expression, Identifier>>> VariableWithFieldMap() throws ParseException:
+{
+  VariableExpr var = null;
+  List<Pair<Expression, Identifier>> fieldList = new ArrayList<Pair<Expression, Identifier>>();
+}
+{
+  var = Variable()
+  ( LOOKAHEAD(1)
+    {
+      VariableExpr fieldVarExpr = null;
+      String fieldIdentifierStr = null;
+    }
+    <LEFTPAREN>
+    fieldVarExpr = VariableRef() <AS> fieldIdentifierStr = Identifier()
+    {
+      fieldList.add(new Pair<Expression, Identifier>(fieldVarExpr, new Identifier(fieldIdentifierStr)));
+    }
+    (<COMMA>
+      fieldVarExpr = VariableRef() <AS> fieldIdentifierStr = Identifier()
+      {
+        fieldList.add(new Pair<Expression, Identifier>(fieldVarExpr, new Identifier(fieldIdentifierStr)));
+      }
+    )*
+    <RIGHTPAREN>
+  )?
+  {
+    return new Pair<VariableExpr, List<Pair<Expression, Identifier>>>(var, fieldList);
+  }
+}
+
 VariableExpr ExternalVariableRef() throws ParseException:
 {
   String name = null;
@@ -2615,6 +2687,7 @@ FieldBinding FieldBinding() throws ParseException:
 Expression FunctionCallExpr() throws ParseException:
 {
   Expression resultExpr;
+  CallExpr callExpr;
   List<Expression> argList = new ArrayList<Expression>();
   Expression tmp = null;
   int arity = 0;
@@ -2622,10 +2695,6 @@ Expression FunctionCallExpr() throws ParseException:
   String hint = null;
   boolean star = false;
   boolean distinct = false;
-  Token overToken = null;
-  Expression partitionExpr = null;
-  List<Expression> partitionExprs = new ArrayList<Expression>();
-  OrderbyClause orderByClause = null;
 }
 {
   funcName = FunctionName()
@@ -2664,7 +2733,7 @@ Expression FunctionCallExpr() throws ParseException:
       if (signature == null) {
         signature = new FunctionSignature(funcName.dataverse, fqFunctionName, arity);
       }
-      CallExpr callExpr = FunctionMapUtil.normalizedListInputFunctions(new CallExpr(signature,argList));
+      callExpr = FunctionMapUtil.normalizedListInputFunctions(new CallExpr(signature,argList));
       if (hint != null) {
         if (hint.startsWith(INDEXED_NESTED_LOOP_JOIN_HINT)) {
           callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
@@ -2676,26 +2745,169 @@ Expression FunctionCallExpr() throws ParseException:
       resultExpr = callExpr;
     }
 
-  (
-    <OVER> { overToken = token; }
-    <LEFTPAREN>
-    (
-      <PARTITION> <BY>
-      partitionExpr = Expression() { partitionExprs.add(partitionExpr); }
-      ( <COMMA> partitionExpr = Expression() { partitionExprs.add(partitionExpr); } )*
-    )?
-    orderByClause = OrderbyClause()
-    <RIGHTPAREN>
-    {
-      WindowExpression winExp = new WindowExpression(callExpr, partitionExprs, orderByClause.getOrderbyList(),
-        orderByClause.getModifierList());
-      resultExpr = addSourceLocation(winExp, overToken);
-    }
-  )?
+  ( <OVER> resultExpr = WindowExpr(callExpr.getFunctionSignature(), callExpr.getExprList(), token) )?
 
   {
      return resultExpr;
   }
+}
+
+WindowExpression WindowExpr(FunctionSignature signature, List<Expression> argList, Token startToken) throws ParseException:
+{
+  Expression partitionExpr = null;
+  List<Expression> partitionExprs = new ArrayList<Expression>();
+  OrderbyClause orderByClause = null;
+  List<Expression> orderbyList = null;
+  List<OrderbyClause.OrderModifier> orderbyModifierList = null;
+  WindowExpression.FrameMode frameMode = null;
+  Pair<WindowExpression.FrameBoundaryKind, Expression> frameStart = null, frameEnd = null;
+  WindowExpression.FrameBoundaryKind frameStartKind = null, frameEndKind = null;
+  Expression frameStartExpr = null, frameEndExpr = null;
+  WindowExpression.FrameExclusionKind frameExclusionKind = null;
+  Pair<VariableExpr, List<Pair<Expression, Identifier>>> windowVarWithFieldList = null;
+  VariableExpr windowVar = null;
+  List<Pair<Expression, Identifier>> windowFieldList = null;
+}
+{
+  (
+    windowVarWithFieldList = VariableWithFieldMap() <AS>
+    {
+      windowVar = windowVarWithFieldList.first;
+      windowFieldList = windowVarWithFieldList.second;
+    }
+  )?
+  <LEFTPAREN>
+  (
+    <IDENTIFIER> { expectToken(PARTITION); } <BY>
+    partitionExpr = Expression() { partitionExprs.add(partitionExpr); }
+    ( <COMMA> partitionExpr = Expression() { partitionExprs.add(partitionExpr); } )*
+  )?
+  (
+    orderByClause = OrderbyClause()
+    {
+      orderbyList = orderByClause.getOrderbyList();
+      orderbyModifierList = orderByClause.getModifierList();
+    }
+    (
+      frameMode = WindowFrameMode()
+      (
+        frameStart = WindowFrameBoundary() |
+        ( <BETWEEN> frameStart = WindowFrameBoundary() <AND> frameEnd = WindowFrameBoundary() )
+      )
+      ( frameExclusionKind = WindowFrameExclusion() )?
+      {
+        frameStartKind = frameStart.first;
+        frameStartExpr = frameStart.second;
+        if (frameEnd == null) {
+          frameEndKind = WindowExpression.FrameBoundaryKind.CURRENT_ROW;
+        } else {
+          frameEndKind = frameEnd.first;
+          frameEndExpr = frameEnd.second;
+        }
+        if (frameExclusionKind == null) {
+          frameExclusionKind = WindowExpression.FrameExclusionKind.NO_OTHERS;
+        }
+      }
+    )?
+  )?
+  <RIGHTPAREN>
+  {
+    WindowExpression winExp = new WindowExpression(signature, argList, partitionExprs, orderbyList, orderbyModifierList,
+      frameMode, frameStartKind, frameStartExpr, frameEndKind, frameEndExpr, frameExclusionKind, windowVar,
+      windowFieldList);
+    return addSourceLocation(winExp, startToken);
+  }
+}
+
+WindowExpression.FrameMode WindowFrameMode() throws ParseException:
+{
+}
+{
+  <IDENTIFIER>
+  {
+    if (isToken(RANGE)) {
+      return WindowExpression.FrameMode.RANGE;
+    } else if (isToken(ROWS)) {
+      return WindowExpression.FrameMode.ROWS;
+    } else if (isToken(GROUPS)) {
+      return WindowExpression.FrameMode.GROUPS;
+    } else {
+      throw createUnexpectedTokenError();
+    }
+  }
+}
+
+Pair<WindowExpression.FrameBoundaryKind, Expression> WindowFrameBoundary() throws ParseException:
+{
+  boolean current = false;
+  Expression expr = null;
+}
+{
+  (
+    LOOKAHEAD({ laIdentifier(CURRENT) }) <IDENTIFIER> { current = true; }
+    | LOOKAHEAD({ laIdentifier(UNBOUNDED) }) <IDENTIFIER>
+    | expr = Expression()
+  )
+  <IDENTIFIER>
+  {
+    WindowExpression.FrameBoundaryKind kind;
+    if (current && isToken(ROW)) {
+      kind = WindowExpression.FrameBoundaryKind.CURRENT_ROW;
+    } else if (!current && isToken(PRECEDING)) {
+      kind = expr == null
+        ? WindowExpression.FrameBoundaryKind.UNBOUNDED_PRECEDING
+        : WindowExpression.FrameBoundaryKind.BOUNDED_PRECEDING;
+    } else if (!current && isToken(FOLLOWING)) {
+      kind = expr == null
+        ? WindowExpression.FrameBoundaryKind.UNBOUNDED_FOLLOWING
+        : WindowExpression.FrameBoundaryKind.BOUNDED_FOLLOWING;
+    } else {
+      throw createUnexpectedTokenError();
+    }
+    return new Pair<WindowExpression.FrameBoundaryKind, Expression>(kind, expr);
+  }
+}
+
+WindowExpression.FrameExclusionKind WindowFrameExclusion() throws ParseException:
+{
+  boolean current = false, no = false;
+}
+{
+  <IDENTIFIER>
+  {
+    expectToken(EXCLUDE);
+  }
+  (
+    <GROUP>
+    {
+      return WindowExpression.FrameExclusionKind.GROUP;
+    }
+    |
+    (
+      <IDENTIFIER>
+      {
+        if (isToken(TIES)) {
+          return WindowExpression.FrameExclusionKind.TIES;
+        } else if (isToken(CURRENT)) {
+          current = true;
+        } else if (isToken(NO)) {
+          no = true;
+        } else {
+          throw createUnexpectedTokenError();
+        }
+      }
+      <IDENTIFIER>
+      {
+        if (current && isToken(ROW)) {
+          return WindowExpression.FrameExclusionKind.CURRENT_ROW;
+        } else if (no && isToken(OTHERS)) {
+          return WindowExpression.FrameExclusionKind.NO_OTHERS;
+        } else {
+          throw createUnexpectedTokenError();
+        }
+      }
+    )
+  )
 }
 
 Expression ParenthesizedExpression() throws ParseException:
@@ -3166,9 +3378,9 @@ GroupbyClause GroupbyClause()throws ParseException :
     Expression expr = null;
     VariableExpr decorVar = null;
     Expression decorExpr = null;
-
+    Pair<VariableExpr, List<Pair<Expression, Identifier>>> groupVarWithFieldList = null;
     VariableExpr groupVar = null;
-    List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<Pair<Expression, Identifier>>();
+    List<Pair<Expression, Identifier>> groupFieldList = null;
 }
 {
       {
@@ -3212,25 +3424,11 @@ GroupbyClause GroupbyClause()throws ParseException :
          }
         )*
     )
-    (<GROUP> <AS> groupVar = Variable()
-      ( LOOKAHEAD(1)
-        {
-            VariableExpr fieldVarExpr = null;
-            String fieldIdentifierStr = null;
-        }
-        <LEFTPAREN>
-               fieldVarExpr = VariableRef() <AS> fieldIdentifierStr = Identifier()
-               {
-                   groupFieldList.add(new Pair<Expression, Identifier>(fieldVarExpr, new Identifier(fieldIdentifierStr)));
-               }
-        (<COMMA>
-               fieldVarExpr = VariableRef() <AS> fieldIdentifierStr = Identifier()
-               {
-                   groupFieldList.add(new Pair<Expression, Identifier>(fieldVarExpr, new Identifier(fieldIdentifierStr)));
-               }
-        )*
-        <RIGHTPAREN>
-      )?
+    (<GROUP> <AS> groupVarWithFieldList = VariableWithFieldMap()
+      {
+        groupVar = groupVarWithFieldList.first;
+        groupFieldList = groupVarWithFieldList.second;
+      }
     )?
     {
       gbc.setGbyPairList(vePairList);
@@ -3446,7 +3644,6 @@ TOKEN [IGNORE_CASE]:
   | <OUTPUT : "output">
   | <OVER: "over">
   | <PATH : "path">
-  | <PARTITION : "partition">
   | <POLICY : "policy">
   | <PRESORTED : "pre-sorted">
   | <PRIMARY : "primary">

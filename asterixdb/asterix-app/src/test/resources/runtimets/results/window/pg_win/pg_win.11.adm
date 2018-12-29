@@ -1,0 +1,10 @@
+{ "ntile": 1, "ten": 0, "four": 0 }
+{ "ntile": 1, "ten": 0, "four": 0 }
+{ "ntile": 1, "ten": 0, "four": 2 }
+{ "ntile": 1, "ten": 1, "four": 1 }
+{ "ntile": 2, "ten": 1, "four": 1 }
+{ "ntile": 2, "ten": 1, "four": 3 }
+{ "ntile": 2, "ten": 3, "four": 3 }
+{ "ntile": 3, "ten": 4, "four": 0 }
+{ "ntile": 3, "ten": 7, "four": 1 }
+{ "ntile": 3, "ten": 9, "four": 1 }

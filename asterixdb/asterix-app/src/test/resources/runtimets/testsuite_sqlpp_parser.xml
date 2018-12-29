@@ -7354,4 +7354,11 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="window">
+    <test-case FilePath="window">
+      <compilation-unit name="misc_01">
+        <output-dir compare="AST">misc_01</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

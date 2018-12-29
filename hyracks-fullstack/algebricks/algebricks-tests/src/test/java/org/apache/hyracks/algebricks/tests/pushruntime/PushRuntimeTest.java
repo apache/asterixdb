@@ -494,9 +494,8 @@ public class PushRuntimeTest {
         RecordDescriptor unnestDesc =
                 new RecordDescriptor(new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
 
-        RunningAggregateRuntimeFactory ragg = new RunningAggregateRuntimeFactory(new int[] { 1 },
-                new IRunningAggregateEvaluatorFactory[] { new TupleCountRunningAggregateFunctionFactory() },
-                new int[] { 0, 1 });
+        RunningAggregateRuntimeFactory ragg = new RunningAggregateRuntimeFactory(new int[] { 0, 1 }, new int[] { 1 },
+                new IRunningAggregateEvaluatorFactory[] { new TupleCountRunningAggregateFunctionFactory() });
         RecordDescriptor raggDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
 

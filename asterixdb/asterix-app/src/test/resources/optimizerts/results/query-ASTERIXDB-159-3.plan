@@ -3,14 +3,14 @@
     -- STREAM_LIMIT  |UNPARTITIONED|
       -- STREAM_PROJECT  |PARTITIONED|
         -- ASSIGN  |PARTITIONED|
-          -- SORT_MERGE_EXCHANGE [$$41(DESC), $$42(DESC) ]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$43(DESC), $$44(DESC) ]  |PARTITIONED|
             -- STREAM_LIMIT  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [topK: 5] [$$41(DESC), $$42(DESC)]  |PARTITIONED|
+                -- STABLE_SORT [topK: 5] [$$43(DESC), $$44(DESC)]  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- HYBRID_HASH_JOIN [$$41][$$50]  |PARTITIONED|
+                        -- HYBRID_HASH_JOIN [$$43][$$52]  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- ASSIGN  |PARTITIONED|
@@ -27,7 +27,7 @@
                                                     -- DATASOURCE_SCAN  |PARTITIONED|
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                          -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
+                          -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- STREAM_SELECT  |PARTITIONED|
                                 -- SUBPLAN  |PARTITIONED|

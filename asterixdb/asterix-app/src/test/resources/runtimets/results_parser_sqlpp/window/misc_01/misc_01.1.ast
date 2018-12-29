@@ -1,0 +1,7 @@
+DataverseUse test
+TypeDecl t1Type [
+  open RecordType {
+    c1 : bigint
+  }
+]
+DatasetDecl t1(t1Type) partitioned by [[c1]]

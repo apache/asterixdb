@@ -34,12 +34,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
-import org.apache.hyracks.algebricks.core.algebra.properties.TypePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
-import org.apache.hyracks.algebricks.core.algebra.typing.ITypeEnvPointer;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
-import org.apache.hyracks.algebricks.core.algebra.typing.OpRefTypeEnvPointer;
-import org.apache.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
@@ -233,20 +229,7 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        int n = 0;
-        for (ILogicalPlan p : nestedPlans) {
-            n += p.getRoots().size();
-        }
-        ITypeEnvPointer[] envPointers = new ITypeEnvPointer[n];
-        int i = 0;
-        for (ILogicalPlan p : nestedPlans) {
-            for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                envPointers[i] = new OpRefTypeEnvPointer(r, ctx);
-                i++;
-            }
-        }
-        IVariableTypeEnvironment env = new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
-                ctx.getMissableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
+        IVariableTypeEnvironment env = createNestedPlansPropagatingTypeEnvironment(ctx, false);
         ILogicalOperator child = inputs.get(0).getValue();
         IVariableTypeEnvironment env2 = ctx.getOutputTypeEnvironment(child);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : getGroupByList()) {

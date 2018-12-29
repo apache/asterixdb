@@ -54,8 +54,8 @@ class PercentRankRunningAggregateEvaluator extends AbstractRankRunningAggregateE
     }
 
     @Override
-    protected void writeResult(long rank, DataOutput out) throws HyracksDataException {
-        double percentRank = (rank - 1) / divisor;
+    protected void computeResult(DataOutput out) throws HyracksDataException {
+        double percentRank = first ? 0 : (rank - 1) / divisor;
         aDouble.setValue(percentRank);
         serde.serialize(aDouble, out);
     }

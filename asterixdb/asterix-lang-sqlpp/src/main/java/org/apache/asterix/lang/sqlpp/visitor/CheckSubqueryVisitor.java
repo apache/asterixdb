@@ -19,6 +19,7 @@
 
 package org.apache.asterix.lang.sqlpp.visitor;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -117,8 +118,8 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     public Boolean visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
         boolean hasSubquery = visit(selectBlock.getFromClause(), arg) || visit(selectBlock.getGroupbyClause(), arg)
                 || visit(selectBlock.getHavingClause(), arg) || visit(selectBlock.getWhereClause(), arg);
-        return hasSubquery || visit(selectBlock.getSelectClause(), arg) || visit(selectBlock.getLetList(), arg)
-                || visit(selectBlock.getLetListAfterGroupby(), arg);
+        return hasSubquery || visit(selectBlock.getSelectClause(), arg) || visitExprList(selectBlock.getLetList(), arg)
+                || visitExprList(selectBlock.getLetListAfterGroupby(), arg);
     }
 
     @Override
@@ -133,7 +134,7 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
 
     @Override
     public Boolean visit(SelectRegular selectRegular, ILangExpression arg) throws CompilationException {
-        return visit(selectRegular.getProjections(), arg);
+        return visitExprList(selectRegular.getProjections(), arg);
     }
 
     @Override
@@ -154,7 +155,7 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
         if (selectStatement.isSubquery()) {
             return true;
         }
-        return visit(selectStatement.getLetList(), arg) || visit(selectStatement.getSelectSetOperation(), arg)
+        return visitExprList(selectStatement.getLetList(), arg) || visit(selectStatement.getSelectSetOperation(), arg)
                 || visit(selectStatement.getOrderbyClause(), arg) || visit(selectStatement.getLimitClause(), arg);
 
     }
@@ -171,8 +172,8 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
 
     @Override
     public Boolean visit(CaseExpression caseExpression, ILangExpression arg) throws CompilationException {
-        return visit(caseExpression.getConditionExpr(), arg) || visit(caseExpression.getWhenExprs(), arg)
-                || visit(caseExpression.getThenExprs(), arg) || visit(caseExpression.getElseExpr(), arg);
+        return visit(caseExpression.getConditionExpr(), arg) || visitExprList(caseExpression.getWhenExprs(), arg)
+                || visitExprList(caseExpression.getThenExprs(), arg) || visit(caseExpression.getElseExpr(), arg);
     }
 
     @Override
@@ -197,7 +198,7 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
 
     @Override
     public Boolean visit(ListConstructor lc, ILangExpression arg) throws CompilationException {
-        return visit(lc.getExprList(), arg);
+        return visitExprList(lc.getExprList(), arg);
     }
 
     @Override
@@ -215,7 +216,7 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
 
     @Override
     public Boolean visit(OperatorExpr operatorExpr, ILangExpression arg) throws CompilationException {
-        return visit(operatorExpr.getExprList(), arg);
+        return visitExprList(operatorExpr.getExprList(), arg);
     }
 
     @Override
@@ -261,7 +262,7 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
 
     @Override
     public Boolean visit(OrderbyClause oc, ILangExpression arg) throws CompilationException {
-        return visit(oc.getOrderbyList(), arg);
+        return visitExprList(oc.getOrderbyList(), arg);
     }
 
     @Override
@@ -271,15 +272,18 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
                 return true;
             }
         }
-        for (GbyVariableExpressionPair key : gc.getDecorPairList()) {
-            if (visit(key.getExpr(), arg)) {
-                return true;
+        if (gc.hasDecorList()) {
+            for (GbyVariableExpressionPair key : gc.getDecorPairList()) {
+                if (visit(key.getExpr(), arg)) {
+                    return true;
+                }
             }
         }
-        for (Pair<Expression, Identifier> field : gc.getGroupFieldList()) {
-            if (visit(field.first, arg)) {
-                return true;
-            }
+        if (gc.hasGroupFieldList() && visitFieldList(gc.getGroupFieldList(), arg)) {
+            return true;
+        }
+        if (gc.hasWithMap() && visitExprList(gc.getWithVarMap().keySet(), arg)) {
+            return true;
         }
         return false;
     }
@@ -296,29 +300,43 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
 
     @Override
     public Boolean visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
-        return visit(winExpr.getExpr(), arg) || (winExpr.hasPartitionList() && visit(winExpr.getPartitionList(), arg))
-                || visit(winExpr.getOrderbyList(), arg);
+        return (winExpr.hasPartitionList() && visitExprList(winExpr.getPartitionList(), arg))
+                || (winExpr.hasOrderByList() && visitExprList(winExpr.getOrderbyList(), arg))
+                || (winExpr.hasFrameStartExpr() && visit(winExpr.getFrameStartExpr(), arg))
+                || (winExpr.hasFrameEndExpr() && visit(winExpr.getFrameEndExpr(), arg))
+                || (winExpr.hasWindowFieldList() && visitFieldList(winExpr.getWindowFieldList(), arg))
+                || visitExprList(winExpr.getExprList(), arg);
     }
 
     @Override
     public Boolean visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
-        return visit(callExpr.getExprList(), arg);
+        return visitExprList(callExpr.getExprList(), arg);
     }
 
-    private boolean visit(List<?> langExprs, ILangExpression arg) throws CompilationException {
-        for (Object o : langExprs) {
-            ILangExpression langExpr = (ILangExpression) o;
-            if (langExpr.accept(this, arg)) {
+    private boolean visit(ILangExpression expr, ILangExpression arg) throws CompilationException {
+        if (expr == null) {
+            return false;
+        }
+        return expr.accept(this, arg);
+    }
+
+    private <T extends ILangExpression> boolean visitExprList(Collection<T> exprList, ILangExpression arg)
+            throws CompilationException {
+        for (T langExpr : exprList) {
+            if (visit(langExpr, arg)) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean visit(ILangExpression langExpr, ILangExpression arg) throws CompilationException {
-        if (langExpr == null) {
-            return false;
+    private <T extends ILangExpression> boolean visitFieldList(Collection<Pair<T, Identifier>> fieldList,
+            ILangExpression arg) throws CompilationException {
+        for (Pair<T, Identifier> p : fieldList) {
+            if (visit(p.first, arg)) {
+                return true;
+            }
         }
-        return langExpr.accept(this, arg);
+        return false;
     }
 }

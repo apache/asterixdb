@@ -51,6 +51,7 @@ import org.apache.asterix.lang.sqlpp.clause.NestClause;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -373,6 +374,22 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
             insertStatement.setReturnExpression(visit(returningExpr, insertStatement));
         }
         return null;
+    }
+
+    @Override
+    public Expression visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
+        visitWindowExpressionExcludingExprList(winExpr, arg);
+        if (winExpr.hasWindowVar()) {
+            Scope preScope = scopeChecker.getCurrentScope();
+            Scope newScope = scopeChecker.extendCurrentScope();
+            VariableExpr windowVar = winExpr.getWindowVar();
+            addNewVarSymbolToScope(newScope, windowVar.getVar(), windowVar.getSourceLocation());
+            winExpr.setExprList(visit(winExpr.getExprList(), arg));
+            scopeChecker.replaceCurrentScope(preScope);
+        } else {
+            winExpr.setExprList(visit(winExpr.getExprList(), arg));
+        }
+        return winExpr;
     }
 
     // Adds a new encountered alias identifier into a scope

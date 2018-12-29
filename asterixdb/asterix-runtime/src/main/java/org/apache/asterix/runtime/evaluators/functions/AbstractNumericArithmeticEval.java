@@ -308,11 +308,13 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                             case FLOAT:
                                 if (evaluateDouble(operandsFloating[0], operandsFloating[1], aDouble)) {
                                     dres = aDouble.getDoubleValue();
-                                    if (dres > Float.MAX_VALUE) {
-                                        throw new OverflowException(sourceLoc, getIdentifier());
-                                    }
-                                    if (dres < -Float.MAX_VALUE) {
-                                        throw new UnderflowException(sourceLoc, getIdentifier());
+                                    if (Double.isFinite(dres)) {
+                                        if (dres > Float.MAX_VALUE) {
+                                            throw new OverflowException(sourceLoc, getIdentifier());
+                                        }
+                                        if (dres < -Float.MAX_VALUE) {
+                                            throw new UnderflowException(sourceLoc, getIdentifier());
+                                        }
                                     }
                                     aFloat.setValue((float) dres);
                                     floatSerde.serialize(aFloat, out);

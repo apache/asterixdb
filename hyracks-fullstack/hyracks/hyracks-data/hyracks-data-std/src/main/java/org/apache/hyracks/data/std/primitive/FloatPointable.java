@@ -105,7 +105,7 @@ public final class FloatPointable extends AbstractPointable implements IHashable
     public int compareTo(byte[] bytes, int start, int length) {
         float v = getFloat();
         float ov = getFloat(bytes, start);
-        return v < ov ? -1 : (v > ov ? 1 : 0);
+        return Float.compare(v, ov);
     }
 
     @Override

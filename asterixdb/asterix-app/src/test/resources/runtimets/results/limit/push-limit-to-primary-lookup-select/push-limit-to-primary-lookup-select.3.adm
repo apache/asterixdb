@@ -7,28 +7,28 @@ distribute result [$$c]
       project ([$$c])
       -- STREAM_PROJECT  |PARTITIONED|
         exchange
-        -- SORT_MERGE_EXCHANGE [$$15(ASC), $$16(ASC) ]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$16(ASC), $$17(ASC) ]  |PARTITIONED|
           limit 10
           -- STREAM_LIMIT  |PARTITIONED|
             exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              unnest-map [$$15, $$16, $$c] <- index-search("LineItem", 0, "test", "LineItem", FALSE, FALSE, 2, $$21, $$22, 2, $$21, $$22, TRUE, TRUE, TRUE) condition (and(lt($$c.getField(2), 150), lt($$c.getField(5), 10000))) limit 10
+              unnest-map [$$16, $$17, $$c] <- index-search("LineItem", 0, "test", "LineItem", FALSE, FALSE, 2, $$22, $$23, 2, $$22, $$23, TRUE, TRUE, TRUE) condition (and(lt($$c.getField(2), 150), lt($$c.getField(5), 10000))) limit 10
               -- BTREE_SEARCH  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  order (ASC, $$21) (ASC, $$22)
-                  -- STABLE_SORT [$$21(ASC), $$22(ASC)]  |PARTITIONED|
+                  order (ASC, $$22) (ASC, $$23) 
+                  -- STABLE_SORT [$$22(ASC), $$23(ASC)]  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      project ([$$21, $$22])
+                      project ([$$22, $$23])
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          unnest-map [$$20, $$21, $$22] <- index-search("idx_LineItem_suppkey", 0, "test", "LineItem", FALSE, FALSE, 0, 1, $$19, TRUE, FALSE, FALSE)
+                          unnest-map [$$21, $$22, $$23] <- index-search("idx_LineItem_suppkey", 0, "test", "LineItem", FALSE, FALSE, 0, 1, $$20, TRUE, FALSE, FALSE)
                           -- BTREE_SEARCH  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              assign [$$19] <- [150]
+                              assign [$$20] <- [150]
                               -- ASSIGN  |PARTITIONED|
                                 empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

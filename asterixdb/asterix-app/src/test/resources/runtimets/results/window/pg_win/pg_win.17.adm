@@ -1,0 +1,10 @@
+{ "empno": 1, "depname": "sales", "salary": 5000, "bonus": 1000, "depadj": 200, "min": 1000, "max": 200 }
+{ "empno": 2, "depname": "personnel", "salary": 3900, "bonus": 1000, "depadj": 200, "min": 1000, "max": 200 }
+{ "empno": 3, "depname": "sales", "salary": 4800, "bonus": 500, "depadj": null, "min": 500, "max": 200 }
+{ "empno": 4, "depname": "sales", "salary": 4800, "bonus": 500, "depadj": null, "min": 500, "max": 200 }
+{ "empno": 5, "depname": "personnel", "salary": 3500, "bonus": 500, "depadj": null, "min": 500, "max": 200 }
+{ "empno": 7, "depname": "develop", "salary": 4200, "bonus": null, "depadj": null, "min": 500, "max": 200 }
+{ "empno": 8, "depname": "develop", "salary": 6000, "bonus": 1000, "depadj": 200, "min": 500, "max": 200 }
+{ "empno": 9, "depname": "develop", "salary": 4500, "bonus": null, "depadj": null, "min": 500, "max": 200 }
+{ "empno": 10, "depname": "develop", "salary": 5200, "bonus": 500, "depadj": 200, "min": 500, "max": 200 }
+{ "empno": 11, "depname": "develop", "salary": 5200, "bonus": 500, "depadj": 200, "min": 500, "max": 200 }

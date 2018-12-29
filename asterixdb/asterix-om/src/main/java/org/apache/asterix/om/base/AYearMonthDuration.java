@@ -49,7 +49,8 @@ public class AYearMonthDuration implements IAObject {
     public String toString() {
         StringBuilder sbder = new StringBuilder();
         sbder.append("year_month_duration: {");
-        GregorianCalendarSystem.getInstance().getDurationMonth(chrononInMonth);
+        GregorianCalendarSystem.getInstance().getDurationExtendStringRepWithTimezoneUntilField(0, chrononInMonth,
+                sbder);
         sbder.append(" }");
         return sbder.toString();
     }

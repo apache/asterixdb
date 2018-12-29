@@ -1,0 +1,10 @@
+{ "id": 0, "f_float8": -INF, "first_value": 0, "last_value": 0 }
+{ "id": 1, "f_float8": -3.0, "first_value": 1, "last_value": 1 }
+{ "id": 2, "f_float8": -1.0, "first_value": 2, "last_value": 3 }
+{ "id": 3, "f_float8": 0.0, "first_value": 2, "last_value": 4 }
+{ "id": 4, "f_float8": 1.1, "first_value": 4, "last_value": 6 }
+{ "id": 5, "f_float8": 1.12, "first_value": 4, "last_value": 6 }
+{ "id": 6, "f_float8": 2.0, "first_value": 4, "last_value": 6 }
+{ "id": 7, "f_float8": 100.0, "first_value": 7, "last_value": 7 }
+{ "id": 8, "f_float8": INF, "first_value": 8, "last_value": 8 }
+{ "id": 9, "f_float8": NaN, "first_value": 9, "last_value": 9 }

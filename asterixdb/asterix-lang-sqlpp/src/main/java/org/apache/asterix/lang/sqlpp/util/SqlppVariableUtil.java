@@ -21,20 +21,27 @@ package org.apache.asterix.lang.sqlpp.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
+import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class SqlppVariableUtil {
 
@@ -96,14 +103,14 @@ public class SqlppVariableUtil {
         return isExternalVariableIdentifier(varExpr.getVar());
     }
 
-    public static Collection<VariableExpr> getFreeVariables(ILangExpression langExpr) throws CompilationException {
-        Collection<VariableExpr> freeVars = new HashSet<>();
+    public static Set<VariableExpr> getFreeVariables(ILangExpression langExpr) throws CompilationException {
+        Set<VariableExpr> freeVars = new HashSet<>();
         FreeVariableVisitor visitor = new FreeVariableVisitor();
         langExpr.accept(visitor, freeVars);
         return freeVars;
     }
 
-    public static Collection<VariableExpr> getBindingVariables(FromClause fromClause) {
+    public static List<VariableExpr> getBindingVariables(FromClause fromClause) {
         if (fromClause == null) {
             return Collections.emptyList();
         }
@@ -114,7 +121,7 @@ public class SqlppVariableUtil {
         return bindingVars;
     }
 
-    public static Collection<VariableExpr> getBindingVariables(FromTerm fromTerm) {
+    public static List<VariableExpr> getBindingVariables(FromTerm fromTerm) {
         List<VariableExpr> bindingVars = new ArrayList<>();
         if (fromTerm == null) {
             return bindingVars;
@@ -132,7 +139,7 @@ public class SqlppVariableUtil {
         return bindingVars;
     }
 
-    public static Collection<VariableExpr> getBindingVariables(GroupbyClause gbyClause) {
+    public static List<VariableExpr> getBindingVariables(GroupbyClause gbyClause) {
         List<VariableExpr> bindingVars = new ArrayList<>();
         if (gbyClause == null) {
             return bindingVars;
@@ -143,10 +150,12 @@ public class SqlppVariableUtil {
                 bindingVars.add(var);
             }
         }
-        for (GbyVariableExpressionPair gbyKey : gbyClause.getDecorPairList()) {
-            VariableExpr var = gbyKey.getVar();
-            if (var != null) {
-                bindingVars.add(var);
+        if (gbyClause.hasDecorList()) {
+            for (GbyVariableExpressionPair gbyKey : gbyClause.getDecorPairList()) {
+                VariableExpr var = gbyKey.getVar();
+                if (var != null) {
+                    bindingVars.add(var);
+                }
             }
         }
         if (gbyClause.hasWithMap()) {
@@ -156,7 +165,7 @@ public class SqlppVariableUtil {
         return bindingVars;
     }
 
-    public static Collection<VariableExpr> getBindingVariables(List<LetClause> letClauses) {
+    public static List<VariableExpr> getBindingVariables(List<LetClause> letClauses) {
         List<VariableExpr> bindingVars = new ArrayList<>();
         if (letClauses == null || letClauses.isEmpty()) {
             return bindingVars;
@@ -167,4 +176,18 @@ public class SqlppVariableUtil {
         return bindingVars;
     }
 
+    public static Map<Expression, Identifier> createFieldVariableMap(List<Pair<Expression, Identifier>> fieldList) {
+        Map<Expression, Identifier> fieldVars = new HashMap<>();
+        for (Pair<Expression, Identifier> p : fieldList) {
+            fieldVars.put(p.first, p.second);
+        }
+        return fieldVars;
+    }
+
+    public static void addToFieldVariableList(VariableExpr varExpr, List<Pair<Expression, Identifier>> outFieldList) {
+        VarIdentifier var = varExpr.getVar();
+        VariableExpr newVarExpr = new VariableExpr(var);
+        newVarExpr.setSourceLocation(varExpr.getSourceLocation());
+        outFieldList.add(new Pair<>(newVarExpr, toUserDefinedVariableName(var)));
+    }
 }

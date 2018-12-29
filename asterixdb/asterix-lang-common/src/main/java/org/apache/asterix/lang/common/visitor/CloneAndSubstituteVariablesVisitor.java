@@ -101,13 +101,8 @@ public class CloneAndSubstituteVariablesVisitor extends
                 newWithMap.put(newKeyVar, newValueVar);
             }
         }
-        List<Pair<Expression, Identifier>> newGroupFieldList = new ArrayList<>();
-        if (gc.hasGroupFieldList()) {
-            for (Pair<Expression, Identifier> varId : gc.getGroupFieldList()) {
-                Expression newExpr = (Expression) varId.first.accept(this, env).first;
-                newGroupFieldList.add(new Pair<>(newExpr, varId.second));
-            }
-        }
+        List<Pair<Expression, Identifier>> newGroupFieldList = gc.hasGroupFieldList()
+                ? VariableCloneAndSubstitutionUtil.substInFieldList(gc.getGroupFieldList(), env, this) : null;
         GroupbyClause newGroup = new GroupbyClause(newGbyList, newDecorList, newWithMap, newGroupVar, newGroupFieldList,
                 gc.hasHashGroupByHint(), gc.isGroupAll());
         newGroup.setSourceLocation(gc.getSourceLocation());
@@ -124,7 +119,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             VariableExpr newVar = generateNewVariable(context, t.getVarExpr());
             newSubs = VariableCloneAndSubstitutionUtil.eliminateSubstFromList(newVar, newSubs);
             Pair<ILangExpression, VariableSubstitutionEnvironment> p1 =
-                    visitUnnesBindingExpression(t.getExpr(), newSubs);
+                    visitUnnestBindingExpression(t.getExpr(), newSubs);
             QuantifiedPair t2 = new QuantifiedPair(newVar, (Expression) p1.first);
             newPairs.add(t2);
         }
@@ -392,7 +387,7 @@ public class CloneAndSubstituteVariablesVisitor extends
      * @return a pair of an ILangExpression and a variable substitution environment.
      * @throws CompilationException
      */
-    protected Pair<ILangExpression, VariableSubstitutionEnvironment> visitUnnesBindingExpression(Expression expr,
+    protected Pair<ILangExpression, VariableSubstitutionEnvironment> visitUnnestBindingExpression(Expression expr,
             VariableSubstitutionEnvironment env) throws CompilationException {
         return expr.accept(this, env);
     }

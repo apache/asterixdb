@@ -20,29 +20,62 @@
 package org.apache.asterix.lang.sqlpp.expression;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
+import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class WindowExpression extends AbstractExpression {
-    private Expression expr;
+
+    private FunctionSignature functionSignature;
+    private List<Expression> exprList;
+
     private List<Expression> partitionList;
     private List<Expression> orderbyList;
     private List<OrderbyClause.OrderModifier> orderbyModifierList;
 
-    public WindowExpression(Expression expr, List<Expression> partitionList, List<Expression> orderbyList,
-            List<OrderbyClause.OrderModifier> orderbyModifierList) {
-        if (expr == null || orderbyList == null) {
+    private FrameMode frameMode;
+    private FrameBoundaryKind frameStartKind;
+    private Expression frameStartExpr;
+    private FrameBoundaryKind frameEndKind;
+    private Expression frameEndExpr;
+    private FrameExclusionKind frameExclusionKind;
+
+    private VariableExpr windowVar;
+    private List<Pair<Expression, Identifier>> windowFieldList;
+
+    public WindowExpression(FunctionSignature functionSignature, List<Expression> exprList,
+            List<Expression> partitionList, List<Expression> orderbyList,
+            List<OrderbyClause.OrderModifier> orderbyModifierList, FrameMode frameMode,
+            FrameBoundaryKind frameStartKind, Expression frameStartExpr, FrameBoundaryKind frameEndKind,
+            Expression frameEndExpr, FrameExclusionKind frameExclusionKind, VariableExpr windowVar,
+            List<Pair<Expression, Identifier>> windowFieldList) {
+        if (functionSignature == null || exprList == null) {
             throw new NullPointerException();
         }
-        this.expr = expr;
+        this.functionSignature = functionSignature;
+        this.exprList = exprList;
         this.partitionList = partitionList;
         this.orderbyList = orderbyList;
         this.orderbyModifierList = orderbyModifierList;
+        this.frameMode = frameMode;
+        this.frameStartKind = frameStartKind;
+        this.frameStartExpr = frameStartExpr;
+        this.frameEndKind = frameEndKind;
+        this.frameEndExpr = frameEndExpr;
+        this.frameExclusionKind = frameExclusionKind;
+        this.windowVar = windowVar;
+        this.windowFieldList = windowFieldList;
     }
 
     @Override
@@ -50,15 +83,26 @@ public class WindowExpression extends AbstractExpression {
         return Kind.WINDOW_EXPRESSION;
     }
 
-    public Expression getExpr() {
-        return expr;
+    public FunctionSignature getFunctionSignature() {
+        return functionSignature;
     }
 
-    public void setExpr(Expression expr) {
-        if (expr == null) {
+    public void setFunctionSignature(FunctionSignature functionSignature) {
+        if (functionSignature == null) {
             throw new NullPointerException();
         }
-        this.expr = expr;
+        this.functionSignature = functionSignature;
+    }
+
+    public List<Expression> getExprList() {
+        return exprList;
+    }
+
+    public void setExprList(List<Expression> exprList) {
+        if (exprList == null) {
+            throw new NullPointerException();
+        }
+        this.exprList = exprList;
     }
 
     public boolean hasPartitionList() {
@@ -70,10 +114,11 @@ public class WindowExpression extends AbstractExpression {
     }
 
     public void setPartitionList(List<Expression> partitionList) {
-        if (partitionList == null) {
-            throw new NullPointerException();
-        }
         this.partitionList = partitionList;
+    }
+
+    public boolean hasOrderByList() {
+        return orderbyList != null && !orderbyList.isEmpty();
     }
 
     public List<Expression> getOrderbyList() {
@@ -81,9 +126,6 @@ public class WindowExpression extends AbstractExpression {
     }
 
     public void setOrderbyList(List<Expression> orderbyList) {
-        if (orderbyList == null) {
-            throw new NullPointerException();
-        }
         this.orderbyList = orderbyList;
     }
 
@@ -92,14 +134,235 @@ public class WindowExpression extends AbstractExpression {
     }
 
     public void setOrderbyModifierList(List<OrderbyClause.OrderModifier> orderbyModifierList) {
-        if (orderbyModifierList == null) {
-            throw new NullPointerException();
-        }
         this.orderbyModifierList = orderbyModifierList;
+    }
+
+    public boolean hasFrameDefinition() {
+        return frameMode != null;
+    }
+
+    public FrameMode getFrameMode() {
+        return frameMode;
+    }
+
+    public void setFrameMode(FrameMode frameMode) {
+        this.frameMode = frameMode;
+    }
+
+    public FrameBoundaryKind getFrameStartKind() {
+        return frameStartKind;
+    }
+
+    public void setFrameStartKind(FrameBoundaryKind frameStartKind) {
+        this.frameStartKind = frameStartKind;
+    }
+
+    public boolean hasFrameStartExpr() {
+        return frameStartExpr != null;
+    }
+
+    public Expression getFrameStartExpr() {
+        return frameStartExpr;
+    }
+
+    public void setFrameStartExpr(Expression frameStartExpr) {
+        this.frameStartExpr = frameStartExpr;
+    }
+
+    public FrameBoundaryKind getFrameEndKind() {
+        return frameEndKind;
+    }
+
+    public void setFrameEndKind(FrameBoundaryKind frameEndKind) {
+        this.frameEndKind = frameEndKind;
+    }
+
+    public boolean hasFrameEndExpr() {
+        return frameEndExpr != null;
+    }
+
+    public Expression getFrameEndExpr() {
+        return frameEndExpr;
+    }
+
+    public void setFrameEndExpr(Expression frameEndExpr) {
+        this.frameEndExpr = frameEndExpr;
+    }
+
+    public FrameExclusionKind getFrameExclusionKind() {
+        return frameExclusionKind;
+    }
+
+    public void setFrameExclusionKind(FrameExclusionKind frameExclusionKind) {
+        this.frameExclusionKind = frameExclusionKind;
+    }
+
+    public boolean hasWindowVar() {
+        return windowVar != null;
+    }
+
+    public VariableExpr getWindowVar() {
+        return windowVar;
+    }
+
+    public void setWindowVar(VariableExpr windowVar) {
+        this.windowVar = windowVar;
+    }
+
+    public boolean hasWindowFieldList() {
+        return windowFieldList != null && !windowFieldList.isEmpty();
+    }
+
+    public List<Pair<Expression, Identifier>> getWindowFieldList() {
+        return windowFieldList;
+    }
+
+    public void setWindowFieldList(List<Pair<Expression, Identifier>> windowFieldList) {
+        this.windowFieldList = windowFieldList;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(functionSignature, exprList, ExpressionUtils.emptyIfNull(partitionList),
+                ExpressionUtils.emptyIfNull(orderbyList), ExpressionUtils.emptyIfNull(orderbyModifierList), frameMode,
+                frameStartKind, frameStartExpr, frameEndKind, frameEndExpr, frameExclusionKind, windowVar,
+                ExpressionUtils.emptyIfNull(windowFieldList));
+    }
+
+    @Override
+    @SuppressWarnings("squid:S1067") // expressions should not be too complex
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof WindowExpression)) {
+            return false;
+        }
+        WindowExpression target = (WindowExpression) object;
+        return Objects.equals(functionSignature, target.functionSignature) && Objects.equals(exprList, target.exprList)
+                && Objects.equals(ExpressionUtils.emptyIfNull(partitionList),
+                        ExpressionUtils.emptyIfNull(target.partitionList))
+                && Objects.equals(ExpressionUtils.emptyIfNull(orderbyList),
+                        ExpressionUtils.emptyIfNull(target.orderbyList))
+                && Objects.equals(ExpressionUtils.emptyIfNull(orderbyModifierList),
+                        ExpressionUtils.emptyIfNull(target.orderbyModifierList))
+                && frameMode == target.frameMode && frameStartKind == target.frameStartKind
+                && Objects.equals(frameStartExpr, target.frameStartExpr) && frameEndKind == target.frameEndKind
+                && Objects.equals(frameEndExpr, target.frameEndExpr) && frameExclusionKind == target.frameExclusionKind
+                && Objects.equals(windowVar, target.windowVar)
+                && Objects.equals(ExpressionUtils.emptyIfNull(windowFieldList),
+                        ExpressionUtils.emptyIfNull(target.windowFieldList));
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(128);
+        sb.append("WINDOW ");
+        sb.append(functionSignature);
+        sb.append('(');
+        sb.append(StringUtils.join(exprList, ','));
+        sb.append(") OVER ");
+        if (hasWindowVar()) {
+            sb.append(windowVar);
+            if (hasWindowFieldList()) {
+                sb.append('{');
+                for (int i = 0, ln = windowFieldList.size(); i < ln; i++) {
+                    if (i > 0) {
+                        sb.append(',');
+                    }
+                    Pair<Expression, Identifier> p = windowFieldList.get(i);
+                    sb.append(p.first).append(':').append(p.second);
+                }
+                sb.append('}');
+            }
+            sb.append(" AS ");
+        }
+        sb.append('(');
+        if (hasPartitionList()) {
+            sb.append(" PARTITION BY ");
+            sb.append(StringUtils.join(partitionList, ','));
+        }
+        if (hasOrderByList()) {
+            sb.append(" ORDER BY ");
+            for (int i = 0, ln = orderbyList.size(); i < ln; i++) {
+                if (i > 0) {
+                    sb.append(',');
+                }
+                sb.append(orderbyList.get(i)).append(' ').append(orderbyModifierList.get(i));
+            }
+        }
+        if (hasFrameDefinition()) {
+            sb.append(" FRAME ").append(frameMode);
+            sb.append(" BETWEEN ").append(frameStartKind);
+            if (hasFrameStartExpr()) {
+                sb.append(' ').append(frameStartExpr);
+            }
+            sb.append(" AND ").append(frameEndKind);
+            if (hasFrameEndExpr()) {
+                sb.append(' ').append(frameEndExpr);
+            }
+            sb.append(" EXCLUDE ").append(frameExclusionKind);
+        }
+        sb.append(')');
+        return sb.toString();
     }
 
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
         return ((ISqlppVisitor<R, T>) visitor).visit(this, arg);
+    }
+
+    public enum FrameMode {
+        RANGE("range"),
+        ROWS("rows"),
+        GROUPS("groups");
+
+        private String text;
+
+        FrameMode(String text) {
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
+    }
+
+    public enum FrameBoundaryKind {
+        CURRENT_ROW("current row"),
+        UNBOUNDED_PRECEDING("unbounded preceding"),
+        UNBOUNDED_FOLLOWING("unbounded following"),
+        BOUNDED_PRECEDING("preceding"),
+        BOUNDED_FOLLOWING("following");
+
+        private String text;
+
+        FrameBoundaryKind(String text) {
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
+    }
+
+    public enum FrameExclusionKind {
+        CURRENT_ROW("current row"),
+        GROUP("group"),
+        TIES("ties"),
+        NO_OTHERS("no others");
+
+        private String text;
+
+        FrameExclusionKind(String text) {
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
     }
 }

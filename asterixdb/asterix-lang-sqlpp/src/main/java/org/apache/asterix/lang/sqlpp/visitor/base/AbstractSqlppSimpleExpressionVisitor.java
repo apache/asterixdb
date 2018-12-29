@@ -46,6 +46,7 @@ import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
@@ -64,6 +65,7 @@ import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class AbstractSqlppSimpleExpressionVisitor
         extends AbstractSqlppQueryExpressionVisitor<Expression, ILangExpression> {
@@ -217,8 +219,10 @@ public class AbstractSqlppSimpleExpressionVisitor
         for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
             gbyVarExpr.setExpr(visit(gbyVarExpr.getExpr(), gc));
         }
-        for (GbyVariableExpressionPair decVarExpr : gc.getDecorPairList()) {
-            decVarExpr.setExpr(visit(decVarExpr.getExpr(), gc));
+        if (gc.hasDecorList()) {
+            for (GbyVariableExpressionPair decVarExpr : gc.getDecorPairList()) {
+                decVarExpr.setExpr(visit(decVarExpr.getExpr(), gc));
+            }
         }
         return null;
     }
@@ -324,12 +328,30 @@ public class AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
-        winExpr.setExpr(visit(winExpr.getExpr(), arg));
+        visitWindowExpressionExcludingExprList(winExpr, arg);
+        winExpr.setExprList(visit(winExpr.getExprList(), arg));
+        return winExpr;
+    }
+
+    protected void visitWindowExpressionExcludingExprList(WindowExpression winExpr, ILangExpression arg)
+            throws CompilationException {
         if (winExpr.hasPartitionList()) {
             winExpr.setPartitionList(visit(winExpr.getPartitionList(), winExpr));
         }
-        winExpr.setOrderbyList(visit(winExpr.getOrderbyList(), winExpr));
-        return winExpr;
+        if (winExpr.hasOrderByList()) {
+            winExpr.setOrderbyList(visit(winExpr.getOrderbyList(), winExpr));
+        }
+        if (winExpr.hasFrameStartExpr()) {
+            winExpr.setFrameStartExpr(visit(winExpr.getFrameStartExpr(), winExpr));
+        }
+        if (winExpr.hasFrameEndExpr()) {
+            winExpr.setFrameEndExpr(visit(winExpr.getFrameEndExpr(), winExpr));
+        }
+        if (winExpr.hasWindowFieldList()) {
+            for (Pair<Expression, Identifier> field : winExpr.getWindowFieldList()) {
+                field.first = visit(field.first, arg);
+            }
+        }
     }
 
     @Override
@@ -391,8 +413,8 @@ public class AbstractSqlppSimpleExpressionVisitor
         return expr;
     }
 
-    private List<Expression> visit(List<Expression> exprs, ILangExpression arg) throws CompilationException {
-        List<Expression> newExprList = new ArrayList<>();
+    protected List<Expression> visit(List<Expression> exprs, ILangExpression arg) throws CompilationException {
+        List<Expression> newExprList = new ArrayList<>(exprs.size());
         for (Expression expr : exprs) {
             newExprList.add(visit(expr, arg));
         }

@@ -21,6 +21,7 @@ package org.apache.asterix.om.typecomputer.impl;
 import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -29,9 +30,19 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class CollectionMemberResultType extends AbstractResultTypeComputer {
-    public static final CollectionMemberResultType INSTANCE = new CollectionMemberResultType();
+    public static final CollectionMemberResultType INSTANCE = new CollectionMemberResultType(false, false);
 
-    protected CollectionMemberResultType() {
+    public static final CollectionMemberResultType INSTANCE_NULLABLE = new CollectionMemberResultType(true, false);
+
+    public static final CollectionMemberResultType INSTANCE_MISSABLE = new CollectionMemberResultType(false, true);
+
+    private final boolean nullable;
+
+    private final boolean missable;
+
+    private CollectionMemberResultType(boolean nullable, boolean missable) {
+        this.missable = missable;
+        this.nullable = nullable;
     }
 
     @Override
@@ -49,7 +60,13 @@ public class CollectionMemberResultType extends AbstractResultTypeComputer {
         if (type.getTypeTag() == ATypeTag.ANY) {
             return BuiltinType.ANY;
         }
-        return ((AbstractCollectionType) type).getItemType();
+        IAType itemType = ((AbstractCollectionType) type).getItemType();
+        if (nullable) {
+            itemType = AUnionType.createNullableType(itemType);
+        }
+        if (missable) {
+            itemType = AUnionType.createMissableType(itemType);
+        }
+        return itemType;
     }
-
 }

@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
@@ -184,11 +185,7 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitGroupByOperator(GroupByOperator op, Void arg) throws AlgebricksException {
-        for (ILogicalPlan p : op.getNestedPlans()) {
-            for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                VariableUtilities.getUsedVariablesInDescendantsAndSelf(r.getValue(), usedVariables);
-            }
-        }
+        visitNestedPlans(op);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> g : op.getGroupByList()) {
             g.second.getValue().getUsedVariables(usedVariables);
         }
@@ -272,11 +269,7 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitSubplanOperator(SubplanOperator op, Void arg) throws AlgebricksException {
-        for (ILogicalPlan p : op.getNestedPlans()) {
-            for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                VariableUtilities.getUsedVariablesInDescendantsAndSelf(r.getValue(), usedVariables);
-            }
-        }
+        visitNestedPlans(op);
         return null;
     }
 
@@ -473,16 +466,41 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
     }
 
     @Override
-    public Void visitWindowOperator(WindowOperator op, Void arg) {
+    public Void visitWindowOperator(WindowOperator op, Void arg) throws AlgebricksException {
+        visitNestedPlans(op);
         for (Mutable<ILogicalExpression> exprRef : op.getPartitionExpressions()) {
             exprRef.getValue().getUsedVariables(usedVariables);
         }
-        for (Pair<IOrder, Mutable<ILogicalExpression>> oe : op.getOrderExpressions()) {
-            oe.second.getValue().getUsedVariables(usedVariables);
+        for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
+            p.second.getValue().getUsedVariables(usedVariables);
+        }
+        for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getFrameValueExpressions()) {
+            p.second.getValue().getUsedVariables(usedVariables);
+        }
+        for (Mutable<ILogicalExpression> exprRef : op.getFrameStartExpressions()) {
+            exprRef.getValue().getUsedVariables(usedVariables);
+        }
+        for (Mutable<ILogicalExpression> exprRef : op.getFrameEndExpressions()) {
+            exprRef.getValue().getUsedVariables(usedVariables);
+        }
+        for (Mutable<ILogicalExpression> exprRef : op.getFrameExcludeExpressions()) {
+            exprRef.getValue().getUsedVariables(usedVariables);
+        }
+        ILogicalExpression frameOffset = op.getFrameOffset().getValue();
+        if (frameOffset != null) {
+            frameOffset.getUsedVariables(usedVariables);
         }
         for (Mutable<ILogicalExpression> exprRef : op.getExpressions()) {
             exprRef.getValue().getUsedVariables(usedVariables);
         }
         return null;
+    }
+
+    private void visitNestedPlans(AbstractOperatorWithNestedPlans op) throws AlgebricksException {
+        for (ILogicalPlan p : op.getNestedPlans()) {
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                VariableUtilities.getUsedVariablesInDescendantsAndSelf(r.getValue(), usedVariables);
+            }
+        }
     }
 }

@@ -63,7 +63,7 @@ public class FunctionMapUtil {
      * @return true if the function signature is a SQL-92 core aggregate,
      *         false otherwise.
      */
-    public static boolean isSql92AggregateFunction(FunctionSignature signature) throws CompilationException {
+    public static boolean isSql92AggregateFunction(FunctionSignature signature) {
         IFunctionInfo finfo = FunctionUtil.getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
                 signature.getName().toLowerCase(), signature.getArity()));
         if (finfo == null) {
@@ -78,9 +78,8 @@ public class FunctionMapUtil {
      * @param fs,
      *            the SQL-92 aggregate function signature.
      * @return the SQL++ aggregate function signature.
-     * @throws CompilationException
      */
-    public static FunctionSignature sql92ToCoreAggregateFunction(FunctionSignature fs) throws CompilationException {
+    public static FunctionSignature sql92ToCoreAggregateFunction(FunctionSignature fs) {
         if (!isSql92AggregateFunction(fs)) {
             return fs;
         }
@@ -110,11 +109,15 @@ public class FunctionMapUtil {
             if (finfo != null && BuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null) {
                 return new FunctionSignature(FunctionConstants.ASTERIX_NS, internalName, fs.getArity());
             }
-        } else if (checkSql92Aggregate && isSql92AggregateFunction(fs)) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    fs.getName() + " is a SQL-92 aggregate function. The SQL++ core aggregate function "
-                            + CORE_SQL_AGGREGATE_PREFIX + fs.getName().toLowerCase()
-                            + " could potentially express the intent.");
+        } else if (checkSql92Aggregate) {
+            if (isSql92AggregateFunction(fs)) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                        fs.getName() + " is a SQL-92 aggregate function. The SQL++ core aggregate function "
+                                + CORE_SQL_AGGREGATE_PREFIX + fs.getName().toLowerCase()
+                                + " could potentially express the intent.");
+            } else if (getInternalWindowFunction(fs) != null) {
+                throw new CompilationException(ErrorCode.COMPILATION_UNEXPECTED_WINDOW_EXPRESSION, sourceLoc);
+            }
         }
         String mappedName = CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(fs).getName();
         return new FunctionSignature(fs.getNamespace(), mappedName, fs.getArity());
@@ -159,5 +162,17 @@ public class FunctionMapUtil {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Returns an internal implementation function for a public window function,
+     * or {@code null} if given function is not a public window function
+     * @param signature function signature
+     * @return said value
+     */
+    public static FunctionIdentifier getInternalWindowFunction(FunctionSignature signature) {
+        IFunctionInfo finfo = FunctionUtil.getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+                signature.getName().toLowerCase(), signature.getArity()));
+        return finfo != null ? BuiltinFunctions.getWindowFunction(finfo.getFunctionIdentifier()) : null;
     }
 }

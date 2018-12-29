@@ -1,0 +1,209 @@
+DataverseUse test
+Query:
+Let Variable [ Name=$P ]
+  :=
+  LiteralExpr [LONG] [10]
+Let Variable [ Name=$N ]
+  :=
+  LiteralExpr [LONG] [10]
+Let Variable [ Name=$D ]
+  :=
+  LiteralExpr [LONG] [4]
+SELECT [
+FunctionCall asterix.sql-min@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=#2 ]
+      Field=rank_result_delta
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#2 ]
+    ]
+  )
+]
+rank_min_delta
+FunctionCall asterix.sql-max@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=#3 ]
+      Field=rank_result_delta
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#3 ]
+    ]
+  )
+]
+rank_max_delta
+FunctionCall asterix.sql-min@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=#4 ]
+      Field=percent_rank_result_delta
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#4 ]
+    ]
+  )
+]
+percent_rank_min_delta
+FunctionCall asterix.sql-max@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=#5 ]
+      Field=percent_rank_result_delta
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#5 ]
+    ]
+  )
+]
+percent_rank_max_delta
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.t1]
+  ]
+  AS Variable [ Name=$t1 ]
+,
+  FunctionCall test.range@2[
+    FieldAccessor [
+      Variable [ Name=$t1 ]
+      Field=one
+    ]
+    Variable [ Name=$P ]
+  ]
+  AS Variable [ Name=$p ]
+,
+  FunctionCall test.range@2[
+    FieldAccessor [
+      Variable [ Name=$t1 ]
+      Field=one
+    ]
+    Variable [ Name=$N ]
+  ]
+  AS Variable [ Name=$n ]
+,
+  FunctionCall test.range@2[
+    FieldAccessor [
+      Variable [ Name=$t1 ]
+      Field=one
+    ]
+    Variable [ Name=$D ]
+  ]
+  AS Variable [ Name=$d ]
+]
+Let Variable [ Name=$rank_result_expected ]
+  :=
+  OperatorExpr [
+    OperatorExpr [
+      OperatorExpr [
+        Variable [ Name=$N ]
+        -
+        Variable [ Name=$n ]
+      ]
+      *
+      Variable [ Name=$D ]
+    ]
+    +
+    LiteralExpr [LONG] [1]
+  ]
+Let Variable [ Name=$rank_result_actual ]
+  :=
+  WINDOW test.rank@0[
+  ]
+  OVER (
+    PARTITION BY
+      FieldAccessor [
+        Variable [ Name=$t1 ]
+        Field=c2
+      ]
+      Variable [ Name=$p ]
+    ORDER BY
+      Variable [ Name=$n ]
+      DESC
+  )
+Let Variable [ Name=$rank_result_delta ]
+  :=
+  OperatorExpr [
+    Variable [ Name=$rank_result_expected ]
+    -
+    Variable [ Name=$rank_result_actual ]
+  ]
+Let Variable [ Name=$percent_rank_result_expected ]
+  :=
+  OperatorExpr [
+    OperatorExpr [
+      Variable [ Name=$rank_result_expected ]
+      -
+      LiteralExpr [LONG] [1]
+    ]
+    /
+    OperatorExpr [
+      OperatorExpr [
+        Variable [ Name=$N ]
+        *
+        Variable [ Name=$D ]
+      ]
+      -
+      LiteralExpr [LONG] [1]
+    ]
+  ]
+Let Variable [ Name=$percent_rank_result_actual ]
+  :=
+  WINDOW test.percent_rank@0[
+  ]
+  OVER (
+    PARTITION BY
+      FieldAccessor [
+        Variable [ Name=$t1 ]
+        Field=c2
+      ]
+      Variable [ Name=$p ]
+    ORDER BY
+      Variable [ Name=$n ]
+      DESC
+  )
+Let Variable [ Name=$percent_rank_result_delta_raw ]
+  :=
+  OperatorExpr [
+    Variable [ Name=$percent_rank_result_expected ]
+    -
+    Variable [ Name=$percent_rank_result_actual ]
+  ]
+Let Variable [ Name=$percent_rank_result_delta ]
+  :=
+  CASE      LiteralExpr [TRUE]
+
+  WHEN       OperatorExpr [
+        Variable [ Name=$percent_rank_result_delta_raw ]
+        <
+        LiteralExpr [DOUBLE] [0.001]
+      ]
+  THEN       LiteralExpr [LONG] [0]
+
+  ELSE       Variable [ Name=$percent_rank_result_delta_raw ]
+
+  END
+Group All
+  GROUP AS Variable [ Name=#1 ]
+  (
+    t1:=Variable [ Name=$t1 ]
+    p:=Variable [ Name=$p ]
+    n:=Variable [ Name=$n ]
+    d:=Variable [ Name=$d ]
+    rank_result_expected:=Variable [ Name=$rank_result_expected ]
+    rank_result_actual:=Variable [ Name=$rank_result_actual ]
+    rank_result_delta:=Variable [ Name=$rank_result_delta ]
+    percent_rank_result_expected:=Variable [ Name=$percent_rank_result_expected ]
+    percent_rank_result_actual:=Variable [ Name=$percent_rank_result_actual ]
+    percent_rank_result_delta_raw:=Variable [ Name=$percent_rank_result_delta_raw ]
+    percent_rank_result_delta:=Variable [ Name=$percent_rank_result_delta ]
+  )
+

@@ -22,4 +22,4 @@
  */
 
 from range(1,10) t
-select ntile("string") over (order by t desc)
+select ntile("string") over (order by t desc) as res

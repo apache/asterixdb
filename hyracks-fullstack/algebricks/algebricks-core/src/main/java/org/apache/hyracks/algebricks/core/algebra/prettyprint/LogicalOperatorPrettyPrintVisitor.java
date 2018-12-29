@@ -486,10 +486,57 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     public Void visitWindowOperator(WindowOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent).append("window ").append(str(op.getVariables())).append(" <- ");
         pprintExprList(op.getExpressions(), indent);
-        buffer.append(" partition ");
-        pprintExprList(op.getPartitionExpressions(), indent);
-        buffer.append(" order ");
-        pprintOrderList(op.getOrderExpressions(), indent);
+        if (!op.getPartitionExpressions().isEmpty()) {
+            buffer.append(" partition ");
+            pprintExprList(op.getPartitionExpressions(), indent);
+        }
+        if (!op.getOrderExpressions().isEmpty()) {
+            buffer.append(" order ");
+            pprintOrderList(op.getOrderExpressions(), indent);
+        }
+        if (op.hasNestedPlans()) {
+            buffer.append(" frame on ");
+            pprintOrderList(op.getFrameValueExpressions(), indent);
+            buffer.append("start ");
+            List<Mutable<ILogicalExpression>> frameStartExpressions = op.getFrameStartExpressions();
+            if (!frameStartExpressions.isEmpty()) {
+                pprintExprList(frameStartExpressions, indent);
+            } else {
+                buffer.append("unbounded");
+            }
+            buffer.append(" end ");
+            List<Mutable<ILogicalExpression>> frameEndExpressions = op.getFrameEndExpressions();
+            if (!frameEndExpressions.isEmpty()) {
+                pprintExprList(frameEndExpressions, indent);
+            } else {
+                buffer.append("unbounded");
+            }
+            List<Mutable<ILogicalExpression>> frameExcludeExpressions = op.getFrameExcludeExpressions();
+            if (!frameExcludeExpressions.isEmpty()) {
+                buffer.append(" exclude ");
+                int negStartIdx = op.getFrameExcludeNegationStartIdx();
+                if (negStartIdx >= 0 && op.getFrameExcludeNegationStartIdx() < frameExcludeExpressions.size()) {
+                    pprintExprList(frameExcludeExpressions.subList(0, negStartIdx), indent);
+                    buffer.append(" and not ");
+                    pprintExprList(frameExcludeExpressions.subList(negStartIdx, frameExcludeExpressions.size()),
+                            indent);
+                } else {
+                    pprintExprList(frameExcludeExpressions, indent);
+                }
+            }
+            Mutable<ILogicalExpression> frameOffset = op.getFrameOffset();
+            if (frameOffset.getValue() != null) {
+                buffer.append(" offset ");
+                buffer.append(frameOffset.getValue().accept(exprVisitor, indent));
+            }
+            int frameMaxObjects = op.getFrameMaxObjects();
+            if (frameMaxObjects != -1) {
+                buffer.append(" maxObjects " + frameMaxObjects);
+            }
+
+            buffer.append(" {");
+            printNestedPlans(op, indent);
+        }
         return null;
     }
 

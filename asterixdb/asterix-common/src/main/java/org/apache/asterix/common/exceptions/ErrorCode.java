@@ -183,6 +183,9 @@ public class ErrorCode {
     public static final int COMPILATION_EXPECTED_FUNCTION_CALL = 1095;
     public static final int UNKNOWN_COMPRESSION_SCHEME = 1096;
     public static final int UNSUPPORTED_WITH_SUBFIELD = 1097;
+    public static final int COMPILATION_INVALID_WINDOW_FRAME = 1098;
+    public static final int COMPILATION_UNEXPECTED_WINDOW_FRAME = 1099;
+    public static final int COMPILATION_UNEXPECTED_WINDOW_EXPRESSION = 1100;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

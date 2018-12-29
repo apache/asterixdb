@@ -19,8 +19,10 @@
 package org.apache.asterix.lang.common.visitor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -53,6 +55,7 @@ import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
@@ -204,20 +207,23 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
 
     @Override
     public Boolean visit(GroupbyClause gc, List<FunctionDecl> arg) throws CompilationException {
-        boolean changed = false;
-        for (GbyVariableExpressionPair p : gc.getGbyPairList()) {
-            Pair<Boolean, Expression> be = inlineUdfsInExpr(p.getExpr(), arg);
-            p.setExpr(be.second);
-            if (be.first) {
-                changed = true;
-            }
+        Pair<Boolean, List<GbyVariableExpressionPair>> p1 = inlineUdfsInGbyPairList(gc.getGbyPairList(), arg);
+        gc.setGbyPairList(p1.second);
+        boolean changed = p1.first;
+        if (gc.hasDecorList()) {
+            Pair<Boolean, List<GbyVariableExpressionPair>> p2 = inlineUdfsInGbyPairList(gc.getDecorPairList(), arg);
+            gc.setDecorPairList(p2.second);
+            changed |= p2.first;
         }
-        for (GbyVariableExpressionPair p : gc.getDecorPairList()) {
-            Pair<Boolean, Expression> be = inlineUdfsInExpr(p.getExpr(), arg);
-            p.setExpr(be.second);
-            if (be.first) {
-                changed = true;
-            }
+        if (gc.hasGroupFieldList()) {
+            Pair<Boolean, List<Pair<Expression, Identifier>>> p3 = inlineUdfsInFieldList(gc.getGroupFieldList(), arg);
+            gc.setGroupFieldList(p3.second);
+            changed |= p3.first;
+        }
+        if (gc.hasWithMap()) {
+            Pair<Boolean, Map<Expression, VariableExpr>> p4 = inlineUdfsInVarMap(gc.getWithVarMap(), arg);
+            gc.setWithVarMap(p4.second);
+            changed |= p4.first;
         }
         return changed;
     }
@@ -319,16 +325,50 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
 
     protected Pair<Boolean, List<Expression>> inlineUdfsInExprList(List<Expression> exprList, List<FunctionDecl> fds)
             throws CompilationException {
-        ArrayList<Expression> newList = new ArrayList<>();
+        List<Expression> newList = new ArrayList<>(exprList.size());
         boolean changed = false;
         for (Expression e : exprList) {
-            Pair<Boolean, Expression> p = inlineUdfsInExpr(e, fds);
-            newList.add(p.second);
-            if (p.first) {
-                changed = true;
-            }
+            Pair<Boolean, Expression> be = inlineUdfsInExpr(e, fds);
+            newList.add(be.second);
+            changed |= be.first;
         }
         return new Pair<>(changed, newList);
+    }
+
+    private Pair<Boolean, List<GbyVariableExpressionPair>> inlineUdfsInGbyPairList(
+            List<GbyVariableExpressionPair> gbyPairList, List<FunctionDecl> fds) throws CompilationException {
+        List<GbyVariableExpressionPair> newList = new ArrayList<>(gbyPairList.size());
+        boolean changed = false;
+        for (GbyVariableExpressionPair p : gbyPairList) {
+            Pair<Boolean, Expression> be = inlineUdfsInExpr(p.getExpr(), fds);
+            newList.add(new GbyVariableExpressionPair(p.getVar(), be.second));
+            changed |= be.first;
+        }
+        return new Pair<>(changed, newList);
+    }
+
+    protected Pair<Boolean, List<Pair<Expression, Identifier>>> inlineUdfsInFieldList(
+            List<Pair<Expression, Identifier>> fieldList, List<FunctionDecl> fds) throws CompilationException {
+        List<Pair<Expression, Identifier>> newList = new ArrayList<>(fieldList.size());
+        boolean changed = false;
+        for (Pair<Expression, Identifier> p : fieldList) {
+            Pair<Boolean, Expression> be = inlineUdfsInExpr(p.first, fds);
+            newList.add(new Pair<>(be.second, p.second));
+            changed |= be.first;
+        }
+        return new Pair<>(changed, newList);
+    }
+
+    private Pair<Boolean, Map<Expression, VariableExpr>> inlineUdfsInVarMap(Map<Expression, VariableExpr> varMap,
+            List<FunctionDecl> fds) throws CompilationException {
+        Map<Expression, VariableExpr> newMap = new HashMap<>();
+        boolean changed = false;
+        for (Map.Entry<Expression, VariableExpr> me : varMap.entrySet()) {
+            Pair<Boolean, Expression> be = inlineUdfsInExpr(me.getKey(), fds);
+            newMap.put(be.second, me.getValue());
+            changed |= be.first;
+        }
+        return new Pair<>(changed, newMap);
     }
 
     private Expression rewriteFunctionBody(FunctionDecl fnDecl) throws CompilationException {
@@ -363,7 +403,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         }
     }
 
-    protected static FunctionDecl findFuncDeclaration(FunctionSignature fid, List<FunctionDecl> sequence) {
+    private static FunctionDecl findFuncDeclaration(FunctionSignature fid, List<FunctionDecl> sequence) {
         for (FunctionDecl f : sequence) {
             if (f.getSignature().equals(fid)) {
                 return f;

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.lang.common.util;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -96,5 +98,9 @@ public class ExpressionUtils {
             default:
                 throw new CompilationException(ErrorCode.LITERAL_TYPE_NOT_SUPPORTED_IN_CONSTANT_RECORD, literalType);
         }
+    }
+
+    public static <T> Collection<T> emptyIfNull(Collection<T> coll) {
+        return coll == null ? Collections.emptyList() : coll;
     }
 }

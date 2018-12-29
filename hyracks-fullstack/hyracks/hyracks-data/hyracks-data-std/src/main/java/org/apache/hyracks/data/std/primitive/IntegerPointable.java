@@ -109,7 +109,7 @@ public final class IntegerPointable extends AbstractPointable implements IHashab
     public int compareTo(byte[] bytes, int start, int length) {
         int v = getInteger();
         int ov = getInteger(bytes, start);
-        return v < ov ? -1 : (v > ov ? 1 : 0);
+        return Integer.compare(v, ov);
     }
 
     @Override

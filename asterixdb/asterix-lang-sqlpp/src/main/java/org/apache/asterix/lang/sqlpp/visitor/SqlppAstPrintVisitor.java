@@ -293,12 +293,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
             out.print(skip(step + 1) + "GROUP AS ");
             gc.getGroupVar().accept(this, 0);
             if (gc.hasGroupFieldList()) {
-                out.println(skip(step + 1) + "(");
-                for (Pair<Expression, Identifier> field : gc.getGroupFieldList()) {
-                    out.print(skip(step + 2) + field.second + ":=");
-                    field.first.accept(this, 0);
-                }
-                out.println(skip(step + 1) + ")");
+                printFieldList(step + 1, gc.getGroupFieldList());
             }
         }
         if (gc.hasWithMap()) {
@@ -335,31 +330,6 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(WindowExpression winExpr, Integer step) throws CompilationException {
-        out.print(skip(step) + "WINDOW");
-        winExpr.getExpr().accept(this, step + 1);
-        out.println();
-        out.println(skip(step) + "OVER (");
-        if (winExpr.hasPartitionList()) {
-            out.println(skip(step + 1) + "PARTITION BY");
-            List<Expression> partitionList = winExpr.getPartitionList();
-            for (Expression expr : partitionList) {
-                expr.accept(this, step + 2);
-                out.println();
-            }
-        }
-        out.println(skip(step + 1) + "ORDER BY");
-        List<Expression> orderbyList = winExpr.getOrderbyList();
-        List<OrderbyClause.OrderModifier> orderbyModifierList = winExpr.getOrderbyModifierList();
-        for (int i = 0, ln = orderbyList.size(); i < ln; i++) {
-            orderbyList.get(i).accept(this, step + 2);
-            out.println(" " + orderbyModifierList.get(i));
-        }
-        out.println(skip(step) + ")");
-        return null;
-    }
-
-    @Override
     public Void visit(ListSliceExpression expression, Integer step) throws CompilationException {
         out.println(skip(step) + "ListSliceExpression [");
         expression.getExpr().accept(this, step + 1);
@@ -375,5 +345,59 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
         }
         out.println(skip(step) + "]");
         return null;
+    }
+
+    @Override
+    public Void visit(WindowExpression winExpr, Integer step) throws CompilationException {
+        out.println(skip(step) + "WINDOW " + winExpr.getFunctionSignature() + "[");
+        for (Expression expr : winExpr.getExprList()) {
+            expr.accept(this, step + 1);
+        }
+        out.println(skip(step) + "]");
+        if (winExpr.hasWindowVar()) {
+            out.print(skip(step + 1) + "AS ");
+            winExpr.getWindowVar().accept(this, 0);
+            if (winExpr.hasWindowFieldList()) {
+                printFieldList(step + 1, winExpr.getWindowFieldList());
+            }
+        }
+        out.println(skip(step) + "OVER (");
+        if (winExpr.hasPartitionList()) {
+            out.println(skip(step + 1) + "PARTITION BY");
+            List<Expression> partitionList = winExpr.getPartitionList();
+            for (Expression expr : partitionList) {
+                expr.accept(this, step + 2);
+            }
+        }
+        if (winExpr.hasOrderByList()) {
+            out.println(skip(step + 1) + "ORDER BY");
+            List<Expression> orderbyList = winExpr.getOrderbyList();
+            List<OrderbyClause.OrderModifier> orderbyModifierList = winExpr.getOrderbyModifierList();
+            for (int i = 0, ln = orderbyList.size(); i < ln; i++) {
+                orderbyList.get(i).accept(this, step + 2);
+                out.println(skip(step + 2) + orderbyModifierList.get(i));
+            }
+        }
+        if (winExpr.hasFrameDefinition()) {
+            out.println(skip(step + 1) + winExpr.getFrameMode() + ' ' + winExpr.getFrameStartKind() + ' '
+                    + winExpr.getFrameEndKind() + " EXCLUDE " + winExpr.getFrameExclusionKind());
+            if (winExpr.hasFrameStartExpr()) {
+                winExpr.getFrameStartExpr().accept(this, step + 2);
+            }
+            if (winExpr.hasFrameEndExpr()) {
+                winExpr.getFrameEndExpr().accept(this, step + 2);
+            }
+        }
+        out.println(skip(step) + ")");
+        return null;
+    }
+
+    private void printFieldList(int step, List<Pair<Expression, Identifier>> fieldList) throws CompilationException {
+        out.println(skip(step) + "(");
+        for (Pair<Expression, Identifier> field : fieldList) {
+            out.print(skip(step + 1) + field.second + ":=");
+            field.first.accept(this, 0);
+        }
+        out.println(skip(step) + ")");
     }
 }

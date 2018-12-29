@@ -34,7 +34,6 @@ import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionV
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -123,19 +122,14 @@ public class SqlppGroupByVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     private List<Pair<Expression, Identifier>> createGroupFieldList(SelectBlock selectBlock) {
         List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<>();
-        addToGroupFieldList(groupFieldList, SqlppVariableUtil.getBindingVariables(selectBlock.getFromClause()));
-        addToGroupFieldList(groupFieldList, SqlppVariableUtil.getBindingVariables(selectBlock.getLetList()));
+        addToFieldList(groupFieldList, SqlppVariableUtil.getBindingVariables(selectBlock.getFromClause()));
+        addToFieldList(groupFieldList, SqlppVariableUtil.getBindingVariables(selectBlock.getLetList()));
         return groupFieldList;
     }
 
-    private void addToGroupFieldList(List<Pair<Expression, Identifier>> groupFieldList,
-            Collection<VariableExpr> fromBindingVars) {
-        for (VariableExpr varExpr : fromBindingVars) {
-            VariableExpr newVarExpr = new VariableExpr(varExpr.getVar());
-            newVarExpr.setSourceLocation(varExpr.getSourceLocation());
-            Pair<Expression, Identifier> varIdPair =
-                    new Pair<>(newVarExpr, SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar()));
-            groupFieldList.add(varIdPair);
+    private void addToFieldList(List<Pair<Expression, Identifier>> outFieldList, List<VariableExpr> varList) {
+        for (VariableExpr varExpr : varList) {
+            SqlppVariableUtil.addToFieldVariableList(varExpr, outFieldList);
         }
     }
 }

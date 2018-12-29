@@ -4,19 +4,19 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- STABLE_SORT [$$44(ASC), $$45(ASC)]  |PARTITIONED|
-              -- RANGE_PARTITION_EXCHANGE [$$44(ASC), $$45(ASC)]  |PARTITIONED|
+            -- STABLE_SORT [$$47(ASC), $$48(ASC)]  |PARTITIONED|
+              -- RANGE_PARTITION_EXCHANGE [$$47(ASC), $$48(ASC)]  |PARTITIONED|
                 -- FORWARD  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- REPLICATE  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- HYBRID_HASH_JOIN [$$44][$$48]  |PARTITIONED|
-                              -- HASH_PARTITION_EXCHANGE [$$44]  |PARTITIONED|
+                            -- HYBRID_HASH_JOIN [$$47][$$51]  |PARTITIONED|
+                              -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- HYBRID_HASH_JOIN [$$45, $$44][$$47, $$46]  |PARTITIONED|
+                                    -- HYBRID_HASH_JOIN [$$48, $$47][$$50, $$49]  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- DATASOURCE_SCAN  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -39,11 +39,11 @@
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- HYBRID_HASH_JOIN [$$44][$$48]  |PARTITIONED|
-                                        -- HASH_PARTITION_EXCHANGE [$$44]  |PARTITIONED|
+                                      -- HYBRID_HASH_JOIN [$$47][$$51]  |PARTITIONED|
+                                        -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- HYBRID_HASH_JOIN [$$45, $$44][$$47, $$46]  |PARTITIONED|
+                                              -- HYBRID_HASH_JOIN [$$48, $$47][$$50, $$49]  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   -- DATASOURCE_SCAN  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

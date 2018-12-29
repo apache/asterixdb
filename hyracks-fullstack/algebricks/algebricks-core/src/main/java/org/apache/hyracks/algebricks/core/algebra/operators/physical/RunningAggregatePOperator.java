@@ -90,7 +90,7 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
         int[] projectionList = JobGenHelper.projectAllVariables(opSchema);
 
         RunningAggregateRuntimeFactory runtime =
-                new RunningAggregateRuntimeFactory(outColumns, runningAggFuns, projectionList);
+                new RunningAggregateRuntimeFactory(projectionList, outColumns, runningAggFuns);
         runtime.setSourceLocation(ragg.getSourceLocation());
 
         // contribute one Asterix framewriter

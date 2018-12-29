@@ -3,21 +3,21 @@
     -- STREAM_LIMIT  |UNPARTITIONED|
       -- STREAM_PROJECT  |PARTITIONED|
         -- ASSIGN  |PARTITIONED|
-          -- SORT_MERGE_EXCHANGE [$$48(DESC) ]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$53(DESC) ]  |PARTITIONED|
             -- STREAM_LIMIT  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [topK: 3] [$$48(DESC)]  |PARTITIONED|
+                -- STABLE_SORT [topK: 3] [$$53(DESC)]  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- PRE_CLUSTERED_GROUP_BY[$$46]  |PARTITIONED|
+                    -- PRE_CLUSTERED_GROUP_BY[$$51]  |PARTITIONED|
                             {
                               -- AGGREGATE  |LOCAL|
                                 -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                                  -- IN_MEMORY_STABLE_SORT [$$41(ASC)]  |LOCAL|
+                                  -- IN_MEMORY_STABLE_SORT [$$46(ASC)]  |LOCAL|
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                             }
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- STABLE_SORT [$$46(ASC)]  |PARTITIONED|
-                          -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
+                        -- STABLE_SORT [$$51(ASC)]  |PARTITIONED|
+                          -- HASH_PARTITION_EXCHANGE [$$51]  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- ASSIGN  |PARTITIONED|
                                 -- STREAM_PROJECT  |PARTITIONED|

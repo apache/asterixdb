@@ -123,7 +123,7 @@ public final class LongPointable extends AbstractPointable implements IHashable,
     public int compareTo(byte[] bytes, int start, int length) {
         long v = getLong();
         long ov = getLong(bytes, start);
-        return v < ov ? -1 : (v > ov ? 1 : 0);
+        return Long.compare(v, ov);
     }
 
     @Override

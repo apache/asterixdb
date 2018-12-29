@@ -9246,6 +9246,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="window">
+      <compilation-unit name="pg_win">
+        <output-dir compare="Text">pg_win</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
       <compilation-unit name="rank_01">
         <output-dir compare="Text">rank_01</output-dir>
       </compilation-unit>

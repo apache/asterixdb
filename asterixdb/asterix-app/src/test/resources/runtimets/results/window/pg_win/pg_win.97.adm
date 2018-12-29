@@ -1,0 +1,10 @@
+{ "salary": 3500, "last_value": 4500, "lag": null }
+{ "salary": 3900, "last_value": 4800, "lag": 3500 }
+{ "salary": 4200, "last_value": 5200, "lag": 3900 }
+{ "salary": 4500, "last_value": 5200, "lag": 4200 }
+{ "salary": 4800, "last_value": 5200, "lag": 4500 }
+{ "salary": 4800, "last_value": 5200, "lag": 4800 }
+{ "salary": 5000, "last_value": 6000, "lag": 4800 }
+{ "salary": 5200, "last_value": 6000, "lag": 5000 }
+{ "salary": 5200, "last_value": 6000, "lag": 5200 }
+{ "salary": 6000, "last_value": 6000, "lag": 5200 }

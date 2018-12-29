@@ -28,5 +28,5 @@ with P as 4
 from t1, range(t1.one, P) p
 group by p
 select p, row_number() over (order by p desc) rn
-order by p
+order by p;
 

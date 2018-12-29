@@ -293,30 +293,32 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
     @Override
     public GroupbyClause visit(GroupbyClause gc, Void arg) throws CompilationException {
         List<GbyVariableExpressionPair> gbyPairList = new ArrayList<>();
-        List<GbyVariableExpressionPair> decorPairList = new ArrayList<>();
-        Map<Expression, VariableExpr> withVarMap = new HashMap<>();
-        VariableExpr groupVarExpr = null;
-        List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<>();
         for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
             VariableExpr var = gbyVarExpr.getVar();
             gbyPairList.add(new GbyVariableExpressionPair(var == null ? null : (VariableExpr) var.accept(this, arg),
                     (Expression) gbyVarExpr.getExpr().accept(this, arg)));
         }
-        for (GbyVariableExpressionPair gbyVarExpr : gc.getDecorPairList()) {
-            VariableExpr var = gbyVarExpr.getVar();
-            decorPairList.add(new GbyVariableExpressionPair(var == null ? null : (VariableExpr) var.accept(this, arg),
-                    (Expression) gbyVarExpr.getExpr().accept(this, arg)));
+        List<GbyVariableExpressionPair> decorPairList = new ArrayList<>();
+        if (gc.hasDecorList()) {
+            for (GbyVariableExpressionPair gbyVarExpr : gc.getDecorPairList()) {
+                VariableExpr var = gbyVarExpr.getVar();
+                decorPairList
+                        .add(new GbyVariableExpressionPair(var == null ? null : (VariableExpr) var.accept(this, arg),
+                                (Expression) gbyVarExpr.getExpr().accept(this, arg)));
+            }
         }
-        for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
-            withVarMap.put((Expression) entry.getKey().accept(this, arg),
-                    (VariableExpr) entry.getValue().accept(this, arg));
+        Map<Expression, VariableExpr> withVarMap = new HashMap<>();
+        if (gc.hasWithMap()) {
+            for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
+                withVarMap.put((Expression) entry.getKey().accept(this, arg),
+                        (VariableExpr) entry.getValue().accept(this, arg));
+            }
         }
+        VariableExpr groupVarExpr = null;
         if (gc.hasGroupVar()) {
             groupVarExpr = (VariableExpr) gc.getGroupVar().accept(this, arg);
         }
-        for (Pair<Expression, Identifier> field : gc.getGroupFieldList()) {
-            groupFieldList.add(new Pair<>((Expression) field.first.accept(this, arg), field.second));
-        }
+        List<Pair<Expression, Identifier>> groupFieldList = copyFieldList(gc.getGroupFieldList(), arg);
         GroupbyClause copy = new GroupbyClause(gbyPairList, decorPairList, withVarMap, groupVarExpr, groupFieldList,
                 gc.hasHashGroupByHint(), gc.isGroupAll());
         copy.setSourceLocation(gc.getSourceLocation());
@@ -515,12 +517,24 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public ILangExpression visit(WindowExpression winExpr, Void arg) throws CompilationException {
-        Expression newExpr = (Expression) winExpr.getExpr().accept(this, arg);
+        List<Expression> newExprList = copyExprList(winExpr.getExprList(), arg);
         List<Expression> newPartitionList =
                 winExpr.hasPartitionList() ? copyExprList(winExpr.getPartitionList(), arg) : null;
-        List<Expression> newOrderbyList = copyExprList(winExpr.getOrderbyList(), arg);
-        List<OrderbyClause.OrderModifier> newOrderbyModifierList = new ArrayList<>(winExpr.getOrderbyModifierList());
-        WindowExpression copy = new WindowExpression(newExpr, newPartitionList, newOrderbyList, newOrderbyModifierList);
+        List<Expression> newOrderbyList = winExpr.hasOrderByList() ? copyExprList(winExpr.getOrderbyList(), arg) : null;
+        List<OrderbyClause.OrderModifier> newOrderbyModifierList =
+                winExpr.hasOrderByList() ? new ArrayList<>(winExpr.getOrderbyModifierList()) : null;
+        Expression newFrameStartExpr =
+                winExpr.hasFrameStartExpr() ? (Expression) winExpr.getFrameStartExpr().accept(this, arg) : null;
+        Expression newFrameEndExpr =
+                winExpr.hasFrameEndExpr() ? (Expression) winExpr.getFrameEndExpr().accept(this, arg) : null;
+        VariableExpr newWindowVar =
+                winExpr.hasWindowVar() ? (VariableExpr) winExpr.getWindowVar().accept(this, arg) : null;
+        List<Pair<Expression, Identifier>> newWindowFieldList =
+                winExpr.hasWindowFieldList() ? copyFieldList(winExpr.getWindowFieldList(), arg) : null;
+        WindowExpression copy = new WindowExpression(winExpr.getFunctionSignature(), newExprList, newPartitionList,
+                newOrderbyList, newOrderbyModifierList, winExpr.getFrameMode(), winExpr.getFrameStartKind(),
+                newFrameStartExpr, winExpr.getFrameEndKind(), newFrameEndExpr, winExpr.getFrameExclusionKind(),
+                newWindowVar, newWindowFieldList);
         copy.setSourceLocation(winExpr.getSourceLocation());
         copy.addHints(winExpr.getHints());
         return copy;
@@ -532,5 +546,14 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
             newExprList.add((Expression) expr.accept(this, arg));
         }
         return newExprList;
+    }
+
+    private List<Pair<Expression, Identifier>> copyFieldList(List<Pair<Expression, Identifier>> fieldList, Void arg)
+            throws CompilationException {
+        List<Pair<Expression, Identifier>> newFieldList = new ArrayList<>(fieldList.size());
+        for (Pair<Expression, Identifier> field : fieldList) {
+            newFieldList.add(new Pair<>((Expression) field.first.accept(this, arg), field.second));
+        }
+        return newFieldList;
     }
 }

@@ -3,13 +3,13 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- SORT_MERGE_EXCHANGE [$$cntrycode(ASC) ]  |PARTITIONED|
-          -- SORT_GROUP_BY[$$165]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$177]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
-            -- HASH_PARTITION_EXCHANGE [$$165]  |PARTITIONED|
-              -- SORT_GROUP_BY[$$142]  |PARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$177]  |PARTITIONED|
+              -- SORT_GROUP_BY[$$154]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -21,25 +21,25 @@
                         -- STREAM_SELECT  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- SORT_GROUP_BY[$$162]  |PARTITIONED|
+                              -- SORT_GROUP_BY[$$174]  |PARTITIONED|
                                       {
                                         -- AGGREGATE  |LOCAL|
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                                       }
-                                -- HASH_PARTITION_EXCHANGE [$$162]  |PARTITIONED|
-                                  -- PRE_CLUSTERED_GROUP_BY[$$156]  |PARTITIONED|
+                                -- HASH_PARTITION_EXCHANGE [$$174]  |PARTITIONED|
+                                  -- PRE_CLUSTERED_GROUP_BY[$$168]  |PARTITIONED|
                                           {
                                             -- AGGREGATE  |LOCAL|
                                               -- STREAM_SELECT  |LOCAL|
                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                                           }
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- STABLE_SORT [$$156(ASC)]  |PARTITIONED|
+                                      -- STABLE_SORT [$$168(ASC)]  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- HYBRID_HASH_JOIN [$$151][$$148]  |PARTITIONED|
-                                                -- HASH_PARTITION_EXCHANGE [$$151]  |PARTITIONED|
+                                              -- HYBRID_HASH_JOIN [$$163][$$160]  |PARTITIONED|
+                                                -- HASH_PARTITION_EXCHANGE [$$163]  |PARTITIONED|
                                                   -- ASSIGN  |PARTITIONED|
                                                     -- STREAM_PROJECT  |PARTITIONED|
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -66,7 +66,7 @@
                                                                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                -- HASH_PARTITION_EXCHANGE [$$148]  |PARTITIONED|
+                                                -- HASH_PARTITION_EXCHANGE [$$160]  |PARTITIONED|
                                                   -- ASSIGN  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- DATASOURCE_SCAN  |PARTITIONED|

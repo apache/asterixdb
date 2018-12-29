@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
+import java.util.List;
+
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -26,7 +28,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableEvalSizeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractAssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -96,7 +97,7 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
 
     @Override
     public Void visitAssignOperator(AssignOperator op, IOptimizationContext context) throws AlgebricksException {
-        visitAssignment(op, context);
+        visitAssignment(op, op.getExpressions(), context);
         return null;
     }
 
@@ -201,13 +202,13 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
     @Override
     public Void visitRunningAggregateOperator(RunningAggregateOperator op, IOptimizationContext context)
             throws AlgebricksException {
-        visitAssignment(op, context);
+        visitAssignment(op, op.getExpressions(), context);
         return null;
     }
 
     @Override
     public Void visitWindowOperator(WindowOperator op, IOptimizationContext context) throws AlgebricksException {
-        visitAssignment(op, context);
+        visitAssignment(op, op.getExpressions(), context);
         return null;
     }
 
@@ -320,7 +321,8 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
         return v;
     }
 
-    private void visitAssignment(AbstractAssignOperator op, IOptimizationContext context) throws AlgebricksException {
+    private void visitAssignment(ILogicalOperator op, List<Mutable<ILogicalExpression>> exprList,
+            IOptimizationContext context) throws AlgebricksException {
         LogicalPropertiesVectorImpl v = propagateCardinality(op, context);
         if (v != null && v.getNumberOfTuples() != null) {
             IVariableEvalSizeEnvironment varSizeEnv = context.getVariableEvalSizeEnvironment();
@@ -331,7 +333,7 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
                 if (v0 != null) {
                     long frames0 = v0.getMaxOutputFrames();
                     long overhead = 0; // added per tuple
-                    for (Mutable<ILogicalExpression> exprRef : op.getExpressions()) {
+                    for (Mutable<ILogicalExpression> exprRef : exprList) {
                         int sz = evalSize.getEvalSize(exprRef.getValue(), varSizeEnv);
                         if (sz == -1) {
                             return;

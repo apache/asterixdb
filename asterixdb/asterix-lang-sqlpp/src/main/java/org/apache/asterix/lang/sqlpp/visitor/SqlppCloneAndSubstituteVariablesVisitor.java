@@ -33,6 +33,7 @@ import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.util.VariableCloneAndSubstitutionUtil;
 import org.apache.asterix.lang.common.visitor.CloneAndSubstituteVariablesVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
@@ -90,7 +91,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         VariableExpr newLeftVar = generateNewVariable(context, leftVar);
         VariableExpr newLeftPosVar = fromTerm.hasPositionalVariable()
                 ? generateNewVariable(context, fromTerm.getPositionalVariable()) : null;
-        Expression newLeftExpr = (Expression) visitUnnesBindingExpression(fromTerm.getLeftExpression(), env).first;
+        Expression newLeftExpr = (Expression) visitUnnestBindingExpression(fromTerm.getLeftExpression(), env).first;
         List<AbstractBinaryCorrelateClause> newCorrelateClauses = new ArrayList<>();
 
         VariableSubstitutionEnvironment currentEnv = new VariableSubstitutionEnvironment(env);
@@ -131,7 +132,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 ? generateNewVariable(context, joinClause.getPositionalVariable()) : null;
 
         // Visits the right expression.
-        Expression newRightExpr = (Expression) visitUnnesBindingExpression(joinClause.getRightExpression(), env).first;
+        Expression newRightExpr = (Expression) visitUnnestBindingExpression(joinClause.getRightExpression(), env).first;
 
         // Visits the condition.
         VariableSubstitutionEnvironment currentEnv = new VariableSubstitutionEnvironment(env);
@@ -183,7 +184,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 ? generateNewVariable(context, unnestClause.getPositionalVariable()) : null;
 
         // Visits the right expression.
-        Expression rightExpr = (Expression) visitUnnesBindingExpression(unnestClause.getRightExpression(), env).first;
+        Expression rightExpr = (Expression) visitUnnestBindingExpression(unnestClause.getRightExpression(), env).first;
 
         // Visits the condition.
         VariableSubstitutionEnvironment currentEnv = new VariableSubstitutionEnvironment(env);
@@ -416,14 +417,26 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(WindowExpression winExpr,
             VariableSubstitutionEnvironment env) throws CompilationException {
-        Expression newExpr = (Expression) winExpr.getExpr().accept(this, env).first;
+        List<Expression> newExprList =
+                VariableCloneAndSubstitutionUtil.visitAndCloneExprList(winExpr.getExprList(), env, this);
         List<Expression> newPartitionList = winExpr.hasPartitionList()
                 ? VariableCloneAndSubstitutionUtil.visitAndCloneExprList(winExpr.getPartitionList(), env, this) : null;
-        List<Expression> newOrderbyList =
-                VariableCloneAndSubstitutionUtil.visitAndCloneExprList(winExpr.getOrderbyList(), env, this);
-        List<OrderbyClause.OrderModifier> newOrderbyModifierList = new ArrayList<>(winExpr.getOrderbyModifierList());
-        WindowExpression newWinExpr =
-                new WindowExpression(newExpr, newPartitionList, newOrderbyList, newOrderbyModifierList);
+        List<Expression> newOrderbyList = winExpr.hasOrderByList()
+                ? VariableCloneAndSubstitutionUtil.visitAndCloneExprList(winExpr.getOrderbyList(), env, this) : null;
+        List<OrderbyClause.OrderModifier> newOrderbyModifierList =
+                winExpr.hasOrderByList() ? new ArrayList<>(winExpr.getOrderbyModifierList()) : null;
+        Expression newFrameStartExpr =
+                winExpr.hasFrameStartExpr() ? (Expression) winExpr.getFrameStartExpr().accept(this, env).first : null;
+        Expression newFrameEndExpr =
+                winExpr.hasFrameEndExpr() ? (Expression) winExpr.getFrameEndExpr().accept(this, env).first : null;
+        VariableExpr newWindowVar =
+                winExpr.hasWindowVar() ? (VariableExpr) winExpr.getWindowVar().accept(this, env).first : null;
+        List<Pair<Expression, Identifier>> newWindowFieldList = winExpr.hasWindowFieldList()
+                ? VariableCloneAndSubstitutionUtil.substInFieldList(winExpr.getWindowFieldList(), env, this) : null;
+        WindowExpression newWinExpr = new WindowExpression(winExpr.getFunctionSignature(), newExprList,
+                newPartitionList, newOrderbyList, newOrderbyModifierList, winExpr.getFrameMode(),
+                winExpr.getFrameStartKind(), newFrameStartExpr, winExpr.getFrameEndKind(), newFrameEndExpr,
+                winExpr.getFrameExclusionKind(), newWindowVar, newWindowFieldList);
         newWinExpr.setSourceLocation(winExpr.getSourceLocation());
         newWinExpr.addHints(winExpr.getHints());
         return new Pair<>(newWinExpr, env);

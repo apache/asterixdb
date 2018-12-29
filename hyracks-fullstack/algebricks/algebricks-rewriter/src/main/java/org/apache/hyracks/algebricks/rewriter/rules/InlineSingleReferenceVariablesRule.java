@@ -19,7 +19,7 @@
 package org.apache.hyracks.algebricks.rewriter.rules;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +52,7 @@ public class InlineSingleReferenceVariablesRule extends InlineVariablesRule {
 
     // Maps from variable to a list of operators using that variable.
     protected Map<LogicalVariable, List<ILogicalOperator>> usedVarsMap =
-            new HashMap<LogicalVariable, List<ILogicalOperator>>();
+            new LinkedHashMap<LogicalVariable, List<ILogicalOperator>>();
     protected List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
 
     @Override

@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestNonMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -154,11 +155,7 @@ public class SubstituteVariableVisitor
             throws AlgebricksException {
         subst(pair.first, pair.second, op.getGroupByList());
         subst(pair.first, pair.second, op.getDecorList());
-        for (ILogicalPlan p : op.getNestedPlans()) {
-            for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                VariableUtilities.substituteVariablesInDescendantsAndSelf(r.getValue(), pair.first, pair.second, ctx);
-            }
-        }
+        substInNestedPlans(pair.first, pair.second, op);
         substVarTypes(op, pair);
         return null;
     }
@@ -248,11 +245,7 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitSubplanOperator(SubplanOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        for (ILogicalPlan p : op.getNestedPlans()) {
-            for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                VariableUtilities.substituteVariablesInDescendantsAndSelf(r.getValue(), pair.first, pair.second, ctx);
-            }
-        }
+        substInNestedPlans(pair.first, pair.second, op);
         return null;
     }
 
@@ -380,6 +373,15 @@ public class SubstituteVariableVisitor
         }
     }
 
+    private void substInNestedPlans(LogicalVariable v1, LogicalVariable v2, AbstractOperatorWithNestedPlans op)
+            throws AlgebricksException {
+        for (ILogicalPlan p : op.getNestedPlans()) {
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                VariableUtilities.substituteVariablesInDescendantsAndSelf(r.getValue(), v1, v2, ctx);
+            }
+        }
+    }
+
     private void substAssignVariables(List<LogicalVariable> variables, List<Mutable<ILogicalExpression>> expressions,
             Pair<LogicalVariable, LogicalVariable> pair) {
         int n = variables.size();
@@ -503,13 +505,30 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitWindowOperator(WindowOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        for (Mutable<ILogicalExpression> pe : op.getPartitionExpressions()) {
-            pe.getValue().substituteVar(pair.first, pair.second);
+        for (Mutable<ILogicalExpression> expr : op.getPartitionExpressions()) {
+            expr.getValue().substituteVar(pair.first, pair.second);
         }
-        for (Pair<IOrder, Mutable<ILogicalExpression>> oe : op.getOrderExpressions()) {
-            oe.second.getValue().substituteVar(pair.first, pair.second);
+        for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
+            p.second.getValue().substituteVar(pair.first, pair.second);
+        }
+        for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getFrameValueExpressions()) {
+            p.second.getValue().substituteVar(pair.first, pair.second);
+        }
+        for (Mutable<ILogicalExpression> expr : op.getFrameStartExpressions()) {
+            expr.getValue().substituteVar(pair.first, pair.second);
+        }
+        for (Mutable<ILogicalExpression> expr : op.getFrameEndExpressions()) {
+            expr.getValue().substituteVar(pair.first, pair.second);
+        }
+        for (Mutable<ILogicalExpression> expr : op.getFrameExcludeExpressions()) {
+            expr.getValue().substituteVar(pair.first, pair.second);
+        }
+        ILogicalExpression frameOffset = op.getFrameOffset().getValue();
+        if (frameOffset != null) {
+            frameOffset.substituteVar(pair.first, pair.second);
         }
         substAssignVariables(op.getVariables(), op.getExpressions(), pair);
+        substInNestedPlans(pair.first, pair.second, op);
         substVarTypes(op, pair);
         return null;
     }

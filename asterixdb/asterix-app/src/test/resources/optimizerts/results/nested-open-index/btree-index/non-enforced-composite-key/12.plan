@@ -2,8 +2,8 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$27(ASC) ]  |PARTITIONED|
-          -- STABLE_SORT [$$27(ASC)]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$28(ASC) ]  |PARTITIONED|
+          -- STABLE_SORT [$$28(ASC)]  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               -- STREAM_PROJECT  |PARTITIONED|
                 -- STREAM_SELECT  |PARTITIONED|
@@ -16,7 +16,7 @@
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 -- INTERSECT  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- STABLE_SORT [$$33(ASC)]  |PARTITIONED|
+                                    -- STABLE_SORT [$$34(ASC)]  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -25,7 +25,7 @@
                                                 -- ASSIGN  |PARTITIONED|
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- STABLE_SORT [$$37(ASC)]  |PARTITIONED|
+                                    -- STABLE_SORT [$$38(ASC)]  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

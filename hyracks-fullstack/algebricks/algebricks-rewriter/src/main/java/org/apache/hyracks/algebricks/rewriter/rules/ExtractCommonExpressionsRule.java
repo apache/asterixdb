@@ -92,6 +92,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
         ignoreOps.add(LogicalOperatorTag.PROJECT);
         ignoreOps.add(LogicalOperatorTag.AGGREGATE);
         ignoreOps.add(LogicalOperatorTag.RUNNINGAGGREGATE);
+        ignoreOps.add(LogicalOperatorTag.WINDOW); //TODO: can extract from partition/order/frame expressions
     }
 
     @Override

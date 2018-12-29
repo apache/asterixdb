@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.data.std.util;
 
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 public class DataUtils {
@@ -96,5 +98,21 @@ public class DataUtils {
             }
         }
         return true;
+    }
+
+    /**
+     * Compare two value references using given comparator
+     *
+     * @param first
+     *            first value
+     * @param second
+     *            second value
+     * @param cmp
+     *            comparator
+     */
+    public static int compare(IValueReference first, IValueReference second, IBinaryComparator cmp)
+            throws HyracksDataException {
+        return cmp.compare(first.getByteArray(), first.getStartOffset(), first.getLength(), second.getByteArray(),
+                second.getStartOffset(), second.getLength());
     }
 }

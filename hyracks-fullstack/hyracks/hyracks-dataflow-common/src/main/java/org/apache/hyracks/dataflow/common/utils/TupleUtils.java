@@ -190,4 +190,19 @@ public class TupleUtils {
         }
         return true;
     }
+
+    public static void addFields(ArrayTupleBuilder sourceBuilder, ArrayTupleBuilder targetBuilder)
+            throws HyracksDataException {
+        byte[] data = sourceBuilder.getByteArray();
+        int[] fieldEnds = sourceBuilder.getFieldEndOffsets();
+        int start = 0;
+        int offset;
+        for (int i = 0; i < fieldEnds.length; i++) {
+            if (i > 0) {
+                start = fieldEnds[i - 1];
+            }
+            offset = fieldEnds[i] - start;
+            targetBuilder.addField(data, start, offset);
+        }
+    }
 }

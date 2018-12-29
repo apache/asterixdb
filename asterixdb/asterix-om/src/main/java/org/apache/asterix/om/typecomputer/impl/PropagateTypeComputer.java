@@ -19,6 +19,7 @@
 package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -28,10 +29,19 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
  */
 public class PropagateTypeComputer extends AbstractResultTypeComputer {
 
-    public static final PropagateTypeComputer INSTANCE = new PropagateTypeComputer();
+    public static final PropagateTypeComputer INSTANCE = new PropagateTypeComputer(false);
+
+    public static final PropagateTypeComputer INSTANCE_NULLABLE = new PropagateTypeComputer(true);
+
+    private final boolean nullable;
+
+    public PropagateTypeComputer(boolean nullable) {
+        this.nullable = nullable;
+    }
 
     @Override
     public IAType getResultType(ILogicalExpression expr, IAType... knownTypes) throws AlgebricksException {
-        return knownTypes[0];
+        IAType t = knownTypes[0];
+        return nullable ? AUnionType.createNullableType(t) : t;
     }
 }

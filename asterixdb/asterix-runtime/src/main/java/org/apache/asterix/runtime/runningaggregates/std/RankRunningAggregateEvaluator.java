@@ -45,7 +45,7 @@ class RankRunningAggregateEvaluator extends AbstractRankRunningAggregateEvaluato
         super(args, dense, sourceLoc);
     }
 
-    protected void writeResult(long rank, DataOutput out) throws HyracksDataException {
+    protected void computeResult(DataOutput out) throws HyracksDataException {
         aInt64.setValue(rank);
         serde.serialize(aInt64, out);
     }

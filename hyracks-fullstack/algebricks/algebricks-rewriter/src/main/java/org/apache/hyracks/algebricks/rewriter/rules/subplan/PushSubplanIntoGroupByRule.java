@@ -31,9 +31,9 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -184,11 +184,11 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
                             // Copy the original nested pipeline inside the group-by.
                             Pair<ILogicalOperator, Map<LogicalVariable, LogicalVariable>> copiedAggOpAndVarMap =
                                     OperatorManipulationUtil.deepCopyWithNewVars(aggOp, context);
-                            ILogicalOperator newBottomAgg = copiedAggOpAndVarMap.getLeft();
+                            ILogicalOperator newBottomAgg = copiedAggOpAndVarMap.first;
 
                             // Substitutes variables in the upper nested pipe line.
                             VariableUtilities.substituteVariablesInDescendantsAndSelf(rootOpRef.getValue(),
-                                    copiedAggOpAndVarMap.getRight(), context);
+                                    copiedAggOpAndVarMap.second, context);
 
                             // Does the actual push.
                             Mutable<ILogicalOperator> ntsRef = downToNts(rootOpRef);

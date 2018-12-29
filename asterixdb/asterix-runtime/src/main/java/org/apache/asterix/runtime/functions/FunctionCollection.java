@@ -29,6 +29,7 @@ import org.apache.asterix.om.functions.IFunctionCollection;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionRegistrant;
 import org.apache.asterix.runtime.aggregates.collections.FirstElementAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.collections.LastElementAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.collections.LocalFirstElementAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarAvgAggregateDescriptor;
@@ -271,6 +272,7 @@ import org.apache.asterix.runtime.evaluators.functions.IfMissingOrNullDescriptor
 import org.apache.asterix.runtime.evaluators.functions.IfNanDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfNanOrInfDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfNullDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.IfSystemNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.InjectFailureDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsArrayDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsAtomicDescriptor;
@@ -532,6 +534,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(LocalMinAggregateDescriptor.FACTORY);
         fc.add(FirstElementAggregateDescriptor.FACTORY);
         fc.add(LocalFirstElementAggregateDescriptor.FACTORY);
+        fc.add(LastElementAggregateDescriptor.FACTORY);
         fc.add(StddevAggregateDescriptor.FACTORY);
         fc.add(LocalStddevAggregateDescriptor.FACTORY);
         fc.add(IntermediateStddevAggregateDescriptor.FACTORY);
@@ -702,6 +705,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(IfMissingDescriptor.FACTORY);
         fc.add(IfNullDescriptor.FACTORY);
         fc.add(IfMissingOrNullDescriptor.FACTORY);
+        fc.add(IfSystemNullDescriptor.FACTORY);
 
         // uuid generators (zero independent functions)
         fc.add(CreateUUIDDescriptor.FACTORY);

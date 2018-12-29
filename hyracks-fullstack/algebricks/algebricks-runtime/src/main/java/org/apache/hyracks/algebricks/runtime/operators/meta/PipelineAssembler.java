@@ -93,4 +93,29 @@ public class PipelineAssembler {
     public IPushRuntime[] getPushRuntime(IPushRuntimeFactory runtimeFactory) {
         return runtimeMap.get(runtimeFactory);
     }
+
+    //TODO: refactoring is needed
+    public static IFrameWriter assemblePipeline(AlgebricksPipeline subplan, IFrameWriter writer,
+            IHyracksTaskContext ctx) throws HyracksDataException {
+        // should enforce protocol
+        boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
+        // plug the operators
+        IFrameWriter start = writer;
+        IPushRuntimeFactory[] runtimeFactories = subplan.getRuntimeFactories();
+        RecordDescriptor[] recordDescriptors = subplan.getRecordDescriptors();
+        for (int i = runtimeFactories.length - 1; i >= 0; i--) {
+            IPushRuntime newRuntime = runtimeFactories[i].createPushRuntime(ctx)[0];
+            newRuntime = enforce ? EnforcePushRuntime.enforce(newRuntime) : newRuntime;
+            start = enforce ? EnforceFrameWriter.enforce(start) : start;
+            newRuntime.setOutputFrameWriter(0, start, recordDescriptors[i]);
+            if (i > 0) {
+                newRuntime.setInputRecordDescriptor(0, recordDescriptors[i - 1]);
+            } else {
+                // the nts has the same input and output rec. desc.
+                newRuntime.setInputRecordDescriptor(0, recordDescriptors[0]);
+            }
+            start = newRuntime;
+        }
+        return start;
+    }
 }

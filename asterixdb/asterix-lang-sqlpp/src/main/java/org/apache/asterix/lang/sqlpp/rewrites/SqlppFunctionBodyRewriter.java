@@ -46,6 +46,9 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Group-by core rewrites
         rewriteGroupBys();
 
+        // Window expression core rewrites.
+        rewriteWindowExpressions();
+
         // Rewrites set operations.
         rewriteSetOperations();
 
@@ -57,6 +60,9 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
 
         // Rewrites SQL-92 global aggregations.
         rewriteGroupByAggregationSugar();
+
+        // Rewrite window expression aggregations.
+        rewriteWindowAggregationSugar();
 
         // Rewrites like/not-like expressions.
         rewriteOperatorExpression();

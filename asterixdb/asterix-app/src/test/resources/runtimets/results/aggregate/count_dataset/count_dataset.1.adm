@@ -1,24 +1,24 @@
-distribute result [$$23]
+distribute result [$$24]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    aggregate [$$23] <- [agg-sum($$26)]
+    aggregate [$$24] <- [agg-sum($$27)]
     -- AGGREGATE  |UNPARTITIONED|
-      aggregate [$$26] <- [agg-count(1)]
+      aggregate [$$27] <- [agg-count(1)]
       -- AGGREGATE  |PARTITIONED|
         exchange
-        -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
-          project ([$$24])
+        -- SORT_MERGE_EXCHANGE [$$25(ASC) ]  |PARTITIONED|
+          project ([$$25])
           -- STREAM_PROJECT  |PARTITIONED|
-            select (and(ge($$22, 1), le($$22, 10)))
+            select (and(ge($$23, 1), le($$23, 10)))
             -- STREAM_SELECT  |PARTITIONED|
-              project ([$$24, $$22])
+              project ([$$25, $$23])
               -- STREAM_PROJECT  |PARTITIONED|
-                assign [$$22] <- [$$Tweet.getField(1)]
+                assign [$$23] <- [$$Tweet.getField(1)]
                 -- ASSIGN  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$24, $$Tweet] <- Twitter.Tweet
+                    data-scan []<-[$$25, $$Tweet] <- Twitter.Tweet
                     -- DATASOURCE_SCAN  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

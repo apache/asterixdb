@@ -404,10 +404,14 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
         for (GbyVariableExpressionPair keyPair : gbyClause.getGbyPairList()) {
             producedVars.add(keyPair.getVar());
         }
-        for (GbyVariableExpressionPair keyPair : gbyClause.getDecorPairList()) {
-            producedVars.add(keyPair.getVar());
+        if (gbyClause.hasDecorList()) {
+            for (GbyVariableExpressionPair keyPair : gbyClause.getDecorPairList()) {
+                producedVars.add(keyPair.getVar());
+            }
         }
-        producedVars.addAll(gbyClause.getWithVarMap().values());
+        if (gbyClause.hasWithMap()) {
+            producedVars.addAll(gbyClause.getWithVarMap().values());
+        }
         return producedVars;
     }
 

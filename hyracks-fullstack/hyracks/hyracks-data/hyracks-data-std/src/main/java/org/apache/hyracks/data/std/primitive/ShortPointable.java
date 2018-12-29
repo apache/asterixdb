@@ -100,7 +100,7 @@ public final class ShortPointable extends AbstractPointable implements IHashable
     public int compareTo(byte[] bytes, int start, int length) {
         short v = getShort();
         short ov = getShort(bytes, start);
-        return v < ov ? -1 : (v > ov ? 1 : 0);
+        return Short.compare(v, ov);
     }
 
     @Override

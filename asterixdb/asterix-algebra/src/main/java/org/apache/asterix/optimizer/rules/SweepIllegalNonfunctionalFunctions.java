@@ -322,11 +322,40 @@ public class SweepIllegalNonfunctionalFunctions implements IAlgebraicRewriteRule
             for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
                 sweepExpression(p.second.getValue(), op);
             }
-            for (Mutable<ILogicalExpression> me : op.getExpressions()) {
+            for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getFrameValueExpressions()) {
+                sweepExpression(p.second.getValue(), op);
+            }
+            for (Mutable<ILogicalExpression> me : op.getFrameStartExpressions()) {
                 sweepExpression(me.getValue(), op);
+            }
+            for (Mutable<ILogicalExpression> me : op.getFrameEndExpressions()) {
+                sweepExpression(me.getValue(), op);
+            }
+            for (Mutable<ILogicalExpression> me : op.getFrameExcludeExpressions()) {
+                sweepExpression(me.getValue(), op);
+            }
+            ILogicalExpression frameOffset = op.getFrameOffset().getValue();
+            if (frameOffset != null) {
+                sweepExpression(frameOffset, op);
+            }
+            for (Mutable<ILogicalExpression> me : op.getExpressions()) {
+                ILogicalExpression expr = me.getValue();
+                if (isStatefulFunctionCall(expr)) {
+                    for (Mutable<ILogicalExpression> fcallArg : ((AbstractFunctionCallExpression) expr)
+                            .getArguments()) {
+                        sweepExpression(fcallArg.getValue(), op);
+                    }
+                } else {
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, op.getSourceLocation());
+                }
             }
             return null;
         }
-    }
 
+        private boolean isStatefulFunctionCall(ILogicalExpression expr) {
+            return expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL
+                    && ((AbstractFunctionCallExpression) expr)
+                            .getKind() == AbstractFunctionCallExpression.FunctionKind.STATEFUL;
+        }
+    }
 }

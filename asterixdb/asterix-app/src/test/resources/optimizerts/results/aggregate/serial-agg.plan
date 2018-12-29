@@ -3,13 +3,13 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- EXTERNAL_GROUP_BY[$$43]  |PARTITIONED|
+          -- EXTERNAL_GROUP_BY[$$47]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
-            -- HASH_PARTITION_EXCHANGE [$$43]  |PARTITIONED|
-              -- EXTERNAL_GROUP_BY[$$38]  |PARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
+              -- EXTERNAL_GROUP_BY[$$42]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|

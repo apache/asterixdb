@@ -196,7 +196,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         LimitOperator limitOpArg = (LimitOperator) copyAndSubstituteVar(op, arg);
-        if (op.getOffset() != limitOpArg.getOffset()) {
+        if (!Objects.equals(op.getOffset().getValue(), limitOpArg.getOffset().getValue())) {
             return Boolean.FALSE;
         }
         boolean isomorphic = op.getMaxObjects().getValue().equals(limitOpArg.getMaxObjects().getValue());
@@ -621,21 +621,45 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
     public Boolean visitWindowOperator(WindowOperator op, ILogicalOperator arg) throws AlgebricksException {
         AbstractLogicalOperator aop = (AbstractLogicalOperator) arg;
         if (aop.getOperatorTag() != LogicalOperatorTag.WINDOW) {
-            return Boolean.FALSE;
+            return false;
         }
         WindowOperator windowOpArg = (WindowOperator) copyAndSubstituteVar(op, arg);
         if (!VariableUtilities.varListEqualUnordered(op.getPartitionExpressions(),
                 windowOpArg.getPartitionExpressions())) {
-            return Boolean.FALSE;
+            return false;
         }
         if (!compareIOrderAndExpressions(op.getOrderExpressions(), windowOpArg.getOrderExpressions())) {
-            return Boolean.FALSE;
+            return false;
+        }
+        if (!compareIOrderAndExpressions(op.getFrameValueExpressions(), windowOpArg.getFrameValueExpressions())) {
+            return false;
+        }
+        if (!compareExpressions(op.getFrameStartExpressions(), windowOpArg.getFrameStartExpressions())) {
+            return false;
+        }
+        if (!compareExpressions(op.getFrameEndExpressions(), windowOpArg.getFrameEndExpressions())) {
+            return false;
+        }
+        if (!compareExpressions(op.getFrameExcludeExpressions(), windowOpArg.getFrameExcludeExpressions())) {
+            return false;
+        }
+        if (op.getFrameExcludeNegationStartIdx() != windowOpArg.getFrameExcludeNegationStartIdx()) {
+            return false;
+        }
+        if (!Objects.equals(op.getFrameOffset().getValue(), windowOpArg.getFrameOffset().getValue())) {
+            return false;
+        }
+        if (op.getFrameMaxObjects() != windowOpArg.getFrameMaxObjects()) {
+            return false;
         }
         if (!VariableUtilities.varListEqualUnordered(getPairList(op.getVariables(), op.getExpressions()),
                 getPairList(windowOpArg.getVariables(), windowOpArg.getExpressions()))) {
-            return Boolean.FALSE;
+            return false;
         }
-        return Boolean.TRUE;
+        List<ILogicalPlan> plans = op.getNestedPlans();
+        List<ILogicalPlan> plansArg = windowOpArg.getNestedPlans();
+        boolean isomorphic = compareSubplans(plans, plansArg);
+        return isomorphic;
     }
 
     private Boolean compareExpressions(List<Mutable<ILogicalExpression>> opExprs,
@@ -668,6 +692,19 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             }
         }
         return Boolean.TRUE;
+    }
+
+    private boolean compareSubplans(List<ILogicalPlan> plans, List<ILogicalPlan> plansArg) throws AlgebricksException {
+        int plansSize = plans.size();
+        if (plansSize != plansArg.size()) {
+            return false;
+        }
+        for (int i = 0; i < plansSize; i++) {
+            if (!IsomorphismUtilities.isOperatorIsomorphicPlan(plans.get(i), plansArg.get(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private ILogicalOperator copyAndSubstituteVar(ILogicalOperator op, ILogicalOperator argOp)

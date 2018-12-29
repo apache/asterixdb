@@ -618,11 +618,24 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
                 exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getPartitionExpressions());
         List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprCopy =
                 deepCopyOrderExpressionReferencePairList(op.getOrderExpressions());
+        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> frameValueExprCopy =
+                deepCopyOrderExpressionReferencePairList(op.getFrameValueExpressions());
+        List<Mutable<ILogicalExpression>> frameStartExprCopy =
+                exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getFrameStartExpressions());
+        List<Mutable<ILogicalExpression>> frameEndExprCopy =
+                exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getFrameEndExpressions());
+        List<Mutable<ILogicalExpression>> frameExclusionExprCopy =
+                exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getFrameExcludeExpressions());
+        ILogicalExpression frameOffsetCopy = exprDeepCopyVisitor.deepCopy(op.getFrameOffset().getValue());
         List<LogicalVariable> varCopy = deepCopyVariableList(op.getVariables());
         List<Mutable<ILogicalExpression>> exprCopy =
                 exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getExpressions());
-        WindowOperator opCopy = new WindowOperator(partitionExprCopy, orderExprCopy, varCopy, exprCopy);
+        List<ILogicalPlan> nestedPlansCopy = new ArrayList<>();
+        WindowOperator opCopy = new WindowOperator(partitionExprCopy, orderExprCopy, frameValueExprCopy,
+                frameStartExprCopy, frameEndExprCopy, frameExclusionExprCopy, op.getFrameExcludeNegationStartIdx(),
+                frameOffsetCopy, op.getFrameMaxObjects(), varCopy, exprCopy, nestedPlansCopy);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
+        deepCopyPlanList(op.getNestedPlans(), nestedPlansCopy, opCopy);
         return opCopy;
     }
 

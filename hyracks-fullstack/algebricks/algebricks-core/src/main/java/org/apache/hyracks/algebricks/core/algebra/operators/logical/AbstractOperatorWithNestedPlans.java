@@ -28,6 +28,11 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.properties.TypePropagationPolicy;
+import org.apache.hyracks.algebricks.core.algebra.typing.ITypeEnvPointer;
+import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
+import org.apache.hyracks.algebricks.core.algebra.typing.OpRefTypeEnvPointer;
+import org.apache.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 
 public abstract class AbstractOperatorWithNestedPlans extends AbstractLogicalOperator {
     protected final List<ILogicalPlan> nestedPlans;
@@ -85,6 +90,35 @@ public abstract class AbstractOperatorWithNestedPlans extends AbstractLogicalOpe
     @Override
     public boolean isMap() {
         return false;
+    }
+
+    protected PropagatingTypeEnvironment createNestedPlansPropagatingTypeEnvironment(ITypingContext ctx,
+            boolean propagateInput) {
+        int n = 0;
+        for (ILogicalPlan p : nestedPlans) {
+            n += p.getRoots().size();
+        }
+
+        int i;
+        ITypeEnvPointer[] envPointers;
+        if (propagateInput) {
+            i = inputs.size();
+            envPointers = new ITypeEnvPointer[n + i];
+            for (int j = 0; j < i; j++) {
+                envPointers[j] = new OpRefTypeEnvPointer(inputs.get(j), ctx);
+            }
+        } else {
+            envPointers = new ITypeEnvPointer[n];
+            i = 0;
+        }
+        for (ILogicalPlan p : nestedPlans) {
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                envPointers[i] = new OpRefTypeEnvPointer(r, ctx);
+                i++;
+            }
+        }
+        return new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMissableTypeComputer(),
+                ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
     }
 
     public abstract void getUsedVariablesExceptNestedPlans(Collection<LogicalVariable> vars);

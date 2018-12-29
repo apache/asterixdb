@@ -44,5 +44,4 @@ select
   min(rank_result_delta) rank_min_delta,
   max(rank_result_delta) rank_max_delta,
   min(percent_rank_result_delta) percent_rank_min_delta,
-  max(percent_rank_result_delta) percent_rank_max_delta
-
+  max(percent_rank_result_delta) percent_rank_max_delta;
