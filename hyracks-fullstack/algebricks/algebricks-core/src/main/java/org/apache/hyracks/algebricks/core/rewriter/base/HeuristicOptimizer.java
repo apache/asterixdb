@@ -74,15 +74,12 @@ public class HeuristicOptimizer {
         if (plan == null) {
             return;
         }
-        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Starting logical optimizations.\n");
-        }
 
-        logPlanAt("Logical Plan", Level.TRACE);
-        runOptimizationSets(plan, logicalRewrites);
+        logPlanAt("Plan Before Optimization", Level.TRACE);
+        runLogicalOptimizationSets(plan, logicalRewrites);
         computeSchemaBottomUpForPlan(plan);
-        runPhysicalOptimizations(plan, physicalRewrites);
-        logPlanAt("Optimized Plan", Level.TRACE);
+        runPhysicalOptimizationSets(plan, physicalRewrites);
+        logPlanAt("Plan After Optimization", Level.TRACE);
     }
 
     private void logPlanAt(String name, Level lvl) throws AlgebricksException {
@@ -94,9 +91,19 @@ public class HeuristicOptimizer {
         }
     }
 
+    private void runLogicalOptimizationSets(ILogicalPlan plan,
+            List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> optimizationSet)
+            throws AlgebricksException {
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Starting logical optimizations.\n");
+        }
+        runOptimizationSets(plan, optimizationSet);
+    }
+
     private void runOptimizationSets(ILogicalPlan plan,
-            List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> optimSet) throws AlgebricksException {
-        for (Pair<AbstractRuleController, List<IAlgebraicRewriteRule>> ruleList : optimSet) {
+            List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> optimizationSet)
+            throws AlgebricksException {
+        for (Pair<AbstractRuleController, List<IAlgebraicRewriteRule>> ruleList : optimizationSet) {
             for (Mutable<ILogicalOperator> r : plan.getRoots()) {
                 ruleList.first.setContext(context);
                 ruleList.first.rewriteWithRuleCollection(r, ruleList.second);
@@ -123,13 +130,12 @@ public class HeuristicOptimizer {
         op.recomputeSchema();
     }
 
-    private void runPhysicalOptimizations(ILogicalPlan plan,
-            List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> physicalRewrites)
+    private void runPhysicalOptimizationSets(ILogicalPlan plan,
+            List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> optimizationSet)
             throws AlgebricksException {
         if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
             AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Starting physical optimizations.\n");
         }
-        runOptimizationSets(plan, physicalRewrites);
+        runOptimizationSets(plan, optimizationSet);
     }
-
 }
