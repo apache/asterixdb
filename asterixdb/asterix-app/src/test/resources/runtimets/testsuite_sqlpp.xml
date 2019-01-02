@@ -8870,6 +8870,7 @@
     <test-case FilePath="feeds">
       <compilation-unit name="change-feed-with-meta-with-mixed-index">
         <output-dir compare="Text">change-feed-with-meta-with-mixed-index</output-dir>
+        <expected-error>Compilation error: Cannot create index on meta fields (in line 61, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
@@ -8885,7 +8886,7 @@
     <test-case FilePath="feeds">
       <compilation-unit name="change-feed-with-meta-open-index-in-meta">
         <output-dir compare="Text">change-feed-with-meta-open-index-in-meta</output-dir>
-        <expected-error>Typed open index can only be created on the record part</expected-error>
+        <expected-error>Compilation error: Cannot create index on meta fields (in line 60, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
@@ -8896,11 +8897,13 @@
     <test-case FilePath="feeds">
       <compilation-unit name="change-feed-with-meta-pk-in-meta-index-after-ingest">
         <output-dir compare="Text">change-feed-with-meta-pk-in-meta-index-after-ingest</output-dir>
+        <expected-error>Compilation error: Cannot create index on meta fields (in line 27, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
       <compilation-unit name="change-feed-with-meta-pk-in-meta-index-in-meta">
         <output-dir compare="Text">change-feed-with-meta-pk-in-meta-index-in-meta</output-dir>
+        <expected-error>Compilation error: Cannot create index on meta fields (in line 60, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
