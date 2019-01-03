@@ -24,5 +24,7 @@
 use test;
 
 FROM (SELECT VALUE tenk1 FROM tenk1 WHERE unique2 < 10 ORDER BY four, ten LIMIT 10) s
-SELECT last_value(ten) OVER (PARTITION BY four) AS `last_value`, ten, four
+SELECT
+  last_value(ten) OVER (PARTITION BY four ORDER BY ten ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS `last_value`,
+  ten, four
 ORDER BY four, ten;
