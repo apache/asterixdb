@@ -33,7 +33,7 @@ import org.junit.runners.Parameterized.Parameters;
  * Runs the SQL++ storage runtime tests with the Snappy compression.
  */
 @RunWith(Parameterized.class)
-public class SqlppExecutionWithCompresisionTest {
+public class SqlppExecutionWithCompressionTest {
     protected static final String TEST_CONFIG_FILE_NAME = "src/test/resources/cc-compression.conf";
 
     @BeforeClass
@@ -53,7 +53,7 @@ public class SqlppExecutionWithCompresisionTest {
 
     protected TestCaseContext tcCtx;
 
-    public SqlppExecutionWithCompresisionTest(TestCaseContext tcCtx) {
+    public SqlppExecutionWithCompressionTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
     }
 
