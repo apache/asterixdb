@@ -58,4 +58,11 @@ public interface ICheckpointManager extends ILifeCycleComponent {
      * @param id
      */
     void completed(TxnId id);
+
+    /**
+     * Checkpoints idle datasets by flushing their in-memory component to disk if needed.
+     *
+     * @throws HyracksDataException
+     */
+    void checkpointIdleDatasets() throws HyracksDataException;
 }

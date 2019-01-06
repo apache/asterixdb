@@ -20,8 +20,6 @@ package org.apache.asterix.transaction.management.service.recovery;
 
 import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.asterix.common.transactions.ILogManager;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -59,29 +57,22 @@ public class CheckpointThread extends Thread {
         while (shouldRun) {
             try {
                 sleep(checkpointTermInSecs * 1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            if (!shouldRun) {
-                return;
-            }
-            if (lastCheckpointLSN == -1) {
-                try {
+                if (!shouldRun) {
+                    return;
+                }
+                if (lastCheckpointLSN == -1) {
                     //Since the system just started up after sharp checkpoint,
                     //last checkpoint LSN is considered as the min LSN of the current log partition
                     lastCheckpointLSN = logManager.getReadableSmallestLSN();
-                } catch (Exception e) {
-                    LOGGER.log(Level.WARN, "Error getting smallest readable LSN", e);
-                    lastCheckpointLSN = 0;
                 }
-            }
+                checkpointManager.checkpointIdleDatasets();
 
-            //1. get current log LSN
-            currentLogLSN = logManager.getAppendLSN();
+                //1. get current log LSN
+                currentLogLSN = logManager.getAppendLSN();
 
-            //2. if current log LSN - previous checkpoint > threshold, do checkpoint
-            if (currentLogLSN - lastCheckpointLSN > lsnThreshold) {
-                try {
+                //2. if current log LSN - previous checkpoint > threshold, do checkpoint
+                if (currentLogLSN - lastCheckpointLSN > lsnThreshold) {
+
                     // in check point:
                     //1. get minimum first LSN (MFL) from open indexes.
                     //2. if current MinFirstLSN < targetCheckpointLSN, schedule async flush for any open index witch has first LSN < force flush delta
@@ -94,9 +85,13 @@ public class CheckpointThread extends Thread {
                     if (currentCheckpointAttemptMinLSN >= targetCheckpointLSN) {
                         lastCheckpointLSN = currentCheckpointAttemptMinLSN;
                     }
-                } catch (HyracksDataException e) {
-                    LOGGER.log(Level.ERROR, "Error during checkpoint", e);
+
                 }
+            } catch (InterruptedException e) {
+                LOGGER.info("Checkpoint thread interrupted", e);
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                LOGGER.error("Error during checkpoint", e);
             }
         }
     }

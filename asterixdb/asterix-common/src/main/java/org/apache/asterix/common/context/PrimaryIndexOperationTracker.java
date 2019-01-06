@@ -51,9 +51,11 @@ import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
+import org.apache.hyracks.util.annotations.NotThreadSafe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@NotThreadSafe
 public class PrimaryIndexOperationTracker extends BaseOperationTracker implements IoOperationCompleteListener {
     private static final Logger LOGGER = LogManager.getLogger();
     private final int partition;
@@ -64,6 +66,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
     private boolean flushOnExit = false;
     private boolean flushLogCreated = false;
     private final Map<String, FlushOperation> scheduledFlushes = new HashMap<>();
+    private long lastFlushTime = System.nanoTime();
 
     public PrimaryIndexOperationTracker(int datasetID, int partition, ILogManager logManager, DatasetInfo dsInfo,
             ILSMComponentIdGenerator idGenerator) {
@@ -213,6 +216,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
                     ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
                     accessor.getOpContext().setParameters(flushMap);
                     ILSMIOOperation flush = accessor.scheduleFlush();
+                    lastFlushTime = System.nanoTime();
                     scheduledFlushes.put(flush.getTarget().getRelativePath(), (FlushOperation) flush);
                     flush.addCompleteListener(this);
                 }
@@ -274,6 +278,15 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
 
     public int getPartition() {
         return partition;
+    }
+
+    public long getLastFlushTime() {
+        return lastFlushTime;
+    }
+
+    @Override
+    public String toString() {
+        return "Dataset (" + datasetID + "), Partition (" + partition + ")";
     }
 
     private boolean canSafelyFlush() {

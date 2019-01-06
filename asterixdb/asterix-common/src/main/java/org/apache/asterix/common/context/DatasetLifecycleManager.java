@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.IDatasetMemoryManager;
@@ -390,35 +391,27 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
-    public synchronized void scheduleAsyncFlushForLaggingDatasets(long targetLSN) throws HyracksDataException {
-        //schedule flush for datasets with min LSN (Log Serial Number) < targetLSN
+    public synchronized void asyncFlushMatchingIndexes(Predicate<ILSMIndex> indexPredicate)
+            throws HyracksDataException {
         for (DatasetResource dsr : datasets.values()) {
             for (PrimaryIndexOperationTracker opTracker : dsr.getOpTrackers()) {
-                // check all partitions
                 synchronized (opTracker) {
-                    scheduleAsyncFlushForLaggingDatasetPartition(dsr, opTracker, targetLSN);
+                    asyncFlush(dsr, opTracker, indexPredicate);
                 }
             }
         }
     }
 
-    private void scheduleAsyncFlushForLaggingDatasetPartition(DatasetResource dsr,
-            PrimaryIndexOperationTracker opTracker, long targetLSN) throws HyracksDataException {
-        int partition = opTracker.getPartition();
+    private void asyncFlush(DatasetResource dsr, PrimaryIndexOperationTracker opTracker,
+            Predicate<ILSMIndex> indexPredicate) throws HyracksDataException {
+        final int partition = opTracker.getPartition();
         for (ILSMIndex lsmIndex : dsr.getDatasetInfo().getDatasetPartitionOpenIndexes(partition)) {
             LSMIOOperationCallback ioCallback = (LSMIOOperationCallback) lsmIndex.getIOOperationCallback();
-            if (!(lsmIndex.isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()
-                    || opTracker.isFlushLogCreated() || opTracker.isFlushOnExit())) {
-                long firstLSN = ioCallback.getPersistenceLsn();
-                if (firstLSN < targetLSN) {
-                    LOGGER.info("Checkpoint flush dataset {} partition {}", dsr.getDatasetID(), partition);
-                    opTracker.setFlushOnExit(true);
-                    if (opTracker.getNumActiveOperations() == 0) {
-                        // No Modify operations currently, we need to trigger the flush and we can do so safely
-                        opTracker.flushIfRequested();
-                    }
-                    break;
-                }
+            if (needsFlush(opTracker, lsmIndex, ioCallback) && indexPredicate.test(lsmIndex)) {
+                LOGGER.info("Async flushing {}", opTracker);
+                opTracker.setFlushOnExit(true);
+                opTracker.flushIfNeeded();
+                break;
             }
         }
     }
@@ -622,5 +615,11 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         } catch (HyracksDataException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    private static boolean needsFlush(PrimaryIndexOperationTracker opTracker, ILSMIndex lsmIndex,
+            LSMIOOperationCallback ioCallback) throws HyracksDataException {
+        return !(lsmIndex.isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()
+                || opTracker.isFlushLogCreated() || opTracker.isFlushOnExit());
     }
 }

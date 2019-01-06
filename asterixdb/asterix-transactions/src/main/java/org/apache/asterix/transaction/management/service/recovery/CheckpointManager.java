@@ -18,18 +18,22 @@
  */
 package org.apache.asterix.transaction.management.service.recovery;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Predicate;
+
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
+import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.common.transactions.CheckpointProperties;
 import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * An implementation of {@link ICheckpointManager} that defines the logic
@@ -39,10 +43,12 @@ public class CheckpointManager extends AbstractCheckpointManager {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long NO_SECURED_LSN = -1L;
+    private final long datasetCheckpointInterval;
     private final Map<TxnId, Long> securedLSNs;
 
     public CheckpointManager(ITransactionSubsystem txnSubsystem, CheckpointProperties checkpointProperties) {
         super(txnSubsystem, checkpointProperties);
+        datasetCheckpointInterval = checkpointProperties.getDatasetCheckpointInterval();
         securedLSNs = new HashMap<>();
     }
 
@@ -78,9 +84,8 @@ public class CheckpointManager extends AbstractCheckpointManager {
         boolean checkpointSucceeded = minFirstLSN >= checkpointTargetLSN;
         if (!checkpointSucceeded) {
             // Flush datasets with indexes behind target checkpoint LSN
-            IDatasetLifecycleManager datasetLifecycleManager =
-                    txnSubsystem.getApplicationContext().getDatasetLifecycleManager();
-            datasetLifecycleManager.scheduleAsyncFlushForLaggingDatasets(checkpointTargetLSN);
+            final IDatasetLifecycleManager dlcm = txnSubsystem.getApplicationContext().getDatasetLifecycleManager();
+            dlcm.asyncFlushMatchingIndexes(newLaggingDatasetPredicate(checkpointTargetLSN));
         }
         capture(minFirstLSN, false);
         if (checkpointSucceeded) {
@@ -100,7 +105,31 @@ public class CheckpointManager extends AbstractCheckpointManager {
         securedLSNs.remove(id);
     }
 
+    @Override
+    public synchronized void checkpointIdleDatasets() throws HyracksDataException {
+        final IDatasetLifecycleManager dlcm = txnSubsystem.getApplicationContext().getDatasetLifecycleManager();
+        dlcm.asyncFlushMatchingIndexes(newIdleDatasetPredicate());
+    }
+
     private synchronized long getMinSecuredLSN() {
         return securedLSNs.isEmpty() ? NO_SECURED_LSN : Collections.min(securedLSNs.values());
+    }
+
+    private Predicate<ILSMIndex> newIdleDatasetPredicate() {
+        final long currentTime = System.nanoTime();
+        return lsmIndex -> {
+            if (lsmIndex.isPrimaryIndex()) {
+                PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) lsmIndex.getOperationTracker();
+                return currentTime - opTracker.getLastFlushTime() >= datasetCheckpointInterval;
+            }
+            return false;
+        };
+    }
+
+    private Predicate<ILSMIndex> newLaggingDatasetPredicate(long checkpointTargetLSN) {
+        return lsmIndex -> {
+            final LSMIOOperationCallback ioCallback = (LSMIOOperationCallback) lsmIndex.getIOOperationCallback();
+            return ioCallback.getPersistenceLsn() < checkpointTargetLSN;
+        };
     }
 }

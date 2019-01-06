@@ -19,6 +19,7 @@
 package org.apache.asterix.common.api;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.context.IndexInfo;
@@ -26,6 +27,7 @@ import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
@@ -56,12 +58,12 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
     void flushAllDatasets() throws HyracksDataException;
 
     /**
-     * Schedules asynchronous flush on datasets that have memory components with first LSN < nonSharpCheckpointTargetLSN.
+     * Schedules asynchronous flush on indexes matching the predicate {@code indexPredicate}
      *
-     * @param nonSharpCheckpointTargetLSN
+     * @param indexPredicate
      * @throws HyracksDataException
      */
-    void scheduleAsyncFlushForLaggingDatasets(long nonSharpCheckpointTargetLSN) throws HyracksDataException;
+    void asyncFlushMatchingIndexes(Predicate<ILSMIndex> indexPredicate) throws HyracksDataException;
 
     /**
      * creates (if necessary) and returns the dataset info.

@@ -26,6 +26,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.UNSIGNED_INTE
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
@@ -35,6 +36,10 @@ import org.apache.hyracks.util.StorageUtil;
 public class TransactionProperties extends AbstractProperties {
 
     public enum Option implements IOption {
+        TXN_DATASET_CHECKPOINT_INTERVAL(
+                POSITIVE_INTEGER,
+                (int) TimeUnit.MINUTES.toSeconds(10),
+                "The interval (in seconds) after which a dataset is considered idle and persisted to disk"),
         TXN_LOG_BUFFER_NUMPAGES(POSITIVE_INTEGER, 8, "The number of pages in the transaction log tail"),
         TXN_LOG_BUFFER_PAGESIZE(
                 INTEGER_BYTE_UNIT,
@@ -172,5 +177,9 @@ public class TransactionProperties extends AbstractProperties {
 
     public long getJobRecoveryMemorySize() {
         return accessor.getLong(Option.TXN_JOB_RECOVERY_MEMORYSIZE);
+    }
+
+    public int getDatasetCheckpointInterval() {
+        return accessor.getInt(Option.TXN_DATASET_CHECKPOINT_INTERVAL);
     }
 }

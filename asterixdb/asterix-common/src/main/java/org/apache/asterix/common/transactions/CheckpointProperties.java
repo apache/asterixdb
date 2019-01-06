@@ -26,6 +26,7 @@ public class CheckpointProperties {
     private final int lsnThreshold;
     private final int pollFrequency;
     private final int historyToKeep;
+    private final int datasetCheckpointInterval;
 
     public CheckpointProperties(TransactionProperties txnProperties, String nodeId) {
         // Currently we use the log files directory for checkpoints
@@ -33,6 +34,7 @@ public class CheckpointProperties {
         lsnThreshold = txnProperties.getCheckpointLSNThreshold();
         pollFrequency = txnProperties.getCheckpointPollFrequency();
         historyToKeep = txnProperties.getCheckpointHistory();
+        datasetCheckpointInterval = txnProperties.getDatasetCheckpointInterval();
     }
 
     public int getLsnThreshold() {
@@ -51,10 +53,15 @@ public class CheckpointProperties {
         return checkpointDirPath;
     }
 
+    public int getDatasetCheckpointInterval() {
+        return datasetCheckpointInterval;
+    }
+
     @Override
     public String toString() {
         return "{\"class\" : \"" + getClass().getSimpleName() + "\", \"checkpoint-dir-path\" : \"" + checkpointDirPath
                 + "\", \"lsn-threshold\" : " + lsnThreshold + ", \"poll-frequency\" : " + pollFrequency
-                + ", \"history-to-keep\" : " + historyToKeep + " }";
+                + ", \"history-to-keep\" : " + historyToKeep + ", \"dataset-checkpoint-interval\" : "
+                + datasetCheckpointInterval + "}";
     }
 }
