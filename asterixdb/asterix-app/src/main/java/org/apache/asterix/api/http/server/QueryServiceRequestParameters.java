@@ -44,6 +44,7 @@ public class QueryServiceRequestParameters {
     private String planFormat;
     private Map<String, JsonNode> statementParams;
     private boolean expressionTree;
+    private boolean parseOnly; //don't execute; simply check for syntax correctness and named parameters.
     private boolean rewrittenExpressionTree;
     private boolean logicalPlan;
     private boolean optimizedLogicalPlan;
@@ -169,6 +170,14 @@ public class QueryServiceRequestParameters {
 
     public void setOptimizedLogicalPlan(boolean optimizedLogicalPlan) {
         this.optimizedLogicalPlan = optimizedLogicalPlan;
+    }
+
+    public void setParseOnly(boolean parseOnly) {
+        this.parseOnly = parseOnly;
+    }
+
+    public boolean isParseOnly() {
+        return parseOnly;
     }
 
     public boolean isJob() {

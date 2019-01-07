@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
@@ -52,5 +53,10 @@ public interface IQueryRewriter {
      * Find the function calls used by a given expression
      */
     Set<CallExpr> getFunctionCalls(Expression expression) throws CompilationException;
+
+    /**
+     * Find all external variables (positional and named variables) in given expression
+     */
+    Set<VariableExpr> getExternalVariables(Expression expr) throws CompilationException;
 
 }

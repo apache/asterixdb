@@ -143,6 +143,11 @@ class AqlQueryRewriter implements IQueryRewriter {
         return gfc.getCalls();
     }
 
+    @Override
+    public Set<VariableExpr> getExternalVariables(Expression expr) {
+        throw new UnsupportedOperationException("getExternalVariables not implemented for AQL");
+    }
+
     private static class GatherFunctionCalls extends GatherFunctionCallsVisitor implements IAQLVisitor<Void, Void> {
 
         public GatherFunctionCalls() {

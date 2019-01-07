@@ -33,23 +33,29 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.asterix.algebra.base.ILangExtension;
+import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.translator.ExecutionPlans;
@@ -141,6 +147,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         REWRITTEN_EXPRESSION_TREE("rewritten-expression-tree"),
         LOGICAL_PLAN("logical-plan"),
         OPTIMIZED_LOGICAL_PLAN("optimized-logical-plan"),
+        PARSE_ONLY("parse-only"),
         JOB("job"),
         SIGNATURE("signature"),
         MULTI_STATEMENT("multi-statement");
@@ -411,6 +418,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         param.setExpressionTree(getOptBoolean(jsonRequest, Parameter.EXPRESSION_TREE.str(), false));
         param.setRewrittenExpressionTree(getOptBoolean(jsonRequest, Parameter.REWRITTEN_EXPRESSION_TREE.str(), false));
         param.setLogicalPlan(getOptBoolean(jsonRequest, Parameter.LOGICAL_PLAN.str(), false));
+        param.setParseOnly(getOptBoolean(jsonRequest, Parameter.PARSE_ONLY.str(), false));
         param.setOptimizedLogicalPlan(getOptBoolean(jsonRequest, Parameter.OPTIMIZED_LOGICAL_PLAN.str(), false));
         param.setJob(getOptBoolean(jsonRequest, Parameter.JOB.str(), false));
         param.setSignature(getOptBoolean(jsonRequest, Parameter.SIGNATURE.str(), true));
@@ -435,6 +443,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         param.setTimeout(request.getParameter(Parameter.TIMEOUT.str()));
         param.setMaxResultReads(request.getParameter(Parameter.MAX_RESULT_READS.str()));
         param.setPlanFormat(request.getParameter(Parameter.PLAN_FORMAT.str()));
+        param.setParseOnly(Boolean.parseBoolean(request.getParameter(Parameter.PARSE_ONLY.str())));
         final String multiStatementParam = request.getParameter(Parameter.MULTI_STATEMENT.str());
         param.setMultiStatement(multiStatementParam == null || Boolean.parseBoolean(multiStatementParam));
         try {
@@ -443,6 +452,14 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         } catch (JsonParseException | JsonMappingException e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
         }
+    }
+
+    private void setAccessControlHeaders(IServletRequest request, IServletResponse response) throws IOException {
+        //CORS
+        if (request.getHeader("Origin") != null) {
+            response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+        }
+        response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     }
 
     private static ResultDelivery parseResultDelivery(String mode) {
@@ -506,29 +523,36 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             LOGGER.info("handleRequest: {}", param);
             ResultDelivery delivery = parseResultDelivery(param.getMode());
             setSessionConfig(sessionOutput, param, delivery);
-            ResultProperties resultProperties = param.getMaxResultReads() == null ? new ResultProperties(delivery)
+            final ResultProperties resultProperties = param.getMaxResultReads() == null ? new ResultProperties(delivery)
                     : new ResultProperties(delivery, Long.parseLong(param.getMaxResultReads()));
             printAdditionalResultFields(sessionOutput.out());
             printRequestId(sessionOutput.out());
             printClientContextID(sessionOutput.out(), param);
-            printSignature(sessionOutput.out(), param);
+            if (!param.isParseOnly()) {
+                printSignature(sessionOutput.out(), param);
+            }
             printType(sessionOutput.out(), sessionOutput.config());
             if (param.getStatement() == null || param.getStatement().isEmpty()) {
                 throw new RuntimeDataException(ErrorCode.NO_STATEMENT_PROVIDED);
             }
             String statementsText = param.getStatement() + ";";
-            Map<String, byte[]> statementParams = org.apache.asterix.app.translator.RequestParameters
-                    .serializeParameterValues(param.getStatementParams());
-            // CORS
-            if (request.getHeader("Origin") != null) {
-                response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
-            }
-            response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-            response.setStatus(execution.getHttpStatus());
-            executeStatement(statementsText, sessionOutput, resultProperties, stats, param, execution, optionalParams,
-                    statementParams);
-            if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
+            if (param.isParseOnly()) {
+                ResultUtil.ParseOnlyResult parseOnlyResult = parseStatement(statementsText);
+                setAccessControlHeaders(request, response);
+                response.setStatus(HttpResponseStatus.OK);
+                printParseOnlyValueResult(sessionOutput, parseOnlyResult);
                 ResultUtil.printStatus(sessionOutput, execution.getResultStatus());
+            } else {
+                Map<String, byte[]> statementParams = org.apache.asterix.app.translator.RequestParameters
+                        .serializeParameterValues(param.getStatementParams());
+
+                setAccessControlHeaders(request, response);
+                response.setStatus(execution.getHttpStatus());
+                executeStatement(statementsText, sessionOutput, resultProperties, stats, param, execution,
+                        optionalParams, statementParams);
+                if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
+                    ResultUtil.printStatus(sessionOutput, execution.getResultStatus());
+                }
             }
             if (!warnings.isEmpty()) {
                 printWarnings(sessionOutput.out(), warnings);
@@ -551,6 +575,18 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         if (sessionOutput.out().checkError()) {
             LOGGER.warn("Error flushing output writer");
         }
+    }
+
+    protected ResultUtil.ParseOnlyResult parseStatement(String statementsText) throws CompilationException {
+        IParserFactory factory = compilationProvider.getParserFactory();
+        IParser parser = factory.createParser(statementsText);
+        List<Statement> stmts = parser.parse();
+        QueryTranslator.validateStatements(stmts);
+        Query query = (Query) stmts.get(stmts.size() - 1);
+        Set<VariableExpr> extVars =
+                compilationProvider.getRewriterFactory().createQueryRewriter().getExternalVariables(query.getBody());
+        ResultUtil.ParseOnlyResult parseOnlyResult = new ResultUtil.ParseOnlyResult(extVars);
+        return parseOnlyResult;
     }
 
     protected void executeStatement(String statementsText, SessionOutput sessionOutput,
@@ -646,8 +682,17 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         // do nothing
     }
 
-    private void printWarnings(PrintWriter pw, List<ExecutionWarning> warnings) {
+    protected void printWarnings(PrintWriter pw, List<ExecutionWarning> warnings) {
         ResultUtil.printWarnings(pw, warnings);
+    }
+
+    protected void printParseOnlyValueResult(SessionOutput output, ResultUtil.ParseOnlyResult parseOnlyResult) {
+        final PrintWriter pw = output.out();
+        pw.print("\t\"");
+        pw.print(ResultFields.RESULTS.str()); //TODO: use ResultUtil, ResultPrinter
+        pw.print("\":");
+        pw.print(parseOnlyResult.asJson());
+        pw.print(",\n");
     }
 
     protected void printExecutionPlans(SessionOutput output, ExecutionPlans executionPlans) {

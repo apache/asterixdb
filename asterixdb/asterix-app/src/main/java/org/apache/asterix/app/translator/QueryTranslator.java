@@ -65,7 +65,6 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
@@ -2932,13 +2931,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void validateStatements(List<Statement> statements) throws RuntimeDataException {
-        if (statements.stream().filter(this::isNotAllowedMultiStatement).count() > 1) {
-            throw new RuntimeDataException(ErrorCode.UNSUPPORTED_MULTIPLE_STATEMENTS);
+    public static void validateStatements(List<Statement> statements) throws CompilationException {
+        if (statements.stream().filter(QueryTranslator::isNotAllowedMultiStatement).count() > 1) {
+            throw new CompilationException(ErrorCode.UNSUPPORTED_MULTIPLE_STATEMENTS);
         }
     }
 
-    protected boolean isNotAllowedMultiStatement(Statement statement) {
+    protected static boolean isNotAllowedMultiStatement(Statement statement) {
         switch (statement.getKind()) {
             case DATAVERSE_DECL:
             case FUNCTION_DECL:

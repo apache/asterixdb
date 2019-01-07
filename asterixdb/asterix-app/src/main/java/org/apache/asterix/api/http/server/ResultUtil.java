@@ -24,9 +24,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +37,8 @@ import org.apache.asterix.app.result.ResultPrinter;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.lang.aql.parser.TokenMgrError;
+import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionOutput;
@@ -378,5 +382,53 @@ public class ResultUtil {
     public static SessionOutput.ResultAppender createResultStatusAppender() {
         return (app, status) -> app.append("\t\"").append(AbstractQueryApiServlet.ResultFields.STATUS.str())
                 .append("\": \"").append(status).append("\",\n");
+    }
+
+    public static class ParseOnlyResult {
+        private Set<VariableExpr> externalVariables;
+
+        private static final String STMT_PARAM_LBL = "statement-parameters";
+
+        public ParseOnlyResult(Set<VariableExpr> extVars) {
+            this.externalVariables = extVars;
+        }
+
+        public String asJson() {
+
+            ArrayList<String> positionalVars = new ArrayList<>();
+            ArrayList<String> namedVars = new ArrayList<>();
+
+            for (VariableExpr extVarRef : externalVariables) {
+                String varname = extVarRef.getVar().getValue();
+                if (SqlppVariableUtil.isPositionalVariableIdentifier(extVarRef.getVar())) {
+                    positionalVars.add(SqlppVariableUtil.toUserDefinedName(varname));
+                } else {
+                    namedVars.add(SqlppVariableUtil.toUserDefinedName(varname));
+                }
+            }
+            Collections.sort(positionalVars);
+            Collections.sort(namedVars);
+            final StringBuilder output = new StringBuilder();
+            output.append("{\"").append(STMT_PARAM_LBL).append("\":[");
+            boolean first = true;
+            for (String posVar : positionalVars) {
+                if (first) {
+                    first = false;
+                } else {
+                    output.append(",");
+                }
+                output.append(posVar);
+            }
+            for (String namedVar : namedVars) {
+                if (first) {
+                    first = false;
+                } else {
+                    output.append(",");
+                }
+                output.append("\"").append(namedVar).append("\"");
+            }
+            output.append("]}");
+            return output.toString();
+        }
     }
 }

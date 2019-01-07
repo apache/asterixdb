@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,6 +34,7 @@ import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -77,6 +79,9 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.VariableCheckAndRewriteVis
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppAstPrintUtil;
+import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
+import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -295,6 +300,19 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         GatherFunctionCalls gfc = new GatherFunctionCalls();
         expression.accept(gfc, null);
         return gfc.getCalls();
+    }
+
+    @Override
+    public Set<VariableExpr> getExternalVariables(Expression expr) throws CompilationException {
+        Set<VariableExpr> freeVars = SqlppVariableUtil.getFreeVariables(expr);
+
+        Set<VariableExpr> extVars = new HashSet<>();
+        for (VariableExpr ve : freeVars) {
+            if (SqlppVariableUtil.isExternalVariableReference(ve)) {
+                extVars.add(ve);
+            }
+        }
+        return extVars;
     }
 
     private static class GatherFunctionCalls extends GatherFunctionCallsVisitor implements ISqlppVisitor<Void, Void> {

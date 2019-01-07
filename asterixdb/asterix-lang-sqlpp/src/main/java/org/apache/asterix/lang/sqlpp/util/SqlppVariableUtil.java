@@ -19,7 +19,6 @@
 package org.apache.asterix.lang.sqlpp.util;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,7 +38,6 @@ import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
-import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
@@ -80,6 +78,10 @@ public class SqlppVariableUtil {
         if (varName.startsWith(USER_VAR_PREFIX)) {
             return varName.substring(1);
         }
+        if (varName.startsWith(EXTERNAL_VAR_PREFIX)) {
+            return varName.substring(1);
+        }
+
         return varName;
     }
 
@@ -93,6 +95,15 @@ public class SqlppVariableUtil {
 
     public static String toExternalVariableName(String varName) {
         return EXTERNAL_VAR_PREFIX + varName;
+    }
+
+    public static boolean isPositionalVariableIdentifier(VarIdentifier varId) {
+        try {
+            Integer.parseInt(toUserDefinedName(varId.getValue()));
+            return true;
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
     }
 
     public static boolean isExternalVariableIdentifier(VarIdentifier varId) {
