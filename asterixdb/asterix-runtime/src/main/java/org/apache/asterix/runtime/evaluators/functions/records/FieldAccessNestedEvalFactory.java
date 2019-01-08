@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
@@ -40,6 +42,8 @@ import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -70,6 +74,10 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
     public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
         return new IScalarEvaluator() {
 
+            private final IBinaryHashFunction fieldNameHashFunction =
+                    BinaryHashFunctionFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryHashFunction();
+            private final IBinaryComparator fieldNameComparator =
+                    BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
             private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
             private final DataOutput out = resultStorage.getDataOutput();
             private final ByteArrayAccessibleOutputStream subRecordTmpStream = new ByteArrayAccessibleOutputStream();
@@ -204,7 +212,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                     for (; pathIndex < fieldPointables.length; pathIndex++) {
                         openField = true;
                         subFieldOffset = ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, start, len,
-                                fieldPointables[pathIndex].getByteArray(), fieldPointables[pathIndex].getStartOffset());
+                                fieldPointables[pathIndex].getByteArray(), fieldPointables[pathIndex].getStartOffset(),
+                                fieldNameHashFunction, fieldNameComparator);
                         if (subFieldOffset < 0) {
                             out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
                             result.set(resultStorage);
