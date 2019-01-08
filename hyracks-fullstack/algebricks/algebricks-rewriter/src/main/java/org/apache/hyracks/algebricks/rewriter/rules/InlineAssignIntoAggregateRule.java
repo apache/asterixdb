@@ -34,9 +34,9 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.AbstractConstVarFunVisitor;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -51,46 +51,69 @@ public class InlineAssignIntoAggregateRule implements IAlgebraicRewriteRule {
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        if (op.getOperatorTag() != LogicalOperatorTag.GROUP) {
+        if (op.getOperatorTag() != LogicalOperatorTag.GROUP && op.getOperatorTag() != LogicalOperatorTag.WINDOW) {
             return false;
         }
         boolean changed = false;
-        GroupByOperator gbyOp = (GroupByOperator) op;
-        for (ILogicalPlan p : gbyOp.getNestedPlans()) {
+        AbstractOperatorWithNestedPlans opWithNestedPlan = (AbstractOperatorWithNestedPlans) op;
+        for (ILogicalPlan p : opWithNestedPlan.getNestedPlans()) {
             for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                if (inlined(r)) {
-                    changed = true;
-                }
+                changed |= inlined(r.getValue(), opWithNestedPlan);
             }
         }
         return changed;
     }
 
-    private boolean inlined(Mutable<ILogicalOperator> r) throws AlgebricksException {
-        AbstractLogicalOperator op1 = (AbstractLogicalOperator) r.getValue();
+    private boolean inlined(ILogicalOperator planRootOp, AbstractOperatorWithNestedPlans opWithNestedPlan)
+            throws AlgebricksException {
+        AbstractLogicalOperator op1 = (AbstractLogicalOperator) planRootOp;
         if (op1.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
             return false;
         }
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
+        AggregateOperator aggOp = (AggregateOperator) op1;
+        boolean inlined = inlineInputAssignIntoAgg(aggOp);
+        if (opWithNestedPlan.getOperatorTag() == LogicalOperatorTag.WINDOW) {
+            inlined |= inlineOuterInputAssignIntoAgg(aggOp, opWithNestedPlan);
+        }
+        return inlined;
+    }
+
+    private boolean inlineInputAssignIntoAgg(AggregateOperator aggOp) throws AlgebricksException {
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) aggOp.getInputs().get(0).getValue();
         if (op2.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
         }
-        AggregateOperator agg = (AggregateOperator) op1;
-        AssignOperator assign = (AssignOperator) op2;
-        VarExprSubstitution ves = new VarExprSubstitution(assign.getVariables(), assign.getExpressions());
-        for (Mutable<ILogicalExpression> exprRef : agg.getExpressions()) {
-            ILogicalExpression expr = exprRef.getValue();
-            Pair<Boolean, ILogicalExpression> p = expr.accept(ves, null);
-            if (p.first == true) {
-                exprRef.setValue(p.second);
-            }
-            // AbstractLogicalExpression ale = (AbstractLogicalExpression) expr;
-            // ale.accept(ves, null);
-        }
-        List<Mutable<ILogicalOperator>> op1InpList = op1.getInputs();
+        AssignOperator assignOp = (AssignOperator) op2;
+        VarExprSubstitution ves = new VarExprSubstitution(assignOp.getVariables(), assignOp.getExpressions());
+        inlineVariables(aggOp, ves);
+        List<Mutable<ILogicalOperator>> op1InpList = aggOp.getInputs();
         op1InpList.clear();
         op1InpList.add(op2.getInputs().get(0));
         return true;
+    }
+
+    private boolean inlineOuterInputAssignIntoAgg(AggregateOperator aggOp,
+            AbstractOperatorWithNestedPlans opWithNestedPlans) throws AlgebricksException {
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opWithNestedPlans.getInputs().get(0).getValue();
+        if (op2.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+            return false;
+        }
+        AssignOperator assignOp = (AssignOperator) op2;
+        VarExprSubstitution ves = new VarExprSubstitution(assignOp.getVariables(), assignOp.getExpressions());
+        return inlineVariables(aggOp, ves);
+    }
+
+    private boolean inlineVariables(AggregateOperator aggOp, VarExprSubstitution ves) throws AlgebricksException {
+        boolean inlined = false;
+        for (Mutable<ILogicalExpression> exprRef : aggOp.getExpressions()) {
+            ILogicalExpression expr = exprRef.getValue();
+            Pair<Boolean, ILogicalExpression> p = expr.accept(ves, null);
+            if (p.first) {
+                exprRef.setValue(p.second);
+                inlined = true;
+            }
+        }
+        return inlined;
     }
 
     private class VarExprSubstitution extends AbstractConstVarFunVisitor<Pair<Boolean, ILogicalExpression>, Void> {

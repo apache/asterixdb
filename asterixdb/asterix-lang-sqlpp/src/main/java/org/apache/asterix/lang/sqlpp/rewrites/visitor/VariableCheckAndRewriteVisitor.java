@@ -204,6 +204,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         return path.length == 2 && metadataProvider.findDataset(path[0], path[1]) != null;
     }
 
+    @Override
     public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         // skip variables inside SQL-92 aggregates (they will be resolved by SqlppGroupByAggregationSugarVisitor)
         if (FunctionMapUtil.isSql92AggregateFunction(callExpr.getFunctionSignature())) {

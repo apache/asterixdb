@@ -1,0 +1,58 @@
+Query:
+SELECT [
+Variable [ Name=$m ]
+m
+Variable [ Name=$t ]
+t
+WINDOW null.sum@1[
+  OperatorExpr [
+    Variable [ Name=$t ]
+    mod
+    LiteralExpr [LONG] [4]
+  ]
+]
+OVER (
+  PARTITION BY
+    Variable [ Name=$m ]
+  ORDER BY
+    Variable [ Name=$t ]
+    ASC
+  rows between unbounded preceding and current row exclude no others
+)
+sum
+WINDOW null.sum-distinct@1[
+  OperatorExpr [
+    Variable [ Name=$t ]
+    mod
+    LiteralExpr [LONG] [4]
+  ]
+]
+OVER (
+  PARTITION BY
+    Variable [ Name=$m ]
+  ORDER BY
+    Variable [ Name=$t ]
+    ASC
+  rows between unbounded preceding and current row exclude no others
+)
+sum_distinct
+]
+FROM [  FunctionCall null.range@2[
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [20]
+  ]
+  AS Variable [ Name=$t ]
+]
+Let Variable [ Name=$m ]
+  :=
+  OperatorExpr [
+    Variable [ Name=$t ]
+    mod
+    LiteralExpr [LONG] [4]
+  ]
+Orderby
+  Variable [ Name=$m ]
+  ASC
+  Variable [ Name=$t ]
+  ASC
+

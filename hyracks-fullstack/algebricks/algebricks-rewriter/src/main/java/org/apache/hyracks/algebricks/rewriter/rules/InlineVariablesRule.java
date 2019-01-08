@@ -39,8 +39,8 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExp
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -157,9 +157,9 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         }
 
         // Descend into subplan
-        if (op.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
-            SubplanOperator subplanOp = (SubplanOperator) op;
-            for (ILogicalPlan nestedPlan : subplanOp.getNestedPlans()) {
+        if (op.getOperatorTag() == LogicalOperatorTag.SUBPLAN || op.getOperatorTag() == LogicalOperatorTag.WINDOW) {
+            List<ILogicalPlan> nestedPlans = ((AbstractOperatorWithNestedPlans) op).getNestedPlans();
+            for (ILogicalPlan nestedPlan : nestedPlans) {
                 for (Mutable<ILogicalOperator> root : nestedPlan.getRoots()) {
                     if (inlineVariables(root, context)) {
                         modified = true;

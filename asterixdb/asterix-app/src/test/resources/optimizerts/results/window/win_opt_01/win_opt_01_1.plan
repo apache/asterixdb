@@ -1,0 +1,11 @@
+-- DISTRIBUTE_RESULT  |LOCAL|
+  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    -- STREAM_PROJECT  |LOCAL|
+      -- ASSIGN  |LOCAL|
+        -- WINDOW  |LOCAL|
+          -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+            -- STABLE_SORT [$$m(ASC), $$t(ASC)]  |LOCAL|
+              -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                -- ASSIGN  |UNPARTITIONED|
+                  -- UNNEST  |UNPARTITIONED|
+                    -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

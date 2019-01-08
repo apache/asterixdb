@@ -624,32 +624,10 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return false;
         }
         WindowOperator windowOpArg = (WindowOperator) copyAndSubstituteVar(op, arg);
-        if (!VariableUtilities.varListEqualUnordered(op.getPartitionExpressions(),
-                windowOpArg.getPartitionExpressions())) {
+        if (!compareWindowPartitionSpec(op, windowOpArg)) {
             return false;
         }
-        if (!compareIOrderAndExpressions(op.getOrderExpressions(), windowOpArg.getOrderExpressions())) {
-            return false;
-        }
-        if (!compareIOrderAndExpressions(op.getFrameValueExpressions(), windowOpArg.getFrameValueExpressions())) {
-            return false;
-        }
-        if (!compareExpressions(op.getFrameStartExpressions(), windowOpArg.getFrameStartExpressions())) {
-            return false;
-        }
-        if (!compareExpressions(op.getFrameEndExpressions(), windowOpArg.getFrameEndExpressions())) {
-            return false;
-        }
-        if (!compareExpressions(op.getFrameExcludeExpressions(), windowOpArg.getFrameExcludeExpressions())) {
-            return false;
-        }
-        if (op.getFrameExcludeNegationStartIdx() != windowOpArg.getFrameExcludeNegationStartIdx()) {
-            return false;
-        }
-        if (!Objects.equals(op.getFrameOffset().getValue(), windowOpArg.getFrameOffset().getValue())) {
-            return false;
-        }
-        if (op.getFrameMaxObjects() != windowOpArg.getFrameMaxObjects()) {
+        if (!compareWindowFrameSpec(op, windowOpArg)) {
             return false;
         }
         if (!VariableUtilities.varListEqualUnordered(getPairList(op.getVariables(), op.getExpressions()),
@@ -662,36 +640,52 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         return isomorphic;
     }
 
-    private Boolean compareExpressions(List<Mutable<ILogicalExpression>> opExprs,
+    public static boolean compareWindowPartitionSpec(WindowOperator winOp1, WindowOperator winOp2) {
+        return VariableUtilities.varListEqualUnordered(winOp1.getPartitionExpressions(),
+                winOp2.getPartitionExpressions())
+                && compareIOrderAndExpressions(winOp1.getOrderExpressions(), winOp2.getOrderExpressions());
+    }
+
+    public static boolean compareWindowFrameSpec(WindowOperator winOp1, WindowOperator winOp2) {
+        return compareIOrderAndExpressions(winOp1.getFrameValueExpressions(), winOp2.getFrameValueExpressions())
+                && compareExpressions(winOp1.getFrameStartExpressions(), winOp2.getFrameStartExpressions())
+                && compareExpressions(winOp1.getFrameEndExpressions(), winOp2.getFrameEndExpressions())
+                && compareExpressions(winOp1.getFrameExcludeExpressions(), winOp2.getFrameExcludeExpressions())
+                && winOp1.getFrameExcludeNegationStartIdx() == winOp2.getFrameExcludeNegationStartIdx()
+                && Objects.equals(winOp1.getFrameOffset().getValue(), winOp2.getFrameOffset().getValue())
+                && winOp1.getFrameMaxObjects() == winOp2.getFrameMaxObjects();
+    }
+
+    private static boolean compareExpressions(List<Mutable<ILogicalExpression>> opExprs,
             List<Mutable<ILogicalExpression>> argExprs) {
         if (opExprs.size() != argExprs.size()) {
-            return Boolean.FALSE;
+            return false;
         }
         for (int i = 0; i < opExprs.size(); i++) {
             boolean isomorphic = opExprs.get(i).getValue().equals(argExprs.get(i).getValue());
             if (!isomorphic) {
-                return Boolean.FALSE;
+                return false;
             }
         }
-        return Boolean.TRUE;
+        return true;
     }
 
-    private Boolean compareIOrderAndExpressions(List<Pair<IOrder, Mutable<ILogicalExpression>>> opOrderExprs,
+    private static boolean compareIOrderAndExpressions(List<Pair<IOrder, Mutable<ILogicalExpression>>> opOrderExprs,
             List<Pair<IOrder, Mutable<ILogicalExpression>>> argOrderExprs) {
         if (opOrderExprs.size() != argOrderExprs.size()) {
-            return Boolean.FALSE;
+            return false;
         }
         for (int i = 0; i < opOrderExprs.size(); i++) {
             boolean isomorphic = opOrderExprs.get(i).first.equals(argOrderExprs.get(i).first);
             if (!isomorphic) {
-                return Boolean.FALSE;
+                return false;
             }
             isomorphic = opOrderExprs.get(i).second.getValue().equals(argOrderExprs.get(i).second.getValue());
             if (!isomorphic) {
-                return Boolean.FALSE;
+                return false;
             }
         }
-        return Boolean.TRUE;
+        return true;
     }
 
     private boolean compareSubplans(List<ILogicalPlan> plans, List<ILogicalPlan> plansArg) throws AlgebricksException {

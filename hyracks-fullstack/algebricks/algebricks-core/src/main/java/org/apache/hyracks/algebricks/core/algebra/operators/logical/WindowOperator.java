@@ -68,7 +68,7 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
 
     private final List<Mutable<ILogicalExpression>> frameExcludeExpressions;
 
-    private final int frameExcludeNegationStartIdx;
+    private int frameExcludeNegationStartIdx;
 
     private final Mutable<ILogicalExpression> frameOffset;
 
@@ -173,6 +173,10 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
 
     public int getFrameExcludeNegationStartIdx() {
         return frameExcludeNegationStartIdx;
+    }
+
+    public void setFrameExcludeNegationStartIdx(int value) {
+        this.frameExcludeNegationStartIdx = value;
     }
 
     public Mutable<ILogicalExpression> getFrameOffset() {

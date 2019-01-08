@@ -94,6 +94,8 @@ import org.apache.hyracks.algebricks.rewriter.rules.BreakSelectIntoConjunctsRule
 import org.apache.hyracks.algebricks.rewriter.rules.ComplexUnnestToProductRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateAssignsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.ReuseWindowAggregateRule;
+import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateWindowOperatorsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.CopyLimitDownRule;
 import org.apache.hyracks.algebricks.rewriter.rules.EliminateGroupByEmptyKeyRule;
 import org.apache.hyracks.algebricks.rewriter.rules.EnforceOrderByAfterSubplan;
@@ -291,6 +293,10 @@ public final class RuleCollections {
         //PushUnnestDownUnion => RemoveRedundantListifyRule cause these rules are correlated
         consolidation.add(new PushUnnestDownThroughUnionRule());
         consolidation.add(new RemoveRedundantListifyRule());
+        // Window operator consolidation rules
+        consolidation.add(new ConsolidateWindowOperatorsRule());
+        consolidation.add(new ReuseWindowAggregateRule());
+        consolidation.add(new RemoveRedundantVariablesRule());
         return consolidation;
     }
 

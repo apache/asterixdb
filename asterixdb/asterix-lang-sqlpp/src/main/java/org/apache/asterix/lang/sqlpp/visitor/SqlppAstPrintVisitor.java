@@ -379,8 +379,8 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
             }
         }
         if (winExpr.hasFrameDefinition()) {
-            out.println(skip(step + 1) + winExpr.getFrameMode() + ' ' + winExpr.getFrameStartKind() + ' '
-                    + winExpr.getFrameEndKind() + " EXCLUDE " + winExpr.getFrameExclusionKind());
+            out.println(skip(step + 1) + winExpr.getFrameMode() + " between " + winExpr.getFrameStartKind() + " and "
+                    + winExpr.getFrameEndKind() + " exclude " + winExpr.getFrameExclusionKind());
             if (winExpr.hasFrameStartExpr()) {
                 winExpr.getFrameStartExpr().accept(this, step + 2);
             }

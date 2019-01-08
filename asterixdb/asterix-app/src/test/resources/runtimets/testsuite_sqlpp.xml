@@ -9260,6 +9260,11 @@
         <output-dir compare="Text">row_number_01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="win_opt_01">
+        <output-dir compare="Text">win_opt_01</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="writers">
     <test-case FilePath="writers">

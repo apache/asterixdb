@@ -321,10 +321,10 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                 }
             } else if (opChild.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
                 NestedTupleSourceOperator nts = (NestedTupleSourceOperator) opChild;
-                AbstractLogicalOperator opBelowNestedPlan =
-                        (AbstractLogicalOperator) nts.getDataSourceReference().getValue().getInputs().get(0).getValue();
+                AbstractLogicalOperator opWithNestedPlan =
+                        (AbstractLogicalOperator) nts.getDataSourceReference().getValue();
                 ILogicalExpression expr1 =
-                        findFieldExpression(opBelowNestedPlan, recordVar, accessKey, typeEnvironment, resolver);
+                        findFieldExpression(opWithNestedPlan, recordVar, accessKey, typeEnvironment, resolver);
                 if (expr1 != null) {
                     return expr1;
                 }

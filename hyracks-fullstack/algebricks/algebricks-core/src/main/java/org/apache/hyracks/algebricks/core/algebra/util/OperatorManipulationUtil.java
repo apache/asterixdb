@@ -36,6 +36,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -406,5 +407,26 @@ public class OperatorManipulationUtil {
                     new Pair<>(orderExpr.first, new MutableObject<>(orderExpr.second.getValue().cloneExpression())));
         }
         return clonedExprList;
+    }
+
+    /**
+     * Finds a variable assigned to a given expression and returns a new {@link VariableReferenceExpression}
+     * referring to this variable.
+     * @param assignVarList list of variables
+     * @param assignExprList list of expressions assigned to those variables
+     * @param searchExpr expression to search for
+     * @return said value, {@code null} if a variable is not found
+     */
+    public static VariableReferenceExpression findAssignedVariable(List<LogicalVariable> assignVarList,
+            List<Mutable<ILogicalExpression>> assignExprList, ILogicalExpression searchExpr) {
+        for (int i = 0, n = assignExprList.size(); i < n; i++) {
+            ILogicalExpression expr = assignExprList.get(i).getValue();
+            if (expr.equals(searchExpr)) {
+                VariableReferenceExpression result = new VariableReferenceExpression(assignVarList.get(i));
+                result.setSourceLocation(expr.getSourceLocation());
+                return result;
+            }
+        }
+        return null;
     }
 }

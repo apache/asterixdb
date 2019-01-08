@@ -1790,9 +1790,9 @@ public class BuiltinFunctions {
         addFunction(SCALAR_SQL_COUNT_DISTINCT, AInt64TypeComputer.INSTANCE, true);
 
         addFunction(SUM_DISTINCT, NumericSumAggTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_SUM_DISTINCT, NumericSumAggTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_SUM_DISTINCT, ScalarVersionOfAggregateResultType.INSTANCE, true);
         addFunction(SQL_SUM_DISTINCT, NumericSumAggTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_SQL_SUM_DISTINCT, NumericSumAggTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_SQL_SUM_DISTINCT, ScalarVersionOfAggregateResultType.INSTANCE, true);
 
         addFunction(AVG_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_AVG_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);

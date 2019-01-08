@@ -38,6 +38,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectClause;
 import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -59,23 +60,43 @@ public class SqlppDistinctAggregationSugarVisitor extends AbstractSqlppSimpleExp
 
     @Override
     public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
-        FunctionSignature signature = callExpr.getFunctionSignature();
-        IFunctionInfo finfo = FunctionUtil.getFunctionInfo(signature);
-        FunctionIdentifier aggFn =
-                finfo != null ? BuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) : null;
-        FunctionIdentifier newAggFn = aggFn != null ? BuiltinFunctions.getAggregateFunctionForDistinct(aggFn) : null;
+        FunctionIdentifier newAggFn = getAggregateFunctionForDistinct(callExpr.getFunctionSignature());
         if (newAggFn == null) {
             return super.visit(callExpr, arg);
         }
-        List<Expression> exprList = callExpr.getExprList();
-        List<Expression> newExprList = new ArrayList<>(exprList.size());
-        for (Expression expr : exprList) {
-            Expression newExpr = rewriteArgument(expr);
-            newExprList.add(newExpr.accept(this, arg));
-        }
+        List<Expression> newExprList = rewriteArgumentList(callExpr.getExprList(), arg);
         callExpr.setFunctionSignature(new FunctionSignature(newAggFn));
         callExpr.setExprList(newExprList);
         return callExpr;
+    }
+
+    @Override
+    public Expression visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
+        FunctionIdentifier newAggFn = getAggregateFunctionForDistinct(winExpr.getFunctionSignature());
+        if (newAggFn == null) {
+            return super.visit(winExpr, arg);
+        }
+        List<Expression> newExprList = rewriteArgumentList(winExpr.getExprList(), arg);
+        winExpr.setFunctionSignature(new FunctionSignature(newAggFn));
+        winExpr.setExprList(newExprList);
+        return winExpr;
+    }
+
+    private FunctionIdentifier getAggregateFunctionForDistinct(FunctionSignature signature) {
+        IFunctionInfo finfo = FunctionUtil.getFunctionInfo(signature);
+        FunctionIdentifier aggFn =
+                finfo != null ? BuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) : null;
+        return aggFn != null ? BuiltinFunctions.getAggregateFunctionForDistinct(aggFn) : null;
+    }
+
+    private List<Expression> rewriteArgumentList(List<Expression> exprList, ILangExpression arg)
+            throws CompilationException {
+        List<Expression> result = new ArrayList<>(exprList.size());
+        for (Expression expr : exprList) {
+            Expression newExpr = rewriteArgument(expr);
+            result.add(newExpr.accept(this, arg));
+        }
+        return result;
     }
 
     /**
