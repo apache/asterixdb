@@ -68,6 +68,15 @@ public class CCLogConfigurationFactory extends ConfigurationFactory {
         builder.add(builder.newLogger("org.apache.hyracks.http.server.CLFLogger", Level.forName("ACCESS", 550))
                 .add(builder.newAppenderRef("access")).addAttribute("additivity", false));
 
+        LayoutComponentBuilder traceLayout = builder.newLayout("PatternLayout").addAttribute("pattern", "%m,%n")
+                .addAttribute("header", "[").addAttribute("footer", "]");
+        AppenderComponentBuilder traceRoll =
+                builder.newAppender("trace", "RollingFile").addAttribute("fileName", logDir + "trace-cc.log")
+                        .addAttribute("filePattern", logDir + "trace-cc-%d{MM-dd-yy-ss}.log.gz").add(traceLayout)
+                        .addComponent(triggeringPolicy);
+        builder.add(traceRoll);
+        builder.add(builder.newLogger("org.apache.hyracks.util.trace.Tracer.Traces", Level.forName("TRACER", 570))
+                .add(builder.newAppenderRef("trace")).addAttribute("additivity", false));
         return builder.build();
     }
 

@@ -31,9 +31,6 @@
     <Console name="TracerLog" target="SYSTEM_OUT">
       <PatternLayout pattern="%m%n"/>
     </Console>
-    <File name="TracerLogFile" fileName="target/tracer.log">
-      <PatternLayout pattern="%m,%n" header="[" footer="]"/>
-    </File>
   </Appenders>
   <Loggers>
     <Root level="WARN">
@@ -45,7 +42,6 @@
     </Logger>
     <Logger name="org.apache.hyracks.util.trace.Tracer.Traces" level="TRACER" additivity="false">
       <AppenderRef ref="TracerLog"/>
-      <AppenderRef ref="TracerLogFile"/>
     </Logger>
   </Loggers>
 </Configuration>
