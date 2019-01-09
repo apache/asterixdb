@@ -532,9 +532,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 printSignature(sessionOutput.out(), param);
             }
             printType(sessionOutput.out(), sessionOutput.config());
-            if (param.getStatement() == null || param.getStatement().isEmpty()) {
-                throw new RuntimeDataException(ErrorCode.NO_STATEMENT_PROVIDED);
-            }
+            validateStatement(param.getStatement());
             String statementsText = param.getStatement() + ";";
             if (param.isParseOnly()) {
                 ResultUtil.ParseOnlyResult parseOnlyResult = parseStatement(statementsText);
@@ -574,6 +572,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         sessionOutput.out().flush();
         if (sessionOutput.out().checkError()) {
             LOGGER.warn("Error flushing output writer");
+        }
+    }
+
+    protected void validateStatement(String statement) throws RuntimeDataException {
+        if (statement == null || statement.isEmpty()) {
+            throw new RuntimeDataException(ErrorCode.NO_STATEMENT_PROVIDED);
         }
     }
 

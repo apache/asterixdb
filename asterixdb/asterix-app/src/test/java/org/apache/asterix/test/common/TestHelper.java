@@ -23,9 +23,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -44,6 +46,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 public final class TestHelper {
@@ -135,6 +139,76 @@ public final class TestHelper {
         }
 
         return RequestParameters.deserializeParameterValues(RequestParameters.serializeParameterValues(stmtParams));
+    }
+
+    public static boolean equalJson(JsonNode expectedJson, JsonNode actualJson) {
+        if (expectedJson == actualJson) {
+            return true;
+        }
+        // exactly one is null
+        if (expectedJson == null || actualJson == null) {
+            return false;
+        }
+        // both are not null
+        if (!isRegexField(expectedJson) && expectedJson.getNodeType() != actualJson.getNodeType()) {
+            return false;
+        } else if (expectedJson.isArray() && actualJson.isArray()) {
+            ArrayNode expectedArray = (ArrayNode) expectedJson;
+            ArrayNode actualArray = (ArrayNode) actualJson;
+            if (expectedArray.size() != actualArray.size()) {
+                return false;
+            }
+            boolean found;
+            BitSet alreadyMatched = new BitSet(actualArray.size());
+            for (int i = 0; i < expectedArray.size(); i++) {
+                found = false;
+                for (int k = 0; k < actualArray.size(); k++) {
+                    if (!alreadyMatched.get(k) && equalJson(expectedArray.get(i), actualArray.get(k))) {
+                        alreadyMatched.set(k);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    return false;
+                }
+            }
+            return true;
+        } else if (expectedJson.isObject() && actualJson.isObject()) {
+            // assumes no duplicates in field names
+            ObjectNode expectedObject = (ObjectNode) expectedJson;
+            ObjectNode actualObject = (ObjectNode) actualJson;
+            if (expectedObject.size() != actualObject.size()) {
+                return false;
+            }
+            Iterator<Map.Entry<String, JsonNode>> expectedFields = expectedObject.fields();
+            Map.Entry<String, JsonNode> expectedField;
+            JsonNode actualFieldValue;
+            while (expectedFields.hasNext()) {
+                expectedField = expectedFields.next();
+                actualFieldValue = actualObject.get(expectedField.getKey());
+                if (actualFieldValue == null || !equalJson(expectedField.getValue(), actualFieldValue)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        // value node
+        String expectedAsString = expectedJson.asText();
+        String actualAsString = actualJson.asText();
+        if (expectedAsString.startsWith("R{")) {
+            expectedAsString = expectedAsString.substring(2, expectedAsString.length() - 1);
+            return actualAsString.matches(expectedAsString);
+        }
+        return expectedAsString.equals(actualAsString);
+    }
+
+    private static boolean isRegexField(JsonNode expectedJson) {
+        if (expectedJson.isTextual()) {
+            String regexValue = expectedJson.asText();
+            return regexValue.startsWith("R{");
+        }
+        return false;
     }
 
     private static ObjectMapper createObjectMapper() {

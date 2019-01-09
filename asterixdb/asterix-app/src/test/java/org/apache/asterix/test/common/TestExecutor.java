@@ -234,6 +234,17 @@ public class TestExecutor {
             } else if (actualFile.toString().endsWith(".regexadm")) {
                 runScriptAndCompareWithResultRegexAdm(scriptFile, expectedFile, actualFile);
                 return;
+            } else if (actualFile.toString().endsWith(".regexjson")) {
+                ObjectMapper OM = new ObjectMapper();
+                JsonNode expectedJson = OM.readTree(readerExpected);
+                JsonNode actualJson = OM.readTree(readerActual);
+                if (expectedJson == null || actualJson == null) {
+                    throw new NullPointerException("Error parsing expected or actual result file for " + scriptFile);
+                }
+                if (!TestHelper.equalJson(expectedJson, actualJson)) {
+                    throw new ComparisonException("Result for " + scriptFile + " didn't match the expected JSON");
+                }
+                return;
             }
             String lineExpected, lineActual;
             int num = 1;
