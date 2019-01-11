@@ -64,7 +64,8 @@ public final class SqlppWindowRewriteVisitor extends AbstractSqlppExpressionExtr
         FunctionSignature signature = winExpr.getFunctionSignature();
         FunctionIdentifier winfi = FunctionMapUtil.getInternalWindowFunction(signature);
         if (winfi != null) {
-            if (BuiltinFunctions.windowFunctionWithListArg(winfi)) {
+            if (BuiltinFunctions.windowFunctionHasProperty(winfi,
+                    BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG)) {
                 List<Expression> newExprList =
                         extractExpressions(winExpr.getExprList(), 1, winExpr.getSourceLocation());
                 winExpr.setExprList(newExprList);

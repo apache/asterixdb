@@ -460,6 +460,7 @@ import org.apache.asterix.runtime.runningaggregates.std.PercentRankRunningAggreg
 import org.apache.asterix.runtime.runningaggregates.std.RankRunningAggregateDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.RowNumberRunningAggregateDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
+import org.apache.asterix.runtime.runningaggregates.std.WinPartitionLenRunningAggregateDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.RangeDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.SubsetCollectionDescriptor;
@@ -664,11 +665,12 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ScalarSqlVarPopAggregateDescriptor.FACTORY);
 
         // window functions
-        fc.add(RowNumberRunningAggregateDescriptor.FACTORY);
-        fc.add(RankRunningAggregateDescriptor.FACTORY);
         fc.add(DenseRankRunningAggregateDescriptor.FACTORY);
-        fc.add(PercentRankRunningAggregateDescriptor.FACTORY);
         fc.add(NtileRunningAggregateDescriptor.FACTORY);
+        fc.add(RankRunningAggregateDescriptor.FACTORY);
+        fc.add(RowNumberRunningAggregateDescriptor.FACTORY);
+        fc.add(PercentRankRunningAggregateDescriptor.FACTORY);
+        fc.add(WinPartitionLenRunningAggregateDescriptor.FACTORY);
 
         // boolean functions
         fc.add(AndDescriptor.FACTORY);

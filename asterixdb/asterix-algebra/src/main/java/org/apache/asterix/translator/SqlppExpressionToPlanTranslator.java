@@ -785,7 +785,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             } else if (projection.hasName()) {
                 fieldBindings.add(getFieldBinding(projection, fieldNames));
             } else {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, projection.getSourceLocation());
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, projection.getSourceLocation(), "");
             }
         }
         if (!fieldBindings.isEmpty()) {
@@ -1037,9 +1037,17 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
 
         FunctionSignature fs = winExpr.getFunctionSignature();
         FunctionIdentifier fi = getBuiltinFunctionIdentifier(fs.getName(), fs.getArity());
+        if (fi == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_EXPECTED_WINDOW_FUNCTION, winExpr.getSourceLocation(),
+                    fs.getName());
+        }
         boolean isWin = BuiltinFunctions.isWindowFunction(fi);
-        boolean isWinAgg = isWin && BuiltinFunctions.windowFunctionWithListArg(fi);
-        boolean supportsFrameClause = isWin && BuiltinFunctions.windowFunctionSupportsFrameClause(fi);
+        boolean isWinAgg = isWin
+                && BuiltinFunctions.windowFunctionHasProperty(fi, BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG);
+        boolean prohibitOrderClause = isWin && BuiltinFunctions.windowFunctionHasProperty(fi,
+                BuiltinFunctions.WindowFunctionProperty.NO_ORDER_CLAUSE);
+        boolean prohibitFrameClause = isWin && BuiltinFunctions.windowFunctionHasProperty(fi,
+                BuiltinFunctions.WindowFunctionProperty.NO_FRAME_CLAUSE);
 
         Mutable<ILogicalOperator> currentOpRef = tupSource;
 
@@ -1065,6 +1073,9 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         int frameExcludeNotStartIdx = -1;
 
         if (winExpr.hasOrderByList()) {
+            if (prohibitOrderClause) {
+                throw new CompilationException(ErrorCode.COMPILATION_UNEXPECTED_WINDOW_ORDERBY, sourceLoc);
+            }
             List<Expression> orderExprList = winExpr.getOrderbyList();
             List<OrderbyClause.OrderModifier> orderModifierList = winExpr.getOrderbyModifierList();
             orderExprCount = orderExprList.size();
@@ -1092,7 +1103,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         int winFrameMaxOjbects = -1;
 
         if (winExpr.hasFrameDefinition()) {
-            if (isWin && !supportsFrameClause) {
+            if (prohibitFrameClause) {
                 throw new CompilationException(ErrorCode.COMPILATION_UNEXPECTED_WINDOW_FRAME, sourceLoc);
             }
             winFrameMode = winExpr.getFrameMode();
@@ -1104,17 +1115,21 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             if (!isValidWindowFrameDefinition(winFrameMode, winFrameStartKind, winFrameEndKind, orderExprCount)) {
                 throw new CompilationException(ErrorCode.COMPILATION_INVALID_WINDOW_FRAME, sourceLoc);
             }
-        } else if (!isWin || supportsFrameClause) {
+        } else if (!prohibitFrameClause) {
             winFrameMode = WindowExpression.FrameMode.RANGE;
             winFrameStartKind = WindowExpression.FrameBoundaryKind.UNBOUNDED_PRECEDING;
             winFrameEndKind = WindowExpression.FrameBoundaryKind.CURRENT_ROW;
             winFrameExclusionKind = WindowExpression.FrameExclusionKind.NO_OTHERS;
         }
 
-        FunctionIdentifier winAggFunc = null;
-        FunctionIdentifier winAggDefaultIfNullFunc = null;
-        Expression winAggDefaultExpr = null;
+        boolean makeRunningAgg = false, makeNestedAgg = false;
+        FunctionIdentifier runningAggFunc = null, nestedAggFunc = null, winResultFunc = null, postWinResultFunc = null;
+        Expression postWinExpr = null;
+        List<Expression> nestedAggArgs = null;
+        boolean postWinResultArgsReverse = false;
+
         if (isWinAgg) {
+            makeNestedAgg = true;
             if (BuiltinFunctions.LEAD_IMPL.equals(fi) || BuiltinFunctions.LAG_IMPL.equals(fi)) {
                 int argCount = fargs.size();
                 if (argCount < 1 || argCount > 3) {
@@ -1131,20 +1146,20 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 // then use local-first-element() because it returns SYSTEM_NULL if the list is empty,
                 // otherwise (no default expression) use first-element() which returns NULL if the list is empty
                 if (argCount > 2) {
-                    winAggFunc = BuiltinFunctions.LOCAL_FIRST_ELEMENT;
-                    winAggDefaultIfNullFunc = BuiltinFunctions.IF_SYSTEM_NULL;
-                    winAggDefaultExpr = fargs.get(2);
+                    nestedAggFunc = BuiltinFunctions.SCALAR_LOCAL_FIRST_ELEMENT;
+                    postWinResultFunc = BuiltinFunctions.IF_SYSTEM_NULL;
+                    postWinExpr = fargs.get(2);
                 } else {
-                    winAggFunc = BuiltinFunctions.FIRST_ELEMENT;
+                    nestedAggFunc = BuiltinFunctions.SCALAR_FIRST_ELEMENT;
                 }
                 winFrameMaxOjbects = 1;
             } else if (BuiltinFunctions.FIRST_VALUE_IMPL.equals(fi)) {
-                winAggFunc = BuiltinFunctions.FIRST_ELEMENT;
+                nestedAggFunc = BuiltinFunctions.SCALAR_FIRST_ELEMENT;
                 winFrameMaxOjbects = 1;
             } else if (BuiltinFunctions.LAST_VALUE_IMPL.equals(fi)) {
-                winAggFunc = BuiltinFunctions.LAST_ELEMENT;
+                nestedAggFunc = BuiltinFunctions.SCALAR_LAST_ELEMENT;
             } else if (BuiltinFunctions.NTH_VALUE_IMPL.equals(fi)) {
-                winAggFunc = BuiltinFunctions.FIRST_ELEMENT;
+                nestedAggFunc = BuiltinFunctions.SCALAR_FIRST_ELEMENT;
                 winFrameMaxOjbects = 1;
                 OperatorExpr opExpr = new OperatorExpr();
                 opExpr.addOperand(fargs.get(1));
@@ -1152,9 +1167,36 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 opExpr.addOperand(new LiteralExpr(new IntegerLiteral(1)));
                 opExpr.setSourceLocation(sourceLoc);
                 winFrameOffsetExpr = opExpr;
+            } else if (BuiltinFunctions.RATIO_TO_REPORT_IMPL.equals(fi)) {
+                // ratio_to_report(x) over (...) --> x / sum(x) over (...)
+                nestedAggFunc = BuiltinFunctions.SCALAR_SQL_SUM;
+                postWinResultFunc = BuiltinFunctions.NUMERIC_DIVIDE;
+                postWinExpr = fargs.get(1);
+                postWinResultArgsReverse = true;
             } else {
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, fi.getName());
             }
+            nestedAggArgs = mkSingletonArrayList(fargs.get(0));
+        } else if (isWin) {
+            makeRunningAgg = true;
+            if (BuiltinFunctions.CUME_DIST_IMPL.equals(fi)) {
+                winFrameMode = WindowExpression.FrameMode.RANGE;
+                winFrameStartKind = WindowExpression.FrameBoundaryKind.UNBOUNDED_PRECEDING;
+                winFrameEndKind = WindowExpression.FrameBoundaryKind.CURRENT_ROW;
+                winFrameExclusionKind = WindowExpression.FrameExclusionKind.NO_OTHERS;
+
+                makeNestedAgg = true;
+                runningAggFunc = BuiltinFunctions.WIN_PARTITION_LENGTH_IMPL;
+                nestedAggFunc = BuiltinFunctions.SCALAR_COUNT;
+                nestedAggArgs = mkSingletonArrayList((Expression) SqlppRewriteUtil.deepCopy(winExpr.getWindowVar()));
+                winResultFunc = BuiltinFunctions.NUMERIC_DIVIDE;
+            } else {
+                runningAggFunc = fi;
+            }
+        } else { // regular aggregate
+            makeNestedAgg = true;
+            nestedAggFunc = fi;
+            nestedAggArgs = fargs;
         }
 
         if (winFrameMode != null) {
@@ -1214,54 +1256,15 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 winFrameMaxOjbects);
         winOp.setSourceLocation(sourceLoc);
 
-        AbstractLogicalExpression resultExpr;
+        LogicalVariable runningAggResultVar = null, nestedAggResultVar = null;
 
-        if (isWin && !isWinAgg) {
-            CallExpr callExpr = new CallExpr(new FunctionSignature(fi), fargs);
-            Pair<ILogicalOperator, LogicalVariable> callExprResult = callExpr.accept(this, currentOpRef);
-            ILogicalOperator op = callExprResult.first;
-            if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, "");
-            }
-            AssignOperator assignOp = (AssignOperator) op;
-            List<LogicalVariable> assignVars = assignOp.getVariables();
-            if (assignVars.size() != 1) {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, "");
-            }
-            List<Mutable<ILogicalExpression>> assignExprs = assignOp.getExpressions();
-            if (assignExprs.size() != 1) {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, "");
-            }
-            ILogicalExpression assignExpr = assignExprs.get(0).getValue();
-            if (assignExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc);
-            }
-            AbstractFunctionCallExpression fcallExpr = (AbstractFunctionCallExpression) assignExpr;
-            if (fcallExpr.getKind() != AbstractFunctionCallExpression.FunctionKind.STATEFUL) {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc);
-            }
-            if (BuiltinFunctions.windowFunctionRequiresOrderArgs(fi)) {
-                for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprListOut) {
-                    fcallExpr.getArguments().add(new MutableObject<>(p.second.getValue().cloneExpression()));
-                }
-            }
-
-            winOp.getInputs().add(assignOp.getInputs().get(0));
-            winOp.getVariables().addAll(assignVars);
-            winOp.getExpressions().addAll(assignExprs);
-
-            resultExpr = new VariableReferenceExpression(assignVars.get(0));
-            resultExpr.setSourceLocation(sourceLoc);
-            currentOpRef = new MutableObject<>(winOp);
-        } else {
+        if (makeNestedAgg) {
             LogicalVariable windowRecordVar = context.newVar();
             ILogicalExpression windowRecordConstr =
                     createRecordConstructor(winExpr.getWindowFieldList(), currentOpRef, sourceLoc);
             AssignOperator assignOp = new AssignOperator(windowRecordVar, new MutableObject<>(windowRecordConstr));
             assignOp.getInputs().add(currentOpRef);
             assignOp.setSourceLocation(sourceLoc);
-
-            winOp.getInputs().add(new MutableObject<>(assignOp));
 
             NestedTupleSourceOperator ntsOp = new NestedTupleSourceOperator(new MutableObject<>(winOp));
             ntsOp.setSourceLocation(sourceLoc);
@@ -1280,62 +1283,93 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
 
             context.setVar(winExpr.getWindowVar(), windowVar);
 
-            if (isWinAgg) {
-                Expression listArgExpr = fargs.get(0);
-                Pair<ILogicalOperator, LogicalVariable> listArgExprResult =
-                        listArgExpr.accept(this, new MutableObject<>(aggOp));
-                VariableReferenceExpression listArgVarRef = new VariableReferenceExpression(listArgExprResult.second);
-                listArgVarRef.setSourceLocation(sourceLoc);
+            CallExpr callExpr = new CallExpr(new FunctionSignature(nestedAggFunc), nestedAggArgs);
+            Pair<ILogicalOperator, LogicalVariable> exprResult = callExpr.accept(this, new MutableObject<>(aggOp));
+            winOp.getNestedPlans().add(new ALogicalPlanImpl(new MutableObject<>(exprResult.first)));
 
-                LogicalVariable unnestVar = context.newVar();
-                UnnestingFunctionCallExpression unnestExpr = new UnnestingFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION),
-                        mkSingletonArrayList(new MutableObject<>(listArgVarRef)));
-                unnestExpr.setSourceLocation(sourceLoc);
-                UnnestOperator unnestOp = new UnnestOperator(unnestVar, new MutableObject<>(unnestExpr));
-                unnestOp.setSourceLocation(sourceLoc);
-                unnestOp.getInputs().add(new MutableObject<>(listArgExprResult.first));
-
-                VariableReferenceExpression unnestVarRef = new VariableReferenceExpression(unnestVar);
-                unnestVarRef.setSourceLocation(sourceLoc);
-
-                AggregateFunctionCallExpression winAggCall = BuiltinFunctions.makeAggregateFunctionExpression(
-                        winAggFunc, mkSingletonArrayList(new MutableObject<>(unnestVarRef)));
-                winAggCall.setSourceLocation(sourceLoc);
-                LogicalVariable winAggVar = context.newVar();
-                AggregateOperator winAggOp = new AggregateOperator(mkSingletonArrayList(winAggVar),
-                        mkSingletonArrayList(new MutableObject<>(winAggCall)));
-                winAggOp.getInputs().add(new MutableObject<>(unnestOp));
-                winAggOp.setSourceLocation(sourceLoc);
-
-                winOp.getNestedPlans().add(new ALogicalPlanImpl(new MutableObject<>(winAggOp)));
-                currentOpRef = new MutableObject<>(winOp);
-
-                resultExpr = new VariableReferenceExpression(winAggVar);
-                resultExpr.setSourceLocation(sourceLoc);
-
-                if (winAggDefaultExpr != null) {
-                    Pair<ILogicalOperator, LogicalVariable> winAggDefaultExprResult =
-                            winAggDefaultExpr.accept(this, currentOpRef);
-                    VariableReferenceExpression winAggDefaultVarRef =
-                            new VariableReferenceExpression(winAggDefaultExprResult.second);
-                    winAggDefaultVarRef.setSourceLocation(sourceLoc);
-                    AbstractFunctionCallExpression ifNullExpr =
-                            createFunctionCallExpression(winAggDefaultIfNullFunc, sourceLoc);
-                    ifNullExpr.getArguments().add(new MutableObject<>(resultExpr));
-                    ifNullExpr.getArguments().add(new MutableObject<>(winAggDefaultVarRef));
-                    resultExpr = ifNullExpr;
-                    currentOpRef = new MutableObject<>(winAggDefaultExprResult.first);
-                }
-            } else {
-                CallExpr callExpr = new CallExpr(new FunctionSignature(fi), fargs);
-                Pair<ILogicalOperator, LogicalVariable> exprResult = callExpr.accept(this, new MutableObject<>(aggOp));
-                winOp.getNestedPlans().add(new ALogicalPlanImpl(new MutableObject<>(exprResult.first)));
-                resultExpr = new VariableReferenceExpression(exprResult.second);
-                resultExpr.setSourceLocation(sourceLoc);
-                currentOpRef = new MutableObject<>(winOp);
-            }
+            currentOpRef = new MutableObject<>(assignOp);
+            nestedAggResultVar = exprResult.second;
         }
+
+        if (makeRunningAgg) {
+            CallExpr callExpr = new CallExpr(new FunctionSignature(runningAggFunc), fargs);
+            Pair<ILogicalOperator, LogicalVariable> callExprResult = callExpr.accept(this, currentOpRef);
+            ILogicalOperator op = callExprResult.first;
+            if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, "");
+            }
+            AssignOperator assignOp = (AssignOperator) op;
+            List<LogicalVariable> assignVars = assignOp.getVariables();
+            if (assignVars.size() != 1) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, "");
+            }
+            List<Mutable<ILogicalExpression>> assignExprs = assignOp.getExpressions();
+            if (assignExprs.size() != 1) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, "");
+            }
+            ILogicalExpression assignExpr = assignExprs.get(0).getValue();
+            if (assignExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, "");
+            }
+            AbstractFunctionCallExpression fcallExpr = (AbstractFunctionCallExpression) assignExpr;
+            if (fcallExpr.getKind() != AbstractFunctionCallExpression.FunctionKind.STATEFUL) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, fcallExpr.getKind());
+            }
+            if (BuiltinFunctions.windowFunctionHasProperty(fi,
+                    BuiltinFunctions.WindowFunctionProperty.INJECT_ORDER_ARGS)) {
+                for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprListOut) {
+                    fcallExpr.getArguments().add(new MutableObject<>(p.second.getValue().cloneExpression()));
+                }
+            }
+
+            winOp.getVariables().addAll(assignVars);
+            winOp.getExpressions().addAll(assignExprs);
+
+            currentOpRef = new MutableObject<>(assignOp.getInputs().get(0).getValue());
+            runningAggResultVar = assignVars.get(0);
+        }
+
+        winOp.getInputs().add(currentOpRef);
+        currentOpRef = new MutableObject<>(winOp);
+
+        AbstractLogicalExpression resultExpr;
+        if (makeRunningAgg && makeNestedAgg) {
+            VariableReferenceExpression runningAggResultVarRef = new VariableReferenceExpression(runningAggResultVar);
+            runningAggResultVarRef.setSourceLocation(sourceLoc);
+            VariableReferenceExpression nestedAggResultVarRef = new VariableReferenceExpression(nestedAggResultVar);
+            nestedAggResultVarRef.setSourceLocation(sourceLoc);
+            AbstractFunctionCallExpression resultCallExpr = createFunctionCallExpression(winResultFunc, sourceLoc);
+            resultCallExpr.getArguments().add(new MutableObject<>(nestedAggResultVarRef));
+            resultCallExpr.getArguments().add(new MutableObject<>(runningAggResultVarRef));
+            resultExpr = resultCallExpr;
+        } else if (makeRunningAgg) {
+            resultExpr = new VariableReferenceExpression(runningAggResultVar);
+            resultExpr.setSourceLocation(sourceLoc);
+        } else if (makeNestedAgg) {
+            resultExpr = new VariableReferenceExpression(nestedAggResultVar);
+            resultExpr.setSourceLocation(sourceLoc);
+        } else {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, "");
+        }
+
+        if (postWinExpr != null) {
+            Pair<ILogicalOperator, LogicalVariable> postWinExprResult = postWinExpr.accept(this, currentOpRef);
+            currentOpRef = new MutableObject<>(postWinExprResult.first);
+            VariableReferenceExpression postWinVarRef = new VariableReferenceExpression(postWinExprResult.second);
+            postWinVarRef.setSourceLocation(sourceLoc);
+            AbstractFunctionCallExpression postWinResultCallExpr =
+                    createFunctionCallExpression(postWinResultFunc, sourceLoc);
+            List<Mutable<ILogicalExpression>> postWinResultCallArgs = postWinResultCallExpr.getArguments();
+            if (!postWinResultArgsReverse) {
+                postWinResultCallArgs.add(new MutableObject<>(resultExpr));
+                postWinResultCallArgs.add(new MutableObject<>(postWinVarRef));
+            } else {
+                postWinResultCallArgs.add(new MutableObject<>(postWinVarRef));
+                postWinResultCallArgs.add(new MutableObject<>(resultExpr));
+            }
+            resultExpr = postWinResultCallExpr;
+        }
+
         // must return ASSIGN
         LogicalVariable resultVar = context.newVar();
         AssignOperator resultOp = new AssignOperator(resultVar, new MutableObject<>(resultExpr));
@@ -1530,7 +1564,8 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             }
             AbstractFunctionCallExpression valueExpr =
                     BuiltinFunctions.makeWindowFunctionExpression(fid, new ArrayList<>());
-            if (BuiltinFunctions.windowFunctionRequiresOrderArgs(valueExpr.getFunctionIdentifier())) {
+            if (BuiltinFunctions.windowFunctionHasProperty(valueExpr.getFunctionIdentifier(),
+                    BuiltinFunctions.WindowFunctionProperty.INJECT_ORDER_ARGS)) {
                 for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprList) {
                     valueExpr.getArguments().add(new MutableObject<>(p.second.getValue().cloneExpression()));
                 }

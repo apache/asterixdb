@@ -31,7 +31,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * Descriptor {@code percent_rank()} window function
+ * Descriptor for {@code percent_rank()} window function
  */
 public class PercentRankRunningAggregateDescriptor extends AbstractRunningAggregateFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;

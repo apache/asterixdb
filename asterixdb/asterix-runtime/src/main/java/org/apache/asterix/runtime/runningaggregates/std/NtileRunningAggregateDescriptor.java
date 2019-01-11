@@ -30,7 +30,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * Descriptor {@code ntile()} window function
+ * Descriptor for {@code ntile()} window function
  */
 public class NtileRunningAggregateDescriptor extends AbstractRunningAggregateFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;

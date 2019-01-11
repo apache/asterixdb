@@ -1,0 +1,10 @@
+{ "x": 0, "y": 0, "ratio_to_report": null }
+{ "x": 1, "y": 0, "ratio_to_report": 0.1 }
+{ "x": 2, "y": 0, "ratio_to_report": 0.2 }
+{ "x": 3, "y": 0, "ratio_to_report": 0.3 }
+{ "x": 4, "y": 0, "ratio_to_report": 0.4 }
+{ "x": 1, "y": 1, "ratio_to_report": null }
+{ "x": 0, "y": 1, "ratio_to_report": 0.0 }
+{ "x": 2, "y": 1, "ratio_to_report": 0.22 }
+{ "x": 3, "y": 1, "ratio_to_report": 0.33 }
+{ "x": 4, "y": 1, "ratio_to_report": 0.44 }

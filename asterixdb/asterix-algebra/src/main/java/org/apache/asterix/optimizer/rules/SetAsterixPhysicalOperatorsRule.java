@@ -372,7 +372,8 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                             expr.getExpressionTag());
                 }
                 AbstractFunctionCallExpression callExpr = (AbstractFunctionCallExpression) expr;
-                if (BuiltinFunctions.windowFunctionRequiresMaterialization(callExpr.getFunctionIdentifier())) {
+                if (BuiltinFunctions.windowFunctionHasProperty(callExpr.getFunctionIdentifier(),
+                        BuiltinFunctions.WindowFunctionProperty.MATERIALIZE_PARTITION)) {
                     partitionMaterialization = true;
                     break;
                 }

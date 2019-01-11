@@ -9219,6 +9219,11 @@
   </test-group>
   <test-group name="window">
     <test-case FilePath="window">
+      <compilation-unit name="cume_dist_01">
+        <output-dir compare="Text">cume_dist_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
       <compilation-unit name="dense_rank_01">
         <output-dir compare="Text">dense_rank_01</output-dir>
       </compilation-unit>
@@ -9253,6 +9258,17 @@
     <test-case FilePath="window">
       <compilation-unit name="rank_01">
         <output-dir compare="Text">rank_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="ratio_to_report_01">
+        <output-dir compare="Text">ratio_to_report_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="ratio_to_report_02_negative">
+        <output-dir compare="Text">ratio_to_report_01</output-dir>
+        <expected-error>ASX1101: Unexpected ORDER BY clause in window expression</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="window">

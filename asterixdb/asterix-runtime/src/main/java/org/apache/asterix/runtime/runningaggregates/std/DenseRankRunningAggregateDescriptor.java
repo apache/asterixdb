@@ -31,7 +31,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * Descriptor {@code dense_rank()} window function
+ * Descriptor for {@code dense_rank()} window function
  */
 public class DenseRankRunningAggregateDescriptor extends AbstractRunningAggregateFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;

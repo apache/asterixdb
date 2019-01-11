@@ -29,13 +29,12 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 /**
- * Descriptor for {@code row_number()} window function
+ * Descriptor for internal {@code win_partition_length()} window function
  */
-public class RowNumberRunningAggregateDescriptor extends AbstractRunningAggregateFunctionDynamicDescriptor {
-
+public class WinPartitionLenRunningAggregateDescriptor extends AbstractRunningAggregateFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = RowNumberRunningAggregateDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = WinPartitionLenRunningAggregateDescriptor::new;
 
     @Override
     public IRunningAggregateEvaluatorFactory createRunningAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args) {
@@ -44,13 +43,13 @@ public class RowNumberRunningAggregateDescriptor extends AbstractRunningAggregat
 
             @Override
             public IRunningAggregateEvaluator createRunningAggregateEvaluator(IHyracksTaskContext ctx) {
-                return new RowNumberRunningAggregateEvaluator();
+                return new WinPartitionLenRunningAggregateEvaluator();
             }
         };
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.ROW_NUMBER_IMPL;
+        return BuiltinFunctions.WIN_PARTITION_LENGTH_IMPL;
     }
 }

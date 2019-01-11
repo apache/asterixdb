@@ -31,7 +31,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
- * Evaluator {@code percent_rank()} window function
+ * Evaluator for {@code percent_rank()} window function
  */
 class PercentRankRunningAggregateEvaluator extends AbstractRankRunningAggregateEvaluator {
 

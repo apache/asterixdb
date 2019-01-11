@@ -43,8 +43,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 /**
  * Merges two adjacent window operators into one if their window specifications are compatible.
  * <pre>
- * window [$x] <- [f()] with nested plan (aggergate [$a] <- [agg_1()] - ... - nts )
- * window [$y] <- [g()] with nesedd plan (aggregate [$b] <- [agg_2()] - ... - nts )
+ * window [$x] <- [f()] with nested plan (aggregate [$a] <- [agg_1()] - ... - nts )
+ * window [$y] <- [g()] with nested plan (aggregate [$b] <- [agg_2()] - ... - nts )
  * -->
  * window [$x, $y] <- [f(), g()] with nested plan ( aggregate [$a, $b] <- [agg_1(), agg_2()] - ... - nts )
  * </pre>

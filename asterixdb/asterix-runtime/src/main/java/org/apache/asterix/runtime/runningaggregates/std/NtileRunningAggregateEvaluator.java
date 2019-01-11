@@ -37,7 +37,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
- * Evaluator {@code ntile()} window function
+ * Evaluator for {@code ntile()} window function
  */
 public class NtileRunningAggregateEvaluator implements IWindowAggregateEvaluator {
 
