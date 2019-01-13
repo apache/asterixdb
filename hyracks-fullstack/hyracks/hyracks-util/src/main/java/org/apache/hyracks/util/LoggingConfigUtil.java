@@ -34,7 +34,7 @@ public class LoggingConfigUtil {
     }
 
     public static void defaultIfMissing(String logger, Level defaultLvl) {
-        final Configuration loggingConfig = LoggerContext.getContext().getConfiguration();
+        final Configuration loggingConfig = LoggerContext.getContext(false).getConfiguration();
         final LoggerConfig loggerConfig = loggingConfig.getLoggers().get(logger);
         if (loggerConfig != null) {
             LOGGER.info("{} log level is {}", logger, loggerConfig.getLevel());
