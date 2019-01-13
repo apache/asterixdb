@@ -633,6 +633,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     @Override
     public Void visitForwardOperator(ForwardOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent).append("\"operator\": \"forward\"");
+        addIndent(0).append(",\n");
         addIndent(indent).append("\"expressions\": \""
                 + op.getRangeMapExpression().getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
         return null;
