@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -135,24 +136,18 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         if (selectBlock.hasFromClause()) {
             changed |= selectBlock.getFromClause().accept(this, funcs);
         }
-        if (selectBlock.hasLetClauses()) {
-            for (LetClause letClause : selectBlock.getLetList()) {
-                changed |= letClause.accept(this, funcs);
+        if (selectBlock.hasLetWhereClauses()) {
+            for (AbstractClause letWhereClause : selectBlock.getLetWhereList()) {
+                changed |= letWhereClause.accept(this, funcs);
             }
-        }
-        if (selectBlock.hasWhereClause()) {
-            changed |= selectBlock.getWhereClause().accept(this, funcs);
         }
         if (selectBlock.hasGroupbyClause()) {
             changed |= selectBlock.getGroupbyClause().accept(this, funcs);
         }
-        if (selectBlock.hasLetClausesAfterGroupby()) {
-            for (LetClause letClause : selectBlock.getLetListAfterGroupby()) {
-                changed |= letClause.accept(this, funcs);
+        if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+            for (AbstractClause letHavingClause : selectBlock.getLetHavingListAfterGroupby()) {
+                changed |= letHavingClause.accept(this, funcs);
             }
-        }
-        if (selectBlock.hasHavingClause()) {
-            changed |= selectBlock.getHavingClause().accept(this, funcs);
         }
         changed |= selectBlock.getSelectClause().accept(this, funcs);
         return changed;

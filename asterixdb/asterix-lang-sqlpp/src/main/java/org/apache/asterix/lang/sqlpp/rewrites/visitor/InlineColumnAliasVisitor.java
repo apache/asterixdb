@@ -18,17 +18,15 @@
  */
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -77,15 +75,16 @@ public class InlineColumnAliasVisitor extends AbstractSqlppExpressionScopingVisi
         // Removes all FROM/LET binding variables
         if (selectBlock.hasGroupbyClause()) {
             map.keySet().removeAll(SqlppVariableUtil.getBindingVariables(selectBlock.getGroupbyClause()));
-            if (selectBlock.hasLetClausesAfterGroupby()) {
-                map.keySet().removeAll(SqlppVariableUtil.getBindingVariables(selectBlock.getLetListAfterGroupby()));
+            if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+                map.keySet().removeAll(
+                        SqlppVariableUtil.getLetBindingVariables(selectBlock.getLetHavingListAfterGroupby()));
             }
         } else {
             if (selectBlock.hasFromClause()) {
                 map.keySet().removeAll(SqlppVariableUtil.getBindingVariables(selectBlock.getFromClause()));
             }
-            if (selectBlock.hasLetClauses()) {
-                map.keySet().removeAll(SqlppVariableUtil.getBindingVariables(selectBlock.getLetList()));
+            if (selectBlock.hasLetWhereClauses()) {
+                map.keySet().removeAll(SqlppVariableUtil.getLetBindingVariables(selectBlock.getLetWhereList()));
             }
         }
 
@@ -163,8 +162,8 @@ public class InlineColumnAliasVisitor extends AbstractSqlppExpressionScopingVisi
     private void introduceLetClauses(Map<Expression, VarIdentifier> letVarMap,
             Map<Expression, ColumnAliasBinding> aliasBindingMap, SelectBlock selectBlock) throws CompilationException {
 
-        List<LetClause> targetLetClauses =
-                selectBlock.hasGroupbyClause() ? selectBlock.getLetListAfterGroupby() : selectBlock.getLetList();
+        List<AbstractClause> targetLetClauses = selectBlock.hasGroupbyClause()
+                ? selectBlock.getLetHavingListAfterGroupby() : selectBlock.getLetWhereList();
 
         for (Map.Entry<Expression, VarIdentifier> me : letVarMap.entrySet()) {
             Expression columnAliasVarExpr = me.getKey();

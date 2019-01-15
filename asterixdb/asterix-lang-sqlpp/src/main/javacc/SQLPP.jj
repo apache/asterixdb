@@ -67,6 +67,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.AbstractLangExpression;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
@@ -3034,9 +3035,11 @@ SelectBlock SelectBlock() throws ParseException:
   FromClause fromClause = null;
   List<LetClause> fromLetClauses = null;
   WhereClause whereClause = null;
+  List<AbstractClause> fromLetWhereClauses = new ArrayList<AbstractClause>();
   GroupbyClause groupbyClause = null;
   List<LetClause> gbyLetClauses = null;
   HavingClause havingClause = null;
+  List<AbstractClause> gbyLetHavingClauses = new ArrayList<AbstractClause>();
   SourceLocation startSrcLoc = null;
 }
 {
@@ -3076,8 +3079,20 @@ SelectBlock SelectBlock() throws ParseException:
      selectClause = SelectClause()
   )
   {
-    SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, fromLetClauses, whereClause, groupbyClause,
-      gbyLetClauses, havingClause);
+    if (fromLetClauses != null) {
+      fromLetWhereClauses.addAll(fromLetClauses);
+    }
+    if (whereClause != null) {
+      fromLetWhereClauses.add(whereClause);
+    }
+    if (gbyLetClauses != null) {
+      gbyLetHavingClauses.addAll(gbyLetClauses);
+    }
+    if (havingClause != null) {
+      gbyLetHavingClauses.add(havingClause);
+    }
+    SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, fromLetWhereClauses, groupbyClause,
+      gbyLetHavingClauses);
     selectBlock.setSourceLocation(startSrcLoc);
     return selectBlock;
   }

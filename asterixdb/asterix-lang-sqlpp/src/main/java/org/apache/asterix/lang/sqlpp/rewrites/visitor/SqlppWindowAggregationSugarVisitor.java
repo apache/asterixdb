@@ -125,9 +125,10 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
         List<Pair<Expression, Identifier>> fieldList = new ArrayList<>();
         if (selectBlock != null) {
             addToFieldList(fieldList, SqlppVariableUtil.getBindingVariables(selectBlock.getFromClause()));
-            addToFieldList(fieldList, SqlppVariableUtil.getBindingVariables(selectBlock.getLetList()));
+            addToFieldList(fieldList, SqlppVariableUtil.getLetBindingVariables(selectBlock.getLetWhereList()));
             addToFieldList(fieldList, SqlppVariableUtil.getBindingVariables(selectBlock.getGroupbyClause()));
-            addToFieldList(fieldList, SqlppVariableUtil.getBindingVariables(selectBlock.getLetListAfterGroupby()));
+            addToFieldList(fieldList,
+                    SqlppVariableUtil.getLetBindingVariables(selectBlock.getLetHavingListAfterGroupby()));
         }
         return fieldList;
     }

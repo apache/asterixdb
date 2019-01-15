@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -84,20 +85,15 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
 
     @Override
     public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
-        // Traverses the select block in the order of "from", "let"s, "where",
-        // "group by", "let"s, "having" and "select".
+        // Traverses the select block in the order of "from", "let/where"s, "group by", "let/having"s and "select".
         FromClause fromClause = selectBlock.getFromClause();
         if (selectBlock.hasFromClause()) {
             fromClause.accept(this, arg);
         }
-        if (selectBlock.hasLetClauses()) {
-            List<LetClause> letList = selectBlock.getLetList();
-            for (LetClause letClause : letList) {
-                letClause.accept(this, arg);
+        if (selectBlock.hasLetWhereClauses()) {
+            for (AbstractClause letWhereClause : selectBlock.getLetWhereList()) {
+                letWhereClause.accept(this, arg);
             }
-        }
-        if (selectBlock.hasWhereClause()) {
-            selectBlock.getWhereClause().accept(this, arg);
         }
         if (selectBlock.hasGroupbyClause()) {
             Set<VariableExpr> visibleVarsPreGroupByScope = scopeChecker.getCurrentScope().getLiveVariables();
@@ -109,29 +105,30 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
             VariableExpr groupVar = groupbyClause.getGroupVar();
             Map<Expression, Identifier> groupFieldVars = getGroupFieldVariables(groupbyClause);
 
-            Collection<VariableExpr> freeVariablesInGbyLets = new HashSet<>();
-            if (selectBlock.hasLetClausesAfterGroupby()) {
-                List<LetClause> letListAfterGby = selectBlock.getLetListAfterGroupby();
-                for (LetClause letClauseAfterGby : letListAfterGby) {
-                    letClauseAfterGby.accept(this, arg);
-                    // Rewrites each let clause after the group-by.
-                    rewriteExpressionUsingGroupVariable(groupVar, groupFieldVars, letClauseAfterGby,
-                            visibleVarsPreGroupByScope);
-                    Collection<VariableExpr> freeVariablesInLet =
-                            SqlppVariableUtil.getFreeVariables(letClauseAfterGby.getBindingExpr());
-                    freeVariablesInLet.removeAll(visibleVarsInCurrentScope);
-                    freeVariablesInGbyLets.addAll(freeVariablesInLet);
-                    visibleVarsInCurrentScope.add(letClauseAfterGby.getVarExpr());
-                }
-            }
-
             Collection<VariableExpr> freeVariables = new HashSet<>();
-            if (selectBlock.hasHavingClause()) {
-                // Rewrites the having clause.
-                HavingClause havingClause = selectBlock.getHavingClause();
-                havingClause.accept(this, arg);
-                rewriteExpressionUsingGroupVariable(groupVar, groupFieldVars, havingClause, visibleVarsPreGroupByScope);
-                freeVariables.addAll(SqlppVariableUtil.getFreeVariables(havingClause));
+            Collection<VariableExpr> freeVariablesInGbyLets = new HashSet<>();
+            if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+                for (AbstractClause letHavingClause : selectBlock.getLetHavingListAfterGroupby()) {
+                    letHavingClause.accept(this, arg);
+                    // Rewrites each let/having clause after the group-by.
+                    rewriteExpressionUsingGroupVariable(groupVar, groupFieldVars, letHavingClause,
+                            visibleVarsPreGroupByScope);
+                    switch (letHavingClause.getClauseType()) {
+                        case LET_CLAUSE:
+                            LetClause letClause = (LetClause) letHavingClause;
+                            Collection<VariableExpr> freeVariablesInClause =
+                                    SqlppVariableUtil.getFreeVariables(letClause.getBindingExpr());
+                            freeVariablesInClause.removeAll(visibleVarsInCurrentScope);
+                            freeVariablesInGbyLets.addAll(freeVariablesInClause);
+                            visibleVarsInCurrentScope.add(letClause.getVarExpr());
+                            break;
+                        case HAVING_CLAUSE:
+                            freeVariables.addAll(SqlppVariableUtil.getFreeVariables(letHavingClause));
+                            break;
+                        default:
+                            throw new IllegalStateException(String.valueOf(letHavingClause.getClauseType()));
+                    }
+                }
             }
 
             SelectExpression parentSelectExpression = (SelectExpression) arg;

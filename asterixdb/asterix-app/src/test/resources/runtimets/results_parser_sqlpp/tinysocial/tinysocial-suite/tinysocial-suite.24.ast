@@ -18,27 +18,6 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$user ]
 ]
-Let Variable [ Name=#1 ]
-  :=
-  FieldAccessor [
-    Variable [ Name=$user ]
-    Field=name
-  ]
-Let Variable [ Name=#2 ]
-  :=
-  FieldAccessor [
-    Variable [ Name=$user ]
-    Field=alias
-  ]
-Let Variable [ Name=#3 ]
-  :=
-  FunctionCall TinySocial.substring@2[
-    FieldAccessor [
-      Variable [ Name=$message ]
-      Field=message
-    ]
-    LiteralExpr [LONG] [29]
-  ]
 Where
   OperatorExpr [
     OperatorExpr [
@@ -70,6 +49,27 @@ Where
       <
       LiteralExpr [LONG] [11]
     ]
+  ]
+Let Variable [ Name=#1 ]
+  :=
+  FieldAccessor [
+    Variable [ Name=$user ]
+    Field=name
+  ]
+Let Variable [ Name=#2 ]
+  :=
+  FieldAccessor [
+    Variable [ Name=$user ]
+    Field=alias
+  ]
+Let Variable [ Name=#3 ]
+  :=
+  FunctionCall TinySocial.substring@2[
+    FieldAccessor [
+      Variable [ Name=$message ]
+      Field=message
+    ]
+    LiteralExpr [LONG] [29]
   ]
 Orderby
   Variable [ Name=#1 ]

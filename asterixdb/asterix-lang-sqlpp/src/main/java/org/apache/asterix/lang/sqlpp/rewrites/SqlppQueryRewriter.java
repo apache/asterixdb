@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -364,24 +365,18 @@ public class SqlppQueryRewriter implements IQueryRewriter {
             if (selectBlock.hasFromClause()) {
                 selectBlock.getFromClause().accept(this, arg);
             }
-            if (selectBlock.hasLetClauses()) {
-                for (LetClause letClause : selectBlock.getLetList()) {
-                    letClause.accept(this, arg);
+            if (selectBlock.hasLetWhereClauses()) {
+                for (AbstractClause letWhereClause : selectBlock.getLetWhereList()) {
+                    letWhereClause.accept(this, arg);
                 }
-            }
-            if (selectBlock.hasWhereClause()) {
-                selectBlock.getWhereClause().accept(this, arg);
             }
             if (selectBlock.hasGroupbyClause()) {
                 selectBlock.getGroupbyClause().accept(this, arg);
             }
-            if (selectBlock.hasLetClausesAfterGroupby()) {
-                for (LetClause letClause : selectBlock.getLetListAfterGroupby()) {
-                    letClause.accept(this, arg);
+            if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+                for (AbstractClause letHavingClause : selectBlock.getLetHavingListAfterGroupby()) {
+                    letHavingClause.accept(this, arg);
                 }
-            }
-            if (selectBlock.hasHavingClause()) {
-                selectBlock.getHavingClause().accept(this, arg);
             }
             selectBlock.getSelectClause().accept(this, arg);
             return null;

@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -64,54 +65,47 @@ abstract class AbstractSqlppExpressionExtractionVisitor extends AbstractSqlppSim
                 handleUnsupportedClause(clause, extractionList);
             }
         }
-        List<LetClause> letList = selectBlock.getLetList();
-        if (selectBlock.hasLetClauses()) {
-            visitLetClauses(letList, extractionList, arg);
-        }
-        if (selectBlock.hasWhereClause()) {
-            selectBlock.getWhereClause().accept(this, arg);
-            introduceLetClauses(extractionList, letList);
+        List<AbstractClause> letWhereList = selectBlock.getLetWhereList();
+        if (!letWhereList.isEmpty()) {
+            visitLetWhereClauses(letWhereList, extractionList, arg);
         }
         if (selectBlock.hasGroupbyClause()) {
             selectBlock.getGroupbyClause().accept(this, arg);
-            introduceLetClauses(extractionList, letList);
+            introduceLetClauses(extractionList, letWhereList);
         }
-        List<LetClause> letListAfterGby = selectBlock.getLetListAfterGroupby();
-        if (selectBlock.hasLetClausesAfterGroupby()) {
-            visitLetClauses(letListAfterGby, extractionList, arg);
-        }
-        if (selectBlock.hasHavingClause()) {
-            selectBlock.getHavingClause().accept(this, arg);
-            introduceLetClauses(extractionList, letListAfterGby);
+        List<AbstractClause> letHavingListAfterGby = selectBlock.getLetHavingListAfterGroupby();
+        if (!letHavingListAfterGby.isEmpty()) {
+            visitLetWhereClauses(letHavingListAfterGby, extractionList, arg);
         }
         selectBlock.getSelectClause().accept(this, arg);
-        introduceLetClauses(extractionList, selectBlock.hasGroupbyClause() ? letListAfterGby : letList);
+        introduceLetClauses(extractionList, selectBlock.hasGroupbyClause() ? letHavingListAfterGby : letWhereList);
 
         stack.pop();
         return null;
     }
 
-    private void visitLetClauses(List<LetClause> letList, List<Pair<Expression, VarIdentifier>> extractionList,
-            ILangExpression arg) throws CompilationException {
-        List<LetClause> newLetList = new ArrayList<>(letList.size());
-        for (LetClause letClause : letList) {
-            letClause.accept(this, arg);
-            introduceLetClauses(extractionList, newLetList);
-            newLetList.add(letClause);
+    private void visitLetWhereClauses(List<AbstractClause> clauseList,
+            List<Pair<Expression, VarIdentifier>> extractionList, ILangExpression arg) throws CompilationException {
+        List<AbstractClause> newClauseList = new ArrayList<>(clauseList.size());
+        for (AbstractClause letWhereClause : clauseList) {
+            letWhereClause.accept(this, arg);
+            introduceLetClauses(extractionList, newClauseList);
+            newClauseList.add(letWhereClause);
         }
-        if (newLetList.size() > letList.size()) {
-            letList.clear();
-            letList.addAll(newLetList);
+        if (newClauseList.size() > clauseList.size()) {
+            clauseList.clear();
+            clauseList.addAll(newClauseList);
         }
     }
 
-    private void introduceLetClauses(List<Pair<Expression, VarIdentifier>> fromBindingList, List<LetClause> toLetList) {
+    private void introduceLetClauses(List<Pair<Expression, VarIdentifier>> fromBindingList,
+            List<AbstractClause> toLetWhereList) {
         for (Pair<Expression, VarIdentifier> p : fromBindingList) {
             Expression bindExpr = p.first;
             VarIdentifier var = p.second;
             VariableExpr varExpr = new VariableExpr(var);
             varExpr.setSourceLocation(bindExpr.getSourceLocation());
-            toLetList.add(new LetClause(varExpr, bindExpr));
+            toLetWhereList.add(new LetClause(varExpr, bindExpr));
             context.addExcludedForFieldAccessVar(var);
         }
         fromBindingList.clear();

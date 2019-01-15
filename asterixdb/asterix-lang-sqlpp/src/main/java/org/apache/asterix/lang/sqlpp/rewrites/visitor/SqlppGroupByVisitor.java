@@ -123,7 +123,7 @@ public class SqlppGroupByVisitor extends AbstractSqlppSimpleExpressionVisitor {
     private List<Pair<Expression, Identifier>> createGroupFieldList(SelectBlock selectBlock) {
         List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<>();
         addToFieldList(groupFieldList, SqlppVariableUtil.getBindingVariables(selectBlock.getFromClause()));
-        addToFieldList(groupFieldList, SqlppVariableUtil.getBindingVariables(selectBlock.getLetList()));
+        addToFieldList(groupFieldList, SqlppVariableUtil.getLetBindingVariables(selectBlock.getLetWhereList()));
         return groupFieldList;
     }
 

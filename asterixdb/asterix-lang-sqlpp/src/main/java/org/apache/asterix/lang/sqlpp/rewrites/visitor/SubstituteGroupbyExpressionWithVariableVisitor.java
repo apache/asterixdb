@@ -24,10 +24,10 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
-import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
@@ -65,13 +65,10 @@ public class SubstituteGroupbyExpressionWithVariableVisitor extends AbstractSqlp
             SubstituteGroupbyExpressionVisitor visitor = new SubstituteGroupbyExpressionVisitor(context, map);
 
             // Rewrites LET/HAVING/SELECT clauses.
-            if (selectBlock.hasLetClausesAfterGroupby()) {
-                for (LetClause letClause : selectBlock.getLetListAfterGroupby()) {
-                    letClause.accept(visitor, arg);
+            if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+                for (AbstractClause letHavingClause : selectBlock.getLetHavingListAfterGroupby()) {
+                    letHavingClause.accept(visitor, arg);
                 }
-            }
-            if (selectBlock.hasHavingClause()) {
-                selectBlock.getHavingClause().accept(visitor, arg);
             }
             selectBlock.getSelectClause().accept(visitor, arg);
             SelectExpression selectExpression = (SelectExpression) arg;

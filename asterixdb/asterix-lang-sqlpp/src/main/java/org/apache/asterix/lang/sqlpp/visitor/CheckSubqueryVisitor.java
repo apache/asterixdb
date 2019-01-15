@@ -116,10 +116,9 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
 
     @Override
     public Boolean visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
-        boolean hasSubquery = visit(selectBlock.getFromClause(), arg) || visit(selectBlock.getGroupbyClause(), arg)
-                || visit(selectBlock.getHavingClause(), arg) || visit(selectBlock.getWhereClause(), arg);
-        return hasSubquery || visit(selectBlock.getSelectClause(), arg) || visitExprList(selectBlock.getLetList(), arg)
-                || visitExprList(selectBlock.getLetListAfterGroupby(), arg);
+        return visit(selectBlock.getFromClause(), arg) || visit(selectBlock.getGroupbyClause(), arg)
+                || visit(selectBlock.getSelectClause(), arg) || visitExprList(selectBlock.getLetWhereList(), arg)
+                || visitExprList(selectBlock.getLetHavingListAfterGroupby(), arg);
     }
 
     @Override

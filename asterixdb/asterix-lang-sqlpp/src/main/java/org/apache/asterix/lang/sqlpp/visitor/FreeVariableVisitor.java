@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -155,16 +156,16 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
     public Void visit(SelectBlock selectBlock, Collection<VariableExpr> freeVars) throws CompilationException {
         Collection<VariableExpr> selectFreeVars = new HashSet<>();
         Collection<VariableExpr> fromFreeVars = new HashSet<>();
-        Collection<VariableExpr> letsFreeVars = new HashSet<>();
-        Collection<VariableExpr> whereFreeVars = new HashSet<>();
+        Collection<VariableExpr> letWheresFreeVars = new HashSet<>();
         Collection<VariableExpr> gbyFreeVars = new HashSet<>();
-        Collection<VariableExpr> gbyLetsFreeVars = new HashSet<>();
+        Collection<VariableExpr> gbyLetHavingsFreeVars = new HashSet<>();
 
         Collection<VariableExpr> fromBindingVars = SqlppVariableUtil.getBindingVariables(selectBlock.getFromClause());
-        Collection<VariableExpr> letsBindingVars = SqlppVariableUtil.getBindingVariables(selectBlock.getLetList());
+        Collection<VariableExpr> letsBindingVars =
+                SqlppVariableUtil.getLetBindingVariables(selectBlock.getLetWhereList());
         Collection<VariableExpr> gbyBindingVars = SqlppVariableUtil.getBindingVariables(selectBlock.getGroupbyClause());
         Collection<VariableExpr> gbyLetsBindingVars =
-                SqlppVariableUtil.getBindingVariables(selectBlock.getLetListAfterGroupby());
+                SqlppVariableUtil.getLetBindingVariables(selectBlock.getLetHavingListAfterGroupby());
 
         selectBlock.getSelectClause().accept(this, selectFreeVars);
         // Removes group-by, from, let, and gby-let binding vars.
@@ -174,30 +175,20 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         if (selectBlock.hasFromClause()) {
             selectBlock.getFromClause().accept(this, fromFreeVars);
         }
-        if (selectBlock.hasLetClauses()) {
-            visitLetClauses(selectBlock.getLetList(), letsFreeVars);
-            letsFreeVars.removeAll(fromBindingVars);
-        }
-        if (selectBlock.hasWhereClause()) {
-            selectBlock.getWhereClause().accept(this, whereFreeVars);
-            whereFreeVars.removeAll(fromBindingVars);
-            whereFreeVars.removeAll(letsBindingVars);
+        if (selectBlock.hasLetWhereClauses()) {
+            visitLetWhereClauses(selectBlock.getLetWhereList(), letWheresFreeVars);
+            letWheresFreeVars.removeAll(fromBindingVars);
         }
         if (selectBlock.hasGroupbyClause()) {
             selectBlock.getGroupbyClause().accept(this, gbyFreeVars);
             // Remove group-by and let binding vars.
             gbyFreeVars.removeAll(fromBindingVars);
             gbyFreeVars.removeAll(letsBindingVars);
-            if (selectBlock.hasLetClausesAfterGroupby()) {
-                visitLetClauses(selectBlock.getLetListAfterGroupby(), gbyLetsFreeVars);
-                gbyLetsFreeVars.removeAll(fromBindingVars);
-                gbyLetsFreeVars.removeAll(letsBindingVars);
-                gbyLetsFreeVars.removeAll(gbyBindingVars);
-            }
-            if (selectBlock.hasHavingClause()) {
-                selectBlock.getHavingClause().accept(this, selectFreeVars);
-                removeAllBindingVarsInSelectBlock(selectFreeVars, fromBindingVars, letsBindingVars, gbyBindingVars,
-                        gbyLetsBindingVars);
+            if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+                visitLetWhereClauses(selectBlock.getLetHavingListAfterGroupby(), gbyLetHavingsFreeVars);
+                gbyLetHavingsFreeVars.removeAll(fromBindingVars);
+                gbyLetHavingsFreeVars.removeAll(letsBindingVars);
+                gbyLetHavingsFreeVars.removeAll(gbyBindingVars);
             }
         }
 
@@ -209,10 +200,9 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         // Adds all free vars.
         freeVars.addAll(selectFreeVars);
         freeVars.addAll(fromFreeVars);
-        freeVars.addAll(letsFreeVars);
-        freeVars.addAll(whereFreeVars);
+        freeVars.addAll(letWheresFreeVars);
         freeVars.addAll(gbyFreeVars);
-        freeVars.addAll(gbyLetsFreeVars);
+        freeVars.addAll(gbyLetHavingsFreeVars);
         return null;
     }
 
@@ -322,7 +312,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
             throws CompilationException {
         Collection<VariableExpr> letsFreeVars = new HashSet<>();
         Collection<VariableExpr> selectFreeVars = new HashSet<>();
-        visitLetClauses(selectExpression.getLetList(), letsFreeVars);
+        visitLetWhereClauses(selectExpression.getLetList(), letsFreeVars);
 
         // visit order by
         if (selectExpression.hasOrderby()) {
@@ -340,7 +330,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         selectExpression.getSelectSetOperation().accept(this, selectFreeVars);
 
         // Removed let binding variables.
-        selectFreeVars.removeAll(SqlppVariableUtil.getBindingVariables(selectExpression.getLetList()));
+        selectFreeVars.removeAll(SqlppVariableUtil.getLetBindingVariables(selectExpression.getLetList()));
         freeVars.addAll(letsFreeVars);
         freeVars.addAll(selectFreeVars);
         return null;
@@ -471,22 +461,24 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         return null;
     }
 
-    private void visitLetClauses(List<LetClause> letClauses, Collection<VariableExpr> freeVars)
+    private void visitLetWhereClauses(List<? extends AbstractClause> clauseList, Collection<VariableExpr> freeVars)
             throws CompilationException {
-        if (letClauses == null || letClauses.isEmpty()) {
+        if (clauseList == null || clauseList.isEmpty()) {
             return;
         }
         Collection<VariableExpr> bindingVars = new HashSet<>();
-        for (LetClause letClause : letClauses) {
-            Collection<VariableExpr> letFreeVars = new HashSet<>();
-            letClause.accept(this, letFreeVars);
+        for (AbstractClause clause : clauseList) {
+            Collection<VariableExpr> clauseFreeVars = new HashSet<>();
+            clause.accept(this, clauseFreeVars);
 
             // Removes previous binding variables.
-            letFreeVars.removeAll(bindingVars);
-            freeVars.addAll(letFreeVars);
+            clauseFreeVars.removeAll(bindingVars);
+            freeVars.addAll(clauseFreeVars);
 
             // Adds let binding variables into the binding variable collection.
-            bindingVars.add(letClause.getVarExpr());
+            if (clause.getClauseType() == ClauseType.LET_CLAUSE) {
+                bindingVars.add(((LetClause) clause).getVarExpr());
+            }
         }
     }
 

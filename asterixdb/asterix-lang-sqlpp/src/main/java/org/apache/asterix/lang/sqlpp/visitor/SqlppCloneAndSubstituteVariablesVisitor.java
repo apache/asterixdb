@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -29,7 +30,6 @@ import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
-import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
@@ -215,13 +215,12 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(SelectBlock selectBlock,
             VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> newFrom = null;
-        Pair<ILangExpression, VariableSubstitutionEnvironment> newLet;
-        Pair<ILangExpression, VariableSubstitutionEnvironment> newWhere = null;
+        Pair<ILangExpression, VariableSubstitutionEnvironment> newLetWhere;
         Pair<ILangExpression, VariableSubstitutionEnvironment> newGroupby = null;
-        Pair<ILangExpression, VariableSubstitutionEnvironment> newHaving = null;
+        Pair<ILangExpression, VariableSubstitutionEnvironment> newLetHaving;
         Pair<ILangExpression, VariableSubstitutionEnvironment> newSelect;
-        List<LetClause> newLetClauses = new ArrayList<>();
-        List<LetClause> newLetClausesAfterGby = new ArrayList<>();
+        List<AbstractClause> newLetWhereClauses = new ArrayList<>();
+        List<AbstractClause> newLetHavingClausesAfterGby = new ArrayList<>();
         VariableSubstitutionEnvironment currentEnv = new VariableSubstitutionEnvironment(env);
 
         if (selectBlock.hasFromClause()) {
@@ -229,44 +228,32 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             currentEnv = newFrom.second;
         }
 
-        if (selectBlock.hasLetClauses()) {
-            for (LetClause letClause : selectBlock.getLetList()) {
-                newLet = letClause.accept(this, currentEnv);
-                currentEnv = newLet.second;
-                newLetClauses.add((LetClause) newLet.first);
+        if (selectBlock.hasLetWhereClauses()) {
+            for (AbstractClause letWhereClause : selectBlock.getLetWhereList()) {
+                newLetWhere = letWhereClause.accept(this, currentEnv);
+                currentEnv = newLetWhere.second;
+                newLetWhereClauses.add((AbstractClause) newLetWhere.first);
             }
-        }
-
-        if (selectBlock.hasWhereClause()) {
-            newWhere = selectBlock.getWhereClause().accept(this, currentEnv);
-            currentEnv = newWhere.second;
         }
 
         if (selectBlock.hasGroupbyClause()) {
             newGroupby = selectBlock.getGroupbyClause().accept(this, currentEnv);
             currentEnv = newGroupby.second;
-            if (selectBlock.hasLetClausesAfterGroupby()) {
-                for (LetClause letClauseAfterGby : selectBlock.getLetListAfterGroupby()) {
-                    newLet = letClauseAfterGby.accept(this, currentEnv);
-                    currentEnv = newLet.second;
-                    newLetClausesAfterGby.add(letClauseAfterGby);
+            if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+                for (AbstractClause letHavingClauseAfterGby : selectBlock.getLetHavingListAfterGroupby()) {
+                    newLetHaving = letHavingClauseAfterGby.accept(this, currentEnv);
+                    currentEnv = newLetHaving.second;
+                    newLetHavingClausesAfterGby.add((AbstractClause) newLetHaving.first);
                 }
             }
-        }
-
-        if (selectBlock.hasHavingClause()) {
-            newHaving = selectBlock.getHavingClause().accept(this, currentEnv);
-            currentEnv = newHaving.second;
         }
 
         newSelect = selectBlock.getSelectClause().accept(this, currentEnv);
         currentEnv = newSelect.second;
         FromClause fromClause = newFrom == null ? null : (FromClause) newFrom.first;
-        WhereClause whereClause = newWhere == null ? null : (WhereClause) newWhere.first;
         GroupbyClause groupbyClause = newGroupby == null ? null : (GroupbyClause) newGroupby.first;
-        HavingClause havingClause = newHaving == null ? null : (HavingClause) newHaving.first;
-        SelectBlock newSelectBlock = new SelectBlock((SelectClause) newSelect.first, fromClause, newLetClauses,
-                whereClause, groupbyClause, newLetClausesAfterGby, havingClause);
+        SelectBlock newSelectBlock = new SelectBlock((SelectClause) newSelect.first, fromClause, newLetWhereClauses,
+                groupbyClause, newLetHavingClausesAfterGby);
         newSelectBlock.setSourceLocation(selectBlock.getSourceLocation());
         return new Pair<>(newSelectBlock, currentEnv);
     }

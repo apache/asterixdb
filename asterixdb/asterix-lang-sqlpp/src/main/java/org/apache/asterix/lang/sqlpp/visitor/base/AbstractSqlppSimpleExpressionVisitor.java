@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -120,31 +121,22 @@ public class AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
-        // Traverses the select block in the order of "from", "let"s, "where",
-        // "group by", "let"s, "having" and "select".
+        // Traverses the select block in the order of "from", "let/where"s, "group by", "let/having"s and "select".
         if (selectBlock.hasFromClause()) {
             selectBlock.getFromClause().accept(this, arg);
         }
-        if (selectBlock.hasLetClauses()) {
-            List<LetClause> letList = selectBlock.getLetList();
-            for (LetClause letClause : letList) {
-                letClause.accept(this, arg);
+        if (selectBlock.hasLetWhereClauses()) {
+            for (AbstractClause clause : selectBlock.getLetWhereList()) {
+                clause.accept(this, arg);
             }
-        }
-        if (selectBlock.hasWhereClause()) {
-            selectBlock.getWhereClause().accept(this, arg);
         }
         if (selectBlock.hasGroupbyClause()) {
             selectBlock.getGroupbyClause().accept(this, arg);
         }
-        if (selectBlock.hasLetClausesAfterGroupby()) {
-            List<LetClause> letListAfterGby = selectBlock.getLetListAfterGroupby();
-            for (LetClause letClauseAfterGby : letListAfterGby) {
-                letClauseAfterGby.accept(this, arg);
+        if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+            for (AbstractClause clause : selectBlock.getLetHavingListAfterGroupby()) {
+                clause.accept(this, arg);
             }
-        }
-        if (selectBlock.hasHavingClause()) {
-            selectBlock.getHavingClause().accept(this, arg);
         }
         selectBlock.getSelectClause().accept(this, arg);
         return null;

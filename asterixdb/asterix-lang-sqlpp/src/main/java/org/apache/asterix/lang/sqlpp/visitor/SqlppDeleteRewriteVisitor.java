@@ -86,7 +86,8 @@ public class SqlppDeleteRewriteVisitor extends AbstractSqlppAstVisitor<Void, Voi
         selectClause.setSourceLocation(deleteStmt.getSourceLocation());
 
         // Construct the select expression.
-        SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, whereClause, null, null, null);
+        SelectBlock selectBlock = new SelectBlock(selectClause, fromClause,
+                whereClause != null ? Collections.singletonList(whereClause) : null, null, null);
         selectBlock.setSourceLocation(var.getSourceLocation());
         SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
         selectSetOperation.setSourceLocation(var.getSourceLocation());

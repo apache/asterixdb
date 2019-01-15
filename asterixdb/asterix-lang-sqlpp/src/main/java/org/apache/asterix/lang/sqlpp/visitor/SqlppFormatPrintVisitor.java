@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -144,24 +145,18 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
         if (selectBlock.hasFromClause()) {
             selectBlock.getFromClause().accept(this, step);
         }
-        if (selectBlock.hasLetClauses()) {
-            for (LetClause letClause : selectBlock.getLetList()) {
-                letClause.accept(this, step);
+        if (selectBlock.hasLetWhereClauses()) {
+            for (AbstractClause letWhereClause : selectBlock.getLetWhereList()) {
+                letWhereClause.accept(this, step);
             }
-        }
-        if (selectBlock.hasWhereClause()) {
-            selectBlock.getWhereClause().accept(this, step);
         }
         if (selectBlock.hasGroupbyClause()) {
             selectBlock.getGroupbyClause().accept(this, step);
-            if (selectBlock.hasLetClausesAfterGroupby()) {
-                for (LetClause letClause : selectBlock.getLetListAfterGroupby()) {
-                    letClause.accept(this, step);
+            if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+                for (AbstractClause letHavingClause : selectBlock.getLetHavingListAfterGroupby()) {
+                    letHavingClause.accept(this, step);
                 }
             }
-        }
-        if (selectBlock.hasHavingClause()) {
-            selectBlock.getHavingClause().accept(this, step);
         }
         return null;
     }

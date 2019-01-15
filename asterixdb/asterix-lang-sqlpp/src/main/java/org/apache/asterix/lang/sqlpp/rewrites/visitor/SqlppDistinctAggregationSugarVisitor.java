@@ -119,7 +119,7 @@ public class SqlppDistinctAggregationSugarVisitor extends AbstractSqlppSimpleExp
         selectClause.setSourceLocation(sourceLoc);
 
         // Construct the select expression.
-        SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, null, null, null, null);
+        SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, null, null);
         selectBlock.setSourceLocation(sourceLoc);
         SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
         selectSetOperation.setSourceLocation(sourceLoc);

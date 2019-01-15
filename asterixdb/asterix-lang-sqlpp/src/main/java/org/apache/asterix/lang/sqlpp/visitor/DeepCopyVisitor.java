@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -152,41 +153,31 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
     @Override
     public SelectBlock visit(SelectBlock selectBlock, Void arg) throws CompilationException {
         FromClause fromClause = null;
-        List<LetClause> letClauses = new ArrayList<>();
-        WhereClause whereClause = null;
+        List<AbstractClause> letWhereClauses = new ArrayList<>();
         GroupbyClause gbyClause = null;
-        List<LetClause> gbyLetClauses = new ArrayList<>();
-        HavingClause havingClause = null;
-        SelectClause selectCluase;
-        // Traverses the select block in the order of "from", "let"s, "where",
-        // "group by", "let"s, "having" and "select".
+        List<AbstractClause> gbyLetHavingClauses = new ArrayList<>();
+        SelectClause selectClause;
+        // Traverses the select block in the order of "from", "let/where"s, "group by", "let/having"s, and "select".
         if (selectBlock.hasFromClause()) {
             fromClause = (FromClause) selectBlock.getFromClause().accept(this, arg);
         }
-        if (selectBlock.hasLetClauses()) {
-            List<LetClause> letList = selectBlock.getLetList();
-            for (LetClause letClause : letList) {
-                letClauses.add((LetClause) letClause.accept(this, arg));
+        if (selectBlock.hasLetWhereClauses()) {
+            List<AbstractClause> letWhereList = selectBlock.getLetWhereList();
+            for (AbstractClause letWhereClause : letWhereList) {
+                letWhereClauses.add((AbstractClause) letWhereClause.accept(this, arg));
             }
-        }
-        if (selectBlock.hasWhereClause()) {
-            whereClause = (WhereClause) selectBlock.getWhereClause().accept(this, arg);
         }
         if (selectBlock.hasGroupbyClause()) {
             gbyClause = (GroupbyClause) selectBlock.getGroupbyClause().accept(this, arg);
         }
-        if (selectBlock.hasLetClausesAfterGroupby()) {
-            List<LetClause> letListAfterGby = selectBlock.getLetListAfterGroupby();
-            for (LetClause letClauseAfterGby : letListAfterGby) {
-                gbyLetClauses.add((LetClause) letClauseAfterGby.accept(this, arg));
+        if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+            List<AbstractClause> letHavingListAfterGby = selectBlock.getLetHavingListAfterGroupby();
+            for (AbstractClause letHavingClauseAfterGby : letHavingListAfterGby) {
+                gbyLetHavingClauses.add((AbstractClause) letHavingClauseAfterGby.accept(this, arg));
             }
         }
-        if (selectBlock.hasHavingClause()) {
-            havingClause = (HavingClause) selectBlock.getHavingClause().accept(this, arg);
-        }
-        selectCluase = (SelectClause) selectBlock.getSelectClause().accept(this, arg);
-        SelectBlock copy = new SelectBlock(selectCluase, fromClause, letClauses, whereClause, gbyClause, gbyLetClauses,
-                havingClause);
+        selectClause = (SelectClause) selectBlock.getSelectClause().accept(this, arg);
+        SelectBlock copy = new SelectBlock(selectClause, fromClause, letWhereClauses, gbyClause, gbyLetHavingClauses);
         copy.setSourceLocation(selectBlock.getSourceLocation());
         return copy;
     }

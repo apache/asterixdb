@@ -225,7 +225,8 @@ public class FeedOperations {
         // Constructing select clause
         SelectElement selectElement = new SelectElement(previousVarExpr);
         SelectClause selectClause = new SelectClause(selectElement, null, false);
-        SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, whereClause, null, null, null);
+        SelectBlock selectBlock = new SelectBlock(selectClause, fromClause,
+                whereClause != null ? Collections.singletonList(whereClause) : null, null, null);
         SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
         SelectExpression body = new SelectExpression(null, selectSetOperation, null, null, true);
         Query query = new Query(false, true, body, 0);

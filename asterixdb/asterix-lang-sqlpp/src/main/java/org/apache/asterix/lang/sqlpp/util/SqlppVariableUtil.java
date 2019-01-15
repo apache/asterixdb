@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractClause;
+import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -176,13 +178,16 @@ public class SqlppVariableUtil {
         return bindingVars;
     }
 
-    public static List<VariableExpr> getBindingVariables(List<LetClause> letClauses) {
+    public static List<VariableExpr> getLetBindingVariables(List<? extends AbstractClause> clauses) {
         List<VariableExpr> bindingVars = new ArrayList<>();
-        if (letClauses == null || letClauses.isEmpty()) {
+        if (clauses == null || clauses.isEmpty()) {
             return bindingVars;
         }
-        for (LetClause letClause : letClauses) {
-            bindingVars.add(letClause.getVarExpr());
+        for (AbstractClause clause : clauses) {
+            if (clause.getClauseType() == Clause.ClauseType.LET_CLAUSE) {
+                LetClause letClause = (LetClause) clause;
+                bindingVars.add(letClause.getVarExpr());
+            }
         }
         return bindingVars;
     }

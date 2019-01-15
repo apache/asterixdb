@@ -26,8 +26,6 @@ import java.util.Objects;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
-import org.apache.asterix.lang.common.clause.LetClause;
-import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 
@@ -35,25 +33,20 @@ public class SelectBlock extends AbstractClause {
 
     private SelectClause selectClause;
     private FromClause fromClause;
-    private List<LetClause> letClauses = new ArrayList<>();
-    private WhereClause whereClause;
+    private final List<AbstractClause> letWhereClauses = new ArrayList<>();
     private GroupbyClause groupbyClause;
-    private List<LetClause> letClausesAfterGby = new ArrayList<>();
-    private HavingClause havingClause;
+    private final List<AbstractClause> letHavingClausesAfterGby = new ArrayList<>();
 
-    public SelectBlock(SelectClause selectClause, FromClause fromClause, List<LetClause> letClauses,
-            WhereClause whereClause, GroupbyClause groupbyClause, List<LetClause> letClausesAfterGby,
-            HavingClause havingClause) {
+    public SelectBlock(SelectClause selectClause, FromClause fromClause, List<AbstractClause> letWhereClauses,
+            GroupbyClause groupbyClause, List<AbstractClause> letHavingClausesAfterGby) {
         this.selectClause = selectClause;
         this.fromClause = fromClause;
-        if (letClauses != null) {
-            this.letClauses.addAll(letClauses);
+        if (letWhereClauses != null) {
+            this.letWhereClauses.addAll(letWhereClauses);
         }
-        this.whereClause = whereClause;
         this.groupbyClause = groupbyClause;
-        this.havingClause = havingClause;
-        if (letClausesAfterGby != null) {
-            this.letClausesAfterGby.addAll(letClausesAfterGby);
+        if (letHavingClausesAfterGby != null) {
+            this.letHavingClausesAfterGby.addAll(letHavingClausesAfterGby);
         }
     }
 
@@ -75,48 +68,32 @@ public class SelectBlock extends AbstractClause {
         return fromClause;
     }
 
-    public List<LetClause> getLetList() {
-        return letClauses;
-    }
-
-    public WhereClause getWhereClause() {
-        return whereClause;
+    public List<AbstractClause> getLetWhereList() {
+        return letWhereClauses;
     }
 
     public GroupbyClause getGroupbyClause() {
         return groupbyClause;
     }
 
-    public HavingClause getHavingClause() {
-        return havingClause;
+    public List<AbstractClause> getLetHavingListAfterGroupby() {
+        return letHavingClausesAfterGby;
     }
 
     public boolean hasFromClause() {
         return fromClause != null;
     }
 
-    public boolean hasLetClauses() {
-        return !letClauses.isEmpty();
-    }
-
-    public boolean hasWhereClause() {
-        return whereClause != null;
+    public boolean hasLetWhereClauses() {
+        return !letWhereClauses.isEmpty();
     }
 
     public boolean hasGroupbyClause() {
         return groupbyClause != null;
     }
 
-    public boolean hasLetClausesAfterGroupby() {
-        return !letClausesAfterGby.isEmpty();
-    }
-
-    public List<LetClause> getLetListAfterGroupby() {
-        return letClausesAfterGby;
-    }
-
-    public boolean hasHavingClause() {
-        return havingClause != null;
+    public boolean hasLetHavingClausesAfterGroupby() {
+        return !letHavingClausesAfterGby.isEmpty();
     }
 
     public void setGroupbyClause(GroupbyClause groupbyClause) {
@@ -125,8 +102,7 @@ public class SelectBlock extends AbstractClause {
 
     @Override
     public int hashCode() {
-        return Objects.hash(fromClause, groupbyClause, havingClause, letClauses, letClausesAfterGby, selectClause,
-                whereClause);
+        return Objects.hash(fromClause, groupbyClause, letWhereClauses, letHavingClausesAfterGby, selectClause);
     }
 
     @Override
@@ -140,9 +116,9 @@ public class SelectBlock extends AbstractClause {
         }
         SelectBlock target = (SelectBlock) object;
         return Objects.equals(fromClause, target.fromClause) && Objects.equals(groupbyClause, target.groupbyClause)
-                && Objects.equals(havingClause, target.havingClause) && Objects.equals(letClauses, target.letClauses)
-                && Objects.equals(letClausesAfterGby, target.letClausesAfterGby)
-                && Objects.equals(selectClause, target.selectClause) && Objects.equals(whereClause, target.whereClause);
+                && Objects.equals(letWhereClauses, target.letWhereClauses)
+                && Objects.equals(letHavingClausesAfterGby, target.letHavingClausesAfterGby)
+                && Objects.equals(selectClause, target.selectClause);
     }
 
     @Override
@@ -150,22 +126,16 @@ public class SelectBlock extends AbstractClause {
         StringBuilder sb = new StringBuilder();
         sb.append(selectClause);
         if (hasFromClause()) {
-            sb.append(" " + fromClause);
+            sb.append(' ').append(fromClause);
         }
-        if (hasLetClauses()) {
-            sb.append(" " + letClauses);
-        }
-        if (hasWhereClause()) {
-            sb.append(" " + whereClause);
+        if (hasLetWhereClauses()) {
+            sb.append(' ').append(letWhereClauses);
         }
         if (hasGroupbyClause()) {
-            sb.append(" " + groupbyClause);
+            sb.append(' ').append(groupbyClause);
         }
-        if (hasLetClausesAfterGroupby()) {
-            sb.append(" " + letClausesAfterGby);
-        }
-        if (hasHavingClause()) {
-            sb.append(" " + havingClause);
+        if (hasLetHavingClausesAfterGroupby()) {
+            sb.append(' ').append(letHavingClausesAfterGby);
         }
         return sb.toString();
     }

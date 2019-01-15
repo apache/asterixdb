@@ -96,6 +96,12 @@ FROM [  (
  AT
 Variable [ Name=$p ]
 ]
+Where
+  OperatorExpr [
+    Variable [ Name=$p ]
+    <
+    LiteralExpr [LONG] [4]
+  ]
 Let Variable [ Name=#1 ]
   :=
   FieldAccessor [
@@ -113,12 +119,6 @@ Let Variable [ Name=#3 ]
   FieldAccessor [
     Variable [ Name=$j ]
     Field=l_orderkey
-  ]
-Where
-  OperatorExpr [
-    Variable [ Name=$p ]
-    <
-    LiteralExpr [LONG] [4]
   ]
 Orderby
   Variable [ Name=#1 ]

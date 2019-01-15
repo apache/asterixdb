@@ -95,7 +95,7 @@ public class SetOperationVisitor extends AbstractSqlppExpressionScopingVisitor {
         newFromClause.setSourceLocation(sourceLoc);
         SelectClause selectClause = new SelectClause(new SelectElement(newBindingVar), null, false);
         selectClause.setSourceLocation(sourceLoc);
-        SelectBlock selectBlock = new SelectBlock(selectClause, newFromClause, null, null, null, null, null);
+        SelectBlock selectBlock = new SelectBlock(selectClause, newFromClause, null, null, null);
         selectBlock.setSourceLocation(sourceLoc);
         SelectSetOperation newSelectSetOperation =
                 new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
