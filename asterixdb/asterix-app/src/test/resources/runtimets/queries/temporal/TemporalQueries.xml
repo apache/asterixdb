@@ -139,41 +139,6 @@
                 <output-dir compare="Text">interval_functions</output-dir>
             </compilation-unit>
         </test-case>
-        <test-case FilePath="temporal/interval_joins">
-            <compilation-unit name="interval_before">
-                <output-dir compare="Text">interval_before</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="temporal/interval_joins">
-            <compilation-unit name="interval_covers">
-                <output-dir compare="Text">interval_covers</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="temporal/interval_joins">
-            <compilation-unit name="interval_ends">
-                <output-dir compare="Text">interval_ends</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="temporal/interval_joins">
-            <compilation-unit name="interval_meets">
-                <output-dir compare="Text">interval_meets</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="temporal/interval_joins">
-            <compilation-unit name="interval_overlapping">
-                <output-dir compare="Text">interval_overlapping</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="temporal/interval_joins">
-            <compilation-unit name="interval_overlaps">
-                <output-dir compare="Text">interval_overlaps</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="temporal/interval_joins">
-            <compilation-unit name="interval_starts">
-                <output-dir compare="Text">interval_starts</output-dir>
-            </compilation-unit>
-        </test-case>
         <test-case FilePath="temporal">
             <compilation-unit name="time_functions">
                 <output-dir compare="Text">time_functions</output-dir>

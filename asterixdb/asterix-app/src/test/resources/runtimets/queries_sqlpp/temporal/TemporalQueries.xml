@@ -1,0 +1,222 @@
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+  <test-group name="temporal">
+    <test-case FilePath="temporal">
+      <compilation-unit name="overlap_bins_gby_3">
+        <output-dir compare="Text">overlap_bins_gby_3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="agg_min">
+        <output-dir compare="Text">agg_min</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="agg_max">
+        <output-dir compare="Text">agg_max</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="overlap_bins_gby_1">
+        <output-dir compare="Text">overlap_bins_gby_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="duration_functions">
+        <output-dir compare="Text">duration_functions</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="overlap_bins_gby_0">
+        <output-dir compare="Text">overlap_bins_gby_0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="get_overlapping_interval">
+        <output-dir compare="Text">get_overlapping_interval</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="overlap_bins">
+        <output-dir compare="Text">overlap_bins</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="parse_02">
+        <output-dir compare="Text">parse_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="parse_01">
+        <output-dir compare="Text">parse_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="day_of_week_01">
+        <output-dir compare="Text">day_of_week_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="interval_bin">
+        <output-dir compare="Text">interval_bin</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="interval_bin_gby_0">
+        <output-dir compare="Text">interval_bin_gby_0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="interval_bin_gby_1">
+        <output-dir compare="Text">interval_bin_gby_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="accessors">
+        <output-dir compare="Text">accessors</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="accessors_interval">
+        <output-dir compare="Text">accessors_interval</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="accessors_interval_null">
+        <output-dir compare="Text">accessors_interval_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="adjust_timezone">
+        <output-dir compare="Text">adjust_timezone</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="calendar_duration">
+        <output-dir compare="Text">calendar_duration</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="date_functions">
+        <output-dir compare="Text">date_functions</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="datetime_functions">
+        <output-dir compare="Text">datetime_functions</output-dir>
+      </compilation-unit>
+    </test-case>
+    <!--
+       <test-case FilePath="temporal">
+           <compilation-unit name="insert_from_delimited_ds">
+              <output-dir compare="Text">insert_from_delimited_ds</output-dir>
+           </compilation-unit>
+      </test-case>
+        -->
+    <test-case FilePath="temporal">
+      <compilation-unit name="insert_from_ext_ds">
+        <output-dir compare="Text">insert_from_ext_ds</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="insert_from_ext_ds_2">
+        <output-dir compare="Text">insert_from_ext_ds_2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="interval_functions">
+        <output-dir compare="Text">interval_functions</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="time_functions">
+        <output-dir compare="Text">time_functions</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="duration_comps">
+        <output-dir compare="Text">duration_comps</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_overlapping">
+        <output-dir compare="Text">interval_overlapping</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_before">
+        <output-dir compare="Text">interval_before</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_covers">
+        <output-dir compare="Text">interval_covers</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_ends">
+        <output-dir compare="Text">interval_ends</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_meets">
+        <output-dir compare="Text">interval_meets</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_overlaps">
+        <output-dir compare="Text">interval_overlaps</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_starts">
+        <output-dir compare="Text">interval_starts</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_after">
+        <output-dir compare="Text">interval_after</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_covered_by">
+        <output-dir compare="Text">interval_covered_by</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_ended_by">
+        <output-dir compare="Text">interval_ended_by</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_met_by">
+        <output-dir compare="Text">interval_met_by</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_overlapped_by">
+        <output-dir compare="Text">interval_overlapped_by</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_started_by">
+        <output-dir compare="Text">interval_started_by</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
