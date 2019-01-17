@@ -1,0 +1,4 @@
+{ "channel": "catalog", "item": 10, "return_ratio": 2.43, "return_rank": 1, "currency_rank": 2 }
+{ "channel": "catalog", "item": 1, "return_ratio": 3.0, "return_rank": 2, "currency_rank": 1 }
+{ "channel": "store", "item": 13, "return_ratio": 9.0, "return_rank": 1, "currency_rank": 1 }
+{ "channel": "web", "item": 25, "return_ratio": 2.67, "return_rank": 1, "currency_rank": 1 }

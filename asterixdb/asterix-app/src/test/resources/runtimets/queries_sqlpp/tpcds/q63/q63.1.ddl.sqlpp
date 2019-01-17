@@ -1,0 +1,150 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop dataverse tpcds if exists;
+create dataverse tpcds;
+
+use tpcds;
+
+create type tpcds.date_dim_type as
+ closed {
+  d_date_sk : bigint,
+  d_date_id : string,
+  d_date : string?,
+  d_month_seq : bigint?,
+  d_week_seq : bigint?,
+  d_quarter_seq : bigint?,
+  d_year : bigint? ,
+  d_dow : bigint? ,
+  d_moy : bigint?,
+  d_dom : bigint?,
+  d_qoy : bigint?,
+  d_fy_year : bigint?,
+  d_fy_quarter_seq : bigint?,
+  d_fy_week_seq : bigint?,
+  d_day_name : string?,
+  d_quarter_name : string?,
+  d_holiday : string?,
+  d_weekend : string?,
+  d_following_holiday : string?,
+  d_first_dom : bigint?,
+  d_last_dom : bigint?,
+  d_same_day_ly : bigint?,
+  d_same_day_lq : bigint?,
+  d_current_day : string?,
+  d_current_week : string?,
+  d_current_month : string?,
+  d_current_quarter : string?,
+  d_current_year : string?
+};
+
+create type tpcds.item_type as
+ closed {
+  i_item_sk : bigint,
+  i_item_id : string,
+  i_rec_start_date : string?,
+  i_rec_end_date : string?,
+  i_item_desc : string?,
+  i_current_price : double?,
+  i_wholesale_cost : double?,
+  i_brand_id : bigint?,
+  i_brand : string?,
+  i_class_id : bigint?,
+  i_class : string?,
+  i_category_id : bigint?,
+  i_category : string?,
+  i_manufact_id : bigint?,
+  i_manufact : string?,
+  i_size : string?,
+  i_formulation : string?,
+  i_color : string?,
+  i_units : string?,
+  i_container : string?,
+  i_manager_id : bigint?,
+  i_product_name : string?
+};
+
+create type tpcds.store_type as
+ closed {
+  s_store_sk : bigint,
+  s_store_id : string,
+  s_rec_start_date : string?,
+  s_rec_end_date : string?,
+  s_closed_date_sk : bigint?,
+  s_store_name : string?,
+  s_number_employees : bigint?,
+  s_floor_space : bigint?,
+  s_hours : string?,
+  s_manager : string?,
+  s_market_id : bigint?,
+  s_geography_class : string?,
+  s_market_desc : string?,
+  s_market_manager : string?,
+  s_division_id : bigint?,
+  s_division_name : string?,
+  s_company_id : bigint?,
+  s_company_name : string?,
+  s_street_number : string?,
+  s_street_name : string?,
+  s_street_type : string?,
+  s_suite_number : string?,
+  s_city : string?,
+  s_county : string?,
+  s_state : string?,
+  s_zip : string?,
+  s_country : string?,
+  s_gmt_offset : double?,
+  s_tax_precentage : double?
+};
+
+create type tpcds.store_sales_type as
+ closed {
+  ss_sold_date_sk:           bigint?,
+  ss_sold_time_sk:           bigint?,
+  ss_item_sk:                bigint,
+  ss_customer_sk:            bigint?,
+  ss_cdemo_sk:               bigint?,
+  ss_hdemo_sk:               bigint?,
+  ss_addr_sk:                bigint?,
+  ss_store_sk:               bigint?,
+  ss_promo_sk:               bigint?,
+  ss_ticket_number:          bigint,
+  ss_quantity:               bigint?,
+  ss_wholesale_cost:         double?,
+  ss_list_price:             double?,
+  ss_sales_price:            double?,
+  ss_ext_discount_amt:       double?,
+  ss_ext_sales_price:        double?,
+  ss_ext_wholesale_cost:     double?,
+  ss_ext_list_price:         double?,
+  ss_ext_tax:                double?,
+  ss_coupon_amt:             double?,
+  ss_net_paid:               double?,
+  ss_net_paid_inc_tax:       double?,
+  ss_net_profit:             double?
+};
+
+create dataset date_dim(date_dim_type) primary key d_date_sk;
+
+create dataset item(item_type) primary key i_item_sk;
+
+create dataset store(store_type) primary key s_store_sk;
+
+create dataset store_sales(store_sales_type) primary key ss_item_sk, ss_ticket_number;
+

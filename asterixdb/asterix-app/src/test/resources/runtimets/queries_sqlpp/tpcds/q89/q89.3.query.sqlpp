@@ -1,0 +1,59 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions AND limitations
+ * under the License.
+ */
+
+USE tpcds;
+
+SELECT tmp1.*
+FROM (
+  SELECT
+    i_category,
+    i_class,
+    i_brand,
+    s_store_name,
+    s_company_name,
+    d_moy,
+    ROUND_HALF_TO_EVEN(SUM(ss.ss_sales_price), 2) sum_sales,
+    ROUND_HALF_TO_EVEN(
+      AVG(SUM(ss.ss_sales_price)) OVER (PARTITION BY i_category, i_brand, s_store_name, s_company_name), 2)
+      avg_monthly_sales
+  FROM
+    item i,
+    store_sales ss,
+    date_dim d,
+    store s
+  WHERE
+    ss.ss_item_sk = i.i_item_sk
+    AND ss.ss_sold_date_sk = d.d_date_sk
+    AND ss.ss_store_sk = s.s_store_sk
+    AND d.d_year IN [2000, 2001]
+    AND ((i.i_category IN ['Home', 'Men', 'Sports'] AND i.i_class IN ['furniture', 'accessories', 'hockey'])
+      OR (i.i_category IN ['Electronics', 'Jewelry', 'Women'] AND i.i_class IN ['musical', 'estate', 'fragrances']))
+  GROUP BY
+    i.i_category,
+    i.i_class,
+    i.i_brand,
+    s.s_store_name,
+    s.s_company_name,
+    d.d_moy
+) tmp1
+WHERE
+  CASE WHEN (avg_monthly_sales <> 0) THEN (ABS(sum_sales - avg_monthly_sales) / avg_monthly_sales) ELSE NULL END > 0.1
+ORDER BY
+  sum_sales - avg_monthly_sales, s_store_name
+LIMIT 100;

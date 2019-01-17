@@ -1,0 +1,83 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions AND limitations
+ * under the License.
+ */
+
+USE tpcds;
+
+WITH
+  v1 AS (
+  SELECT
+    i_category,
+    i_brand,
+    cc_name,
+    d_year,
+    d_moy,
+    SUM(cs.cs_sales_price) sum_sales,
+    AVG(SUM(cs.cs_sales_price)) OVER (PARTITION BY i_category, i_brand, cc_name, d_year) avg_monthly_sales,
+    RANK() OVER (PARTITION BY i_category, i_brand, cc_name ORDER BY d_year, d_moy) rn
+  FROM
+    item i,
+    catalog_sales cs,
+    date_dim d,
+    call_center cc
+  WHERE
+    cs.cs_item_sk = i.i_item_sk
+    AND cs.cs_sold_date_sk = d.d_date_sk
+    AND cc.cc_call_center_sk = cs.cs_call_center_sk
+    /*AND ( d.d_year = 2000 OR ( d.d_year = 2000 - 1 AND d.d_moy = 12 ) OR ( d.d_year = 2000 + 1 AND d.d_moy = 1 ) )*/
+  GROUP BY
+    i.i_category,
+    i.i_brand,
+    cc.cc_name,
+    d.d_year,
+    d.d_moy),
+
+  v2 AS (
+  SELECT
+    v1_orig.i_category,
+    v1_orig.i_brand,
+    v1_orig.cc_name,
+    v1_orig.d_year,
+    v1_orig.d_moy,
+    v1_orig.avg_monthly_sales,
+    v1_orig.sum_sales,
+    v1_lag.sum_sales psum,
+    v1_lead.sum_sales nsum
+  FROM
+    v1 v1_orig,
+    v1 v1_lag,
+    v1 v1_lead
+  WHERE
+    v1_orig.i_category = v1_lag.i_category
+    AND v1_orig.i_category = v1_lead.i_category
+    AND v1_orig.i_brand = v1_lag.i_brand
+    AND v1_orig.i_brand = v1_lead.i_brand
+    AND v1_orig.cc_name = v1_lag.cc_name
+    AND v1_orig.cc_name = v1_lead.cc_name
+    AND v1_orig.rn = v1_lag.rn + 1
+    AND v1_orig.rn = v1_lead.rn - 1)
+
+SELECT v2.*
+FROM v2
+WHERE
+  d_year = 2000 AND
+  avg_monthly_sales > 0
+  /*AND CASE WHEN avg_monthly_sales > 0 THEN ABS(sum_sales - avg_monthly_sales) / avg_monthly_sales ELSE NULL END > 0.1*/
+ORDER BY
+  sum_sales - avg_monthly_sales, cc_name
+LIMIT 100;

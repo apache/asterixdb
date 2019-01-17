@@ -1,0 +1,134 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions AND limitations
+ * under the License.
+ */
+
+USE tpcds;
+
+SELECT
+  'web' AS channel,
+  web.item,
+  web.return_ratio,
+  web.return_rank,
+  web.currency_rank
+FROM
+  (SELECT
+    item,
+    return_ratio,
+    currency_ratio,
+    RANK() OVER (ORDER BY return_ratio) AS return_rank,
+    RANK() OVER (ORDER BY currency_ratio) AS currency_rank
+  FROM
+    (SELECT
+      ws.ws_item_sk AS item,
+      ROUND_HALF_TO_EVEN(SUM(COALESCE(wr.wr_return_quantity, 0)) / SUM(COALESCE(ws.ws_quantity, 0)), 2) AS return_ratio,
+      SUM(COALESCE(wr.wr_return_amt, 0)) / SUM(COALESCE(ws.ws_net_paid, 0)) AS currency_ratio
+    FROM
+      web_sales ws
+      LEFT OUTER JOIN web_returns wr ON ( ws.ws_order_number = wr.wr_order_number AND ws.ws_item_sk = wr.wr_item_sk ),
+      date_dim d
+    WHERE
+      wr.wr_return_amt > 100
+      AND ws.ws_net_profit > 1
+      AND ws.ws_net_paid > 0
+      AND ws.ws_quantity > 0
+      AND ws.ws_sold_date_sk = d.d_date_sk
+      /* AND d.d_year = 1999 AND d.d_moy = 12*/
+    GROUP BY
+      ws.ws_item_sk
+    ) in_web
+  ) web
+WHERE (web.return_rank <= 10 OR web.currency_rank <= 10)
+
+UNION ALL
+
+SELECT
+  'catalog' AS channel,
+  catalog.item,
+  catalog.return_ratio,
+  catalog.return_rank,
+  catalog.currency_rank
+FROM
+  (SELECT
+    item,
+    return_ratio,
+    currency_ratio,
+    RANK() OVER (ORDER BY return_ratio) AS return_rank,
+    RANK() OVER (ORDER BY currency_ratio) AS currency_rank
+  FROM
+    (SELECT
+      cs.cs_item_sk AS item,
+      ROUND_HALF_TO_EVEN(SUM(COALESCE(cr.cr_return_quantity, 0)) / SUM(COALESCE(cs.cs_quantity, 0)), 2) AS return_ratio,
+      SUM(COALESCE(cr.cr_return_amount, 0)) / SUM(COALESCE(cs.cs_net_paid, 0)) AS currency_ratio
+    FROM
+      catalog_sales cs
+      LEFT OUTER JOIN catalog_returns cr ON ( cs.cs_order_number = cr.cr_order_number AND cs.cs_item_sk = cr.cr_item_sk ),
+      date_dim d
+    WHERE
+      cr.cr_return_amount > 100
+      AND cs.cs_net_profit > 1
+      AND cs.cs_net_paid > 0
+      AND cs.cs_quantity > 0
+      AND cs.cs_sold_date_sk = d.d_date_sk
+      /*AND d.d_year = 1999 AND d.d_moy = 12*/
+    GROUP BY
+      cs.cs_item_sk
+    ) in_cat
+  ) catalog
+WHERE ( catalog.return_rank <= 10 OR catalog.currency_rank <= 10 )
+
+UNION ALL
+
+SELECT
+  'store' AS channel,
+  store.item,
+  store.return_ratio,
+  store.return_rank,
+  store.currency_rank
+FROM
+  (SELECT
+    item,
+    return_ratio,
+    currency_ratio,
+    RANK() OVER (ORDER BY return_ratio) AS return_rank,
+    RANK() OVER (ORDER BY currency_ratio) AS currency_rank
+  FROM
+    (SELECT
+      sts.ss_item_sk AS item,
+      ROUND_HALF_TO_EVEN(SUM(COALESCE(sr.sr_return_quantity, 0)) / SUM(COALESCE(sts.ss_quantity, 0)), 2) AS return_ratio,
+      SUM(COALESCE(sr.sr_return_amt, 0)) / SUM(COALESCE(sts.ss_net_paid, 0)) AS currency_ratio
+    FROM
+      store_sales sts
+      LEFT OUTER JOIN store_returns sr ON ( sts.ss_ticket_number = sr.sr_ticket_number AND sts.ss_item_sk = sr.sr_item_sk ),
+      date_dim d
+    WHERE
+      sr.sr_return_amt > 100
+      AND sts.ss_net_profit > 1
+      AND sts.ss_net_paid > 0
+      AND sts.ss_quantity > 0
+      AND sts.ss_sold_date_sk = d.d_date_sk
+      /*AND d.d_year = 1999 AND d.d_moy = 12*/
+    GROUP BY
+      sts.ss_item_sk
+    ) in_store
+  ) store
+WHERE ( store.return_rank <= 10 OR store.currency_rank <= 10 )
+ORDER BY
+  channel,
+  return_rank,
+  currency_rank
+LIMIT 100;

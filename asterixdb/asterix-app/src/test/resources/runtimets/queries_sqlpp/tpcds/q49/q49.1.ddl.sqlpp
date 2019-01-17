@@ -1,0 +1,254 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop dataverse tpcds if exists;
+create dataverse tpcds;
+
+use tpcds;
+
+create type tpcds.catalog_returns_type as
+ closed {
+  cr_returned_date_sk : bigint?,
+  cr_returned_time_sk : bigint?,
+  cr_item_sk : bigint,
+  cr_refunded_customer_sk : bigint?,
+  cr_refunded_cdemo_sk : bigint?,
+  cr_refunded_hdemo_sk : bigint?,
+  cr_refunded_addr_sk : bigint?,
+  cr_returning_customer_sk : bigint?,
+  cr_returning_cdemo_sk : bigint?,
+  cr_returning_hdemo_sk : bigint?,
+  cr_returning_addr_sk : bigint?,
+  cr_call_center_sk : bigint?,
+  cr_catalog_page_sk : bigint?,
+  cr_ship_mode_sk : bigint?,
+  cr_warehouse_sk : bigint?,
+  cr_reason_sk : bigint?,
+  cr_order_number : bigint,
+  cr_return_quantity : bigint?,
+  cr_return_amount : double?,
+  cr_return_tax : double?,
+  cr_return_amt_inc_tax : double?,
+  cr_fee : double?,
+  cr_return_ship_cost : double?,
+  cr_refunded_cash : double?,
+  cr_reversed_charge : double?,
+  cr_store_credit : double?,
+  cr_net_loss : double?
+};
+
+create type tpcds.catalog_sales_type as
+ closed {
+  cs_sold_date_sk:           bigint?,
+  cs_sold_time_sk:           bigint?,
+  cs_ship_date_sk:           bigint?,
+  cs_bill_customer_sk:       bigint?,
+  cs_bill_cdemo_sk:          bigint?,
+  cs_bill_hdemo_sk:          bigint?,
+  cs_bill_addr_sk:           bigint?,
+  cs_ship_customer_sk:       bigint?,
+  cs_ship_cdemo_sk:          bigint?,
+  cs_ship_hdemo_sk:          bigint?,
+  cs_ship_addr_sk:           bigint?,
+  cs_call_center_sk:         bigint?,
+  cs_ship_mode_sk:           bigint?,
+  cs_warehouse_sk:           bigint?,
+  cs_item_sk:                bigint,
+  cs_promo_sk:               bigint?,
+  cs_order_number:           bigint,
+  cs_quantity:               bigint?,
+  cs_wholesale_cost:         double?,
+  cs_list_price:             double?,
+  cs_sales_price:            double?,
+  cs_ext_discount_amt:       double?,
+  cs_ext_sales_price:        double?,
+  cs_ext_wholesale_cost:     double?,
+  cs_ext_list_price:         double?,
+  cs_ext_tax:                double?,
+  cs_coupon_amt:             double?,
+  cs_ext_ship_cost:          double?,
+  cs_net_paid:               double?,
+  cs_net_paid_inc_tax:       double?,
+  cs_net_paid_inc_ship:      double?,
+  cs_net_paid_inc_ship_tax:  double?,
+  cs_net_profit:             double?
+};
+
+create type tpcds.date_dim_type as
+ closed {
+  d_date_sk : bigint,
+  d_date_id : string,
+  d_date : string?,
+  d_month_seq : bigint?,
+  d_week_seq : bigint?,
+  d_quarter_seq : bigint?,
+  d_year : bigint? ,
+  d_dow : bigint? ,
+  d_moy : bigint?,
+  d_dom : bigint?,
+  d_qoy : bigint?,
+  d_fy_year : bigint?,
+  d_fy_quarter_seq : bigint?,
+  d_fy_week_seq : bigint?,
+  d_day_name : string?,
+  d_quarter_name : string?,
+  d_holiday : string?,
+  d_weekend : string?,
+  d_following_holiday : string?,
+  d_first_dom : bigint?,
+  d_last_dom : bigint?,
+  d_same_day_ly : bigint?,
+  d_same_day_lq : bigint?,
+  d_current_day : string?,
+  d_current_week : string?,
+  d_current_month : string?,
+  d_current_quarter : string?,
+  d_current_year : string?
+};
+
+create type tpcds.store_returns_type as
+ closed {
+  sr_returned_date_sk : int64?,
+  sr_return_time_sk : int64?,
+  sr_item_sk : int64,
+  sr_customer_sk : int64?,
+  sr_cdemo_sk : int64?,
+  sr_hdemo_sk : int64?,
+  sr_addr_sk : int64?,
+  sr_store_sk : int64?,
+  sr_reason_sk : int64?,
+  sr_ticket_number : int64,
+  sr_return_quantity : int64?,
+  sr_return_amt : double,
+  sr_return_tax : double?,
+  sr_return_amt_inc_tax : double?,
+  sr_fee : double?,
+  sr_return_ship_cost : double?,
+  sr_refunded_cash : double?,
+  sr_reversed_charge : double?,
+  sr_store_credit : double?,
+  sr_net_loss : double?
+};
+
+create type tpcds.store_sales_type as
+ closed {
+  ss_sold_date_sk:           bigint?,
+  ss_sold_time_sk:           bigint?,
+  ss_item_sk:                bigint,
+  ss_customer_sk:            bigint?,
+  ss_cdemo_sk:               bigint?,
+  ss_hdemo_sk:               bigint?,
+  ss_addr_sk:                bigint?,
+  ss_store_sk:               bigint?,
+  ss_promo_sk:               bigint?,
+  ss_ticket_number:          bigint,
+  ss_quantity:               bigint?,
+  ss_wholesale_cost:         double?,
+  ss_list_price:             double?,
+  ss_sales_price:            double?,
+  ss_ext_discount_amt:       double?,
+  ss_ext_sales_price:        double?,
+  ss_ext_wholesale_cost:     double?,
+  ss_ext_list_price:         double?,
+  ss_ext_tax:                double?,
+  ss_coupon_amt:             double?,
+  ss_net_paid:               double?,
+  ss_net_paid_inc_tax:       double?,
+  ss_net_profit:             double?
+};
+
+create type tpcds.web_returns_type as
+ closed {
+  wr_returned_date_sk : bigint?,
+  wr_returned_time_sk : bigint?,
+  wr_item_sk : bigint,
+  wr_refunded_customer_sk : bigint?,
+  wr_refunded_cdemo_sk : bigint?,
+  wr_refunded_hdemo_sk : bigint?,
+  wr_refunded_addr_sk : bigint?,
+  wr_returning_customer_sk : bigint?,
+  wr_returning_cdemo_sk : bigint?,
+  wr_returning_hdemo_sk : bigint?,
+  wr_returning_addr_sk : bigint?,
+  wr_web_page_sk : bigint?,
+  wr_reason_sk : bigint?,
+  wr_order_number : bigint,
+  wr_return_quantity : bigint?,
+  wr_return_amt : double?,
+  wr_return_tax : double?,
+  wr_return_amt_inc_tax : double?,
+  wr_fee : double?,
+  wr_return_ship_cost: double?,
+  wr_refunded_cash: double?,
+  wr_reversed_charge: double?,
+  wr_account_credit: double?,
+  wr_net_loss: double?
+};
+
+create type tpcds.web_sales_type as
+ closed {
+  ws_sold_date_sk : bigint?,
+  ws_sold_time_sk : bigint?,
+  ws_ship_date_sk : bigint?,
+  ws_item_sk : bigint,
+  ws_bill_customer_sk : bigint?,
+  ws_bill_cdemo_sk : bigint?,
+  ws_bill_hdemo_sk : bigint?,
+  ws_bill_addr_sk : bigint?,
+  ws_ship_customer_sk : bigint?,
+  ws_ship_cdemo_sk : bigint?,
+  ws_ship_hdemo_sk : bigint?,
+  ws_ship_addr_sk : bigint?,
+  ws_web_page_sk : bigint?,
+  ws_web_site_sk : bigint?,
+  ws_ship_mode_sk : bigint?,
+  ws_warehouse_sk : bigint?,
+  ws_promo_sk : bigint?,
+  ws_order_number : bigint,
+  ws_quantity : bigint?,
+  ws_wholesale_cost : double?,
+  ws_list_price : double?,
+  ws_sales_price : double?,
+  ws_ext_discount_amt : double?,
+  ws_ext_sales_price : double?,
+  ws_ext_wholesale_cost : double?,
+  ws_ext_list_price : double?,
+  ws_ext_tax : double?,
+  ws_coupon_amt : double?,
+  ws_ext_ship_cost : double?,
+  ws_net_paid : double?,
+  ws_net_paid_inc_tax : double?,
+  ws_net_paid_inc_ship : double?,
+  ws_net_paid_inc_ship_tax : double?,
+  ws_net_profit : double?
+};
+
+create dataset catalog_returns (catalog_returns_type) primary key cr_item_sk, cr_order_number;
+
+create dataset catalog_sales (catalog_sales_type) primary key cs_item_sk, cs_order_number;
+
+create dataset date_dim(date_dim_type) primary key d_date_sk;
+
+create dataset store_returns (store_returns_type) primary key sr_item_sk, sr_ticket_number;
+
+create dataset store_sales (store_sales_type) primary key ss_item_sk, ss_ticket_number;
+
+create dataset web_returns (web_returns_type) primary key wr_item_sk, wr_order_number;
+
+create dataset web_sales (web_sales_type) primary key ws_item_sk, ws_order_number;
