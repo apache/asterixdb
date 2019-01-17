@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules;
 
+import static org.apache.asterix.common.config.GlobalConfig.ASTERIX_LOGGER;
+
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -42,6 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.visitors.AbstractConstVarFunVisitor;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 /**
  * open-record-constructor() becomes closed-record-constructor() if all the
@@ -113,7 +116,8 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                     int n = expr.getArguments().size();
                     if (n % 2 > 0) {
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, expr.getSourceLocation(),
-                                "Record constructor expected to have an even number of arguments: " + expr);
+                                "Record constructor expected to have an even number of arguments: "
+                                        + LogRedactionUtil.userData(expr.toString()));
                     }
                     for (int i = 0; i < n / 2; i++) {
                         ILogicalExpression a0 = expr.getArguments().get(2 * i).getValue();
@@ -133,7 +137,8 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                     }
                     if (allClosed) {
                         expr.setFunctionInfo(FunctionUtil.getFunctionInfo(BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR));
-                        GlobalConfig.ASTERIX_LOGGER.trace("Switching to CLOSED record constructor in " + expr + ".\n");
+                        ASTERIX_LOGGER.trace(() -> "Switching to CLOSED record constructor in "
+                                + LogRedactionUtil.userData(expr.toString()) + ".\n");
                         changed = true;
                     }
                 }

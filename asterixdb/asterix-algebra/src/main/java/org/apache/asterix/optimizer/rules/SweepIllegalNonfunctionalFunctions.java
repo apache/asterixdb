@@ -101,23 +101,23 @@ public class SweepIllegalNonfunctionalFunctions implements IAlgebraicRewriteRule
 
     private class IllegalNonfunctionalFunctionSweeperOperatorVisitor implements ILogicalOperatorVisitor<Void, Void> {
 
-        private void sweepExpression(ILogicalExpression expr, ILogicalOperator op) throws AlgebricksException {
+        private void sweepExpression(ILogicalExpression expr) throws AlgebricksException {
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL && !expr.isFunctional()) {
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, fce.getSourceLocation(),
-                        "Found non-functional function " + fce.getFunctionIdentifier() + " in op " + op);
+                        "Found non-functional function " + fce.getFunctionIdentifier());
             }
         }
 
         @Override
         public Void visitAggregateOperator(AggregateOperator op, Void arg) throws AlgebricksException {
             for (Mutable<ILogicalExpression> me : op.getExpressions()) {
-                sweepExpression(me.getValue(), op);
+                sweepExpression(me.getValue());
             }
             List<Mutable<ILogicalExpression>> mergeExprs = op.getMergeExpressions();
             if (mergeExprs != null) {
                 for (Mutable<ILogicalExpression> me : mergeExprs) {
-                    sweepExpression(me.getValue(), op);
+                    sweepExpression(me.getValue());
                 }
             }
             return null;
@@ -126,7 +126,7 @@ public class SweepIllegalNonfunctionalFunctions implements IAlgebraicRewriteRule
         @Override
         public Void visitRunningAggregateOperator(RunningAggregateOperator op, Void arg) throws AlgebricksException {
             for (Mutable<ILogicalExpression> me : op.getExpressions()) {
-                sweepExpression(me.getValue(), op);
+                sweepExpression(me.getValue());
             }
             return null;
         }
@@ -139,10 +139,10 @@ public class SweepIllegalNonfunctionalFunctions implements IAlgebraicRewriteRule
         @Override
         public Void visitGroupByOperator(GroupByOperator op, Void arg) throws AlgebricksException {
             for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getGroupByList()) {
-                sweepExpression(p.second.getValue(), op);
+                sweepExpression(p.second.getValue());
             }
             for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getDecorList()) {
-                sweepExpression(p.second.getValue(), op);
+                sweepExpression(p.second.getValue());
             }
             return null;
         }
@@ -154,13 +154,13 @@ public class SweepIllegalNonfunctionalFunctions implements IAlgebraicRewriteRule
 
         @Override
         public Void visitInnerJoinOperator(InnerJoinOperator op, Void arg) throws AlgebricksException {
-            sweepExpression(op.getCondition().getValue(), op);
+            sweepExpression(op.getCondition().getValue());
             return null;
         }
 
         @Override
         public Void visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Void arg) throws AlgebricksException {
-            sweepExpression(op.getCondition().getValue(), op);
+            sweepExpression(op.getCondition().getValue());
             return null;
         }
 
@@ -172,7 +172,7 @@ public class SweepIllegalNonfunctionalFunctions implements IAlgebraicRewriteRule
         @Override
         public Void visitOrderOperator(OrderOperator op, Void arg) throws AlgebricksException {
             for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
-                sweepExpression(p.second.getValue(), op);
+                sweepExpression(p.second.getValue());
             }
             return null;
         }
@@ -266,7 +266,7 @@ public class SweepIllegalNonfunctionalFunctions implements IAlgebraicRewriteRule
         @Override
         public Void visitDistinctOperator(DistinctOperator op, Void arg) throws AlgebricksException {
             for (Mutable<ILogicalExpression> expr : op.getExpressions()) {
-                sweepExpression(expr.getValue(), op);
+                sweepExpression(expr.getValue());
             }
             return null;
         }
@@ -310,40 +310,40 @@ public class SweepIllegalNonfunctionalFunctions implements IAlgebraicRewriteRule
 
         @Override
         public Void visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
-            sweepExpression(op.getRangeMapExpression().getValue(), op);
+            sweepExpression(op.getRangeMapExpression().getValue());
             return null;
         }
 
         @Override
         public Void visitWindowOperator(WindowOperator op, Void arg) throws AlgebricksException {
             for (Mutable<ILogicalExpression> me : op.getPartitionExpressions()) {
-                sweepExpression(me.getValue(), op);
+                sweepExpression(me.getValue());
             }
             for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
-                sweepExpression(p.second.getValue(), op);
+                sweepExpression(p.second.getValue());
             }
             for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getFrameValueExpressions()) {
-                sweepExpression(p.second.getValue(), op);
+                sweepExpression(p.second.getValue());
             }
             for (Mutable<ILogicalExpression> me : op.getFrameStartExpressions()) {
-                sweepExpression(me.getValue(), op);
+                sweepExpression(me.getValue());
             }
             for (Mutable<ILogicalExpression> me : op.getFrameEndExpressions()) {
-                sweepExpression(me.getValue(), op);
+                sweepExpression(me.getValue());
             }
             for (Mutable<ILogicalExpression> me : op.getFrameExcludeExpressions()) {
-                sweepExpression(me.getValue(), op);
+                sweepExpression(me.getValue());
             }
             ILogicalExpression frameOffset = op.getFrameOffset().getValue();
             if (frameOffset != null) {
-                sweepExpression(frameOffset, op);
+                sweepExpression(frameOffset);
             }
             for (Mutable<ILogicalExpression> me : op.getExpressions()) {
                 ILogicalExpression expr = me.getValue();
                 if (isStatefulFunctionCall(expr)) {
                     for (Mutable<ILogicalExpression> fcallArg : ((AbstractFunctionCallExpression) expr)
                             .getArguments()) {
-                        sweepExpression(fcallArg.getValue(), op);
+                        sweepExpression(fcallArg.getValue());
                     }
                 } else {
                     throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, op.getSourceLocation());

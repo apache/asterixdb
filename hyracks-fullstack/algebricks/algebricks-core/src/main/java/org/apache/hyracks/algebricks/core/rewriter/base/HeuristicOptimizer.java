@@ -33,6 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendab
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.Level;
 
 public class HeuristicOptimizer {
@@ -87,7 +88,8 @@ public class HeuristicOptimizer {
             final LogicalOperatorPrettyPrintVisitor pvisitor = context.getPrettyPrintVisitor();
             pvisitor.reset(new AlgebricksAppendable());
             PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
-            AlgebricksConfig.ALGEBRICKS_LOGGER.log(lvl, name + ":\n" + pvisitor.get().toString());
+            AlgebricksConfig.ALGEBRICKS_LOGGER.log(lvl,
+                    name + ":\n" + LogRedactionUtil.userData(pvisitor.get().toString()));
         }
     }
 

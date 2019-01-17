@@ -31,6 +31,7 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendab
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public abstract class AbstractRuleController {
 
@@ -47,7 +48,7 @@ public abstract class AbstractRuleController {
      * Each rewriting strategy may differ in the
      *
      * @param root
-     * @param ruleClasses
+     * @param rules
      * @return true iff one of the rules in the collection fired
      */
     public abstract boolean rewriteWithRuleCollection(Mutable<ILogicalOperator> root,
@@ -74,12 +75,11 @@ public abstract class AbstractRuleController {
         return null;
     }
 
-    private void printRuleApplication(IAlgebraicRewriteRule rule, String beforePlan, String afterPlan)
-            throws AlgebricksException {
+    private void printRuleApplication(IAlgebraicRewriteRule rule, String beforePlan, String afterPlan) {
         if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">>>> Rule " + rule.getClass() + " fired.\n");
-            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">>>> Before plan\n" + beforePlan + "\n");
-            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">>>> After plan\n" + afterPlan + "\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">> Rule " + rule.getClass() + " fired.\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">> Before plan\n" + LogRedactionUtil.userData(beforePlan) + "\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">> After plan\n" + LogRedactionUtil.userData(afterPlan) + "\n");
         }
     }
 

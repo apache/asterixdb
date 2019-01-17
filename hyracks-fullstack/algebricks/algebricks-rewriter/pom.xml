@@ -39,6 +39,11 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-util</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>algebricks-core</artifactId>
       <version>${project.version}</version>
     </dependency>

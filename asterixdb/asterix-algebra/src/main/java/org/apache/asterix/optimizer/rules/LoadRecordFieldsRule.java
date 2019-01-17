@@ -223,7 +223,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                     }
                 }
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, a2.getSourceLocation(),
-                        "Field access " + getFirstExpr(a2) + " does not correspond to any input of operator " + topOp);
+                        "Field access " + getFirstExpr(a2) + " does not correspond to any input");
             }
         }
     }

@@ -35,6 +35,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 /**
  * This rule is to check if all the filter expression are of the boolean type or a possible (determined
@@ -65,7 +66,8 @@ public class CheckFilterExpressionTypeRule implements IAlgebraicRewriteRule {
         if (condType.getTypeTag() != ATypeTag.BOOLEAN && condType.getTypeTag() != ATypeTag.ANY
                 && !isPossibleBoolean(condType)) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, condition.getSourceLocation(),
-                    "The select condition " + condition.toString() + " should be of the boolean type.");
+                    "The select condition " + LogRedactionUtil.userData(condition.toString()) + " should be of the "
+                            + "boolean type.");
         }
         return false;
     }

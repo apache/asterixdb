@@ -35,6 +35,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public class FeedLogManager implements Closeable {
 
@@ -45,13 +46,13 @@ public class FeedLogManager implements Closeable {
         SNAPSHOT // an identifier that partitions with identifiers before this one should be ignored
     }
 
-    public static final String PROGRESS_LOG_FILE_NAME = "progress.log";
-    public static final String ERROR_LOG_FILE_NAME = "error.log";
-    public static final String BAD_RECORDS_FILE_NAME = "failed_record.log";
-    public static final String START_PREFIX = "s:";
-    public static final String END_PREFIX = "e:";
+    private static final String PROGRESS_LOG_FILE_NAME = "progress.log";
+    private static final String ERROR_LOG_FILE_NAME = "error.log";
+    private static final String BAD_RECORDS_FILE_NAME = "failed_record.log";
+    private static final String START_PREFIX = "s:";
+    private static final String END_PREFIX = "e:";
     private static final String DATE_FORMAT_STRING = "MM/dd/yyyy HH:mm:ss";
-    public static final int PREFIX_SIZE = START_PREFIX.length() + DATE_FORMAT_STRING.length() + 1;
+    private static final int PREFIX_SIZE = START_PREFIX.length() + DATE_FORMAT_STRING.length() + 1;
     private String currentPartition;
     private final TreeSet<String> completed;
     private final Path dir;
@@ -149,7 +150,7 @@ public class FeedLogManager implements Closeable {
         return true;
     }
 
-    public synchronized void logProgress(String log) throws IOException {
+    private synchronized void logProgress(String log) throws IOException {
         stringBuilder.setLength(0);
         stringBuilder.append(df.format((new Date())));
         stringBuilder.append(' ');
@@ -173,7 +174,7 @@ public class FeedLogManager implements Closeable {
 
     public synchronized void logRecord(String record, String errorMessage) throws IOException {
         stringBuilder.setLength(0);
-        stringBuilder.append(record);
+        stringBuilder.append(LogRedactionUtil.userData(record));
         stringBuilder.append(ExternalDataConstants.LF);
         stringBuilder.append(df.format((new Date())));
         stringBuilder.append(' ');
@@ -183,7 +184,7 @@ public class FeedLogManager implements Closeable {
         recordLogger.flush();
     }
 
-    public static String getSplitId(String log) {
+    private static String getSplitId(String log) {
         return log.substring(PREFIX_SIZE);
     }
 

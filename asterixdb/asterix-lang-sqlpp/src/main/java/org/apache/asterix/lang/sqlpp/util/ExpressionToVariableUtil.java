@@ -27,6 +27,7 @@ import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.parser.ParseException;
 import org.apache.asterix.lang.sqlpp.parser.SqlppParseException;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -54,7 +55,7 @@ public class ExpressionToVariableUtil {
                 throw new SqlppParseException(expr.getSourceLocation(), e.getLocalizedMessage());
             }
             throw new SqlppParseException(expr.getSourceLocation(),
-                    "Need an alias for the enclosed expression:\n" + exprText);
+                    "Need an alias for the enclosed expression:\n" + LogRedactionUtil.userData(exprText));
         }
     }
 

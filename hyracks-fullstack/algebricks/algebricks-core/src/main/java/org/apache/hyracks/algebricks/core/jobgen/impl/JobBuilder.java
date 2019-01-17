@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.algebricks.core.jobgen.impl;
 
+import static org.apache.hyracks.api.exceptions.ErrorCode.DESCRIPTOR_GENERATION_ERROR;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -311,7 +313,7 @@ public class JobBuilder implements IHyracksJobBuilder {
         }
         Integer metaOpKey = algebraicOpBelongingToMetaAsterixOp.get(op);
         if (metaOpKey == null) {
-            throw new AlgebricksException("Could not generate operator descriptor for operator " + op);
+            throw AlgebricksException.create(DESCRIPTOR_GENERATION_ERROR, op.getSourceLocation(), op.getOperatorTag());
         }
         return metaAsterixOps.get(metaOpKey);
     }

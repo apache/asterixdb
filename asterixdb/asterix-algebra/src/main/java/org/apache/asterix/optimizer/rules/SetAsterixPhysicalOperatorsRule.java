@@ -332,10 +332,11 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                     .createMergeAggregation(aggProducedVars.get(i), aggFuncExpr, context);
             if (mergeExpr == null) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, aggFuncExpr.getSourceLocation(),
-                        "The aggregation function " + aggFuncExpr
+                        "The aggregation function "
+                                + ((AbstractFunctionCallExpression) aggFuncExpr).getFunctionIdentifier().getName()
                                 + " does not have a registered intermediate aggregation function.");
             }
-            mergeExpressionRefs.add(new MutableObject<ILogicalExpression>(mergeExpr));
+            mergeExpressionRefs.add(new MutableObject<>(mergeExpr));
         }
         aggOp.setMergeExpressions(mergeExpressionRefs);
     }

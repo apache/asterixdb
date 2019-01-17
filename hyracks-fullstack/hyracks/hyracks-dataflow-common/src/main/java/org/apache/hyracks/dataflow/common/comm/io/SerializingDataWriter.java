@@ -25,6 +25,7 @@ import org.apache.hyracks.api.dataflow.IOpenableDataWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -82,7 +83,7 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
         for (int i = 0; i < data.length; ++i) {
             Object instance = data[i];
             if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(i + " " + instance);
+                LOGGER.trace(i + " " + LogRedactionUtil.userData(instance.toString()));
             }
             tb.addField(recordDescriptor.getFields()[i], instance);
         }

@@ -64,7 +64,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceSc
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
-import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -283,8 +282,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                 }
             }
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, assignOp.getSourceLocation(),
-                    "Field access " + assignOp.getExpressions().get(0).getValue()
-                            + " does not correspond to any input of operator " + inputOp);
+                    "Field access " + assignOp.getExpressions().get(0).getValue() + " doesn't correspond to any input");
         } else {
             // check if the accessed field is one of the partitioning key fields. If yes, we can equate the 2 variables
             if (inputOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {

@@ -26,6 +26,7 @@ import org.apache.hyracks.api.comm.FrameConstants;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -71,7 +72,7 @@ public class FrameDeserializer {
         for (int i = 0; i < record.length; ++i) {
             Object instance = recordDescriptor.getFields()[i].deserialize(di);
             if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(i + " " + instance);
+                LOGGER.trace(i + " " + LogRedactionUtil.userData(instance.toString()));
             }
             record[i] = instance;
             if (FrameConstants.DEBUG_FRAME_IO) {

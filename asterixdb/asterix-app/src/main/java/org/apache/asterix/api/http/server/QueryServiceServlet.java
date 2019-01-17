@@ -76,6 +76,7 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -520,7 +521,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 optionalParams = optionalParamProvider.apply(request);
             }
             setRequestParam(request, param, optionalParams);
-            LOGGER.info("handleRequest: {}", param);
+            LOGGER.info(() -> "handleRequest: " + LogRedactionUtil.userData(param.toString()));
             ResultDelivery delivery = parseResultDelivery(param.getMode());
             setSessionConfig(sessionOutput, param, delivery);
             final ResultProperties resultProperties = param.getMaxResultReads() == null ? new ResultProperties(delivery)
@@ -624,33 +625,38 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         if (t instanceof org.apache.asterix.aqlplus.parser.TokenMgrError || t instanceof TokenMgrError
                 || t instanceof AlgebricksException) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("handleException: {}: {}", t.getMessage(), param, t);
+                LOGGER.debug("handleException: {}: {}", t.getMessage(), LogRedactionUtil.userData(param.toString()), t);
             } else {
-                LOGGER.info("handleException: {}: {}", t.getMessage(), param);
+                LOGGER.info(() -> "handleException: " + t.getMessage() + ": "
+                        + LogRedactionUtil.userData(param.toString()));
             }
             state.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
         } else if (t instanceof HyracksException) {
             HyracksException he = (HyracksException) t;
             switch (he.getComponent() + he.getErrorCode()) {
                 case ASTERIX + REQUEST_TIMEOUT:
-                    LOGGER.info("handleException: request execution timed out: {}", param);
+                    LOGGER.info(() -> "handleException: request execution timed out: "
+                            + LogRedactionUtil.userData(param.toString()));
                     state.setStatus(ResultStatus.TIMEOUT, HttpResponseStatus.OK);
                     break;
                 case ASTERIX + REJECT_BAD_CLUSTER_STATE:
                 case ASTERIX + REJECT_NODE_UNREGISTERED:
-                    LOGGER.warn("handleException: {}: {}", he.getMessage(), param);
+                    LOGGER.warn(() -> "handleException: " + he.getMessage() + ": "
+                            + LogRedactionUtil.userData(param.toString()));
                     state.setStatus(ResultStatus.FATAL, HttpResponseStatus.SERVICE_UNAVAILABLE);
                     break;
                 case ASTERIX + NO_STATEMENT_PROVIDED:
                     state.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
                     break;
                 default:
-                    LOGGER.warn("handleException: unexpected exception {}: {}", he.getMessage(), param, he);
+                    LOGGER.warn(() -> "handleException: unexpected exception " + he.getMessage() + ": "
+                            + LogRedactionUtil.userData(param.toString()), he);
                     state.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
                     break;
             }
         } else {
-            LOGGER.warn("handleException: unexpected exception: {}", param, t);
+            LOGGER.warn(() -> "handleException: unexpected exception: " + LogRedactionUtil.userData(param.toString()),
+                    t);
             state.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }

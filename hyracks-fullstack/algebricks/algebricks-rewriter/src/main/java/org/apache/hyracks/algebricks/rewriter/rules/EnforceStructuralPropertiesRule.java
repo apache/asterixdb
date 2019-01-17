@@ -106,6 +106,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConf
 import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
@@ -901,7 +902,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
         PlanPrettyPrinter.printOperator(op, pvisitor, 0);
         if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(pvisitor.get().toString());
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(LogRedactionUtil.userData(pvisitor.get().toString()));
         }
     }
 

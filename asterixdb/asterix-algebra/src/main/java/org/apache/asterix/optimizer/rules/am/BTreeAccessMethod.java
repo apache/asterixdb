@@ -74,6 +74,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnn
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 /**
  * Class for helping rewrite rules to choose and apply BTree indexes.
@@ -787,7 +788,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         // The original select cond must be an AND. Check it just to be sure.
         if (funcExpr.getFunctionIdentifier() != AlgebricksBuiltinFunctions.AND) {
             throw new CompilationException(ErrorCode.COMPILATION_FUNC_EXPRESSION_CANNOT_UTILIZE_INDEX,
-                    funcExpr.getSourceLocation(), funcExpr.toString());
+                    funcExpr.getSourceLocation(), LogRedactionUtil.userData(funcExpr.toString()));
         }
         // Clean the conjuncts.
         for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {

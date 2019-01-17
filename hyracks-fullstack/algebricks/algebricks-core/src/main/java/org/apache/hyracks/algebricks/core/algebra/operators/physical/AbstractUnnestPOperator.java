@@ -36,6 +36,7 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.UnnestRuntimeFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public abstract class AbstractUnnestPOperator extends AbstractScanPOperator {
     private final boolean leftOuter;
@@ -73,7 +74,8 @@ public abstract class AbstractUnnestPOperator extends AbstractScanPOperator {
             }
         }
         if (exit) {
-            throw new AlgebricksException("Unnest expression " + unnestExpr + " is not an unnesting function call.");
+            throw new AlgebricksException("Unnest expression " + LogRedactionUtil.userData(unnestExpr.toString())
+                    + " is not an unnesting function call.");
         }
         UnnestingFunctionCallExpression agg = (UnnestingFunctionCallExpression) unnestExpr;
         IUnnestingEvaluatorFactory unnestingFactory = expressionRuntimeProvider.createUnnestingFunctionFactory(agg,

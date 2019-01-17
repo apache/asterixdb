@@ -32,6 +32,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
 /**
@@ -134,7 +135,7 @@ public class PointableHelper {
             }
             utf8Writer.writeUTF8(str, output);
         } catch (IOException e) {
-            throw new HyracksDataException("Could not serialize " + str);
+            throw new HyracksDataException("Could not serialize " + LogRedactionUtil.userData(str));
         }
     }
 

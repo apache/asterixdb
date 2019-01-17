@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
+import static org.apache.hyracks.api.exceptions.ErrorCode.PHYS_OPERATOR_NOT_SET;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -164,7 +166,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
             throws AlgebricksException {
         if (bJobGenEnabled) {
             if (physicalOperator == null) {
-                throw new AlgebricksException("Physical operator not set for operator: " + this);
+                throw AlgebricksException.create(PHYS_OPERATOR_NOT_SET, getSourceLocation(), this.getOperatorTag());
             }
             physicalOperator.contributeRuntimeOperator(builder, context, this, propagatedSchema, inputSchemas,
                     outerPlanSchema);

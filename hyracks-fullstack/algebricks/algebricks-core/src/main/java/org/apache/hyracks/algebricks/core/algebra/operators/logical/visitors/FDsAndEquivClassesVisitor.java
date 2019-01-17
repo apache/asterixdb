@@ -86,6 +86,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralPro
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalGroupingProperty;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, IOptimizationContext> {
 
@@ -316,9 +317,9 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
             }
         }
         if (changed && AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER
-                    .trace(">>>> Group-by list changed from " + GroupByOperator.veListToString(gByList) + " to "
-                            + GroupByOperator.veListToString(newGbyList) + ".\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">>>> Group-by list changed from {} to {}.\n",
+                    LogRedactionUtil.userData(GroupByOperator.veListToString(gByList)),
+                    LogRedactionUtil.userData(GroupByOperator.veListToString(newGbyList)));
         }
         gByList.clear();
         gByList.addAll(newGbyList);

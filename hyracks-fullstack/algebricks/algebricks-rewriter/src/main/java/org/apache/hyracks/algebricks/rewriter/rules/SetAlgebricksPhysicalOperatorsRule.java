@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.algebricks.rewriter.rules;
 
+import static org.apache.hyracks.api.exceptions.ErrorCode.ORDER_EXPR_NOT_NORMALIZED;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -222,7 +224,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     for (Pair<IOrder, Mutable<ILogicalExpression>> p : oo.getOrderExpressions()) {
                         ILogicalExpression e = p.second.getValue();
                         if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                            throw new AlgebricksException("Order expression " + e + " has not been normalized.");
+                            throw AlgebricksException.create(ORDER_EXPR_NOT_NORMALIZED, e.getSourceLocation());
                         }
                     }
                     if (topLevelOp) {

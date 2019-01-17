@@ -157,6 +157,9 @@ public class ErrorCode {
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;
     public static final int CANNOT_COMPOSE_PART_CONSTRAINTS = 10001;
+    public static final int PHYS_OPERATOR_NOT_SET = 10002;
+    public static final int DESCRIPTOR_GENERATION_ERROR = 10003;
+    public static final int ORDER_EXPR_NOT_NORMALIZED = 10004;
 
     private static class Holder {
         private static final Map<Integer, String> errorMessageMap;
