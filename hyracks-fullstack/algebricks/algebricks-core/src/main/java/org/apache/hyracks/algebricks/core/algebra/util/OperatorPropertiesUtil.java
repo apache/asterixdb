@@ -300,24 +300,26 @@ public class OperatorPropertiesUtil {
      * @param op
      *            the operator to consider.
      * @return true if the operator can be moved, false if the operator cannot be moved.
-     * @throws AlgebricksException
      */
     public static boolean isMovable(ILogicalOperator op) {
         Object annotation = op.getAnnotations().get(MOVABLE);
-        if (annotation == null) {
-            // Can't move nonPures!
-            if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+        if (annotation != null) {
+            return (Boolean) annotation;
+        }
+        switch (op.getOperatorTag()) {
+            case ASSIGN:
+                // Can't move nonPures!
                 AssignOperator assign = (AssignOperator) op;
                 for (Mutable<ILogicalExpression> expr : assign.getExpressions()) {
                     if (containsNonpureCall(expr.getValue())) {
                         return false;
                     }
                 }
-            }
-            return true;
+                break;
+            case WINDOW:
+                return false;
         }
-        Boolean movable = (Boolean) annotation;
-        return movable;
+        return true;
     }
 
     private static boolean containsNonpureCall(ILogicalExpression expr) {

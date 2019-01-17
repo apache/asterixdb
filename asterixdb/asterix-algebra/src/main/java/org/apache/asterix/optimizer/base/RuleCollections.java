@@ -94,6 +94,7 @@ import org.apache.hyracks.algebricks.rewriter.rules.BreakSelectIntoConjunctsRule
 import org.apache.hyracks.algebricks.rewriter.rules.ComplexUnnestToProductRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateAssignsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.RemoveRedundantWindowOperatorsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ReuseWindowAggregateRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateWindowOperatorsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.CopyLimitDownRule;
@@ -296,6 +297,7 @@ public final class RuleCollections {
         // Window operator consolidation rules
         consolidation.add(new ConsolidateWindowOperatorsRule());
         consolidation.add(new ReuseWindowAggregateRule());
+        consolidation.add(new RemoveRedundantWindowOperatorsRule());
         consolidation.add(new RemoveRedundantVariablesRule());
         return consolidation;
     }

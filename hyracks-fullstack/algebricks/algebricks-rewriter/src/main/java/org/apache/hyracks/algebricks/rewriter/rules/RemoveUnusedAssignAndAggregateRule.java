@@ -45,6 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -53,12 +54,12 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  */
 public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule {
 
-    // Keep the variables that are produced by ASSIGN, UNNEST, AGGREGATE, UNION,
+    // Keep the variables that are produced by ASSIGN, UNNEST, AGGREGATE, UNION, WINDOW,
     // and GROUP operators.
     private Map<Mutable<ILogicalOperator>, Set<LogicalVariable>> assignedVarMap = new LinkedHashMap<>();
     private Set<LogicalVariable> assignedVarSet = new HashSet<>();
 
-    // Keep the variables that are used after ASSIGN, UNNEST, AGGREGATE, UNION,
+    // Keep the variables that are used after ASSIGN, UNNEST, AGGREGATE, UNION, WINDOW,
     // and GROUP operators.
     private Map<Mutable<ILogicalOperator>, Set<LogicalVariable>> accumulatedUsedVarFromRootMap = new LinkedHashMap<>();
 
@@ -236,6 +237,13 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                 }
                 return groupByOp.getGroupByList().size() + groupByOp.getNestedPlans().size()
                         + groupByOp.getDecorList().size();
+            case WINDOW:
+                WindowOperator winOp = (WindowOperator) op;
+                if (removeUnusedVarsAndExprs(toRemove, winOp.getVariables(), winOp.getExpressions())) {
+                    context.computeAndSetTypeEnvironmentForOperator(winOp);
+                    isTransformed = true;
+                }
+                return winOp.getVariables().size() + winOp.getNestedPlans().size();
             default:
                 break;
         }
@@ -371,7 +379,10 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                     }
                 }
                 break;
-            default:
+            case WINDOW:
+                WindowOperator winOp = (WindowOperator) op;
+                assignVarsSetInThisOp.addAll(winOp.getVariables());
+                targetOpFound = true;
                 break;
         }
 

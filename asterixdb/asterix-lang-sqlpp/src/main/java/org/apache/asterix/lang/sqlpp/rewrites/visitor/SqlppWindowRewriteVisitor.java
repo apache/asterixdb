@@ -66,13 +66,17 @@ public final class SqlppWindowRewriteVisitor extends AbstractSqlppExpressionExtr
         if (winfi != null) {
             if (BuiltinFunctions.windowFunctionHasProperty(winfi,
                     BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG)) {
-                List<Expression> newExprList =
-                        extractExpressions(winExpr.getExprList(), 1, winExpr.getSourceLocation());
+                List<Expression> newExprList = extractExpressions(winExpr.getExprList(), 1);
+                if (newExprList == null) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, winExpr.getSourceLocation(), "");
+                }
                 winExpr.setExprList(newExprList);
             }
         } else if (FunctionMapUtil.isSql92AggregateFunction(signature)) {
-            List<Expression> newExprList = extractExpressions(winExpr.getExprList(), winExpr.getExprList().size(),
-                    winExpr.getSourceLocation());
+            List<Expression> newExprList = extractExpressions(winExpr.getExprList(), winExpr.getExprList().size());
+            if (newExprList == null) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, winExpr.getSourceLocation(), "");
+            }
             winExpr.setExprList(newExprList);
         }
 

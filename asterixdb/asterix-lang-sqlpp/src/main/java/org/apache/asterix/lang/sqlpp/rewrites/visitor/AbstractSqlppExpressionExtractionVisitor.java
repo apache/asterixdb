@@ -25,7 +25,6 @@ import java.util.Deque;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -37,11 +36,10 @@ import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * Base class for visitors that extract expressions into LET clauses.
- * Subclasses should call {@link #extractExpressions(List, int, SourceLocation)} to perform the extraction.
+ * Subclasses should call {@link #extractExpressions(List, int)} to perform the extraction.
  */
 abstract class AbstractSqlppExpressionExtractionVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
@@ -111,11 +109,10 @@ abstract class AbstractSqlppExpressionExtractionVisitor extends AbstractSqlppSim
         fromBindingList.clear();
     }
 
-    List<Expression> extractExpressions(List<Expression> exprList, int limit, SourceLocation sourceLocation)
-            throws CompilationException {
+    List<Expression> extractExpressions(List<Expression> exprList, int limit) {
         List<Pair<Expression, VarIdentifier>> outLetList = stack.peek();
         if (outLetList == null) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLocation);
+            return null;
         }
         int n = exprList.size();
         List<Expression> newExprList = new ArrayList<>(n);

@@ -169,7 +169,7 @@ class Sql92AggregateFunctionVisitor extends AbstractSqlppSimpleExpressionVisitor
             ident = me.getValue();
         }
         if (ident == null) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, usedVar.getSourceLocation());
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, usedVar.getSourceLocation(), "");
         }
         return ident;
     }

@@ -714,8 +714,9 @@ class LangExpressionToPlanTranslator
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_NAME));
         fldAccess.setSourceLocation(sourceLoc);
         fldAccess.getArguments().add(new MutableObject<>(p.first));
-        ILogicalExpression faExpr =
+        ConstantExpression faExpr =
                 new ConstantExpression(new AsterixConstantValue(new AString(fa.getIdent().getValue())));
+        faExpr.setSourceLocation(sourceLoc);
         fldAccess.getArguments().add(new MutableObject<>(faExpr));
         AssignOperator a = new AssignOperator(v, new MutableObject<>(fldAccess));
         a.getInputs().add(p.second);
@@ -822,8 +823,11 @@ class LangExpressionToPlanTranslator
                     break;
                 case LITERAL_EXPRESSION:
                     LiteralExpr val = (LiteralExpr) expr;
-                    args.add(new MutableObject<>(new ConstantExpression(
-                            new AsterixConstantValue(ConstantHelper.objectFromLiteral(val.getValue())))));
+                    AsterixConstantValue cValue =
+                            new AsterixConstantValue(ConstantHelper.objectFromLiteral(val.getValue()));
+                    ConstantExpression cExpr = new ConstantExpression(cValue);
+                    cExpr.setSourceLocation(expr.getSourceLocation());
+                    args.add(new MutableObject<>(cExpr));
                     break;
                 default:
                     Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(expr, topOp);
@@ -1133,10 +1137,13 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(LiteralExpr l, Mutable<ILogicalOperator> tupSource) {
+        SourceLocation sourceLoc = l.getSourceLocation();
         LogicalVariable var = context.newVar();
-        AssignOperator a = new AssignOperator(var, new MutableObject<>(
-                new ConstantExpression(new AsterixConstantValue(ConstantHelper.objectFromLiteral(l.getValue())))));
-        a.setSourceLocation(l.getSourceLocation());
+        AsterixConstantValue cValue = new AsterixConstantValue(ConstantHelper.objectFromLiteral(l.getValue()));
+        ConstantExpression cExpr = new ConstantExpression(cValue);
+        cExpr.setSourceLocation(sourceLoc);
+        AssignOperator a = new AssignOperator(var, new MutableObject<>(cExpr));
+        a.setSourceLocation(sourceLoc);
         if (tupSource != null) {
             a.getInputs().add(tupSource);
         }
@@ -1295,9 +1302,10 @@ class LangExpressionToPlanTranslator
             // condition() -> not(if-missing-or-null(condition(), false))
 
             List<Mutable<ILogicalExpression>> ifMissingOrNullArgs = new ArrayList<>(2);
+            ConstantExpression eFalse = new ConstantExpression(new AsterixConstantValue(ABoolean.FALSE));
+            eFalse.setSourceLocation(sourceLoc);
             ifMissingOrNullArgs.add(new MutableObject<>(eo2.first));
-            ifMissingOrNullArgs
-                    .add(new MutableObject<>(new ConstantExpression(new AsterixConstantValue(ABoolean.FALSE))));
+            ifMissingOrNullArgs.add(new MutableObject<>(eFalse));
 
             List<Mutable<ILogicalExpression>> notArgs = new ArrayList<>(1);
             ScalarFunctionCallExpression ifMissinOrNullExpr = new ScalarFunctionCallExpression(
@@ -1560,8 +1568,11 @@ class LangExpressionToPlanTranslator
                 return new Pair<>(varRefExpr, topOpRef);
             case LITERAL_EXPRESSION:
                 LiteralExpr val = (LiteralExpr) expr;
-                return new Pair<>(new ConstantExpression(
-                        new AsterixConstantValue(ConstantHelper.objectFromLiteral(val.getValue()))), topOpRef);
+                AsterixConstantValue cValue =
+                        new AsterixConstantValue(ConstantHelper.objectFromLiteral(val.getValue()));
+                ConstantExpression cExpr = new ConstantExpression(cValue);
+                cExpr.setSourceLocation(sourceLoc);
+                return new Pair<>(cExpr, topOpRef);
             default:
                 if (expressionNeedsNoNesting(expr)) {
                     Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, topOpRef);
@@ -1876,9 +1887,10 @@ class LangExpressionToPlanTranslator
         count.setSourceLocation(sourceLoc);
         AbstractFunctionCallExpression comparison = new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(not ? BuiltinFunctions.EQ : BuiltinFunctions.NEQ));
+        ConstantExpression eZero = new ConstantExpression(new AsterixConstantValue(new AInt64(0L)));
+        eZero.setSourceLocation(sourceLoc);
         comparison.getArguments().add(new MutableObject<>(count));
-        comparison.getArguments()
-                .add(new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(0L)))));
+        comparison.getArguments().add(new MutableObject<>(eZero));
         comparison.setSourceLocation(sourceLoc);
         AssignOperator a = new AssignOperator(v1, new MutableObject<>(comparison));
         a.setSourceLocation(sourceLoc);
