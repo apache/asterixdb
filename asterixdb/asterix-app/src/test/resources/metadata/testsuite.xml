@@ -49,16 +49,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="basic">
-      <compilation-unit name="dataset_with_meta-6">
-        <output-dir compare="Text">dataset_with_meta-6</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="basic">
-      <compilation-unit name="dataset_with_meta-7">
-        <output-dir compare="Text">dataset_with_meta-7</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="basic">
       <compilation-unit name="meta01">
         <output-dir compare="Text">meta01</output-dir>
       </compilation-unit>

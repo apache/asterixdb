@@ -779,6 +779,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         String datasetFullyQualifiedName = dataverseName + "." + datasetName;
+        boolean isSecondaryPrimary = stmtCreateIndex.getFieldExprs().isEmpty();
         Dataset ds = null;
         Index index = null;
         MetadataLockUtil.createIndexBegin(lockManager, metadataProvider.getLocks(), dataverseName,
@@ -800,9 +801,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new CompilationException(ErrorCode.INDEX_EXISTS, sourceLoc, indexName);
                 }
             }
-            // can't create secondary primary index on an external dataset
-            if (ds.getDatasetType() == DatasetType.EXTERNAL && stmtCreateIndex.getFieldExprs().isEmpty()) {
+            // find keySourceIndicators for secondary primary index since the parser isn't aware of them
+            if (isSecondaryPrimary && ds.getDatasetType() == DatasetType.INTERNAL) {
+                keySourceIndicators = ((InternalDatasetDetails) ds.getDatasetDetails()).getKeySourceIndicator();
+            }
+            // disable creating secondary primary index on an external dataset
+            if (isSecondaryPrimary && ds.getDatasetType() == DatasetType.EXTERNAL) {
                 throw new AsterixException(ErrorCode.CANNOT_CREATE_SEC_PRIMARY_IDX_ON_EXT_DATASET);
+            }
+            // disable creating an index on meta fields (fields with source indicator == 1 are meta fields)
+            if (keySourceIndicators.stream().anyMatch(fieldSource -> fieldSource == 1) && !isSecondaryPrimary) {
+                throw new AsterixException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                        "Cannot create index on meta fields");
             }
             Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
                     ds.getItemTypeDataverseName(), ds.getItemTypeName());

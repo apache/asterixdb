@@ -18,25 +18,26 @@
  */
 package org.apache.asterix.common.context;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public abstract class Info {
-    private int referenceCount;
-    private boolean isOpen;
+    private final AtomicInteger referenceCount = new AtomicInteger();
+    private volatile boolean isOpen;
 
     public Info() {
-        referenceCount = 0;
         isOpen = false;
     }
 
     public void touch() {
-        ++referenceCount;
+        referenceCount.incrementAndGet();
     }
 
     public void untouch() {
-        --referenceCount;
+        referenceCount.decrementAndGet();
     }
 
     public int getReferenceCount() {
-        return referenceCount;
+        return referenceCount.get();
     }
 
     public boolean isOpen() {

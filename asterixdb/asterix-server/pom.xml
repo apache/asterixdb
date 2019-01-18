@@ -250,7 +250,10 @@
             </license>
             <license>
               <url>https://opensource.org/licenses/mit-license.php</url>
-              <aliasUrls>http://www.opensource.org/licenses/mit-license.php</aliasUrls>
+              <aliasUrls>
+                <aliasUrl>http://www.opensource.org/licenses/mit-license.php</aliasUrl>
+                <aliasUrl>http://opensource.org/licenses/MIT</aliasUrl>
+              </aliasUrls>
             </license>
             <license>
               <url>https://opensource.org/licenses/bsd-license.php</url>
@@ -630,7 +633,7 @@
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
-      <version>3.0.24</version>
+      <version>3.1.0</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>

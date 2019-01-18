@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.context;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -159,8 +160,8 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         this.isExternal = isExternal;
     }
 
-    public Map<Long, IndexInfo> getIndexes() {
-        return indexes;
+    public synchronized Map<Long, IndexInfo> getIndexes() {
+        return Collections.unmodifiableMap(indexes);
     }
 
     public synchronized void addIndex(long resourceID, IndexInfo indexInfo) {

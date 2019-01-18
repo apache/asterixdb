@@ -305,8 +305,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         return offset + AInt32SerializerDeserializer.getInt(serRecord, pointer + nullBitmapSize + (4 * fieldId));
     }
 
-    public static int getFieldOffsetByName(byte[] serRecord, int start, int len, byte[] fieldName, int nstart)
-            throws HyracksDataException {
+    public static int getFieldOffsetByName(byte[] serRecord, int start, int len, byte[] fieldName, int nstart,
+            IBinaryHashFunction nameHashFunction, IBinaryComparator nameComparator) throws HyracksDataException {
         // 5 is the index of the byte that determines whether the record is expanded or not, i.e. it has an open part.
         if (hasNoFields(serRecord, start, len) || serRecord[start + 5] != 1) {
             return -1;
@@ -316,14 +316,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         int numberOfOpenField = AInt32SerializerDeserializer.getInt(serRecord, openPartOffset);
         int fieldUtflength = UTF8StringUtil.getUTFLength(fieldName, nstart + 1);
         int fieldUtfMetaLen = UTF8StringUtil.getNumBytesToStoreLength(fieldUtflength);
-
-        IBinaryHashFunction utf8HashFunction =
-                BinaryHashFunctionFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryHashFunction();
-
-        IBinaryComparator utf8BinaryComparator =
-                BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
-
-        int fieldNameHashCode = utf8HashFunction.hash(fieldName, nstart + 1, fieldUtflength + fieldUtfMetaLen);
+        int fieldNameHashCode = nameHashFunction.hash(fieldName, nstart + 1, fieldUtflength + fieldUtfMetaLen);
 
         int offset = openPartOffset + 4;
         int fieldOffset = -1;
@@ -337,7 +330,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             if (h == fieldNameHashCode) {
                 fieldOffset = start + AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * mid) + 4);
                 // the utf8 comparator do not require to put the precise length, we can just pass a estimated limit.
-                if (utf8BinaryComparator.compare(serRecord, fieldOffset, len, fieldName, nstart + 1,
+                if (nameComparator.compare(serRecord, fieldOffset, len, fieldName, nstart + 1,
                         fieldUtflength + fieldUtfMetaLen) == 0) {
                     // since they are equal, we can directly use the meta length and the utf length.
                     return fieldOffset + fieldUtfMetaLen + fieldUtflength;
@@ -346,7 +339,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                         h = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * j));
                         if (h == fieldNameHashCode) {
                             fieldOffset = start + AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * j) + 4);
-                            if (utf8BinaryComparator.compare(serRecord, fieldOffset, len, fieldName, nstart + 1,
+                            if (nameComparator.compare(serRecord, fieldOffset, len, fieldName, nstart + 1,
                                     fieldUtflength) == 0) {
                                 return fieldOffset + fieldUtfMetaLen + fieldUtflength;
                             }

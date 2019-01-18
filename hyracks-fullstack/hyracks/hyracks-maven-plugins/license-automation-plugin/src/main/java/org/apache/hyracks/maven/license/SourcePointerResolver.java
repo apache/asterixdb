@@ -269,5 +269,15 @@ public class SourcePointerResolver {
         public Proxy getProxy() {
             return null;
         }
+
+        @java.lang.Override
+        public List<ArtifactRepository> getMirroredRepositories() {
+            return Collections.emptyList();
+        }
+
+        @java.lang.Override
+        public void setMirroredRepositories(List<ArtifactRepository> list) {
+            // unused
+        }
     }
 }

@@ -164,9 +164,11 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         dsInfo.waitForIO();
         closeIndex(iInfo);
         dsInfo.removeIndex(resourceID);
-        if (dsInfo.getReferenceCount() == 0 && dsInfo.isOpen() && dsInfo.getIndexes().isEmpty()
-                && !dsInfo.isExternal()) {
-            removeDatasetFromCache(dsInfo.getDatasetID());
+        synchronized (dsInfo) {
+            if (dsInfo.getReferenceCount() == 0 && dsInfo.isOpen() && dsInfo.getIndexes().isEmpty()
+                    && !dsInfo.isExternal()) {
+                removeDatasetFromCache(dsInfo.getDatasetID());
+            }
         }
     }
 
