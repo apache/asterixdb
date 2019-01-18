@@ -46,7 +46,7 @@ public class SampleTestIT {
     @BeforeClass
     public static void before() throws RuntimeEngineException {
         Deployment deployment = TestUtil.getSimpleClusterDeployment();
-        runner = SpiderSilkRunner.run(deployment, new SingleNodeRuntimeEngine(deployment));
+        runner = SpiderSilkRunner.run(deployment);
         TestUtil.waitForClusterToBeUp(runner);
         logger.info("The cluster is UP!");
     }
