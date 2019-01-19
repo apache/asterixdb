@@ -84,7 +84,7 @@ class WindowMaterializingPushRuntime extends AbstractWindowPushRuntime {
     }
 
     @Override
-    protected void beginPartitionImpl() {
+    protected void beginPartitionImpl() throws HyracksDataException {
         chunkEndIdx.clear();
         partitionLength = 0;
         if (run != null) {

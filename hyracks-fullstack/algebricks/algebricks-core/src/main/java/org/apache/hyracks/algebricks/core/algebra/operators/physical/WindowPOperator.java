@@ -59,6 +59,7 @@ import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFact
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.win.AbstractWindowRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.win.WindowNestedPlansRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.win.WindowNestedPlansUnboundedRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.win.WindowSimpleRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.win.WindowAggregatorDescriptorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.win.WindowMaterializingRuntimeFactory;
@@ -158,20 +159,24 @@ public class WindowPOperator extends AbstractPhysicalOperator {
         IExpressionRuntimeProvider exprRuntimeProvider = context.getExpressionRuntimeProvider();
         IBinaryComparatorFactoryProvider binaryComparatorFactoryProvider = context.getBinaryComparatorFactoryProvider();
 
-        IScalarEvaluatorFactory[] frameStartExprEvals = createEvaluatorFactories(winOp.getFrameStartExpressions(),
-                inputSchemas, inputTypeEnv, exprRuntimeProvider, context);
+        List<Mutable<ILogicalExpression>> frameStartExprList = winOp.getFrameStartExpressions();
+        IScalarEvaluatorFactory[] frameStartExprEvals =
+                createEvaluatorFactories(frameStartExprList, inputSchemas, inputTypeEnv, exprRuntimeProvider, context);
 
-        IScalarEvaluatorFactory[] frameEndExprEvals = createEvaluatorFactories(winOp.getFrameEndExpressions(),
-                inputSchemas, inputTypeEnv, exprRuntimeProvider, context);
+        List<Mutable<ILogicalExpression>> frameEndExprList = winOp.getFrameEndExpressions();
+        IScalarEvaluatorFactory[] frameEndExprEvals =
+                createEvaluatorFactories(frameEndExprList, inputSchemas, inputTypeEnv, exprRuntimeProvider, context);
 
+        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> frameValueExprList =
+                winOp.getFrameValueExpressions();
         Pair<IScalarEvaluatorFactory[], IBinaryComparatorFactory[]> frameValueExprEvalsAndComparators =
-                createEvaluatorAndComparatorFactories(winOp.getFrameValueExpressions(), Pair::getSecond, Pair::getFirst,
-                        inputSchemas, inputTypeEnv, exprRuntimeProvider, binaryComparatorFactoryProvider, context);
+                createEvaluatorAndComparatorFactories(frameValueExprList, Pair::getSecond, Pair::getFirst, inputSchemas,
+                        inputTypeEnv, exprRuntimeProvider, binaryComparatorFactoryProvider, context);
 
+        List<Mutable<ILogicalExpression>> frameExcludeExprList = winOp.getFrameExcludeExpressions();
         Pair<IScalarEvaluatorFactory[], IBinaryComparatorFactory[]> frameExcludeExprEvalsAndComparators =
-                createEvaluatorAndComparatorFactories(winOp.getFrameExcludeExpressions(), v -> v,
-                        v -> OrderOperator.ASC_ORDER, inputSchemas, inputTypeEnv, exprRuntimeProvider,
-                        binaryComparatorFactoryProvider, context);
+                createEvaluatorAndComparatorFactories(frameExcludeExprList, v -> v, v -> OrderOperator.ASC_ORDER,
+                        inputSchemas, inputTypeEnv, exprRuntimeProvider, binaryComparatorFactoryProvider, context);
 
         IScalarEvaluatorFactory frameOffsetExprEval = null;
         ILogicalExpression frameOffsetExpr = winOp.getFrameOffset().getValue();
@@ -201,14 +206,24 @@ public class WindowPOperator extends AbstractPhysicalOperator {
             int aggregatorOutputSchemaSize = opSchema.getSize() - opSchemaSizePreSubplans;
             WindowAggregatorDescriptorFactory nestedAggFactory = new WindowAggregatorDescriptorFactory(subplans);
             nestedAggFactory.setSourceLocation(winOp.getSourceLocation());
-            runtime = new WindowNestedPlansRuntimeFactory(partitionColumnsList, partitionComparatorFactories,
-                    orderComparatorFactories, frameValueExprEvalsAndComparators.first,
-                    frameValueExprEvalsAndComparators.second, frameStartExprEvals, frameEndExprEvals,
-                    frameExcludeExprEvalsAndComparators.first, winOp.getFrameExcludeNegationStartIdx(),
-                    frameExcludeExprEvalsAndComparators.second, frameOffsetExprEval,
-                    context.getBinaryIntegerInspectorFactory(), winOp.getFrameMaxObjects(),
-                    projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories,
-                    aggregatorOutputSchemaSize, nestedAggFactory);
+
+            boolean useUnboundedRuntime = frameStartExprList.isEmpty() && frameEndExprList.isEmpty()
+                    && frameExcludeExprList.isEmpty() && frameOffsetExprEval == null;
+            if (useUnboundedRuntime) {
+                runtime = new WindowNestedPlansUnboundedRuntimeFactory(partitionColumnsList,
+                        partitionComparatorFactories, orderComparatorFactories, winOp.getFrameMaxObjects(),
+                        projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories,
+                        aggregatorOutputSchemaSize, nestedAggFactory);
+            } else {
+                runtime = new WindowNestedPlansRuntimeFactory(partitionColumnsList, partitionComparatorFactories,
+                        orderComparatorFactories, frameValueExprEvalsAndComparators.first,
+                        frameValueExprEvalsAndComparators.second, frameStartExprEvals, frameEndExprEvals,
+                        frameExcludeExprEvalsAndComparators.first, winOp.getFrameExcludeNegationStartIdx(),
+                        frameExcludeExprEvalsAndComparators.second, frameOffsetExprEval,
+                        context.getBinaryIntegerInspectorFactory(), winOp.getFrameMaxObjects(),
+                        projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories,
+                        aggregatorOutputSchemaSize, nestedAggFactory);
+            }
         } else if (partitionMaterialization) {
             runtime = new WindowMaterializingRuntimeFactory(partitionColumnsList, partitionComparatorFactories,
                     orderComparatorFactories, projectionColumnsExcludingSubplans, runningAggOutColumns,

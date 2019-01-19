@@ -1202,8 +1202,8 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             LogicalVariable denseRankVar = context.newVar();
             ListSet<LogicalVariable> usedVars = new ListSet<>();
 
-            frameValueExprRefs = translateWindowFrameMode(winFrameMode, orderExprListOut, rowNumVar, denseRankVar,
-                    usedVars, sourceLoc);
+            frameValueExprRefs = translateWindowFrameMode(winFrameMode, winFrameStartKind, winFrameEndKind,
+                    orderExprListOut, rowNumVar, denseRankVar, usedVars, sourceLoc);
 
             Pair<List<Mutable<ILogicalExpression>>, Integer> frameExclusionResult =
                     translateWindowExclusion(winFrameExclusionKind, rowNumVar, denseRankVar, usedVars, sourceLoc);
@@ -1223,16 +1223,16 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 currentOpRef = new MutableObject<>(helperWinOp);
             }
 
-            Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> frameStartResult =
-                    translateWindowBoundary(winFrameStartKind, winFrameStartExpr, frameValueExprRefs, currentOpRef);
+            Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> frameStartResult = translateWindowBoundary(
+                    winFrameStartKind, winFrameStartExpr, frameValueExprRefs, orderExprListOut, currentOpRef);
             if (frameStartResult != null) {
                 frameStartExprRefs = frameStartResult.first;
                 if (frameStartResult.second != null) {
                     currentOpRef = new MutableObject<>(frameStartResult.second);
                 }
             }
-            Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> frameEndResult =
-                    translateWindowBoundary(winFrameEndKind, winFrameEndExpr, frameValueExprRefs, currentOpRef);
+            Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> frameEndResult = translateWindowBoundary(
+                    winFrameEndKind, winFrameEndExpr, frameValueExprRefs, orderExprListOut, currentOpRef);
             if (frameEndResult != null) {
                 frameEndExprRefs = frameEndResult.first;
                 if (frameEndResult.second != null) {
@@ -1377,10 +1377,17 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     }
 
     private List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> translateWindowFrameMode(
-            WindowExpression.FrameMode frameMode,
+            WindowExpression.FrameMode frameMode, WindowExpression.FrameBoundaryKind winFrameStartKind,
+            WindowExpression.FrameBoundaryKind winFrameEndKind,
             List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprList, LogicalVariable rowNumVar,
             LogicalVariable denseRankVar, Set<LogicalVariable> outUsedVars, SourceLocation sourceLoc)
             throws CompilationException {
+        // if the frame is unbounded then no need to generate the frame value expression
+        // because it will not be used
+        if (winFrameStartKind == WindowExpression.FrameBoundaryKind.UNBOUNDED_PRECEDING
+                && winFrameEndKind == WindowExpression.FrameBoundaryKind.UNBOUNDED_FOLLOWING) {
+            return Collections.emptyList();
+        }
         switch (frameMode) {
             case RANGE:
                 List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> result =
@@ -1454,7 +1461,13 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     private Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> translateWindowBoundary(
             WindowExpression.FrameBoundaryKind boundaryKind, Expression boundaryExpr,
             List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> valueExprs,
+            List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprList,
             Mutable<ILogicalOperator> tupSource) throws CompilationException {
+        // if no ORDER BY in window specification then all rows are considered peers,
+        // so the frame becomes unbounded
+        if (orderExprList.isEmpty()) {
+            return null;
+        }
         switch (boundaryKind) {
             case CURRENT_ROW:
                 List<Mutable<ILogicalExpression>> resultExprs = new ArrayList<>(valueExprs.size());
