@@ -21,8 +21,18 @@ package org.apache.hyracks.util;
 
 public class LogRedactionUtil {
 
-    private static final ILogRedactor defaultLogRedactor = text -> text;
-    private static ILogRedactor redactor = defaultLogRedactor;
+    private static final ILogRedactor DEFAULT_LOG_REDACTOR = new ILogRedactor() {
+        @Override
+        public String userData(String text) {
+            return text;
+        }
+
+        @Override
+        public String unredactUserData(String text) {
+            return text;
+        }
+    };
+    private static ILogRedactor redactor = DEFAULT_LOG_REDACTOR;
 
     private LogRedactionUtil() {
     }
@@ -33,5 +43,9 @@ public class LogRedactionUtil {
 
     public static String userData(String text) {
         return redactor.userData(text);
+    }
+
+    public static String unredactUserData(String text) {
+        return redactor.unredactUserData(text);
     }
 }

@@ -57,6 +57,7 @@ import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -181,6 +182,6 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
     @Override
     public String toString() {
         return String.format("%s(id=%s, from=%s): %s", getClass().getSimpleName(), requestMessageId, requestNodeId,
-                statementsText);
+                LogRedactionUtil.userData(statementsText));
     }
 }
