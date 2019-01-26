@@ -72,7 +72,7 @@ public class InlineSingleReferenceVariablesRule extends InlineVariablesRule {
                 if (!op.requiresVariableReferenceExpressions()) {
                     inlineVisitor.setOperator(op);
                     inlineVisitor.setTargetVariable(entry.getKey());
-                    if (op.acceptExpressionTransform(inlineVisitor)) {
+                    if (op.accept(inlineVisitor, inlineVisitor)) {
                         modified = true;
                     }
                     inlineVisitor.setTargetVariable(null);

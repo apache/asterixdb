@@ -75,11 +75,14 @@ public class WindowPOperator extends AbstractPhysicalOperator {
 
     private final List<OrderColumn> orderColumns;
 
+    private final boolean frameStartIsMonotonic;
+
     public WindowPOperator(List<LogicalVariable> partitionColumns, boolean partitionMaterialization,
-            List<OrderColumn> orderColumns) {
+            List<OrderColumn> orderColumns, boolean frameStartIsMonotonic) {
         this.partitionColumns = partitionColumns;
         this.partitionMaterialization = partitionMaterialization;
         this.orderColumns = orderColumns;
+        this.frameStartIsMonotonic = frameStartIsMonotonic;
     }
 
     @Override
@@ -217,10 +220,10 @@ public class WindowPOperator extends AbstractPhysicalOperator {
             } else {
                 runtime = new WindowNestedPlansRuntimeFactory(partitionColumnsList, partitionComparatorFactories,
                         orderComparatorFactories, frameValueExprEvalsAndComparators.first,
-                        frameValueExprEvalsAndComparators.second, frameStartExprEvals, frameEndExprEvals,
-                        frameExcludeExprEvalsAndComparators.first, winOp.getFrameExcludeNegationStartIdx(),
-                        frameExcludeExprEvalsAndComparators.second, frameOffsetExprEval,
-                        context.getBinaryIntegerInspectorFactory(), winOp.getFrameMaxObjects(),
+                        frameValueExprEvalsAndComparators.second, frameStartExprEvals, frameStartIsMonotonic,
+                        frameEndExprEvals, frameExcludeExprEvalsAndComparators.first,
+                        winOp.getFrameExcludeNegationStartIdx(), frameExcludeExprEvalsAndComparators.second,
+                        frameOffsetExprEval, context.getBinaryIntegerInspectorFactory(), winOp.getFrameMaxObjects(),
                         projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories,
                         aggregatorOutputSchemaSize, nestedAggFactory);
             }

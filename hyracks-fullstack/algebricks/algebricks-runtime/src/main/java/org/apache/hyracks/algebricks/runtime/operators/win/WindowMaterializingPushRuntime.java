@@ -99,9 +99,8 @@ class WindowMaterializingPushRuntime extends AbstractWindowPushRuntime {
         boolean isFirstChunk = chunkEndIdx.isEmpty();
         if (isFirstChunk) {
             if (frameId != curFrameId) {
-                int nBlocks = FrameHelper.deserializeNumOfMinFrame(frameBuffer);
-                curFrame.ensureFrameSize(curFrame.getMinSize() * nBlocks);
                 int pos = frameBuffer.position();
+                curFrame.ensureFrameSize(frameBuffer.capacity());
                 FrameUtils.copyAndFlip(frameBuffer, curFrame.getBuffer());
                 frameBuffer.position(pos);
                 curFrameId = frameId;

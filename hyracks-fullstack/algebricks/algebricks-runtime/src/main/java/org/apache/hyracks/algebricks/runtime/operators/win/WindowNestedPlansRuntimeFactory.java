@@ -40,6 +40,8 @@ public class WindowNestedPlansRuntimeFactory extends AbstractWindowRuntimeFactor
 
     private final IScalarEvaluatorFactory[] frameStartEvalFactories;
 
+    private final boolean frameStartIsMonotonic;
+
     private final IScalarEvaluatorFactory[] frameEndEvalFactories;
 
     private final IBinaryComparatorFactory[] frameValueComparatorFactories;
@@ -64,9 +66,9 @@ public class WindowNestedPlansRuntimeFactory extends AbstractWindowRuntimeFactor
             IBinaryComparatorFactory[] partitionComparatorFactories,
             IBinaryComparatorFactory[] orderComparatorFactories, IScalarEvaluatorFactory[] frameValueEvalFactories,
             IBinaryComparatorFactory[] frameValueComparatorFactories, IScalarEvaluatorFactory[] frameStartEvalFactories,
-            IScalarEvaluatorFactory[] frameEndEvalFactories, IScalarEvaluatorFactory[] frameExcludeEvalFactories,
-            int frameExcludeNegationStartIdx, IBinaryComparatorFactory[] frameExcludeComparatorFactories,
-            IScalarEvaluatorFactory frameOffsetEvalFactory,
+            boolean frameStartIsMonotonic, IScalarEvaluatorFactory[] frameEndEvalFactories,
+            IScalarEvaluatorFactory[] frameExcludeEvalFactories, int frameExcludeNegationStartIdx,
+            IBinaryComparatorFactory[] frameExcludeComparatorFactories, IScalarEvaluatorFactory frameOffsetEvalFactory,
             IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory, int frameMaxObjects,
             int[] projectionColumnsExcludingSubplans, int[] runningAggOutColumns,
             IRunningAggregateEvaluatorFactory[] runningAggFactories, int nestedAggOutSchemaSize,
@@ -75,6 +77,7 @@ public class WindowNestedPlansRuntimeFactory extends AbstractWindowRuntimeFactor
                 projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories);
         this.frameValueEvalFactories = frameValueEvalFactories;
         this.frameStartEvalFactories = frameStartEvalFactories;
+        this.frameStartIsMonotonic = frameStartIsMonotonic;
         this.frameEndEvalFactories = frameEndEvalFactories;
         this.frameValueComparatorFactories = frameValueComparatorFactories;
         this.frameExcludeEvalFactories = frameExcludeEvalFactories;
@@ -91,10 +94,10 @@ public class WindowNestedPlansRuntimeFactory extends AbstractWindowRuntimeFactor
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(IHyracksTaskContext ctx) {
         return new WindowNestedPlansPushRuntime(partitionColumns, partitionComparatorFactories,
                 orderComparatorFactories, frameValueEvalFactories, frameValueComparatorFactories,
-                frameStartEvalFactories, frameEndEvalFactories, frameExcludeEvalFactories, frameExcludeNegationStartIdx,
-                frameExcludeComparatorFactories, frameOffsetEvalFactory, binaryIntegerInspectorFactory, frameMaxObjects,
-                projectionList, runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory,
-                ctx);
+                frameStartEvalFactories, frameStartIsMonotonic, frameEndEvalFactories, frameExcludeEvalFactories,
+                frameExcludeNegationStartIdx, frameExcludeComparatorFactories, frameOffsetEvalFactory,
+                binaryIntegerInspectorFactory, frameMaxObjects, projectionList, runningAggOutColumns,
+                runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, ctx);
     }
 
     @Override

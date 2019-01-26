@@ -40,9 +40,12 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 /**
  * Window operator evaluates window functions. It has the following components:
  * <ul>
- * <li>{@link #partitionExpressions} - define how input data must be partitioned</li>
- * <li>{@link #orderExpressions} - define how data inside these partitions must be ordered</li>
- * <li>{@link #frameValueExpressions} - value expressions for comparing against frame start / end boundaries and frame exclusion</li>
+ * <li>{@link #partitionExpressions} - define how input data must be partitioned.
+ *     Each must be a variable reference</li>
+ * <li>{@link #orderExpressions} - define how data inside these partitions must be ordered.
+ *     Each must be a variable reference</li>
+ * <li>{@link #frameValueExpressions} - value expressions for comparing against frame start / end boundaries and frame exclusion.
+ *     Each must be a variable reference</li>
  * <li>{@link #frameStartExpressions} - frame start boundary</li>
  * <li>{@link #frameEndExpressions} - frame end boundary</li>
  * <li>{@link #frameExcludeExpressions} - define values to be excluded from the frame</li>
@@ -217,15 +220,27 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
 
     @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
+        return acceptExpressionTransform(visitor, true);
+    }
+
+    /**
+     * Allows performing expression transformation only on a subset of this operator's expressions
+     * @param visitor transforming visitor
+     * @param visitVarRefRequiringExprs whether to visit variable reference requiring expressions, or not
+     */
+    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor,
+            boolean visitVarRefRequiringExprs) throws AlgebricksException {
         boolean mod = false;
-        for (Mutable<ILogicalExpression> expr : partitionExpressions) {
-            mod |= visitor.transform(expr);
-        }
-        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExpressions) {
-            mod |= visitor.transform(p.second);
-        }
-        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : frameValueExpressions) {
-            mod |= visitor.transform(p.second);
+        if (visitVarRefRequiringExprs) {
+            for (Mutable<ILogicalExpression> expr : partitionExpressions) {
+                mod |= visitor.transform(expr);
+            }
+            for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExpressions) {
+                mod |= visitor.transform(p.second);
+            }
+            for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : frameValueExpressions) {
+                mod |= visitor.transform(p.second);
+            }
         }
         for (Mutable<ILogicalExpression> expr : frameStartExpressions) {
             mod |= visitor.transform(expr);
@@ -304,5 +319,15 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
         for (Mutable<ILogicalExpression> expr : expressions) {
             expr.getValue().getUsedVariables(vars);
         }
+    }
+
+    /**
+     * Only the following expressions require variable references: {@link #partitionExpressions},
+     * {@link #orderExpressions}, and {@link #frameValueExpressions}, others do not.
+     * Use {@link #acceptExpressionTransform(ILogicalExpressionReferenceTransform, boolean)}
+     * to visit only non-requiring expressions.
+     */
+    public boolean requiresVariableReferenceExpressions() {
+        return false;
     }
 }

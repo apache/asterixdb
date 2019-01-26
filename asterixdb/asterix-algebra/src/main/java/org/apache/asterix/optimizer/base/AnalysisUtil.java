@@ -35,6 +35,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 
 public class AnalysisUtil {
@@ -129,6 +130,39 @@ public class AnalysisUtil {
         return new Pair<>(dataverseName, datasetName);
     }
 
+    /**
+     * Checks whether frame boundary expression is a monotonically non-descreasing function over a frame value variable
+     */
+    public static boolean isWindowFrameBoundaryMonotonic(List<Mutable<ILogicalExpression>> frameBoundaryExprList,
+            List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> frameValueExprList) {
+        if (frameValueExprList.size() != 1) {
+            return false;
+        }
+        ILogicalExpression frameValueExpr = frameValueExprList.get(0).second.getValue();
+        if (frameValueExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+            return false;
+        }
+        if (frameBoundaryExprList.size() != 1) {
+            return false;
+        }
+        ILogicalExpression frameStartExpr = frameBoundaryExprList.get(0).getValue();
+        switch (frameStartExpr.getExpressionTag()) {
+            case CONSTANT:
+                return true;
+            case VARIABLE:
+                return frameStartExpr.equals(frameValueExpr);
+            case FUNCTION_CALL:
+                AbstractFunctionCallExpression frameStartCallExpr = (AbstractFunctionCallExpression) frameStartExpr;
+                FunctionIdentifier fi = frameStartCallExpr.getFunctionIdentifier();
+                return (BuiltinFunctions.NUMERIC_ADD.equals(fi) || BuiltinFunctions.NUMERIC_SUBTRACT.equals(fi))
+                        && frameStartCallExpr.getArguments().get(0).getValue().equals(frameValueExpr)
+                        && frameStartCallExpr.getArguments().get(1).getValue()
+                                .getExpressionTag() == LogicalExpressionTag.CONSTANT;
+            default:
+                throw new IllegalStateException(String.valueOf(frameStartExpr.getExpressionTag()));
+        }
+    }
+
     private static List<FunctionIdentifier> fieldAccessFunctions = new ArrayList<>();
 
     static {
@@ -136,5 +170,4 @@ public class AnalysisUtil {
         fieldAccessFunctions.add(BuiltinFunctions.GET_HANDLE);
         fieldAccessFunctions.add(BuiltinFunctions.TYPE_OF);
     }
-
 }

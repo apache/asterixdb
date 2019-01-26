@@ -26,7 +26,6 @@ import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -34,15 +33,17 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.DataUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.PointableTupleReference;
 import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 /**
  * Runtime for window operators that performs partition materialization and can evaluate running aggregates
@@ -56,11 +57,11 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
 
     private IScalarEvaluator[] frameValueEvals;
 
-    private IPointable[] frameValuePointables;
+    private PointableTupleReference frameValuePointables;
 
     private final IBinaryComparatorFactory[] frameValueComparatorFactories;
 
-    private IBinaryComparator[] frameValueComparators;
+    private MultiComparator frameValueComparators;
 
     private final boolean frameStartExists;
 
@@ -68,7 +69,9 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
 
     private IScalarEvaluator[] frameStartEvals;
 
-    private IPointable[] frameStartPointables;
+    private PointableTupleReference frameStartPointables;
+
+    private final boolean frameStartIsMonotonic;
 
     private final boolean frameEndExists;
 
@@ -76,7 +79,7 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
 
     private IScalarEvaluator[] frameEndEvals;
 
-    private IPointable[] frameEndPointables;
+    private PointableTupleReference frameEndPointables;
 
     private final boolean frameExcludeExists;
 
@@ -86,7 +89,7 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
 
     private final int frameExcludeNegationStartIdx;
 
-    private IPointable[] frameExcludePointables;
+    private PointableTupleReference frameExcludePointables;
 
     private IPointable frameExcludePointable2;
 
@@ -116,18 +119,28 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
 
     private IFrame runFrame;
 
+    private int runFrameChunkId;
+
+    private long runFrameSize;
+
     private FrameTupleAccessor tAccess2;
 
     private FrameTupleReference tRef2;
 
     private IBinaryIntegerInspector bii;
 
+    private int chunkIdxFrameStartGlobal;
+
+    private int tBeginIdxFrameStartGlobal;
+
+    private long readerPosFrameStartGlobal;
+
     WindowNestedPlansPushRuntime(int[] partitionColumns, IBinaryComparatorFactory[] partitionComparatorFactories,
             IBinaryComparatorFactory[] orderComparatorFactories, IScalarEvaluatorFactory[] frameValueEvalFactories,
             IBinaryComparatorFactory[] frameValueComparatorFactories, IScalarEvaluatorFactory[] frameStartEvalFactories,
-            IScalarEvaluatorFactory[] frameEndEvalFactories, IScalarEvaluatorFactory[] frameExcludeEvalFactories,
-            int frameExcludeNegationStartIdx, IBinaryComparatorFactory[] frameExcludeComparatorFactories,
-            IScalarEvaluatorFactory frameOffsetEvalFactory,
+            boolean frameStartIsMonotonic, IScalarEvaluatorFactory[] frameEndEvalFactories,
+            IScalarEvaluatorFactory[] frameExcludeEvalFactories, int frameExcludeNegationStartIdx,
+            IBinaryComparatorFactory[] frameExcludeComparatorFactories, IScalarEvaluatorFactory frameOffsetEvalFactory,
             IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory, int frameMaxObjects, int[] projectionColumns,
             int[] runningAggOutColumns, IRunningAggregateEvaluatorFactory[] runningAggFactories,
             int nestedAggOutSchemaSize, WindowAggregatorDescriptorFactory nestedAggFactory, IHyracksTaskContext ctx) {
@@ -137,6 +150,7 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
         this.frameValueExists = frameValueEvalFactories != null && frameValueEvalFactories.length > 0;
         this.frameStartEvalFactories = frameStartEvalFactories;
         this.frameStartExists = frameStartEvalFactories != null && frameStartEvalFactories.length > 0;
+        this.frameStartIsMonotonic = frameStartExists && frameStartIsMonotonic;
         this.frameEndEvalFactories = frameEndEvalFactories;
         this.frameEndExists = frameEndEvalFactories != null && frameEndEvalFactories.length > 0;
         this.frameValueComparatorFactories = frameValueComparatorFactories;
@@ -158,7 +172,7 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
 
         if (frameValueExists) {
             frameValueEvals = createEvaluators(frameValueEvalFactories, ctx);
-            frameValueComparators = createBinaryComparators(frameValueComparatorFactories);
+            frameValueComparators = MultiComparator.create(frameValueComparatorFactories);
             frameValuePointables = createPointables(frameValueEvalFactories.length);
         }
         if (frameStartExists) {
@@ -190,16 +204,26 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
     }
 
     @Override
+    protected void beginPartitionImpl() throws HyracksDataException {
+        super.beginPartitionImpl();
+        chunkIdxFrameStartGlobal = -1;
+        tBeginIdxFrameStartGlobal = -1;
+        readerPosFrameStartGlobal = -1;
+        runFrameChunkId = -1;
+    }
+
+    @Override
     protected void producePartitionTuples(int chunkIdx, GeneratedRunFileReader reader) throws HyracksDataException {
+        boolean frameStartForward = frameStartIsMonotonic && chunkIdxFrameStartGlobal >= 0;
+
         long readerPos = -1;
         int nChunks = getPartitionChunkCount();
         if (nChunks > 1) {
             readerPos = reader.position();
             if (chunkIdx == 0) {
                 ByteBuffer curFrameBuffer = curFrame.getBuffer();
-                int nBlocks = FrameHelper.deserializeNumOfMinFrame(curFrameBuffer);
-                copyFrame2.ensureFrameSize(copyFrame2.getMinSize() * nBlocks);
                 int pos = curFrameBuffer.position();
+                copyFrame2.ensureFrameSize(curFrameBuffer.capacity());
                 FrameUtils.copyAndFlip(curFrameBuffer, copyFrame2.getBuffer());
                 curFrameBuffer.position(pos);
             }
@@ -216,19 +240,13 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
 
             // frame boundaries
             if (frameStartExists) {
-                for (int i = 0; i < frameStartEvals.length; i++) {
-                    frameStartEvals[i].evaluate(tRef, frameStartPointables[i]);
-                }
+                evaluate(frameStartEvals, tRef, frameStartPointables);
             }
             if (frameEndExists) {
-                for (int i = 0; i < frameEndEvals.length; i++) {
-                    frameEndEvals[i].evaluate(tRef, frameEndPointables[i]);
-                }
+                evaluate(frameEndEvals, tRef, frameEndPointables);
             }
             if (frameExcludeExists) {
-                for (int i = 0; i < frameExcludeEvals.length; i++) {
-                    frameExcludeEvals[i].evaluate(tRef, frameExcludePointables[i]);
-                }
+                evaluate(frameExcludeEvals, tRef, frameExcludePointables);
             }
             int toSkip = 0;
             if (frameOffsetExists) {
@@ -241,37 +259,65 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
             // aggregator created by WindowAggregatorDescriptorFactory does not process argument tuple in init()
             nestedAgg.init(null, null, -1, null);
 
+            int chunkIdxInnerStart = frameStartForward ? chunkIdxFrameStartGlobal : 0;
+            int tBeginIdxInnerStart = frameStartForward ? tBeginIdxFrameStartGlobal : -1;
             if (nChunks > 1) {
-                reader.seek(0);
+                reader.seek(frameStartForward ? readerPosFrameStartGlobal : 0);
             }
 
-            frame_loop: for (int chunkIdx2 = 0; chunkIdx2 < nChunks; chunkIdx2++) {
-                IFrame innerFrame;
-                if (chunkIdx2 == 0) {
-                    // first chunk's frame is always in memory
-                    innerFrame = chunkIdx == 0 ? curFrame : copyFrame2;
-                } else {
-                    reader.nextFrame(runFrame);
-                    innerFrame = runFrame;
-                }
-                tAccess2.reset(innerFrame.getBuffer());
+            int chunkIdxFrameStartLocal = -1, tBeginIdxFrameStartLocal = -1;
+            long readerPosFrameStartLocal = -1;
 
-                int tBeginIdx2 = getTupleBeginIdx(chunkIdx2);
-                int tEndIdx2 = getTupleEndIdx(chunkIdx2);
-                for (int tIdx2 = tBeginIdx2; tIdx2 <= tEndIdx2; tIdx2++) {
-                    tRef2.reset(tAccess2, tIdx2);
+            frame_loop: for (int chunkIdxInner = chunkIdxInnerStart; chunkIdxInner < nChunks; chunkIdxInner++) {
+                long readerPosFrameInner;
+                IFrame frameInner;
+                if (chunkIdxInner == 0) {
+                    // first chunk's frame is always in memory
+                    frameInner = chunkIdx == 0 ? curFrame : copyFrame2;
+                    readerPosFrameInner = 0;
+                } else {
+                    readerPosFrameInner = reader.position();
+                    if (runFrameChunkId == chunkIdxInner) {
+                        // runFrame has this chunk, so just advance the reader
+                        reader.seek(readerPosFrameInner + runFrameSize);
+                    } else {
+                        reader.nextFrame(runFrame);
+                        runFrameSize = reader.position() - readerPosFrameInner;
+                        runFrameChunkId = chunkIdxInner;
+                    }
+                    frameInner = runFrame;
+                }
+                tAccess2.reset(frameInner.getBuffer());
+
+                int tBeginIdxInner;
+                if (tBeginIdxInnerStart < 0) {
+                    tBeginIdxInner = getTupleBeginIdx(chunkIdxInner);
+                } else {
+                    tBeginIdxInner = tBeginIdxInnerStart;
+                    tBeginIdxInnerStart = -1;
+                }
+                int tEndIdxInner = getTupleEndIdx(chunkIdxInner);
+
+                for (int tIdxInner = tBeginIdxInner; tIdxInner <= tEndIdxInner; tIdxInner++) {
+                    tRef2.reset(tAccess2, tIdxInner);
 
                     if (frameStartExists || frameEndExists) {
-                        for (int frameValueIdx = 0; frameValueIdx < frameValueEvals.length; frameValueIdx++) {
-                            frameValueEvals[frameValueIdx].evaluate(tRef2, frameValuePointables[frameValueIdx]);
-                        }
-                        if (frameStartExists
-                                && compare(frameValuePointables, frameStartPointables, frameValueComparators) < 0) {
-                            // skip if value < start
-                            continue;
+                        evaluate(frameValueEvals, tRef2, frameValuePointables);
+                        if (frameStartExists) {
+                            if (frameValueComparators.compare(frameValuePointables, frameStartPointables) < 0) {
+                                // skip if value < start
+                                continue;
+                            }
+                            if (chunkIdxFrameStartLocal < 0) {
+                                // save position of the first tuple that matches the frame start.
+                                // we'll continue from it in the next frame iteration
+                                chunkIdxFrameStartLocal = chunkIdxInner;
+                                tBeginIdxFrameStartLocal = tIdxInner;
+                                readerPosFrameStartLocal = readerPosFrameInner;
+                            }
                         }
                         if (frameEndExists
-                                && compare(frameValuePointables, frameEndPointables, frameValueComparators) > 0) {
+                                && frameValueComparators.compare(frameValuePointables, frameEndPointables) > 0) {
                             // skip and exit if value > end
                             break frame_loop;
                         }
@@ -288,7 +334,7 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
                     }
 
                     if (toWrite != 0) {
-                        nestedAgg.aggregate(tAccess2, tIdx2, null, -1, null);
+                        nestedAgg.aggregate(tAccess2, tIdxInner, null, -1, null);
                     }
                     if (toWrite > 0) {
                         toWrite--;
@@ -301,6 +347,19 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
 
             nestedAgg.outputFinalResult(tupleBuilder, null, -1, null);
             appendToFrameFromTupleBuilder(tupleBuilder);
+
+            if (frameStartIsMonotonic) {
+                if (chunkIdxFrameStartLocal >= 0) {
+                    chunkIdxFrameStartGlobal = chunkIdxFrameStartLocal;
+                    tBeginIdxFrameStartGlobal = tBeginIdxFrameStartLocal;
+                    readerPosFrameStartGlobal = readerPosFrameStartLocal;
+                } else {
+                    // frame start not found, set start beyond the last chunk
+                    chunkIdxFrameStartGlobal = nChunks;
+                    tBeginIdxFrameStartGlobal = 0;
+                    readerPosFrameStartGlobal = 0;
+                }
+            }
         }
 
         if (nChunks > 1) {
@@ -311,7 +370,7 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
     private boolean isExcluded() throws HyracksDataException {
         for (int i = 0; i < frameExcludeEvals.length; i++) {
             frameExcludeEvals[i].evaluate(tRef2, frameExcludePointable2);
-            boolean b = DataUtils.compare(frameExcludePointables[i], frameExcludePointable2,
+            boolean b = DataUtils.compare(frameExcludePointables.getField(i), frameExcludePointable2,
                     frameExcludeComparators[i]) != 0;
             if (i >= frameExcludeNegationStartIdx) {
                 b = !b;
@@ -337,22 +396,18 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
         return evals;
     }
 
-    private static IPointable[] createPointables(int ln) {
+    private static void evaluate(IScalarEvaluator[] evals, IFrameTupleReference inTuple,
+            PointableTupleReference outTuple) throws HyracksDataException {
+        for (int i = 0; i < evals.length; i++) {
+            evals[i].evaluate(inTuple, outTuple.getField(i));
+        }
+    }
+
+    private static PointableTupleReference createPointables(int ln) {
         IPointable[] pointables = new IPointable[ln];
         for (int i = 0; i < ln; i++) {
             pointables[i] = VoidPointable.FACTORY.createPointable();
         }
-        return pointables;
-    }
-
-    private static int compare(IValueReference[] first, IValueReference[] second, IBinaryComparator[] comparators)
-            throws HyracksDataException {
-        for (int i = 0; i < first.length; i++) {
-            int c = DataUtils.compare(first[i], second[i], comparators[i]);
-            if (c != 0) {
-                return c;
-            }
-        }
-        return 0;
+        return new PointableTupleReference(pointables);
     }
 }

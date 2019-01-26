@@ -35,13 +35,14 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.visitors.LogicalExpressionReferenceTransformVisitor;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -113,7 +114,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         // Only inline variables in operators that can deal with arbitrary expressions.
         if (!op.requiresVariableReferenceExpressions()) {
             inlineVisitor.setOperator(op);
-            return op.acceptExpressionTransform(inlineVisitor);
+            return op.accept(inlineVisitor, inlineVisitor);
         }
         return false;
     }
@@ -199,7 +200,8 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         return modified;
     }
 
-    public static class InlineVariablesVisitor implements ILogicalExpressionReferenceTransform {
+    public static class InlineVariablesVisitor extends LogicalExpressionReferenceTransformVisitor
+            implements ILogicalExpressionReferenceTransform {
 
         private final Map<LogicalVariable, ILogicalExpression> varAssignRhs;
         private final Set<LogicalVariable> liveVars = new HashSet<>();
@@ -227,9 +229,15 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         }
 
         @Override
+        public Boolean visitWindowOperator(WindowOperator op, ILogicalExpressionReferenceTransform arg)
+                throws AlgebricksException {
+            return op.acceptExpressionTransform(arg, false);
+        }
+
+        @Override
         public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
             ILogicalExpression e = exprRef.getValue();
-            switch (((AbstractLogicalExpression) e).getExpressionTag()) {
+            switch (e.getExpressionTag()) {
                 case VARIABLE:
                     return transformVariableReferenceExpression(exprRef,
                             ((VariableReferenceExpression) e).getVariableReference());
