@@ -39,6 +39,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -98,11 +99,13 @@ public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescript
 
     public class ArrayRemoveEval extends AbstractArrayAddRemoveEval {
         private final ArrayBackedValueStorage storage;
+        private final IPointable item;
         private final IBinaryComparator comp;
 
         public ArrayRemoveEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             super(args, ctx, 0, 1, args.length - 1, argTypes, true, sourceLoc, false, false);
             storage = new ArrayBackedValueStorage();
+            item = new VoidPointable();
             comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         }
 
@@ -118,18 +121,17 @@ public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescript
             // get the list items one by one and append to the new list only if the list item is not in removed list
             boolean addItem;
             for (int i = 0; i < listAccessor.size(); i++) {
-                storage.reset();
-                listAccessor.writeItem(i, storage.getDataOutput());
+                listAccessor.getOrWriteItem(i, item, storage);
                 addItem = true;
                 for (int j = 0; j < removed.length; j++) {
-                    if (comp.compare(storage.getByteArray(), storage.getStartOffset(), storage.getLength(),
+                    if (comp.compare(item.getByteArray(), item.getStartOffset(), item.getLength(),
                             removed[j].getByteArray(), removed[j].getStartOffset(), removed[j].getLength()) == 0) {
                         addItem = false;
                         break;
                     }
                 }
                 if (addItem) {
-                    listBuilder.addItem(storage);
+                    listBuilder.addItem(item);
                 }
             }
         }

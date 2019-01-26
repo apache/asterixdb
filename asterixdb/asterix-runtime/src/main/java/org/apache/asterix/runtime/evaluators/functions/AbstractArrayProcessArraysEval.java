@@ -48,8 +48,9 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator {
-    private ArrayBackedValueStorage finalResult;
+    private final ArrayBackedValueStorage finalResult;
     private final ListAccessor listAccessor;
+    private final IPointable tempList;
     private final IPointable[] listsArgs;
     private final IScalarEvaluator[] listsEval;
     private final SourceLocation sourceLocation;
@@ -70,6 +71,7 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
         finalResult = new ArrayBackedValueStorage();
         listAccessor = new ListAccessor();
         caster = new CastTypeEvaluator();
+        tempList = new VoidPointable();
         listsArgs = new IPointable[args.length];
         listsEval = new IScalarEvaluator[args.length];
         for (int i = 0; i < args.length; i++) {
@@ -87,46 +89,46 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
         boolean returnNull = false;
         AbstractCollectionType outList = null;
         ATypeTag listTag;
-        for (int i = 0; i < listsEval.length; i++) {
-            listsEval[i].evaluate(tuple, listsArgs[i]);
-            if (!returnNull) {
-                listArgType = listsArgs[i].getByteArray()[listsArgs[i].getStartOffset()];
-                listTag = ATYPETAGDESERIALIZER.deserialize(listArgType);
-                if (!listTag.isListType()) {
-                    returnNull = true;
-                } else if (outList != null && outList.getTypeTag() != listTag) {
-                    throw new RuntimeDataException(ErrorCode.DIFFERENT_LIST_TYPE_ARGS, sourceLocation);
-                } else {
-                    if (outList == null) {
-                        outList = (AbstractCollectionType) DefaultOpenFieldType.getDefaultOpenFieldType(listTag);
-                    }
+        try {
+            for (int i = 0; i < listsEval.length; i++) {
+                listsEval[i].evaluate(tuple, tempList);
+                if (!returnNull) {
+                    listArgType = tempList.getByteArray()[tempList.getStartOffset()];
+                    listTag = ATYPETAGDESERIALIZER.deserialize(listArgType);
+                    if (!listTag.isListType()) {
+                        returnNull = true;
+                    } else if (outList != null && outList.getTypeTag() != listTag) {
+                        throw new RuntimeDataException(ErrorCode.DIFFERENT_LIST_TYPE_ARGS, sourceLocation);
+                    } else {
+                        if (outList == null) {
+                            outList = (AbstractCollectionType) DefaultOpenFieldType.getDefaultOpenFieldType(listTag);
+                        }
 
-                    caster.reset(outList, argTypes[i], listsEval[i]);
-                    caster.evaluate(tuple, listsArgs[i]);
+                        caster.resetAndAllocate(outList, argTypes[i], listsEval[i]);
+                        caster.cast(tempList, listsArgs[i]);
+                    }
                 }
             }
-        }
 
-        if (returnNull) {
-            PointableHelper.setNull(result);
-            return;
-        }
-
-        IAsterixListBuilder listBuilder;
-        if (outList.getTypeTag() == ATypeTag.ARRAY) {
-            if (orderedListBuilder == null) {
-                orderedListBuilder = new OrderedListBuilder();
+            if (returnNull) {
+                PointableHelper.setNull(result);
+                return;
             }
-            listBuilder = orderedListBuilder;
-        } else {
-            if (unorderedListBuilder == null) {
-                unorderedListBuilder = new UnorderedListBuilder();
-            }
-            listBuilder = unorderedListBuilder;
-        }
 
-        listBuilder.reset(outList);
-        try {
+            IAsterixListBuilder listBuilder;
+            if (outList.getTypeTag() == ATypeTag.ARRAY) {
+                if (orderedListBuilder == null) {
+                    orderedListBuilder = new OrderedListBuilder();
+                }
+                listBuilder = orderedListBuilder;
+            } else {
+                if (unorderedListBuilder == null) {
+                    unorderedListBuilder = new UnorderedListBuilder();
+                }
+                listBuilder = unorderedListBuilder;
+            }
+
+            listBuilder.reset(outList);
             init();
             processLists(listsArgs, listBuilder);
             finish(listBuilder);
@@ -140,6 +142,7 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
             release();
             storageAllocator.reset();
             pointableAllocator.reset();
+            caster.deallocatePointables();
         }
     }
 

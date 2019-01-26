@@ -127,8 +127,6 @@ public class ArraySortDescriptor extends AbstractScalarFunctionDynamicDescriptor
                 throws HyracksDataException {
             super(args, ctx, inputListType);
             this.sourceLoc = sourceLoc;
-            item = pointableAllocator.allocateEmpty();
-            storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
             sortedList = new PriorityQueue<>(new ArraySortComparator());
         }
 
@@ -136,6 +134,8 @@ public class ArraySortDescriptor extends AbstractScalarFunctionDynamicDescriptor
         protected void processList(ListAccessor listAccessor, IAsterixListBuilder listBuilder) throws IOException {
             sortedList.clear();
             boolean itemInStorage;
+            item = pointableAllocator.allocateEmpty();
+            storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
             for (int i = 0; i < listAccessor.size(); i++) {
                 itemInStorage = listAccessor.getOrWriteItem(i, item, storage);
                 if (ATYPETAGDESERIALIZER.deserialize(item.getByteArray()[item.getStartOffset()]).isDerivedType()) {

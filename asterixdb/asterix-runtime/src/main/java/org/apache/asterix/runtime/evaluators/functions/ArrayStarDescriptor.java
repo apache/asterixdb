@@ -21,11 +21,12 @@ package org.apache.asterix.runtime.evaluators.functions;
 import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.PriorityQueue;
 
+import org.apache.asterix.builders.ArrayListFactory;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
@@ -39,6 +40,9 @@ import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.container.IObjectFactory;
+import org.apache.asterix.om.util.container.IObjectPool;
+import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
@@ -50,6 +54,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -123,11 +128,11 @@ public class ArrayStarDescriptor extends AbstractScalarFunctionDynamicDescriptor
         };
     }
 
-    public class UTF8StringComparator implements Comparator<IVisitablePointable> {
+    public class UTF8StringComparator implements Comparator<IValueReference> {
         private final IBinaryComparator comp = PointableHelper.createStringBinaryComparator();
 
         @Override
-        public int compare(IVisitablePointable val1, IVisitablePointable val2) {
+        public int compare(IValueReference val1, IValueReference val2) {
             try {
                 return PointableHelper.compareStringBinValues(val1, val2, comp);
             } catch (HyracksDataException e) {
@@ -136,74 +141,119 @@ public class ArrayStarDescriptor extends AbstractScalarFunctionDynamicDescriptor
         }
     }
 
+    protected class FieldNameToValues implements IValueReference {
+        private IVisitablePointable fieldName;
+        private List<IVisitablePointable> values;
+
+        @Override
+        public byte[] getByteArray() {
+            return fieldName.getByteArray();
+        }
+
+        @Override
+        public int getStartOffset() {
+            return fieldName.getStartOffset();
+        }
+
+        @Override
+        public int getLength() {
+            return fieldName.getLength();
+        }
+    }
+
+    protected class FieldNameToValuesAllocator implements IObjectFactory<FieldNameToValues, ATypeTag> {
+
+        @Override
+        public FieldNameToValues create(ATypeTag arg) {
+            return new FieldNameToValues();
+        }
+    }
+
     public class ArrayStarEval implements IScalarEvaluator {
+        private final IBinaryComparator binaryStrComp = PointableHelper.createStringBinaryComparator();
         private final UTF8StringComparator comp = new UTF8StringComparator();
         private final ArrayBackedValueStorage storage;
         private final IScalarEvaluator listEval;
         private final IPointable list;
+        private final IPointable tempList;
         private final IPointable object;
         private final CastTypeEvaluator caster;
         private final ListAccessor listAccessor;
-        private final TreeMap<IVisitablePointable, IVisitablePointable[]> fieldNameToValues;
         private final RecordBuilder recordBuilder;
         private final IAsterixListBuilder listBuilder;
         private final PointableAllocator pointableAllocator;
+        private final List<FieldNameToValues> fieldNameToValuesList;
+        private final PriorityQueue<FieldNameToValues> tempMinHeap;
+        private final IObjectPool<List<IVisitablePointable>, ATypeTag> arrayListAllocator;
+        private final IObjectPool<FieldNameToValues, ATypeTag> fieldNameToValuesAllocator;
 
         public ArrayStarEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             storage = new ArrayBackedValueStorage();
             object = new VoidPointable();
             list = new VoidPointable();
+            tempList = new VoidPointable();
             listEval = args[0].createScalarEvaluator(ctx);
             caster = new CastTypeEvaluator();
             listAccessor = new ListAccessor();
-            fieldNameToValues = new TreeMap<>(comp);
             recordBuilder = new RecordBuilder();
             listBuilder = new OrderedListBuilder();
             pointableAllocator = new PointableAllocator();
+            fieldNameToValuesList = new ArrayList<>();
+            tempMinHeap = new PriorityQueue<>(comp);
+            arrayListAllocator = new ListObjectPool<>(new ArrayListFactory<>());
+            fieldNameToValuesAllocator = new ListObjectPool<>(new FieldNameToValuesAllocator());
         }
 
         @Override
         public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
             storage.reset();
-            listEval.evaluate(tuple, list);
-            ATypeTag listTag = ATYPETAGDESERIALIZER.deserialize(list.getByteArray()[list.getStartOffset()]);
+            listEval.evaluate(tuple, tempList);
+            ATypeTag listTag = ATYPETAGDESERIALIZER.deserialize(tempList.getByteArray()[tempList.getStartOffset()]);
             if (listTag != ATypeTag.ARRAY) {
                 PointableHelper.setNull(result);
                 return;
             }
 
-            caster.reset(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE, inputListType, listEval);
-            caster.evaluate(tuple, list);
-
-            fieldNameToValues.clear();
-            listAccessor.reset(list.getByteArray(), list.getStartOffset());
-            int numObjects = listAccessor.size();
             try {
+                caster.resetAndAllocate(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE, inputListType, listEval);
+                caster.cast(tempList, list);
+
+                tempMinHeap.clear();
+                fieldNameToValuesList.clear();
+                listAccessor.reset(list.getByteArray(), list.getStartOffset());
+                int numObjects = listAccessor.size();
+
                 for (int objectIndex = 0; objectIndex < numObjects; objectIndex++) {
                     listAccessor.getOrWriteItem(objectIndex, object, storage);
                     processObject(object, objectIndex, numObjects);
                 }
 
-                if (fieldNameToValues.isEmpty()) {
+                if (fieldNameToValuesList.isEmpty()) {
                     PointableHelper.setMissing(result);
                     return;
                 }
-
+                for (int i = 0; i < fieldNameToValuesList.size(); i++) {
+                    tempMinHeap.add(fieldNameToValuesList.get(i));
+                }
                 recordBuilder.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
                 recordBuilder.init();
 
-                for (Map.Entry<IVisitablePointable, IVisitablePointable[]> e : fieldNameToValues.entrySet()) {
+                FieldNameToValues fieldNameToValues;
+                IVisitablePointable oneValue;
+                while (!tempMinHeap.isEmpty()) {
+                    fieldNameToValues = tempMinHeap.poll();
                     listBuilder.reset(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
-                    for (int i = 0; i < e.getValue().length; i++) {
-                        if (e.getValue()[i] == null) {
+                    for (int k = 0; k < fieldNameToValues.values.size(); k++) {
+                        oneValue = fieldNameToValues.values.get(k);
+                        if (oneValue == null) {
                             listBuilder.addItem(PointableHelper.NULL_REF);
                         } else {
-                            listBuilder.addItem(e.getValue()[i]);
+                            listBuilder.addItem(oneValue);
                         }
                     }
                     storage.reset();
                     listBuilder.write(storage.getDataOutput(), true);
-                    recordBuilder.addField(e.getKey(), storage);
+                    recordBuilder.addField(fieldNameToValues.fieldName, storage);
                 }
 
                 storage.reset();
@@ -213,10 +263,13 @@ public class ArrayStarDescriptor extends AbstractScalarFunctionDynamicDescriptor
                 throw HyracksDataException.create(e);
             } finally {
                 pointableAllocator.reset();
+                arrayListAllocator.reset();
+                fieldNameToValuesAllocator.reset();
+                caster.deallocatePointables();
             }
         }
 
-        private void processObject(IPointable object, int objectIndex, int numObjects) {
+        private void processObject(IPointable object, int objectIndex, int numObjects) throws HyracksDataException {
             ARecordVisitablePointable record;
             // process only objects (records)
             if (object.getByteArray()[object.getStartOffset()] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
@@ -225,16 +278,46 @@ public class ArrayStarDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
                 List<IVisitablePointable> fieldNames = record.getFieldNames();
                 List<IVisitablePointable> fieldValues = record.getFieldValues();
-                IVisitablePointable[] values;
+                List<IVisitablePointable> values;
+                IVisitablePointable fieldName;
                 for (int j = 0; j < fieldNames.size(); j++) {
-                    values = fieldNameToValues.get(fieldNames.get(j));
-                    if (values == null) {
-                        values = new IVisitablePointable[numObjects];
-                        fieldNameToValues.put(fieldNames.get(j), values);
+                    fieldName = fieldNames.get(j);
+                    FieldNameToValues fieldNameToValues = findField(fieldName, fieldNameToValuesList, binaryStrComp);
+
+                    if (fieldNameToValues == null) {
+                        // new field name
+                        fieldNameToValues = fieldNameToValuesAllocator.allocate(null);
+                        values = arrayListAllocator.allocate(null);
+                        clear(values, numObjects);
+                        fieldNameToValues.fieldName = fieldName;
+                        fieldNameToValues.values = values;
+                        fieldNameToValuesList.add(fieldNameToValues);
+                    } else {
+                        // field name already exists, get the values vector
+                        values = fieldNameToValues.values;
                     }
-                    values[objectIndex] = fieldValues.get(j);
+                    values.set(objectIndex, fieldValues.get(j));
                 }
             }
+        }
+
+        private void clear(List<IVisitablePointable> values, int numObjects) {
+            values.clear();
+            for (int i = 1; i <= numObjects; i++) {
+                values.add(null);
+            }
+        }
+
+        private FieldNameToValues findField(IVisitablePointable fieldName, List<FieldNameToValues> fieldNamesList,
+                IBinaryComparator strComp) throws HyracksDataException {
+            FieldNameToValues anotherFieldName;
+            for (int i = 0; i < fieldNamesList.size(); i++) {
+                anotherFieldName = fieldNamesList.get(i);
+                if (PointableHelper.isEqual(fieldName, anotherFieldName.fieldName, strComp)) {
+                    return anotherFieldName;
+                }
+            }
+            return null;
         }
     }
 }

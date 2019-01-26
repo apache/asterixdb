@@ -20,7 +20,7 @@
 use TinySocial;
 
 {
-  "t1": (select array_intersect(t.`referred-topics`, {{"t-mobile", "platform"}}, {{"t-mobile"}}) from TweetMessages t order by t.tweetid),
+  "t1": (select t.tweetid, array_intersect(t.`referred-topics`, {{"t-mobile", "platform"}}, {{"t-mobile"}}) from TweetMessages t order by t.tweetid),
   "t2": (select array_intersect([1, "John", 2], (select value v.id from d1 v), [2,4,1])),
   "t3": (array_intersect([3,5,1], [5,7,3], [3,2,5,1])),
   "t4": (array_intersect([3,5.0,1], [5,7,3], [3,2,5,1])),
@@ -36,5 +36,6 @@ use TinySocial;
   "t14": (array_intersect(missing, "non_array", [2,5,1])),
   "t15": (array_intersect([], [], [])),
   "t16": (array_intersect([], [3,2], [])),
-  "t17": (select array_intersect(d.followers, ["John Green", "sth"], ["sth", "John Green"]) from d1 d)
+  "t17": (select array_intersect(d.followers, ["John Green", "sth"], ["sth", "John Green"]) from d1 d),
+  "t18": (array_intersect([1,2], [3,2,1], [1,2,3,4]))
 };

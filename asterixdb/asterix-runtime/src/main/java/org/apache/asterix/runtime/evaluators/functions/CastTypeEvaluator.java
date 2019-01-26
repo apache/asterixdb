@@ -48,10 +48,10 @@ public class CastTypeEvaluator implements IScalarEvaluator {
     }
 
     public CastTypeEvaluator(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator) {
-        reset(reqType, inputType, argEvaluator);
+        resetAndAllocate(reqType, inputType, argEvaluator);
     }
 
-    public void reset(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator) {
+    public void resetAndAllocate(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator) {
         this.argEvaluator = argEvaluator;
         this.inputPointable = allocatePointable(inputType, reqType);
         this.resultPointable = allocatePointable(reqType, inputType);
@@ -76,6 +76,12 @@ public class CastTypeEvaluator implements IScalarEvaluator {
         result.set(resultPointable);
     }
 
+    // TODO: refactor in a better way
+    protected void cast(IPointable argPointable, IPointable result) throws HyracksDataException {
+        inputPointable.set(argPointable);
+        cast(result);
+    }
+
     // Allocates the result pointable.
     private IVisitablePointable allocatePointable(IAType typeForPointable, IAType typeForOtherSide) {
         if (!typeForPointable.equals(BuiltinType.ANY)) {
@@ -97,5 +103,9 @@ public class CastTypeEvaluator implements IScalarEvaluator {
             default:
                 return allocator.allocateFieldValue(null);
         }
+    }
+
+    public void deallocatePointables() {
+        allocator.reset();
     }
 }

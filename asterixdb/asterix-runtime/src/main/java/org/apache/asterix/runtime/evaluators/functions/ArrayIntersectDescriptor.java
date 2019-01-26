@@ -21,11 +21,8 @@ package org.apache.asterix.runtime.evaluators.functions;
 import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.apache.asterix.builders.AbvsBuilderFactory;
 import org.apache.asterix.builders.ArrayListFactory;
 import org.apache.asterix.builders.IAsterixListBuilder;
@@ -46,6 +43,7 @@ import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -66,6 +64,9 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 /**
  * <pre>
@@ -101,31 +102,6 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
         }
     };
 
-    public class ValueListIndex implements IValueReference {
-        private final IPointable value;
-        private int listIndex;
-
-        public ValueListIndex(IPointable value, int listIndex) {
-            this.value = value;
-            this.listIndex = listIndex;
-        }
-
-        @Override
-        public byte[] getByteArray() {
-            return value.getByteArray();
-        }
-
-        @Override
-        public int getStartOffset() {
-            return value.getStartOffset();
-        }
-
-        @Override
-        public int getLength() {
-            return value.getLength();
-        }
-    }
-
     @Override
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.ARRAY_INTERSECT;
@@ -149,8 +125,49 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
         };
     }
 
+    protected class ValueListIndex implements IValueReference {
+        private IPointable value;
+        private int listIndex;
+
+        protected ValueListIndex() {
+        }
+
+        protected void set(IPointable value, int listIndex) {
+            this.value = value;
+            this.listIndex = listIndex;
+        }
+
+        @Override
+        public byte[] getByteArray() {
+            return value.getByteArray();
+        }
+
+        @Override
+        public int getStartOffset() {
+            return value.getStartOffset();
+        }
+
+        @Override
+        public int getLength() {
+            return value.getLength();
+        }
+    }
+
+    protected class ValueListIndexAllocator implements IObjectFactory<ValueListIndex, ATypeTag> {
+
+        protected ValueListIndexAllocator() {
+        }
+
+        @Override
+        public ValueListIndex create(ATypeTag arg) {
+            return new ValueListIndex();
+        }
+    }
+
     public class ArrayIntersectEval implements IScalarEvaluator {
         private final ListAccessor listAccessor;
+        private final IPointable pointable;
+        private final ArrayBackedValueStorage currentItemStorage;
         private final IPointable[] listsArgs;
         private final IScalarEvaluator[] listsEval;
         private final IBinaryHashFunction binaryHashFunction;
@@ -158,6 +175,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
         private final PointableAllocator pointableAllocator;
         private final IObjectPool<IMutableValueStorage, ATypeTag> storageAllocator;
         private final IObjectPool<List<ValueListIndex>, ATypeTag> arrayListAllocator;
+        private final IObjectPool<ValueListIndex, ATypeTag> valueListIndexAllocator;
         private final ArrayBackedValueStorage finalResult;
         private final CastTypeEvaluator caster;
         private final IBinaryComparator comp;
@@ -170,6 +188,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             pointableAllocator = new PointableAllocator();
             storageAllocator = new ListObjectPool<>(new AbvsBuilderFactory());
             arrayListAllocator = new ListObjectPool<>(new ArrayListFactory<>());
+            valueListIndexAllocator = new ListObjectPool<>(new ValueListIndexAllocator());
             hashes = new Int2ObjectOpenHashMap<>();
             finalResult = new ArrayBackedValueStorage();
             listAccessor = new ListAccessor();
@@ -177,6 +196,8 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             listsArgs = new IPointable[args.length];
             listsEval = new IScalarEvaluator[args.length];
+            pointable = new VoidPointable();
+            currentItemStorage = new ArrayBackedValueStorage();
             for (int i = 0; i < args.length; i++) {
                 listsArgs[i] = new VoidPointable();
                 listsEval[i] = args[i].createScalarEvaluator(ctx);
@@ -194,72 +215,70 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             int minListIndex = 0;
             int minSize = -1;
             int nextSize;
-            IScalarEvaluator listEval;
-            IPointable listArg;
 
             // evaluate all the lists first to make sure they're all actually lists and of the same list type
-            for (int i = 0; i < listsEval.length; i++) {
-                listEval = listsEval[i];
-                listEval.evaluate(tuple, listsArgs[i]);
-                if (!returnNull) {
-                    listArg = listsArgs[i];
-                    listArgType = listArg.getByteArray()[listArg.getStartOffset()];
-                    listTag = ATYPETAGDESERIALIZER.deserialize(listArgType);
-                    if (!listTag.isListType()) {
-                        returnNull = true;
-                    } else if (outList != null && outList.getTypeTag() != listTag) {
-                        throw new RuntimeDataException(ErrorCode.DIFFERENT_LIST_TYPE_ARGS, sourceLoc);
-                    } else {
-                        if (outList == null) {
-                            outList = (AbstractCollectionType) DefaultOpenFieldType.getDefaultOpenFieldType(listTag);
-                        }
+            try {
+                for (int i = 0; i < listsEval.length; i++) {
+                    listsEval[i].evaluate(tuple, pointable);
+                    if (!returnNull) {
+                        listArgType = pointable.getByteArray()[pointable.getStartOffset()];
+                        listTag = ATYPETAGDESERIALIZER.deserialize(listArgType);
+                        if (!listTag.isListType()) {
+                            returnNull = true;
+                        } else if (outList != null && outList.getTypeTag() != listTag) {
+                            throw new RuntimeDataException(ErrorCode.DIFFERENT_LIST_TYPE_ARGS, sourceLoc);
+                        } else {
+                            if (outList == null) {
+                                outList =
+                                        (AbstractCollectionType) DefaultOpenFieldType.getDefaultOpenFieldType(listTag);
+                            }
 
-                        caster.reset(outList, argTypes[i], listsEval[i]);
-                        caster.evaluate(tuple, listsArgs[i]);
-                        nextSize = getNumItems(outList, listArg.getByteArray(), listArg.getStartOffset());
-                        if (nextSize < minSize) {
-                            minSize = nextSize;
-                            minListIndex = i;
+                            caster.resetAndAllocate(outList, argTypes[i], listsEval[i]);
+                            caster.cast(pointable, listsArgs[i]);
+                            nextSize = getNumItems(outList, listsArgs[i].getByteArray(), listsArgs[i].getStartOffset());
+                            if (nextSize < minSize || minSize == -1) {
+                                minSize = nextSize;
+                                minListIndex = i;
+                            }
                         }
                     }
                 }
-            }
 
-            if (returnNull) {
-                PointableHelper.setNull(result);
-                return;
-            }
-
-            IAsterixListBuilder listBuilder;
-            if (outList.getTypeTag() == ATypeTag.ARRAY) {
-                if (orderedListBuilder == null) {
-                    orderedListBuilder = new OrderedListBuilder();
+                if (returnNull) {
+                    PointableHelper.setNull(result);
+                    return;
                 }
-                listBuilder = orderedListBuilder;
-            } else {
-                if (unorderedListBuilder == null) {
-                    unorderedListBuilder = new UnorderedListBuilder();
-                }
-                listBuilder = unorderedListBuilder;
-            }
 
-            hashes.clear();
-            try {
-                // first, get distinct items of the most restrictive (smallest) list, pass listBuilder as null since
-                // we're not adding values yet. Values will be added to listBuilder after inspecting all input lists
+                IAsterixListBuilder listBuilder;
+                if (outList.getTypeTag() == ATypeTag.ARRAY) {
+                    if (orderedListBuilder == null) {
+                        orderedListBuilder = new OrderedListBuilder();
+                    }
+                    listBuilder = orderedListBuilder;
+                } else {
+                    if (unorderedListBuilder == null) {
+                        unorderedListBuilder = new UnorderedListBuilder();
+                    }
+                    listBuilder = unorderedListBuilder;
+                }
+
+                IPointable listArg;
+                hashes.clear();
+
+                // first, get distinct items of the most restrictive (smallest) list.
+                // values will be added to listBuilder after inspecting all input lists
                 listArg = listsArgs[minListIndex];
                 listAccessor.reset(listArg.getByteArray(), listArg.getStartOffset());
-                processList(listAccessor, minListIndex, null, true);
-
-                // now process each list one by one
+                buildRestrictiveList(listAccessor);
                 listBuilder.reset(outList);
-                for (int listIndex = 0; listIndex < listsArgs.length; listIndex++) {
-                    if (listIndex == minListIndex) {
-                        incrementSmallest(listIndex, hashes.values());
-                    } else {
+
+                if (!hashes.isEmpty()) {
+                    // process each list one by one
+                    for (int listIndex = 0; listIndex < listsArgs.length; listIndex++) {
+                        // TODO(ali): find a way to avoid comparing the smallest list
                         listArg = listsArgs[listIndex];
                         listAccessor.reset(listArg.getByteArray(), listArg.getStartOffset());
-                        processList(listAccessor, listIndex, listBuilder, false);
+                        processList(listAccessor, listIndex, listBuilder);
                     }
                 }
 
@@ -269,6 +288,8 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             } finally {
+                caster.deallocatePointables();
+                valueListIndexAllocator.reset();
                 storageAllocator.reset();
                 arrayListAllocator.reset();
                 pointableAllocator.reset();
@@ -283,57 +304,75 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             }
         }
 
-        private void processList(ListAccessor listAccessor, int listIndex, IAsterixListBuilder listBuilder,
-                boolean initIntersectList) throws IOException {
-            int hash;
-            List<ValueListIndex> sameHashes;
-            boolean itemInStorage;
-            IPointable item = pointableAllocator.allocateEmpty();
-            ArrayBackedValueStorage storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
-            storage.reset();
-            for (int j = 0; j < listAccessor.size(); j++) {
-                itemInStorage = listAccessor.getOrWriteItem(j, item, storage);
-                if (ATYPETAGDESERIALIZER.deserialize(item.getByteArray()[item.getStartOffset()]).isDerivedType()) {
-                    throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLoc);
-                }
-                if (notNullAndMissing(item)) {
-                    // look up to see if item exists
-                    hash = binaryHashFunction.hash(item.getByteArray(), item.getStartOffset(), item.getLength());
-                    sameHashes = hashes.get(hash);
-                    if (initIntersectList && initIntersectList(item, hash, sameHashes)) {
-                        // item is used
-                        item = pointableAllocator.allocateEmpty();
-                        if (itemInStorage) {
-                            storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
-                            storage.reset();
+        // puts all the items of the smallest list in "hashes"
+        private void buildRestrictiveList(ListAccessor listAccessor) throws IOException {
+            if (listAccessor.size() > 0) {
+                int hash;
+                List<ValueListIndex> sameHashes;
+                boolean itemInStorage;
+                IPointable item = pointableAllocator.allocateEmpty();
+                ArrayBackedValueStorage storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
+                storage.reset();
+                for (int j = 0; j < listAccessor.size(); j++) {
+                    itemInStorage = listAccessor.getOrWriteItem(j, item, storage);
+                    validateItem(item);
+                    if (notNullAndMissing(item)) {
+                        hash = binaryHashFunction.hash(item.getByteArray(), item.getStartOffset(), item.getLength());
+                        sameHashes = hashes.get(hash);
+                        if (addToSmallestList(item, hash, sameHashes)) {
+                            // item has been added to intersect list and is being used, allocate new pointable
+                            item = pointableAllocator.allocateEmpty();
+                            if (itemInStorage) {
+                                storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
+                                storage.reset();
+                            }
                         }
-                    } else {
-                        incrementCommonValue(item, sameHashes, listIndex, listBuilder);
                     }
                 }
             }
         }
 
-        // collect the items of the most restrictive list, it initializes the list index as -1. each successive list
+        private void processList(ListAccessor listAccessor, int listIndex, IAsterixListBuilder listBuilder)
+                throws IOException {
+            int hash;
+            List<ValueListIndex> sameHashes;
+            for (int j = 0; j < listAccessor.size(); j++) {
+                listAccessor.getOrWriteItem(j, pointable, currentItemStorage);
+                validateItem(pointable);
+                if (notNullAndMissing(pointable)) {
+                    // hash the item and look up to see if it is common
+                    hash = binaryHashFunction.hash(pointable.getByteArray(), pointable.getStartOffset(),
+                            pointable.getLength());
+                    sameHashes = hashes.get(hash);
+                    incrementIfCommonValue(pointable, sameHashes, listIndex, listBuilder);
+                }
+            }
+        }
+
+        // collects the items of the most restrictive list, it initializes the list index as -1. each successive list
         // should stamp the value with its list index if the list has the item. It starts with list index = 0
-        private boolean initIntersectList(IPointable item, int hash, List<ValueListIndex> sameHashes)
+        private boolean addToSmallestList(IPointable item, int hash, List<ValueListIndex> sameHashes)
                 throws IOException {
             // add if new item
             if (sameHashes == null) {
                 List<ValueListIndex> newHashes = arrayListAllocator.allocate(null);
                 newHashes.clear();
-                newHashes.add(new ValueListIndex(item, -1));
+                ValueListIndex valueListIndex = valueListIndexAllocator.allocate(null);
+                valueListIndex.set(item, -1);
+                newHashes.add(valueListIndex);
                 hashes.put(hash, newHashes);
                 return true;
             } else if (ArrayFunctionsUtil.findItem(item, sameHashes, comp) == null) {
-                sameHashes.add(new ValueListIndex(item, -1));
+                ValueListIndex valueListIndex = valueListIndexAllocator.allocate(null);
+                valueListIndex.set(item, -1);
+                sameHashes.add(valueListIndex);
                 return true;
             }
             // else ignore for duplicate values in the same list
             return false;
         }
 
-        private void incrementCommonValue(IPointable item, List<ValueListIndex> sameHashes, int listIndex,
+        private void incrementIfCommonValue(IPointable item, List<ValueListIndex> sameHashes, int listIndex,
                 IAsterixListBuilder listBuilder) throws IOException {
             if (sameHashes != null) {
                 // look for the same equal item, add to list builder when all lists have seen this item
@@ -346,32 +385,24 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             return tag != ATypeTag.SERIALIZED_NULL_TYPE_TAG && tag != ATypeTag.SERIALIZED_MISSING_TYPE_TAG;
         }
 
-        // this method is only for the most restrictive list. it avoids comparison since it is the initial list we start
-        // with, so for sure every element in the collection must exist in the list
-        private void incrementSmallest(int listIndex, Collection<List<ValueListIndex>> commonValues) {
-            for (List<ValueListIndex> items : commonValues) {
-                for (int i = 0; i < items.size(); i++) {
-                    // any difference that is not == 1 means either this current list has already stamped and advanced
-                    // the stamp or the item is not common among lists because if it's common then each list should've
-                    // incremented the item list index up to the current list index
-                    if (listIndex - items.get(i).listIndex == 1) {
-                        items.get(i).listIndex = listIndex;
-                    }
-                }
-            }
-        }
-
         private void incrementIfExists(List<ValueListIndex> sameHashes, IPointable item, int listIndex,
                 IAsterixListBuilder listBuilder) throws HyracksDataException {
             ValueListIndex sameValue = ArrayFunctionsUtil.findItem(item, sameHashes, comp);
             if (sameValue != null && listIndex - sameValue.listIndex == 1) {
-                // found the item, its stamp is OK (stamp saves the last list index that has seen this item)
+                // found the item, its stamp is OK (stamp saves the index of the last list that has seen this item)
                 // increment stamp of this item
                 sameValue.listIndex = listIndex;
                 if (listIndex == listsArgs.length - 1) {
-                    // when listIndex is the last list, then it means this item was found in all previous lists
+                    // if this list is the last to stamp, then add to the final result
                     listBuilder.addItem(item);
                 }
+            }
+        }
+
+        // validates that the item is not derived, multisets, objects and arrays are not yet supported
+        private void validateItem(IPointable item) throws RuntimeDataException {
+            if (ATYPETAGDESERIALIZER.deserialize(item.getByteArray()[item.getStartOffset()]).isDerivedType()) {
+                throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLoc);
             }
         }
     }
