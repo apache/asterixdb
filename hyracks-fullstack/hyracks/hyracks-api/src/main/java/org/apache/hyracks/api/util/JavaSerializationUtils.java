@@ -29,20 +29,25 @@ import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 
+import org.apache.hyracks.api.comm.IJavaSerializationProvider;
+
 public class JavaSerializationUtils {
+    private static IJavaSerializationProvider serProvider = new IJavaSerializationProvider() {
+    };
+
     public static byte[] serialize(Serializable jobSpec) throws IOException {
         if (jobSpec instanceof byte[]) {
             return (byte[]) jobSpec;
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        ObjectOutputStream oos = serProvider.newObjectOutputStream(baos);
         oos.writeObject(jobSpec);
         return baos.toByteArray();
     }
 
     public static byte[] serialize(Serializable jobSpec, ClassLoader classLoader) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        ObjectOutputStream oos = serProvider.newObjectOutputStream(baos);
         ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(classLoader);
@@ -57,7 +62,7 @@ public class JavaSerializationUtils {
         if (bytes == null) {
             return null;
         }
-        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes));
+        ObjectInputStream ois = serProvider.newObjectInputStream(new ByteArrayInputStream(bytes));
         return ois.readObject();
     }
 
@@ -76,6 +81,18 @@ public class JavaSerializationUtils {
 
     public static Class<?> loadClass(String className) throws IOException, ClassNotFoundException {
         return Class.forName(className);
+    }
+
+    public static void setSerializationProvider(IJavaSerializationProvider serProvider) {
+        JavaSerializationUtils.serProvider = serProvider;
+    }
+
+    public static IJavaSerializationProvider getSerializationProvider() {
+        return serProvider;
+    }
+
+    public static void readObject(ObjectInputStream in, Object object) throws IOException, ClassNotFoundException {
+        serProvider.readObject(in, object);
     }
 
     private static class ClassLoaderObjectInputStream extends ObjectInputStream {

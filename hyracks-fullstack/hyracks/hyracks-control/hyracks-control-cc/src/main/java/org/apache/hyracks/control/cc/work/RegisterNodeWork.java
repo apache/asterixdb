@@ -21,11 +21,11 @@ package org.apache.hyracks.control.cc.work;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
+import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.controllers.NodeParameters;
 import org.apache.hyracks.control.common.controllers.NodeRegistration;
 import org.apache.hyracks.control.common.ipc.NodeControllerRemoteProxy;
@@ -62,11 +62,16 @@ public class RegisterNodeWork extends SynchronizableWork {
         try {
             NodeControllerState state = new NodeControllerState(nc, reg);
             nodeManager.addNode(id, state);
-            IApplicationConfig cfg = state.getNCConfig().getConfigManager().getNodeEffectiveConfig(id);
             final Map<IOption, Object> ncConfiguration = new HashMap<>();
-            for (IOption option : cfg.getOptions()) {
-                ncConfiguration.put(option, cfg.get(option));
-            }
+            ConfigManager configManager = ccs.getConfig().getConfigManager();
+            state.getConfig().forEach((key, value) -> {
+                IOption option = configManager.lookupOption(key);
+                if (option == null) {
+                    LOGGER.info("discarding unknown option {}", key);
+                } else {
+                    ncConfiguration.put(option, value);
+                }
+            });
             LOGGER.info("registered node: {}", id);
             nc.sendRegistrationResult(params, null);
             ccs.getContext().notifyNodeJoin(id, ncConfiguration);

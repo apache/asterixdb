@@ -37,7 +37,6 @@ import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.apache.hyracks.control.common.controllers.CCConfig;
-import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.common.work.IPCResponder;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 import org.apache.hyracks.util.MXHelper;
@@ -89,10 +88,7 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
             if (ncs != null) {
                 detail = ncs.toDetailedJSON(includeStats, includeConfig);
                 if (includeConfig) {
-                    final NCConfig ncConfig = ncs.getNCConfig();
-                    ConfigUtils.addConfigToJSON(detail, ncConfig.getConfigManager().getNodeEffectiveConfig(nodeId),
-                            NC_SECTIONS);
-                    detail.putPOJO("app.args", ncConfig.getAppArgs());
+                    ConfigUtils.addConfigToJSON(detail, ncs.getConfig(), ccConfig.getConfigManager(), NC_SECTIONS);
                 }
             }
         }

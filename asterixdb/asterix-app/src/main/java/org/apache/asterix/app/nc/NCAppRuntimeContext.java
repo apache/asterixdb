@@ -78,8 +78,8 @@ import org.apache.asterix.runtime.utils.NoOpCoordinationService;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.client.impl.ClusterControllerInfo;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
@@ -435,11 +435,18 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         if (metadataNodeStub == null) {
             final INetworkSecurityManager networkSecurityManager =
                     ncServiceContext.getControllerService().getNetworkSecurityManager();
-            final RMIServerFactory serverSocketFactory = new RMIServerFactory(networkSecurityManager);
-            final RMIClientFactory clientSocketFactory =
-                    new RMIClientFactory(networkSecurityManager.getConfiguration().isSslEnabled());
-            metadataNodeStub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE,
-                    getMetadataProperties().getMetadataPort(), clientSocketFactory, serverSocketFactory);
+
+            // clients need to have the client factory on their classpath- to enable older clients, only use
+            // our client socket factory when SSL is enabled
+            if (networkSecurityManager.getConfiguration().isSslEnabled()) {
+                final RMIServerFactory serverSocketFactory = new RMIServerFactory(networkSecurityManager);
+                final RMIClientFactory clientSocketFactory = new RMIClientFactory(true);
+                metadataNodeStub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE,
+                        getMetadataProperties().getMetadataPort(), clientSocketFactory, serverSocketFactory);
+            } else {
+                metadataNodeStub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE,
+                        getMetadataProperties().getMetadataPort());
+            }
         }
     }
 

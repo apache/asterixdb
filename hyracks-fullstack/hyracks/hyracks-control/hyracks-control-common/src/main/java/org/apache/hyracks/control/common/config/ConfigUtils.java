@@ -34,6 +34,8 @@ import java.util.function.Predicate;
 
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.api.config.SerializedOption;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.ini4j.Ini;
 import org.kohsuke.args4j.CmdLineException;
@@ -150,23 +152,21 @@ public class ConfigUtils {
         return value;
     }
 
-    public static String getString(Ini ini, org.apache.hyracks.api.config.Section section, IOption option,
-            String defaultValue) {
+    public static String getString(Ini ini, Section section, IOption option, String defaultValue) {
         return getString(ini, section.sectionName(), option.ini(), defaultValue);
     }
 
-    public static void addConfigToJSON(ObjectNode o, IApplicationConfig cfg,
-            org.apache.hyracks.api.config.Section... sections) {
+    public static void addConfigToJSON(ObjectNode o, IApplicationConfig cfg, Section... sections) {
         ArrayNode configArray = o.putArray("config");
-        for (org.apache.hyracks.api.config.Section section : cfg.getSections(Arrays.asList(sections)::contains)) {
+        for (Section section : cfg.getSections(Arrays.asList(sections)::contains)) {
             ObjectNode sectionNode = configArray.addObject();
             Map<String, Object> sectionConfig = getSectionOptionsForJSON(cfg, section, option -> true);
             sectionNode.put("section", section.sectionName()).putPOJO("properties", sectionConfig);
         }
     }
 
-    public static Map<String, Object> getSectionOptionsForJSON(IApplicationConfig cfg,
-            org.apache.hyracks.api.config.Section section, Predicate<IOption> selector) {
+    public static Map<String, Object> getSectionOptionsForJSON(IApplicationConfig cfg, Section section,
+            Predicate<IOption> selector) {
         Map<String, Object> sectionConfig = new TreeMap<>();
         for (IOption option : cfg.getOptions(section)) {
             if (selector.test(option)) {
@@ -174,5 +174,29 @@ public class ConfigUtils {
             }
         }
         return sectionConfig;
+    }
+
+    public static void addConfigToJSON(ObjectNode o, Map<SerializedOption, Object> config, ConfigManager configManager,
+            Section... sections) {
+        ArrayNode configArray = o.putArray("config");
+        for (Section section : sections) {
+            ObjectNode sectionNode = configArray.addObject();
+            Map<String, Object> sectionConfig = new TreeMap<>();
+            config.entrySet().stream().filter(e -> e.getKey().section().equals(section)).forEach(entry -> sectionConfig
+                    .put(IOption.toIni(entry.getKey().optionName()), fixupValueForJSON(entry, configManager)));
+            if (!sectionConfig.isEmpty()) {
+                sectionNode.put("section", section.sectionName()).putPOJO("properties", sectionConfig);
+            }
+        }
+    }
+
+    private static Object fixupValueForJSON(Map.Entry<SerializedOption, Object> entry, ConfigManager configManager) {
+        IOption option = configManager.lookupOption(entry.getKey());
+        if (option != null) {
+            // use the type system for the option to serialize this
+            return option.type().serializeToJSON(entry.getValue());
+        }
+        // not much we can do, let default JSON serialization do its thing
+        return entry.getValue();
     }
 }

@@ -21,6 +21,7 @@ package org.apache.hyracks.control.common;
 import static org.apache.hyracks.control.common.utils.ConfigurationUtil.toPathElements;
 import static org.apache.hyracks.util.JSONUtil.put;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -28,9 +29,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.config.SerializedOption;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
-import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.common.controllers.NodeRegistration;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
@@ -42,7 +43,9 @@ public class NodeControllerData {
 
     private static final int RRD_SIZE = 720;
 
-    private final NCConfig ncConfig;
+    private final String nodeId;
+
+    private final Map<SerializedOption, Object> config;
 
     private final NetworkAddress dataPort;
 
@@ -145,7 +148,9 @@ public class NodeControllerData {
     private NodeCapacity capacity;
 
     public NodeControllerData(NodeRegistration reg) {
-        ncConfig = reg.getNCConfig();
+        nodeId = reg.getNodeId();
+        config = Collections.unmodifiableMap(reg.getConfig());
+
         dataPort = reg.getDataPort();
         resultPort = reg.getResultPort();
         messagingPort = reg.getMessagingPort();
@@ -252,8 +257,8 @@ public class NodeControllerData {
         return System.nanoTime() - lastHeartbeatNanoTime;
     }
 
-    public NCConfig getNCConfig() {
-        return ncConfig;
+    public Map<SerializedOption, Object> getConfig() {
+        return config;
     }
 
     public Set<JobId> getActiveJobIds() {
@@ -279,7 +284,7 @@ public class NodeControllerData {
     public synchronized ObjectNode toSummaryJSON() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode o = om.createObjectNode();
-        put(o, "node-id", ncConfig.getNodeId());
+        put(o, "node-id", nodeId);
         put(o, "heap-used", heapUsedSize[(rrdPtr + RRD_SIZE - 1) % RRD_SIZE]);
         put(o, "system-load-average", systemLoadAverage[(rrdPtr + RRD_SIZE - 1) % RRD_SIZE]);
 
@@ -290,7 +295,7 @@ public class NodeControllerData {
         ObjectMapper om = new ObjectMapper();
         ObjectNode o = om.createObjectNode();
 
-        put(o, "node-id", ncConfig.getNodeId());
+        put(o, "node-id", nodeId);
 
         if (includeConfig) {
             put(o, "os-name", osName);

@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.dataflow;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
@@ -33,6 +34,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LsmResource;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LsmResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
+import org.apache.hyracks.util.CompatibilityUtil;
 
 public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
 
@@ -68,5 +71,15 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
                 isPrimary, fileRef.getRelativePath(), storageManager, mergePolicyFactory, mergePolicyProperties,
                 filterTypeTraits, filterCmpFactories, btreeFields, filterFields, opTrackerProvider, ioOpCallbackFactory,
                 metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, durable, compressorDecompressorFactory);
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+
+        // compat w/ 0.3.4
+        if (compressorDecompressorFactory == null) {
+            CompatibilityUtil.writeField(this, "compressorDecompressorFactory",
+                    NoOpCompressorDecompressorFactory.INSTANCE);
+        }
     }
 }

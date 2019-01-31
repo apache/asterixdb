@@ -36,7 +36,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.application.ICCApplication;
-import org.apache.hyracks.api.client.impl.ClusterControllerInfo;
+import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.context.ICCContext;

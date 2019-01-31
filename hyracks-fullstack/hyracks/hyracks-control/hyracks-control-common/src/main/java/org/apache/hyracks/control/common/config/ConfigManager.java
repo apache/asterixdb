@@ -52,6 +52,7 @@ import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.config.IConfigurator;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.api.config.SerializedOption;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.control.common.application.ConfigManagerApplicationConfig;
 import org.apache.logging.log4j.Level;
@@ -208,6 +209,10 @@ public class ConfigManager implements IConfigManager, Serializable {
     @Override
     public void setVersionString(String versionString) {
         this.versionString = versionString;
+    }
+
+    public IOption lookupOption(SerializedOption option) {
+        return lookupOption(option.section().sectionName(), IOption.toIni(option.optionName()));
     }
 
     public IOption lookupOption(String section, String key) {

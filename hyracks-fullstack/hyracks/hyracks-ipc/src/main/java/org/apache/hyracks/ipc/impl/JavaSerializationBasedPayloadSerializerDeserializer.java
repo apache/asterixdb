@@ -18,8 +18,11 @@
  */
 package org.apache.hyracks.ipc.impl;
 
+import static org.apache.hyracks.api.util.JavaSerializationUtils.getSerializationProvider;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -28,6 +31,7 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.ipc.api.IPayloadSerializerDeserializer;
 
 public class JavaSerializationBasedPayloadSerializerDeserializer implements IPayloadSerializerDeserializer {
+
     @Override
     public Object deserializeObject(ByteBuffer buffer, int length) throws Exception {
         return deserialize(buffer, length);
@@ -48,21 +52,23 @@ public class JavaSerializationBasedPayloadSerializerDeserializer implements IPay
         return serialize(exception);
     }
 
-    public static void serialize(OutputStream out, Object object) throws Exception {
-        ObjectOutputStream oos = new ObjectOutputStream(out);
-        oos.writeObject(object);
-        oos.flush();
+    public static void serialize(OutputStream out, Object object) throws IOException {
+        try (ObjectOutputStream oos = getSerializationProvider().newObjectOutputStream(out)) {
+            oos.writeObject(object);
+            oos.flush();
+        }
     }
 
     private Object deserialize(ByteBuffer buffer, int length) throws Exception {
-        ObjectInputStream ois =
-                new ObjectInputStream(new ByteArrayInputStream(buffer.array(), buffer.position(), length));
-        Object object = ois.readObject();
-        ois.close();
+        Object object;
+        try (ObjectInputStream ois = getSerializationProvider()
+                .newObjectInputStream(new ByteArrayInputStream(buffer.array(), buffer.position(), length))) {
+            object = ois.readObject();
+        }
         return object;
     }
 
-    private byte[] serialize(Object object) throws Exception {
+    private byte[] serialize(Object object) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         serialize(baos, object);
         baos.close();

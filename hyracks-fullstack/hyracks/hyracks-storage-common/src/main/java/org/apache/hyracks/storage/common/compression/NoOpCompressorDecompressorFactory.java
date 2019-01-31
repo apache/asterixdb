@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.common.compression;
 
+import java.io.ObjectStreamException;
+
 import org.apache.hyracks.api.compression.ICompressorDecompressor;
 import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -26,7 +28,7 @@ import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class NoOpCompressorDecompressorFactory implements ICompressorDecompressorFactory {
+public final class NoOpCompressorDecompressorFactory implements ICompressorDecompressorFactory {
     private static final long serialVersionUID = 1L;
     public static final ICompressorDecompressorFactory INSTANCE = new NoOpCompressorDecompressorFactory();
 
@@ -42,6 +44,10 @@ public class NoOpCompressorDecompressorFactory implements ICompressorDecompresso
 
     @SuppressWarnings("squid:S1172") // unused parameter
     public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        return INSTANCE;
+    }
+
+    private Object readResolve() throws ObjectStreamException {
         return INSTANCE;
     }
 }

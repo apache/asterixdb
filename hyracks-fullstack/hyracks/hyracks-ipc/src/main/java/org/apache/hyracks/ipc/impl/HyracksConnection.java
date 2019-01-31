@@ -40,7 +40,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.IHyracksClientInterface;
 import org.apache.hyracks.api.client.NodeControllerInfo;
-import org.apache.hyracks.api.client.impl.ClusterControllerInfo;
+import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.client.impl.JobSpecificationActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.deployment.DeploymentId;

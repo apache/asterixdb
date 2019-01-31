@@ -22,6 +22,7 @@ package org.apache.hyracks.control.cc.cluster;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.concurrent.Executors;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
@@ -174,9 +175,8 @@ public class NodeManagerTest {
         when(ncState.getDataPort()).thenReturn(dataAddr);
         when(ncState.getResultPort()).thenReturn(resultAddr);
         when(ncState.getMessagingPort()).thenReturn(msgAddr);
-        NCConfig ncConfig = new NCConfig(nodeId);
-        ncConfig.setDataPublicAddress(ipAddr);
-        when(ncState.getNCConfig()).thenReturn(ncConfig);
+        when(ncState.getConfig())
+                .thenReturn(Collections.singletonMap(NCConfig.Option.DATA_PUBLIC_ADDRESS.toSerializable(), ipAddr));
         Mockito.when(ncState.getNodeController()).thenReturn(ncProxy);
         return ncState;
     }

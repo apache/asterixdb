@@ -65,7 +65,7 @@ public interface IOption {
     }
 
     default String ini() {
-        return name().toLowerCase().replace("_", ".");
+        return toIni(name());
     }
 
     default String camelCase() {
@@ -74,5 +74,13 @@ public interface IOption {
 
     default String toIniString() {
         return "[" + section().sectionName() + "] " + ini();
+    }
+
+    static String toIni(String name) {
+        return name.toLowerCase().replace("_", ".");
+    }
+
+    default SerializedOption toSerializable() {
+        return new SerializedOption(this);
     }
 }

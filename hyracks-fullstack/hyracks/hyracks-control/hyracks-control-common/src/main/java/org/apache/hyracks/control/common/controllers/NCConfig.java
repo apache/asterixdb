@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.control.common.controllers;
 
-import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
@@ -260,10 +259,18 @@ public class NCConfig extends ControllerConfig {
     }
 
     public NCConfig(String nodeId, ConfigManager configManager) {
+        this(nodeId, configManager, true);
+    }
+
+    public NCConfig(String nodeId, ConfigManager configManager, boolean selfRegister) {
         super(configManager);
         this.appConfig = nodeId == null ? configManager.getAppConfig() : configManager.getNodeEffectiveConfig(nodeId);
-        configManager.register(Option.class);
-        configManager.register(ControllerConfig.Option.class);
+        if (selfRegister) {
+            configManager.register(Option.class);
+            configManager.register(ControllerConfig.Option.class);
+        } else {
+            configManager.register(Option.NODE_ID);
+        }
         setNodeId(nodeId);
         this.nodeId = nodeId;
         configManager.registerArgsListener(appArgs::addAll);

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.client.impl;
+package org.apache.hyracks.api.client;
 
 import java.io.Serializable;
 

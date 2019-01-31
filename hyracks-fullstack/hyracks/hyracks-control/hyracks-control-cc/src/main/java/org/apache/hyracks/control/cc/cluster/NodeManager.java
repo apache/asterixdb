@@ -46,6 +46,7 @@ import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.cc.scheduler.IResourceManager;
 import org.apache.hyracks.control.common.controllers.CCConfig;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.hyracks.util.annotations.Idempotent;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
@@ -218,7 +219,7 @@ public class NodeManager implements INodeManager {
     }
 
     private InetAddress getIpAddress(NodeControllerState ncState) throws HyracksException {
-        String ipAddress = ncState.getNCConfig().getDataPublicAddress();
+        String ipAddress = (String) ncState.getConfig().get(NCConfig.Option.DATA_PUBLIC_ADDRESS.toSerializable());
         try {
             return InetAddress.getByName(ipAddress);
         } catch (UnknownHostException e) {
@@ -237,8 +238,8 @@ public class NodeManager implements INodeManager {
                 state.getNodeController().shutdown(false);
                 LOGGER.warn("Request to shutdown failed node {} succeeded. false positive heartbeat miss indication",
                         nodeId);
-            } catch (Exception ignore) {
-                LOGGER.debug(() -> "Ignoring failure on ensuring node " + nodeId + " has failed", ignore);
+            } catch (Exception ex) {
+                LOGGER.debug(() -> "Ignoring failure on ensuring node " + nodeId + " has failed", ex);
             }
         });
     }

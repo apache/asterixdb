@@ -19,6 +19,7 @@
 package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -31,7 +32,17 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class SqlSumAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = SqlSumAggregateDescriptor::new;
+
+    // this must remain an anonymous inner class due to the evaluator factory below being an anonymous inner
+    // serializable class, to not break binary compatibility
+    // this can be reverted once serialization compatibility code is in place to write the correct class
+    @SuppressWarnings({ "Anonymous2MethodRef", "Convert2Lambda" })
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new SqlSumAggregateDescriptor();
+        }
+    };
 
     @Override
     public FunctionIdentifier getIdentifier() {

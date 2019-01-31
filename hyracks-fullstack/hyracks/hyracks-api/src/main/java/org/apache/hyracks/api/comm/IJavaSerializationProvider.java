@@ -16,20 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.context;
+package org.apache.hyracks.api.comm;
 
-import java.net.InetAddress;
-import java.util.Map;
-import java.util.Set;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 
-import org.apache.hyracks.api.client.ClusterControllerInfo;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.topology.ClusterTopology;
+public interface IJavaSerializationProvider {
+    default ObjectOutputStream newObjectOutputStream(OutputStream out) throws IOException {
+        return new ObjectOutputStream(out);
+    }
 
-public interface ICCContext {
-    ClusterControllerInfo getClusterControllerInfo();
+    default ObjectInputStream newObjectInputStream(InputStream in) throws IOException {
+        return new ObjectInputStream(in);
+    }
 
-    void getIPAddressNodeMap(Map<InetAddress, Set<String>> map) throws HyracksDataException;
-
-    ClusterTopology getClusterTopology();
+    default void readObject(ObjectInputStream in, Object object) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+    }
 }
