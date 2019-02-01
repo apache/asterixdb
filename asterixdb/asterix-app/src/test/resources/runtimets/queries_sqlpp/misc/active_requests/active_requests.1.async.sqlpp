@@ -16,28 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.api;
+-- param client_context_id=sleep_async_query
+-- handlevariable=status
 
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-public interface IClientRequest {
-
-    /**
-     * Mark the request as complete, non-cancellable anymore
-     */
-    void complete();
-
-    /**
-     * Cancel a request
-     *
-     * @param appCtx
-     * @throws HyracksDataException
-     */
-    void cancel(ICcApplicationContext appCtx) throws HyracksDataException;
-
-    /**
-     * @return A json representation of this request
-     */
-    String toJson();
-}
+select value sleep("result", 10000);

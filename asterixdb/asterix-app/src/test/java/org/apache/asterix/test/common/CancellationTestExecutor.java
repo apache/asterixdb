@@ -51,6 +51,7 @@ public class CancellationTestExecutor extends TestExecutor {
     public InputStream executeQueryService(String str, TestCaseContext.OutputFormat fmt, URI uri,
             List<TestCase.CompilationUnit.Parameter> params, boolean jsonEncoded,
             Predicate<Integer> responseCodeValidator, boolean cancellable) throws Exception {
+        cancellable = cancellable && !containsClientContextID(str);
         String clientContextId = UUID.randomUUID().toString();
         final List<TestCase.CompilationUnit.Parameter> newParams = cancellable
                 ? upsertParam(params, "client_context_id", ParameterTypeEnum.STRING, clientContextId) : params;

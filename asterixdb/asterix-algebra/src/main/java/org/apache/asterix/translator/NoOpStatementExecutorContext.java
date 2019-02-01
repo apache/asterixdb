@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.translator;
 
+import java.util.Collections;
+import java.util.Map;
+
 import org.apache.asterix.common.api.IClientRequest;
 
 public class NoOpStatementExecutorContext implements IStatementExecutorContext {
@@ -42,4 +45,8 @@ public class NoOpStatementExecutorContext implements IStatementExecutorContext {
         return null;
     }
 
+    @Override
+    public Map<String, IClientRequest> getRunningRequests() {
+        return Collections.emptyMap();
+    }
 }

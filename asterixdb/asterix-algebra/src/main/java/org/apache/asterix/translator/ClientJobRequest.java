@@ -22,6 +22,9 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.util.JSONUtil;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ClientJobRequest extends BaseClientRequest {
     private final JobId jobId;
@@ -40,5 +43,16 @@ public class ClientJobRequest extends BaseClientRequest {
             throw HyracksDataException.create(e);
         }
         ctx.remove(contextId);
+    }
+
+    @Override
+    public String toJson() {
+        final ObjectNode jsonNode = super.asJson();
+        jsonNode.put("jobId", jobId.toString());
+        try {
+            return JSONUtil.convertNode(jsonNode);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.api.http.ctx;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,5 +42,10 @@ public class StatementExecutorContext implements IStatementExecutorContext {
     @Override
     public IClientRequest remove(String clientContextId) {
         return runningQueries.remove(clientContextId);
+    }
+
+    @Override
+    public Map<String, IClientRequest> getRunningRequests() {
+        return Collections.unmodifiableMap(runningQueries);
     }
 }

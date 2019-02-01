@@ -118,11 +118,15 @@ public class ADateTime implements IAObject {
         return sbder.toString();
     }
 
-    public String toSimpleString() throws IOException {
+    public String toSimpleString() {
         StringBuilder sbder = new StringBuilder();
-        GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTime, 0, sbder,
-                GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
-        return sbder.toString();
+        try {
+            GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTime, 0, sbder,
+                    GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+            return sbder.toString();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     public long getChrononTime() {

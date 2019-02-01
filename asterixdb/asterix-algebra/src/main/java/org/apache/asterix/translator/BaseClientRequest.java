@@ -20,10 +20,15 @@ package org.apache.asterix.translator;
 
 import org.apache.asterix.common.api.IClientRequest;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.om.base.ADateTime;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.JSONUtil;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class BaseClientRequest implements IClientRequest {
     protected final IStatementExecutorContext ctx;
+    protected final long requestTime = System.currentTimeMillis();
     protected final String contextId;
     private boolean complete;
 
@@ -48,6 +53,22 @@ public abstract class BaseClientRequest implements IClientRequest {
         }
         complete();
         doCancel(appCtx);
+    }
+
+    @Override
+    public String toJson() {
+        try {
+            return JSONUtil.convertNode(asJson());
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    protected ObjectNode asJson() {
+        ObjectNode json = JSONUtil.createObject();
+        json.put("requestTime", new ADateTime(requestTime).toSimpleString());
+        json.put("clientContextID", contextId);
+        return json;
     }
 
     protected abstract void doCancel(ICcApplicationContext appCtx) throws HyracksDataException;

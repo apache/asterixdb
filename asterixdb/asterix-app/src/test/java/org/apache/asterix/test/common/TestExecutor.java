@@ -1999,6 +1999,12 @@ public class TestExecutor {
         }
     }
 
+    protected static boolean containsClientContextID(String statement) {
+        List<Parameter> httpParams = extractParameters(statement);
+        return httpParams.stream().map(Parameter::getName)
+                .anyMatch(QueryServiceServlet.Parameter.CLIENT_ID.str()::equals);
+    }
+
     private static boolean isCancellable(String type) {
         return !NON_CANCELLABLE.contains(type);
     }

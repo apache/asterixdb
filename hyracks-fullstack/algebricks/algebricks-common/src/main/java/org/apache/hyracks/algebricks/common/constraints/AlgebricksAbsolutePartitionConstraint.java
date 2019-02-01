@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.common.constraints;
 
 import java.util.Arrays;
+import java.util.Random;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -31,6 +32,11 @@ public class AlgebricksAbsolutePartitionConstraint extends AlgebricksPartitionCo
         this.locations = locations;
         sortedLocations = locations.clone();
         Arrays.sort(sortedLocations);
+    }
+
+    public static AlgebricksAbsolutePartitionConstraint randomLocation(String[] locations) {
+        int randomIndex = new Random().nextInt(locations.length);
+        return new AlgebricksAbsolutePartitionConstraint(new String[] { locations[randomIndex] });
     }
 
     @Override

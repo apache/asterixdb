@@ -4982,6 +4982,11 @@
         <output-dir compare="Text">p_sort_num_samples</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="active_requests">
+        <output-dir compare="Text">active_requests</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index">
     <test-group name="index/validations">

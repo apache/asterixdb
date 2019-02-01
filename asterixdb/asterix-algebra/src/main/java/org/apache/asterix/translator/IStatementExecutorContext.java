@@ -19,6 +19,8 @@
 
 package org.apache.asterix.translator;
 
+import java.util.Map;
+
 import org.apache.asterix.common.api.IClientRequest;
 
 /**
@@ -52,4 +54,9 @@ public interface IStatementExecutorContext {
      *            a user provided client context id.
      */
     IClientRequest remove(String clientContextId);
+
+    /**
+     * @return The currently running requests
+     */
+    Map<String, IClientRequest> getRunningRequests();
 }
