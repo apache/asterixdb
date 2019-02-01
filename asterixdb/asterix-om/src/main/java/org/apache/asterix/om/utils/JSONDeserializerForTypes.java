@@ -19,13 +19,12 @@
 
 package org.apache.asterix.om.utils;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-import com.google.common.collect.Lists;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
@@ -33,7 +32,28 @@ import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.Lists;
+
 public class JSONDeserializerForTypes {
+    private static final Map<String, IAType> primitiveTypeMap;
+    static {
+        primitiveTypeMap = new HashMap<>();
+        Class<?> buildInTypeClass = BuiltinType.class;
+        Stream.of(buildInTypeClass.getDeclaredFields()).filter(f -> f.getType().isAssignableFrom(BuiltinType.class))
+                .forEach(f -> {
+                    try {
+                        primitiveTypeMap.put(f.getName().toUpperCase(), (IAType) f.get(null));
+                    } catch (IllegalAccessException e) {
+                        throw new IllegalStateException(e);
+                    }
+                });
+        // for backward-compatibility
+        primitiveTypeMap.put("ASTERIX_TYPE", BuiltinType.ALL_TYPE);
+    }
+
+    private JSONDeserializerForTypes() {
+    }
 
     /**
      * Deserialize an arbitrary JSON representation of a type.
@@ -59,7 +79,7 @@ public class JSONDeserializerForTypes {
 
         // Deals with Union Type.
         if (typeName.equals(AUnionType.class.getName())) {
-            List<IAType> unionTypes = new ArrayList<IAType>();
+            List<IAType> unionTypes = new ArrayList<>();
             JsonNode fields = typeInJSON.get("fields");
             for (int i = 0; i < fields.size(); i++) {
                 JsonNode fieldType = fields.get(i);
@@ -86,8 +106,6 @@ public class JSONDeserializerForTypes {
         }
 
         // Deals with primitive types.
-        Class<?> cl = BuiltinType.class;
-        Field typeField = cl.getDeclaredField(typeName.toUpperCase());
-        return (IAType) typeField.get(null);
+        return primitiveTypeMap.get(typeName.toUpperCase());
     }
 }

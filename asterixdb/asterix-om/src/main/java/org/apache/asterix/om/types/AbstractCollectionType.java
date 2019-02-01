@@ -43,7 +43,7 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
 
     @Override
     public IAType getType() {
-        return BuiltinType.ASTERIX_TYPE;
+        return BuiltinType.ALL_TYPE;
     }
 
     @Override

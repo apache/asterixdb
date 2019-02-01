@@ -22,8 +22,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.om.base.IAObject;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -161,7 +162,7 @@ public class AUnionType extends AbstractComplexType {
 
     @Override
     public IAType getType() {
-        return BuiltinType.ASTERIX_TYPE;
+        return BuiltinType.ALL_TYPE;
     }
 
     @Override

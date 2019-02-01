@@ -26,8 +26,19 @@ import org.apache.logging.log4j.Logger;
 
 public class CompatibilityUtil {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static CompatibilityLevel compatLevel = CompatibilityLevel.DEFAULT;
 
     private CompatibilityUtil() {
+    }
+
+    public static CompatibilityLevel getCompatibilityLevel() {
+        return compatLevel;
+    }
+
+    public static CompatibilityLevel setCompatibilityLevel(CompatibilityLevel newLevel) {
+        CompatibilityLevel prevLevel = compatLevel;
+        compatLevel = newLevel;
+        return prevLevel;
     }
 
     public static Object readField(Object obj, String fieldName) throws IOException {
@@ -54,5 +65,9 @@ public class CompatibilityUtil {
             LOGGER.warn("exception updating field '{}' object of type {} to {}", fieldName, objClass, newValue, e);
             throw new IOException(e);
         }
+    }
+
+    public static boolean isAtLeast035() {
+        return getCompatibilityLevel().intValue() >= CompatibilityLevel.V_0_3_5.intValue();
     }
 }

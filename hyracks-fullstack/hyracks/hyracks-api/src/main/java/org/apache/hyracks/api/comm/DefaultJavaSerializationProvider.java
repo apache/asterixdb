@@ -16,26 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.application;
+package org.apache.hyracks.api.comm;
 
-import org.apache.hyracks.api.config.IConfigManager;
-import org.apache.hyracks.api.control.CcId;
-import org.apache.hyracks.api.io.IFileDeviceResolver;
-import org.apache.hyracks.api.job.resource.NodeCapacity;
+public class DefaultJavaSerializationProvider implements IJavaSerializationProvider {
+    public static final IJavaSerializationProvider INSTANCE = new DefaultJavaSerializationProvider();
 
-public interface INCApplication extends IApplication {
-
-    void preStop() throws Exception; //NOSONAR
-
-    NodeCapacity getCapacity();
-
-    /**
-     * @return the file device resolver which resolves the relative path of a storage
-     *         file into an io device.
-     */
-    IFileDeviceResolver getFileDeviceResolver();
-
-    void tasksCompleted(CcId ccId) throws Exception;
-
-    IConfigManager getConfigManager();
+    private DefaultJavaSerializationProvider() {
+    }
 }

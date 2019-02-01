@@ -63,7 +63,7 @@ public class TypeTagUtil {
             case POINT3D:
                 return BuiltinType.APOINT3D;
             case TYPE:
-                return BuiltinType.ASTERIX_TYPE;
+                return BuiltinType.ALL_TYPE;
             case ANY:
                 return BuiltinType.ANY;
             case LINE:

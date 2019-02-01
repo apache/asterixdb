@@ -29,41 +29,47 @@ import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 
+import org.apache.hyracks.api.comm.DefaultJavaSerializationProvider;
 import org.apache.hyracks.api.comm.IJavaSerializationProvider;
 
 public class JavaSerializationUtils {
-    private static IJavaSerializationProvider serProvider = new IJavaSerializationProvider() {
-    };
+    private static IJavaSerializationProvider serProvider = DefaultJavaSerializationProvider.INSTANCE;
+
+    private JavaSerializationUtils() {
+    }
 
     public static byte[] serialize(Serializable jobSpec) throws IOException {
         if (jobSpec instanceof byte[]) {
             return (byte[]) jobSpec;
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = serProvider.newObjectOutputStream(baos);
-        oos.writeObject(jobSpec);
+        try (ObjectOutputStream oos = serProvider.newObjectOutputStream(baos)) {
+            oos.writeObject(jobSpec);
+        }
         return baos.toByteArray();
     }
 
     public static byte[] serialize(Serializable jobSpec, ClassLoader classLoader) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = serProvider.newObjectOutputStream(baos);
-        ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
-        try {
-            Thread.currentThread().setContextClassLoader(classLoader);
-            oos.writeObject(jobSpec);
-            return baos.toByteArray();
-        } finally {
-            Thread.currentThread().setContextClassLoader(ctxCL);
+        try (ObjectOutputStream oos = serProvider.newObjectOutputStream(baos)) {
+            ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
+            try {
+                Thread.currentThread().setContextClassLoader(classLoader);
+                oos.writeObject(jobSpec);
+            } finally {
+                Thread.currentThread().setContextClassLoader(ctxCL);
+            }
         }
+        return baos.toByteArray();
     }
 
     public static Object deserialize(byte[] bytes) throws IOException, ClassNotFoundException {
         if (bytes == null) {
             return null;
         }
-        ObjectInputStream ois = serProvider.newObjectInputStream(new ByteArrayInputStream(bytes));
-        return ois.readObject();
+        try (ObjectInputStream ois = serProvider.newObjectInputStream(new ByteArrayInputStream(bytes))) {
+            return ois.readObject();
+        }
     }
 
     public static Object deserialize(byte[] bytes, ClassLoader classLoader) throws IOException, ClassNotFoundException {

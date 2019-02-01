@@ -29,6 +29,7 @@ import org.apache.hyracks.api.job.resource.NodeCapacity;
 public class TestNCApplication implements INCApplication {
 
     private RuntimeContext rCtx;
+    private IConfigManager configManager;
 
     @Override
     public void init(IServiceContext serviceCtx) throws Exception {
@@ -67,7 +68,7 @@ public class TestNCApplication implements INCApplication {
 
     @Override
     public void registerConfig(IConfigManager configManager) {
-        // no-op
+        this.configManager = configManager;
     }
 
     @Override
@@ -80,4 +81,8 @@ public class TestNCApplication implements INCApplication {
         return null;
     }
 
+    @Override
+    public IConfigManager getConfigManager() {
+        return configManager;
+    }
 }

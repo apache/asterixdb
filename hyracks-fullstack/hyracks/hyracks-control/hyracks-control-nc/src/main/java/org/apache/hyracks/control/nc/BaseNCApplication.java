@@ -29,6 +29,7 @@ import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.api.util.HyracksConstants;
+import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
@@ -38,6 +39,7 @@ import org.apache.logging.log4j.Level;
 
 public class BaseNCApplication implements INCApplication {
     public static final BaseNCApplication INSTANCE = new BaseNCApplication();
+    private ConfigManager configManager;
 
     protected BaseNCApplication() {
     }
@@ -82,6 +84,7 @@ public class BaseNCApplication implements INCApplication {
 
     @Override
     public void registerConfig(IConfigManager configManager) {
+        this.configManager = (ConfigManager) configManager;
         configManager.addIniParamOptions(ControllerConfig.Option.CONFIG_FILE, ControllerConfig.Option.CONFIG_FILE_URL);
         configManager.addCmdLineSections(Section.NC, Section.COMMON, Section.LOCALNC);
         configManager.setUsageFilter(getUsageFilter());
@@ -102,4 +105,8 @@ public class BaseNCApplication implements INCApplication {
         LoggingConfigUtil.defaultIfMissing(HyracksConstants.HYRACKS_LOGGER_NAME, level);
     }
 
+    @Override
+    public ConfigManager getConfigManager() {
+        return configManager;
+    }
 }

@@ -95,6 +95,7 @@ public class NCApplication extends BaseNCApplication {
     @Override
     public void init(IServiceContext serviceCtx) throws Exception {
         ncServiceCtx = (INCServiceContext) serviceCtx;
+        configureLoggingLevel(ncServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
         // set the node status initially to idle to indicate that it is pending booting
         ((NodeControllerService) serviceCtx.getControllerService()).setNodeStatus(NodeStatus.IDLE);
         ncServiceCtx.setThreadFactory(
@@ -112,8 +113,6 @@ public class NCApplication extends BaseNCApplication {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
         }
-        configureLoggingLevel(ncServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
-
         final NodeControllerService controllerService = (NodeControllerService) ncServiceCtx.getControllerService();
 
         if (System.getProperty("java.rmi.server.hostname") == null) {
