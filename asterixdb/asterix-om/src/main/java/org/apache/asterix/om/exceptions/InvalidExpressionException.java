@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class InvalidExpressionException extends CompilationException {
+    private static final long serialVersionUID = -3601791480135148643L;
 
     public InvalidExpressionException(FunctionIdentifier fid, int index, ILogicalExpression actualExpr,
             LogicalExpressionTag... exprKinds) {

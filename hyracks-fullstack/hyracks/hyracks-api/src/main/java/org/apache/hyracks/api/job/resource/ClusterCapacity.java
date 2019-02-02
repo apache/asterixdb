@@ -28,6 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.util.StorageUtil;
 
 public class ClusterCapacity implements IClusterCapacity {
+    private static final long serialVersionUID = 3487998182013966747L;
 
     private long aggregatedMemoryByteSize = 0;
     private int aggregatedCores = 0;

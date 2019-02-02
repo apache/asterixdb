@@ -64,8 +64,8 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-@SuppressWarnings("serial")
 public abstract class AbstractNumericArithmeticEval extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = 527445160961348706L;
 
     /**
      * abstract method for arithmetic operation between two integer values

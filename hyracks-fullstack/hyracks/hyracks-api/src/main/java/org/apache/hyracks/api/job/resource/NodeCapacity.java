@@ -25,6 +25,7 @@ import java.io.Serializable;
  * Specifies the capacity for computation on a particular node, i.e., a NCDriver process.
  */
 public class NodeCapacity implements Serializable {
+    private static final long serialVersionUID = -6124502740160006465L;
 
     // All memory for computations -- this is not changed during the lifetime of a running instance.
     private final long memoryByteSize;

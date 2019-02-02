@@ -23,6 +23,8 @@ public interface IConfigSetter {
     void set(String nodeId, Object value, boolean isDefault) throws SetException;
 
     class SetException extends RuntimeException {
+        private static final long serialVersionUID = 700327181143546634L;
+
         public SetException(Exception e) {
             super(e);
         }

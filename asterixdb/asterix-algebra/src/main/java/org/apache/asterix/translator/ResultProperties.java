@@ -21,6 +21,7 @@ package org.apache.asterix.translator;
 import java.io.Serializable;
 
 public class ResultProperties implements Serializable {
+    private static final long serialVersionUID = -4741260459407538016L;
 
     public static final long DEFAULT_MAX_READS = 1;
     private final IStatementExecutor.ResultDelivery delivery;

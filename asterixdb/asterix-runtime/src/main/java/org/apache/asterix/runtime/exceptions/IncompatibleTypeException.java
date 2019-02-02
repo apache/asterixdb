@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class IncompatibleTypeException extends RuntimeDataException {
+    private static final long serialVersionUID = 3967461820552150509L;
 
     // Incompatible input parameters, e.g., "1.0" > 1.0
     public IncompatibleTypeException(SourceLocation sourceLoc, FunctionIdentifier fid, byte typeTagLeft,

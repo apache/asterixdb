@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class UnsupportedTypeException extends RuntimeDataException {
+    private static final long serialVersionUID = 1627870063930883067L;
 
     // Unsupported input type.
     public UnsupportedTypeException(SourceLocation sourceLoc, FunctionIdentifier fid, byte actualTypeTag) {

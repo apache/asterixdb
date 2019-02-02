@@ -38,6 +38,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<DatasourceAdapter> {
+    private static final long serialVersionUID = 6183434454125673504L;
 
     // Field indexes of serialized Adapter in a tuple.
     // First key field.

@@ -51,6 +51,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Feed metadata entity to an ITupleReference and vice versa.
  */
 public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
+    private static final long serialVersionUID = -5967081194106401387L;
+
     // Field indexes of serialized Feed in a tuple.
     // Key field.
     public static final int FEED_DATAVERSE_NAME_FIELD_INDEX = 0;

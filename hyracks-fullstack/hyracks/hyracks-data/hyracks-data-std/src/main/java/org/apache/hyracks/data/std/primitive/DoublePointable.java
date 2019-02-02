@@ -35,6 +35,8 @@ public final class DoublePointable extends AbstractPointable implements IHashabl
 
     public static final DoublePointableFactory FACTORY = new DoublePointableFactory();
     public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(8) {
+        private static final long serialVersionUID = 7348262203696059687L;
+
         //TODO fix RTREE logic based on class comparision in LSMRTreeUtils#proposeBestLinearizer
         @Override
         public boolean isFixedLength() {

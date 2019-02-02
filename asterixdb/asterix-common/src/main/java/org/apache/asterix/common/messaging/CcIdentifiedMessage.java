@@ -24,6 +24,8 @@ import org.apache.asterix.common.messaging.api.ICcIdentifiedMessage;
 import org.apache.hyracks.api.control.CcId;
 
 public abstract class CcIdentifiedMessage implements ICcIdentifiedMessage, Serializable {
+    private static final long serialVersionUID = -7529473341458281278L;
+
     private CcId ccId;
 
     @Override

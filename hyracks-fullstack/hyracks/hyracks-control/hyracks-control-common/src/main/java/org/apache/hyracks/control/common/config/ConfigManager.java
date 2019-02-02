@@ -384,6 +384,8 @@ public class ConfigManager implements IConfigManager, Serializable {
             return map.get(option);
         } else {
             Object value = resolveDefault(option, new ConfigManagerApplicationConfig(this) {
+                private static final long serialVersionUID = -5505664489371709335L;
+
                 @Override
                 public Object getStatic(IOption option) {
                     return getOrDefault(map, option, nodeId);
@@ -453,6 +455,8 @@ public class ConfigManager implements IConfigManager, Serializable {
         final Map<IOption, Object> nodeMap = nodeSpecificDefaultMap.get(nodeId);
         Map<IOption, Object> nodeEffectiveMap = getNodeEffectiveMap(nodeId);
         return new ConfigManagerApplicationConfig(this) {
+            private static final long serialVersionUID = 3166949269001016392L;
+
             @Override
             public Object getStatic(IOption option) {
                 if (!nodeEffectiveMap.containsKey(option)) {
@@ -582,6 +586,8 @@ public class ConfigManager implements IConfigManager, Serializable {
     }
 
     private static class NoOpMapMutator implements CompositeMap.MapMutator<IOption, Object> {
+        private static final long serialVersionUID = -7239155627408457440L;
+
         @Override
         public Object put(CompositeMap<IOption, Object> compositeMap, Map<IOption, Object>[] maps, IOption iOption,
                 Object o) {

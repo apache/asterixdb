@@ -25,6 +25,8 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class OverflowException extends RuntimeDataException {
+    private static final long serialVersionUID = -9108000688790364894L;
+
     // Overflow.
     public OverflowException(SourceLocation sourceLoc, FunctionIdentifier fid) {
         super(ErrorCode.OVERFLOW, sourceLoc, fid.getName());

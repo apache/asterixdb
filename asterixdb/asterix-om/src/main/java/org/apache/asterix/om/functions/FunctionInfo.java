@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 public class FunctionInfo implements IFunctionInfo {
+    private static final long serialVersionUID = 5460606629941107898L;
 
     private final FunctionIdentifier functionIdentifier;
     private final boolean isFunctional;

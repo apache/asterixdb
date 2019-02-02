@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class TypeMismatchException extends CompilationException {
+    private static final long serialVersionUID = -3069967719104299912L;
 
     // Function parameter type mismatch.
     public TypeMismatchException(FunctionIdentifier fid, Integer i, ATypeTag actualTypeTag,

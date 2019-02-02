@@ -35,6 +35,8 @@ public final class IntegerPointable extends AbstractPointable implements IHashab
 
     public static final IntegerPointableFactory FACTORY = new IntegerPointableFactory();
     public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(4) {
+        private static final long serialVersionUID = -7178318032449879790L;
+
         //TODO fix RTREE logic based on class comparision in LSMRTreeUtils#proposeBestLinearizer
         @Override
         public boolean isFixedLength() {

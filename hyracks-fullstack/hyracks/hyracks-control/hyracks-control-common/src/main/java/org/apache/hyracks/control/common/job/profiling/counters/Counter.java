@@ -23,6 +23,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 
 public class Counter implements ICounter {
+    private static final long serialVersionUID = -3935601595055562080L;
+
     private final String name;
     private final AtomicLong counter;
 

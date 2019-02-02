@@ -43,6 +43,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class ExternalFileTupleTranslator extends AbstractTupleTranslator<ExternalFile> {
+    private static final long serialVersionUID = -4966958481117396312L;
+
     // Field indexes of serialized ExternalFile in a tuple.
     // First key field.
     public static final int EXTERNAL_FILE_DATAVERSENAME_TUPLE_FIELD_INDEX = 0;

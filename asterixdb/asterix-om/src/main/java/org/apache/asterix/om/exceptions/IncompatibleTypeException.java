@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class IncompatibleTypeException extends CompilationException {
+    private static final long serialVersionUID = 8381231750372706059L;
 
     // Incompatible input parameters, e.g., "1.0" > 1.0
     public IncompatibleTypeException(FunctionIdentifier fid, ATypeTag typeTagLeft, ATypeTag typeTagRight) {

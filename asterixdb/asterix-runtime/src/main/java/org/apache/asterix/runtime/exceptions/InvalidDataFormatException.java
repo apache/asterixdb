@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class InvalidDataFormatException extends RuntimeDataException {
+    private static final long serialVersionUID = 7927137063741221011L;
 
     public InvalidDataFormatException(SourceLocation sourceLoc, FunctionIdentifier fid, byte expectedTypeTag) {
         super(ErrorCode.INVALID_FORMAT, sourceLoc, fid.getName(),

@@ -21,6 +21,7 @@ package org.apache.asterix.translator;
 import java.io.Serializable;
 
 public class ExecutionPlans implements Serializable {
+    private static final long serialVersionUID = 6853904213354224457L;
 
     private String expressionTree;
     private String rewrittenExpressionTree;
