@@ -106,24 +106,18 @@ public class ADateTime implements IAObject {
 
     @Override
     public String toString() {
-        StringBuilder sbder = new StringBuilder();
-        sbder.append("datetime: { ");
-        try {
-            GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTime, 0, sbder,
-                    GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        sbder.append(" }");
-        return sbder.toString();
+        return appendDatetime(new StringBuilder().append("datetime: { "), chrononTime).append(" }").toString();
     }
 
     public String toSimpleString() {
-        StringBuilder sbder = new StringBuilder();
+        return appendDatetime(new StringBuilder(), chrononTime).toString();
+    }
+
+    private static StringBuilder appendDatetime(StringBuilder sbder, long chrononTime) {
         try {
             GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTime, 0, sbder,
                     GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
-            return sbder.toString();
+            return sbder;
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
