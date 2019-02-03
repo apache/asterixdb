@@ -244,7 +244,7 @@ public class IPCConnectionManager {
                         connectionEstablished(handle, channelKey, clientChannel);
                     }
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 LOGGER.warn("Exception finishing connect", e);
             } finally {
                 if (!connected) {
@@ -267,7 +267,7 @@ public class IPCConnectionManager {
                 } else {
                     connectionReceived(serverChannel, channelKey);
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 LOGGER.error("Failed to accept channel ", e);
                 close(channelKey, channel);
             }
@@ -293,7 +293,7 @@ public class IPCConnectionManager {
                         handle.setKey(channelKey);
                         channelKey.attach(handle);
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
                     LOGGER.error("Failed to accept channel ", e);
                     close(channelKey, channel);
                     handle.setState(HandleState.CLOSED);
@@ -399,7 +399,7 @@ public class IPCConnectionManager {
                 if (!readBuffer.hasRemaining()) {
                     handle.resizeInBuffer();
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 LOGGER.error("TCP read error from {}", handle.getRemoteAddress(), e);
                 close(readableKey, channel);
             }
@@ -424,7 +424,7 @@ public class IPCConnectionManager {
                     handle.clearFull();
                     selector.wakeup();
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 LOGGER.error("TCP write error to {}", handle.getRemoteAddress(), e);
                 close(writableKey, channel);
             }

@@ -124,8 +124,6 @@ public class ArrayDistinctDescriptor extends AbstractScalarFunctionDynamicDescri
             this.sourceLoc = sourceLoc;
             hashes = new Int2ObjectOpenHashMap<>();
             comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-            item = pointableAllocator.allocateEmpty();
-            storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
             binaryHashFunction = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(null)
                     .createBinaryHashFunction();
         }
@@ -137,6 +135,8 @@ public class ArrayDistinctDescriptor extends AbstractScalarFunctionDynamicDescri
             boolean nullMissingWasAdded = false;
             List<IPointable> sameHashes;
             hashes.clear();
+            item = pointableAllocator.allocateEmpty();
+            storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
             for (int i = 0; i < listAccessor.size(); i++) {
                 // get the item and compute its hash
                 itemInStorage = listAccessor.getOrWriteItem(i, item, storage);

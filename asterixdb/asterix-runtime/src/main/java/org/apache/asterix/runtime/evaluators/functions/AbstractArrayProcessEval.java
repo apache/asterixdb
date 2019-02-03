@@ -31,6 +31,7 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
@@ -47,6 +48,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractArrayProcessEval implements IScalarEvaluator {
+    private final AOrderedListType orderedListType;
+    private final AUnorderedListType unorderedListType;
     private final ArrayBackedValueStorage storage;
     private final IScalarEvaluator listArgEval;
     private final ListAccessor listAccessor;
@@ -63,6 +66,8 @@ public abstract class AbstractArrayProcessEval implements IScalarEvaluator {
             throws HyracksDataException {
         orderedListBuilder = null;
         unorderedListBuilder = null;
+        orderedListType = new AOrderedListType(BuiltinType.ANY, null);
+        unorderedListType = new AUnorderedListType(BuiltinType.ANY, null);
         storage = new ArrayBackedValueStorage();
         listArg = new VoidPointable();
         pointableAllocator = new PointableAllocator();
@@ -101,9 +106,12 @@ public abstract class AbstractArrayProcessEval implements IScalarEvaluator {
         if (!inputListType.getTypeTag().isListType()) {
             ATypeTag itemType = listAccessor.getItemType();
             if (listAccessor.getListType() == ATypeTag.ARRAY) {
-                outputListType = new AOrderedListType(TypeTagUtil.getBuiltinTypeByTag(itemType), null);
+                // TODO(ali): check the case when the item type from the runtime is a derived type
+                orderedListType.setItemType(TypeTagUtil.getBuiltinTypeByTag(itemType));
+                outputListType = orderedListType;
             } else {
-                outputListType = new AUnorderedListType(TypeTagUtil.getBuiltinTypeByTag(itemType), null);
+                unorderedListType.setItemType(TypeTagUtil.getBuiltinTypeByTag(itemType));
+                outputListType = unorderedListType;
             }
         } else {
             outputListType = (AbstractCollectionType) inputListType;

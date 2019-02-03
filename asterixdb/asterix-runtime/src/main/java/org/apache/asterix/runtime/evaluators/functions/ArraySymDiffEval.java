@@ -20,8 +20,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.util.List;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.apache.asterix.builders.ArrayListFactory;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
@@ -40,6 +38,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.storage.common.arraylist.IntArrayList;
+
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
     private final IBinaryHashFunction binaryHashFunction;
@@ -47,6 +49,7 @@ public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
     private final IObjectPool<List<ValueCounter>, ATypeTag> arrayListAllocator;
     private final IObjectPool<ValueCounter, ATypeTag> valueCounterAllocator;
     private final IBinaryComparator comp;
+    private final IntArrayList intHashes;
 
     public ArraySymDiffEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLocation,
             IAType[] argTypes) throws HyracksDataException {
@@ -55,6 +58,7 @@ public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
         valueCounterAllocator = new ListObjectPool<>(new ValueCounterFactory());
         hashes = new Int2ObjectOpenHashMap<>();
         comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        intHashes = new IntArrayList(50, 10);
         binaryHashFunction = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(null)
                 .createBinaryHashFunction();
     }
@@ -100,14 +104,18 @@ public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
     @Override
     protected void init() {
         hashes.clear();
+        intHashes.clear();
     }
 
     @Override
     protected void finish(IAsterixListBuilder listBuilder) throws HyracksDataException {
         ValueCounter item;
-        for (List<ValueCounter> entry : hashes.values()) {
-            for (int i = 0; i < entry.size(); i++) {
-                item = entry.get(i);
+        List<ValueCounter> items;
+        // TODO(ali): temp solution to avoid iterator object creation, find a better way
+        for (int i = 0; i < intHashes.size(); i++) {
+            items = hashes.get(intHashes.get(i));
+            for (int k = 0; k < items.size(); k++) {
+                item = items.get(k);
                 if (checkCounter(item.counter)) {
                     listBuilder.addItem(item.value);
                 }
@@ -137,12 +145,13 @@ public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
             sameHashes.clear();
             addItem(item, listIndex, sameHashes);
             hashes.put(hash, sameHashes);
+            intHashes.add(hash);
             return true;
         } else {
             // potentially, item already exists
             ValueCounter itemListIdxCounter = ArrayFunctionsUtil.findItem(item, sameHashes, comp);
             if (itemListIdxCounter == null) {
-                // new item
+                // new item having the same hash as a different item
                 addItem(item, listIndex, sameHashes);
                 return true;
             }

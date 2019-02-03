@@ -41,6 +41,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -101,12 +102,16 @@ public class ArrayPutDescriptor extends AbstractScalarFunctionDynamicDescriptor 
 
     public class ArrayPutEval extends AbstractArrayAddRemoveEval {
         private final ArrayBackedValueStorage storage;
+        private final IPointable item;
         private final IBinaryComparator comp;
+        private final boolean[] add;
 
         public ArrayPutEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             super(args, ctx, 0, 1, args.length - 1, argTypes, true, sourceLoc, true, false);
             comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             storage = new ArrayBackedValueStorage();
+            item = new VoidPointable();
+            add = new boolean[args.length - 1];
         }
 
         @Override
@@ -125,27 +130,31 @@ public class ArrayPutDescriptor extends AbstractScalarFunctionDynamicDescriptor 
         @Override
         protected void processList(ListAccessor listAccessor, IAsterixListBuilder listBuilder, IPointable[] values,
                 int position) throws IOException {
-            boolean[] dontAdd = new boolean[values.length];
+            markAllToBeAdded();
             // get the list items one by one and append to the new list
             for (int i = 0; i < listAccessor.size(); i++) {
-                storage.reset();
-                listAccessor.writeItem(i, storage.getDataOutput());
-                listBuilder.addItem(storage);
+                listAccessor.getOrWriteItem(i, item, storage);
+                listBuilder.addItem(item);
                 // mark the equal values to skip adding them
                 for (int j = 0; j < values.length; j++) {
-                    if (!dontAdd[j]
-                            && comp.compare(storage.getByteArray(), storage.getStartOffset(), storage.getLength(),
-                                    values[j].getByteArray(), values[j].getStartOffset(), values[j].getLength()) == 0) {
-                        dontAdd[j] = true;
+                    if (add[j] && comp.compare(item.getByteArray(), item.getStartOffset(), item.getLength(),
+                            values[j].getByteArray(), values[j].getStartOffset(), values[j].getLength()) == 0) {
+                        add[j] = false;
                     }
                     // skip comparison if the value is already marked
                 }
             }
             // append the values arguments only if they are not already present in the list, i.e. not marked
             for (int i = 0; i < values.length; i++) {
-                if (!dontAdd[i]) {
+                if (add[i]) {
                     listBuilder.addItem(values[i]);
                 }
+            }
+        }
+
+        private void markAllToBeAdded() {
+            for (int i = 0; i < add.length; i++) {
+                add[i] = true;
             }
         }
     }

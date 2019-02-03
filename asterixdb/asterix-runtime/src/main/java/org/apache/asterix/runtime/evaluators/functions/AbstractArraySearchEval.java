@@ -41,12 +41,13 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractArraySearchEval implements IScalarEvaluator {
     private final IPointable listArg;
     private final IPointable searchedValueArg;
+    private final IPointable tempVal;
     private final IScalarEvaluator listEval;
     private final IScalarEvaluator searchedValueEval;
     private final IBinaryComparator comp;
     private final ListAccessor listAccessor;
     private final SourceLocation sourceLocation;
-    protected final AMutableInt32 intValue;
+    private final AMutableInt32 intValue;
     protected final ArrayBackedValueStorage storage;
 
     public AbstractArraySearchEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLoc)
@@ -54,6 +55,7 @@ public abstract class AbstractArraySearchEval implements IScalarEvaluator {
         storage = new ArrayBackedValueStorage();
         listArg = new VoidPointable();
         searchedValueArg = new VoidPointable();
+        tempVal = new VoidPointable();
         listEval = args[0].createScalarEvaluator(ctx);
         searchedValueEval = args[1].createScalarEvaluator(ctx);
         comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
@@ -92,9 +94,8 @@ public abstract class AbstractArraySearchEval implements IScalarEvaluator {
 
         try {
             for (int i = 0; i < numItems; i++) {
-                storage.reset();
-                listAccessor.writeItem(i, storage.getDataOutput());
-                if (comp.compare(storage.getByteArray(), storage.getStartOffset(), storage.getLength(), valueBytes,
+                listAccessor.getOrWriteItem(i, tempVal, storage);
+                if (comp.compare(tempVal.getByteArray(), tempVal.getStartOffset(), tempVal.getLength(), valueBytes,
                         valueOffset, valueLength) == 0) {
                     intValue.setValue(i);
                     break;

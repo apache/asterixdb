@@ -122,8 +122,10 @@ public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescrip
         private final IScalarEvaluator newValEval;
         private IScalarEvaluator maxEval;
         private final IPointable list;
+        private final IPointable tempList;
         private final IPointable target;
         private final IPointable newVal;
+        private final IPointable tempVal;
         private TaggedValuePointable maxArg;
         private final AbstractPointable item;
         private final ListAccessor listAccessor;
@@ -143,8 +145,10 @@ public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescrip
                 maxArg = new TaggedValuePointable();
             }
             list = new VoidPointable();
+            tempList = new VoidPointable();
             target = new VoidPointable();
             newVal = new VoidPointable();
+            tempVal = new VoidPointable();
             item = new VoidPointable();
             listAccessor = new ListAccessor();
             caster = new CastTypeEvaluator();
@@ -156,12 +160,12 @@ public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescrip
         @Override
         public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
             storage.reset();
-            listEval.evaluate(tuple, list);
+            listEval.evaluate(tuple, tempList);
             targetValEval.evaluate(tuple, target);
-            newValEval.evaluate(tuple, newVal);
-            ATypeTag listType = ATYPETAGDESERIALIZER.deserialize(list.getByteArray()[list.getStartOffset()]);
+            newValEval.evaluate(tuple, tempVal);
+            ATypeTag listType = ATYPETAGDESERIALIZER.deserialize(tempList.getByteArray()[tempList.getStartOffset()]);
             ATypeTag targetTag = ATYPETAGDESERIALIZER.deserialize(target.getByteArray()[target.getStartOffset()]);
-            ATypeTag newValTag = ATYPETAGDESERIALIZER.deserialize(newVal.getByteArray()[newVal.getStartOffset()]);
+            ATypeTag newValTag = ATYPETAGDESERIALIZER.deserialize(tempVal.getByteArray()[tempVal.getStartOffset()]);
             if (listType == ATypeTag.MISSING || targetTag == ATypeTag.MISSING || newValTag == ATypeTag.MISSING) {
                 PointableHelper.setMissing(result);
                 return;
@@ -192,34 +196,37 @@ public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescrip
                 throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLoc);
             }
 
-            IAType defaultOpenType = DefaultOpenFieldType.getDefaultOpenFieldType(listType);
-            caster.reset(defaultOpenType, inputListType, listEval);
-            caster.evaluate(tuple, list);
-
-            defaultOpenType = DefaultOpenFieldType.getDefaultOpenFieldType(newValTag);
-            if (defaultOpenType != null) {
-                caster.reset(defaultOpenType, newValueType, newValEval);
-                caster.evaluate(tuple, newVal);
-            }
-
-            int max = (int) maxDouble;
-            // create list
-            IAsterixListBuilder listBuilder;
-            if (listType == ATypeTag.ARRAY) {
-                if (orderedListBuilder == null) {
-                    orderedListBuilder = new OrderedListBuilder();
-                }
-                listBuilder = orderedListBuilder;
-            } else {
-                if (unorderedListBuilder == null) {
-                    unorderedListBuilder = new UnorderedListBuilder();
-                }
-                listBuilder = unorderedListBuilder;
-            }
-
-            listBuilder.reset((AbstractCollectionType) DefaultOpenFieldType.getDefaultOpenFieldType(listType));
-            listAccessor.reset(list.getByteArray(), list.getStartOffset());
             try {
+                IAType defaultOpenType = DefaultOpenFieldType.getDefaultOpenFieldType(listType);
+                caster.resetAndAllocate(defaultOpenType, inputListType, listEval);
+                caster.cast(tempList, list);
+
+                defaultOpenType = DefaultOpenFieldType.getDefaultOpenFieldType(newValTag);
+                if (defaultOpenType != null) {
+                    caster.resetAndAllocate(defaultOpenType, newValueType, newValEval);
+                    caster.cast(tempVal, newVal);
+                } else {
+                    newVal.set(tempVal);
+                }
+
+                int max = (int) maxDouble;
+                // create list
+                IAsterixListBuilder listBuilder;
+                if (listType == ATypeTag.ARRAY) {
+                    if (orderedListBuilder == null) {
+                        orderedListBuilder = new OrderedListBuilder();
+                    }
+                    listBuilder = orderedListBuilder;
+                } else {
+                    if (unorderedListBuilder == null) {
+                        unorderedListBuilder = new UnorderedListBuilder();
+                    }
+                    listBuilder = unorderedListBuilder;
+                }
+
+                listBuilder.reset((AbstractCollectionType) DefaultOpenFieldType.getDefaultOpenFieldType(listType));
+                listAccessor.reset(list.getByteArray(), list.getStartOffset());
+
                 int counter = 0;
                 byte[] targetBytes = target.getByteArray();
                 int offset = target.getStartOffset();
@@ -239,6 +246,8 @@ public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescrip
                 result.set(storage);
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
+            } finally {
+                caster.deallocatePointables();
             }
         }
     }

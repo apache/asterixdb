@@ -49,6 +49,8 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
     private final IAType[] argTypes;
     private final ArrayBackedValueStorage storage;
     private final IPointable listArg;
+    private final IPointable tempList;
+    private final IPointable tempItem;
     private final IPointable[] valuesArgs;
     private final IScalarEvaluator listArgEval;
     private final IScalarEvaluator[] valuesEval;
@@ -79,6 +81,8 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
         caster = new CastTypeEvaluator();
         storage = new ArrayBackedValueStorage();
         listArg = new VoidPointable();
+        tempList = new VoidPointable();
+        tempItem = new VoidPointable();
         listArgEval = args[listOffset].createScalarEvaluator(ctx);
         valuesArgs = new IPointable[numValues];
         valuesEval = new IScalarEvaluator[numValues];
@@ -100,11 +104,11 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         // get the list argument, 1st or last argument, make sure it's a list
-        listArgEval.evaluate(tuple, listArg);
-        ATypeTag listArgTag = ATYPETAGDESERIALIZER.deserialize(listArg.getByteArray()[listArg.getStartOffset()]);
+        listArgEval.evaluate(tuple, tempList);
+        ATypeTag listArgTag = ATYPETAGDESERIALIZER.deserialize(tempList.getByteArray()[tempList.getStartOffset()]);
 
         // evaluate the position argument if provided by some functions
-        int adjustedPosition = getPosition(tuple, listArg, listArgTag);
+        int adjustedPosition = getPosition(tuple, tempList, listArgTag);
 
         if (listArgTag == ATypeTag.MISSING || adjustedPosition == RETURN_MISSING) {
             PointableHelper.setMissing(result);
@@ -120,76 +124,81 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
         ATypeTag valueTag;
         IAType defaultOpenType;
         boolean encounteredNonPrimitive = false;
-        for (int i = 0; i < valuesEval.length; i++) {
-            // cast val to open if needed. don't cast if function will return null anyway, e.g. list arg was not list
-            defaultOpenType = DefaultOpenFieldType.getDefaultOpenFieldType(argTypes[i + valuesOffset].getTypeTag());
-            if (defaultOpenType != null && !returnNull) {
-                caster.reset(defaultOpenType, argTypes[i + valuesOffset], valuesEval[i]);
-                caster.evaluate(tuple, valuesArgs[i]);
-            } else {
-                valuesEval[i].evaluate(tuple, valuesArgs[i]);
+        try {
+            for (int i = 0; i < valuesEval.length; i++) {
+                // cast val to open if needed. don't cast if function will return null anyway, e.g. list arg not list
+                defaultOpenType = DefaultOpenFieldType.getDefaultOpenFieldType(argTypes[i + valuesOffset].getTypeTag());
+                if (defaultOpenType != null && !returnNull) {
+                    caster.resetAndAllocate(defaultOpenType, argTypes[i + valuesOffset], valuesEval[i]);
+                    caster.evaluate(tuple, valuesArgs[i]);
+                } else {
+                    valuesEval[i].evaluate(tuple, valuesArgs[i]);
+                }
+                valueTag =
+                        ATYPETAGDESERIALIZER.deserialize(valuesArgs[i].getByteArray()[valuesArgs[i].getStartOffset()]);
+                // for now, we don't support deep equality of object/lists. Throw an error if value is of these types
+                if (comparesValues && valueTag.isDerivedType()) {
+                    encounteredNonPrimitive = true;
+                }
+                if (valueTag == ATypeTag.MISSING) {
+                    PointableHelper.setMissing(result);
+                    return;
+                }
+                if (!acceptNullValues && valueTag == ATypeTag.NULL) {
+                    returnNull = true;
+                }
             }
-            valueTag = ATYPETAGDESERIALIZER.deserialize(valuesArgs[i].getByteArray()[valuesArgs[i].getStartOffset()]);
-            // for now, we don't support deep equality of object/lists. Throw an error if the value is of these types
-            if (comparesValues && valueTag.isDerivedType()) {
-                encounteredNonPrimitive = true;
-            }
-            if (valueTag == ATypeTag.MISSING) {
-                PointableHelper.setMissing(result);
+
+            if (returnNull) {
+                PointableHelper.setNull(result);
                 return;
             }
-            if (!acceptNullValues && valueTag == ATypeTag.NULL) {
-                returnNull = true;
-            }
-        }
 
-        if (returnNull) {
-            PointableHelper.setNull(result);
-            return;
-        }
-
-        if (encounteredNonPrimitive) {
-            throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLocation);
-        }
-        // all arguments are valid
-        AbstractCollectionType listType;
-        IAsterixListBuilder listBuilder;
-        // create the new list to be returned. cast the input list and make it open if required
-        if (listArgTag == ATypeTag.ARRAY) {
-            if (orderedListBuilder == null) {
-                orderedListBuilder = new OrderedListBuilder();
+            if (encounteredNonPrimitive) {
+                throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLocation);
             }
-            listBuilder = orderedListBuilder;
-            if (makeOpen || argTypes[listOffset].getTypeTag() != ATypeTag.ARRAY) {
-                listType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
-                caster.reset(listType, argTypes[listOffset], listArgEval);
-                caster.evaluate(tuple, listArg);
+            // all arguments are valid
+            AbstractCollectionType listType;
+            IAsterixListBuilder listBuilder;
+            // create the new list to be returned. cast the input list and make it open if required
+            if (listArgTag == ATypeTag.ARRAY) {
+                if (orderedListBuilder == null) {
+                    orderedListBuilder = new OrderedListBuilder();
+                }
+                listBuilder = orderedListBuilder;
+                if (makeOpen || argTypes[listOffset].getTypeTag() != ATypeTag.ARRAY) {
+                    listType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
+                    caster.resetAndAllocate(listType, argTypes[listOffset], listArgEval);
+                    caster.cast(tempList, listArg);
+                } else {
+                    listType = (AbstractCollectionType) argTypes[listOffset];
+                    listArg.set(tempList);
+                }
             } else {
-                listType = (AbstractCollectionType) argTypes[listOffset];
+                if (unorderedListBuilder == null) {
+                    unorderedListBuilder = new UnorderedListBuilder();
+                }
+                listBuilder = unorderedListBuilder;
+                if (makeOpen || argTypes[listOffset].getTypeTag() != ATypeTag.MULTISET) {
+                    listType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
+                    caster.resetAndAllocate(listType, argTypes[listOffset], listArgEval);
+                    caster.cast(tempList, listArg);
+                } else {
+                    listType = (AbstractCollectionType) argTypes[listOffset];
+                    listArg.set(tempList);
+                }
             }
-        } else {
-            if (unorderedListBuilder == null) {
-                unorderedListBuilder = new UnorderedListBuilder();
-            }
-            listBuilder = unorderedListBuilder;
-            if (makeOpen || argTypes[listOffset].getTypeTag() != ATypeTag.MULTISET) {
-                listType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
-                caster.reset(listType, argTypes[listOffset], listArgEval);
-                caster.evaluate(tuple, listArg);
-            } else {
-                listType = (AbstractCollectionType) argTypes[listOffset];
-            }
-        }
 
-        listBuilder.reset(listType);
-        listAccessor.reset(listArg.getByteArray(), listArg.getStartOffset());
-        try {
+            listBuilder.reset(listType);
+            listAccessor.reset(listArg.getByteArray(), listArg.getStartOffset());
             processList(listAccessor, listBuilder, valuesArgs, adjustedPosition);
             storage.reset();
             listBuilder.write(storage.getDataOutput(), true);
             result.set(storage);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
+        } finally {
+            caster.deallocatePointables();
         }
     }
 
@@ -197,18 +206,16 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
             int position) throws IOException {
         int i;
         for (i = 0; i < position; i++) {
-            storage.reset();
-            listAccessor.writeItem(i, storage.getDataOutput());
-            listBuilder.addItem(storage);
+            listAccessor.getOrWriteItem(i, tempItem, storage);
+            listBuilder.addItem(tempItem);
         }
         // insert the values arguments
         for (int j = 0; j < values.length; j++) {
             listBuilder.addItem(values[j]);
         }
         for (; i < listAccessor.size(); i++) {
-            storage.reset();
-            listAccessor.writeItem(i, storage.getDataOutput());
-            listBuilder.addItem(storage);
+            listAccessor.getOrWriteItem(i, tempItem, storage);
+            listBuilder.addItem(tempItem);
         }
     }
 }

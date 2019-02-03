@@ -120,11 +120,12 @@ public class ArrayFlattenDescriptor extends AbstractScalarFunctionDynamicDescrip
         private final IScalarEvaluator listEval;
         private final IScalarEvaluator depthEval;
         private final IPointable list;
-        private final AbstractPointable item;
+        private final AbstractPointable pointable;
         private final TaggedValuePointable depthArg;
         private final IObjectPool<IMutableValueStorage, ATypeTag> storageAllocator;
         private final IObjectPool<ListAccessor, ATypeTag> listAccessorAllocator;
         private final CastTypeEvaluator caster;
+        private final ArrayBackedValueStorage finalStorage;
         private ArrayBackedValueStorage storage;
         private IAsterixListBuilder orderedListBuilder;
         private IAsterixListBuilder unorderedListBuilder;
@@ -132,11 +133,11 @@ public class ArrayFlattenDescriptor extends AbstractScalarFunctionDynamicDescrip
         public ArrayFlattenEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             storageAllocator = new ListObjectPool<>(new AbvsBuilderFactory());
             listAccessorAllocator = new ListObjectPool<>(new ListAccessorFactory());
-            storage = new ArrayBackedValueStorage();
+            finalStorage = new ArrayBackedValueStorage();
             listEval = args[0].createScalarEvaluator(ctx);
             depthEval = args[1].createScalarEvaluator(ctx);
             list = new VoidPointable();
-            item = new VoidPointable();
+            pointable = new VoidPointable();
             caster = new CastTypeEvaluator();
             depthArg = new TaggedValuePointable();
             orderedListBuilder = null;
@@ -146,11 +147,11 @@ public class ArrayFlattenDescriptor extends AbstractScalarFunctionDynamicDescrip
         @Override
         public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
             // 1st arg: list to flatten
-            listEval.evaluate(tuple, list);
+            listEval.evaluate(tuple, pointable);
             // 2nd arg: depthArg
             depthEval.evaluate(tuple, depthArg);
 
-            ATypeTag listType = ATYPETAGDESERIALIZER.deserialize(list.getByteArray()[list.getStartOffset()]);
+            ATypeTag listType = ATYPETAGDESERIALIZER.deserialize(pointable.getByteArray()[pointable.getStartOffset()]);
             if (!ATypeHierarchy.isCompatible(ATYPETAGDESERIALIZER.deserialize(depthArg.getTag()), ATypeTag.DOUBLE)
                     || !listType.isListType()) {
                 PointableHelper.setNull(result);
@@ -163,37 +164,41 @@ public class ArrayFlattenDescriptor extends AbstractScalarFunctionDynamicDescrip
                 return;
             }
 
-            caster.reset(DefaultOpenFieldType.getDefaultOpenFieldType(listType), inputListType, listEval);
-            caster.evaluate(tuple, list);
-
-            int depthInt = (int) depth;
-            // create list
-            IAsterixListBuilder listBuilder;
-            if (listType == ATypeTag.ARRAY) {
-                if (orderedListBuilder == null) {
-                    orderedListBuilder = new OrderedListBuilder();
-                }
-                listBuilder = orderedListBuilder;
-            } else {
-                if (unorderedListBuilder == null) {
-                    unorderedListBuilder = new UnorderedListBuilder();
-                }
-                listBuilder = unorderedListBuilder;
-            }
-
-            ListAccessor mainListAccessor = listAccessorAllocator.allocate(null);
-            listBuilder.reset((AbstractCollectionType) DefaultOpenFieldType.getDefaultOpenFieldType(listType));
-            mainListAccessor.reset(list.getByteArray(), list.getStartOffset());
             try {
+                caster.resetAndAllocate(DefaultOpenFieldType.getDefaultOpenFieldType(listType), inputListType,
+                        listEval);
+                caster.cast(pointable, list);
+
+                int depthInt = (int) depth;
+                // create list
+                IAsterixListBuilder listBuilder;
+                if (listType == ATypeTag.ARRAY) {
+                    if (orderedListBuilder == null) {
+                        orderedListBuilder = new OrderedListBuilder();
+                    }
+                    listBuilder = orderedListBuilder;
+                } else {
+                    if (unorderedListBuilder == null) {
+                        unorderedListBuilder = new UnorderedListBuilder();
+                    }
+                    listBuilder = unorderedListBuilder;
+                }
+
+                ListAccessor mainListAccessor = listAccessorAllocator.allocate(null);
+                listBuilder.reset((AbstractCollectionType) DefaultOpenFieldType.getDefaultOpenFieldType(listType));
+                mainListAccessor.reset(list.getByteArray(), list.getStartOffset());
+
+                storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
                 process(mainListAccessor, listBuilder, 0, depthInt);
-                storage.reset();
-                listBuilder.write(storage.getDataOutput(), true);
-                result.set(storage);
+                finalStorage.reset();
+                listBuilder.write(finalStorage.getDataOutput(), true);
+                result.set(finalStorage);
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             } finally {
                 storageAllocator.reset();
                 listAccessorAllocator.reset();
+                caster.deallocatePointables();
             }
         }
 
@@ -201,15 +206,15 @@ public class ArrayFlattenDescriptor extends AbstractScalarFunctionDynamicDescrip
                 throws IOException {
             boolean itemInStorage;
             for (int i = 0; i < listAccessor.size(); i++) {
-                itemInStorage = listAccessor.getOrWriteItem(i, item, storage);
+                itemInStorage = listAccessor.getOrWriteItem(i, pointable, storage);
                 // if item is not a list or depth is reached, write it
-                if (!ATYPETAGDESERIALIZER.deserialize(item.getByteArray()[item.getStartOffset()]).isListType()
+                if (!ATYPETAGDESERIALIZER.deserialize(pointable.getByteArray()[pointable.getStartOffset()]).isListType()
                         || currentDepth == depth) {
-                    listBuilder.addItem(item);
+                    listBuilder.addItem(pointable);
                 } else {
                     // recurse on the sublist
                     ListAccessor newListAccessor = listAccessorAllocator.allocate(null);
-                    newListAccessor.reset(item.getByteArray(), item.getStartOffset());
+                    newListAccessor.reset(pointable.getByteArray(), pointable.getStartOffset());
                     if (itemInStorage) {
                         // create a new storage since the item is using it
                         storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
