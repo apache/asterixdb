@@ -1,0 +1,1 @@
+/\{ "type": "job-summary", "job-id": "JID:.*", "create-time": \d*, "start-time": \d*, "end-time": \d*, "status": "RUNNING" \}/
