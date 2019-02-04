@@ -39,6 +39,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Library metadata entity to an ITupleReference and vice versa.
  */
 public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
+    private static final long serialVersionUID = -7574173417999340281L;
+
     // Field indexes of serialized Library in a tuple.
     // First key field.
     public static final int LIBRARY_DATAVERSENAME_TUPLE_FIELD_INDEX = 0;

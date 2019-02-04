@@ -25,6 +25,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class UnderflowException extends RuntimeDataException {
+    private static final long serialVersionUID = -8808136503804136973L;
 
     // Underflow.
     public UnderflowException(SourceLocation sourceLoc, FunctionIdentifier fid) {

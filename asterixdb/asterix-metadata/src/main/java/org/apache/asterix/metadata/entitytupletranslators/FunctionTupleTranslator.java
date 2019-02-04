@@ -47,6 +47,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Function metadata entity to an ITupleReference and vice versa.
  */
 public class FunctionTupleTranslator extends AbstractTupleTranslator<Function> {
+    private static final long serialVersionUID = 1147594449575992161L;
+
     // Field indexes of serialized Function in a tuple.
     // First key field.
     public static final int FUNCTION_DATAVERSENAME_TUPLE_FIELD_INDEX = 0;

@@ -38,6 +38,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Dataset metadata entity to an ITupleReference and vice versa.
  */
 public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<CompactionPolicy> {
+    private static final long serialVersionUID = 5291424952240239023L;
+
     // Field indexes of serialized CompactionPolicy in a tuple.
     // Key field.
     public static final int COMPACTION_POLICY_DATAVERSE_NAME_FIELD_INDEX = 0;

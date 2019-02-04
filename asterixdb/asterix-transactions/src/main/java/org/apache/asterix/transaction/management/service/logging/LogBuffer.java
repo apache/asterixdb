@@ -324,6 +324,7 @@ public class LogBuffer implements ILogBuffer {
     }
 
     private class MutableTxnId extends TxnId {
+        private static final long serialVersionUID = 579540092176284383L;
 
         public MutableTxnId(long id) {
             super(id);

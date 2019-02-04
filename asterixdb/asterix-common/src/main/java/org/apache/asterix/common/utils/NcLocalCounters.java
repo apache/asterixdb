@@ -27,6 +27,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class NcLocalCounters implements Serializable {
+    private static final long serialVersionUID = 3798954558299915995L;
 
     private final long maxResourceId;
     private final long maxTxnId;

@@ -38,6 +38,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class ToObjectDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = -4146417699529927812L;
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {

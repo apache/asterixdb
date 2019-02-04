@@ -46,6 +46,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedConnection> {
+    private static final long serialVersionUID = -1798961999812829511L;
 
     public static final int FEED_CONN_DATAVERSE_NAME_FIELD_INDEX = 0;
     public static final int FEED_CONN_FEED_NAME_FIELD_INDEX = 1;

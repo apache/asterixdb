@@ -22,6 +22,7 @@ package org.apache.hyracks.client.stats;
 import org.apache.hyracks.control.common.job.profiling.counters.Counter;
 
 public class AggregateCounter extends Counter {
+    private static final long serialVersionUID = 9140555872026977436L;
 
     private long sum = 0;
     private long numOfItems = 0;

@@ -98,5 +98,6 @@ class CachingTxnIdFactory implements ITxnIdFactory {
     }
 
     private static class BlockExhaustedException extends Exception {
+        private static final long serialVersionUID = 8967868415735213490L;
     }
 }

@@ -42,6 +42,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Dataverse metadata entity to an ITupleReference and vice versa.
  */
 public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse> {
+    private static final long serialVersionUID = -3196752600543191613L;
+
     // Field indexes of serialized Dataverse in a tuple.
     // Key field.
     public static final int DATAVERSE_DATAVERSENAME_TUPLE_FIELD_INDEX = 0;

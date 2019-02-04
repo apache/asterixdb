@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class UnsupportedItemTypeException extends CompilationException {
+    private static final long serialVersionUID = -8192292060995420548L;
 
     // Unsupported item type.
     public UnsupportedItemTypeException(FunctionIdentifier fid, ATypeTag itemTypeTag) {

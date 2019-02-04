@@ -75,6 +75,8 @@ public interface IStatementExecutor {
     }
 
     class Stats implements Serializable {
+        private static final long serialVersionUID = 5885273238208454610L;
+
         private long count;
         private long size;
         private long processedObjects;

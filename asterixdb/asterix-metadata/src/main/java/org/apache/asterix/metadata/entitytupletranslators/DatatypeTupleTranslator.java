@@ -61,6 +61,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Datatype metadata entity to an ITupleReference and vice versa.
  */
 public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
+    private static final long serialVersionUID = -2324433490801381399L;
+
     // Field indexes of serialized Dataset in a tuple.
     // First key field.
     public static final int DATATYPE_DATAVERSENAME_TUPLE_FIELD_INDEX = 0;

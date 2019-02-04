@@ -20,7 +20,6 @@ package org.apache.hyracks.dataflow.common.data.partition.range;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Objects;
 
 /**
  * <pre>
@@ -36,18 +35,20 @@ import java.util.Objects;
  * </pre>
  */
 public class RangeMap implements Serializable {
-    private final int numFields;
+    private static final long serialVersionUID = -7523433293419648234L;
+
+    private final int fields;
     private final byte[] bytes;
     private final int[] endOffsets;
 
     public RangeMap(int numFields, byte[] bytes, int[] endOffsets) {
-        this.numFields = numFields;
+        this.fields = numFields;
         this.bytes = bytes;
         this.endOffsets = endOffsets;
     }
 
     public int getSplitCount() {
-        return endOffsets.length / numFields;
+        return endOffsets.length / fields;
     }
 
     public byte[] getByteArray() {
@@ -73,7 +74,7 @@ public class RangeMap implements Serializable {
      * @return the index of the desired split value that could be used with {@code bytes} & {@code endOffsets}.
      */
     private int getSplitValueIndex(int fieldIndex, int splitIndex) {
-        return splitIndex * numFields + fieldIndex;
+        return splitIndex * fields + fieldIndex;
     }
 
     /**
@@ -110,7 +111,7 @@ public class RangeMap implements Serializable {
 
     @Override
     public int hashCode() {
-        return numFields + Arrays.hashCode(bytes) + Arrays.hashCode(endOffsets);
+        return fields + Arrays.hashCode(bytes) + Arrays.hashCode(endOffsets);
     }
 
     @Override
@@ -122,7 +123,7 @@ public class RangeMap implements Serializable {
             return false;
         }
         RangeMap other = (RangeMap) object;
-        return numFields == other.numFields && Arrays.equals(endOffsets, other.endOffsets)
+        return fields == other.fields && Arrays.equals(endOffsets, other.endOffsets)
                 && Arrays.equals(bytes, other.bytes);
     }
 }

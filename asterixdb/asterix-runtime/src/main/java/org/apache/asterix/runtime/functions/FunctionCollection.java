@@ -469,6 +469,7 @@ import org.apache.asterix.runtime.unnestingfunctions.std.SubsetCollectionDescrip
  * This class holds a list of function descriptor factories.
  */
 public final class FunctionCollection implements IFunctionCollection {
+    private static final long serialVersionUID = -8308873930697425307L;
 
     private static final String FACTORY = "FACTORY";
 

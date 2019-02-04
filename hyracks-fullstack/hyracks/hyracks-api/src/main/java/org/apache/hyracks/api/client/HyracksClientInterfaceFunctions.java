@@ -446,6 +446,7 @@ public class HyracksClientInterfaceFunctions {
     }
 
     public static class ThreadDumpFunction extends Function {
+        private static final long serialVersionUID = 2956155746070390274L;
         private final String node;
 
         public ThreadDumpFunction(String node) {

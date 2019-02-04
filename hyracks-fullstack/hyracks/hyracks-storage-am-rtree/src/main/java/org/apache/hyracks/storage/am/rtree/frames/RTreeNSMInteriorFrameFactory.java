@@ -26,6 +26,8 @@ import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFacto
 
 public class RTreeNSMInteriorFrameFactory extends RTreeFrameFactory {
 
+    private static final long serialVersionUID = -8880568594091620229L;
+
     public RTreeNSMInteriorFrameFactory(RTreeTypeAwareTupleWriterFactory tupleWriterFactory,
             IPrimitiveValueProviderFactory[] keyValueProviderFactories, RTreePolicyType rtreePolicyType,
             boolean isPointMBR) {
