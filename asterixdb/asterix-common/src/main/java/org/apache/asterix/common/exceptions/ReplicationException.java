@@ -19,6 +19,7 @@
 package org.apache.asterix.common.exceptions;
 
 public class ReplicationException extends RuntimeException {
+    private static final long serialVersionUID = 8035037902984423617L;
 
     public ReplicationException(Throwable cause) {
         super(cause);

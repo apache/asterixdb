@@ -42,6 +42,7 @@ import org.ini4j.Ini;
 
 @SuppressWarnings("SameParameterValue")
 public class CCConfig extends ControllerConfig {
+    private static final long serialVersionUID = 4118822454622201176L;
 
     public enum Option implements IOption {
         APP_CLASS(STRING, (String) null),

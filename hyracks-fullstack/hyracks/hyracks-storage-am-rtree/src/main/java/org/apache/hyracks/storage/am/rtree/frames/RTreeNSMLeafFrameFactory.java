@@ -25,6 +25,7 @@ import org.apache.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 
 public class RTreeNSMLeafFrameFactory extends RTreeFrameFactory {
+    private static final long serialVersionUID = 1360338463029768516L;
 
     public RTreeNSMLeafFrameFactory(RTreeTypeAwareTupleWriterFactory tupleWriterFactory,
             IPrimitiveValueProviderFactory[] keyValueProviderFactories, RTreePolicyType rtreePolicyType,

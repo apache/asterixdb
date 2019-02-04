@@ -27,6 +27,7 @@ import org.apache.hyracks.api.job.profiling.counters.ICounter;
 import org.apache.hyracks.control.common.job.profiling.counters.Counter;
 
 public class OperatorStats implements IOperatorStats {
+    private static final long serialVersionUID = 6401830963367567167L;
 
     public final String operatorName;
     public final ICounter tupleCounter;

@@ -36,6 +36,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Node metadata entity to an ITupleReference and vice versa.
  */
 public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
+    private static final long serialVersionUID = -5257435809246039182L;
 
     // Field indexes of serialized Node in a tuple.
     // First key field.

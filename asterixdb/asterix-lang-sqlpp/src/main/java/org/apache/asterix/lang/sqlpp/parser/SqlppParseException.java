@@ -22,6 +22,7 @@ package org.apache.asterix.lang.sqlpp.parser;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public final class SqlppParseException extends ParseException {
+    private static final long serialVersionUID = -7395094812307808714L;
 
     private final SourceLocation sourceLoc;
 

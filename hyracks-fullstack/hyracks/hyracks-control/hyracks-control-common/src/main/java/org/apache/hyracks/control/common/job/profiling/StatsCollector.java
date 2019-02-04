@@ -29,6 +29,7 @@ import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
 
 public class StatsCollector implements IStatsCollector {
+    private static final long serialVersionUID = 6858817639895434577L;
 
     private final Map<String, IOperatorStats> operatorStatsMap = new HashMap<>();
 
