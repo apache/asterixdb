@@ -585,6 +585,13 @@ public class DateTimeFormatUtils {
                     } else if (processState == DateTimeProcessState.SECOND) {
                         sec = parsedValue;
                     } else if (processState == DateTimeProcessState.MILLISECOND) {
+                        //read remaining millis values
+                        while (dataStringPointer < dataLength && data[dataStart + dataStringPointer] >= '0'
+                                && data[dataStart + dataStringPointer] <= '9') {
+                            //parsedValue = parsedValue * 10 + (data[dataStart + dataStringPointer] - '0');
+                            dataStringPointer++;
+                            processFieldsCount++;
+                        }
                         ms = parsedValue;
                         for (int i = processFieldsCount; i < 3; i++) {
                             ms *= 10;
