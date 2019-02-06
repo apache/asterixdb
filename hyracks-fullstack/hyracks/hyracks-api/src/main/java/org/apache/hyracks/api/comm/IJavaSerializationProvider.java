@@ -36,4 +36,8 @@ public interface IJavaSerializationProvider {
     default void readObject(ObjectInputStream in, Object object) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
     }
+
+    default void writeObject(ObjectOutputStream out, Object object) throws IOException {
+        out.defaultWriteObject();
+    }
 }

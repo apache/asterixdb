@@ -101,6 +101,10 @@ public class JavaSerializationUtils {
         serProvider.readObject(in, object);
     }
 
+    public static void writeObject(ObjectOutputStream out, Object object) throws IOException {
+        serProvider.writeObject(out, object);
+    }
+
     private static class ClassLoaderObjectInputStream extends ObjectInputStream {
         private ClassLoader classLoader;
 
