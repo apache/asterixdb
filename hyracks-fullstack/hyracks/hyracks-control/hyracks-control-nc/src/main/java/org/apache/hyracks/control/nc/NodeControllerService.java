@@ -193,7 +193,6 @@ public class NodeControllerService implements IControllerService {
         if (application == null) {
             throw new IllegalArgumentException("INCApplication cannot be null");
         }
-        configManager.processConfig();
         this.application = application;
         id = ncConfig.getNodeId();
         if (id == null) {

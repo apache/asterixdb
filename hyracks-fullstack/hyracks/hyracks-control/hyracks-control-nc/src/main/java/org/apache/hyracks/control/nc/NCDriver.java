@@ -52,6 +52,7 @@ public class NCDriver {
             Configuration cfg = ctx.getConfiguration();
             NCLogConfigurationFactory logCfgFactory = new NCLogConfigurationFactory(ncConfig);
             ConfigurationFactory.setConfigurationFactory(logCfgFactory);
+            configManager.processConfig();
             cfg.removeLogger("Console");
             ctx.start(logCfgFactory.getConfiguration(ctx, ConfigurationSource.NULL_SOURCE));
             final NodeControllerService ncService = new NodeControllerService(ncConfig, application);

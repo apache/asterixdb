@@ -53,6 +53,7 @@ public class CCDriver {
             CCLogConfigurationFactory logCfgFactory = new CCLogConfigurationFactory(ccConfig);
             ConfigurationFactory.setConfigurationFactory(logCfgFactory);
             cfg.removeLogger("Console");
+            configManager.processConfig();
             ctx.start(logCfgFactory.getConfiguration(ctx, ConfigurationSource.NULL_SOURCE));
             ClusterControllerService ccService = new ClusterControllerService(ccConfig, application);
             ccService.start();
