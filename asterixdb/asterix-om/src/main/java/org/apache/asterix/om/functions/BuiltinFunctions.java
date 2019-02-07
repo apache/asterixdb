@@ -157,6 +157,8 @@ public class BuiltinFunctions {
     private static final Map<IFunctionInfo, IFunctionInfo> builtinPublicFunctionsSet = new HashMap<>();
     private static final Map<IFunctionInfo, IFunctionInfo> builtinPrivateFunctionsSet = new HashMap<>();
     private static final Map<IFunctionInfo, IResultTypeComputer> funTypeComputer = new HashMap<>();
+    private static final Map<IFunctionInfo, Set<? extends BuiltinFunctionProperty>> builtinFunctionProperties =
+            new HashMap<>();
     private static final Set<IFunctionInfo> builtinAggregateFunctions = new HashSet<>();
     private static final Map<IFunctionInfo, IFunctionToDataSourceRewriter> datasourceFunctions = new HashMap<>();
     private static final Set<IFunctionInfo> similarityFunctions = new HashSet<>();
@@ -170,7 +172,7 @@ public class BuiltinFunctions {
     private static final Map<IFunctionInfo, IFunctionInfo> distinctToRegularScalarAggregateFunctionMap =
             new HashMap<>();
     private static final Map<IFunctionInfo, IFunctionInfo> sqlToWindowFunctions = new HashMap<>();
-    private static final Map<IFunctionInfo, Set<WindowFunctionProperty>> windowFunctions = new HashMap<>();
+    private static final Set<IFunctionInfo> windowFunctions = new HashSet<>();
 
     private static final Map<IFunctionInfo, SpatialFilterKind> spatialFilterFunctions = new HashMap<>();
 
@@ -2629,7 +2631,7 @@ public class BuiltinFunctions {
         addIntermediateAgg(SERIAL_GLOBAL_SQL_SUM, SERIAL_INTERMEDIATE_SQL_SUM);
         addGlobalAgg(SERIAL_SQL_SUM, SERIAL_GLOBAL_SQL_SUM);
 
-        // SQL SUM Distinct
+        // SQL SUM DISTINCT
         addDistinctAgg(SQL_SUM_DISTINCT, SCALAR_SQL_SUM);
         addScalarAgg(SQL_SUM_DISTINCT, SCALAR_SQL_SUM_DISTINCT);
 
@@ -2641,7 +2643,10 @@ public class BuiltinFunctions {
         addGlobalAgg(ST_UNION_AGG, ST_UNION_AGG);
     }
 
-    public enum WindowFunctionProperty {
+    interface BuiltinFunctionProperty {
+    }
+
+    public enum WindowFunctionProperty implements BuiltinFunctionProperty {
         /** Whether the order clause is prohibited */
         NO_ORDER_CLAUSE,
         /** Whether the frame clause is prohibited */
@@ -2818,6 +2823,21 @@ public class BuiltinFunctions {
         registeredFunctions.put(fi, functionInfo);
     }
 
+    private static <T extends Enum<T> & BuiltinFunctionProperty> void registerFunctionProperties(IFunctionInfo finfo,
+            Class<T> propertyClass, T[] properties) {
+        if (properties == null) {
+            return;
+        }
+        Set<T> propertySet = EnumSet.noneOf(propertyClass);
+        Collections.addAll(propertySet, properties);
+        builtinFunctionProperties.put(finfo, propertySet);
+    }
+
+    public static boolean builtinFunctionHasProperty(FunctionIdentifier fi, BuiltinFunctionProperty property) {
+        Set<? extends BuiltinFunctionProperty> propertySet = builtinFunctionProperties.get(getAsterixFunctionInfo(fi));
+        return propertySet != null && propertySet.contains(property);
+    }
+
     public static void addAgg(FunctionIdentifier fi) {
         builtinAggregateFunctions.add(getAsterixFunctionInfo(fi));
     }
@@ -2856,10 +2876,9 @@ public class BuiltinFunctions {
             WindowFunctionProperty... properties) {
         IFunctionInfo sqlinfo = getAsterixFunctionInfo(sqlfi);
         IFunctionInfo wininfo = getAsterixFunctionInfo(winfi);
-        Set<WindowFunctionProperty> propertiesSet = EnumSet.noneOf(WindowFunctionProperty.class);
-        Collections.addAll(propertiesSet, properties);
         sqlToWindowFunctions.put(sqlinfo, wininfo);
-        windowFunctions.put(wininfo, propertiesSet);
+        windowFunctions.add(wininfo);
+        registerFunctionProperties(wininfo, WindowFunctionProperty.class, properties);
     }
 
     public static FunctionIdentifier getWindowFunction(FunctionIdentifier sqlfi) {
@@ -2868,12 +2887,7 @@ public class BuiltinFunctions {
     }
 
     public static boolean isWindowFunction(FunctionIdentifier winfi) {
-        return windowFunctions.containsKey(getAsterixFunctionInfo(winfi));
-    }
-
-    public static boolean windowFunctionHasProperty(FunctionIdentifier winfi, WindowFunctionProperty property) {
-        Set<WindowFunctionProperty> propertySet = windowFunctions.get(getAsterixFunctionInfo(winfi));
-        return propertySet != null && propertySet.contains(property);
+        return windowFunctions.contains(getAsterixFunctionInfo(winfi));
     }
 
     public static AbstractFunctionCallExpression makeWindowFunctionExpression(FunctionIdentifier winfi,

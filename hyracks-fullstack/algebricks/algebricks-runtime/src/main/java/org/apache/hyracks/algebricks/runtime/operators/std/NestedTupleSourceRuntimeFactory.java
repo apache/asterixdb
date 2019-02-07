@@ -61,7 +61,7 @@ public class NestedTupleSourceRuntimeFactory extends AbstractPushRuntimeFactory 
 
         @Override
         public void flush() throws HyracksDataException {
-            writer.flush();
+            appender.flush(writer);
         }
     }
 }

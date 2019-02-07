@@ -22,42 +22,55 @@ package org.apache.hyracks.algebricks.runtime.operators.win;
 import java.util.Arrays;
 
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 
 /**
  * Optimized runtime for window operators that performs partition materialization and can evaluate running aggregates
- * as well as regular aggregates (in nested plans) over <b>unbounded</b> window frames.
+ * as well as regular aggregates (in nested plans) over accumulating window frames
+ * (unbounded preceding to current row or N following).
  */
-public final class WindowNestedPlansUnboundedRuntimeFactory extends AbstractWindowNestedPlansRuntimeFactory {
+public class WindowNestedPlansRunningRuntimeFactory extends AbstractWindowNestedPlansRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 
+    private final IScalarEvaluatorFactory[] frameValueEvalFactories;
+
+    private final IBinaryComparatorFactory[] frameValueComparatorFactories;
+
+    private final IScalarEvaluatorFactory[] frameEndEvalFactories;
+
     private final int frameMaxObjects;
 
-    public WindowNestedPlansUnboundedRuntimeFactory(int[] partitionColumns,
+    public WindowNestedPlansRunningRuntimeFactory(int[] partitionColumns,
             IBinaryComparatorFactory[] partitionComparatorFactories,
-            IBinaryComparatorFactory[] orderComparatorFactories, int frameMaxObjects,
-            int[] projectionColumnsExcludingSubplans, int[] runningAggOutColumns,
+            IBinaryComparatorFactory[] orderComparatorFactories, IScalarEvaluatorFactory[] frameValueEvalFactories,
+            IBinaryComparatorFactory[] frameValueComparatorFactories, IScalarEvaluatorFactory[] frameEndEvalFactories,
+            int frameMaxObjects, int[] projectionColumnsExcludingSubplans, int[] runningAggOutColumns,
             IRunningAggregateEvaluatorFactory[] runningAggFactories, int nestedAggOutSchemaSize,
             WindowAggregatorDescriptorFactory nestedAggFactory) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories,
                 projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize,
                 nestedAggFactory);
+        this.frameValueEvalFactories = frameValueEvalFactories;
+        this.frameValueComparatorFactories = frameValueComparatorFactories;
+        this.frameEndEvalFactories = frameEndEvalFactories;
         this.frameMaxObjects = frameMaxObjects;
     }
 
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(IHyracksTaskContext ctx) {
-        return new WindowNestedPlansUnboundedPushRuntime(partitionColumns, partitionComparatorFactories,
-                orderComparatorFactories, frameMaxObjects, projectionList, runningAggOutColumns, runningAggFactories,
-                nestedAggOutSchemaSize, nestedAggFactory, ctx);
+        return new WindowNestedPlansRunningPushRuntime(partitionColumns, partitionComparatorFactories,
+                orderComparatorFactories, frameValueEvalFactories, frameValueComparatorFactories, frameEndEvalFactories,
+                frameMaxObjects, projectionList, runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize,
+                nestedAggFactory, ctx);
     }
 
     @Override
     public String toString() {
-        return "window [nested-unbounded] (" + Arrays.toString(partitionColumns) + ") "
+        return "window [nested-running] (" + Arrays.toString(partitionColumns) + ") "
                 + Arrays.toString(runningAggOutColumns) + " := " + Arrays.toString(runningAggFactories);
     }
 }

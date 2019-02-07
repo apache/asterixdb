@@ -29,7 +29,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
-import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor;
 
 /**
  * Optimized runtime for window operators that performs partition materialization and can evaluate running aggregates
@@ -44,13 +43,7 @@ import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor;
  * <li>no frame offset</li>
  * </ul>
  */
-public class WindowNestedPlansUnboundedPushRuntime extends WindowMaterializingPushRuntime {
-
-    private final int nestedAggOutSchemaSize;
-
-    private final WindowAggregatorDescriptorFactory nestedAggFactory;
-
-    private IAggregatorDescriptor nestedAgg;
+class WindowNestedPlansUnboundedPushRuntime extends AbstractWindowNestedPlansPushRuntime {
 
     private ArrayTupleBuilder nestedAggOutputBuilder;
 
@@ -64,24 +57,20 @@ public class WindowNestedPlansUnboundedPushRuntime extends WindowMaterializingPu
             int[] runningAggOutColumns, IRunningAggregateEvaluatorFactory[] runningAggFactories,
             int nestedAggOutSchemaSize, WindowAggregatorDescriptorFactory nestedAggFactory, IHyracksTaskContext ctx) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories, projectionColumns,
-                runningAggOutColumns, runningAggFactories, ctx);
+                runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, ctx);
         this.frameMaxObjects = frameMaxObjects;
-        this.nestedAggFactory = nestedAggFactory;
-        this.nestedAggOutSchemaSize = nestedAggOutSchemaSize;
     }
 
     @Override
     protected void init() throws HyracksDataException {
         super.init();
-        nestedAgg = nestedAggFactory.createAggregator(ctx, null, null, null, null, null, -1);
         nestedAggOutputBuilder = new ArrayTupleBuilder(nestedAggOutSchemaSize);
     }
 
     @Override
     protected void beginPartitionImpl() throws HyracksDataException {
         super.beginPartitionImpl();
-        // aggregator created by WindowAggregatorDescriptorFactory does not process argument tuple in init()
-        nestedAgg.init(null, null, -1, null);
+        nestedAggInit();
         nestedAggOutputBuilder.reset();
         toWrite = frameMaxObjects;
     }
@@ -92,7 +81,7 @@ public class WindowNestedPlansUnboundedPushRuntime extends WindowMaterializingPu
         super.partitionChunkImpl(frameId, frameBuffer, tBeginIdx, tEndIdx);
         tAccess.reset(frameBuffer);
         for (int t = tBeginIdx; t <= tEndIdx && toWrite != 0; t++) {
-            nestedAgg.aggregate(tAccess, t, null, -1, null);
+            nestedAggAggregate(tAccess, t);
             if (toWrite > 0) {
                 toWrite--;
             }
@@ -101,7 +90,7 @@ public class WindowNestedPlansUnboundedPushRuntime extends WindowMaterializingPu
 
     @Override
     protected void endPartitionImpl() throws HyracksDataException {
-        nestedAgg.outputFinalResult(nestedAggOutputBuilder, null, -1, null);
+        nestedAggOutputFinalResult(nestedAggOutputBuilder);
         super.endPartitionImpl();
     }
 
@@ -110,10 +99,5 @@ public class WindowNestedPlansUnboundedPushRuntime extends WindowMaterializingPu
             FrameTupleReference tupleRef) throws HyracksDataException {
         super.produceTuple(tb, accessor, tIndex, tupleRef);
         TupleUtils.addFields(nestedAggOutputBuilder, tb);
-    }
-
-    @Override
-    protected ArrayTupleBuilder createOutputTupleBuilder(int[] projectionList) {
-        return new ArrayTupleBuilder(projectionList.length + nestedAggOutSchemaSize);
     }
 }

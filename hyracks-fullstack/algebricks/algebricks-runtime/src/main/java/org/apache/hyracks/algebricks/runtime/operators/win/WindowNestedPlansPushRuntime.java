@@ -35,21 +35,18 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.DataUtils;
-import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.PointableTupleReference;
 import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
-import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import org.apache.hyracks.storage.common.MultiComparator;
 
 /**
  * Runtime for window operators that performs partition materialization and can evaluate running aggregates
  * as well as regular aggregates (in nested plans) over window frames.
  */
-public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime {
+class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime {
 
     private final boolean frameValueExists;
 
@@ -109,12 +106,6 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
 
     private final int frameMaxObjects;
 
-    private final int nestedAggOutSchemaSize;
-
-    private final WindowAggregatorDescriptorFactory nestedAggFactory;
-
-    private IAggregatorDescriptor nestedAgg;
-
     private IFrame copyFrame2;
 
     private IFrame runFrame;
@@ -145,7 +136,7 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
             int[] runningAggOutColumns, IRunningAggregateEvaluatorFactory[] runningAggFactories,
             int nestedAggOutSchemaSize, WindowAggregatorDescriptorFactory nestedAggFactory, IHyracksTaskContext ctx) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories, projectionColumns,
-                runningAggOutColumns, runningAggFactories, ctx);
+                runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, ctx);
         this.frameValueEvalFactories = frameValueEvalFactories;
         this.frameValueExists = frameValueEvalFactories != null && frameValueEvalFactories.length > 0;
         this.frameStartEvalFactories = frameStartEvalFactories;
@@ -162,8 +153,6 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
         this.frameOffsetEvalFactory = frameOffsetEvalFactory;
         this.binaryIntegerInspectorFactory = binaryIntegerInspectorFactory;
         this.frameMaxObjects = frameMaxObjects;
-        this.nestedAggFactory = nestedAggFactory;
-        this.nestedAggOutSchemaSize = nestedAggOutSchemaSize;
     }
 
     @Override
@@ -194,8 +183,6 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
             frameOffsetPointable = VoidPointable.FACTORY.createPointable();
             bii = binaryIntegerInspectorFactory.createBinaryIntegerInspector(ctx);
         }
-
-        nestedAgg = nestedAggFactory.createAggregator(ctx, null, null, null, null, null, -1);
 
         runFrame = new VSizeFrame(ctx);
         copyFrame2 = new VSizeFrame(ctx);
@@ -256,8 +243,7 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
             }
             int toWrite = frameMaxObjects;
 
-            // aggregator created by WindowAggregatorDescriptorFactory does not process argument tuple in init()
-            nestedAgg.init(null, null, -1, null);
+            nestedAggInit();
 
             int chunkIdxInnerStart = frameStartForward ? chunkIdxFrameStartGlobal : 0;
             int tBeginIdxInnerStart = frameStartForward ? tBeginIdxFrameStartGlobal : -1;
@@ -334,7 +320,7 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
                     }
 
                     if (toWrite != 0) {
-                        nestedAgg.aggregate(tAccess2, tIdxInner, null, -1, null);
+                        nestedAggAggregate(tAccess2, tIdxInner);
                     }
                     if (toWrite > 0) {
                         toWrite--;
@@ -345,10 +331,11 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
                 }
             }
 
-            nestedAgg.outputFinalResult(tupleBuilder, null, -1, null);
+            nestedAggOutputFinalResult(tupleBuilder);
             appendToFrameFromTupleBuilder(tupleBuilder);
 
             if (frameStartIsMonotonic) {
+                frameStartForward = true;
                 if (chunkIdxFrameStartLocal >= 0) {
                     chunkIdxFrameStartGlobal = chunkIdxFrameStartLocal;
                     tBeginIdxFrameStartGlobal = tBeginIdxFrameStartLocal;
@@ -380,34 +367,5 @@ public class WindowNestedPlansPushRuntime extends WindowMaterializingPushRuntime
             }
         }
         return true;
-    }
-
-    @Override
-    protected ArrayTupleBuilder createOutputTupleBuilder(int[] projectionList) {
-        return new ArrayTupleBuilder(projectionList.length + nestedAggOutSchemaSize);
-    }
-
-    private static IScalarEvaluator[] createEvaluators(IScalarEvaluatorFactory[] evalFactories, IHyracksTaskContext ctx)
-            throws HyracksDataException {
-        IScalarEvaluator[] evals = new IScalarEvaluator[evalFactories.length];
-        for (int i = 0; i < evalFactories.length; i++) {
-            evals[i] = evalFactories[i].createScalarEvaluator(ctx);
-        }
-        return evals;
-    }
-
-    private static void evaluate(IScalarEvaluator[] evals, IFrameTupleReference inTuple,
-            PointableTupleReference outTuple) throws HyracksDataException {
-        for (int i = 0; i < evals.length; i++) {
-            evals[i].evaluate(inTuple, outTuple.getField(i));
-        }
-    }
-
-    private static PointableTupleReference createPointables(int ln) {
-        IPointable[] pointables = new IPointable[ln];
-        for (int i = 0; i < ln; i++) {
-            pointables[i] = VoidPointable.FACTORY.createPointable();
-        }
-        return new PointableTupleReference(pointables);
     }
 }

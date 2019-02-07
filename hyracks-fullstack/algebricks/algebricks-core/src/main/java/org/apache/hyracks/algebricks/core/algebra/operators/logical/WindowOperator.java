@@ -327,6 +327,7 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
      * Use {@link #acceptExpressionTransform(ILogicalExpressionReferenceTransform, boolean)}
      * to visit only non-requiring expressions.
      */
+    @Override
     public boolean requiresVariableReferenceExpressions() {
         return false;
     }

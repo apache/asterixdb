@@ -58,7 +58,7 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
         final NestedTupleSourceRuntime[] pipelines = new NestedTupleSourceRuntime[subplans.length];
         for (int i = 0; i < subplans.length; i++) {
             pipelines[i] =
-                    (NestedTupleSourceRuntime) PipelineAssembler.assemblePipeline(subplans[i], outputWriter, ctx);
+                    (NestedTupleSourceRuntime) PipelineAssembler.assemblePipeline(subplans[i], outputWriter, ctx, null);
         }
 
         return new IAggregatorDescriptor() {

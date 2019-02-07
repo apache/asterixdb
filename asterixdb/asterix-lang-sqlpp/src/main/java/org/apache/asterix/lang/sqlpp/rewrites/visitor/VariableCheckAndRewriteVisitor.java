@@ -219,7 +219,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         FunctionSignature fs = winExpr.getFunctionSignature();
         FunctionIdentifier winfi = FunctionMapUtil.getInternalWindowFunction(fs);
         if (winfi != null) {
-            if (BuiltinFunctions.windowFunctionHasProperty(winfi,
+            if (BuiltinFunctions.builtinFunctionHasProperty(winfi,
                     BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG)) {
                 visitWindowExpressionExcludingExprList(winExpr, arg);
                 List<Expression> exprList = winExpr.getExprList();

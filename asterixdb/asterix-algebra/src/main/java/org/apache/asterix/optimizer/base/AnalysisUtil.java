@@ -21,6 +21,8 @@ package org.apache.asterix.optimizer.base;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.AccessMethodUtils;
@@ -29,6 +31,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -37,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractData
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 
 public class AnalysisUtil {
     /*
@@ -131,6 +135,25 @@ public class AnalysisUtil {
     }
 
     /**
+     * Checks whether a window operator has a function call where the function has given property
+     */
+    public static boolean hasFunctionWithProperty(WindowOperator winOp,
+            BuiltinFunctions.WindowFunctionProperty property) throws CompilationException {
+        for (Mutable<ILogicalExpression> exprRef : winOp.getExpressions()) {
+            ILogicalExpression expr = exprRef.getValue();
+            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, winOp.getSourceLocation(),
+                        expr.getExpressionTag());
+            }
+            AbstractFunctionCallExpression callExpr = (AbstractFunctionCallExpression) expr;
+            if (BuiltinFunctions.builtinFunctionHasProperty(callExpr.getFunctionIdentifier(), property)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Checks whether frame boundary expression is a monotonically non-descreasing function over a frame value variable
      */
     public static boolean isWindowFrameBoundaryMonotonic(List<Mutable<ILogicalExpression>> frameBoundaryExprList,
@@ -161,6 +184,22 @@ public class AnalysisUtil {
             default:
                 throw new IllegalStateException(String.valueOf(frameStartExpr.getExpressionTag()));
         }
+    }
+
+    public static boolean isTrivialAggregateSubplan(ILogicalPlan subplan) {
+        if (subplan.getRoots().isEmpty()) {
+            return false;
+        }
+        for (Mutable<ILogicalOperator> rootOpRef : subplan.getRoots()) {
+            ILogicalOperator rootOp = rootOpRef.getValue();
+            if (rootOp.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
+                return false;
+            }
+            if (firstChildOfType((AbstractLogicalOperator) rootOp, LogicalOperatorTag.NESTEDTUPLESOURCE) == null) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static List<FunctionIdentifier> fieldAccessFunctions = new ArrayList<>();

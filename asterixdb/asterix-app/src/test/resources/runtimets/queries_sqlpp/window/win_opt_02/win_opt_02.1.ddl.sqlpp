@@ -37,3 +37,17 @@ create function q1_sum_1_preceding_1_following(N) {
     min(result_delta) min_delta,
     max(result_delta) max_delta
 };
+
+create function q2_max_unbounded_preceding_n_following(N) {
+  let
+    DBL_N = N * 2
+  from
+    range(1, DBL_N) x
+  let
+    result_expected = case when x > N then DBL_N else x + N end,
+    result_actual = max(x) over (order by x range between unbounded preceding and N following),
+    result_delta = result_expected - result_actual
+  select
+    min(result_delta) min_delta,
+    max(result_delta) max_delta
+}

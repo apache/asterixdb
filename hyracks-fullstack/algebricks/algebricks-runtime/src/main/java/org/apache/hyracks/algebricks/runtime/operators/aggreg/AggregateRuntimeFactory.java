@@ -18,18 +18,10 @@
  */
 package org.apache.hyracks.algebricks.runtime.operators.aggreg;
 
-import java.nio.ByteBuffer;
-
-import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 
 public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
@@ -59,66 +51,7 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
     }
 
     @Override
-    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
-            throws HyracksDataException {
-        return new AbstractOneInputOneOutputOneFramePushRuntime() {
-            private IAggregateEvaluator[] aggregs = new IAggregateEvaluator[aggregFactories.length];
-            private IPointable result = VoidPointable.FACTORY.createPointable();
-            private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(aggregs.length);
-
-            private boolean first = true;
-
-            @Override
-            public void open() throws HyracksDataException {
-                if (first) {
-                    first = false;
-                    initAccessAppendRef(ctx);
-                    for (int i = 0; i < aggregFactories.length; i++) {
-                        aggregs[i] = aggregFactories[i].createAggregateEvaluator(ctx);
-                    }
-                }
-                for (int i = 0; i < aggregFactories.length; i++) {
-                    aggregs[i].init();
-                }
-                super.open();
-            }
-
-            @Override
-            public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                tAccess.reset(buffer);
-                int nTuple = tAccess.getTupleCount();
-                for (int t = 0; t < nTuple; t++) {
-                    tRef.reset(tAccess, t);
-                    processTuple(tRef);
-                }
-
-            }
-
-            @Override
-            public void close() throws HyracksDataException {
-                if (isOpen) {
-                    try {
-                        computeAggregate();
-                        appendToFrameFromTupleBuilder(tupleBuilder);
-                    } finally {
-                        super.close();
-                    }
-                }
-            }
-
-            private void computeAggregate() throws HyracksDataException {
-                tupleBuilder.reset();
-                for (int f = 0; f < aggregs.length; f++) {
-                    aggregs[f].finish(result);
-                    tupleBuilder.addField(result.getByteArray(), result.getStartOffset(), result.getLength());
-                }
-            }
-
-            private void processTuple(FrameTupleReference tupleRef) throws HyracksDataException {
-                for (int f = 0; f < aggregs.length; f++) {
-                    aggregs[f].step(tupleRef);
-                }
-            }
-        };
+    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(IHyracksTaskContext ctx) {
+        return new AggregatePushRuntime(aggregFactories, ctx);
     }
 }

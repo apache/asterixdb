@@ -88,7 +88,7 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
         if (winfi != null) {
             winExpr.setFunctionSignature(new FunctionSignature(winfi));
             rewriteSpecificWindowFunctions(winfi, winExpr);
-            if (BuiltinFunctions.windowFunctionHasProperty(winfi,
+            if (BuiltinFunctions.builtinFunctionHasProperty(winfi,
                     BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG)) {
                 wrapAggregationArguments(winExpr, 1);
             }

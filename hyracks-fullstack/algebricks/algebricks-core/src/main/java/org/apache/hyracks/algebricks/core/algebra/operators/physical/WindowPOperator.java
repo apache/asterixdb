@@ -58,6 +58,7 @@ import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.win.AbstractWindowRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.win.WindowNestedPlansRunningRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.win.WindowNestedPlansRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.win.WindowNestedPlansUnboundedRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.win.WindowSimpleRuntimeFactory;
@@ -77,12 +78,19 @@ public class WindowPOperator extends AbstractPhysicalOperator {
 
     private final boolean frameStartIsMonotonic;
 
+    private final boolean frameEndIsMonotonic;
+
+    private final boolean nestedTrivialAggregates;
+
     public WindowPOperator(List<LogicalVariable> partitionColumns, boolean partitionMaterialization,
-            List<OrderColumn> orderColumns, boolean frameStartIsMonotonic) {
+            List<OrderColumn> orderColumns, boolean frameStartIsMonotonic, boolean frameEndIsMonotonic,
+            boolean nestedTrivialAggregates) {
         this.partitionColumns = partitionColumns;
         this.partitionMaterialization = partitionMaterialization;
         this.orderColumns = orderColumns;
         this.frameStartIsMonotonic = frameStartIsMonotonic;
+        this.frameEndIsMonotonic = frameEndIsMonotonic;
+        this.nestedTrivialAggregates = nestedTrivialAggregates;
     }
 
     @Override
@@ -202,7 +210,7 @@ public class WindowPOperator extends AbstractPhysicalOperator {
                     inputSchemas, context);
         }
 
-        AbstractWindowRuntimeFactory runtime;
+        AbstractWindowRuntimeFactory runtime = null;
         if (winOp.hasNestedPlans()) {
             int opSchemaSizePreSubplans = opSchema.getSize();
             AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], winOp, opSchema, context);
@@ -210,20 +218,35 @@ public class WindowPOperator extends AbstractPhysicalOperator {
             WindowAggregatorDescriptorFactory nestedAggFactory = new WindowAggregatorDescriptorFactory(subplans);
             nestedAggFactory.setSourceLocation(winOp.getSourceLocation());
 
-            boolean useUnboundedRuntime = frameStartExprList.isEmpty() && frameEndExprList.isEmpty()
-                    && frameExcludeExprList.isEmpty() && frameOffsetExprEval == null;
-            if (useUnboundedRuntime) {
-                runtime = new WindowNestedPlansUnboundedRuntimeFactory(partitionColumnsList,
-                        partitionComparatorFactories, orderComparatorFactories, winOp.getFrameMaxObjects(),
-                        projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories,
-                        aggregatorOutputSchemaSize, nestedAggFactory);
-            } else {
+            int frameMaxObjects = winOp.getFrameMaxObjects();
+
+            // special cases
+            if (frameStartExprList.isEmpty() && frameExcludeExprList.isEmpty() && frameOffsetExpr == null) {
+                if (frameEndExprList.isEmpty()) {
+                    // special case #1: frame == whole partition, no exclusions, no offset
+                    runtime = new WindowNestedPlansUnboundedRuntimeFactory(partitionColumnsList,
+                            partitionComparatorFactories, orderComparatorFactories, frameMaxObjects,
+                            projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories,
+                            aggregatorOutputSchemaSize, nestedAggFactory);
+                } else if (frameEndIsMonotonic && nestedTrivialAggregates) {
+                    // special case #2: accumulating frame from beginning of the partition, no exclusions, no offset,
+                    //                  trivial aggregate subplan ( aggregate + nts )
+                    nestedAggFactory.setPartialOutputEnabled(true);
+                    runtime = new WindowNestedPlansRunningRuntimeFactory(partitionColumnsList,
+                            partitionComparatorFactories, orderComparatorFactories,
+                            frameValueExprEvalsAndComparators.first, frameValueExprEvalsAndComparators.second,
+                            frameEndExprEvals, frameMaxObjects, projectionColumnsExcludingSubplans,
+                            runningAggOutColumns, runningAggFactories, aggregatorOutputSchemaSize, nestedAggFactory);
+                }
+            }
+            // default case
+            if (runtime == null) {
                 runtime = new WindowNestedPlansRuntimeFactory(partitionColumnsList, partitionComparatorFactories,
                         orderComparatorFactories, frameValueExprEvalsAndComparators.first,
                         frameValueExprEvalsAndComparators.second, frameStartExprEvals, frameStartIsMonotonic,
                         frameEndExprEvals, frameExcludeExprEvalsAndComparators.first,
                         winOp.getFrameExcludeNegationStartIdx(), frameExcludeExprEvalsAndComparators.second,
-                        frameOffsetExprEval, context.getBinaryIntegerInspectorFactory(), winOp.getFrameMaxObjects(),
+                        frameOffsetExprEval, context.getBinaryIntegerInspectorFactory(), frameMaxObjects,
                         projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories,
                         aggregatorOutputSchemaSize, nestedAggFactory);
             }

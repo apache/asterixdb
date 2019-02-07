@@ -96,7 +96,7 @@ public class PipelineAssembler {
 
     //TODO: refactoring is needed
     public static IFrameWriter assemblePipeline(AlgebricksPipeline subplan, IFrameWriter writer,
-            IHyracksTaskContext ctx) throws HyracksDataException {
+            IHyracksTaskContext ctx, Map<IPushRuntimeFactory, IPushRuntime> outRuntimeMap) throws HyracksDataException {
         // should enforce protocol
         boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
         // plug the operators
@@ -104,15 +104,19 @@ public class PipelineAssembler {
         IPushRuntimeFactory[] runtimeFactories = subplan.getRuntimeFactories();
         RecordDescriptor[] recordDescriptors = subplan.getRecordDescriptors();
         for (int i = runtimeFactories.length - 1; i >= 0; i--) {
-            IPushRuntime newRuntime = runtimeFactories[i].createPushRuntime(ctx)[0];
-            newRuntime = enforce ? EnforcePushRuntime.enforce(newRuntime) : newRuntime;
             start = enforce ? EnforceFrameWriter.enforce(start) : start;
+            IPushRuntimeFactory runtimeFactory = runtimeFactories[i];
+            IPushRuntime[] newRuntimes = runtimeFactory.createPushRuntime(ctx);
+            IPushRuntime newRuntime = enforce ? EnforcePushRuntime.enforce(newRuntimes[0]) : newRuntimes[0];
             newRuntime.setOutputFrameWriter(0, start, recordDescriptors[i]);
             if (i > 0) {
                 newRuntime.setInputRecordDescriptor(0, recordDescriptors[i - 1]);
             } else {
                 // the nts has the same input and output rec. desc.
                 newRuntime.setInputRecordDescriptor(0, recordDescriptors[0]);
+            }
+            if (outRuntimeMap != null) {
+                outRuntimeMap.put(runtimeFactory, newRuntimes[0]);
             }
             start = newRuntime;
         }

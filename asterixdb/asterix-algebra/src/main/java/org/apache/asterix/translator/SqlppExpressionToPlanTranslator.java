@@ -1040,11 +1040,11 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                     fs.getName());
         }
         boolean isWin = BuiltinFunctions.isWindowFunction(fi);
-        boolean isWinAgg = isWin
-                && BuiltinFunctions.windowFunctionHasProperty(fi, BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG);
-        boolean prohibitOrderClause = isWin && BuiltinFunctions.windowFunctionHasProperty(fi,
+        boolean isWinAgg = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
+                BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG);
+        boolean prohibitOrderClause = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
                 BuiltinFunctions.WindowFunctionProperty.NO_ORDER_CLAUSE);
-        boolean prohibitFrameClause = isWin && BuiltinFunctions.windowFunctionHasProperty(fi,
+        boolean prohibitFrameClause = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
                 BuiltinFunctions.WindowFunctionProperty.NO_FRAME_CLAUSE);
 
         Mutable<ILogicalOperator> currentOpRef = tupSource;
@@ -1313,7 +1313,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             if (fcallExpr.getKind() != AbstractFunctionCallExpression.FunctionKind.STATEFUL) {
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, fcallExpr.getKind());
             }
-            if (BuiltinFunctions.windowFunctionHasProperty(fi,
+            if (BuiltinFunctions.builtinFunctionHasProperty(fi,
                     BuiltinFunctions.WindowFunctionProperty.INJECT_ORDER_ARGS)) {
                 for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprListOut) {
                     fcallExpr.getArguments().add(new MutableObject<>(p.second.getValue().cloneExpression()));
@@ -1575,7 +1575,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             }
             AbstractFunctionCallExpression valueExpr =
                     BuiltinFunctions.makeWindowFunctionExpression(fid, new ArrayList<>());
-            if (BuiltinFunctions.windowFunctionHasProperty(valueExpr.getFunctionIdentifier(),
+            if (BuiltinFunctions.builtinFunctionHasProperty(valueExpr.getFunctionIdentifier(),
                     BuiltinFunctions.WindowFunctionProperty.INJECT_ORDER_ARGS)) {
                 for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprList) {
                     valueExpr.getArguments().add(new MutableObject<>(p.second.getValue().cloneExpression()));

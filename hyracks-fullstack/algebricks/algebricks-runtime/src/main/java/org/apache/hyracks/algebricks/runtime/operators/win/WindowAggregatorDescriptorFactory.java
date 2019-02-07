@@ -19,7 +19,13 @@
 
 package org.apache.hyracks.algebricks.runtime.operators.win;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
+import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
+import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.aggreg.AggregatePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.aggreg.NestedPlansAccumulatingAggregatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.meta.PipelineAssembler;
 import org.apache.hyracks.algebricks.runtime.operators.std.NestedTupleSourceRuntimeFactory.NestedTupleSourceRuntime;
@@ -40,10 +46,16 @@ public final class WindowAggregatorDescriptorFactory extends AbstractAccumulatin
 
     private static final long serialVersionUID = 1L;
 
-    private AlgebricksPipeline[] subplans;
+    private final AlgebricksPipeline[] subplans;
+
+    private boolean partialOutputEnabled;
 
     public WindowAggregatorDescriptorFactory(AlgebricksPipeline[] subplans) {
         this.subplans = subplans;
+    }
+
+    public void setPartialOutputEnabled(boolean value) {
+        partialOutputEnabled = value;
     }
 
     @Override
@@ -53,9 +65,26 @@ public final class WindowAggregatorDescriptorFactory extends AbstractAccumulatin
         NestedPlansAccumulatingAggregatorFactory.AggregatorOutput outputWriter =
                 new NestedPlansAccumulatingAggregatorFactory.AggregatorOutput(subplans, 0);
         NestedTupleSourceRuntime[] pipelines = new NestedTupleSourceRuntime[subplans.length];
+
+        Map<IPushRuntimeFactory, IPushRuntime> pipelineRuntimeMap = partialOutputEnabled ? new HashMap<>() : null;
+        AggregatePushRuntime[] aggs = partialOutputEnabled ? new AggregatePushRuntime[subplans.length] : null;
+
         for (int i = 0; i < subplans.length; i++) {
-            pipelines[i] =
-                    (NestedTupleSourceRuntime) PipelineAssembler.assemblePipeline(subplans[i], outputWriter, ctx);
+            AlgebricksPipeline subplan = subplans[i];
+            if (pipelineRuntimeMap != null) {
+                pipelineRuntimeMap.clear();
+            }
+            pipelines[i] = (NestedTupleSourceRuntime) PipelineAssembler.assemblePipeline(subplan, outputWriter, ctx,
+                    pipelineRuntimeMap);
+            if (pipelineRuntimeMap != null) {
+                IPushRuntimeFactory[] subplanFactories = subplan.getRuntimeFactories();
+                IPushRuntimeFactory aggFactory = subplanFactories[subplanFactories.length - 1];
+                AggregatePushRuntime agg = (AggregatePushRuntime) pipelineRuntimeMap.get(aggFactory);
+                if (agg == null) {
+                    throw new IllegalStateException();
+                }
+                aggs[i] = agg;
+            }
         }
 
         return new IAggregatorDescriptor() {
@@ -64,7 +93,6 @@ public final class WindowAggregatorDescriptorFactory extends AbstractAccumulatin
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 outputWriter.getTupleBuilder().reset();
-
                 for (NestedTupleSourceRuntime pipeline : pipelines) {
                     pipeline.open();
                 }
@@ -91,6 +119,30 @@ public final class WindowAggregatorDescriptorFactory extends AbstractAccumulatin
                 return true;
             }
 
+            /**
+             * This method is called when evaluating accumulating frames.
+             * It emits current result of the aggregates but does not close pipelines, so aggregation can continue.
+             * This method may be called several times.
+             * {@link #outputFinalResult(ArrayTupleBuilder, IFrameTupleAccessor, int, AggregateState)}
+             * should be called at the end to emit the last value and close all pipelines
+             */
+            @Override
+            public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+                    AggregateState state) throws HyracksDataException {
+                if (aggs == null) {
+                    throw new UnsupportedOperationException();
+                }
+                for (int i = 0; i < pipelines.length; i++) {
+                    outputWriter.setInputIdx(i);
+                    pipelines[i].flush();
+                    aggs[i].finishAggregates(true);
+                }
+                memoryUsageCheck();
+                TupleUtils.addFields(outputWriter.getTupleBuilder(), tupleBuilder);
+                outputWriter.getTupleBuilder().reset();
+                return true;
+            }
+
             @Override
             public AggregateState createAggregateStates() {
                 return null;
@@ -98,12 +150,6 @@ public final class WindowAggregatorDescriptorFactory extends AbstractAccumulatin
 
             @Override
             public void reset() {
-            }
-
-            @Override
-            public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
-                    AggregateState state) {
-                throw new UnsupportedOperationException();
             }
 
             @Override
