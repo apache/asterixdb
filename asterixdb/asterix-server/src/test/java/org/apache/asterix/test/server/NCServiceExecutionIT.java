@@ -93,6 +93,7 @@ public class NCServiceExecutionIT {
             StringUtils.join(new String[] { TARGET_DIR, "ittest" }, File.separator);
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static boolean startHdfs;
 
     enum KillCommand {
         CC,
@@ -119,6 +120,11 @@ public class NCServiceExecutionIT {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        setUp(false);
+    }
+
+    public static void setUp(boolean startHdfs) throws Exception {
+        NCServiceExecutionIT.startHdfs = startHdfs;
         // Create actual-results output directory.
         File outDir = new File(ACTUAL_RESULTS_DIR);
         outDir.mkdirs();
@@ -129,8 +135,10 @@ public class NCServiceExecutionIT {
             FileUtils.deleteDirectory(instanceDir);
         }
 
-        // HDFSCluster requires the input directory to end with a file separator.
-        HDFSCluster.getInstance().setup(ASTERIX_APP_DIR + File.separator);
+        if (startHdfs) {
+            // HDFSCluster requires the input directory to end with a file separator.
+            HDFSCluster.getInstance().setup(ASTERIX_APP_DIR + File.separator);
+        }
 
         cluster = new HyracksVirtualCluster(new File(APP_HOME), new File(ASTERIX_APP_DIR));
         nc1 = cluster.addNCService(new File(CONF_DIR, "ncservice1.conf"), new File(LOG_DIR, "ncservice1.log"));
@@ -138,7 +146,7 @@ public class NCServiceExecutionIT {
         nc2 = cluster.addNCService(new File(CONF_DIR, "ncservice2.conf"), new File(LOG_DIR, "ncservice2.log"));
 
         // Start CC
-        cc = cluster.start(new File(CONF_DIR, "cc.conf"), new File(LOG_DIR, "cc.log"));
+        cc = cluster.start(new File(CONF_DIR, "cc.conf"), new File(LOG_DIR, "asterixcc.out.log"));
 
         testExecutor.waitForClusterActive(30, TimeUnit.SECONDS);
         clusterActive = true;
@@ -152,7 +160,9 @@ public class NCServiceExecutionIT {
             outdir.delete();
         }
         cluster.stop();
-        HDFSCluster.getInstance().cleanup();
+        if (startHdfs) {
+            HDFSCluster.getInstance().cleanup();
+        }
         if (!badTestCases.isEmpty()) {
             System.out.println("The following test cases left some data");
             for (String testCase : badTestCases) {
