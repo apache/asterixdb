@@ -252,9 +252,16 @@ public class TestCaseContext {
         }
 
         public List<TestCaseContext> build(File tsRoot, String tsXMLFilePath) throws Exception {
-            File tsFile = new File(tsRoot, tsXMLFilePath);
+            return build(tsRoot, new File(tsRoot, tsXMLFilePath));
+        }
+
+        public List<TestCaseContext> build(File tsRoot, File tsFile) throws Exception {
             TestSuiteParser tsp = new TestSuiteParser();
             TestSuite ts = tsp.parse(tsFile);
+            return build(tsRoot, ts);
+        }
+
+        public List<TestCaseContext> build(File tsRoot, TestSuite ts) throws Exception {
             List<TestCaseContext> tccs = new ArrayList<>();
             List<TestGroup> tgPath = new ArrayList<>();
             addContexts(tsRoot, ts, tgPath, ts.getTestGroup(), tccs);

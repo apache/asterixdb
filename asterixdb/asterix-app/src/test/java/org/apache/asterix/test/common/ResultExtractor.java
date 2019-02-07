@@ -19,7 +19,6 @@
 package org.apache.asterix.test.common;
 
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -108,7 +107,7 @@ public class ResultExtractor {
     }
 
     private static InputStream extract(InputStream resultStream, EnumSet<ResultField> resultFields) throws Exception {
-        final String resultStr = IOUtils.toString(resultStream, Charset.defaultCharset());
+        final String resultStr = IOUtils.toString(resultStream, StandardCharsets.UTF_8);
         final PrettyPrinter singleLine = new SingleLinePrettyPrinter();
         final ObjectNode result = OBJECT_MAPPER.readValue(resultStr, ObjectNode.class);
 
