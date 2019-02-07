@@ -22,14 +22,18 @@ package org.apache.asterix.runtime;
 
 import static org.mockito.Mockito.mock;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionCollection;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
@@ -46,13 +50,14 @@ public class NullMissingTest {
         List<IFunctionDescriptorFactory> functions =
                 FunctionCollection.createDefaultFunctionCollection().getFunctionDescriptorFactories();
         int testedFunctions = 0;
+        Set<FunctionIdentifier> excluded = new HashSet<>();
+        buildExcluded(excluded);
         for (IFunctionDescriptorFactory func : functions) {
             String className = func.getClass().getName();
             // We test all generated functions except
             // record and cast functions, which requires type settings (we test them in runtime tests).
             if (className.contains("Gen") && !className.contains("record") && !className.contains("Cast")) {
-                System.out.println("Testing " + className);
-                testFunction(func);
+                testFunction(func, excluded, className);
                 ++testedFunctions;
             }
         }
@@ -61,11 +66,15 @@ public class NullMissingTest {
                 testedFunctions >= 217);
     }
 
-    private void testFunction(IFunctionDescriptorFactory funcFactory) throws Exception {
+    private void testFunction(IFunctionDescriptorFactory funcFactory, Set<FunctionIdentifier> excluded,
+            String className) throws Exception {
         IFunctionDescriptor functionDescriptor = funcFactory.createFunctionDescriptor();
-        if (!(functionDescriptor instanceof AbstractScalarFunctionDynamicDescriptor)) {
+        if (!(functionDescriptor instanceof AbstractScalarFunctionDynamicDescriptor)
+                || excluded.contains(functionDescriptor.getIdentifier())) {
+            System.out.println("Excluding " + className);
             return;
         }
+        System.out.println("Testing " + className);
         AbstractScalarFunctionDynamicDescriptor funcDesc = (AbstractScalarFunctionDynamicDescriptor) functionDescriptor;
         int inputArity = funcDesc.getIdentifier().getArity();
         Iterator<IScalarEvaluatorFactory[]> argEvalFactoryIterator = getArgCombinations(inputArity);
@@ -114,4 +123,18 @@ public class NullMissingTest {
 
     }
 
+    // adds functions that require setImmutables be called in order to set the args types
+    private void buildExcluded(Set<FunctionIdentifier> excluded) {
+        excluded.add(BuiltinFunctions.EQ);
+        excluded.add(BuiltinFunctions.LT);
+        excluded.add(BuiltinFunctions.GT);
+        excluded.add(BuiltinFunctions.GE);
+        excluded.add(BuiltinFunctions.LE);
+        excluded.add(BuiltinFunctions.NEQ);
+        excluded.add(BuiltinFunctions.MISSING_IF);
+        excluded.add(BuiltinFunctions.NAN_IF);
+        excluded.add(BuiltinFunctions.NEGINF_IF);
+        excluded.add(BuiltinFunctions.NULL_IF);
+        excluded.add(BuiltinFunctions.POSINF_IF);
+    }
 }

@@ -30,6 +30,7 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 public class IntervalLogic implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    // TODO(ali): switch to ILogicalBinaryComparator
     private final ComparisonHelper ch;
     private final transient IPointable s1 = VoidPointable.FACTORY.createPointable();
     private final transient IPointable e1 = VoidPointable.FACTORY.createPointable();

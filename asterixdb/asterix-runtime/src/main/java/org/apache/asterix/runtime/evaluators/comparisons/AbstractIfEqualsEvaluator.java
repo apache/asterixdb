@@ -19,6 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.comparisons;
 
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -27,19 +28,28 @@ import org.apache.hyracks.data.std.api.IPointable;
 
 public abstract class AbstractIfEqualsEvaluator extends AbstractComparisonEvaluator {
 
-    AbstractIfEqualsEvaluator(IScalarEvaluatorFactory evalLeftFactory, IScalarEvaluatorFactory evalRightFactory,
-            IHyracksTaskContext ctx, SourceLocation sourceLoc) throws HyracksDataException {
-        super(evalLeftFactory, evalRightFactory, ctx, sourceLoc);
+    AbstractIfEqualsEvaluator(IScalarEvaluatorFactory evalLeftFactory, IAType leftType,
+            IScalarEvaluatorFactory evalRightFactory, IAType rightType, IHyracksTaskContext ctx,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(evalLeftFactory, leftType, evalRightFactory, rightType, ctx, sourceLoc, true);
     }
 
     @Override
     protected void evaluateImpl(IPointable result) throws HyracksDataException {
-        if (comparabilityCheck() && compare() == 0) {
-            resultStorage.reset();
-            writeEqualsResult();
-            result.set(resultStorage);
-        } else {
-            result.set(argLeft);
+        switch (compare()) {
+            case MISSING:
+                writeMissing(result);
+                break;
+            case NULL:
+                writeNull(result);
+                break;
+            case EQ:
+                resultStorage.reset();
+                writeEqualsResult();
+                result.set(resultStorage);
+                break;
+            default:
+                result.set(argLeft);
         }
     }
 

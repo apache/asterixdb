@@ -19,13 +19,11 @@
 
 package org.apache.asterix.runtime.evaluators.comparisons;
 
+import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.Result;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -35,64 +33,33 @@ import org.apache.hyracks.data.std.api.IPointable;
 
 public abstract class AbstractValueComparisonEvaluator extends AbstractComparisonEvaluator {
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ABoolean> serde =
+    private ISerializerDeserializer<ABoolean> serde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
-    @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ANull> nullSerde =
-            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
-    public AbstractValueComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
-            IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext ctx, SourceLocation sourceLoc)
-            throws HyracksDataException {
-        super(evalLeftFactory, evalRightFactory, ctx, sourceLoc);
+    public AbstractValueComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory, IAType leftType,
+            IScalarEvaluatorFactory evalRightFactory, IAType rightType, IHyracksTaskContext ctx,
+            SourceLocation sourceLoc, boolean isEquality) throws HyracksDataException {
+        super(evalLeftFactory, leftType, evalRightFactory, rightType, ctx, sourceLoc, isEquality);
     }
 
     @Override
     protected void evaluateImpl(IPointable result) throws HyracksDataException {
-        resultStorage.reset();
-
-        // checks whether we can apply >, >=, <, and <= to the given type since
-        // these operations cannot be defined for certain types.
-        if (isTotallyOrderable()) {
-            checkTotallyOrderable();
-        }
-
-        // Checks whether two types are comparable
-        if (comparabilityCheck()) {
-            // Two types can be compared
-            int r = compare();
-            ABoolean b = getComparisonResult(r) ? ABoolean.TRUE : ABoolean.FALSE;
-            serde.serialize(b, out);
-        } else {
-            // result:NULL - two types cannot be compared.
-            nullSerde.serialize(ANull.NULL, out);
-        }
-        result.set(resultStorage);
-    }
-
-    protected abstract boolean isTotallyOrderable();
-
-    protected abstract boolean getComparisonResult(int r);
-
-    // checks whether we can apply >, >=, <, and <= operations to the given type since
-    // these operations can not be defined for certain types.
-    protected void checkTotallyOrderable() throws HyracksDataException {
-        if (argLeft.getLength() != 0) {
-            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argLeft.getTag());
-            switch (typeTag) {
-                case DURATION:
-                case INTERVAL:
-                case LINE:
-                case POINT:
-                case POINT3D:
-                case POLYGON:
-                case CIRCLE:
-                case RECTANGLE:
-                    throw new UnsupportedTypeException(sourceLoc, ComparisonHelper.COMPARISON, argLeft.getTag());
-                default:
-                    return;
-            }
+        Result comparisonResult = compare();
+        switch (comparisonResult) {
+            case MISSING:
+                writeMissing(result);
+                break;
+            case NULL:
+            case MISMATCH:
+                writeNull(result);
+                break;
+            default:
+                resultStorage.reset();
+                ABoolean b = getComparisonResult(comparisonResult) ? ABoolean.TRUE : ABoolean.FALSE;
+                serde.serialize(b, out);
+                result.set(resultStorage);
         }
     }
 
+    protected abstract boolean getComparisonResult(Result r);
 }

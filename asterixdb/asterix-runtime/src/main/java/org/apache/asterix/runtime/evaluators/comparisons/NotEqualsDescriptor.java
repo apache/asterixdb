@@ -19,22 +19,30 @@
 
 package org.apache.asterix.runtime.evaluators.comparisons;
 
+import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.Result;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.om.functions.IFunctionTypeInferer;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class NotEqualsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class NotEqualsDescriptor extends AbstractComparisonDescriptor {
     private static final long serialVersionUID = 1L;
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new NotEqualsDescriptor();
+        }
+
+        @Override
+        public IFunctionTypeInferer createFunctionTypeInferer() {
+            return FunctionTypeInferers.SET_ARGUMENTS_TYPE;
         }
     };
 
@@ -50,16 +58,12 @@ public class NotEqualsDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractValueComparisonEvaluator(args[0], args[1], ctx, sourceLoc) {
+                return new AbstractValueComparisonEvaluator(args[0], leftType, args[1], rightType, ctx, sourceLoc,
+                        true) {
 
                     @Override
-                    protected boolean getComparisonResult(int r) {
-                        return r != 0;
-                    }
-
-                    @Override
-                    protected boolean isTotallyOrderable() {
-                        return false;
+                    protected boolean getComparisonResult(Result r) {
+                        return r != Result.EQ;
                     }
                 };
             }

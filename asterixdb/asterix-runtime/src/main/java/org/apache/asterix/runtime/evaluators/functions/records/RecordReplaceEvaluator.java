@@ -61,6 +61,7 @@ class RecordReplaceEvaluator implements IScalarEvaluator {
     private final CastTypeEvaluator inputRecordCaster;
     private final CastTypeEvaluator newValueRecordCaster;
     private final SourceLocation sourceLoc;
+    // TODO(ali): switch to ILogicalBinaryComparator
     private final ComparisonHelper comparisonHelper;
 
     RecordReplaceEvaluator(SourceLocation sourceLoc, IScalarEvaluator eval0, IScalarEvaluator eval1,

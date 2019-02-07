@@ -20,50 +20,74 @@ package org.apache.asterix.runtime.evaluators.comparisons;
 
 import java.io.DataOutput;
 
+import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
+import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.Result;
+import org.apache.asterix.dataflow.data.nontagged.comparators.LogicalComparatorUtil;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.ADouble;
+import org.apache.asterix.om.base.AFloat;
+import org.apache.asterix.om.base.AInt16;
+import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AInt64;
+import org.apache.asterix.om.base.AInt8;
+import org.apache.asterix.om.base.AMissing;
+import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
 
+    @SuppressWarnings("unchecked")
+    protected final ISerializerDeserializer<AMissing> missingSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
+    @SuppressWarnings("unchecked")
+    protected final ISerializerDeserializer<ANull> nullSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
     protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     protected final DataOutput out = resultStorage.getDataOutput();
     protected final TaggedValuePointable argLeft = TaggedValuePointable.FACTORY.createPointable();
-    protected final TaggedValuePointable argRight = TaggedValuePointable.FACTORY.createPointable();
-    protected final IPointable outLeft = VoidPointable.FACTORY.createPointable();
-    protected final IPointable outRight = VoidPointable.FACTORY.createPointable();
-    protected final IScalarEvaluator evalLeft;
-    protected final IScalarEvaluator evalRight;
+    private final TaggedValuePointable argRight = TaggedValuePointable.FACTORY.createPointable();
+    private final IScalarEvaluator evalLeft;
+    private final IScalarEvaluator evalRight;
     protected final SourceLocation sourceLoc;
-    private final ComparisonHelper ch;
-    private Number leftValue;
-    private Number rightValue;
+    private final ILogicalBinaryComparator logicalComparator;
+    private IAObject leftConstant;
+    private IAObject rightConstant;
 
-    public AbstractComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
-            IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext ctx, SourceLocation sourceLoc)
-            throws HyracksDataException {
+    public AbstractComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory, IAType leftType,
+            IScalarEvaluatorFactory evalRightFactory, IAType rightType, IHyracksTaskContext ctx,
+            SourceLocation sourceLoc, boolean isEquality) throws HyracksDataException {
         this.evalLeft = evalLeftFactory.createScalarEvaluator(ctx);
         this.evalRight = evalRightFactory.createScalarEvaluator(ctx);
         this.sourceLoc = sourceLoc;
-        ch = new ComparisonHelper(sourceLoc);
-        leftValue = getValueOfConstantEval(evalLeftFactory);
-        rightValue = getValueOfConstantEval(evalRightFactory);
+        logicalComparator = LogicalComparatorUtil.createLogicalComparator(leftType, rightType, isEquality);
+        leftConstant = getValueOfConstantEval(evalLeftFactory);
+        rightConstant = getValueOfConstantEval(evalRightFactory);
     }
 
-    private Number getValueOfConstantEval(IScalarEvaluatorFactory factory) throws HyracksDataException {
+    private IAObject getValueOfConstantEval(IScalarEvaluatorFactory factory) {
         if (factory instanceof ConstantEvalFactory) {
-            return ch.getNumberValue(((ConstantEvalFactory) factory).getValue());
+            return getConstantValue(((ConstantEvalFactory) factory).getValue());
         }
         return null;
     }
@@ -73,27 +97,67 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
         // Evaluates input args.
         evalLeft.evaluate(tuple, argLeft);
         evalRight.evaluate(tuple, argRight);
-        argLeft.getValue(outLeft);
-        argRight.getValue(outRight);
-
         evaluateImpl(result);
     }
 
     protected abstract void evaluateImpl(IPointable result) throws HyracksDataException;
 
-    // checks whether two types are comparable
-    boolean comparabilityCheck() {
-        // Checks whether two types are comparable or not
-        ATypeTag typeTag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argLeft.getTag());
-        ATypeTag typeTag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argRight.getTag());
-
-        // Are two types compatible, meaning that they can be compared? (e.g., compare between numeric types
-        return ATypeHierarchy.isCompatible(typeTag1, typeTag2);
+    Result compare() throws HyracksDataException {
+        if (leftConstant != null) {
+            if (rightConstant != null) {
+                // both are constants
+                return logicalComparator.compare(leftConstant, rightConstant);
+            } else {
+                // left is constant, right isn't
+                return logicalComparator.compare(leftConstant, argRight.getByteArray(), argRight.getStartOffset(),
+                        argRight.getLength());
+            }
+        } else {
+            if (rightConstant != null) {
+                // right is constant, left isn't
+                return logicalComparator.compare(argLeft.getByteArray(), argLeft.getStartOffset(), argLeft.getLength(),
+                        rightConstant);
+            } else {
+                return logicalComparator.compare(argLeft.getByteArray(), argLeft.getStartOffset(), argLeft.getLength(),
+                        argRight.getByteArray(), argRight.getStartOffset(), argRight.getLength());
+            }
+        }
     }
 
-    int compare() throws HyracksDataException {
-        ATypeTag leftTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argLeft.getTag());
-        ATypeTag rightTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argRight.getTag());
-        return ch.compare(leftTypeTag, rightTypeTag, outLeft, outRight, leftValue, rightValue);
+    void writeMissing(IPointable result) throws HyracksDataException {
+        resultStorage.reset();
+        missingSerde.serialize(AMissing.MISSING, out);
+        result.set(resultStorage);
+    }
+
+    void writeNull(IPointable result) throws HyracksDataException {
+        resultStorage.reset();
+        nullSerde.serialize(ANull.NULL, out);
+        result.set(resultStorage);
+    }
+
+    private IAObject getConstantValue(byte[] bytes) {
+        int start = 0;
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[start]);
+        if (typeTag == null) {
+            return null;
+        }
+        start++;
+        switch (typeTag) {
+            case TINYINT:
+                return new AInt8(AInt8SerializerDeserializer.getByte(bytes, start));
+            case SMALLINT:
+                return new AInt16(AInt16SerializerDeserializer.getShort(bytes, start));
+            case INTEGER:
+                return new AInt32(AInt32SerializerDeserializer.getInt(bytes, start));
+            case BIGINT:
+                return new AInt64(AInt64SerializerDeserializer.getLong(bytes, start));
+            case FLOAT:
+                return new AFloat(AFloatSerializerDeserializer.getFloat(bytes, start));
+            case DOUBLE:
+                return new ADouble(ADoubleSerializerDeserializer.getDouble(bytes, start));
+            default:
+                return null;
+        }
     }
 }
