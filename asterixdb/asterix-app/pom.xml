@@ -287,7 +287,7 @@
     <profile>
       <id>asterix-gerrit-asterix-app</id>
       <properties>
-        <test.excludes>**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java</test.excludes>
+        <test.excludes>**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java,**/*Compression*Test.java,**/*Ssl*Test.java</test.excludes>
       </properties>
       <build>
         <plugins>
@@ -298,9 +298,6 @@
               <execution>
                 <id>SqlppExecutionTest</id>
                 <configuration>
-                  <includes combine.self="override">
-                    <include>**/SqlppExecutionTest.java</include>
-                  </includes>
                   <excludes combine.self="override"/>
                   <argLine>
                     -enableassertions -Xmx${test.heap.size}m
@@ -324,6 +321,14 @@
       <properties>
         <test.includes/>
         <itest.includes>**/SqlppExecution*IT.java</itest.includes>
+        <failIfNoTests>false</failIfNoTests>
+      </properties>
+    </profile>
+    <profile>
+      <id>asterix-gerrit-ssl-compression</id>
+      <properties>
+        <test.includes>**/*Compression*Test.java,**/*Ssl*Test.java</test.includes>
+        <itest.includes/>
         <failIfNoTests>false</failIfNoTests>
       </properties>
     </profile>
