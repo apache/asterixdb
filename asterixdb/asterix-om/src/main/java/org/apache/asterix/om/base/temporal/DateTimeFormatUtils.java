@@ -274,14 +274,14 @@ public class DateTimeFormatUtils {
     public boolean parseDateTime(AMutableInt64 outChronon, byte[] data, int dataStart, int dataLength, byte[] format,
             int formatStart, int formatLength, DateTimeParseMode parseMode, boolean raiseParseDataError)
             throws AsterixTemporalTypeParseException {
-        return parseDateTime(outChronon, null, null, data, dataStart, dataLength, format, formatStart, formatLength,
-                parseMode, raiseParseDataError, (byte) '\0');
+        return parseDateTime(outChronon, null, null, null, data, dataStart, dataLength, format, formatStart,
+                formatLength, parseMode, raiseParseDataError, '\0');
     }
 
     public boolean parseDateTime(AMutableInt64 outChronon, Mutable<Boolean> outTimeZoneExists,
-            AMutableInt32 outTimeZone, byte[] data, int dataStart, int dataLength, byte[] format, int formatStart,
-            int formatLength, DateTimeParseMode parseMode, boolean raiseParseDataError, byte altSeparatorChar)
-            throws AsterixTemporalTypeParseException {
+            AMutableInt32 outTimeZone, Mutable<Character> dateTimeSeparatorOut, byte[] data, int dataStart,
+            int dataLength, byte[] format, int formatStart, int formatLength, DateTimeParseMode parseMode,
+            boolean raiseParseDataError, char altSeparatorChar) throws AsterixTemporalTypeParseException {
         int year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0, ms = 0, timezone = 0;
         boolean timezoneExists = false;
 
@@ -290,7 +290,11 @@ public class DateTimeFormatUtils {
 
         int dataStringPointer = 0, formatPointer = 0;
 
-        byte separatorChar = '\0';
+        char separatorChar = '\0';
+
+        char lastSeparatorChar = '\0';
+
+        char dateTimeSeparatorChar = 'T'; //default dateTimeSeparator
 
         DateTimeProcessState processState;
 
@@ -386,11 +390,12 @@ public class DateTimeFormatUtils {
                 case COMMA_CHAR:
                 case T_CHAR:
                     // separator
-                    separatorChar = format[formatStart + formatPointer];
+                    separatorChar = (char) format[formatStart + formatPointer];
                     processState = DateTimeProcessState.SEPARATOR;
                     formatPointer++;
                     formatCharCopies++;
-                    while (formatPointer < formatLength && format[formatStart + formatPointer] == separatorChar) {
+                    while (formatPointer < formatLength
+                            && (char) (format[formatStart + formatPointer]) == separatorChar) {
                         formatPointer++;
                         formatCharCopies++;
                     }
@@ -541,6 +546,7 @@ public class DateTimeFormatUtils {
                     dataStringPointer += processedWeekdayFieldsCount;
                     break;
                 case HOUR:
+                    dateTimeSeparatorChar = lastSeparatorChar;
                 case MINUTE:
                 case SECOND:
                 case MILLISECOND:
@@ -755,7 +761,8 @@ public class DateTimeFormatUtils {
                 case SEPARATOR:
                     for (int i = 0; i < formatCharCopies; i++) {
                         byte b = data[dataStart + dataStringPointer];
-                        boolean match = b == separatorChar || (altSeparatorChar != '\0' && b == altSeparatorChar);
+                        boolean match =
+                                (char) b == separatorChar || (altSeparatorChar != '\0' && (char) b == altSeparatorChar);
                         if (!match) {
                             if (raiseParseDataError) {
                                 throw new AsterixTemporalTypeParseException(
@@ -764,6 +771,7 @@ public class DateTimeFormatUtils {
                                 return false;
                             }
                         }
+                        lastSeparatorChar = (char) b;
                         dataStringPointer++;
                     }
                     break;
@@ -793,7 +801,11 @@ public class DateTimeFormatUtils {
 
         long chronon = parseMode == DateTimeParseMode.TIME_ONLY ? CAL.getChronon(hour, min, sec, ms, timezone)
                 : CAL.getChronon(year, month, day, hour, min, sec, ms, timezone);
+
         outChronon.setValue(chronon);
+        if (dateTimeSeparatorOut != null) {
+            dateTimeSeparatorOut.setValue(dateTimeSeparatorChar);
+        }
         if (outTimeZoneExists != null) {
             outTimeZoneExists.setValue(timezoneExists);
         }
@@ -817,7 +829,7 @@ public class DateTimeFormatUtils {
 
         int formatPointer = 0;
 
-        byte separatorChar = '\0';
+        char separatorChar = '\0';
 
         DateTimeProcessState processState;
 
@@ -912,11 +924,12 @@ public class DateTimeFormatUtils {
                 case COMMA_CHAR:
                 case T_CHAR:
                     // separator
-                    separatorChar = format[formatStart + formatPointer];
+                    separatorChar = (char) format[formatStart + formatPointer];
                     processState = DateTimeProcessState.SEPARATOR;
                     formatPointer++;
                     formatCharCopies++;
-                    while (formatPointer < formatLength && format[formatStart + formatPointer] == separatorChar) {
+                    while (formatPointer < formatLength
+                            && format[formatStart + formatPointer] == (byte) separatorChar) {
                         formatPointer++;
                         formatCharCopies++;
                     }
@@ -1061,7 +1074,7 @@ public class DateTimeFormatUtils {
                                     "Incorrect separator: separator char is not initialized properly!");
                         }
                         for (int i = 0; i < formatCharCopies; i++) {
-                            appender.append((char) separatorChar);
+                            appender.append(separatorChar);
                         }
                         break;
                     default:
