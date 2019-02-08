@@ -1,2 +1,5 @@
-[ { "NaN": "NaN", "Infinity": "INF", "-Infinity": "-INF" }
- ]
+[ {
+  "NaN" : "NaN",
+  "Infinity" : "INF",
+  "-Infinity" : "-INF"
+} ]

@@ -30,7 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.fasterxml.jackson.core.PrettyPrinter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -108,7 +108,6 @@ public class ResultExtractor {
 
     private static InputStream extract(InputStream resultStream, EnumSet<ResultField> resultFields) throws Exception {
         final String resultStr = IOUtils.toString(resultStream, StandardCharsets.UTF_8);
-        final PrettyPrinter singleLine = new SingleLinePrettyPrinter();
         final ObjectNode result = OBJECT_MAPPER.readValue(resultStr, ObjectNode.class);
 
         LOGGER.debug("+++++++\n" + result + "\n+++++++\n");
@@ -135,9 +134,9 @@ public class ResultExtractor {
                                 resultBuilder.append(fieldValue.get(0).asText());
                             } else {
                                 ObjectMapper omm = new ObjectMapper();
-                                omm.setDefaultPrettyPrinter(singleLine);
                                 omm.enable(SerializationFeature.INDENT_OUTPUT);
-                                resultBuilder.append(omm.writer(singleLine).writeValueAsString(fieldValue));
+                                resultBuilder
+                                        .append(omm.writer(new DefaultPrettyPrinter()).writeValueAsString(fieldValue));
                             }
                         } else {
                             resultBuilder.append(OBJECT_MAPPER.writeValueAsString(fieldValue));
