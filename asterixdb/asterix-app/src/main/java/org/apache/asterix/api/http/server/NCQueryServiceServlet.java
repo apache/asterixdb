@@ -20,7 +20,6 @@
 package org.apache.asterix.api.http.server;
 
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -33,6 +32,7 @@ import org.apache.asterix.app.message.ExecuteStatementResponseMessage;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
@@ -69,10 +69,10 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     }
 
     @Override
-    protected void executeStatement(String statementsText, SessionOutput sessionOutput,
-            ResultProperties resultProperties, IStatementExecutor.Stats stats, QueryServiceRequestParameters param,
-            RequestExecutionState execution, Map<String, String> optionalParameters,
-            Map<String, byte[]> statementParameters) throws Exception {
+    protected void executeStatement(IRequestReference requestReference, String statementsText,
+            SessionOutput sessionOutput, ResultProperties resultProperties, IStatementExecutor.Stats stats,
+            QueryServiceRequestParameters param, RequestExecutionState execution,
+            Map<String, String> optionalParameters, Map<String, byte[]> statementParameters) throws Exception {
         // Running on NC -> send 'execute' message to CC
         INCServiceContext ncCtx = (INCServiceContext) serviceCtx;
         INCMessageBroker ncMb = (INCMessageBroker) ncCtx.getMessageBroker();
@@ -81,9 +81,6 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         MessageFuture responseFuture = ncMb.registerMessageFuture();
         final String handleUrl = getHandleUrl(param.getHost(), param.getPath(), delivery);
         try {
-            if (param.getClientContextID() == null) {
-                param.setClientContextID(UUID.randomUUID().toString());
-            }
             long timeout = ExecuteStatementRequestMessage.DEFAULT_NC_TIMEOUT_MILLIS;
             if (param.getTimeout() != null && !param.getTimeout().trim().isEmpty()) {
                 timeout = TimeUnit.NANOSECONDS.toMillis(Duration.parseDurationStringToNanos(param.getTimeout()));
@@ -91,7 +88,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             ExecuteStatementRequestMessage requestMsg = new ExecuteStatementRequestMessage(ncCtx.getNodeId(),
                     responseFuture.getFutureId(), queryLanguage, statementsText, sessionOutput.config(),
                     resultProperties.getNcToCcResultProperties(), param.getClientContextID(), handleUrl,
-                    optionalParameters, statementParameters, param.isMultiStatement());
+                    optionalParameters, statementParameters, param.isMultiStatement(), requestReference);
             execution.start();
             ncMb.sendMessageToPrimaryCC(requestMsg);
             try {

@@ -36,6 +36,8 @@ import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.IDatasetMemoryManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IPropertiesFactory;
+import org.apache.asterix.common.api.IReceptionist;
+import org.apache.asterix.common.api.IReceptionistFactory;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.ActiveProperties;
 import org.apache.asterix.common.config.AsterixExtension;
@@ -146,6 +148,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private IHyracksClientConnection hcc;
     private IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     private IReplicaManager replicaManager;
+    private IReceptionist receptionist;
 
     public NCAppRuntimeContext(INCServiceContext ncServiceContext, List<AsterixExtension> extensions,
             IPropertiesFactory propertiesFactory) throws AsterixException, InstantiationException,
@@ -175,7 +178,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     }
 
     @Override
-    public void initialize(IRecoveryManagerFactory recoveryManagerFactory, boolean initialRun) throws IOException {
+    public void initialize(IRecoveryManagerFactory recoveryManagerFactory, IReceptionistFactory receptionistFactory,
+            boolean initialRun) throws IOException {
         ioManager = getServiceContext().getIoManager();
         threadExecutor =
                 MaintainedThreadNameExecutorService.newCachedThreadPool(getServiceContext().getThreadFactory());
@@ -215,6 +219,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         activeManager = new ActiveManager(threadExecutor, getServiceContext().getNodeId(),
                 activeProperties.getMemoryComponentGlobalBudget(), compilerProperties.getFrameSize(),
                 this.ncServiceContext);
+        receptionist = receptionistFactory.create();
 
         if (replicationProperties.isReplicationEnabled()) {
             replicationManager = new ReplicationManager(this, replicationProperties);
@@ -532,5 +537,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IPersistedResourceRegistry getPersistedResourceRegistry() {
         return persistedResourceRegistry;
+    }
+
+    @Override
+    public IReceptionist getReceptionist() {
+        return receptionist;
     }
 }

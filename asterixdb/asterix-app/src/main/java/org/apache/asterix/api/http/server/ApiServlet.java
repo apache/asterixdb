@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentMap;
 import javax.imageio.ImageIO;
 
 import org.apache.asterix.app.translator.RequestParameters;
+import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -89,6 +90,7 @@ public class ApiServlet extends AbstractServlet {
 
     @Override
     protected void post(IServletRequest request, IServletResponse response) {
+        final IRequestReference requestReference = appCtx.getReceptionist().welcome(request);
         // Query language
         ILangCompilationProvider compilationProvider = "AQL".equals(request.getParameter("query-language"))
                 ? aqlCompilationProvider : sqlppCompilationProvider;
@@ -149,10 +151,10 @@ public class ApiServlet extends AbstractServlet {
                     compilationProvider, componentProvider);
             double duration;
             long startTime = System.currentTimeMillis();
-            final IRequestParameters requestParameters =
-                    new RequestParameters(resultSet, new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE),
-                            new IStatementExecutor.Stats(), null, null, null, null, true);
-            translator.compileAndExecute(hcc, null, requestParameters);
+            final IRequestParameters requestParameters = new RequestParameters(requestReference, query, resultSet,
+                    new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE), new IStatementExecutor.Stats(),
+                    null, null, null, null, true);
+            translator.compileAndExecute(hcc, requestParameters);
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
             out.println(HTML_STATEMENT_SEPARATOR);

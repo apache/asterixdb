@@ -1,1 +1,1 @@
-/\{ "clientContextID": "sleep_async_query", "jobId": "JID:.*", "requestTime": ".*" \}/
+/\{ "cancellable": true, "jobId": "JID:.*", "state": "running", "uuid": ".*" \}/

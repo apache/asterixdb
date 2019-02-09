@@ -76,4 +76,6 @@ public interface IApplicationContext {
      * @return the cluster coordination service.
      */
     ICoordinationService getCoordinationService();
+
+    IReceptionist getReceptionist();
 }

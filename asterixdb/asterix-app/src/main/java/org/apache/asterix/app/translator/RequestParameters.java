@@ -23,6 +23,7 @@ import java.io.DataOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.external.parser.JSONDataParser;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.IAObject;
@@ -41,6 +42,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public class RequestParameters implements IRequestParameters {
 
+    private final IRequestReference requestReference;
     private final IResultSet resultSet;
     private final ResultProperties resultProperties;
     private final Stats stats;
@@ -49,10 +51,14 @@ public class RequestParameters implements IRequestParameters {
     private final String clientContextId;
     private final Map<String, IAObject> statementParameters;
     private final boolean multiStatement;
+    private final String statement;
 
-    public RequestParameters(IResultSet resultSet, ResultProperties resultProperties, Stats stats,
-            IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
-            Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement) {
+    public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
+            ResultProperties resultProperties, Stats stats, IStatementExecutor.ResultMetadata outMetadata,
+            String clientContextId, Map<String, String> optionalParameters, Map<String, IAObject> statementParameters,
+            boolean multiStatement) {
+        this.requestReference = requestReference;
+        this.statement = statement;
         this.resultSet = resultSet;
         this.resultProperties = resultProperties;
         this.stats = stats;
@@ -101,6 +107,16 @@ public class RequestParameters implements IRequestParameters {
     @Override
     public Map<String, IAObject> getStatementParameters() {
         return statementParameters;
+    }
+
+    @Override
+    public String getStatement() {
+        return statement;
+    }
+
+    @Override
+    public IRequestReference getRequestReference() {
+        return requestReference;
     }
 
     public static Map<String, byte[]> serializeParameterValues(Map<String, JsonNode> inParams)

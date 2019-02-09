@@ -34,6 +34,8 @@ import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessag
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IPropertiesFactory;
+import org.apache.asterix.common.api.IReceptionistFactory;
+import org.apache.asterix.translator.Receptionist;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -128,7 +130,8 @@ public class NCApplication extends BaseNCApplication {
             }
             updateOnNodeJoin();
         }
-        runtimeContext.initialize(getRecoveryManagerFactory(), runtimeContext.getNodeProperties().isInitialRun());
+        runtimeContext.initialize(getRecoveryManagerFactory(), getReceptionistFactory(),
+                runtimeContext.getNodeProperties().isInitialRun());
         MessagingProperties messagingProperties = runtimeContext.getMessagingProperties();
         NCMessageBroker messageBroker = new NCMessageBroker(controllerService, messagingProperties);
         this.ncServiceCtx.setMessageBroker(messageBroker);
@@ -153,6 +156,10 @@ public class NCApplication extends BaseNCApplication {
 
     protected IRecoveryManagerFactory getRecoveryManagerFactory() {
         return RecoveryManager::new;
+    }
+
+    protected IReceptionistFactory getReceptionistFactory() {
+        return () -> new Receptionist(nodeId);
     }
 
     @Override

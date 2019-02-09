@@ -46,10 +46,7 @@ public class ActiveRequestsRequest implements ICcAddressedMessage {
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
-        ClusterControllerService ccs = (ClusterControllerService) appCtx.getServiceContext().getControllerService();
-        CCApplication application = (CCApplication) ccs.getApplication();
-        IStatementExecutorContext executorsCtx = application.getStatementExecutorContext();
-        final Collection<IClientRequest> runningRequests = executorsCtx.getRunningRequests().values();
+        final Collection<IClientRequest> runningRequests = appCtx.getRequestTracker().getRunningRequests();
         final String[] requests = runningRequests.stream().map(IClientRequest::toJson).toArray(String[]::new);
         ActiveRequestsResponse response = new ActiveRequestsResponse(reqId, requests);
         CCMessageBroker messageBroker = (CCMessageBroker) appCtx.getServiceContext().getMessageBroker();

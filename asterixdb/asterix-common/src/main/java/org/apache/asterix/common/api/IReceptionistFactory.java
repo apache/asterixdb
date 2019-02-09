@@ -16,28 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.utils;
+package org.apache.asterix.common.api;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
+@FunctionalInterface
+public interface IReceptionistFactory {
 
-public enum RequestStatus {
-    SUCCESS,
-    FAILED,
-    NOT_FOUND,
-    REJECTED;
-
-    public HttpResponseStatus toHttpResponse() {
-        switch (this) {
-            case SUCCESS:
-                return HttpResponseStatus.OK;
-            case FAILED:
-                return HttpResponseStatus.INTERNAL_SERVER_ERROR;
-            case NOT_FOUND:
-                return HttpResponseStatus.NOT_FOUND;
-            case REJECTED:
-                return HttpResponseStatus.FORBIDDEN;
-            default:
-                throw new IllegalStateException("Unrecognized status: " + this);
-        }
-    }
+    /**
+     * Creates a {@link IReceptionist}
+     *
+     * @return a receptionist
+     */
+    IReceptionist create();
 }

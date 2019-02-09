@@ -24,6 +24,9 @@ import java.util.function.Supplier;
 import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.INodeJobTracker;
+import org.apache.asterix.common.api.IReceptionist;
+import org.apache.asterix.common.api.IReceptionistFactory;
+import org.apache.asterix.common.api.IRequestTracker;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.ActiveProperties;
@@ -90,12 +93,15 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final INodeJobTracker nodeJobTracker;
     private final ITxnIdFactory txnIdFactory;
     private final ICompressionManager compressionManager;
+    private final IReceptionist receptionist;
+    private final IRequestTracker requestTracker;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
             ILibraryManager libraryManager, Supplier<IMetadataBootstrap> metadataBootstrapSupplier,
             IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator ftStrategy,
             IJobLifecycleListener activeLifeCycleListener, IStorageComponentProvider storageComponentProvider,
-            IMetadataLockManager mdLockManager) throws AlgebricksException, IOException {
+            IMetadataLockManager mdLockManager, IReceptionistFactory receptionistFactory)
+            throws AlgebricksException, IOException {
         this.ccServiceCtx = ccServiceCtx;
         this.hcc = hcc;
         this.libraryManager = libraryManager;
@@ -125,7 +131,8 @@ public class CcApplicationContext implements ICcApplicationContext {
         nodeJobTracker = new NodeJobTracker();
         txnIdFactory = new BulkTxnIdFactory();
         compressionManager = new CompressionManager(storageProperties);
-
+        receptionist = receptionistFactory.create();
+        requestTracker = new RequestTracker(this);
     }
 
     @Override
@@ -282,5 +289,15 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public ICompressionManager getCompressionManager() {
         return compressionManager;
+    }
+
+    @Override
+    public IReceptionist getReceptionist() {
+        return receptionist;
+    }
+
+    @Override
+    public IRequestTracker getRequestTracker() {
+        return requestTracker;
     }
 }

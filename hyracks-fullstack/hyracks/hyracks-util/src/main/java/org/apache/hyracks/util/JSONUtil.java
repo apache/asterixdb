@@ -63,6 +63,14 @@ public class JSONUtil {
         return PRETTY_SORTED_WRITER.writeValueAsString(SORTED_MAPPER.treeToValue(node, Object.class));
     }
 
+    public static String convertNodeOrThrow(final JsonNode node) {
+        try {
+            return convertNode(node);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     public static void writeNode(final Writer writer, final JsonNode node) throws IOException {
         PRETTY_SORTED_WRITER.writeValue(writer, SORTED_MAPPER.treeToValue(node, Object.class));
     }

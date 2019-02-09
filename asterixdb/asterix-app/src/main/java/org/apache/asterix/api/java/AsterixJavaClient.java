@@ -22,9 +22,11 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.app.translator.RequestParameters;
+import org.apache.asterix.common.api.RequestReference;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.utils.Job;
@@ -113,7 +115,8 @@ public class AsterixJavaClient {
         while ((ch = queryText.read()) != -1) {
             builder.append((char) ch);
         }
-        IParser parser = parserFactory.createParser(builder.toString());
+        String statement = builder.toString();
+        IParser parser = parserFactory.createParser(statement);
         List<Statement> statements = parser.parse();
         MetadataManager.INSTANCE.init();
 
@@ -126,10 +129,12 @@ public class AsterixJavaClient {
 
         IStatementExecutor translator = statementExecutorFactory.create(appCtx, statements, output, compilationProvider,
                 storageComponentProvider);
-        final IRequestParameters requestParameters =
-                new RequestParameters(null, new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE),
-                        new IStatementExecutor.Stats(), null, null, null, statementParams, true);
-        translator.compileAndExecute(hcc, null, requestParameters);
+        final RequestReference requestReference =
+                RequestReference.of(UUID.randomUUID().toString(), "CC", System.currentTimeMillis());
+        final IRequestParameters requestParameters = new RequestParameters(requestReference, statement, null,
+                new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE), new IStatementExecutor.Stats(), null,
+                null, null, statementParams, true);
+        translator.compileAndExecute(hcc, requestParameters);
         writer.flush();
     }
 

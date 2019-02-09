@@ -24,8 +24,9 @@ import java.util.Map;
 import org.apache.asterix.common.api.IClientRequest;
 
 /**
- * The context for statement executors. Maintains ongoing user requests.
+ * @deprecated (use IRequestTracker)
  */
+@Deprecated
 public interface IStatementExecutorContext {
 
     /**

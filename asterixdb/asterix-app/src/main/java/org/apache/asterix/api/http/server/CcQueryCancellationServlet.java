@@ -23,8 +23,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.api.http.server.QueryServiceServlet.Parameter;
 import org.apache.asterix.common.api.IClientRequest;
+import org.apache.asterix.common.api.IRequestTracker;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
@@ -54,17 +54,20 @@ public class CcQueryCancellationServlet extends AbstractServlet {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
         }
-        IStatementExecutorContext executorCtx =
-                (IStatementExecutorContext) ctx.get(ServletConstants.RUNNING_QUERIES_ATTR);
-        IClientRequest req = executorCtx.get(clientContextId);
+        final IRequestTracker requestTracker = appCtx.getRequestTracker();
+        final IClientRequest req = requestTracker.getByClientContextId(clientContextId);
         if (req == null) {
             // response: NOT FOUND
             response.setStatus(HttpResponseStatus.NOT_FOUND);
             return;
         }
+        if (!req.isCancellable()) {
+            response.setStatus(HttpResponseStatus.FORBIDDEN);
+            return;
+        }
         try {
             // Cancels the on-going job.
-            req.cancel(appCtx);
+            requestTracker.cancel(req.getId());
             // response: OK
             response.setStatus(HttpResponseStatus.OK);
         } catch (Exception e) {

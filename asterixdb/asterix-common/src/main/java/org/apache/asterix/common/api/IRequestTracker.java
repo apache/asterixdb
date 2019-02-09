@@ -18,50 +18,54 @@
  */
 package org.apache.asterix.common.api;
 
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import java.util.Collection;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface IClientRequest {
+public interface IRequestTracker {
 
     /**
-     * A system wide unique id representing this {@link IClientRequest}
+     * Starts tracking {@code request}
      *
-     * @return the system request id
+     * @param request
      */
-    String getId();
+    void track(IClientRequest request);
 
     /**
-     * A user supplied id representing this {@link IClientRequest}
+     * Gets a client request by {@code requestId}
      *
-     * @return the client supplied request id
+     * @param requestId
+     * @return the client request if found. Otherwise null.
      */
-    String getClientContextId();
+    IClientRequest get(String requestId);
 
     /**
-     * Mark the request as complete, non-cancellable anymore
-     */
-    void complete();
-
-    /**
-     * Mark the request as cancellable
-     */
-    void markCancellable();
-
-    /**
-     * @return true if the request can be cancelled. Otherwise false.
-     */
-    boolean isCancellable();
-
-    /**
-     * Cancel a request
+     * Gets a client request by {@code clientContextId}
      *
-     * @param appCtx
+     * @param clientContextId
+     * @return the client request if found. Otherwise null.
+     */
+    IClientRequest getByClientContextId(String clientContextId);
+
+    /**
+     * Cancels the client request with id {@code requestId} if found.
+     *
+     * @param requestId
      * @throws HyracksDataException
      */
-    void cancel(ICcApplicationContext appCtx) throws HyracksDataException;
+    void cancel(String requestId) throws HyracksDataException;
 
     /**
-     * @return A json representation of this request
+     * Completes the request with id {@code requestId}
+     *
+     * @param requestId
      */
-    String toJson();
+    void complete(String requestId);
+
+    /**
+     * Gets the currently running requests
+     *
+     * @return the currently running requests
+     */
+    Collection<IClientRequest> getRunningRequests();
 }

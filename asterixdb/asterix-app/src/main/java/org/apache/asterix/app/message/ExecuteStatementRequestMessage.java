@@ -30,6 +30,7 @@ import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.api.IClusterManagementWork;
+import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -80,11 +81,12 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
     private final Map<String, String> optionalParameters;
     private final Map<String, byte[]> statementParameters;
     private final boolean multiStatement;
+    private final IRequestReference requestReference;
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
             String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
             String clientContextID, String handleUrl, Map<String, String> optionalParameters,
-            Map<String, byte[]> statementParameters, boolean multiStatement) {
+            Map<String, byte[]> statementParameters, boolean multiStatement, IRequestReference requestReference) {
         this.requestNodeId = requestNodeId;
         this.requestMessageId = requestMessageId;
         this.lang = lang;
@@ -96,6 +98,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         this.optionalParameters = optionalParameters;
         this.statementParameters = statementParameters;
         this.multiStatement = multiStatement;
+        this.requestReference = requestReference;
     }
 
     @Override
@@ -113,7 +116,6 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         ILangCompilationProvider compilationProvider = ccExtMgr.getCompilationProvider(lang);
         IStorageComponentProvider storageComponentProvider = ccAppCtx.getStorageComponentProvider();
         IStatementExecutorFactory statementExecutorFactory = ccApp.getStatementExecutorFactory();
-        IStatementExecutorContext statementExecutorContext = ccApp.getStatementExecutorContext();
         ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
         try {
             IParser parser = compilationProvider.getParserFactory().createParser(statementsText);
@@ -132,9 +134,10 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
                     compilationProvider, storageComponentProvider);
             final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
-            final IRequestParameters requestParameters = new RequestParameters(null, resultProperties, stats,
-                    outMetadata, clientContextID, optionalParameters, stmtParams, multiStatement);
-            translator.compileAndExecute(ccApp.getHcc(), statementExecutorContext, requestParameters);
+            final IRequestParameters requestParameters =
+                    new RequestParameters(requestReference, statementsText, null, resultProperties, stats, outMetadata,
+                            clientContextID, optionalParameters, stmtParams, multiStatement);
+            translator.compileAndExecute(ccApp.getHcc(), requestParameters);
             outPrinter.close();
             responseMsg.setResult(outWriter.toString());
             responseMsg.setMetadata(outMetadata);

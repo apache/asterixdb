@@ -19,14 +19,12 @@
 package org.apache.asterix.app.message;
 
 import org.apache.asterix.common.api.IClientRequest;
+import org.apache.asterix.common.api.IRequestTracker;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.utils.RequestStatus;
-import org.apache.asterix.hyracks.bootstrap.CCApplication;
 import org.apache.asterix.messaging.CCMessageBroker;
-import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,23 +45,24 @@ public class CancelQueryRequest implements ICcAddressedMessage {
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
-        ClusterControllerService ccs = (ClusterControllerService) appCtx.getServiceContext().getControllerService();
-        CCApplication application = (CCApplication) ccs.getApplication();
-        IStatementExecutorContext executorsCtx = application.getStatementExecutorContext();
-        IClientRequest req = executorsCtx.get(contextId);
+        final IRequestTracker requestTracker = appCtx.getRequestTracker();
+        IClientRequest req = requestTracker.getByClientContextId(contextId);
         RequestStatus status;
 
         if (req == null) {
             LOGGER.log(Level.WARN, "No job found for context id " + contextId);
             status = RequestStatus.NOT_FOUND;
         } else {
-            try {
-                req.cancel(appCtx);
-                executorsCtx.remove(contextId);
-                status = RequestStatus.SUCCESS;
-            } catch (Exception e) {
-                LOGGER.log(Level.WARN, "unexpected exception thrown from cancel", e);
-                status = RequestStatus.FAILED;
+            if (!req.isCancellable()) {
+                status = RequestStatus.REJECTED;
+            } else {
+                try {
+                    requestTracker.cancel(req.getId());
+                    status = RequestStatus.SUCCESS;
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARN, "unexpected exception thrown from cancel", e);
+                    status = RequestStatus.FAILED;
+                }
             }
         }
         CancelQueryResponse response = new CancelQueryResponse(reqId, status);

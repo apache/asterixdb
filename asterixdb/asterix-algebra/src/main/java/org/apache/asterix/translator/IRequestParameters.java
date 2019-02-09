@@ -20,6 +20,7 @@ package org.apache.asterix.translator;
 
 import java.util.Map;
 
+import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.hyracks.api.result.IResultSet;
@@ -67,4 +68,18 @@ public interface IRequestParameters {
      * @return true if the request accepts multiple statements. Otherwise, false.
      */
     boolean isMultiStatement();
+
+    /**
+     * Gets the statement the client provided with the request
+     *
+     * @return the request statement
+     */
+    String getStatement();
+
+    /**
+     * The request reference of this {@link IRequestParameters}
+     *
+     * @return the request reference
+     */
+    IRequestReference getRequestReference();
 }

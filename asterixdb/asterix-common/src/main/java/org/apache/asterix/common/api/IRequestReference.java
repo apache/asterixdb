@@ -16,28 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.utils;
+package org.apache.asterix.common.api;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
+import java.io.Serializable;
 
-public enum RequestStatus {
-    SUCCESS,
-    FAILED,
-    NOT_FOUND,
-    REJECTED;
+public interface IRequestReference extends Serializable {
 
-    public HttpResponseStatus toHttpResponse() {
-        switch (this) {
-            case SUCCESS:
-                return HttpResponseStatus.OK;
-            case FAILED:
-                return HttpResponseStatus.INTERNAL_SERVER_ERROR;
-            case NOT_FOUND:
-                return HttpResponseStatus.NOT_FOUND;
-            case REJECTED:
-                return HttpResponseStatus.FORBIDDEN;
-            default:
-                throw new IllegalStateException("Unrecognized status: " + this);
-        }
-    }
+    /**
+     * Gets the system wide unique request id.
+     *
+     * @return the requests id.
+     */
+    String getUuid();
+
+    /**
+     * Get the node name which received this requests.
+     *
+     * @return the node name
+     */
+    String getNode();
+
+    /**
+     * Gets the system time at which the request was received.
+     *
+     * @return the time at which the request was received.
+     */
+    long getTime();
 }

@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.app.translator.RequestParameters;
+import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -176,16 +177,16 @@ public abstract class RestApiServlet extends AbstractServlet {
             response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
             SessionOutput sessionOutput = initResponse(request, response);
             QueryTranslator.ResultDelivery resultDelivery = whichResultDelivery(request);
-            doHandle(response, query, sessionOutput, resultDelivery);
+            final IRequestReference requestReference = appCtx.getReceptionist().welcome(request);
+            doHandle(requestReference, response, query, sessionOutput, resultDelivery);
         } catch (Exception e) {
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
             LOGGER.log(Level.WARN, "Failure handling request", e);
-            return;
         }
     }
 
-    private void doHandle(IServletResponse response, String query, SessionOutput sessionOutput,
-            ResultDelivery resultDelivery) throws JsonProcessingException {
+    private void doHandle(IRequestReference requestReference, IServletResponse response, String query,
+            SessionOutput sessionOutput, ResultDelivery resultDelivery) throws JsonProcessingException {
         try {
             response.setStatus(HttpResponseStatus.OK);
             IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
@@ -196,9 +197,9 @@ public abstract class RestApiServlet extends AbstractServlet {
             IStatementExecutor translator = statementExecutorFactory.create(appCtx, statements, sessionOutput,
                     compilationProvider, componentProvider);
             final IResultSet resultSet = ServletUtil.getResultSet(hcc, appCtx, ctx);
-            final IRequestParameters requestParameters = new RequestParameters(resultSet,
+            final IRequestParameters requestParameters = new RequestParameters(requestReference, query, resultSet,
                     new ResultProperties(resultDelivery), new IStatementExecutor.Stats(), null, null, null, null, true);
-            translator.compileAndExecute(hcc, null, requestParameters);
+            translator.compileAndExecute(hcc, requestParameters);
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
             GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, pe.getMessage(), pe);

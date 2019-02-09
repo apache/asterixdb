@@ -110,12 +110,10 @@ public interface IStatementExecutor {
      * Compiles and executes a list of statements
      *
      * @param hcc
-     * @param ctx
      * @param requestParameters
      * @throws Exception
      */
-    void compileAndExecute(IHyracksClientConnection hcc, IStatementExecutorContext ctx,
-            IRequestParameters requestParameters) throws Exception;
+    void compileAndExecute(IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception;
 
     /**
      * rewrites and compiles query into a hyracks job specifications

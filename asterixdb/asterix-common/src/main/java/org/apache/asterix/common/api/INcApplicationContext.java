@@ -67,8 +67,8 @@ public interface INcApplicationContext extends IApplicationContext {
 
     IResourceIdFactory getResourceIdFactory();
 
-    void initialize(IRecoveryManagerFactory recoveryManagerFactory, boolean initialRun)
-            throws IOException, AlgebricksException;
+    void initialize(IRecoveryManagerFactory recoveryManagerFactory, IReceptionistFactory receptionistFactory,
+            boolean initialRun) throws IOException, AlgebricksException;
 
     void setShuttingdown(boolean b);
 

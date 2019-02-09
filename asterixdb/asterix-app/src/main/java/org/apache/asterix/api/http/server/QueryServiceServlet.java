@@ -43,6 +43,8 @@ import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IClusterManagementWork;
+import org.apache.asterix.common.api.IReceptionist;
+import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -64,7 +66,6 @@ import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
-import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.ResultProperties;
 import org.apache.asterix.translator.SessionConfig;
@@ -93,7 +94,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     private final ILangCompilationProvider compilationProvider;
     private final IStatementExecutorFactory statementExecutorFactory;
     private final IStorageComponentProvider componentProvider;
-    private final IStatementExecutorContext queryCtx;
+    private final IReceptionist receptionist;
     protected final IServiceContext serviceCtx;
     protected final Function<IServletRequest, Map<String, String>> optionalParamProvider;
     protected String hostName;
@@ -107,7 +108,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         this.compilationProvider = compilationProvider;
         this.statementExecutorFactory = statementExecutorFactory;
         this.componentProvider = componentProvider;
-        this.queryCtx = (IStatementExecutorContext) ctx.get(ServletConstants.RUNNING_QUERIES_ATTR);
+        receptionist = appCtx.getReceptionist();
         this.serviceCtx = (IServiceContext) ctx.get(ServletConstants.SERVICE_CONTEXT_ATTR);
         this.optionalParamProvider = optionalParamProvider;
         try {
@@ -345,7 +346,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         pw.print("\t}\n");
     }
 
-    private String getOptText(JsonNode node, String fieldName) {
+    protected String getOptText(JsonNode node, String fieldName) {
         final JsonNode value = node.get(fieldName);
         return value != null ? value.asText() : null;
     }
@@ -397,7 +398,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         String contentType = HttpUtil.getContentTypeOnly(request);
         if (HttpUtil.ContentType.APPLICATION_JSON.equals(contentType)) {
             try {
-                setParamFromJSON(request, param);
+                setParamFromJSON(request, param, optionalParams);
             } catch (JsonParseException | JsonMappingException e) {
                 // if the JSON parsing fails, the statement is empty and we get an empty statement error
                 GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
@@ -407,7 +408,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
     }
 
-    private void setParamFromJSON(IServletRequest request, QueryServiceRequestParameters param) throws IOException {
+    private void setParamFromJSON(IServletRequest request, QueryServiceRequestParameters param,
+            Map<String, String> optionalParameters) throws IOException {
         JsonNode jsonRequest = OBJECT_MAPPER.readTree(HttpUtil.getRequestBody(request));
         param.setFormat(toLower(getOptText(jsonRequest, Parameter.FORMAT.str())));
         param.setPretty(getOptBoolean(jsonRequest, Parameter.PRETTY.str(), false));
@@ -430,6 +432,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         if (jsonRequest.has(statementParam)) {
             param.setStatement(jsonRequest.get(statementParam).asText());
         }
+        setJsonOptionalParameters(jsonRequest, optionalParameters);
+    }
+
+    protected void setJsonOptionalParameters(JsonNode jsonRequest, Map<String, String> optionalParameters) {
+        // allows extensions to set extra parameters
     }
 
     private void setParamFromRequest(IServletRequest request, QueryServiceRequestParameters param) throws IOException {
@@ -503,6 +510,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     private void handleRequest(IServletRequest request, IServletResponse response) {
+        final IRequestReference requestRef = receptionist.welcome(request);
         long elapsedStart = System.nanoTime();
         long errorCount = 1;
         Stats stats = new Stats();
@@ -527,7 +535,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             final ResultProperties resultProperties = param.getMaxResultReads() == null ? new ResultProperties(delivery)
                     : new ResultProperties(delivery, Long.parseLong(param.getMaxResultReads()));
             printAdditionalResultFields(sessionOutput.out());
-            printRequestId(sessionOutput.out());
+            printRequestId(sessionOutput.out(), requestRef.getUuid());
             printClientContextID(sessionOutput.out(), param);
             if (!param.isParseOnly()) {
                 printSignature(sessionOutput.out(), param);
@@ -544,10 +552,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             } else {
                 Map<String, byte[]> statementParams = org.apache.asterix.app.translator.RequestParameters
                         .serializeParameterValues(param.getStatementParams());
-
                 setAccessControlHeaders(request, response);
                 response.setStatus(execution.getHttpStatus());
-                executeStatement(statementsText, sessionOutput, resultProperties, stats, param, execution,
+                executeStatement(requestRef, statementsText, sessionOutput, resultProperties, stats, param, execution,
                         optionalParams, statementParams);
                 if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
                     ResultUtil.printStatus(sessionOutput, execution.getResultStatus());
@@ -594,10 +601,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return parseOnlyResult;
     }
 
-    protected void executeStatement(String statementsText, SessionOutput sessionOutput,
-            ResultProperties resultProperties, Stats stats, QueryServiceRequestParameters param,
-            RequestExecutionState execution, Map<String, String> optionalParameters,
-            Map<String, byte[]> statementParameters) throws Exception {
+    protected void executeStatement(IRequestReference requestReference, String statementsText,
+            SessionOutput sessionOutput, ResultProperties resultProperties, Stats stats,
+            QueryServiceRequestParameters param, RequestExecutionState execution,
+            Map<String, String> optionalParameters, Map<String, byte[]> statementParameters) throws Exception {
         IClusterManagementWork.ClusterState clusterState =
                 ((ICcApplicationContext) appCtx).getClusterStateManager().getState();
         if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
@@ -612,10 +619,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         execution.start();
         Map<String, IAObject> stmtParams =
                 org.apache.asterix.app.translator.RequestParameters.deserializeParameterValues(statementParameters);
-        IRequestParameters requestParameters =
-                new org.apache.asterix.app.translator.RequestParameters(getResultSet(), resultProperties, stats, null,
-                        param.getClientContextID(), optionalParameters, stmtParams, param.isMultiStatement());
-        translator.compileAndExecute(getHyracksClientConnection(), queryCtx, requestParameters);
+        IRequestParameters requestParameters = new org.apache.asterix.app.translator.RequestParameters(requestReference,
+                statementsText, getResultSet(), resultProperties, stats, null, param.getClientContextID(),
+                optionalParameters, stmtParams, param.isMultiStatement());
+        translator.compileAndExecute(getHyracksClientConnection(), requestParameters);
         execution.end();
         printExecutionPlans(sessionOutput, translator.getExecutionPlans());
     }

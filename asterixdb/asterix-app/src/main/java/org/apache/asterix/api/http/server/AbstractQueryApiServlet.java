@@ -120,10 +120,8 @@ public class AbstractQueryApiServlet extends AbstractServlet {
         return hcc;
     }
 
-    protected static UUID printRequestId(PrintWriter pw) {
-        UUID requestId = UUID.randomUUID();
-        ResultUtil.printField(pw, ResultFields.REQUEST_ID.str(), requestId.toString());
-        return requestId;
+    protected static void printRequestId(PrintWriter pw, String requestId) {
+        ResultUtil.printField(pw, ResultFields.REQUEST_ID.str(), requestId);
     }
 
     protected static void printHandle(PrintWriter pw, String handle, boolean comma) {
