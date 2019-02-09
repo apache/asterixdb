@@ -19,7 +19,6 @@
 package org.apache.asterix.om.types;
 
 import org.apache.asterix.om.base.IAObject;
-import org.apache.hyracks.util.CompatibilityUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -66,11 +65,7 @@ public abstract class BuiltinType implements IAType {
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
-            if (CompatibilityUtil.isAtLeast035()) {
-                type.put("type", "ALL_TYPE");
-            } else {
-                type.put("type", "ASTERIX_TYPE");
-            }
+            type.put("type", "ALL_TYPE");
             return type;
         }
     };

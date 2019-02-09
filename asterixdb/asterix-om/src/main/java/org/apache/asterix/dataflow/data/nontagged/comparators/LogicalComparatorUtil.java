@@ -52,10 +52,6 @@ public class LogicalComparatorUtil {
     }
 
     public static ILogicalBinaryComparator createLogicalComparator(IAType left, IAType right, boolean isEquality) {
-        // this should never happen, but for back-compat where types are missing and would be defaulted to null
-        if (left == null || right == null) {
-            return new LogicalScalarBinaryComparator(isEquality);
-        }
         IAType leftType = TypeComputeUtils.getActualType(left);
         IAType rightType = TypeComputeUtils.getActualType(right);
 

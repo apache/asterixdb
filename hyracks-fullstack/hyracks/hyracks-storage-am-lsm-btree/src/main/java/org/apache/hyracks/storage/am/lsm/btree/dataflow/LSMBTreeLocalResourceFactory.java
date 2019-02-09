@@ -35,7 +35,7 @@ import org.apache.hyracks.storage.am.lsm.common.dataflow.LsmResource;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LsmResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
-import org.apache.hyracks.util.CompatibilityUtil;
+import org.apache.hyracks.util.ReflectionUtils;
 
 public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
 
@@ -78,7 +78,7 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
 
         // compat w/ 0.3.4
         if (compressorDecompressorFactory == null) {
-            CompatibilityUtil.writeField(this, "compressorDecompressorFactory",
+            ReflectionUtils.writeField(this, "compressorDecompressorFactory",
                     NoOpCompressorDecompressorFactory.INSTANCE);
         }
     }
