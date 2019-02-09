@@ -22,7 +22,6 @@ import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
-import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -46,11 +45,10 @@ public abstract class ExtensionStatement extends AbstractStatement {
      * @param requestParameters
      * @param metadataProvider
      * @param resultSetId
-     * @param executorCtx
      * @throws HyracksDataException
      * @throws AlgebricksException
      */
     public abstract void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
-            IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId,
-            IStatementExecutorContext executorCtx) throws HyracksDataException, AlgebricksException;
+            IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId)
+            throws HyracksDataException, AlgebricksException;
 }
