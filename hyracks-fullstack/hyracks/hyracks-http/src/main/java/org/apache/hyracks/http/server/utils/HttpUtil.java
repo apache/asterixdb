@@ -30,6 +30,7 @@ import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.BaseRequest;
 import org.apache.hyracks.http.server.FormUrlEncodedRequest;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -79,9 +80,10 @@ public class HttpUtil {
         }
     }
 
-    public static IServletRequest toServletRequest(FullHttpRequest request) throws IOException {
+    public static IServletRequest toServletRequest(ChannelHandlerContext ctx, FullHttpRequest request)
+            throws IOException {
         return ContentType.APPLICATION_X_WWW_FORM_URLENCODED.equals(getContentTypeOnly(request))
-                ? FormUrlEncodedRequest.create(request) : BaseRequest.create(request);
+                ? FormUrlEncodedRequest.create(ctx, request) : BaseRequest.create(ctx, request);
     }
 
     public static String getContentTypeOnly(IServletRequest request) {

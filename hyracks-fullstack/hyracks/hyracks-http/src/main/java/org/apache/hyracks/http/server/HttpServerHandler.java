@@ -130,7 +130,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
     private void submit(ChannelHandlerContext ctx, IServlet servlet, FullHttpRequest request) throws IOException {
         IServletRequest servletRequest;
         try {
-            servletRequest = HttpUtil.toServletRequest(request);
+            servletRequest = HttpUtil.toServletRequest(ctx, request);
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.WARN, "Failure Decoding Request", e);
             respond(ctx, request, HttpResponseStatus.BAD_REQUEST);

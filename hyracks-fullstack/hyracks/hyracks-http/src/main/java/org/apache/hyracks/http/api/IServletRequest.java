@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.http.api;
 
+import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.Set;
 
@@ -73,4 +74,11 @@ public interface IServletRequest {
         String value = getHeader(name);
         return value == null ? defaultValue : value;
     }
+
+    /**
+     * Gets the remote address of this request if its channel is connected. Otherwise null.
+     *
+     * @return the remote address
+     */
+    InetSocketAddress getRemoteAddress();
 }

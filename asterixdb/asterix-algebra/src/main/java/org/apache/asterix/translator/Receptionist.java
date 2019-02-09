@@ -28,6 +28,7 @@ import org.apache.asterix.common.api.RequestReference;
 import org.apache.http.HttpHeaders;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.util.NetworkUtil;
 
 public class Receptionist implements IReceptionist {
 
@@ -42,7 +43,7 @@ public class Receptionist implements IReceptionist {
         final String uuid = UUID.randomUUID().toString();
         final RequestReference ref = RequestReference.of(uuid, node, System.currentTimeMillis());
         ref.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
-        //TODO set remote address
+        ref.setRemoteAddr(NetworkUtil.toHostPort(request.getRemoteAddress()));
         return ref;
     }
 

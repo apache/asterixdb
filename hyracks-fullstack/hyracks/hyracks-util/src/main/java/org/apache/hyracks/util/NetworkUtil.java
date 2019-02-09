@@ -80,7 +80,7 @@ public class NetworkUtil {
     }
 
     public static String toHostPort(InetSocketAddress address) {
-        return toHostPort(address.getHostString(), address.getPort());
+        return address != null ? toHostPort(address.getHostString(), address.getPort()) : null;
     }
 
     public static InetSocketAddress parseInetSocketAddress(String hostPortString) {

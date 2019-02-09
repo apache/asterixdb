@@ -19,6 +19,7 @@
 package org.apache.hyracks.http.server;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ import java.util.Set;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.multipart.Attribute;
@@ -42,7 +44,7 @@ public class FormUrlEncodedRequest extends BaseRequest implements IServletReques
     private final List<String> names;
     private final List<String> values;
 
-    public static IServletRequest create(FullHttpRequest request) throws IOException {
+    public static IServletRequest create(ChannelHandlerContext ctx, FullHttpRequest request) throws IOException {
         List<String> names = new ArrayList<>();
         List<String> values = new ArrayList<>();
         HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(request);
@@ -58,12 +60,14 @@ public class FormUrlEncodedRequest extends BaseRequest implements IServletReques
         } finally {
             decoder.destroy();
         }
-        return new FormUrlEncodedRequest(request, new QueryStringDecoder(request.uri()).parameters(), names, values);
+        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+        return new FormUrlEncodedRequest(request, remoteAddress, new QueryStringDecoder(request.uri()).parameters(),
+                names, values);
     }
 
-    protected FormUrlEncodedRequest(FullHttpRequest request, Map<String, List<String>> parameters, List<String> names,
-            List<String> values) {
-        super(request, parameters);
+    protected FormUrlEncodedRequest(FullHttpRequest request, InetSocketAddress remoteAddress,
+            Map<String, List<String>> parameters, List<String> names, List<String> values) {
+        super(request, remoteAddress, parameters);
         this.names = names;
         this.values = values;
     }
