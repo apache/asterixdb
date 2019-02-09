@@ -28,7 +28,7 @@
   <fileSets>
     <fileSet>
       <directory>target/generated-sources</directory>
-      <outputDirectory>.</outputDirectory>
+      <outputDirectory>apache-asterixdb-${project.version}/</outputDirectory>
       <includes>
         <include>LICENSE*</include>
         <include>NOTICE*</include>
@@ -36,7 +36,7 @@
     </fileSet>
     <fileSet>
       <directory>src/main/opt</directory>
-      <outputDirectory>opt</outputDirectory>
+      <outputDirectory>apache-asterixdb-${project.version}/opt</outputDirectory>
       <excludes>
         <exclude>**/*.sh</exclude>
       </excludes>
@@ -44,7 +44,7 @@
     </fileSet>
     <fileSet>
       <directory>src/main/opt</directory>
-      <outputDirectory>opt</outputDirectory>
+      <outputDirectory>apache-asterixdb-${project.version}/opt</outputDirectory>
       <includes>
         <include>**/*.sh</include>
       </includes>
@@ -53,7 +53,7 @@
     </fileSet>
     <fileSet>
       <directory>src/main/opt/ansible/yaml</directory>
-      <outputDirectory>opt/aws/yaml</outputDirectory>
+      <outputDirectory>apache-asterixdb-${project.version}/opt/aws/yaml</outputDirectory>
       <includes>
         <include>**/*.yml</include>
       </includes>
@@ -61,7 +61,7 @@
     </fileSet>
     <fileSet>
       <directory>src/main/opt/ansible/conf</directory>
-      <outputDirectory>opt/aws/conf</outputDirectory>
+      <outputDirectory>apache-asterixdb-${project.version}/opt/aws/conf</outputDirectory>
       <includes>
         <include>**/instance_settings.yml</include>
       </includes>
@@ -69,16 +69,16 @@
     </fileSet>
     <fileSet>
       <directory>target/appassembler/repo</directory>
-      <outputDirectory>repo</outputDirectory>
+      <outputDirectory>apache-asterixdb-${project.version}/repo</outputDirectory>
     </fileSet>
     <fileSet>
       <directory>target/appassembler/bin</directory>
-      <outputDirectory>bin</outputDirectory>
+      <outputDirectory>apache-asterixdb-${project.version}/bin</outputDirectory>
       <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
       <directory>target/generated-resources/appassembler/booter-windows/etc</directory>
-      <outputDirectory>etc</outputDirectory>
+      <outputDirectory>apache-asterixdb-${project.version}/etc</outputDirectory>
       <includes>
         <include>*.xml</include>
       </includes>
@@ -86,7 +86,7 @@
 
     <fileSet>
       <directory>target/generated-resources/appassembler/booter-windows/bin</directory>
-      <outputDirectory>bin</outputDirectory>
+      <outputDirectory>apache-asterixdb-${project.version}/bin</outputDirectory>
       <fileMode>0755</fileMode>
     </fileSet>
   </fileSets>
@@ -94,7 +94,7 @@
     <dependencySet>
       <useStrictFiltering>true</useStrictFiltering>
       <unpack>true</unpack>
-      <outputDirectory>.</outputDirectory>
+      <outputDirectory>apache-asterixdb-${project.version}</outputDirectory>
       <includes>
         <include>org.apache.asterix:asterix-client-helper:zip:assembly:*</include>
       </includes>
