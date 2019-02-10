@@ -114,8 +114,8 @@ public class CancellationTestExecutor extends TestExecutor {
             }
         }
         String errorMsg = ExceptionUtils.getErrorMessage(e);
-        // Expected, "HYR0025" means a user cancelled the query.)
-        if (errorMsg.startsWith("HYR0025")) {
+        // Expected, "HYR0025" or "ASX0041" means a user cancelled the query.)
+        if (errorMsg.startsWith("HYR0025") || errorMsg.startsWith("ASX0041")) {
             SqlppExecutionWithCancellationTest.numCancelledQueries++;
             queryCount.increment();
             return false;
