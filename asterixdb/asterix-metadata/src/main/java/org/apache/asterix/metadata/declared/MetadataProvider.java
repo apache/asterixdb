@@ -21,10 +21,13 @@ package org.apache.asterix.metadata.declared;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -124,9 +127,9 @@ import org.apache.hyracks.api.dataflow.value.IResultSerializerFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
@@ -151,6 +154,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private final IFunctionManager functionManager;
     private final LockList locks;
     private final Map<String, Object> config;
+    private final Set<Dataset> txnAccessedDatasets;
 
     private Dataverse defaultDataverse;
     private MetadataTransactionContext mdTxnCtx;
@@ -173,6 +177,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         functionManager = ((IFunctionExtensionManager) appCtx.getExtensionManager()).getFunctionManager();
         locks = new LockList();
         config = new HashMap<>();
+        txnAccessedDatasets = new HashSet<>();
     }
 
     @SuppressWarnings("unchecked")
@@ -233,6 +238,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public void setMetadataTxnContext(MetadataTransactionContext mdTxnCtx) {
         this.mdTxnCtx = mdTxnCtx;
+        txnAccessedDatasets.clear();
     }
 
     public MetadataTransactionContext getMetadataTxnContext() {
@@ -1620,5 +1626,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public ICompressionManager getCompressionManager() {
         return appCtx.getCompressionManager();
+    }
+
+    public void addAccessedDataset(Dataset dataset) {
+        txnAccessedDatasets.add(dataset);
+    }
+
+    public Set<Dataset> getAccssedDatasets() {
+        return Collections.unmodifiableSet(txnAccessedDatasets);
     }
 }

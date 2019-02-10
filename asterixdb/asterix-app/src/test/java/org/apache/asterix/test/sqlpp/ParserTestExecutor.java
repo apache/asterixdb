@@ -55,6 +55,8 @@ import org.apache.asterix.testframework.xml.ComparisonEnum;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.junit.Assert;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import junit.extensions.PA;
 
@@ -131,7 +133,16 @@ public class ParserTestExecutor extends TestExecutor {
             when(metadataProvider.getDefaultDataverseName()).thenReturn(dvName);
             when(metadataProvider.getConfig()).thenReturn(config);
             when(config.get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS)).thenReturn("true");
-            when(metadataProvider.findDataset(anyString(), anyString())).thenReturn(mock(Dataset.class));
+            when(metadataProvider.findDataset(anyString(), anyString())).thenAnswer(new Answer<Dataset>() {
+                @Override
+                public Dataset answer(InvocationOnMock invocation) {
+                    Object[] args = invocation.getArguments();
+                    final Dataset mockDataset = mock(Dataset.class);
+                    String fullyQualifiedName = args[0] != null ? args[0] + "." + args[1] : (String) args[1];
+                    when(mockDataset.getFullyQualifiedName()).thenReturn(fullyQualifiedName);
+                    return mockDataset;
+                }
+            });
 
             for (Statement st : statements) {
                 if (st.getKind() == Statement.Kind.QUERY) {

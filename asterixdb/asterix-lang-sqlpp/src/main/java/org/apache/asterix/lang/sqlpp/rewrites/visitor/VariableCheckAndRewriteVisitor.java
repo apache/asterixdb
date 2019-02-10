@@ -44,6 +44,7 @@ import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.CheckDatasetOnlyResolutionVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -146,12 +147,13 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
 
     private Expression resolveAsDataset(String dataverseName, String datasetName, SourceLocation sourceLoc)
             throws CompilationException {
-        if (!datasetExists(dataverseName, datasetName, sourceLoc)) {
+        Dataset dataset = findDataset(dataverseName, datasetName, sourceLoc);
+        if (dataset == null) {
             throwUnresolvableError(dataverseName, datasetName, sourceLoc);
         }
-        String fullyQualifiedName = dataverseName == null ? datasetName : dataverseName + "." + datasetName;
+        metadataProvider.addAccessedDataset(dataset);
         List<Expression> argList = new ArrayList<>(1);
-        argList.add(new LiteralExpr(new StringLiteral(fullyQualifiedName)));
+        argList.add(new LiteralExpr(new StringLiteral(dataset.getFullyQualifiedName())));
         CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), argList);
         callExpr.setSourceLocation(sourceLoc);
         return callExpr;
@@ -186,22 +188,28 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         return parent.accept(visitor, originalExpressionWithUndefinedIdentifier);
     }
 
-    private boolean datasetExists(String dataverseName, String datasetName, SourceLocation sourceLoc)
+    private Dataset findDataset(String dataverseName, String datasetName, SourceLocation sourceLoc)
             throws CompilationException {
         try {
-            return metadataProvider.findDataset(dataverseName, datasetName) != null
-                    || fullyQualifiedDatasetNameExists(datasetName);
+            Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+            if (dataset != null) {
+                return dataset;
+            }
+            return findDatasetByFullyQualifiedName(datasetName);
         } catch (AlgebricksException e) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
         }
     }
 
-    private boolean fullyQualifiedDatasetNameExists(String name) throws AlgebricksException {
+    private Dataset findDatasetByFullyQualifiedName(String name) throws AlgebricksException {
         if (name.indexOf('.') < 0) {
-            return false;
+            return null;
         }
         String[] path = StringUtils.split(name, '.');
-        return path.length == 2 && metadataProvider.findDataset(path[0], path[1]) != null;
+        if (path.length != 2) {
+            return null;
+        }
+        return metadataProvider.findDataset(path[0], path[1]);
     }
 
     @Override
