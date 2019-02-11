@@ -20,12 +20,13 @@ package org.apache.asterix.translator;
 
 import java.util.Map;
 
+import org.apache.asterix.common.api.ICommonRequestParameters;
 import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.hyracks.api.result.IResultSet;
 
-public interface IRequestParameters {
+public interface IRequestParameters extends ICommonRequestParameters {
 
     /**
      * @return A Resultset client object that is used to read the results.
@@ -50,36 +51,7 @@ public interface IRequestParameters {
     IStatementExecutor.ResultMetadata getOutMetadata();
 
     /**
-     * @return the client context id for the query
-     */
-    String getClientContextId();
-
-    /**
-     * @return Optional request parameters. Otherwise null.
-     */
-    Map<String, String> getOptionalParameters();
-
-    /**
      * @return Statement parameters
      */
     Map<String, IAObject> getStatementParameters();
-
-    /**
-     * @return true if the request accepts multiple statements. Otherwise, false.
-     */
-    boolean isMultiStatement();
-
-    /**
-     * Gets the statement the client provided with the request
-     *
-     * @return the request statement
-     */
-    String getStatement();
-
-    /**
-     * The request reference of this {@link IRequestParameters}
-     *
-     * @return the request reference
-     */
-    IRequestReference getRequestReference();
 }

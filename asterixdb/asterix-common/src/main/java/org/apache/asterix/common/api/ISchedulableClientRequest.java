@@ -18,33 +18,36 @@
  */
 package org.apache.asterix.common.api;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import org.apache.hyracks.api.job.JobSpecification;
 
-public interface IReceptionist {
-
-    /**
-     * Generates a request reference based on {@code request}
-     *
-     * @param request
-     * @return a request reference representing the request
-     */
-    IRequestReference welcome(IServletRequest request);
+public interface ISchedulableClientRequest {
 
     /**
-     * Generates a {@link IClientRequest} based on the requests parameters
+     * Gets the client request
      *
-     * @param requestParameters
      * @return the client request
-     * @throws HyracksDataException
      */
-    IClientRequest requestReceived(ICommonRequestParameters requestParameters) throws HyracksDataException;
+    IClientRequest getClientRequest();
 
     /**
-     * Ensures a client's request can be executed before its job is started
+     * Gets the request common parameters
      *
-     * @param schedulableRequest
-     * @throws HyracksDataException
+     * @return the request common parameters
      */
-    void ensureSchedulable(ISchedulableClientRequest schedulableRequest) throws HyracksDataException;
+    ICommonRequestParameters getRequestParameters();
+
+    /**
+     * Gets the request's job specification
+     *
+     * @return
+     */
+    JobSpecification getJobSpecification();
+
+    /**
+     * Gets the metadata provider used to execute this request
+     *
+     * @return the metadata provider
+     */
+    IMetadataProvider getMetadataProvider();
 }

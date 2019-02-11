@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.api.http.server.CcQueryCancellationServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
+import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.api.RequestReference;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.runtime.utils.RequestTracker;
@@ -66,7 +67,9 @@ public class QueryCancellationServletTest {
         verify(mockResponse, times(1)).setStatus(HttpResponseStatus.NOT_FOUND);
 
         final RequestReference requestReference = RequestReference.of("1", "node1", System.currentTimeMillis());
-        ClientRequest request = new ClientRequest(requestReference, "1", "select 1;", new HashMap<>());
+        RequestParameters requestParameters =
+                new RequestParameters(requestReference, "select 1", null, null, null, null, "1", null, null, true);
+        ClientRequest request = new ClientRequest(requestParameters);
         request.setJobId(new JobId(1));
         request.markCancellable();
         tracker.track(request);
@@ -81,7 +84,9 @@ public class QueryCancellationServletTest {
 
         // Tests the case that the job cancellation hit some exception from Hyracks.
         final RequestReference requestReference2 = RequestReference.of("2", "node1", System.currentTimeMillis());
-        ClientRequest request2 = new ClientRequest(requestReference2, "2", "select 1;", new HashMap<>());
+        requestParameters =
+                new RequestParameters(requestReference2, "select 1", null, null, null, null, "2", null, null, true);
+        ClientRequest request2 = new ClientRequest(requestParameters);
         request2.setJobId(new JobId(2));
         request2.markCancellable();
         tracker.track(request2);

@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.translator;
 
-import java.util.Map;
-
-import org.apache.asterix.common.api.IRequestReference;
+import org.apache.asterix.common.api.ICommonRequestParameters;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -35,11 +33,10 @@ public class ClientRequest extends BaseClientRequest {
     protected Thread executor;
     protected String clientContextId;
 
-    public ClientRequest(IRequestReference requestReference, String clientContextId, String statement,
-            Map<String, String> optionalParameters) {
-        super(requestReference);
-        this.clientContextId = clientContextId;
-        this.statement = statement;
+    public ClientRequest(ICommonRequestParameters requestParameters) {
+        super(requestParameters.getRequestReference());
+        this.clientContextId = requestParameters.getClientContextId();
+        this.statement = requestParameters.getStatement();
         this.executor = Thread.currentThread();
     }
 
