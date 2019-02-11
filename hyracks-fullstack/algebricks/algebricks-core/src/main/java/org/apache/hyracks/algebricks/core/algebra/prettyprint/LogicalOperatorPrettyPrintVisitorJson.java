@@ -252,9 +252,13 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     @Override
     public Void visitOrderOperator(OrderOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent).append("\"operator\": \"order\"");
+        buffer.append(",\n");
         int topK = op.getTopK();
-        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions = op.getOrderExpressions();
-        pprintOrderExprList(orderExpressions, topK, indent);
+        if (topK != -1) {
+            addIndent(indent).append("\"topK\": \"" + topK + "\",\n");
+        }
+        addIndent(indent).append("\"order-by-list\": ");
+        pprintOrderExprList(op.getOrderExpressions(), indent);
         return null;
     }
 
@@ -653,58 +657,76 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     @Override
     public Void visitWindowOperator(WindowOperator op, Integer indent) throws AlgebricksException {
+        Integer fldIndent = indent + 2;
         addIndent(indent).append("\"operator\": \"window\"");
         variablePrintHelper(op.getVariables(), indent);
-        addIndent(0).append(",\n");
-        pprintExprList(op.getExpressions(), indent);
-        if (!op.getPartitionExpressions().isEmpty()) {
+        List<Mutable<ILogicalExpression>> expressions = op.getExpressions();
+        if (!expressions.isEmpty()) {
             buffer.append(",\n");
-            addIndent(indent).append("\"partition by\": ");
-            pprintExprList(op.getPartitionExpressions(), indent);
+            pprintExprList(expressions, indent);
         }
-        if (!op.getOrderExpressions().isEmpty()) {
+        List<Mutable<ILogicalExpression>> partitionExpressions = op.getPartitionExpressions();
+        if (!partitionExpressions.isEmpty()) {
             buffer.append(",\n");
-            addIndent(indent).append("\"order by\": ");
-            pprintOrderExprList(op.getOrderExpressions(), -1, indent);
+            addIndent(indent).append("\"partition-by\": {\n");
+            pprintExprList(partitionExpressions, fldIndent);
+            buffer.append("\n");
+            addIndent(indent).append("}");
+        }
+        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions = op.getOrderExpressions();
+        if (!orderExpressions.isEmpty()) {
+            buffer.append(",\n");
+            addIndent(indent).append("\"order-by\": ");
+            pprintOrderExprList(orderExpressions, fldIndent);
         }
         if (op.hasNestedPlans()) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"frame on\": ");
-            pprintOrderExprList(op.getFrameValueExpressions(), -1, indent);
+            List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> frameValueExpressions =
+                    op.getFrameValueExpressions();
+            if (!frameValueExpressions.isEmpty()) {
+                buffer.append(",\n");
+                addIndent(indent).append("\"frame-on\": ");
+                pprintOrderExprList(frameValueExpressions, fldIndent);
+            }
             List<Mutable<ILogicalExpression>> frameStartExpressions = op.getFrameStartExpressions();
             if (!frameStartExpressions.isEmpty()) {
                 buffer.append(",\n");
-                addIndent(indent).append("\"frame start\": ");
-                pprintExprList(frameStartExpressions, indent);
+                addIndent(indent).append("\"frame-start\": {\n");
+                pprintExprList(frameStartExpressions, fldIndent);
+                buffer.append("\n");
+                addIndent(indent).append("}");
             }
             List<Mutable<ILogicalExpression>> frameEndExpressions = op.getFrameEndExpressions();
             if (!frameEndExpressions.isEmpty()) {
                 buffer.append(",\n");
-                addIndent(indent).append("\"frame end\": ");
-                pprintExprList(frameEndExpressions, indent);
+                addIndent(indent).append("\"frame-end\": {\n");
+                pprintExprList(frameEndExpressions, fldIndent);
+                buffer.append("\n");
+                addIndent(indent).append("}");
             }
             List<Mutable<ILogicalExpression>> frameExcludeExpressions = op.getFrameExcludeExpressions();
             if (!frameExcludeExpressions.isEmpty()) {
                 buffer.append(",\n");
-                addIndent(indent).append("\"frame exclude\": ");
-                pprintExprList(frameExcludeExpressions, indent);
-                addIndent(indent).append("\"frame exclude negation start\": ")
+                addIndent(indent).append("\"frame-exclude\": {\n");
+                pprintExprList(frameExcludeExpressions, fldIndent);
+                buffer.append("\n");
+                addIndent(indent).append("},\n");
+                addIndent(indent).append("\"frame-exclude-negation-start\": ")
                         .append(String.valueOf(op.getFrameExcludeNegationStartIdx()));
             }
             Mutable<ILogicalExpression> frameOffset = op.getFrameOffset();
             if (frameOffset.getValue() != null) {
                 buffer.append(",\n");
-                addIndent(indent).append("\"frame offset\": ");
-                pprintExpr(frameOffset, indent);
+                addIndent(indent).append("\"frame-offset\": ");
+                pprintExpr(frameOffset, fldIndent);
             }
             int frameMaxObjects = op.getFrameMaxObjects();
             if (frameMaxObjects != -1) {
                 buffer.append(",\n");
-                addIndent(indent).append("\"frame maxObjects\": " + frameMaxObjects);
+                addIndent(indent).append("\"frame-max-objects\": ").append(String.valueOf(frameMaxObjects));
             }
-
+            buffer.append(",\n");
             addIndent(indent).append("\"subplan\": ");
-            printNestedPlans(op, indent);
+            printNestedPlans(op, fldIndent);
         }
         return null;
     }
@@ -766,27 +788,29 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     }
 
     private void pprintOrderExprList(List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions,
-            int topK, Integer indent) throws AlgebricksException {
+            Integer indent) throws AlgebricksException {
+        buffer.append("[");
+        boolean first = true;
         for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExpressions) {
-            buffer.append(",\n");
-            if (topK != -1) {
-                addIndent(indent).append("\"topK\": \"" + topK + "\",\n");
+            if (first) {
+                first = false;
+            } else {
+                buffer.append(",");
             }
-            String fst = getOrderString(p.first);
-            addIndent(indent).append("\"first\": " + fst + ",\n");
-            addIndent(indent).append(
-                    "\"second\": \"" + p.second.getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
+            buffer.append("{\"order\": \"" + getOrderString(p.first, indent) + "\"," + "\"expression\": \""
+                    + p.second.getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"}");
         }
+        buffer.append("]");
     }
 
-    private String getOrderString(OrderOperator.IOrder first) {
-        switch (first.getKind()) {
+    private String getOrderString(OrderOperator.IOrder order, Integer indent) throws AlgebricksException {
+        switch (order.getKind()) {
             case ASC:
-                return "\"ASC\"";
+                return "ASC";
             case DESC:
-                return "\"DESC\"";
+                return "DESC";
             default:
-                return first.getExpressionRef().toString();
+                return order.getExpressionRef().getValue().accept(exprVisitor, indent).replace('"', ' ');
         }
     }
 }
