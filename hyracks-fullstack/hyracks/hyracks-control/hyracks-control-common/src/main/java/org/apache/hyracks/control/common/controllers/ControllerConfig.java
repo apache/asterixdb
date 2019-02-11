@@ -40,8 +40,8 @@ public class ControllerConfig implements Serializable {
         CONFIG_FILE_URL(OptionTypes.URL, (URL) null, "Specify URL to master configuration file"),
         DEFAULT_DIR(
                 OptionTypes.STRING,
-                "Directory where files are written to by default",
-                FileUtil.joinPath(System.getProperty(ConfigurationUtil.JAVA_IO_TMPDIR), "hyracks")),
+                FileUtil.joinPath(System.getProperty(ConfigurationUtil.JAVA_IO_TMPDIR), "hyracks"),
+                "Directory where files are written to by default"),
         LOG_DIR(
                 OptionTypes.STRING,
                 (Function<IApplicationConfig, String>) appConfig -> FileUtil
