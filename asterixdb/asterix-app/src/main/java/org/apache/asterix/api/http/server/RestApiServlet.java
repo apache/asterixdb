@@ -86,7 +86,7 @@ public abstract class RestApiServlet extends AbstractServlet {
      * based on the Accept: header and other servlet parameters.
      */
     static SessionOutput initResponse(IServletRequest request, IServletResponse response) throws IOException {
-        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, HttpUtil.Encoding.UTF8);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, request);
         // CLEAN_JSON output is the default; most generally useful for a
         // programmatic HTTP API
         OutputFormat format = OutputFormat.CLEAN_JSON;

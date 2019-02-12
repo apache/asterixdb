@@ -52,6 +52,7 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
 
     @Override
     protected void get(IServletRequest request, IServletResponse response) throws IOException {
+        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         PrintWriter responseWriter = response.writer();
         IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
         try {
@@ -63,7 +64,6 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
             } else {
                 json = processNode(request, hcc);
             }
-            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
             responseWriter.write(OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(json));
         } catch (IllegalStateException e) { // NOSONAR - exception not logged or rethrown
             response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);

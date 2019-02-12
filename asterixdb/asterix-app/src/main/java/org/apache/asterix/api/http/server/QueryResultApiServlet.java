@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.api.http.server;
 
-import java.io.PrintWriter;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.app.result.ResultHandle;
@@ -26,10 +25,10 @@ import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionOutput;
-import org.apache.hyracks.api.result.ResultJobRecord;
-import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.result.IResultSet;
+import org.apache.hyracks.api.result.ResultJobRecord;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -48,9 +47,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
 
     @Override
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
-        // TODO this seems wrong ...
-        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);
-        PrintWriter out = response.writer();
+        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, request);
 
         final String strHandle = localPath(request);
         final ResultHandle handle = ResultHandle.parse(strHandle);
@@ -104,13 +101,13 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
                 return;
             }
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
-            out.println(e.getMessage());
+            response.writer().println(e.getMessage());
             LOGGER.log(Level.WARN, "Error retrieving result for \"" + strHandle + "\"", e);
         } catch (Exception e) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             LOGGER.log(Level.WARN, "Error retrieving result for \"" + strHandle + "\"", e);
         }
-        if (out.checkError()) {
+        if (response.writer().checkError()) {
             LOGGER.warn("Error flushing output writer for \"" + strHandle + "\"");
         }
     }

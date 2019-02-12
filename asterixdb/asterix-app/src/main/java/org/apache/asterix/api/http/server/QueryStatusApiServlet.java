@@ -21,7 +21,6 @@ package org.apache.asterix.api.http.server;
 import static org.apache.asterix.api.http.server.AbstractQueryApiServlet.ResultStatus.FAILED;
 
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
@@ -66,10 +65,9 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         ResultStatus resultStatus = resultStatus(resultReaderStatus);
         Exception ex = extractException(resultReaderStatus);
 
-        final StringWriter stringWriter = new StringWriter();
-        final PrintWriter resultWriter = new PrintWriter(stringWriter);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
+        final PrintWriter resultWriter = response.writer();
 
-        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         HttpResponseStatus httpStatus = HttpResponseStatus.OK;
 
         resultWriter.print("{\n");
@@ -84,11 +82,7 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         }
 
         resultWriter.print("}\n");
-        resultWriter.flush();
-        String result = stringWriter.toString();
-
         response.setStatus(httpStatus);
-        response.writer().print(result);
         if (response.writer().checkError()) {
             LOGGER.warn("Error flushing output writer");
         }

@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.servlet;
+package org.apache.hyracks.test.http.servlet;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.hyracks.http.HttpTestUtil;
+import org.apache.hyracks.test.http.HttpTestUtil;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
@@ -43,7 +44,7 @@ public class ChattyServlet extends AbstractServlet {
             responseBuilder.append(line);
         }
         String responseString = responseBuilder.toString();
-        bytes = responseString.getBytes();
+        bytes = responseString.getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
@@ -54,7 +55,7 @@ public class ChattyServlet extends AbstractServlet {
     @Override
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
         response.setStatus(HttpResponseStatus.OK);
-        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, request);
         LOGGER.log(Level.WARN, "I am about to flood you... and a single buffer is " + bytes.length + " bytes");
         for (int i = 0; i < 100; i++) {
             response.outputStream().write(bytes);

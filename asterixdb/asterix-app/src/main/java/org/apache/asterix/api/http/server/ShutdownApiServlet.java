@@ -71,7 +71,7 @@ public class ShutdownApiServlet extends AbstractServlet {
         }, "Shutdown Servlet Worker");
 
         try {
-            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
+            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         } catch (IOException e) {
             LOGGER.log(Level.WARN, "Failure handling request", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);

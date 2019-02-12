@@ -18,10 +18,14 @@
  */
 package org.apache.hyracks.http.server;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.hyracks.http.api.IServletResponse;
 
@@ -41,15 +45,14 @@ import io.netty.handler.codec.http.HttpVersion;
 public class FullResponse implements IServletResponse {
     private final ChannelHandlerContext ctx;
     private final ByteArrayOutputStream baos;
-    private final PrintWriter writer;
     private final FullHttpResponse response;
     private final boolean keepAlive;
+    private PrintWriter writer;
     private ChannelFuture future;
 
     public FullResponse(ChannelHandlerContext ctx, FullHttpRequest request) {
         this.ctx = ctx;
         baos = new ByteArrayOutputStream();
-        writer = new PrintWriter(baos);
         response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         keepAlive = HttpUtil.isKeepAlive(request);
         if (keepAlive) {
@@ -59,7 +62,9 @@ public class FullResponse implements IServletResponse {
 
     @Override
     public void close() throws IOException {
-        writer.close();
+        if (writer != null) {
+            writer.close();
+        }
         FullHttpResponse fullResponse = response.replace(Unpooled.copiedBuffer(baos.toByteArray()));
         if (keepAlive) {
             if (response.status() == HttpResponseStatus.OK || response.status() == HttpResponseStatus.UNAUTHORIZED) {
@@ -81,7 +86,11 @@ public class FullResponse implements IServletResponse {
     }
 
     @Override
-    public PrintWriter writer() {
+    public synchronized PrintWriter writer() {
+        if (writer == null) {
+            Charset charset = io.netty.handler.codec.http.HttpUtil.getCharset(response, StandardCharsets.UTF_8);
+            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(baos, charset)));
+        }
         return writer;
     }
 

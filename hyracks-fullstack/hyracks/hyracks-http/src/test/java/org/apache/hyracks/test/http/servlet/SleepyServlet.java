@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.servlet;
+package org.apache.hyracks.test.http.servlet;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentMap;
@@ -55,7 +55,7 @@ public class SleepyServlet extends AbstractServlet {
                 }
             }
         }
-        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, request);
         response.outputStream().write("I am playing hard to get".getBytes(StandardCharsets.UTF_8));
     }
 

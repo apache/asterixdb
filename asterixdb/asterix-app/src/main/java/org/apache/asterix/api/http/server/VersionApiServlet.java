@@ -53,7 +53,7 @@ public class VersionApiServlet extends AbstractServlet {
         ObjectNode responseObject = OBJECT_MAPPER.createObjectNode();
         buildProperties.forEach(responseObject::put);
         try {
-            HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, HttpUtil.Encoding.UTF8);
+            HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, request);
         } catch (IOException e) {
             LOGGER.log(Level.WARN, "Failure handling request", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);

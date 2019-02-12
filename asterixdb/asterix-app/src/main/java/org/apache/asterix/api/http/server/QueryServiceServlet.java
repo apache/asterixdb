@@ -512,6 +512,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         QueryServiceRequestParameters param = getRequestParameters(request);
         LOGGER.info("handleRequest: {}", param);
         long elapsedStart = System.nanoTime();
+        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         final PrintWriter httpWriter = response.writer();
 
         ResultDelivery delivery = parseResultDelivery(param.getMode());
@@ -522,7 +523,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         String handleUrl = getHandleUrl(param.getHost(), param.getPath(), delivery);
         SessionOutput sessionOutput = createSessionOutput(param, handleUrl, httpWriter);
         SessionConfig sessionConfig = sessionOutput.config();
-        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
 
         Stats stats = new Stats();
         RequestExecutionState execution = new RequestExecutionState();
