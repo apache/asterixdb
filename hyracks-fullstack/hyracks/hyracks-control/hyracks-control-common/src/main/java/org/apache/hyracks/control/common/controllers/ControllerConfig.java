@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.control.common.controllers;
 
+import java.io.File;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.function.Function;
@@ -120,6 +121,8 @@ public class ControllerConfig implements Serializable {
     }
 
     public String getLogDir() {
-        return configManager.getAppConfig().getString(ControllerConfig.Option.LOG_DIR);
+        String relPath = configManager.getAppConfig().getString(ControllerConfig.Option.LOG_DIR);
+        String fullPath = new File(relPath).getAbsolutePath();
+        return fullPath;
     }
 }
