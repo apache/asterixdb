@@ -18,10 +18,14 @@
  */
 package org.apache.hyracks.http.server;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -40,23 +44,24 @@ import io.netty.handler.codec.http.HttpVersion;
 public class FullResponse implements IServletResponse {
     private final ChannelHandlerContext ctx;
     private final ByteArrayOutputStream baos;
-    private final PrintWriter writer;
     private final DefaultFullHttpResponse response;
     private final HttpServerHandler<?> handler;
+    private PrintWriter writer;
     private ChannelFuture future;
 
     public FullResponse(HttpServerHandler<?> handler, ChannelHandlerContext ctx, FullHttpRequest request) {
         this.handler = handler;
         this.ctx = ctx;
         baos = new ByteArrayOutputStream();
-        writer = new PrintWriter(baos);
         response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         HttpUtil.setConnectionHeader(request, response);
     }
 
     @Override
     public void close() throws IOException {
-        writer.close();
+        if (writer != null) {
+            writer.close();
+        }
         FullHttpResponse fullResponse = response.replace(Unpooled.copiedBuffer(baos.toByteArray()));
         fullResponse.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, fullResponse.content().readableBytes());
         final ChannelPromise responseCompletionPromise = ctx.newPromise();
@@ -71,7 +76,11 @@ public class FullResponse implements IServletResponse {
     }
 
     @Override
-    public PrintWriter writer() {
+    public synchronized PrintWriter writer() {
+        if (writer == null) {
+            Charset charset = io.netty.handler.codec.http.HttpUtil.getCharset(response, StandardCharsets.UTF_8);
+            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(baos, charset)));
+        }
         return writer;
     }
 

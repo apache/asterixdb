@@ -18,9 +18,13 @@
  */
 package org.apache.hyracks.http.server;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -64,8 +68,8 @@ public class ChunkedResponse implements IServletResponse {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ChannelHandlerContext ctx;
     private final ChunkedNettyOutputStream outputStream;
-    private final PrintWriter writer;
     private final HttpServerHandler<?> handler;
+    private PrintWriter writer;
     private DefaultHttpResponse response;
     private boolean headerSent;
     private ByteBuf error;
@@ -77,7 +81,6 @@ public class ChunkedResponse implements IServletResponse {
         this.handler = handler;
         this.ctx = ctx;
         outputStream = new ChunkedNettyOutputStream(ctx, chunkSize, this);
-        writer = new PrintWriter(outputStream);
         response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         response.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
         HttpUtil.setConnectionHeader(request, response);
@@ -88,7 +91,11 @@ public class ChunkedResponse implements IServletResponse {
         if (headerSent) {
             throw new IOException("Can't add more headers since the initial response was sent");
         }
-        response.headers().set(name, value);
+        String nameString = String.valueOf(name);
+        if (writer != null && nameString.equals(HttpHeaderNames.CONTENT_TYPE.toString())) {
+            throw new IOException("Can't set " + HttpHeaderNames.CONTENT_TYPE + " after writer has been accessed");
+        }
+        response.headers().set(nameString, value);
         return this;
     }
 
@@ -98,13 +105,21 @@ public class ChunkedResponse implements IServletResponse {
     }
 
     @Override
-    public PrintWriter writer() {
+    public synchronized PrintWriter writer() {
+        if (writer == null) {
+            Charset charset = io.netty.handler.codec.http.HttpUtil.getCharset(response, StandardCharsets.UTF_8);
+            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, charset)));
+        }
         return writer;
     }
 
     @Override
     public void close() throws IOException {
-        writer.close();
+        if (writer != null) {
+            writer.close();
+        } else {
+            outputStream.close();
+        }
         if (error == null && response.status() == HttpResponseStatus.OK) {
             if (!done) {
                 respond(LastHttpContent.EMPTY_LAST_CONTENT);

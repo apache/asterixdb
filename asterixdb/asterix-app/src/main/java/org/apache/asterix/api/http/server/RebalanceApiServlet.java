@@ -87,7 +87,7 @@ public class RebalanceApiServlet extends AbstractServlet {
     protected void delete(IServletRequest request, IServletResponse response) {
         try {
             // Sets the content type.
-            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
+            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
             // Cancels all rebalance requests.
             cancelRebalance();
             // Sends the response back.

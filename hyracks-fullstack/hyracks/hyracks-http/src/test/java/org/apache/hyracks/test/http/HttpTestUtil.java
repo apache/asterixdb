@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http;
+package org.apache.hyracks.test.http;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.test;
+package org.apache.hyracks.test.http;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -40,15 +40,14 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.hyracks.http.HttpTestUtil;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.HttpServerConfig;
 import org.apache.hyracks.http.server.HttpServerConfigBuilder;
 import org.apache.hyracks.http.server.InterruptOnCloseHandler;
 import org.apache.hyracks.http.server.WebManager;
-import org.apache.hyracks.http.servlet.ChattyServlet;
-import org.apache.hyracks.http.servlet.EchoServlet;
-import org.apache.hyracks.http.servlet.SleepyServlet;
+import org.apache.hyracks.test.http.servlet.ChattyServlet;
+import org.apache.hyracks.test.http.servlet.EchoServlet;
+import org.apache.hyracks.test.http.servlet.SleepyServlet;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -377,12 +376,6 @@ public class HttpServerTest {
             webMgr.stop();
         }
         Assert.assertNotNull(failure);
-    }
-
-    public static void setPrivateField(Object obj, String filedName, Object value) throws Exception {
-        Field f = obj.getClass().getDeclaredField(filedName);
-        f.setAccessible(true);
-        f.set(obj, value);
     }
 
     @Test

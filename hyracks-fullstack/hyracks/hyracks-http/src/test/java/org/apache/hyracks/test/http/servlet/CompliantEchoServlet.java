@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.servlet;
+package org.apache.hyracks.test.http.servlet;
 
 import java.util.concurrent.ConcurrentMap;
 
@@ -25,22 +25,16 @@ import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
+public class CompliantEchoServlet extends AbstractServlet {
 
-/**
- * A servlet that echos the received request body
- */
-public class EchoServlet extends AbstractServlet {
-
-    public EchoServlet(ConcurrentMap<String, Object> ctx, String... paths) {
+    public CompliantEchoServlet(ConcurrentMap<String, Object> ctx, String... paths) {
         super(ctx, paths);
     }
 
     @Override
     protected void post(IServletRequest request, IServletResponse response) throws Exception {
-        final String requestBody = HttpUtil.getRequestBody(request);
-        response.setStatus(HttpResponseStatus.OK);
-        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, HttpUtil.Encoding.UTF8);
-        response.writer().write(requestBody);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, request);
+        response.writer().write(HttpUtil.getRequestBody(request));
     }
+
 }

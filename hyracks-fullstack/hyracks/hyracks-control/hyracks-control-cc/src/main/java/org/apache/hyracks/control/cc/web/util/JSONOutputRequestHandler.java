@@ -56,7 +56,7 @@ public class JSONOutputRequestHandler extends AbstractServlet {
 
         ObjectNode result = invoke(response, host, servletPath, parts);
         if (result != null) {
-            deliver(response, result);
+            deliver(request, response, result);
         }
     }
 
@@ -71,9 +71,9 @@ public class JSONOutputRequestHandler extends AbstractServlet {
         return null;
     }
 
-    protected void deliver(IServletResponse response, ObjectNode result) {
+    protected void deliver(IServletRequest request, IServletResponse response, ObjectNode result) {
         try {
-            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
+            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
             ObjectMapper om = new ObjectMapper();
             om.writer().writeValue(response.writer(), result);
             response.setStatus(HttpResponseStatus.OK);

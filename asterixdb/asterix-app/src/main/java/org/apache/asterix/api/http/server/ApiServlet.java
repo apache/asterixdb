@@ -60,7 +60,6 @@ import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.StaticResourceServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.http.server.utils.HttpUtil.ContentType;
-import org.apache.hyracks.http.server.utils.HttpUtil.Encoding;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -96,6 +95,13 @@ public class ApiServlet extends AbstractServlet {
                 ? aqlCompilationProvider : sqlppCompilationProvider;
         IParserFactory parserFactory = compilationProvider.getParserFactory();
 
+        try {
+            HttpUtil.setContentType(response, ContentType.TEXT_HTML, request);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARN, "Failure setting content type", e);
+            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            return;
+        }
         // Output format.
         PrintWriter out = response.writer();
         OutputFormat format;
@@ -126,14 +132,7 @@ public class ApiServlet extends AbstractServlet {
         String printOptimizedLogicalPlanParam = request.getParameter("print-optimized-logical-plan");
         String printJob = request.getParameter("print-job");
         String executeQuery = request.getParameter("execute-query");
-        try {
-            response.setStatus(HttpResponseStatus.OK);
-            HttpUtil.setContentType(response, ContentType.TEXT_HTML, Encoding.UTF8);
-        } catch (IOException e) {
-            LOGGER.log(Level.WARN, "Failure setting content type", e);
-            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            return;
-        }
+        response.setStatus(HttpResponseStatus.OK);
         try {
             IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
             IResultSet resultSet = ServletUtil.getResultSet(hcc, appCtx, ctx);
@@ -175,7 +174,7 @@ public class ApiServlet extends AbstractServlet {
         response.setStatus(HttpResponseStatus.OK);
         if ("/".equals(requestURI)) {
             try {
-                HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);
+                HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, request);
             } catch (IOException e) {
                 LOGGER.log(Level.WARN, "Failure setting content type", e);
                 response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
@@ -208,7 +207,6 @@ public class ApiServlet extends AbstractServlet {
         } catch (IOException e) {
             LOGGER.log(Level.WARN, "Failure handling request", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            return;
         }
     }
 

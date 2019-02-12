@@ -66,7 +66,7 @@ public class ClusterApiServlet extends AbstractServlet {
 
     @Override
     protected void get(IServletRequest request, IServletResponse response) throws IOException {
-        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         PrintWriter responseWriter = response.writer();
         try {
             ObjectNode json;

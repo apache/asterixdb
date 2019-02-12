@@ -59,7 +59,7 @@ public class QueryWebInterfaceServlet extends StaticResourceServlet {
 
     @Override
     protected void post(IServletRequest request, IServletResponse response) throws IOException {
-        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         ExternalProperties externalProperties = appCtx.getExternalProperties();
         response.setStatus(HttpResponseStatus.OK);
         ObjectNode obj = OBJECT_MAPPER.createObjectNode();

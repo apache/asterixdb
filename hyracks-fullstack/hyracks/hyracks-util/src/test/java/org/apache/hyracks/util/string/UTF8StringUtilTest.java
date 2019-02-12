@@ -38,13 +38,11 @@ import static org.apache.hyracks.util.string.UTF8StringUtil.lowerCaseHash;
 import static org.apache.hyracks.util.string.UTF8StringUtil.normalize;
 import static org.apache.hyracks.util.string.UTF8StringUtil.rawByteCompareTo;
 import static org.apache.hyracks.util.string.UTF8StringUtil.hash;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public class UTF8StringUtilTest {

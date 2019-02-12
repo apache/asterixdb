@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.test;
+package org.apache.hyracks.test.http;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

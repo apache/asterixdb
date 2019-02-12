@@ -16,16 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.api.http.server;
+package org.apache.hyracks.test.http.servlet;
 
-import static org.apache.asterix.api.http.server.ServletConstants.ASTERIX_APP_CONTEXT_INFO_ATTR;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.hyracks.test.http.HttpTestUtil;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
@@ -34,34 +30,36 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 
-public class VersionApiServlet extends AbstractServlet {
+public class ChattyServlet extends AbstractServlet {
     private static final Logger LOGGER = LogManager.getLogger();
+    private byte[] bytes;
 
-    public VersionApiServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
+    public ChattyServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
         super(ctx, paths);
+        String line = "I don't know when to stop talking\n";
+        StringBuilder responseBuilder = new StringBuilder();
+        for (int i = 0; i < 100000; i++) {
+            responseBuilder.append(line);
+        }
+        String responseString = responseBuilder.toString();
+        bytes = responseString.getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
-    protected void get(IServletRequest request, IServletResponse response) {
-        response.setStatus(HttpResponseStatus.OK);
-        ICcApplicationContext props = (ICcApplicationContext) ctx.get(ASTERIX_APP_CONTEXT_INFO_ATTR);
-        Map<String, String> buildProperties = props.getBuildProperties().getAllProps();
-        ObjectNode responseObject = OBJECT_MAPPER.createObjectNode();
-        buildProperties.forEach(responseObject::put);
-        try {
-            HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, request);
-        } catch (IOException e) {
-            LOGGER.log(Level.WARN, "Failure handling request", e);
-            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            return;
-        }
-        PrintWriter responseWriter = response.writer();
-        responseWriter.write(responseObject.toString());
-        responseWriter.flush();
+    protected void post(IServletRequest request, IServletResponse response) throws Exception {
+        get(request, response);
     }
 
+    @Override
+    protected void get(IServletRequest request, IServletResponse response) throws Exception {
+        response.setStatus(HttpResponseStatus.OK);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, request);
+        LOGGER.log(Level.WARN, "I am about to flood you... and a single buffer is " + bytes.length + " bytes");
+        for (int i = 0; i < 100; i++) {
+            response.outputStream().write(bytes);
+        }
+        HttpTestUtil.printMemUsage();
+    }
 }

@@ -47,7 +47,7 @@ public class NetDiagnosticsApiServlet extends AbstractServlet {
 
     @Override
     protected void get(IServletRequest request, IServletResponse response) throws IOException {
-        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         response.setStatus(HttpResponseStatus.OK);
         final JsonNode netDiagnostics = getNetDiagnostics();
         final PrintWriter responseWriter = response.writer();

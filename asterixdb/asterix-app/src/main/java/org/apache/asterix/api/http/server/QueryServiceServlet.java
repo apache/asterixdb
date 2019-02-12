@@ -122,7 +122,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     @Override
-    protected void post(IServletRequest request, IServletResponse response) {
+    protected void post(IServletRequest request, IServletResponse response) throws IOException {
         handleRequest(request, response);
     }
 
@@ -509,13 +509,14 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return "http://" + host + path + handlePath(delivery);
     }
 
-    private void handleRequest(IServletRequest request, IServletResponse response) {
+    private void handleRequest(IServletRequest request, IServletResponse response) throws IOException {
         final IRequestReference requestRef = receptionist.welcome(request);
         long elapsedStart = System.nanoTime();
         long errorCount = 1;
         Stats stats = new Stats();
         RequestExecutionState execution = new RequestExecutionState();
         List<ExecutionWarning> warnings = Collections.emptyList();
+        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         PrintWriter httpWriter = response.writer();
         SessionOutput sessionOutput = createSessionOutput(httpWriter);
         QueryServiceRequestParameters param = new QueryServiceRequestParameters();
@@ -523,7 +524,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             // buffer the output until we are ready to set the status of the response message correctly
             sessionOutput.hold();
             sessionOutput.out().print("{\n");
-            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
             Map<String, String> optionalParams = null;
             if (optionalParamProvider != null) {
                 optionalParams = optionalParamProvider.apply(request);

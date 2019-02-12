@@ -16,9 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.servlet;
+package org.apache.hyracks.test.http.servlet;
 
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.hyracks.http.api.IServletRequest;
@@ -28,52 +27,20 @@ import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
-public class SleepyServlet extends AbstractServlet {
+/**
+ * A servlet that echos the received request body
+ */
+public class EchoServlet extends AbstractServlet {
 
-    private volatile boolean sleep = true;
-    private int numSlept = 0;
-
-    public SleepyServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
+    public EchoServlet(ConcurrentMap<String, Object> ctx, String... paths) {
         super(ctx, paths);
     }
 
     @Override
     protected void post(IServletRequest request, IServletResponse response) throws Exception {
-        get(request, response);
-    }
-
-    @Override
-    protected void get(IServletRequest request, IServletResponse response) throws Exception {
+        final String requestBody = HttpUtil.getRequestBody(request);
         response.setStatus(HttpResponseStatus.OK);
-        if (sleep) {
-            synchronized (this) {
-                if (sleep) {
-                    incrementSleptCount();
-                    while (sleep) {
-                        this.wait();
-                    }
-                }
-            }
-        }
-        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);
-        response.outputStream().write("I am playing hard to get".getBytes(StandardCharsets.UTF_8));
-    }
-
-    private void incrementSleptCount() {
-        numSlept++;
-        notifyAll();
-    }
-
-    public int getNumSlept() {
-        return numSlept;
-    }
-
-    public synchronized void wakeUp() {
-        sleep = false;
-        notifyAll();
-    }
-
-    public void sleep() {
-        sleep = true;
+        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, request);
+        response.writer().write(requestBody);
     }
 }
