@@ -32,6 +32,11 @@ public class HyracksCCProcess extends HyracksServerProcess {
         this.workingDir = workingDir;
     }
 
+    public HyracksCCProcess(File configFile, File logFile, File appHome, File workingDir, File log4jPath) {
+        this(configFile, logFile, appHome, workingDir);
+        args.add("-Dlog4j.configurationFile=file://" + log4jPath.getAbsolutePath());
+    }
+
     @Override
     protected String getMainClassName() {
         return CCDriver.class.getName();
@@ -41,7 +46,8 @@ public class HyracksCCProcess extends HyracksServerProcess {
     @SuppressWarnings("squid:CommentedOutCodeLine")
     protected void addJvmArgs(List<String> cList) {
         // CC needs more than default memory
-        cList.add("-Xmx1024m");
+        args.add("-Xmx1024m");
+        cList.addAll(args);
         // cList.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005");
     }
 }

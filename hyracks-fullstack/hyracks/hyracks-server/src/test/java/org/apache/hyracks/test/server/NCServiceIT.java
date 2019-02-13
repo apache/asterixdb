@@ -19,16 +19,24 @@
 package org.apache.hyracks.test.server;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.hyracks.test.server.process.HyracksCCProcess;
+import org.apache.hyracks.test.server.process.HyracksNCServiceProcess;
 import org.apache.hyracks.test.server.process.HyracksVirtualCluster;
 import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
@@ -55,8 +63,13 @@ public class NCServiceIT {
     @BeforeClass
     public static void setUp() throws Exception {
         cluster = new HyracksVirtualCluster(new File(APP_HOME), null);
-        cluster.addNCService(new File(RESOURCE_DIR, "nc-red.conf"), new File(LOG_DIR, "nc-red.log"));
-        cluster.addNCService(new File(RESOURCE_DIR, "nc-blue.conf"), new File(LOG_DIR, "nc-blue.log"));
+        File tempConf = new File(TARGET_DIR, "cc.conf");
+        FileUtils.copyFile(new File(RESOURCE_DIR, "cc.conf"), tempConf);
+        Files.write(tempConf.toPath(), ("log.dir: " + LOG_DIR).getBytes(), StandardOpenOption.APPEND);
+        File log4jPath = new File(FileUtil.joinPath("..", "..", "src", "test", "resources", "log4j2-hyracks-test.xml"));
+
+        cluster.addNCService(new File(RESOURCE_DIR, "nc-red.conf"), new File(LOG_DIR, "nc-red.log"), log4jPath);
+        cluster.addNCService(new File(RESOURCE_DIR, "nc-blue.conf"), new File(LOG_DIR, "nc-blue.log"), log4jPath);
 
         try {
             Thread.sleep(2000);
@@ -64,7 +77,7 @@ public class NCServiceIT {
         }
 
         // Start CC
-        cluster.start(new File(RESOURCE_DIR, "cc.conf"), new File(LOG_DIR, "cc.log"));
+        cluster.start(tempConf, new File(LOG_DIR, "cc.log"), log4jPath);
 
         try {
             Thread.sleep(10000);

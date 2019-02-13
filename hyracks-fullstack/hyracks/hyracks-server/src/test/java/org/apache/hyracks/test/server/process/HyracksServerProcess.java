@@ -37,6 +37,7 @@ abstract class HyracksServerProcess {
     protected File logFile = null;
     protected File appHome = null;
     protected File workingDir = null;
+    protected List<String> args = new ArrayList<>();
 
     public void start() throws IOException {
         String[] cmd = buildCommand();
@@ -112,6 +113,10 @@ abstract class HyracksServerProcess {
     }
 
     protected void addCmdLineArgs(List<String> cList) {
+    }
+
+    public void addArg(String arg) {
+        args.add(arg);
     }
 
     protected abstract String getMainClassName();
