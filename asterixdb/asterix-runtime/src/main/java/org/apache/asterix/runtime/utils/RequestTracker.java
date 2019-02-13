@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.utils;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.common.api.IClientRequest;
@@ -45,6 +46,7 @@ public class RequestTracker implements IRequestTracker {
 
     @Override
     public IClientRequest getByClientContextId(String clientContextId) {
+        Objects.requireNonNull(clientContextId, "clientContextId must not be null");
         return clientIdRequests.get(clientContextId);
     }
 

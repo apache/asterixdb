@@ -136,6 +136,9 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
 
     private void cancelQuery(INCMessageBroker messageBroker, String nodeId, String clientContextID, Exception exception,
             boolean wait) {
+        if (clientContextID == null) {
+            return;
+        }
         MessageFuture cancelQueryFuture = messageBroker.registerMessageFuture();
         try {
             CancelQueryRequest cancelQueryMessage =
