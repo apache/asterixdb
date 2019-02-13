@@ -286,7 +286,7 @@
     <profile>
       <id>asterix-gerrit-asterix-app</id>
       <properties>
-        <test.excludes>**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java</test.excludes>
+        <test.excludes>**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java,**/AqlExecutionTest.java</test.excludes>
       </properties>
       <build>
         <plugins>
@@ -329,7 +329,7 @@
     <profile>
       <id>asterix-gerrit-verify-asterix-app</id>
       <properties>
-        <test.includes/>
+        <test.includes>**/AqlExecutionTest.java</test.includes>
         <itest.excludes>**/SqlppExecution*IT.java,**/RebalanceWithCancellationIT.java</itest.excludes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
