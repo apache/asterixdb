@@ -32,6 +32,11 @@ public class HyracksNCServiceProcess extends HyracksServerProcess {
         this.workingDir = workingDir;
     }
 
+    public HyracksNCServiceProcess(File configFile, File logFile, File appHome, File workingDir, File log4jPath) {
+        this(configFile, logFile, appHome, workingDir);
+        args.add("-Dlog4j.configurationFile=file://" + log4jPath.getAbsolutePath());
+    }
+
     @Override
     protected String getMainClassName() {
         return NCService.class.getName();
@@ -40,6 +45,8 @@ public class HyracksNCServiceProcess extends HyracksServerProcess {
     @Override
     protected void addJvmArgs(List<String> cList) {
         // NCService needs little memory
-        cList.add("-Xmx128m");
+        args.add("-Xmx128m");
+        cList.addAll(args);
     }
+
 }
