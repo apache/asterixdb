@@ -28,10 +28,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ClientRequest extends BaseClientRequest {
 
-    protected String statement;
-    protected JobId jobId;
-    protected Thread executor;
-    protected String clientContextId;
+    protected final Thread executor;
+    protected final String statement;
+    protected final String clientContextId;
+    protected volatile JobId jobId;
 
     public ClientRequest(ICommonRequestParameters requestParameters) {
         super(requestParameters.getRequestReference());
@@ -73,7 +73,7 @@ public class ClientRequest extends BaseClientRequest {
     @Override
     protected ObjectNode asJson() {
         ObjectNode json = super.asJson();
-        json.put("jobId", jobId.toString());
+        json.put("jobId", jobId != null ? jobId.toString() : null);
         json.put("statement", statement);
         json.put("clientContextID", clientContextId);
         return json;
