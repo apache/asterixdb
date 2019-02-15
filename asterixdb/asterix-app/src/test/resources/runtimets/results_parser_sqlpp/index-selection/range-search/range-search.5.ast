@@ -1,0 +1,67 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall asterix.sql-count@1[
+  (
+    SELECT ELEMENT [
+    LiteralExpr [LONG] [1]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#2 ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.LineItem]
+  ]
+  AS Variable [ Name=$c ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=$c ]
+        Field=l_suppkey
+      ]
+      <
+      OperatorExpr [
+        LiteralExpr [LONG] [100]
+        +
+        FunctionCall test.to-bigint@1[
+          OperatorExpr [
+            FunctionCall test.random@0[
+            ]
+            /
+            LiteralExpr [LONG] [2]
+          ]
+        ]
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=$c ]
+        Field=l_suppkey
+      ]
+      >
+      OperatorExpr [
+        LiteralExpr [LONG] [5]
+        +
+        FunctionCall test.to-bigint@1[
+          OperatorExpr [
+            FunctionCall test.random@0[
+            ]
+            /
+            LiteralExpr [LONG] [2]
+          ]
+        ]
+      ]
+    ]
+  ]
+Group All
+  GROUP AS Variable [ Name=#1 ]
+  (
+    c:=Variable [ Name=$c ]
+  )
+

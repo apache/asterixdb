@@ -46,6 +46,7 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
+    <root.dir>${basedir}</root.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <file.encoding>UTF-8</file.encoding>
     <source.jdk.version>1.8</source.jdk.version>
@@ -54,6 +55,7 @@
     <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
     <source-format.goal>format</source-format.goal>
     <source-format.skip>false</source-format.skip>
+    <maven.test.skip>false</maven.test.skip>
     <skipTests>false</skipTests>
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
     <skip.testResources>${maven.test.skip}</skip.testResources>

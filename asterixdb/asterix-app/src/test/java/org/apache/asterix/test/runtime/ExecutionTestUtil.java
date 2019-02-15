@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.test.runtime;
 
+import static org.apache.hyracks.util.file.FileUtil.joinPath;
+
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -40,6 +42,15 @@ import org.apache.logging.log4j.Logger;
 public class ExecutionTestUtil {
 
     protected static final Logger LOGGER = LogManager.getLogger();
+
+    static {
+        // hack to ensure we have a unique location for external libraries in our tests (asterix cluster has a shared home directory)
+        String appHome = joinPath(System.getProperty("app.home", System.getProperty("user.home")),
+                "appHome" + (int) (Math.random() * Integer.MAX_VALUE));
+        LOGGER.info("setting app.home to {}", appHome);
+        System.setProperty("app.home", appHome);
+        new File(appHome).deleteOnExit();
+    }
 
     protected static final String PATH_ACTUAL = "rttest" + File.separator;
 

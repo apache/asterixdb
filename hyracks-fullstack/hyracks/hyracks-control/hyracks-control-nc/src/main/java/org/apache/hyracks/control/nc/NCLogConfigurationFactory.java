@@ -18,10 +18,10 @@
  */
 package org.apache.hyracks.control.nc;
 
+import java.io.File;
 import java.net.URI;
 
 import org.apache.hyracks.control.common.controllers.NCConfig;
-import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
@@ -42,7 +42,7 @@ public class NCLogConfigurationFactory extends ConfigurationFactory {
 
     public Configuration createConfiguration(ConfigurationBuilder<BuiltConfiguration> builder) {
         String nodeId = config.getNodeId();
-        String logDir = config.getLogDir();
+        File logDir = new File(config.getLogDir());
         builder.setStatusLevel(Level.WARN);
         builder.setConfigurationName("RollingBuilder");
         // create a rolling file appender
@@ -51,24 +51,22 @@ public class NCLogConfigurationFactory extends ConfigurationFactory {
         ComponentBuilder triggeringPolicy = builder.newComponent("Policies")
                 .addComponent(builder.newComponent("CronTriggeringPolicy").addAttribute("schedule", "0 0 0 * * ?"))
                 .addComponent(builder.newComponent("SizeBasedTriggeringPolicy").addAttribute("size", "50M"));
-        AppenderComponentBuilder defaultRoll =
-                builder.newAppender("default", "RollingFile")
-                        .addAttribute("fileName", FileUtil.joinPath(logDir, "nc-" + nodeId + ".log"))
-                        .addAttribute("filePattern",
-                                FileUtil.joinPath(logDir, "nc-" + nodeId + "-%d{MM-dd-yy-ss}.log.gz"))
-                        .add(defaultLayout).addComponent(triggeringPolicy);
+        AppenderComponentBuilder defaultRoll = builder.newAppender("default", "RollingFile")
+                .addAttribute("fileName", new File(logDir, "nc-" + nodeId + ".log").getAbsolutePath())
+                .addAttribute("filePattern",
+                        new File(logDir, "nc-" + nodeId + "-%d{MM-dd-yy-ss}.log.gz").getAbsolutePath())
+                .add(defaultLayout).addComponent(triggeringPolicy);
         builder.add(defaultRoll);
 
         // create the new logger
         builder.add(builder.newRootLogger(Level.INFO).add(builder.newAppenderRef("default")));
 
         LayoutComponentBuilder accessLayout = builder.newLayout("PatternLayout").addAttribute("pattern", "%m%n");
-        AppenderComponentBuilder accessRoll =
-                builder.newAppender("access", "RollingFile")
-                        .addAttribute("fileName", FileUtil.joinPath(logDir, "access-" + nodeId + ".log"))
-                        .addAttribute("filePattern",
-                                FileUtil.joinPath(logDir, "access-" + nodeId + "-%d{MM-dd-yy-ss}.log.gz"))
-                        .add(accessLayout).addComponent(triggeringPolicy);
+        AppenderComponentBuilder accessRoll = builder.newAppender("access", "RollingFile")
+                .addAttribute("fileName", new File(logDir, "access-" + nodeId + ".log").getAbsolutePath())
+                .addAttribute("filePattern",
+                        new File(logDir, "access-" + nodeId + "-%d{MM-dd-yy-ss}.log.gz").getAbsolutePath())
+                .add(accessLayout).addComponent(triggeringPolicy);
         builder.add(accessRoll);
         builder.add(builder.newLogger("org.apache.hyracks.http.server.CLFLogger", Level.forName("ACCESS", 550))
                 .add(builder.newAppenderRef("access")).addAttribute("additivity", false));
