@@ -1,0 +1,40 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// simple mixed types
+
+use test;
+
+{
+"t1": {"c":"[smallint('23'), 2] = [23, float('2')]", "r":[smallint('23'), 2] = [23, float('2')]},
+"t2": {"c":"['green', 2, date('2013-01-01'), 'blue'] = ['green', double('2'), date('2013-01-01'), 'blue']",
+"r":['green', 2, date('2013-01-01'), 'blue'] = ['green', double('2'), date('2013-01-01'), 'blue']},
+"t3": {"c":"[1,point('23.22,30.50'), 3] < [1,point('23.22,30.50'),4]", "r":[1,point('23.22,30.50'), 3] < [1,point('23.22,30.50'),4]},
+"t4": {"c":"['black', int('4'), float('3.3')] > ['black', bigint('4')]", "r":['black', int('4'), float('3.3')] > ['black', bigint('4')]},
+"t5": {"c":"['joe',3] > [7,'james']", "r":['joe',3] > [7,'james']},
+"t6": {"c":"[] = []", "r":[] = []},
+"t7": {"c":"[] != []", "r":[] != []},
+"t8": {"c":"[] > []", "r":[] > []},
+"t9": {"c":"[] < []", "r":[] < []},
+"t10": {"c":"[] < [1,3]", "r":[] < [1,3]},
+"t11": {"c":"[] > [1,3]", "r":[] > [1,3]},
+"t12": {"c":"[8] = 8", "r":[8] = 8},
+"t13": {"c":"[1,point('23.22,30.50'), 3] = [1,point('23.22,30.50'),3]", "r":[1,point('23.22,30.50'), 3] = [1,point('23.22,30.50'),3]},
+"t14": {"c":"[true, 'steve', 12.0] != [1, 'mat']", "r": [true, "steve", 12.0] != [1, "mat"]}
+};

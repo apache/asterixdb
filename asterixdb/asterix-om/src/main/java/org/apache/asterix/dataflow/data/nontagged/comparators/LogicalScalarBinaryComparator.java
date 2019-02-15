@@ -89,7 +89,7 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
             return comparisonResult;
         }
         if (comparisonUndefined(leftTag, rightTag, isEquality)) {
-            return Result.NULL;
+            return Result.INCOMPARABLE;
         }
         // compare number if one of args is number
         comparisonResult =
@@ -99,9 +99,9 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
         }
 
         // comparing non-numeric
-        // return null if !=, the assumption here is only numeric types are compatible with each other
+        // throw an exception if !=, the assumption here is only numeric types are compatible with each other
         if (leftTag != rightTag) {
-            return Result.NULL;
+            throw new IllegalStateException("Two different non-numeric tags but they are compatible");
         }
 
         leftStart++;

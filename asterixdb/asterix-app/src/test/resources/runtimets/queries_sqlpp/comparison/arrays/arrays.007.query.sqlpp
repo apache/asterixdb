@@ -1,0 +1,63 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// nesting
+
+use test;
+
+{
+"t1": {"c":"[[1.0,4], [5,9,11,14]] = [[1.0,4], [5,9,11,14]]", "r":[[1.0,4], [5,9,11,14]] = [[1.0,4], [5,9,11,14]]},
+"t2": {"c":"[[5,2,7], ['green','black'], [date('2013-01-01')]] = [[5,2,7], ['green','black'], [date('2013-01-01')]]",
+"r":[[5,2,7], ["green","black"], [date('2013-01-01')]] = [[5,2,7], ["green","black"], [date('2013-01-01')]]},
+
+"t3": {"c":"[['white','yellow','brown'], 6] != [['white','yellow','brown'], double('6')]",
+"r":[["white","yellow","brown"], 6] != [["white","yellow","brown"], double('6')]},
+
+"t4": {"c":"[['white','yellow','brown'], 6] != [double('6'), ['white','yellow','brown']]",
+"r":[["white","yellow","brown"], 6] != [double('6'), ["white","yellow","brown"]]},
+
+"t5": {"c":"[ [[1,2,3], 'gold', ['sql++', 5]], [tinyint('4'), tinyint('5')], smallint('2')] > [ [[1,2,3], 'gold', ['sql++', 5]], [bigint('4'), int('5')], double('0.2')]",
+"r":[ [[1,2,3], 'gold', ['sql++', 5]], [tinyint('4'), tinyint('5')], smallint('2')] > [ [[1,2,3], 'gold', ['sql++', 5]], [bigint('4'), int('5')], double('0.2')]},
+
+"t6": {"c":"[[[1,2], 99], 77] <= [[['flute',2], 99], 77]", "r":[[[1,2], 99], 77] <= [[['flute',2], 99], 77]},
+"t7": {"c":"[[[1,2], 99], 77] <= [[[missing,2], 99], 77]", "r":[[[1,2], 99], 77] <= [[[missing,2], 99], 77]},
+"t8": {"c":"[5, [8,1], [[0, 4], 'b']] > [5, [8,1], [[0, 4], 'a', 'c']]", "r":[5, [8,1], [[0, 4], 'b']] > [5, [8,1], [[0, 4], 'a', 'c']]},
+
+"t9": {"c":"[[1, null], 9] = [[1, 2], 9]", "r":[[1, null], 9] = [[1, 2], 9]},
+"t10": {"c":"[[1, null], 9] = [[1, 2], 99]", "r":[[1, null], 9] = [[1, 2], 99]},
+
+"t11": {"c":"[[1, null], 9] < [[1, 2], 9]", "r":[[1, null], 9] < [[1, 2], 9]},
+"t12": {"c":"[[1, null], 9] < [[1, 2], 99]", "r":[[1, null], 9] < [[1, 2], 99]},
+
+"t13": {"c":"[[1, null], 9] > [[1, 2], 9]", "r":[[1, null], 9] > [[1, 2], 9]},
+"t14": {"c":"[[1, null], 9] > [[1, 2], 99]", "r":[[1, null], 9] > [[1, 2], 99]},
+
+// mismatch
+"t15": {"c":"[1,2] = {{1,2}}", "r":[1,2] = {{1,2}} },
+"t16": {"c":"{'id':99, 'name':'sam'} != [99, 'sam']", "r": {"id":99, "name":"sam"} != [99, 'sam']},
+
+"t17": {"c":"[[1, 'string'], 9] = [[1, 2], 9]", "r":[[1, 'string'], 9] = [[1, 2], 9]},
+"t18": {"c":"[[1, 'string'], 9] = [[1, 2], 99]", "r":[[1, 'string'], 9] = [[1, 2], 99]},
+
+"t19": {"c":"[[1, 'string'], 9] < [[1, 2], 9]", "r":[[1, 'string'], 9] < [[1, 2], 9]},
+"t20": {"c":"[[1, 'string'], 9] < [[1, 2], 99]", "r":[[1, 'string'], 9] < [[1, 2], 99]},
+
+"t21": {"c":"[[1, 'string'], 9] > [[1, 2], 9]", "r":[[1, 'string'], 9] > [[1, 2], 9]},
+"t22": {"c":"[[1, 'string'], 9] > [[1, 2], 99]", "r":[[1, 'string'], 9] > [[1, 2], 99]}
+};

@@ -1,0 +1,63 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// other types basic comparisons
+
+use test;
+
+{
+"t1": {"c": "[point3d('44.0,13.0,41.0'), point3d('11.0,22.55,77.98')] = [point3d('44.0,13.0,41.0'), point3d('11.0,22.55,77.98')]",
+"r": [point3d('44.0,13.0,41.0'), point3d('11.0,22.55,77.98')] = [point3d('44.0,13.0,41.0'), point3d('11.0,22.55,77.98')]},
+
+"t2": {"c":"[point3d('44.0,13.0,41.0'), point3d('11.0,22.55,77.98')] > [point3d('44.0,13.0,41.0'), point3d('11.0,22.55,77.98')]",
+"r": [point3d('44.0,13.0,41.0'), point3d('11.0,22.55,77.98')] > [point3d('44.0,13.0,41.0'), point3d('11.0,22.55,77.98')]},
+
+"t3": {"c":"[duration('P100Y12MT12M'), duration('-PT20.943S')] = [duration('P100Y12MT12M'), duration('-PT20.943S')]",
+"r":[duration('P100Y12MT12M'), duration('-PT20.943S')] = [duration('P100Y12MT12M'), duration('-PT20.943S')]},
+
+"t4": {"c": "[duration('P100Y12MT12M'), duration('-PT20.943S')] <= [duration('P100Y12MT12M'), duration('-PT20.943S')]",
+"r":[duration('P100Y12MT12M'), duration('-PT20.943S')] <= [duration('P100Y12MT12M'), duration('-PT20.943S')]},
+
+"t5": {"c":"[year_month_duration('P100Y'), year_month_duration('P200Y')] = [year_month_duration('P100Y'), year_month_duration('P200Y')]",
+"r": [year_month_duration('P100Y'), year_month_duration('P200Y')] = [year_month_duration('P100Y'), year_month_duration('P200Y')]},
+
+"t6": {"c":"[year_month_duration('P100Y'), year_month_duration('P200Y')] < [year_month_duration('P150Y'), year_month_duration('P200Y')]",
+"r": [year_month_duration('P100Y'), year_month_duration('P200Y')] < [year_month_duration('P150Y'), year_month_duration('P200Y')]},
+
+"t7": {"c":"[day_time_duration('PT30M'), day_time_duration('PT10M')] = [day_time_duration('PT30M'), day_time_duration('PT10M')]",
+"r": [day_time_duration('PT30M'), day_time_duration('PT10M')] = [day_time_duration('PT30M'), day_time_duration('PT10M')]},
+
+"t8": {"c":"[day_time_duration('PT40M'), day_time_duration('PT10M')] > [day_time_duration('PT30M'), day_time_duration('PT10M')]",
+"r":[day_time_duration('PT40M'), day_time_duration('PT10M')] > [day_time_duration('PT30M'), day_time_duration('PT10M')]},
+
+"t9": {"c":"[interval(date('2013-01-01'), date('20130505')), interval(date('2012-01-01'), date('20130505'))] = [interval(date('2013-01-01'), date('20130505')), interval(date('2012-01-01'), date('20130505'))]",
+"r": [interval(date('2013-01-01'), date('20130505')), interval(date('2012-01-01'), date('20130505'))] = [interval(date('2013-01-01'), date('20130505')), interval(date('2012-01-01'), date('20130505'))]},
+
+"t10": {"c":"[interval(date('2013-01-01'), date('20130505')), interval(date('2012-01-01'), date('20130505'))] < [interval(date('2013-01-01'), date('20130505')), interval(date('2012-01-01'), date('20130505'))]",
+"r":[interval(date('2013-01-01'), date('20130505')), interval(date('2012-01-01'), date('20130505'))] < [interval(date('2013-01-01'), date('20130505')), interval(date('2012-01-01'), date('20130505'))]},
+
+"t11": {"c":"[date('2013-01-01'), date('2014-01-01')] < [date('2016-01-01'), date('2014-01-01')]",
+"r":[date('2013-01-01'), date('2014-01-01')] < [date('2016-01-01'), date('2014-01-01')]},
+
+"t12": {"c":"[time('12:12:12.039Z'), time('10:12:12.039Z')] > [time('11:12:12.039Z'), time('10:12:12.039Z')]",
+"r":[time('12:12:12.039Z'), time('10:12:12.039Z')] > [time('11:12:12.039Z'), time('10:12:12.039Z')]},
+
+"t13": {"c":"[datetime('2013-01-01T12:12:12.039Z'), datetime('-19700101T000000000-0800')] = [datetime('2013-01-01T12:12:12.039Z'), datetime('-19700101T000000000-0800')]",
+"r":[datetime('2013-01-01T12:12:12.039Z'), datetime('-19700101T000000000-0800')] = [datetime('2013-01-01T12:12:12.039Z'), datetime('-19700101T000000000-0800')]}
+};

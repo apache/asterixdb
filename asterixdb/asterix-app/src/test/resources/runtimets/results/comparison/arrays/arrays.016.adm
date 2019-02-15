@@ -1,0 +1,8 @@
+{ "id": 1, "array1": [ 1.0, "sql++" ], "OP": "> is_null", "array2": [ "green", "black", "white" ] }
+{ "id": 3, "array1": [ 1.0, "sql++" ], "OP": "> is_null", "array2": [ null, 3, 3 ] }
+{ "id": 4, "array1": [ 1.0, "sql++" ], "OP": "> is_null", "array2": [ [ 1, 5, 6 ], [ 9, 4, 1 ] ] }
+{ "id": 5, "array1": [ 1.0, "sql++" ], "OP": "> is_null", "array2": [ [ 4, 4 ], [ "orange", "purple" ], 99 ] }
+{ "id": 6, "array1": [ 1.0, "sql++" ], "OP": "> is_null", "array2": null }
+{ "id": 8, "array1": [ 1.0, "sql++" ], "OP": "> is_null", "array2": [ [ [ [ 88, 99 ], [ 100, 111 ] ] ], [ 11, 12 ] ] }
+{ "id": 9, "array1": [ 1.0, "sql++" ], "OP": "> is_null", "array2": 56 }
+{ "id": 10, "array1": [ 1.0, "sql++" ], "OP": "> is_null", "array2": [ "green", "black", "white" ] }

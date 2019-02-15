@@ -17,26 +17,4 @@
  * under the License.
  */
 
-package org.apache.asterix.om.util.container;
-
-/**
- * A reusable object pool interface.
- */
-public interface IObjectPool<E, T> {
-
-    /**
-     * Give client an E instance
-     *
-     * @param arg
-     *            the argument to create E
-     * @return an E instance
-     */
-    public E allocate(T arg);
-
-    /**
-     * Mark all instances in the pool as unused
-     */
-    public void reset();
-
-    boolean free(E element);
-}
+drop  dataverse test if exists;

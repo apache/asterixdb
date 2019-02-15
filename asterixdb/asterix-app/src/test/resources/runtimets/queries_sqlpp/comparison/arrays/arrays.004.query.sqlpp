@@ -1,0 +1,64 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// other types basic comparisons
+
+use test;
+
+{
+"t1": {"c": "[tinyint('1'),tinyint('2')] = [tinyint('1'),tinyint('2')]", "r": [tinyint('1'),tinyint('2')] = [tinyint('1'),tinyint('2')]},
+"t2": {"c": "['a','b','c'] = ['a','b','c']", "r": ['a','b','c'] = ['a','b','c']},
+"t3": {"c": "['A','b','c'] = ['a','b','c']", "r": ['A','b','c'] = ['a','b','c']},
+"t4": {"c": "['a','b','c'] < ['a','b','d']", "r": ['a','b','c'] < ['a','b','d']},
+"t5": {"c": "['blue', 'black', 'orange'] < ['purple', 'green']", "r": ['blue', 'black', 'orange'] < ['purple', 'green']},
+"t6": {"c": "['blue', 'black', 'orange'] > ['purple', 'green']", "r": ['blue', 'black', 'orange'] > ['purple', 'green']},
+"t7": {"c": "['blue', 'black', 'orange'] >= ['blue', 'black', 'orange']", "r": ['blue', 'black', 'orange'] >= ['blue', 'black', 'orange']},
+"t8": {"c": "[true] > [false]", "r": [true] > [false]},
+"t9": {"c": "[true, false, true] = [true, false, true]", "r": [true, false, true] = [true, false, true]},
+"t10": {"c": "[true, false, false] >= [true, true]", "r": [true, false, false] >= [true, true]},
+"t11": {"c": "[point('23.22,30.50'), point('-13.22,30.50')] = [point('23.22,30.50'), point('-13.22,30.50')]",
+"r": [point('23.22,30.50'), point('-13.22,30.50')] = [point('23.22,30.50'), point('-13.22,30.50')]},
+
+"t12": {"c": "[point('23.22,30.50'), point('-13.22,30.50')] <= [point('23.22,30.50'), point('-13.22,30.50')]",
+"r": [point('23.22,30.50'), point('-13.22,30.50')] <= [point('23.22,30.50'), point('-13.22,30.50')]},
+
+"t13": {"c":"[line('10.1234,11.1e-1 +10.2E-2,-11.22'), line('0.1234,-1.00e-10 +10.5E-2,-01.02')] != [line('10.1234,11.1e-1 +10.2E-2,-11.22'), line('0.1234,-1.00e-10 +10.5E-2,-01.02')]",
+"r": [line('10.1234,11.1e-1 +10.2E-2,-11.22'), line('0.1234,-1.00e-10 +10.5E-2,-01.02')] != [line('10.1234,11.1e-1 +10.2E-2,-11.22'), line('0.1234,-1.00e-10 +10.5E-2,-01.02')]},
+
+"t14": {"c":"[line('10.1234,11.1e-1 +10.2E-2,-11.22'), line('0.1234,-1.00e-10 +10.5E-2,-01.02')] > [line('10.1234,11.1e-1 +10.2E-2,-11.22'), line('0.1234,-1.00e-10 +10.5E-2,-01.02')]",
+"r": [line('10.1234,11.1e-1 +10.2E-2,-11.22'), line('0.1234,-1.00e-10 +10.5E-2,-01.02')] > [line('10.1234,11.1e-1 +10.2E-2,-11.22'), line('0.1234,-1.00e-10 +10.5E-2,-01.02')]},
+
+"t15": {"c": "[rectangle('5.1,11.8 87.6,15.6548'), rectangle('0.1234,-1.00e-10 5.5487,0.48765')] = [rectangle('5.1,11.8 87.6,15.6548'), rectangle('0.1234,-1.00e-10 5.5487,0.48765')]",
+"r": [rectangle('5.1,11.8 87.6,15.6548'), rectangle('0.1234,-1.00e-10 5.5487,0.48765')] = [rectangle('5.1,11.8 87.6,15.6548'), rectangle('0.1234,-1.00e-10 5.5487,0.48765')]},
+
+"t16": {"c": "[rectangle('5.1,11.8 87.6,15.6548'), rectangle('0.1234,-1.00e-10 5.5487,0.48765')] < [rectangle('5.1,11.8 87.6,15.6548'), rectangle('0.1234,-1.00e-10 5.5487,0.48765')]",
+"r":[rectangle('5.1,11.8 87.6,15.6548'), rectangle('0.1234,-1.00e-10 5.5487,0.48765')] < [rectangle('5.1,11.8 87.6,15.6548'), rectangle('0.1234,-1.00e-10 5.5487,0.48765')]},
+
+"t17": {"c": "[circle('10.1234,11.1e-1 +10.2E-2'), circle('0.1234,-1.00e-10 +10.5E-2')] = [circle('10.1234,11.1e-1 +10.2E-2'), circle('0.1234,-1.00e-10 +10.5E-2')]",
+"r": [circle('10.1234,11.1e-1 +10.2E-2'), circle('0.1234,-1.00e-10 +10.5E-2')] = [circle('10.1234,11.1e-1 +10.2E-2'), circle('0.1234,-1.00e-10 +10.5E-2')]},
+
+"t18": {"c": "[circle('10.1234,11.1e-1 +10.2E-2'), circle('0.1234,-1.00e-10 +10.5E-2')] <= [circle('10.1234,11.1e-1 +10.2E-2'), circle('0.1234,-1.00e-10 +10.5E-2')]",
+"r": [circle('10.1234,11.1e-1 +10.2E-2'), circle('0.1234,-1.00e-10 +10.5E-2')] <= [circle('10.1234,11.1e-1 +10.2E-2'), circle('0.1234,-1.00e-10 +10.5E-2')]},
+
+"t19": {"c": "[polygon('-1.2,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81'), polygon('9.9,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81')] != [polygon('-1.2,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81'), polygon('9.9,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81')]",
+"r": [polygon('-1.2,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81'), polygon('9.9,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81')] != [polygon('-1.2,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81'), polygon('9.9,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81')]},
+
+"t20": {"c":"[polygon('-1.2,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81'), polygon('9.9,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81')] >= [polygon('-1.2,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81'), polygon('9.9,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81')]",
+"r":[polygon('-1.2,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81'), polygon('9.9,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81')] >= [polygon('-1.2,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81'), polygon('9.9,+1.3e2 -2.14E+5,2.15 -3.5e+2,03.6 -4.6E-3,+4.81')]}
+};

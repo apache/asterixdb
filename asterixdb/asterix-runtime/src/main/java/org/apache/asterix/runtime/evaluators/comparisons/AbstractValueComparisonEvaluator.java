@@ -50,7 +50,7 @@ public abstract class AbstractValueComparisonEvaluator extends AbstractCompariso
                 writeMissing(result);
                 break;
             case NULL:
-            case MISMATCH:
+            case INCOMPARABLE:
                 writeNull(result);
                 break;
             default:

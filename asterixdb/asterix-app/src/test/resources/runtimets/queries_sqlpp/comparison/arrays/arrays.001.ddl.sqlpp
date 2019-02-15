@@ -17,26 +17,12 @@
  * under the License.
  */
 
-package org.apache.asterix.om.util.container;
+drop  dataverse test if exists;
+create  dataverse test;
+use test;
 
-/**
- * A reusable object pool interface.
- */
-public interface IObjectPool<E, T> {
+create type openType as {id:int, arrayF1:[int]?};
+create type closedType as closed {id:int, arrayF1:[int], arrayF2:[string]};
 
-    /**
-     * Give client an E instance
-     *
-     * @param arg
-     *            the argument to create E
-     * @return an E instance
-     */
-    public E allocate(T arg);
-
-    /**
-     * Mark all instances in the pool as unused
-     */
-    public void reset();
-
-    boolean free(E element);
-}
+create dataset openDs(openType) primary key id;
+create dataset closedDs(closedType) primary key id;

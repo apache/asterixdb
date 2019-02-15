@@ -73,7 +73,7 @@ public class LogicalComparatorUtil {
             return ILogicalBinaryComparator.Result.NULL;
         }
         if (!ATypeHierarchy.isCompatible(leftTag, rightTag)) {
-            return ILogicalBinaryComparator.Result.MISMATCH;
+            return ILogicalBinaryComparator.Result.INCOMPARABLE;
         }
         return null;
     }

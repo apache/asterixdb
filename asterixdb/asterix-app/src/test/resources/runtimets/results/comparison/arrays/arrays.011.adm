@@ -1,0 +1,2 @@
+{ "id": 4, "array1": null, "OP": "> is_null", "array2": [ 1, 2 ] }
+{ "id": 6, "array1": null, "OP": "> is_null", "array2": [ 1, 2 ] }

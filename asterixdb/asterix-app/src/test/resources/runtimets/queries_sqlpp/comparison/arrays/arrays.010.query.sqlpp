@@ -17,26 +17,12 @@
  * under the License.
  */
 
-package org.apache.asterix.om.util.container;
+// from dataset
 
-/**
- * A reusable object pool interface.
- */
-public interface IObjectPool<E, T> {
+use test;
 
-    /**
-     * Give client an E instance
-     *
-     * @param arg
-     *            the argument to create E
-     * @return an E instance
-     */
-    public E allocate(T arg);
-
-    /**
-     * Mark all instances in the pool as unused
-     */
-    public void reset();
-
-    boolean free(E element);
-}
+from openDs t
+let con = [6,2,1,4]
+where t.arrayF1 = con
+select value {"id": t.id, "array1": t.arrayF1, "OP": "=", "array2": con}
+order by t.id;

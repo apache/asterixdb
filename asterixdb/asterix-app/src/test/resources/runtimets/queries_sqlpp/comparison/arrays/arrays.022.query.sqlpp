@@ -1,0 +1,60 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// nulls, missings, incomparable
+
+use test;
+
+{
+"t1": {"c":"[1, 'string'] != [2, 9]", "r":[1, 'string'] != [2, 9]},
+"t2": {"c":"[1, 'string'] > [2, 9]", "r":[1, 'string'] > [2, 9]},
+"t3": {"c":"[9, {'id': 2}] < [1, {'id': 3}]", "r":[9, {'id': 2}] < [1, {'id': 3}]},
+"t4": {"c":"[1, 2] = ['string', 2, 3, 4]", "r":[1, 2] = ['string', 2, 3, 4]},
+"t5": {"c":"[null, 2, 3, 4, 5] = [1, 2]", "r":[null, 2, 3, 4, 5] = [1, 2]},
+"t6": {"c":"[1, null, 3] = [1, 2, 'string']", "r":[1, null, 3] = [1, 2, 'string']},
+"t7": {"c":"[1, null] = [2, 5]", "r":[1, null] = [2, 5]},
+"t8": {"c":"[1, null, 3, 7] = [1, 2, 9, 5]", "r":[1, null, 3, 7] = [1, 2, 9, 5]},
+"t9": {"c":"[null, 'string'] < [1, 2]", "r":[null, 'string'] < [1, 2]},
+
+"t10": {"c":"[missing, 'string'] < [1, 2]", "r":[missing, 'string'] < [1, 2]},
+
+"t12": {"c":"[null, {'id':3}] < [2, {'id': 4}]", "r":[null, {'id':3}] < [2, {'id': 4}]},
+"t13": {"c":"[null, {'id':3}, 8] < [2, {'id': 4}, 9]", "r":[null, {'id':3}, 8] < [2, {'id': 4}, 9]},
+
+"t14": {"c":"[88, [7, 1], [['string', 44]]] > [3, [-2, -3], [[5, 4]]]", "r":[88, [7, 1], [['string', 44]]] > [3, [-2, -3], [[5, 4]]]},
+"t15": {"c":"[88, null, [['string', 44]]] > [3, [-2, -3], [[5, 4]]]", "r":[88, null, [['string', 44]]] > [3, [-2, -3], [[5, 4]]]},
+"t16": {"c":"[88, missing, [['string', 44]]] > [3, [-2, -3], [[5, 4]]]", "r":[88, missing, [['string', 44]]] > [3, [-2, -3], [[5, 4]]]},
+"t17": {"c":"[null, 88, [['string', 44]]] > [3, 8, [[5, 4]]]", "r":[null, 88, [['string', 44]]] > [3, 8, [[5, 4]]]},
+"t18": {"c":"[null, missing, 88, [['string', 44]]] > [3, 5, 8, [[5, 4]]]", "r":[null, missing, 88, [['string', 44]]] > [3, 5, 8, [[5, 4]]]},
+
+"t19": {"c":"[88, [7, 1], [[-1, -44]]] > [3, [-2, -3], [[5, 4]]]", "r":[88, [7, 1], [[-1, -44]]] > [3, [-2, -3], [[5, 4]]]},
+"t20": {"c":"[88, null, [[-1, -44]]] > [3, [-2, -3], [[5, 4]]]", "r":[88, null, [[-1, -44]]] > [3, [-2, -3], [[5, 4]]]},
+"t21": {"c":"[88, missing, [[-1, -44]]] > [3, [-2, -3], [[5, 4]]]", "r":[88, missing, [[-1, -44]]] > [3, [-2, -3], [[5, 4]]]},
+"t22": {"c":"[null, 88, [[-1, -44]]] > [3, 8, [[5, 4]]]", "r":[null, 88, [[-1, -44]]] > [3, 8, [[5, 4]]]},
+"t23": {"c":"[null, missing, 88, [[-1, -44]]] > [3, 5, 8, [[5, 4]]]", "r":[null, missing, 88, [[-1, -44]]] > [3, 5, 8, [[5, 4]]]},
+"t24": {"c":"[missing, null, 88, [[-1, -44]]] > [3, 5, 8, [[5, 4]]]", "r":[missing, null, 88, [[-1, -44]]] > [3, 5, 8, [[5, 4]]]},
+"t25": {"c": "[1, null, 9, missing] < [1, 2, 3, 4]", "r": [1, null, 9, missing] < [1, 2, 3, 4]},
+"t26": {"c": "[1, null, 3, missing] < [1, 2, 3, 4]", "r": [1, null, 3, missing] < [1, 2, 3, 4]},
+"t27": {"c": "[1, null, missing, 4] < [1, 2, 3, 4]", "r": [1, null, missing, 4] < [1, 2, 3, 4]},
+"t28": {"c": "[1, null, missing, 9] < [1, 2, 3, 4]", "r": [1, null, missing, 9] < [1, 2, 3, 4]},
+"t29": {"c": "[1, null, 9, missing] = [1, 2, 3, 4]", "r": [1, null, 9, missing] = [1, 2, 3, 4]},
+"t30": {"c": "[1, null, 3, missing] = [1, 2, 3, 4]", "r": [1, null, 3, missing] = [1, 2, 3, 4]},
+"t31": {"c": "[1, null, missing, 4] = [1, 2, 3, 4]", "r": [1, null, missing, 4] = [1, 2, 3, 4]},
+"t32": {"c": "[1, null, missing, 9] = [1, 2, 3, 4]", "r": [1, null, missing, 9] = [1, 2, 3, 4]}
+};

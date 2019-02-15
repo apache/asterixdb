@@ -22,13 +22,14 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ILogicalBinaryComparator {
+
     enum Result {
         MISSING,
         NULL,
         EQ,
         LT,
         GT,
-        MISMATCH
+        INCOMPARABLE
     }
 
     static Result asResult(int result) {

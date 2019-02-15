@@ -82,4 +82,15 @@ public class ListObjectPool<E, T> implements IObjectPool<E, T> {
     public void reset() {
         usedBits.clear();
     }
+
+    @Override
+    public boolean free(E element) {
+        for (int i = pool.size() - 1; i >= 0; i--) {
+            if (element == pool.get(i)) {
+                usedBits.clear(i);
+                return true;
+            }
+        }
+        return false;
+    }
 }

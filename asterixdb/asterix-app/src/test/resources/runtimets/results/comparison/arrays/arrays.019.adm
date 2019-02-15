@@ -1,0 +1,6 @@
+{ "id": 2, "array1": [ "zzz", "low" ], "OP": ">", "array2": [ "coin", "dollar", "bill" ] }
+{ "id": 4, "array1": [ "football", "soccer", "basketball" ], "OP": ">", "array2": [ "coin", "dollar", "bill" ] }
+{ "id": 6, "array1": [ "python", "java", "Go" ], "OP": ">", "array2": [ "coin", "dollar", "bill" ] }
+{ "id": 7, "array1": [ "sql++", "sql++" ], "OP": ">", "array2": [ "coin", "dollar", "bill" ] }
+{ "id": 8, "array1": [ "steve" ], "OP": ">", "array2": [ "coin", "dollar", "bill" ] }
+{ "id": 10, "array1": [ "python", "java", "Go" ], "OP": ">", "array2": [ "coin", "dollar", "bill" ] }

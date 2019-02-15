@@ -2380,7 +2380,11 @@
         <output-dir compare="Text">neginfif</output-dir>
       </compilation-unit>
     </test-case>
-
+    <test-case FilePath="comparison">
+      <compilation-unit name="arrays">
+        <output-dir compare="Text">arrays</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="constructor">
     <test-case FilePath="constructor">
