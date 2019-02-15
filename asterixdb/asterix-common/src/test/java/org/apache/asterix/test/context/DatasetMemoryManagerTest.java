@@ -83,15 +83,7 @@ public class DatasetMemoryManagerTest {
         Assert.assertEquals(memoryManager.getAvailable(), expectedBudget);
 
         // double reserve
-        boolean thrown = false;
         Assert.assertTrue(memoryManager.reserve(2));
-        try {
-            memoryManager.reserve(2);
-        } catch (IllegalStateException e) {
-            Assert.assertTrue(e.getMessage().contains("already reserved"));
-            thrown = true;
-        }
-        Assert.assertTrue(thrown);
 
         // cancel reserved
         memoryManager.cancelReserved(2);

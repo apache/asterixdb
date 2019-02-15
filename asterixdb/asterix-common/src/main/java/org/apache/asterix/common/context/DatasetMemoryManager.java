@@ -82,7 +82,8 @@ public class DatasetMemoryManager implements IDatasetMemoryManager {
     @Override
     public synchronized boolean reserve(int datasetId) {
         if (reservedMap.containsKey(datasetId)) {
-            throw new IllegalStateException("Memory is already reserved for dataset: " + datasetId);
+            LOGGER.info("Memory is already reserved for dataset: {}", () -> datasetId);
+            return true;
         }
         final long required = getTotalSize(datasetId);
         if (!isAllocatable(required) && !allocatedMap.containsKey(datasetId)) {

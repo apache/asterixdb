@@ -60,7 +60,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
 
     private static final Logger LOGGER = LogManager.getLogger();
     protected IClusterStateManager clusterManager;
-    protected String metadataNodeId;
+    protected volatile String metadataNodeId;
     protected Set<String> pendingStartupCompletionNodes = new HashSet<>();
     protected final ICCMessageBroker messageBroker;
     private final boolean replicationEnabled;
@@ -157,7 +157,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     }
 
     @Override
-    public void notifyMetadataNodeChange(String node) throws HyracksDataException {
+    public synchronized void notifyMetadataNodeChange(String node) throws HyracksDataException {
         if (metadataNodeId.equals(node)) {
             return;
         }
@@ -203,7 +203,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         return tasks;
     }
 
-    private void process(MetadataNodeResponseMessage response) throws HyracksDataException {
+    private synchronized void process(MetadataNodeResponseMessage response) throws HyracksDataException {
         // rebind metadata node since it might be changing
         MetadataManager.INSTANCE.rebindMetadataNode();
         clusterManager.updateMetadataNode(response.getNodeId(), response.isExported());
