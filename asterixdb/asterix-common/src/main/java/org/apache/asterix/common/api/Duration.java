@@ -47,13 +47,25 @@ public enum Duration {
         this.nanoDigits = nanoDigits;
     }
 
+    public String asciiSafeUnit() {
+        return this == MICRO ? "us" : unit;
+    }
+
     public static String formatNanos(long nanoTime) {
+        return formatNanos(nanoTime, false);
+    }
+
+    public static String formatNanos(long nanoTime, boolean asciiSafe) {
         StringBuilder sb = new StringBuilder();
-        formatNanos(nanoTime, sb);
+        formatNanos(nanoTime, sb, asciiSafe);
         return sb.toString();
     }
 
     public static void formatNanos(long nanoTime, StringBuilder out) {
+        formatNanos(nanoTime, out, false);
+    }
+
+    public static void formatNanos(long nanoTime, StringBuilder out, boolean asciiSafe) {
         final String strTime = String.valueOf(Math.abs(nanoTime));
         final int len = strTime.length();
         for (Duration tu : VALUES) {
@@ -67,7 +79,7 @@ public enum Duration {
                 if (k > 0) {
                     out.append('.').append(strTime, n, k + 1);
                 }
-                out.append(tu.unit);
+                out.append(asciiSafe ? tu.asciiSafeUnit() : tu.unit);
                 break;
             }
         }

@@ -52,7 +52,7 @@ public class FullResponse implements IServletResponse {
 
     public FullResponse(ChannelHandlerContext ctx, FullHttpRequest request) {
         this.ctx = ctx;
-        baos = new ByteArrayOutputStream();
+        baos = new ByteArrayOutputStream(4096);
         response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         keepAlive = HttpUtil.isKeepAlive(request);
         if (keepAlive) {
@@ -89,7 +89,7 @@ public class FullResponse implements IServletResponse {
     public synchronized PrintWriter writer() {
         if (writer == null) {
             Charset charset = io.netty.handler.codec.http.HttpUtil.getCharset(response, StandardCharsets.UTF_8);
-            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(baos, charset)));
+            writer = new PrintWriter(new OutputStreamWriter(baos, charset));
         }
         return writer;
     }

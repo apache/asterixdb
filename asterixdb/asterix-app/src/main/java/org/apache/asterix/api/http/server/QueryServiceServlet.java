@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -77,7 +79,6 @@ import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class QueryServiceServlet extends AbstractQueryApiServlet {
@@ -339,16 +340,18 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     private static void printMetrics(PrintWriter pw, long elapsedTime, long executionTime, long resultCount,
-            long resultSize, long processedObjects, long errorCount, long warnCount) {
+            long resultSize, long processedObjects, long errorCount, long warnCount, Charset resultCharset) {
         boolean hasErrors = errorCount != 0;
         boolean hasWarnings = warnCount != 0;
+        boolean useAscii = !StandardCharsets.UTF_8.equals(resultCharset)
+                && !"μ".contentEquals(resultCharset.decode(resultCharset.encode("μ")));
         pw.print("\t\"");
         pw.print(ResultFields.METRICS.str());
         pw.print("\": {\n");
         pw.print("\t");
-        ResultUtil.printField(pw, Metrics.ELAPSED_TIME.str(), Duration.formatNanos(elapsedTime));
+        ResultUtil.printField(pw, Metrics.ELAPSED_TIME.str(), Duration.formatNanos(elapsedTime, useAscii));
         pw.print("\t");
-        ResultUtil.printField(pw, Metrics.EXECUTION_TIME.str(), Duration.formatNanos(executionTime));
+        ResultUtil.printField(pw, Metrics.EXECUTION_TIME.str(), Duration.formatNanos(executionTime, useAscii));
         pw.print("\t");
         ResultUtil.printField(pw, Metrics.RESULT_COUNT.str(), resultCount, true);
         pw.print("\t");
@@ -366,14 +369,31 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         pw.print("\t}\n");
     }
 
+    private String getOptText(JsonNode node, Parameter parameter) {
+        return getOptText(node, parameter.str());
+    }
+
     private String getOptText(JsonNode node, String fieldName) {
         final JsonNode value = node.get(fieldName);
         return value != null ? value.asText() : null;
     }
 
+    private boolean getOptBoolean(JsonNode node, Parameter parameter, boolean defaultValue) {
+        return getOptBoolean(node, parameter.str(), defaultValue);
+    }
+
     private boolean getOptBoolean(JsonNode node, String fieldName, boolean defaultValue) {
         final JsonNode value = node.get(fieldName);
         return value != null ? value.asBoolean() : defaultValue;
+    }
+
+    private String getParameter(IServletRequest request, Parameter parameter) {
+        return request.getParameter(parameter.str());
+    }
+
+    private boolean getOptBoolean(IServletRequest request, Parameter parameter, boolean defaultValue) {
+        String value = request.getParameter(parameter.str());
+        return value == null ? defaultValue : Boolean.parseBoolean(value);
     }
 
     @FunctionalInterface
@@ -419,46 +439,41 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         if (HttpUtil.ContentType.APPLICATION_JSON.equals(contentType)) {
             try {
                 JsonNode jsonRequest = OBJECT_MAPPER.readTree(HttpUtil.getRequestBody(request));
-                final String statementParam = Parameter.STATEMENT.str();
-                if (jsonRequest.has(statementParam)) {
-                    param.setStatement(jsonRequest.get(statementParam).asText());
-                }
-                param.setFormat(toLower(getOptText(jsonRequest, Parameter.FORMAT.str())));
-                param.setPretty(getOptBoolean(jsonRequest, Parameter.PRETTY.str(), false));
-                param.setMode(toLower(getOptText(jsonRequest, Parameter.MODE.str())));
-                param.setClientContextID(getOptText(jsonRequest, Parameter.CLIENT_ID.str()));
-                param.setTimeout(getOptText(jsonRequest, Parameter.TIMEOUT.str()));
-                param.setMaxResultReads(getOptText(jsonRequest, Parameter.MAX_RESULT_READS.str()));
-                param.setPlanFormat(getOptText(jsonRequest, Parameter.PLAN_FORMAT.str()));
-                param.setExpressionTree(getOptBoolean(jsonRequest, Parameter.EXPRESSION_TREE.str(), false));
+                param.setStatement(getOptText(jsonRequest, Parameter.STATEMENT));
+                param.setFormat(toLower(getOptText(jsonRequest, Parameter.FORMAT)));
+                param.setPretty(getOptBoolean(jsonRequest, Parameter.PRETTY, false));
+                param.setMode(toLower(getOptText(jsonRequest, Parameter.MODE)));
+                param.setClientContextID(getOptText(jsonRequest, Parameter.CLIENT_ID));
+                param.setTimeout(getOptText(jsonRequest, Parameter.TIMEOUT));
+                param.setMaxResultReads(getOptText(jsonRequest, Parameter.MAX_RESULT_READS));
+                param.setPlanFormat(getOptText(jsonRequest, Parameter.PLAN_FORMAT));
+                param.setExpressionTree(getOptBoolean(jsonRequest, Parameter.EXPRESSION_TREE, false));
                 param.setRewrittenExpressionTree(
-                        getOptBoolean(jsonRequest, Parameter.REWRITTEN_EXPRESSION_TREE.str(), false));
-                param.setLogicalPlan(getOptBoolean(jsonRequest, Parameter.LOGICAL_PLAN.str(), false));
-                param.setOptimizedLogicalPlan(
-                        getOptBoolean(jsonRequest, Parameter.OPTIMIZED_LOGICAL_PLAN.str(), false));
-                param.setJob(getOptBoolean(jsonRequest, Parameter.JOB.str(), false));
-                param.setSignature(getOptBoolean(jsonRequest, Parameter.SIGNATURE.str(), true));
+                        getOptBoolean(jsonRequest, Parameter.REWRITTEN_EXPRESSION_TREE, false));
+                param.setLogicalPlan(getOptBoolean(jsonRequest, Parameter.LOGICAL_PLAN, false));
+                param.setOptimizedLogicalPlan(getOptBoolean(jsonRequest, Parameter.OPTIMIZED_LOGICAL_PLAN, false));
+                param.setJob(getOptBoolean(jsonRequest, Parameter.JOB, false));
+                param.setSignature(getOptBoolean(jsonRequest, Parameter.SIGNATURE, true));
                 param.setStatementParams(
                         getOptStatementParameters(jsonRequest, jsonRequest.fieldNames(), JsonNode::get, v -> v));
-                param.setMultiStatement(getOptBoolean(jsonRequest, Parameter.MULTI_STATEMENT.str(), true));
+                param.setMultiStatement(getOptBoolean(jsonRequest, Parameter.MULTI_STATEMENT, true));
             } catch (JsonParseException | JsonMappingException e) {
                 // if the JSON parsing fails, the statement is empty and we get an empty statement error
                 GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
             }
         } else {
-            param.setStatement(request.getParameter(Parameter.STATEMENT.str()));
+            param.setStatement(getParameter(request, Parameter.STATEMENT));
             if (param.getStatement() == null) {
                 param.setStatement(HttpUtil.getRequestBody(request));
             }
-            param.setFormat(toLower(request.getParameter(Parameter.FORMAT.str())));
-            param.setPretty(Boolean.parseBoolean(request.getParameter(Parameter.PRETTY.str())));
-            param.setMode(toLower(request.getParameter(Parameter.MODE.str())));
-            param.setClientContextID(request.getParameter(Parameter.CLIENT_ID.str()));
-            param.setTimeout(request.getParameter(Parameter.TIMEOUT.str()));
-            param.setMaxResultReads(request.getParameter(Parameter.MAX_RESULT_READS.str()));
-            param.setPlanFormat(request.getParameter(Parameter.PLAN_FORMAT.str()));
-            final String multiStatementParam = request.getParameter(Parameter.MULTI_STATEMENT.str());
-            param.setMultiStatement(multiStatementParam == null || Boolean.parseBoolean(multiStatementParam));
+            param.setFormat(toLower(getParameter(request, Parameter.FORMAT)));
+            param.setPretty(Boolean.parseBoolean(getParameter(request, Parameter.PRETTY)));
+            param.setMode(toLower(getParameter(request, Parameter.MODE)));
+            param.setClientContextID(getParameter(request, Parameter.CLIENT_ID));
+            param.setTimeout(getParameter(request, Parameter.TIMEOUT));
+            param.setMaxResultReads(getParameter(request, Parameter.MAX_RESULT_READS));
+            param.setPlanFormat(getParameter(request, Parameter.PLAN_FORMAT));
+            param.setMultiStatement(getOptBoolean(request, Parameter.MULTI_STATEMENT, true));
             try {
                 param.setStatementParams(getOptStatementParameters(request, request.getParameterNames().iterator(),
                         IServletRequest::getParameter, OBJECT_MAPPER::readTree));
@@ -512,7 +527,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         QueryServiceRequestParameters param = getRequestParameters(request);
         LOGGER.info("handleRequest: {}", param);
         long elapsedStart = System.nanoTime();
-        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
+        Charset resultCharset = HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         final PrintWriter httpWriter = response.writer();
 
         ResultDelivery delivery = parseResultDelivery(param.getMode());
@@ -573,7 +588,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             execution.finish();
         }
         printMetrics(sessionOutput.out(), System.nanoTime() - elapsedStart, execution.duration(), stats.getCount(),
-                stats.getSize(), stats.getProcessedObjects(), errorCount, warnings.size());
+                stats.getSize(), stats.getProcessedObjects(), errorCount, warnings.size(), resultCharset);
         sessionOutput.out().print("}\n");
         sessionOutput.out().flush();
         if (sessionOutput.out().checkError()) {

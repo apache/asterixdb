@@ -61,7 +61,7 @@ public class HttpAcceptCharsetTest {
     @Test
     public void testAmbiguous() {
         IServletRequest request = withCharset("utf-8;q=.75,utf-16;q=.75,utf-32;q=.5");
-        String preferredCharset = HttpUtil.getPreferredCharset(request);
+        String preferredCharset = HttpUtil.getPreferredCharset(request).name();
         Assert.assertTrue("ambiguous by weight (got: " + preferredCharset + ")",
                 preferredCharset.toLowerCase().matches("utf-(8|16)"));
     }
@@ -83,7 +83,7 @@ public class HttpAcceptCharsetTest {
         } else if (charsetObject instanceof String) {
             return ((String) charsetObject).toLowerCase();
         } else if (charsetObject instanceof IServletRequest) {
-            return HttpUtil.getPreferredCharset((IServletRequest) charsetObject).toLowerCase();
+            return HttpUtil.getPreferredCharset((IServletRequest) charsetObject).name().toLowerCase();
         }
         throw new IllegalArgumentException("unknown type: " + charsetObject.getClass());
     }

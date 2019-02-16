@@ -99,11 +99,14 @@ if [ -z "$JAVACMD" ] ; then
     JAVACMD=`which java`
   fi
 fi
-"$JAVACMD" -version 2>&1 | grep -q '1\.[89]' || {
-  echo "JAVA_HOME must be at version 1.8 or later:"
-  "$JAVACMD" -version
+export JAVA_VERSION=$($JAVACMD -version 2>&1 | head -1 | awk '{ print $3 }' | tr -d '"')
+case $JAVA_VERSION in
+  1.8*|1.9*|10*|11*)
+    ;;
+  *)
+  echo JAVA_HOME must be at version 1.8 or later, but is: $JAVA_VERSION
   exit 2
-}
+esac
 DIRNAME=$(dirname "$0")
 [ $(echo $DIRNAME | wc -l) -ne 1 ] && {
   echo "Paths with spaces are not supported"

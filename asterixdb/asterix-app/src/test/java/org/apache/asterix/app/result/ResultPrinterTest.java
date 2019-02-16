@@ -28,7 +28,6 @@ import org.apache.asterix.api.http.server.AbstractQueryApiServlet;
 import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.config.CompilerProperties;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.test.common.ResultExtractor;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.SessionConfig;
@@ -75,7 +74,7 @@ public class ResultPrinterTest {
         boolean exceptionThrown = false;
         try {
             // ensure result is valid json and error will be returned and not results.
-            ResultExtractor.extract(IOUtils.toInputStream(resultStr, StandardCharsets.UTF_8));
+            ResultExtractor.extract(IOUtils.toInputStream(resultStr, StandardCharsets.UTF_8), StandardCharsets.UTF_8);
         } catch (Exception e) {
             exceptionThrown = true;
             Assert.assertTrue(e.getMessage().contains(expectedException.getMessage()));

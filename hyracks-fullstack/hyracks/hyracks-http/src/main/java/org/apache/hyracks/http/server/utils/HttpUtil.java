@@ -45,7 +45,7 @@ import io.netty.handler.codec.http.HttpRequest;
 public class HttpUtil {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
-    private static final String DEFAULT_RESPONSE_CHARSET = StandardCharsets.UTF_8.name();
+    private static final Charset DEFAULT_RESPONSE_CHARSET = StandardCharsets.UTF_8;
 
     private HttpUtil() {
     }
@@ -100,15 +100,20 @@ public class HttpUtil {
         return contentType == null ? null : contentType.split(";")[0];
     }
 
-    public static String getRequestBody(IServletRequest request) {
-        FullHttpRequest httpRequest = request.getHttpRequest();
-        Charset charset = io.netty.handler.codec.http.HttpUtil.getCharset(httpRequest, StandardCharsets.UTF_8);
-        return httpRequest.content().toString(charset);
+    public static Charset getRequestCharset(HttpRequest request) {
+        return io.netty.handler.codec.http.HttpUtil.getCharset(request, StandardCharsets.UTF_8);
     }
 
-    public static void setContentType(IServletResponse response, String type, IServletRequest fromRequest)
+    public static String getRequestBody(IServletRequest request) {
+        FullHttpRequest httpRequest = request.getHttpRequest();
+        return httpRequest.content().toString(getRequestCharset(httpRequest));
+    }
+
+    public static Charset setContentType(IServletResponse response, String type, IServletRequest fromRequest)
             throws IOException {
-        response.setHeader(HttpHeaderNames.CONTENT_TYPE, type + "; charset=" + getPreferredCharset(fromRequest));
+        Charset preferredCharset = getPreferredCharset(fromRequest);
+        response.setHeader(HttpHeaderNames.CONTENT_TYPE, type + "; charset=" + preferredCharset.name());
+        return preferredCharset;
     }
 
     public static void setContentType(IServletResponse response, String type, String charset) throws IOException {
@@ -169,25 +174,24 @@ public class HttpUtil {
         return clusterURL;
     }
 
-    public static String getPreferredCharset(IServletRequest request) {
+    public static Charset getPreferredCharset(IServletRequest request) {
         return getPreferredCharset(request, DEFAULT_RESPONSE_CHARSET);
     }
 
-    public static String getPreferredCharset(IServletRequest request, String defaultCharset) {
+    public static Charset getPreferredCharset(IServletRequest request, Charset defaultCharset) {
         String acceptCharset = request.getHeader(HttpHeaderNames.ACCEPT_CHARSET);
         if (acceptCharset == null) {
             return defaultCharset;
         }
         // If no "q" parameter is present, the default weight is 1 [https://tools.ietf.org/html/rfc7231#section-5.3.1]
-        Optional<String> preferredCharset = Stream.of(StringUtils.split(acceptCharset, ","))
-                .map(WeightedHeaderValue::new).sorted().map(WeightedHeaderValue::getValue)
-                .map(a -> "*".equals(a) ? defaultCharset : a).filter(value -> {
+        Optional<Charset> preferredCharset = Stream.of(StringUtils.split(acceptCharset, ","))
+                .map(WeightedHeaderValue::new).sorted().map(WeightedHeaderValue::getValueDefaultStar).filter(value -> {
                     if (!Charset.isSupported(value)) {
                         LOGGER.info("disregarding unsupported charset '{}'", value);
                         return false;
                     }
                     return true;
-                }).findFirst();
+                }).map(Charset::forName).findFirst();
         return preferredCharset.orElse(defaultCharset);
     }
 
@@ -214,6 +218,10 @@ public class HttpUtil {
 
         public String getValue() {
             return value;
+        }
+
+        public String getValueDefaultStar() {
+            return "*".equals(value) ? DEFAULT_RESPONSE_CHARSET.name() : value;
         }
 
         public double getWeight() {

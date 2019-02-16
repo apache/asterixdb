@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -121,7 +122,7 @@ public class SampleLocalClusterIT {
     public void test1_sanityQuery() throws Exception {
         TestExecutor testExecutor = new TestExecutor();
         InputStream resultStream = testExecutor.executeQueryService("1+1;",
-                testExecutor.getEndpoint(Servlets.QUERY_SERVICE), OutputFormat.ADM);
+                testExecutor.getEndpoint(Servlets.QUERY_SERVICE), OutputFormat.ADM, StandardCharsets.UTF_8);
         final ObjectMapper objectMapper = new ObjectMapper();
         final ObjectNode response = objectMapper.readValue(resultStream, ObjectNode.class);
         final JsonNode result = response.get("results");

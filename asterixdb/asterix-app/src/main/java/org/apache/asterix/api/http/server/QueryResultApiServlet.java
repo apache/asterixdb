@@ -18,12 +18,14 @@
  */
 package org.apache.asterix.api.http.server;
 
+import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
+import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -91,7 +93,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             // way to send the same OutputFormat value here as was
             // originally determined there. Need to save this value on
             // some object that we can obtain here.
-            SessionOutput sessionOutput = RestApiServlet.initResponse(request, response);
+            SessionOutput sessionOutput = initResponse(request, response);
             ResultUtil.printResults(appCtx, resultReader, sessionOutput, new Stats(), null);
         } catch (HyracksDataException e) {
             final int errorCode = e.getErrorCode();
@@ -110,6 +112,84 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         if (response.writer().checkError()) {
             LOGGER.warn("Error flushing output writer for \"" + strHandle + "\"");
         }
+    }
+
+    /**
+     * Initialize the Content-Type of the response, and construct a
+     * SessionConfig with the appropriate output writer and output-format
+     * based on the Accept: header and other servlet parameters.
+     */
+    static SessionOutput initResponse(IServletRequest request, IServletResponse response) throws IOException {
+        // CLEAN_JSON output is the default; most generally useful for a
+        // programmatic HTTP API
+        SessionConfig.OutputFormat format = SessionConfig.OutputFormat.CLEAN_JSON;
+        // First check the "output" servlet parameter.
+        String output = request.getParameter("output");
+        String accept = request.getHeader("Accept", "");
+        if (output != null) {
+            if ("CSV".equals(output)) {
+                format = SessionConfig.OutputFormat.CSV;
+            } else if ("ADM".equals(output)) {
+                format = SessionConfig.OutputFormat.ADM;
+            }
+        } else {
+            // Second check the Accept: HTTP header.
+            if (accept.contains("application/x-adm")) {
+                format = SessionConfig.OutputFormat.ADM;
+            } else if (accept.contains("text/csv")) {
+                format = SessionConfig.OutputFormat.CSV;
+            }
+        }
+        SessionConfig.PlanFormat planFormat = SessionConfig.PlanFormat.get(request.getParameter("plan-format"),
+                "plan format", SessionConfig.PlanFormat.STRING, LOGGER);
+
+        // If it's JSON, check for the "lossless" flag
+
+        if (format == SessionConfig.OutputFormat.CLEAN_JSON
+                && ("true".equals(request.getParameter("lossless")) || accept.contains("lossless=true"))) {
+            format = SessionConfig.OutputFormat.LOSSLESS_JSON;
+        }
+
+        SessionOutput.ResultAppender appendHandle = (app, handle) -> app.append("{ \"").append("handle")
+                .append("\":" + " \"").append(handle).append("\" }");
+        SessionConfig sessionConfig = new SessionConfig(format, planFormat);
+
+        // If it's JSON or ADM, check for the "wrapper-array" flag. Default is
+        // "true" for JSON and "false" for ADM. (Not applicable for CSV.)
+        boolean wrapperArray =
+                format == SessionConfig.OutputFormat.CLEAN_JSON || format == SessionConfig.OutputFormat.LOSSLESS_JSON;
+        String wrapperParam = request.getParameter("wrapper-array");
+        if (wrapperParam != null) {
+            wrapperArray = Boolean.valueOf(wrapperParam);
+        } else if (accept.contains("wrap-array=true")) {
+            wrapperArray = true;
+        } else if (accept.contains("wrap-array=false")) {
+            wrapperArray = false;
+        }
+        sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, wrapperArray);
+        // Now that format is set, output the content-type
+        switch (format) {
+            case ADM:
+                HttpUtil.setContentType(response, "application/x-adm", request);
+                break;
+            case CLEAN_JSON:
+                // No need to reflect "clean-ness" in output type; fall through
+            case LOSSLESS_JSON:
+                HttpUtil.setContentType(response, "application/json", request);
+                break;
+            case CSV:
+                // Check for header parameter or in Accept:.
+                if ("present".equals(request.getParameter("header")) || accept.contains("header=present")) {
+                    HttpUtil.setContentType(response, "text/csv; header=present", request);
+                    sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, true);
+                } else {
+                    HttpUtil.setContentType(response, "text/csv; header=absent", request);
+                }
+                break;
+            default:
+                throw new IOException("Unknown format " + format);
+        }
+        return new SessionOutput(sessionConfig, response.writer(), null, null, appendHandle, null);
     }
 
 }

@@ -56,7 +56,7 @@ public class TestMethodTracer extends TestWatcher {
 
     @Override
     protected void failed(Throwable e, Description description) {
-        LOGGER.log(level, "### {} FAILED ({})", description.getMethodName(), e.getClass().getName());
+        LOGGER.log(level, "### {} FAILED", description.getMethodName(), e);
     }
 
     @Override
