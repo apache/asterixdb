@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.test.common;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -36,12 +38,15 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -57,6 +62,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.asterix.api.http.server.QueryServiceServlet;
@@ -143,11 +149,7 @@ public class TestExecutor {
     public static final Set<String> NON_CANCELLABLE =
             Collections.unmodifiableSet(new HashSet<>(Arrays.asList("store", "validate")));
 
-    private final IPollTask plainExecutor = (testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
-            queryCount, expectedResultFileCtxs, testFile, actualPath) -> {
-        executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
-                expectedResultFileCtxs, testFile, actualPath);
-    };
+    private final IPollTask plainExecutor = this::executeTestFile;
 
     public static final String DELIVERY_ASYNC = "async";
     public static final String DELIVERY_DEFERRED = "deferred";
@@ -158,6 +160,9 @@ public class TestExecutor {
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
     private static Map<String, InetSocketAddress> ncEndPoints;
     private static Map<String, InetSocketAddress> replicationAddress;
+
+    private final List<Charset> allCharsets;
+    private final List<Charset> charsetsRemaining = new ArrayList<>();
 
     /*
      * Instance members
@@ -182,6 +187,8 @@ public class TestExecutor {
 
     public TestExecutor(List<InetSocketAddress> endpoints) {
         this.endpoints = endpoints;
+        this.allCharsets = Charset.availableCharsets().values().stream()
+                .filter(c -> canEncodeDecode(c, "\n\t\\[]{}'\"")).collect(Collectors.toList());
     }
 
     public void setLibrarian(IExternalUDFLibrarian librarian) {
@@ -215,24 +222,23 @@ public class TestExecutor {
     }
 
     public void runScriptAndCompareWithResult(File scriptFile, File expectedFile, File actualFile,
-            ComparisonEnum compare) throws Exception {
+            ComparisonEnum compare, Charset actualEncoding) throws Exception {
         LOGGER.info("Expected results file: {} ", expectedFile);
-        BufferedReader readerExpected =
-                new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
-        BufferedReader readerActual =
-                new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
         boolean regex = false;
-        try {
+        try (BufferedReader readerExpected =
+                new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), UTF_8));
+                BufferedReader readerActual =
+                        new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), actualEncoding))) {
             if (ComparisonEnum.BINARY.equals(compare)) {
                 if (!IOUtils.contentEquals(new FileInputStream(actualFile), new FileInputStream(expectedFile))) {
                     throw new Exception("Result for " + scriptFile + ": actual file did not match expected result");
                 }
                 return;
             } else if (actualFile.toString().endsWith(".regex")) {
-                runScriptAndCompareWithResultRegex(scriptFile, expectedFile, actualFile);
+                runScriptAndCompareWithResultRegex(scriptFile, readerExpected, readerActual);
                 return;
             } else if (actualFile.toString().endsWith(".regexadm")) {
-                runScriptAndCompareWithResultRegexAdm(scriptFile, expectedFile, actualFile);
+                runScriptAndCompareWithResultRegexAdm(scriptFile, readerExpected, readerActual);
                 return;
             } else if (actualFile.toString().endsWith(".regexjson")) {
                 ObjectMapper OM = new ObjectMapper();
@@ -293,11 +299,8 @@ public class TestExecutor {
                 throw createLineChangedException(scriptFile, "<EOF>", lineActual, num);
             }
         } catch (Exception e) {
-            LOGGER.info("Actual results file: {}", actualFile);
+            LOGGER.info("Actual results file: {} encoding: {}", actualFile, actualEncoding);
             throw e;
-        } finally {
-            readerExpected.close();
-            readerActual.close();
         }
 
     }
@@ -416,54 +419,48 @@ public class TestExecutor {
         return true;
     }
 
-    public void runScriptAndCompareWithResultRegex(File scriptFile, File expectedFile, File actualFile)
-            throws Exception {
+    public void runScriptAndCompareWithResultRegex(File scriptFile, BufferedReader readerExpected,
+            BufferedReader readerActual) throws Exception {
         String lineExpected, lineActual;
-        try (BufferedReader readerExpected =
-                new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
-                BufferedReader readerActual =
-                        new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), "UTF-8"))) {
-            StringBuilder actual = new StringBuilder();
-            while ((lineActual = readerActual.readLine()) != null) {
-                actual.append(lineActual).append('\n');
+        StringBuilder actual = new StringBuilder();
+        while ((lineActual = readerActual.readLine()) != null) {
+            actual.append(lineActual).append('\n');
+        }
+        while ((lineExpected = readerExpected.readLine()) != null) {
+            if ("".equals(lineExpected.trim())) {
+                continue;
             }
-            while ((lineExpected = readerExpected.readLine()) != null) {
-                if ("".equals(lineExpected.trim())) {
-                    continue;
-                }
-                Matcher m = REGEX_LINES_PATTERN.matcher(lineExpected);
-                if (!m.matches()) {
-                    throw new IllegalArgumentException(
-                            "Each line of regex file must conform to: [-]/regex/[flags]: " + expectedFile);
-                }
-                String negateStr = m.group(1);
-                String expression = m.group(2);
-                String flagStr = m.group(3);
-                boolean negate = "-".equals(negateStr);
-                int flags = Pattern.MULTILINE;
-                if (flagStr.contains("m")) {
-                    flags |= Pattern.DOTALL;
-                }
-                if (flagStr.contains("i")) {
-                    flags |= Pattern.CASE_INSENSITIVE;
-                }
-                Pattern linePattern = Pattern.compile(expression, flags);
-                boolean match = linePattern.matcher(actual).find();
-                if (match && !negate || negate && !match) {
-                    continue;
-                }
-                throw new Exception("Result for " + scriptFile + ": expected pattern '" + expression
-                        + "' not found in result: " + actual);
+            Matcher m = REGEX_LINES_PATTERN.matcher(lineExpected);
+            if (!m.matches()) {
+                throw new IllegalArgumentException("Each line of regex file must conform to: [-]/regex/[flags]");
             }
+            String negateStr = m.group(1);
+            String expression = m.group(2);
+            String flagStr = m.group(3);
+            boolean negate = "-".equals(negateStr);
+            int flags = Pattern.MULTILINE;
+            if (flagStr.contains("m")) {
+                flags |= Pattern.DOTALL;
+            }
+            if (flagStr.contains("i")) {
+                flags |= Pattern.CASE_INSENSITIVE;
+            }
+            Pattern linePattern = Pattern.compile(expression, flags);
+            boolean match = linePattern.matcher(actual).find();
+            if (match && !negate || negate && !match) {
+                continue;
+            }
+            throw new Exception("Result for " + scriptFile + ": expected pattern '" + expression
+                    + "' not found in result: " + actual);
         }
     }
 
-    public void runScriptAndCompareWithResultRegexAdm(File scriptFile, File expectedFile, File actualFile)
-            throws Exception {
+    public void runScriptAndCompareWithResultRegexAdm(File scriptFile, BufferedReader expectedFile,
+            BufferedReader actualFile) throws Exception {
         StringWriter actual = new StringWriter();
         StringWriter expected = new StringWriter();
-        IOUtils.copy(new FileInputStream(actualFile), actual, StandardCharsets.UTF_8);
-        IOUtils.copy(new FileInputStream(expectedFile), expected, StandardCharsets.UTF_8);
+        IOUtils.copy(actualFile, actual);
+        IOUtils.copy(expectedFile, expected);
         Pattern pattern = Pattern.compile(expected.toString(), Pattern.DOTALL | Pattern.MULTILINE);
         if (!pattern.matcher(actual.toString()).matches()) {
             // figure out where the problem first occurs...
@@ -590,21 +587,27 @@ public class TestExecutor {
     }
 
     public InputStream executeQueryService(String str, URI uri, OutputFormat fmt) throws Exception {
-        return executeQueryService(str, fmt, uri, new ArrayList<>(), false);
+        return executeQueryService(str, fmt, uri, new ArrayList<>(), false, UTF_8);
+    }
+
+    public InputStream executeQueryService(String str, URI uri, OutputFormat fmt, Charset resultCharset)
+            throws Exception {
+        return executeQueryService(str, fmt, uri, new ArrayList<>(), false, resultCharset);
     }
 
     public InputStream executeQueryService(String str, OutputFormat fmt, URI uri, List<Parameter> params,
-            boolean jsonEncoded) throws Exception {
-        return executeQueryService(str, fmt, uri, params, jsonEncoded, null, false);
+            boolean jsonEncoded, Charset responseCharset) throws Exception {
+        return executeQueryService(str, fmt, uri, params, jsonEncoded, responseCharset, null, false);
     }
 
     public InputStream executeQueryService(String str, OutputFormat fmt, URI uri, List<Parameter> params,
             boolean jsonEncoded, Predicate<Integer> responseCodeValidator) throws Exception {
-        return executeQueryService(str, fmt, uri, params, jsonEncoded, responseCodeValidator, false);
+        return executeQueryService(str, fmt, uri, params, jsonEncoded, UTF_8, responseCodeValidator, false);
     }
 
     public InputStream executeQueryService(String str, OutputFormat fmt, URI uri, List<Parameter> params,
-            boolean jsonEncoded, Predicate<Integer> responseCodeValidator, boolean cancellable) throws Exception {
+            boolean jsonEncoded, Charset responseCharset, Predicate<Integer> responseCodeValidator, boolean cancellable)
+            throws Exception {
         List<Parameter> newParams = upsertParam(params, "format", ParameterTypeEnum.STRING, fmt.mimeType());
         newParams = upsertParam(newParams, QueryServiceServlet.Parameter.PLAN_FORMAT.str(), ParameterTypeEnum.STRING,
                 DEFAULT_PLAN_FORMAT);
@@ -622,11 +625,64 @@ public class TestExecutor {
         // Set accepted output response type
         method.setHeader("Origin", uri.getScheme() + uri.getAuthority());
         method.setHeader("Accept", OutputFormat.CLEAN_JSON.mimeType());
+        method.setHeader("Accept-Charset", responseCharset.name());
+        if (!responseCharset.equals(UTF_8)) {
+            LOGGER.info("using Accept-Charset: {}", responseCharset.name());
+        }
         HttpResponse response = executeHttpRequest(method);
         if (responseCodeValidator != null) {
             checkResponse(response, responseCodeValidator);
         }
         return response.getEntity().getContent();
+    }
+
+    private Charset selectCharset(File result) throws IOException {
+        // choose an encoding that works for this input
+        return selectCharset(FileUtils.readFileToString(result, UTF_8));
+    }
+
+    private Charset selectCharset(String payload) {
+        // choose an encoding that works for this input
+        return nextCharset(charset -> canEncodeDecode(charset, payload));
+    }
+
+    public void setAvailableCharsets(Collection<Charset> charsets) {
+        synchronized (allCharsets) {
+            allCharsets.clear();
+            allCharsets.addAll(charsets);
+            charsetsRemaining.clear();
+        }
+    }
+
+    public Charset nextCharset(Predicate<Charset> test) {
+        synchronized (allCharsets) {
+            while (true) {
+                for (Iterator<Charset> iter = charsetsRemaining.iterator(); iter.hasNext();) {
+                    Charset next = iter.next();
+                    if (test.test(next)) {
+                        iter.remove();
+                        return next;
+                    }
+                }
+                Collections.shuffle(allCharsets);
+                charsetsRemaining.addAll(allCharsets);
+            }
+        }
+    }
+
+    // duplicated from hyracks-test-support as transitive dependencies on test-jars are not handled correctly
+    private static boolean canEncodeDecode(Charset charset, String input) {
+        try {
+            if (input.equals(new String(input.getBytes(charset), charset))) {
+                // workaround for https://bugs.openjdk.java.net/browse/JDK-6392670 and similar
+                if (input.equals(charset.decode(charset.encode(CharBuffer.wrap(input))).toString())) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.debug("cannot encode / decode {} with {} due to exception", input, charset.displayName(), e);
+        }
+        return false;
     }
 
     protected List<Parameter> upsertParam(List<Parameter> params, String name, ParameterTypeEnum type, String value) {
@@ -666,7 +722,6 @@ public class TestExecutor {
         for (Parameter param : params) {
             builder.addParameter(param.getName(), param.getValue());
         }
-        builder.setCharset(StandardCharsets.UTF_8);
         return builder.build();
     }
 
@@ -676,8 +731,8 @@ public class TestExecutor {
         for (Parameter param : params) {
             builder.addParameter(param.getName(), param.getValue());
         }
-        builder.setCharset(StandardCharsets.UTF_8);
-        body.ifPresent(s -> builder.setEntity(new StringEntity(s, StandardCharsets.UTF_8)));
+        builder.setCharset(UTF_8);
+        body.ifPresent(s -> builder.setEntity(new StringEntity(s, UTF_8)));
         return builder.build();
     }
 
@@ -701,7 +756,7 @@ public class TestExecutor {
         for (Parameter param : params) {
             builder.addParameter(param.getName(), param.getValue());
         }
-        builder.setCharset(StandardCharsets.UTF_8);
+        builder.setCharset(UTF_8);
         return builder.build();
     }
 
@@ -715,9 +770,9 @@ public class TestExecutor {
             builder.addParameter(stmtParam, statement);
         } else {
             // this seems pretty bad - we should probably fix the API and not the client
-            builder.setEntity(new StringEntity(statement, StandardCharsets.UTF_8));
+            builder.setEntity(new StringEntity(statement, UTF_8));
         }
-        builder.setCharset(StandardCharsets.UTF_8);
+        builder.setCharset(UTF_8);
         return builder.build();
     }
 
@@ -752,7 +807,7 @@ public class TestExecutor {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        builder.setCharset(StandardCharsets.UTF_8);
+        builder.setCharset(UTF_8);
         return builder.build();
     }
 
@@ -785,8 +840,7 @@ public class TestExecutor {
     // and returns the contents as a string
     // This string is later passed to REST API for execution.
     public String readTestFile(File testFile) throws Exception {
-        BufferedReader reader =
-                new BufferedReader(new InputStreamReader(new FileInputStream(testFile), StandardCharsets.UTF_8));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(testFile), UTF_8));
         String line;
         StringBuilder stringBuilder = new StringBuilder();
         String ls = System.getProperty("line.separator");
@@ -840,9 +894,9 @@ public class TestExecutor {
         future.get();
         ByteArrayInputStream bisIn = new ByteArrayInputStream(baos.toByteArray());
         StringWriter writerIn = new StringWriter();
-        IOUtils.copy(bisIn, writerIn, StandardCharsets.UTF_8);
+        IOUtils.copy(bisIn, writerIn, UTF_8);
         StringWriter writerErr = new StringWriter();
-        IOUtils.copy(p.getErrorStream(), writerErr, StandardCharsets.UTF_8);
+        IOUtils.copy(p.getErrorStream(), writerErr, UTF_8);
 
         StringBuffer stdOut = writerIn.getBuffer();
         if (writerErr.getBuffer().length() > 0) {
@@ -939,18 +993,18 @@ public class TestExecutor {
                         expectedResultFileCtxs);
                 break;
             case "txnqbc": // qbc represents query before crash
-                resultStream = query(cUnit, testFile.getName(), statement);
+                resultStream = query(cUnit, testFile.getName(), statement, UTF_8);
                 qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
                 writeOutputToFile(qbcFile, resultStream);
                 break;
             case "txnqar": // qar represents query after recovery
-                resultStream = query(cUnit, testFile.getName(), statement);
+                resultStream = query(cUnit, testFile.getName(), statement, UTF_8);
                 File qarFile = new File(actualPath + File.separator
                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName()
                         + "_qar.adm");
                 writeOutputToFile(qarFile, resultStream);
                 qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
-                runScriptAndCompareWithResult(testFile, qbcFile, qarFile, ComparisonEnum.TEXT);
+                runScriptAndCompareWithResult(testFile, qbcFile, qarFile, ComparisonEnum.TEXT, UTF_8);
                 break;
             case "txneu": // eu represents erroneous update
                 try {
@@ -1193,7 +1247,7 @@ public class TestExecutor {
             throw new IllegalArgumentException("Unexpected format for method " + reqType + ": " + extension);
         }
         if (handleVar != null) {
-            String handle = ResultExtractor.extractHandle(resultStream);
+            String handle = ResultExtractor.extractHandle(resultStream, UTF_8);
             if (handle != null) {
                 variableCtx.put(handleVar, handle);
             } else {
@@ -1202,15 +1256,15 @@ public class TestExecutor {
         } else {
             if (expectedResultFile == null) {
                 if (testFile.getName().startsWith(DIAGNOSE)) {
-                    LOGGER.info("Diagnostic output: {}", IOUtils.toString(resultStream, StandardCharsets.UTF_8));
+                    LOGGER.info("Diagnostic output: {}", IOUtils.toString(resultStream, UTF_8));
                 } else {
-                    LOGGER.info("Unexpected output: {}", IOUtils.toString(resultStream, StandardCharsets.UTF_8));
+                    LOGGER.info("Unexpected output: {}", IOUtils.toString(resultStream, UTF_8));
                     Assert.fail("no result file for " + testFile.toString() + "; queryCount: " + queryCount
                             + ", filectxs.size: " + numResultFiles);
                 }
             } else {
                 writeOutputToFile(actualResultFile, resultStream);
-                runScriptAndCompareWithResult(testFile, expectedResultFile, actualResultFile, compare);
+                runScriptAndCompareWithResult(testFile, expectedResultFile, actualResultFile, compare, UTF_8);
             }
         }
         queryCount.increment();
@@ -1228,29 +1282,30 @@ public class TestExecutor {
         URI uri = testFile.getName().endsWith("aql") ? getEndpoint(Servlets.QUERY_AQL)
                 : getEndpoint(Servlets.QUERY_SERVICE);
         boolean isJsonEncoded = isJsonEncoded(extractHttpRequestType(statement));
+        Charset responseCharset = expectedResultFile == null ? UTF_8 : selectCharset(expectedResultFile);
         InputStream resultStream;
         if (DELIVERY_IMMEDIATE.equals(delivery)) {
-            resultStream =
-                    executeQueryService(statement, fmt, uri, params, isJsonEncoded, null, isCancellable(reqType));
+            resultStream = executeQueryService(statement, fmt, uri, params, isJsonEncoded, responseCharset, null,
+                    isCancellable(reqType));
             switch (reqType) {
                 case METRICS_QUERY_TYPE:
-                    resultStream = ResultExtractor.extractMetrics(resultStream);
+                    resultStream = ResultExtractor.extractMetrics(resultStream, responseCharset);
                     break;
                 default:
-                    resultStream = ResultExtractor.extract(resultStream);
+                    resultStream = ResultExtractor.extract(resultStream, responseCharset);
                     break;
             }
         } else {
             String handleVar = getHandleVariable(statement);
             resultStream = executeQueryService(statement, fmt, uri,
-                    upsertParam(params, "mode", ParameterTypeEnum.STRING, delivery), isJsonEncoded);
-            String handle = ResultExtractor.extractHandle(resultStream);
+                    upsertParam(params, "mode", ParameterTypeEnum.STRING, delivery), isJsonEncoded, responseCharset);
+            String handle = ResultExtractor.extractHandle(resultStream, responseCharset);
             Assert.assertNotNull("no handle for " + reqType + " test " + testFile.toString(), handleVar);
             variableCtx.put(handleVar, toQueryServiceHandle(handle));
         }
         if (actualResultFile == null) {
             if (testFile.getName().startsWith(DIAGNOSE)) {
-                LOGGER.info("Diagnostic output: {}", IOUtils.toString(resultStream, StandardCharsets.UTF_8));
+                LOGGER.info("Diagnostic output: {}", IOUtils.toString(resultStream, responseCharset));
             } else {
                 Assert.fail("no result file for " + testFile.toString() + "; queryCount: " + queryCount
                         + ", filectxs.size: " + numResultFiles);
@@ -1265,7 +1320,7 @@ public class TestExecutor {
                         + ", filectxs.size: " + numResultFiles);
             }
         }
-        runScriptAndCompareWithResult(testFile, expectedResultFile, actualResultFile, compare);
+        runScriptAndCompareWithResult(testFile, expectedResultFile, actualResultFile, compare, responseCharset);
         if (!reqType.equals("validate")) {
             queryCount.increment();
         }
@@ -1293,8 +1348,7 @@ public class TestExecutor {
                             throw new Exception(
                                     "Failed to delete an existing result file: " + actualResultFile.getAbsolutePath());
                         }
-                        writeOutputToFile(actualResultFile,
-                                new ByteArrayInputStream(poller.poll().getBytes(StandardCharsets.UTF_8)));
+                        writeOutputToFile(actualResultFile, new ByteArrayInputStream(poller.poll().getBytes(UTF_8)));
                         variableCtx.put(key, actualResultFile);
                         validate(actualPath, testCaseCtx, cUnit, statement, variableCtx, testFile, ctx, queryCount,
                                 expectedResultFileCtxs);
@@ -1426,8 +1480,8 @@ public class TestExecutor {
 
     private InputStream executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri)
             throws Exception {
-        InputStream resultStream = executeQueryService(statement, serviceUri, outputFormat);
-        return ResultExtractor.extract(resultStream);
+        InputStream resultStream = executeQueryService(statement, serviceUri, outputFormat, UTF_8);
+        return ResultExtractor.extract(resultStream, UTF_8);
     }
 
     protected static boolean isExpected(Exception e, CompilationUnit cUnit) {
@@ -1581,7 +1635,7 @@ public class TestExecutor {
         String endpoint = "/admin/cluster/node/" + nodeId + "/config";
         InputStream executeJSONGet = executeJSONGet(fmt, createEndpointURI(endpoint, null));
         StringWriter actual = new StringWriter();
-        IOUtils.copy(executeJSONGet, actual, StandardCharsets.UTF_8);
+        IOUtils.copy(executeJSONGet, actual, UTF_8);
         String config = actual.toString();
         int nodePid = new ObjectMapper().readValue(config, ObjectNode.class).get("pid").asInt();
         if (nodePid <= 1) {
@@ -1611,7 +1665,7 @@ public class TestExecutor {
         String endpoint = "/admin/cluster/node/" + nodeId + "/config";
         InputStream executeJSONGet = executeJSONGet(fmt, createEndpointURI(endpoint, null));
         StringWriter actual = new StringWriter();
-        IOUtils.copy(executeJSONGet, actual, StandardCharsets.UTF_8);
+        IOUtils.copy(executeJSONGet, actual, UTF_8);
         String config = actual.toString();
         ObjectMapper om = new ObjectMapper();
         String logDir = om.readTree(config).findPath("txn.log.dir").asText();
@@ -1806,7 +1860,7 @@ public class TestExecutor {
             InputStream resultStream = executeQueryService(
                     "select dv.DataverseName from Metadata.`Dataverse` as dv order by dv.DataverseName;",
                     getEndpoint(Servlets.QUERY_SERVICE), OutputFormat.CLEAN_JSON);
-            JsonNode result = extractResult(IOUtils.toString(resultStream, StandardCharsets.UTF_8));
+            JsonNode result = extractResult(IOUtils.toString(resultStream, UTF_8));
             for (int i = 0; i < result.size(); i++) {
                 JsonNode json = result.get(i);
                 if (json != null) {
@@ -1826,8 +1880,8 @@ public class TestExecutor {
                     dropStatement.append(dv);
                     dropStatement.append(";\n");
                     resultStream = executeQueryService(dropStatement.toString(), getEndpoint(Servlets.QUERY_SERVICE),
-                            OutputFormat.CLEAN_JSON);
-                    ResultExtractor.extract(resultStream);
+                            OutputFormat.CLEAN_JSON, UTF_8);
+                    ResultExtractor.extract(resultStream, UTF_8);
                 }
             }
         } catch (Throwable th) {
@@ -2017,11 +2071,12 @@ public class TestExecutor {
         return !NON_CANCELLABLE.contains(type);
     }
 
-    private InputStream query(CompilationUnit cUnit, String testFile, String statement) throws Exception {
+    private InputStream query(CompilationUnit cUnit, String testFile, String statement, Charset responseCharset)
+            throws Exception {
         final URI uri = getQueryServiceUri(testFile);
         final InputStream inputStream = executeQueryService(statement, OutputFormat.forCompilationUnit(cUnit), uri,
-                cUnit.getParameter(), true, null, false);
-        return ResultExtractor.extract(inputStream);
+                cUnit.getParameter(), true, responseCharset, null, false);
+        return ResultExtractor.extract(inputStream, responseCharset);
     }
 
     private URI getQueryServiceUri(String extension) throws URISyntaxException {

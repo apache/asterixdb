@@ -675,7 +675,6 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
-      <version>${hyracks.version}</version>
     </dependency>
   </dependencies>
 </project>

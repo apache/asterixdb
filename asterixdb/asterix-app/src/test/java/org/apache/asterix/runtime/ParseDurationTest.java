@@ -142,6 +142,7 @@ public class ParseDurationTest {
         Assert.assertEquals("1.234567ms", Duration.formatNanos(1234567l));
         Assert.assertEquals("123.456µs", Duration.formatNanos(123456l));
         Assert.assertEquals("12.345µs", Duration.formatNanos(12345l));
+        Assert.assertEquals("12.345us", Duration.formatNanos(12345l, true));
         Assert.assertEquals("1.234µs", Duration.formatNanos(1234l));
         Assert.assertEquals("123ns", Duration.formatNanos(123l));
         Assert.assertEquals("12ns", Duration.formatNanos(12l));

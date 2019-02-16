@@ -117,6 +117,8 @@ public class AsterixHyracksIntegrationUtil {
     }
 
     public void init(boolean deleteOldInstanceData, String confFile) throws Exception { //NOSONAR
+        configureExternalLibDir();
+
         final ICCApplication ccApplication = createCCApplication();
         if (confFile == null) {
             configManager = new ConfigManager();
@@ -182,6 +184,16 @@ public class AsterixHyracksIntegrationUtil {
                 cc.getNetworkSecurityManager().getSocketChannelFactory());
         this.ncs = nodeControllers.toArray(new NodeControllerService[nodeControllers.size()]);
         setTestPersistedResourceRegistry();
+    }
+
+    private void configureExternalLibDir() {
+        // hack to ensure we have a unique location for external libraries in our tests (asterix cluster has a shared
+        // home directory)-- TODO: rework this once the external lib dir can be configured explicitly
+        String appHome = joinPath(System.getProperty("app.home", System.getProperty("user.home")),
+                "appHome" + (int) (Math.random() * Integer.MAX_VALUE));
+        LOGGER.info("setting app.home to {}", appHome);
+        System.setProperty("app.home", appHome);
+        new File(appHome).deleteOnExit();
     }
 
     public void init(boolean deleteOldInstanceData, String externalLibPath, String confDir) throws Exception {

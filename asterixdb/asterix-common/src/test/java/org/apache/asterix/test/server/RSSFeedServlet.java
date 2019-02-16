@@ -67,13 +67,12 @@ public class RSSFeedServlet extends AbstractServlet {
             String feedType = req.getParameter(FEED_TYPE);
             feedType = (feedType != null) ? feedType : defaultFeedType;
             feed.setFeedType(feedType);
-            HttpUtil.setContentType(res, MIME_TYPE);
+            HttpUtil.setContentType(res, MIME_TYPE, req);
             SyndFeedOutput output = new SyndFeedOutput();
             output.output(feed, res.writer());
         } catch (FeedException | ParseException ex) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.WARN, ex.getMessage(), ex);
-            String msg = COULD_NOT_GENERATE_FEED_ERROR;
-            res.writer().print(msg);
+            res.writer().print(COULD_NOT_GENERATE_FEED_ERROR);
             res.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }

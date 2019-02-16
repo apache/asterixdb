@@ -19,6 +19,7 @@
 package org.apache.asterix.common;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -131,7 +132,7 @@ public class TestDataUtil {
     public static long getDatasetCount(String datasetName) throws Exception {
         final String query = "SELECT VALUE COUNT(*) FROM `" + datasetName + "`;";
         final InputStream responseStream = TEST_EXECUTOR.executeQueryService(query,
-                TEST_EXECUTOR.getEndpoint(Servlets.QUERY_SERVICE), OUTPUT_FORMAT);
+                TEST_EXECUTOR.getEndpoint(Servlets.QUERY_SERVICE), OUTPUT_FORMAT, StandardCharsets.UTF_8);
         final ObjectNode response = OBJECT_MAPPER.readValue(responseStream, ObjectNode.class);
         final JsonNode result = response.get("results");
         // make sure there is a single value in result

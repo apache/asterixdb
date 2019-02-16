@@ -108,7 +108,7 @@ public class ChunkedResponse implements IServletResponse {
     public synchronized PrintWriter writer() {
         if (writer == null) {
             Charset charset = io.netty.handler.codec.http.HttpUtil.getCharset(response, StandardCharsets.UTF_8);
-            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, charset)));
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset));
         }
         return writer;
     }

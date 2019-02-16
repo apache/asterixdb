@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.http.HttpEntity;
@@ -44,8 +43,7 @@ import org.apache.hyracks.http.server.HttpServerConfig;
 import org.apache.hyracks.http.server.HttpServerConfigBuilder;
 import org.apache.hyracks.http.server.WebManager;
 import org.apache.hyracks.test.http.servlet.CompliantEchoServlet;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hyracks.test.string.EncodingUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -57,8 +55,6 @@ import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class HttpServerEncodingTest {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private static final int PORT = 9898;
     private static final String HOST = "localhost";
     private static final String PROTOCOL = "http";
@@ -72,25 +68,12 @@ public class HttpServerEncodingTest {
         List<Object[]> tests = new ArrayList<>();
         Stream.of("encoding is hard", "中文字符", "لا يوجد ترجمة لكُ", STRING_NEEDS_2_JAVA_CHARS_1,
                 STRING_NEEDS_2_JAVA_CHARS_2).forEach(input -> {
-                    Set<Charset> legalCharsets = getLegalCharsetsFor(input);
+                    Set<Charset> legalCharsets = EncodingUtils.getLegalCharsetsFor(input);
                     legalCharsets.forEach(charsetIn -> legalCharsets.forEach(charsetOut -> tests
                             .add(new Object[] { input + ":" + charsetIn.displayName() + "->" + charsetOut.displayName(),
                                     input, charsetIn, charsetOut })));
                 });
         return tests;
-    }
-
-    private static Set<Charset> getLegalCharsetsFor(String input) {
-        return Charset.availableCharsets().values().stream().filter(Charset::canEncode)
-                .filter(test -> canEncodeDecode(input, test)).collect(Collectors.toSet());
-    }
-
-    private static boolean canEncodeDecode(String input, Charset charset) {
-        if (input.equals(new String(input.getBytes(charset), charset))) {
-            return true;
-        }
-        LOGGER.info("cannot encode / decode {} with {}", input, charset.displayName());
-        return false;
     }
 
     @Parameter(0)

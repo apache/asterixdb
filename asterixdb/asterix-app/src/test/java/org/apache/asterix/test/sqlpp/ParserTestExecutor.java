@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -160,7 +161,8 @@ public class ParserTestExecutor extends TestExecutor {
             }
             writer.close();
             // Compares the actual result and the expected result.
-            runScriptAndCompareWithResult(queryFile, expectedFile, actualResultFile, ComparisonEnum.TEXT);
+            runScriptAndCompareWithResult(queryFile, expectedFile, actualResultFile, ComparisonEnum.TEXT,
+                    StandardCharsets.UTF_8);
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.warn("Failed while testing file " + queryFile);
             throw e;

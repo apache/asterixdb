@@ -19,7 +19,7 @@
 package org.apache.asterix.test.common;
 
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -82,16 +82,16 @@ public class ResultExtractor {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    public static InputStream extract(InputStream resultStream) throws Exception {
-        return extract(resultStream, EnumSet.of(ResultField.RESULTS));
+    public static InputStream extract(InputStream resultStream, Charset resultCharset) throws Exception {
+        return extract(resultStream, EnumSet.of(ResultField.RESULTS), resultCharset);
     }
 
-    public static InputStream extractMetrics(InputStream resultStream) throws Exception {
-        return extract(resultStream, EnumSet.of(ResultField.METRICS));
+    public static InputStream extractMetrics(InputStream resultStream, Charset resultCharset) throws Exception {
+        return extract(resultStream, EnumSet.of(ResultField.METRICS), resultCharset);
     }
 
-    public static String extractHandle(InputStream resultStream) throws Exception {
-        String result = IOUtils.toString(resultStream, StandardCharsets.UTF_8);
+    public static String extractHandle(InputStream resultStream, Charset responseCharset) throws Exception {
+        String result = IOUtils.toString(resultStream, responseCharset);
         ObjectNode resultJson = OBJECT_MAPPER.readValue(result, ObjectNode.class);
         final JsonNode handle = resultJson.get("handle");
         if (handle != null) {
@@ -106,8 +106,9 @@ public class ResultExtractor {
         return null;
     }
 
-    private static InputStream extract(InputStream resultStream, EnumSet<ResultField> resultFields) throws Exception {
-        final String resultStr = IOUtils.toString(resultStream, StandardCharsets.UTF_8);
+    private static InputStream extract(InputStream resultStream, EnumSet<ResultField> resultFields,
+            Charset resultCharset) throws Exception {
+        final String resultStr = IOUtils.toString(resultStream, resultCharset);
         final ObjectNode result = OBJECT_MAPPER.readValue(resultStr, ObjectNode.class);
 
         LOGGER.debug("+++++++\n" + result + "\n+++++++\n");
@@ -170,7 +171,7 @@ public class ResultExtractor {
                     throw new IllegalStateException("Unexpected result field: " + fieldKind);
             }
         }
-        return IOUtils.toInputStream(resultBuilder.toString(), StandardCharsets.UTF_8);
+        return IOUtils.toInputStream(resultBuilder, resultCharset);
     }
 
     private static void checkForErrors(ObjectNode result) throws Exception {
