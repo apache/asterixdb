@@ -35,11 +35,14 @@ public class HyracksVirtualCluster {
 
     /**
      * Construct a Hyracks-based cluster.
-     * @param appHome - path to the installation root of the Hyracks application.
-     *                At least bin/hyracksnc (or the equivalent NC script for
-     *                the application) must exist in this directory.
-     * @param workingDir - directory to use as CWD for all child processes. May
-     *                be null, in which case the CWD of the invoking process is used.
+     *
+     * @param appHome
+     *            - path to the installation root of the Hyracks application.
+     *            At least bin/hyracksnc (or the equivalent NC script for
+     *            the application) must exist in this directory.
+     * @param workingDir
+     *            - directory to use as CWD for all child processes. May
+     *            be null, in which case the CWD of the invoking process is used.
      */
     public HyracksVirtualCluster(File appHome, File workingDir) {
         this.appHome = appHome;
@@ -48,8 +51,11 @@ public class HyracksVirtualCluster {
 
     /**
      * Creates and starts an NCService.
-     * @param configFile - full path to an ncservice.conf. May be null to accept all defaults.
-     * @throws IOException - if there are errors starting the process.
+     *
+     * @param configFile
+     *            - full path to an ncservice.conf. May be null to accept all defaults.
+     * @throws IOException
+     *             - if there are errors starting the process.
      */
     public HyracksNCServiceProcess addNCService(File configFile, File logFile) throws IOException {
         HyracksNCServiceProcess proc = new HyracksNCServiceProcess(configFile, logFile, appHome, workingDir);
@@ -59,14 +65,49 @@ public class HyracksVirtualCluster {
     }
 
     /**
+     * Creates and starts an NCService.
+     *
+     * @param configFile
+     *            - full path to an ncservice.conf. May be null to accept all defaults.
+     * @throws IOException
+     *             - if there are errors starting the process.
+     */
+    public HyracksNCServiceProcess addNCService(File configFile, File logFile, File log4jConfig) throws IOException {
+        HyracksNCServiceProcess proc =
+                new HyracksNCServiceProcess(configFile, logFile, appHome, workingDir, log4jConfig);
+        proc.start();
+        ncProcs.add(proc);
+        return proc;
+    }
+
+    /**
      * Starts the CC, initializing the cluster. Expects that any NCs referenced
      * in the cluster configuration have already been started with addNCService().
-     * @param ccConfigFile - full path to a cluster conf file. May be null to accept all
-     *                     defaults, although this is seldom useful since there are no NCs.
-     * @throws IOException - if there are errors starting the process.
+     *
+     * @param ccConfigFile
+     *            - full path to a cluster conf file. May be null to accept all
+     *            defaults, although this is seldom useful since there are no NCs.
+     * @throws IOException
+     *             - if there are errors starting the process.
      */
     public HyracksCCProcess start(File ccConfigFile, File logFile) throws IOException {
         ccProc = new HyracksCCProcess(ccConfigFile, logFile, appHome, workingDir);
+        ccProc.start();
+        return ccProc;
+    }
+
+    /**
+     * Starts the CC, initializing the cluster. Expects that any NCs referenced
+     * in the cluster configuration have already been started with addNCService().
+     *
+     * @param ccConfigFile
+     *            - full path to a cluster conf file. May be null to accept all
+     *            defaults, although this is seldom useful since there are no NCs.
+     * @throws IOException
+     *             - if there are errors starting the process.
+     */
+    public HyracksCCProcess start(File ccConfigFile, File logFile, File log4jConfig) throws IOException {
+        ccProc = new HyracksCCProcess(ccConfigFile, logFile, appHome, workingDir, log4jConfig);
         ccProc.start();
         return ccProc;
     }

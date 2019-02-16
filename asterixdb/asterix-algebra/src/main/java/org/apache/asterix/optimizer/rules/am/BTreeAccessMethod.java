@@ -330,8 +330,10 @@ public class BTreeAccessMethod implements IAccessMethod {
         LimitType[] highKeyLimits = new LimitType[numSecondaryKeys];
         boolean[] lowKeyInclusive = new boolean[numSecondaryKeys];
         boolean[] highKeyInclusive = new boolean[numSecondaryKeys];
-        ILogicalExpression[] constantAtRuntimeExpressions = new ILogicalExpression[numSecondaryKeys];
-        LogicalVariable[] constAtRuntimeExprVars = new LogicalVariable[numSecondaryKeys];
+        ILogicalExpression[] lowKeyConstAtRuntimeExpressions = new ILogicalExpression[numSecondaryKeys];
+        ILogicalExpression[] highKeyConstantAtRuntimeExpressions = new ILogicalExpression[numSecondaryKeys];
+        LogicalVariable[] lowKeyConstAtRuntimeExprVars = new LogicalVariable[numSecondaryKeys];
+        LogicalVariable[] highKeyConstAtRuntimeExprVars = new LogicalVariable[numSecondaryKeys];
 
         /* TODO: For now we don't do any sophisticated analysis of the func exprs to come up with "the best" range
          * predicate. If we can't figure out how to integrate a certain funcExpr into the current predicate,
@@ -368,13 +370,6 @@ public class BTreeAccessMethod implements IAccessMethod {
             ILogicalExpression searchKeyExpr = returnedSearchKeyExpr.first;
             ILogicalExpression searchKeyEQExpr = null;
             boolean realTypeConvertedToIntegerType = returnedSearchKeyExpr.third;
-            if (searchKeyExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                constantAtRuntimeExpressions[keyPos] = searchKeyExpr;
-                constAtRuntimeExprVars[keyPos] = context.newVar();
-                VariableReferenceExpression varRef = new VariableReferenceExpression(constAtRuntimeExprVars[keyPos]);
-                varRef.setSourceLocation(searchKeyExpr.getSourceLocation());
-                searchKeyExpr = varRef;
-            }
 
             LimitType limit = getLimitType(optFuncExpr, probeSubTree);
             if (limit == null) {
@@ -394,6 +389,24 @@ public class BTreeAccessMethod implements IAccessMethod {
                 } else if (limit == LimitType.LOW_EXCLUSIVE) {
                     limit = LimitType.LOW_INCLUSIVE;
                 }
+            }
+
+            if (searchKeyExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                LogicalVariable constAtRuntimeExprVar = context.newVar();
+                VariableReferenceExpression constAtRuntimeExprVarRef =
+                        new VariableReferenceExpression(constAtRuntimeExprVar);
+                constAtRuntimeExprVarRef.setSourceLocation(searchKeyExpr.getSourceLocation());
+
+                if (limit == LimitType.LOW_INCLUSIVE || limit == LimitType.LOW_EXCLUSIVE || limit == LimitType.EQUAL) {
+                    lowKeyConstAtRuntimeExpressions[keyPos] = searchKeyExpr;
+                    lowKeyConstAtRuntimeExprVars[keyPos] = constAtRuntimeExprVar;
+                }
+                if (limit == LimitType.HIGH_INCLUSIVE || limit == LimitType.HIGH_EXCLUSIVE
+                        || limit == LimitType.EQUAL) {
+                    highKeyConstantAtRuntimeExpressions[keyPos] = searchKeyExpr;
+                    highKeyConstAtRuntimeExprVars[keyPos] = constAtRuntimeExprVar;
+                }
+                searchKeyExpr = constAtRuntimeExprVarRef;
             }
 
             switch (limit) {
@@ -563,9 +576,10 @@ public class BTreeAccessMethod implements IAccessMethod {
         ArrayList<LogicalVariable> assignKeyVarList = new ArrayList<>();
         ArrayList<Mutable<ILogicalExpression>> assignKeyExprList = new ArrayList<>();
         int numLowKeys = createKeyVarsAndExprs(numSecondaryKeys, lowKeyLimits, lowKeyExprs, assignKeyVarList,
-                assignKeyExprList, keyVarList, context, constantAtRuntimeExpressions, constAtRuntimeExprVars);
+                assignKeyExprList, keyVarList, context, lowKeyConstAtRuntimeExpressions, lowKeyConstAtRuntimeExprVars);
         int numHighKeys = createKeyVarsAndExprs(numSecondaryKeys, highKeyLimits, highKeyExprs, assignKeyVarList,
-                assignKeyExprList, keyVarList, context, constantAtRuntimeExpressions, constAtRuntimeExprVars);
+                assignKeyExprList, keyVarList, context, highKeyConstantAtRuntimeExpressions,
+                highKeyConstAtRuntimeExprVars);
 
         BTreeJobGenParams jobGenParams = new BTreeJobGenParams(chosenIndex.getIndexName(), IndexType.BTREE,
                 dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
