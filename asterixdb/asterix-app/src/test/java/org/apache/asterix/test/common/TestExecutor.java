@@ -632,8 +632,10 @@ public class TestExecutor {
                         return next;
                     }
                 }
-                List<Charset> allCharsets = Charset.availableCharsets().values().stream()
-                        .filter(c -> canEncodeDecode(c, "\n\t\\[]{}'\"")).collect(Collectors.toList());
+                List<Charset> allCharsets = Stream
+                        .of("UTF-8", "UTF-16", "UTF-16BE", "UTF-16LE", "UTF-32", "UTF-32BE", "UTF-32LE",
+                                "x-UTF-32BE-BOM", "x-UTF-32LE-BOM", "x-UTF-16LE-BOM")
+                        .filter(Charset::isSupported).map(Charset::forName).collect(Collectors.toList());
                 Collections.shuffle(allCharsets);
                 charsetsRemaining.addAll(allCharsets);
             }
