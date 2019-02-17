@@ -187,8 +187,10 @@ public class TestExecutor {
 
     public TestExecutor(List<InetSocketAddress> endpoints) {
         this.endpoints = endpoints;
-        this.allCharsets = Charset.availableCharsets().values().stream()
-                .filter(c -> canEncodeDecode(c, "\n\t\\[]{}'\"")).collect(Collectors.toList());
+        this.allCharsets = Stream
+                .of("UTF-8", "UTF-16", "UTF-16BE", "UTF-16LE", "UTF-32", "UTF-32BE", "UTF-32LE", "x-UTF-32BE-BOM",
+                        "x-UTF-32LE-BOM", "x-UTF-16LE-BOM")
+                .filter(Charset::isSupported).map(Charset::forName).collect(Collectors.toList());
     }
 
     public void setLibrarian(IExternalUDFLibrarian librarian) {
