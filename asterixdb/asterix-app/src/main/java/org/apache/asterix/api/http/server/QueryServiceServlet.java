@@ -424,7 +424,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
             }
         } else {
-            setParamFromRequest(request, param);
+            setParamFromRequest(request, param, optionalParams);
         }
     }
 
@@ -456,7 +456,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         // allows extensions to set extra parameters
     }
 
-    private void setParamFromRequest(IServletRequest request, QueryServiceRequestParameters param) throws IOException {
+    private void setParamFromRequest(IServletRequest request, QueryServiceRequestParameters param,
+            Map<String, String> optionalParameters) throws IOException {
         param.setStatement(getParameter(request, Parameter.STATEMENT));
         if (param.getStatement() == null) {
             param.setStatement(HttpUtil.getRequestBody(request));
@@ -476,6 +477,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         } catch (JsonParseException | JsonMappingException e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
         }
+        setOptionalParameters(request, optionalParameters);
+    }
+
+    protected void setOptionalParameters(IServletRequest request, Map<String, String> optionalParameters) {
+        // allows extensions to set extra parameters
     }
 
     private void setAccessControlHeaders(IServletRequest request, IServletResponse response) throws IOException {

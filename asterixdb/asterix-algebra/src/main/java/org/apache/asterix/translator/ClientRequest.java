@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ClientRequest extends BaseClientRequest {
 
+    protected final long creationTime = System.nanoTime();
     protected final Thread executor;
     protected final String statement;
     protected final String clientContextId;
@@ -68,6 +69,10 @@ public class ClientRequest extends BaseClientRequest {
         } else if (executor != null) {
             executor.interrupt();
         }
+    }
+
+    public long getCreationTime() {
+        return creationTime;
     }
 
     @Override

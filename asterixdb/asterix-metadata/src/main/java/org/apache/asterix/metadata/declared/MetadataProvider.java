@@ -1632,7 +1632,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         txnAccessedDatasets.add(dataset);
     }
 
-    public Set<Dataset> getAccssedDatasets() {
+    public Set<Dataset> getAccessedDatasets() {
         return Collections.unmodifiableSet(txnAccessedDatasets);
     }
 }

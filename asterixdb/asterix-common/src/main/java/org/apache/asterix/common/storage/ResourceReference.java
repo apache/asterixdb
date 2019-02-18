@@ -105,6 +105,10 @@ public class ResourceReference {
         return Integer.parseInt(partition.substring(StorageConstants.PARTITION_DIR_PREFIX.length()));
     }
 
+    public String getDatasetFullyQualifiedName() {
+        return dataverse + '.' + dataset;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
