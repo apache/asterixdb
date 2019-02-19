@@ -92,9 +92,7 @@ public class NCMessageBroker implements INCMessageBroker {
     @Override
     public void receivedMessage(IMessage message, String nodeId) throws Exception {
         INcAddressedMessage absMessage = (INcAddressedMessage) message;
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Received message: " + absMessage);
-        }
+        IMessage.logMessage(LOGGER, message);
         ncs.getExecutor().submit(() -> {
             try {
                 absMessage.handle(appContext);

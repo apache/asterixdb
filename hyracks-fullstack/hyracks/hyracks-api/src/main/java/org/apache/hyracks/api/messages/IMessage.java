@@ -20,6 +20,22 @@ package org.apache.hyracks.api.messages;
 
 import java.io.Serializable;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+
 public interface IMessage extends Serializable {
 
+    /**
+     * @return true if the message is whispered, otherwise false.
+     */
+    default boolean isWhispered() {
+        return false;
+    }
+
+    static void logMessage(Logger logger, IMessage msg) {
+        final Level logLevel = msg.isWhispered() ? Level.TRACE : Level.INFO;
+        if (logger.isEnabled(logLevel)) {
+            logger.info("Received message: {}", msg);
+        }
+    }
 }

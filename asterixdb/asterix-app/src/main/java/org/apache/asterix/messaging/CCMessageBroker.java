@@ -40,6 +40,7 @@ import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -59,9 +60,7 @@ public class CCMessageBroker implements ICCMessageBroker {
     @Override
     public void receivedMessage(IMessage message, String nodeId) throws Exception {
         ICcAddressedMessage msg = (ICcAddressedMessage) message;
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Received message: " + msg);
-        }
+        IMessage.logMessage(LOGGER, message);
         ICcApplicationContext appCtx = (ICcApplicationContext) ccs.getApplicationContext();
         msg.handle(appCtx);
     }

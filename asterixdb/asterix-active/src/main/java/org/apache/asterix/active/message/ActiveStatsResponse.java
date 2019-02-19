@@ -74,4 +74,8 @@ public class ActiveStatsResponse implements ICcAddressedMessage, INcResponse {
         broker.respond(reqId, this);
     }
 
+    @Override
+    public boolean isWhispered() {
+        return true;
+    }
 }
