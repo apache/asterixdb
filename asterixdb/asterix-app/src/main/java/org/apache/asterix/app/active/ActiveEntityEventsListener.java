@@ -687,7 +687,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     @Override
     public String toString() {
-        return "{\"class\":\"" + getClass().getSimpleName() + "\"" + "\"entityId\":\"" + entityId + "\""
+        return "{\"class\":\"" + getClass().getSimpleName() + "\"," + "\"entityId\":\"" + entityId + "\","
                 + "\"state\":\"" + state + "\"" + "}";
     }
 }
