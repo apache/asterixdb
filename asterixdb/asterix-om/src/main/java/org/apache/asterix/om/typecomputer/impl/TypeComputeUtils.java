@@ -84,7 +84,7 @@ public class TypeComputeUtils {
             inputTypes[index++] = (IAType) env.getType(arg);
         }
 
-        // Checks input types and computes result types.
+        // Checks input types.
         IAType[] knownInputTypes = TypeComputeUtils.getActualType(inputTypes);
         boolean[] unknownable = TypeComputeUtils.isUnknownableType(inputTypes);
         for (int argIndex = 0; argIndex < knownInputTypes.length; ++argIndex) {
@@ -97,7 +97,7 @@ public class TypeComputeUtils {
         }
 
         // Computes the result type.
-        byte category = TypeComputeUtils.resolveCateogry(inputTypes);
+        byte category = TypeComputeUtils.resolveCategory(inputTypes);
         if (propagateNullAndMissing) {
             if (category == MISSING) {
                 return BuiltinType.AMISSING;
@@ -126,7 +126,7 @@ public class TypeComputeUtils {
         }
     }
 
-    private static byte resolveCateogry(IAType... inputTypes) {
+    private static byte resolveCategory(IAType... inputTypes) {
         byte category = CERTAIN;
         boolean meetNull = false;
         for (IAType inputType : inputTypes) {

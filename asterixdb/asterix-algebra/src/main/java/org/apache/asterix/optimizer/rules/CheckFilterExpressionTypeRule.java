@@ -61,7 +61,10 @@ public class CheckFilterExpressionTypeRule implements IAlgebraicRewriteRule {
         }
         SelectOperator select = (SelectOperator) op;
         ILogicalExpression condition = select.getCondition().getValue();
-        IVariableTypeEnvironment env = select.computeOutputTypeEnvironment(context);
+
+        // Get the output type environment
+        IVariableTypeEnvironment env = context.getOutputTypeEnvironment(select);
+
         IAType condType = (IAType) env.getType(condition);
         if (condType.getTypeTag() != ATypeTag.BOOLEAN && condType.getTypeTag() != ATypeTag.ANY
                 && !isPossibleBoolean(condType)) {
