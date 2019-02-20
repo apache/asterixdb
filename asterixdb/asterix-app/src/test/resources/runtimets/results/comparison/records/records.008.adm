@@ -1,0 +1,19 @@
+{ "id": 1, "subRec": { "name": "john", "age": 28, "colors": [ "green", "black", "orange" ] } }
+{ "id": 2, "subRec": { "name": "david", "age": 100, "colors": [ "white", "blue" ] } }
+{ "id": 3, "subRec": { "name": "jones", "age": 105, "colors": [ "purple", "blue" ] } }
+{ "id": 4, "subRec": null }
+{ "id": 5, "subRec": { "name": "mat", "age": 10, "colors": [ "yellow", "blue" ] } }
+{ "id": 6, "subRec": { "name": "jones", "age": 45, "colors": [ "purple", "blue" ] } }
+{ "id": 7, "subRec": { "name": "jones", "age": 105, "colors": [ "purple", "blue" ] } }
+{ "id": 8 }
+{ "id": 9, "subRec": { "name": "mat", "age": 10, "colors": [ "blue", "yellow" ] } }
+{ "id": 10 }
+{ "id": 11, "subRec": { "name": null, "age": 28, "colors": [ "green", "black", "orange" ] } }
+{ "id": 12, "subRec": { "name": "david", "age": "100", "colors": [ "white", "blue" ] } }
+{ "id": 13, "subRec": { "name": "jones", "age": 105, "colors": [ "purple", 3, "green" ] } }
+{ "id": 14, "subRec": null }
+{ "id": 15, "subRec": { "age": 28, "colors": [ "green", "black", "orange" ] } }
+{ "id": 16, "subRec": { "name": "john", "age": 28, "colors": [ null, "black", "orange" ] } }
+{ "id": 17, "subRec": { "name": "jones", "age": 45, "colors": [ "purple", "blue" ], "nested": { "x": 2, "y": "str" } } }
+{ "id": 18, "subRec": { "name": "john", "age": 28, "colors": [ "green", null, "orange" ] } }
+{ "id": 19, "subRec": { "name": "mat", "age": 10, "colors": [ "yellow", "blue" ], "extraF": 33 } }

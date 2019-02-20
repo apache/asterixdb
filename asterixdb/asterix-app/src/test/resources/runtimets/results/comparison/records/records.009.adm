@@ -1,0 +1,10 @@
+{ "id": 1, "subRec": { "name": "john", "age": 28, "colors": [ "green", "black", "orange" ] } }
+{ "id": 4, "subRec": null }
+{ "id": 8 }
+{ "id": 10 }
+{ "id": 11, "subRec": { "name": null, "age": 28, "colors": [ "green", "black", "orange" ] } }
+{ "id": 12, "subRec": { "name": "david", "age": "100", "colors": [ "white", "blue" ] } }
+{ "id": 13, "subRec": { "name": "jones", "age": 105, "colors": [ "purple", 3, "green" ] } }
+{ "id": 14, "subRec": null }
+{ "id": 16, "subRec": { "name": "john", "age": 28, "colors": [ null, "black", "orange" ] } }
+{ "id": 18, "subRec": { "name": "john", "age": 28, "colors": [ "green", null, "orange" ] } }

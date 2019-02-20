@@ -17,32 +17,9 @@
  * under the License.
  */
 
-package org.apache.asterix.om.util.container;
+use test;
 
-/**
- * A reusable object pool interface.
- */
-public interface IObjectPool<E, T> {
-
-    /**
-     * Give client an E instance
-     *
-     * @param arg
-     *            the argument to create E
-     * @return an E instance
-     */
-    E allocate(T arg);
-
-    /**
-     * Mark all instances in the pool as unused
-     */
-    void reset();
-
-    /**
-     * Frees the argument element in the pool and makes it available again.
-     *
-     * @param element instance to free.
-     * @return true if the element is marked available in the pool. Otherwise, false.
-     */
-    boolean free(E element);
-}
+from openDs t
+where t.subRec = {"name": "jones", "age": 45, "colors": ["purple", "blue"], "nested": {"x": 2, "y": "str"}}
+select value t
+order by t.id;

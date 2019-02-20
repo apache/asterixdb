@@ -1,0 +1,48 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// basic =,!= comparisons
+
+use test;
+
+{
+"t1": {"c": "{'name': 'john', 'id': 231} = {'name': 'john', 'id': 231}", "r": {'name': 'john', 'id': 231} = {'name': 'john', 'id': 231}},
+"t2": {"c": "{'name': 'john', 'id': 231} != {'name': 'john', 'id': 231}", "r": {'name': 'john', 'id': 231} != {'name': 'john', 'id': 231}},
+"t3": {"c": "{'name': 'david', 'id': 34.2} = {'id': 34.2, 'name': 'david'}", "r": {'name': 'david', 'id': 34.2} = {'id': 34.2, 'name': 'david'}},
+"t4": {"c": "{'name': 'david', 'id': 34.2} != {'id': 34.2, 'name': 'david'}", "r": {'name': 'david', 'id': 34.2} != {'id': 34.2, 'name': 'david'}},
+"t5": {"c": "{'name': 'henry', 'id': 111} = {'name': 'henry'}", "r": {'name': 'henry', 'id': 111} = {'name': 'henry'}},
+"t6": {"c": "{'a': 1, 'b': 2} = {'c': 3, 'd': 4}", "r": {'a': 1, 'b': 2} = {'c': 3, 'd': 4}},
+"t7": {"c": "{'aa': 11, 'bb': 22} = {'bb': 22, 'cc': 33}", "r": {'aa': 11, 'bb': 22} = {'bb': 22, 'cc': 33}},
+"t8": {"c": "{'aa': 33, 'bb': missing} != {'aa': 33}", "r": {'aa': 33, 'bb': missing} != {'aa': 33}},
+"t9": {"c": "{'bb': missing, 'a_a': 9} = {'a_a': 9}", "r": {'bb': missing, 'a_a': 9} = {'a_a': 9}},
+"t10": {"c": "{'kk': missing, 'aa': 22, 'jj': 'foo'} = {'jj': 'foo', 'dd': missing, 'aa': 22}", "r": {'kk': missing, 'aa': 22, 'jj': 'foo'} = {'jj': 'foo', 'dd': missing, 'aa': 22}},
+"t11": {
+  "c": "{'dept_ids': [3,1,5], 'manager': {'name': 'mike', 'id': 987}, 'salary': 32.2, 'employees': [{'name': 'seth', 'id': 22}, {'name': 'dave'}]} = {'salary': 32.2, 'dept_ids': [3,1,5], 'employees': [{'name': 'seth', 'id': 22}, {'name': 'dave'}], 'manager': {'name': 'mike', 'id': 987}}",
+  "r": {'dept_ids': [3,1,5], 'manager': {'name': 'mike', 'id': 987}, 'salary': 32.2, 'employees': [{'name': 'seth', 'id': 22}, {'name': 'dave'}]} = {'salary': 32.2, 'dept_ids': [3,1,5], 'employees': [{'name': 'seth', 'id': 22}, {'name': 'dave'}], 'manager': {'name': 'mike', 'id': 987}}
+  },
+"t12": {"c": "{'f1': [5,6,1], 'f2': [9,2,8]} != {'f1': [5,6,1], 'f2': [8,9,2]}", "r": {'f1': [5,6,1], 'f2': [9,2,8]} != {'f1': [5,6,1], 'f2': [8,9,2]}},
+"t13": {"c": "{'f1': 44, 'f2': 99} = {'f2': 44, 'f1': 99}", "r": {'f1': 44, 'f2': 99} = {'f2': 44, 'f1': 99}},
+"t14": {"c": "{'f1': 33, 'F2': 77} = {'f1': 33, 'f2': 77}", "r": {'f1': 33, 'F2': 77} = {'f1': 33, 'f2': 77}},
+"t15": {"c": "{'f1': 12, 'f2': 34, 'F2': 56} = {'f1': 12, 'F2': 56, 'f2': 34}", "r": {'f1': 12, 'f2': 34, 'F2': 56} = {'f1': 12, 'F2': 56, 'f2': 34}},
+"t16": {"c": "{} = {}", "r": {} = {}},
+"t17": {"c": "{'a': missing, 'c': missing} = {'b': missing}", "r": {'a': missing, 'c': missing} = {'b': missing}},
+"t18": {"c": "{'a': 22, 'b': 'john'} != {}", "r": {'a': 22, 'b': 'john'} != {}},
+"t19": {"c": "{} != {'a': 22, 'b': 'john'}", "r": {} != {'a': 22, 'b': 'john'}},
+"t20": {"c": "{'yy': float('5'), 'zz': tinyint('8')} = {'yy': 5, 'zz': double('8')}", "r": {'yy': float('5'), 'zz': tinyint('8')} = {'yy': 5, 'zz': double('8')}}
+};

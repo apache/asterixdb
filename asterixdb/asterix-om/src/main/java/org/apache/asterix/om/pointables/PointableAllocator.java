@@ -134,6 +134,10 @@ public class PointableAllocator {
         return recordValueAllocator.allocate(type);
     }
 
+    public void freeRecord(ARecordVisitablePointable instance) {
+        recordValueAllocator.free(instance);
+    }
+
     public void reset() {
         flatValueAllocator.reset();
         recordValueAllocator.reset();
