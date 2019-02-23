@@ -38,6 +38,8 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  * The servlet provides a REST API for cancelling an on-going query.
  */
 public class CcQueryCancellationServlet extends AbstractServlet {
+
+    public static final String REQUEST_UUID_PARAM_NAME = "uuid";
     private static final Logger LOGGER = LogManager.getLogger();
     private final ICcApplicationContext appCtx;
 
@@ -49,15 +51,15 @@ public class CcQueryCancellationServlet extends AbstractServlet {
 
     @Override
     protected void delete(IServletRequest request, IServletResponse response) throws IOException {
-        String clientContextId = request.getParameter(Parameter.CLIENT_ID.str());
-        if (clientContextId == null) {
+        String uuid = request.getParameter(REQUEST_UUID_PARAM_NAME);
+        String clientCtxId = request.getParameter(Parameter.CLIENT_ID.str());
+        if (uuid == null && clientCtxId == null) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
         }
         final IRequestTracker requestTracker = appCtx.getRequestTracker();
-        final IClientRequest req = requestTracker.getByClientContextId(clientContextId);
+        IClientRequest req = uuid != null ? requestTracker.get(uuid) : requestTracker.getByClientContextId(clientCtxId);
         if (req == null) {
-            // response: NOT FOUND
             response.setStatus(HttpResponseStatus.NOT_FOUND);
             return;
         }

@@ -94,13 +94,13 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             try {
                 responseMsg = (ExecuteStatementResponseMessage) responseFuture.get(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
-                cancelQuery(ncMb, ncCtx.getNodeId(), param.getClientContextID(), e, false);
+                cancelQuery(ncMb, ncCtx.getNodeId(), requestReference.getUuid(), param.getClientContextID(), e, false);
                 throw e;
             } catch (TimeoutException exception) {
                 RuntimeDataException hde = new RuntimeDataException(ErrorCode.REQUEST_TIMEOUT);
                 hde.addSuppressed(exception);
                 // cancel query
-                cancelQuery(ncMb, ncCtx.getNodeId(), param.getClientContextID(), hde, true);
+                cancelQuery(ncMb, ncCtx.getNodeId(), requestReference.getUuid(), param.getClientContextID(), hde, true);
                 throw hde;
             }
             execution.end();
@@ -134,15 +134,15 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         printExecutionPlans(sessionOutput, responseMsg.getExecutionPlans());
     }
 
-    private void cancelQuery(INCMessageBroker messageBroker, String nodeId, String clientContextID, Exception exception,
-            boolean wait) {
-        if (clientContextID == null) {
+    private void cancelQuery(INCMessageBroker messageBroker, String nodeId, String uuid, String clientContextID,
+            Exception exception, boolean wait) {
+        if (uuid == null && clientContextID == null) {
             return;
         }
         MessageFuture cancelQueryFuture = messageBroker.registerMessageFuture();
         try {
             CancelQueryRequest cancelQueryMessage =
-                    new CancelQueryRequest(nodeId, cancelQueryFuture.getFutureId(), clientContextID);
+                    new CancelQueryRequest(nodeId, cancelQueryFuture.getFutureId(), uuid, clientContextID);
             // TODO(mblow): multicc -- need to send cancellation to the correct cc
             LOGGER.info("Cancelling query due to {}", exception.getClass().getSimpleName());
             messageBroker.sendMessageToPrimaryCC(cancelQueryMessage);

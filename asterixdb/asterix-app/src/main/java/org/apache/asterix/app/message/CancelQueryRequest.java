@@ -35,22 +35,24 @@ public class CancelQueryRequest implements ICcAddressedMessage {
     private static final long serialVersionUID = 1L;
     private final String nodeId;
     private final long reqId;
+    private final String uuid;
     private final String contextId;
 
-    public CancelQueryRequest(String nodeId, long reqId, String contextId) {
+    public CancelQueryRequest(String nodeId, long reqId, String uuid, String contextId) {
         this.nodeId = nodeId;
         this.reqId = reqId;
+        this.uuid = uuid;
         this.contextId = contextId;
     }
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
         final IRequestTracker requestTracker = appCtx.getRequestTracker();
-        IClientRequest req = requestTracker.getByClientContextId(contextId);
+        IClientRequest req = uuid != null ? requestTracker.get(uuid) : requestTracker.getByClientContextId(contextId);
         RequestStatus status;
 
         if (req == null) {
-            LOGGER.log(Level.WARN, "No job found for context id " + contextId);
+            LOGGER.log(Level.INFO, "No request found for uuid {} or context id {}", uuid, contextId);
             status = RequestStatus.NOT_FOUND;
         } else {
             if (!req.isCancellable()) {

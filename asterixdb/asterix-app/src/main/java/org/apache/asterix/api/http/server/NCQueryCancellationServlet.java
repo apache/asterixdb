@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.api.http.server;
 
+import static org.apache.asterix.api.http.server.CcQueryCancellationServlet.REQUEST_UUID_PARAM_NAME;
 import static org.apache.asterix.app.message.ExecuteStatementRequestMessage.DEFAULT_NC_TIMEOUT_MILLIS;
 
 import java.util.concurrent.ConcurrentMap;
@@ -55,16 +56,16 @@ public class NCQueryCancellationServlet extends AbstractServlet {
 
     @Override
     protected void delete(IServletRequest request, IServletResponse response) {
-        // gets the parameter client_context_id from the request.
+        String uuid = request.getParameter(REQUEST_UUID_PARAM_NAME);
         String clientContextId = request.getParameter(Parameter.CLIENT_ID.str());
-        if (clientContextId == null) {
+        if (uuid == null && clientContextId == null) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
         }
         final MessageFuture cancelQueryFuture = messageBroker.registerMessageFuture();
         try {
-            CancelQueryRequest cancelQueryMessage =
-                    new CancelQueryRequest(serviceCtx.getNodeId(), cancelQueryFuture.getFutureId(), clientContextId);
+            CancelQueryRequest cancelQueryMessage = new CancelQueryRequest(serviceCtx.getNodeId(),
+                    cancelQueryFuture.getFutureId(), uuid, clientContextId);
             // TODO(mblow): multicc -- need to send cancellation to the correct cc
             messageBroker.sendMessageToPrimaryCC(cancelQueryMessage);
             CancelQueryResponse cancelResponse =
