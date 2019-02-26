@@ -18,14 +18,20 @@
  */
 package org.apache.asterix.om.types;
 
-import org.apache.asterix.om.base.IAObject;
+import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
 
+import org.apache.asterix.om.base.IAObject;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class BuiltinType implements IAType {
 
     private static final long serialVersionUID = 1L;
+    private static final String TAG_FIELD = "tag";
 
     public abstract static class LowerCaseConstructorType extends BuiltinType {
         private static final long serialVersionUID = 1L;
@@ -62,6 +68,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -87,6 +98,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "int8";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -118,6 +134,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -143,6 +164,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "int32";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -174,6 +200,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -199,6 +230,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "binary";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -230,6 +266,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -255,6 +296,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "double";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -286,6 +332,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -311,6 +362,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "missing";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -342,6 +398,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -367,6 +428,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "boolean";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -398,6 +464,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -423,6 +494,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "date";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -454,6 +530,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -479,6 +560,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "duration";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -510,6 +596,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -535,6 +626,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "day-time-duration";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -566,6 +662,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             return null;
         }
@@ -588,6 +689,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "point";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -619,6 +725,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -644,6 +755,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "line";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -675,6 +791,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -703,6 +824,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectNode type = new ObjectMapper().createObjectNode();
             type.put("type", "AGEOMETRY");
@@ -727,6 +853,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "circle";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -758,6 +889,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -786,6 +922,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -810,6 +951,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getTypeName() {
             return "uuid";
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -846,6 +992,11 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
+        }
+
+        @Override
         public ObjectNode toJSON() {
             ObjectMapper om = new ObjectMapper();
             ObjectNode type = om.createObjectNode();
@@ -876,6 +1027,11 @@ public abstract class BuiltinType implements IAType {
         @Override
         public String getConstructor() {
             return null;
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) {
+            return convertToJson(registry, getTypeTag().serialize(), serialVersionUID);
         }
 
         @Override
@@ -925,4 +1081,79 @@ public abstract class BuiltinType implements IAType {
         return getType().getTypeTag().serialize();
     }
 
+    private static JsonNode convertToJson(IPersistedResourceRegistry registry, short tag, long version) {
+        ObjectNode jsonNode = registry.getClassIdentifier(BuiltinType.class, version);
+        jsonNode.put(TAG_FIELD, tag);
+        return jsonNode;
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        byte tag = (byte) json.get(TAG_FIELD).shortValue();
+        ATypeTag typeTag = VALUE_TYPE_MAPPING[tag];
+        switch (typeTag) {
+            case TYPE:
+                return ALL_TYPE;
+            case TINYINT:
+                return AINT8;
+            case SMALLINT:
+                return AINT16;
+            case INTEGER:
+                return AINT32;
+            case BIGINT:
+                return AINT64;
+            case FLOAT:
+                return AFLOAT;
+            case DOUBLE:
+                return ADOUBLE;
+            case STRING:
+                return ASTRING;
+            case BINARY:
+                return ABINARY;
+            case MISSING:
+                return AMISSING;
+            case NULL:
+                return ANULL;
+            case BOOLEAN:
+                return ABOOLEAN;
+            case TIME:
+                return ATIME;
+            case DATE:
+                return ADATE;
+            case DATETIME:
+                return ADATETIME;
+            case DURATION:
+                return ADURATION;
+            case YEARMONTHDURATION:
+                return AYEARMONTHDURATION;
+            case DAYTIMEDURATION:
+                return ADAYTIMEDURATION;
+            case INTERVAL:
+                return AINTERVAL;
+            case POINT:
+                return APOINT;
+            case POINT3D:
+                return APOINT3D;
+            case LINE:
+                return ALINE;
+            case POLYGON:
+                return APOLYGON;
+            case GEOMETRY:
+                return AGEOMETRY;
+            case CIRCLE:
+                return ACIRCLE;
+            case RECTANGLE:
+                return ARECTANGLE;
+            case BITARRAY:
+                return ABITARRAY;
+            case UUID:
+                return AUUID;
+            case ANY:
+                return ANY;
+            case SHORTWITHOUTTYPEINFO:
+                return SHORTWITHOUTTYPEINFO;
+            default:
+                throw new IllegalStateException();
+        }
+    }
 }

@@ -18,10 +18,17 @@
  */
 package org.apache.asterix.om.types;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public abstract class AbstractCollectionType extends AbstractComplexType {
 
     private static final long serialVersionUID = 1L;
-
+    private static final String ITEM_TYPE_FIELD = "itemType";
     protected IAType itemType;
 
     AbstractCollectionType(IAType itemType, String typeName) {
@@ -58,5 +65,21 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
     @Override
     public boolean containsType(IAType type) {
         return isTyped() && itemType.getTypeName().equals(type.getTypeName());
+    }
+
+    protected JsonNode convertToJson(IPersistedResourceRegistry registry, Class<? extends IJsonSerializable> clazz,
+            long version) throws HyracksDataException {
+        final ObjectNode jsonObject = registry.getClassIdentifier(clazz, version);
+        addToJson(jsonObject);
+        jsonObject.set(ITEM_TYPE_FIELD, itemType.toJson(registry));
+        return jsonObject;
+    }
+
+    protected static IJsonSerializable convertToObject(IPersistedResourceRegistry registry, JsonNode json,
+            boolean ordered) throws HyracksDataException {
+        String typeName = json.get(TYPE_NAME_FIELD).asText();
+        JsonNode itemTypeJson = json.get(ITEM_TYPE_FIELD);
+        IAType itemType = (IAType) registry.deserialize(itemTypeJson);
+        return ordered ? new AOrderedListType(itemType, typeName) : new AUnorderedListType(itemType, typeName);
     }
 }

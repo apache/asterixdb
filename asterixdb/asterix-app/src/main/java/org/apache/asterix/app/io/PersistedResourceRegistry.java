@@ -59,6 +59,11 @@ import org.apache.asterix.metadata.utils.SecondaryCorrelatedTreeIndexOperationsH
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.om.pointables.nonvisitor.AListPointable;
 import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
+import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.AUnorderedListType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.asterix.runtime.utils.RuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerFactory;
@@ -249,6 +254,13 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         REGISTERED_CLASSES.put("UTF8NGramTokenFactory", UTF8NGramTokenFactory.class);
         REGISTERED_CLASSES.put("UTF8WordTokenFactory", UTF8WordTokenFactory.class);
         REGISTERED_CLASSES.put("RTreePolicyType", RTreePolicyType.class);
+
+        // IAType
+        REGISTERED_CLASSES.put("BuiltinType", BuiltinType.class);
+        REGISTERED_CLASSES.put("AOrderedListType", AOrderedListType.class);
+        REGISTERED_CLASSES.put("ARecordType", ARecordType.class);
+        REGISTERED_CLASSES.put("AUnionType", AUnionType.class);
+        REGISTERED_CLASSES.put("AUnorderedListType", AUnorderedListType.class);
 
         //ICompressorDecompressorFactory
         CompressionManager.registerCompressorDecompressorsFactoryClasses(REGISTERED_CLASSES);

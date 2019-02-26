@@ -21,8 +21,9 @@ package org.apache.asterix.om.types;
 import java.io.Serializable;
 
 import org.apache.asterix.om.base.IAObject;
+import org.apache.hyracks.api.io.IJsonSerializable;
 
-public interface IAType extends IAObject, Serializable {
+public interface IAType extends IAObject, Serializable, IJsonSerializable {
 
     public ATypeTag getTypeTag();
 

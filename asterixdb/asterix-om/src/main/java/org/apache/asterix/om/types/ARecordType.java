@@ -33,7 +33,12 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -47,6 +52,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class ARecordType extends AbstractComplexType {
 
     private static final long serialVersionUID = 1L;
+    private static final JavaType SET = OBJECT_MAPPER.getTypeFactory().constructCollectionType(Set.class, String.class);
+    private static final String IS_OPEN = "isOpen";
+    private static final String FIELD_NAMES = "fieldNames";
+    private static final String FIELD_TYPES = "fieldTypes";
+    private static final String ADDITIONAL_FIELDS = "additionalFieldNames";
     private final String[] fieldNames;
     private final IAType[] fieldTypes;
     private final Map<String, Integer> fieldNameToIndexMap = new HashMap<>();
@@ -370,6 +380,35 @@ public class ARecordType extends AbstractComplexType {
 
         type.set("fields", fields);
         return type;
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        final ObjectNode jsonObject = registry.getClassIdentifier(getClass(), serialVersionUID);
+        addToJson(jsonObject);
+        jsonObject.put(IS_OPEN, isOpen);
+        jsonObject.putPOJO(FIELD_NAMES, fieldNames);
+        jsonObject.putPOJO(ADDITIONAL_FIELDS, allPossibleAdditionalFieldNames);
+        ArrayNode fieldTypesArray = OBJECT_MAPPER.createArrayNode();
+        for (int i = 0; i < fieldTypes.length; i++) {
+            fieldTypesArray.add(fieldTypes[i].toJson(registry));
+        }
+        jsonObject.set(FIELD_TYPES, fieldTypesArray);
+        return jsonObject;
+    }
+
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
+            throws HyracksDataException {
+        String typeName = json.get(TYPE_NAME_FIELD).asText();
+        boolean isOpen = json.get(IS_OPEN).asBoolean();
+        String[] fieldNames = OBJECT_MAPPER.convertValue(json.get(FIELD_NAMES), String[].class);
+        Set<String> additionalFields = OBJECT_MAPPER.convertValue(json.get(ADDITIONAL_FIELDS), SET);
+        ArrayNode fieldTypesNode = (ArrayNode) json.get(FIELD_TYPES);
+        IAType[] fieldTypes = new IAType[fieldTypesNode.size()];
+        for (int i = 0; i < fieldTypesNode.size(); i++) {
+            fieldTypes[i] = (IAType) registry.deserialize(fieldTypesNode.get(i));
+        }
+        return new ARecordType(typeName, fieldNames, fieldTypes, isOpen, additionalFields);
     }
 
     public List<IAType> getFieldTypes(List<List<String>> fields) throws AlgebricksException {

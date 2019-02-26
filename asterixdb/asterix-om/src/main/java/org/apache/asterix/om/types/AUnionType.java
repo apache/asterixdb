@@ -23,7 +23,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.asterix.om.base.IAObject;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -32,6 +36,7 @@ public class AUnionType extends AbstractComplexType {
 
     private static final long serialVersionUID = 1L;
     private static final int OPTIONAL_TYPE_INDEX_IN_UNION_LIST = 0;
+    private static final String UNION_LIST_FIELD = "unionList";
     private final List<IAType> unionList;
 
     public AUnionType(List<IAType> unionList, String typeName) {
@@ -222,5 +227,28 @@ public class AUnionType extends AbstractComplexType {
 
         type.set("fields", fields);
         return type;
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        final ObjectNode jsonObject = registry.getClassIdentifier(getClass(), serialVersionUID);
+        addToJson(jsonObject);
+        ArrayNode fieldTypesArray = OBJECT_MAPPER.createArrayNode();
+        for (int i = 0; i < unionList.size(); i++) {
+            fieldTypesArray.add(unionList.get(i).toJson(registry));
+        }
+        jsonObject.set(UNION_LIST_FIELD, fieldTypesArray);
+        return jsonObject;
+    }
+
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
+            throws HyracksDataException {
+        String typeName = json.get(TYPE_NAME_FIELD).asText();
+        ArrayNode unionListJson = (ArrayNode) json.get(UNION_LIST_FIELD);
+        List<IAType> unionList = new ArrayList<>();
+        for (int i = 0; i < unionListJson.size(); i++) {
+            unionList.add((IAType) registry.deserialize(unionListJson.get(i)));
+        }
+        return new AUnionType(unionList, typeName);
     }
 }

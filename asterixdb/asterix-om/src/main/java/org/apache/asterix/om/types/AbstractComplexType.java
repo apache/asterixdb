@@ -20,9 +20,14 @@ package org.apache.asterix.om.types;
 
 import org.apache.asterix.om.base.IAObject;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public abstract class AbstractComplexType implements IAType {
 
     private static final long serialVersionUID = 1L;
+    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    protected static final String TYPE_NAME_FIELD = "typeName";
     protected String typeName;
 
     public AbstractComplexType(String typeName) {
@@ -43,6 +48,10 @@ public abstract class AbstractComplexType implements IAType {
     @Override
     public boolean equals(Object object) {
         return object instanceof IAObject && deepEqual((IAObject) object);
+    }
+
+    protected void addToJson(final ObjectNode json) {
+        json.put(TYPE_NAME_FIELD, typeName);
     }
 
     public abstract boolean containsType(IAType type);
