@@ -82,15 +82,19 @@ public class WindowPOperator extends AbstractPhysicalOperator {
 
     private final boolean nestedTrivialAggregates;
 
+    // The maximum number of in-memory frames that this operator can use.
+    private final int memSizeInFrames;
+
     public WindowPOperator(List<LogicalVariable> partitionColumns, boolean partitionMaterialization,
             List<OrderColumn> orderColumns, boolean frameStartIsMonotonic, boolean frameEndIsMonotonic,
-            boolean nestedTrivialAggregates) {
+            boolean nestedTrivialAggregates, int memSizeInFrames) {
         this.partitionColumns = partitionColumns;
         this.partitionMaterialization = partitionMaterialization;
         this.orderColumns = orderColumns;
         this.frameStartIsMonotonic = frameStartIsMonotonic;
         this.frameEndIsMonotonic = frameEndIsMonotonic;
         this.nestedTrivialAggregates = nestedTrivialAggregates;
+        this.memSizeInFrames = memSizeInFrames;
     }
 
     @Override
@@ -227,7 +231,7 @@ public class WindowPOperator extends AbstractPhysicalOperator {
                     runtime = new WindowNestedPlansUnboundedRuntimeFactory(partitionColumnsList,
                             partitionComparatorFactories, orderComparatorFactories, frameMaxObjects,
                             projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories,
-                            aggregatorOutputSchemaSize, nestedAggFactory);
+                            aggregatorOutputSchemaSize, nestedAggFactory, memSizeInFrames);
                 } else if (frameEndIsMonotonic && nestedTrivialAggregates) {
                     // special case #2: accumulating frame from beginning of the partition, no exclusions, no offset,
                     //                  trivial aggregate subplan ( aggregate + nts )
@@ -236,7 +240,8 @@ public class WindowPOperator extends AbstractPhysicalOperator {
                             partitionComparatorFactories, orderComparatorFactories,
                             frameValueExprEvalsAndComparators.first, frameValueExprEvalsAndComparators.second,
                             frameEndExprEvals, frameMaxObjects, projectionColumnsExcludingSubplans,
-                            runningAggOutColumns, runningAggFactories, aggregatorOutputSchemaSize, nestedAggFactory);
+                            runningAggOutColumns, runningAggFactories, aggregatorOutputSchemaSize, nestedAggFactory,
+                            memSizeInFrames);
                 }
             }
             // default case
@@ -248,12 +253,12 @@ public class WindowPOperator extends AbstractPhysicalOperator {
                         winOp.getFrameExcludeNegationStartIdx(), frameExcludeExprEvalsAndComparators.second,
                         frameOffsetExprEval, context.getBinaryIntegerInspectorFactory(), frameMaxObjects,
                         projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories,
-                        aggregatorOutputSchemaSize, nestedAggFactory);
+                        aggregatorOutputSchemaSize, nestedAggFactory, memSizeInFrames);
             }
         } else if (partitionMaterialization) {
             runtime = new WindowMaterializingRuntimeFactory(partitionColumnsList, partitionComparatorFactories,
                     orderComparatorFactories, projectionColumnsExcludingSubplans, runningAggOutColumns,
-                    runningAggFactories);
+                    runningAggFactories, memSizeInFrames);
         } else {
             runtime = new WindowSimpleRuntimeFactory(partitionColumnsList, partitionComparatorFactories,
                     orderComparatorFactories, projectionColumnsExcludingSubplans, runningAggOutColumns,

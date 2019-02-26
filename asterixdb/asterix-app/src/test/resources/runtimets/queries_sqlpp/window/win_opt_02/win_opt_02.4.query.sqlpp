@@ -22,6 +22,9 @@
  * Expected Res : SUCCESS
  */
 
+/* 2 frames for partition writer */
+set `compiler.windowmemory` "192KB";
+
 use test;
 
 with N as 10000, W as 5000

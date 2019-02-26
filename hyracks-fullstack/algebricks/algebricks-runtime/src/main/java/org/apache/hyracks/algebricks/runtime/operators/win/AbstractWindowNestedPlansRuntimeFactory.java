@@ -25,7 +25,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 /**
  * Base class for window runtime factories that compute nested aggregates
  */
-abstract class AbstractWindowNestedPlansRuntimeFactory extends AbstractWindowRuntimeFactory {
+abstract class AbstractWindowNestedPlansRuntimeFactory extends WindowMaterializingRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 
@@ -37,9 +37,9 @@ abstract class AbstractWindowNestedPlansRuntimeFactory extends AbstractWindowRun
             IBinaryComparatorFactory[] partitionComparatorFactories,
             IBinaryComparatorFactory[] orderComparatorFactories, int[] projectionColumnsExcludingSubplans,
             int[] runningAggOutColumns, IRunningAggregateEvaluatorFactory[] runningAggFactories,
-            int nestedAggOutSchemaSize, WindowAggregatorDescriptorFactory nestedAggFactory) {
+            int nestedAggOutSchemaSize, WindowAggregatorDescriptorFactory nestedAggFactory, int memSizeInFrames) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories,
-                projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories);
+                projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories, memSizeInFrames);
         this.nestedAggFactory = nestedAggFactory;
         this.nestedAggOutSchemaSize = nestedAggOutSchemaSize;
     }

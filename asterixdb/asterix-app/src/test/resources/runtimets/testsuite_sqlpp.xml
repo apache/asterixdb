@@ -9278,13 +9278,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="window">
-      <compilation-unit name="ntile_02">
-        <output-dir compare="Text">ntile_01</output-dir>
-        <expected-error>ASX0002: Type mismatch</expected-error>
-        <source-location>false</source-location>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
       <compilation-unit name="percent_rank_01">
         <output-dir compare="Text">percent_rank_01</output-dir>
       </compilation-unit>
@@ -9305,14 +9298,17 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="window">
-      <compilation-unit name="ratio_to_report_02_negative">
-        <output-dir compare="Text">ratio_to_report_01</output-dir>
-        <expected-error>ASX1101: Unexpected ORDER BY clause in window expression</expected-error>
+      <compilation-unit name="row_number_01">
+        <output-dir compare="Text">row_number_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="window">
-      <compilation-unit name="row_number_01">
-        <output-dir compare="Text">row_number_01</output-dir>
+      <compilation-unit name="win_negative">
+        <output-dir compare="Text">misc_01</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+        <expected-error>ASX1101: Unexpected ORDER BY clause in window expression</expected-error>
+        <expected-error>ASX1037: Invalid query parameter compiler.windowmemory</expected-error>
+        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="window">

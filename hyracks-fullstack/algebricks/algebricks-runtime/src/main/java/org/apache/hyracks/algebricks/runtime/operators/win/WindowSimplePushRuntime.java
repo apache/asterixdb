@@ -25,6 +25,7 @@ import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFact
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * Runtime for window operators that evaluates running aggregates without partition materialization.
@@ -33,9 +34,10 @@ class WindowSimplePushRuntime extends AbstractWindowPushRuntime {
 
     WindowSimplePushRuntime(int[] partitionColumns, IBinaryComparatorFactory[] partitionComparatorFactories,
             IBinaryComparatorFactory[] orderComparatorFactories, int[] projectionColumns, int[] runningAggOutColumns,
-            IRunningAggregateEvaluatorFactory[] runningAggFactories, IHyracksTaskContext ctx) {
+            IRunningAggregateEvaluatorFactory[] runningAggFactories, IHyracksTaskContext ctx,
+            SourceLocation sourceLoc) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories, projectionColumns,
-                runningAggOutColumns, runningAggFactories, ctx);
+                runningAggOutColumns, runningAggFactories, ctx, sourceLoc);
     }
 
     @Override
@@ -47,7 +49,7 @@ class WindowSimplePushRuntime extends AbstractWindowPushRuntime {
     protected void partitionChunkImpl(long frameId, ByteBuffer frameBuffer, int tBeginIdx, int tEndIdx)
             throws HyracksDataException {
         tAccess.reset(frameBuffer);
-        produceTuples(tAccess, tBeginIdx, tEndIdx);
+        produceTuples(tAccess, tBeginIdx, tEndIdx, tRef);
     }
 
     @Override

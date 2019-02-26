@@ -36,6 +36,6 @@ class RunningAggregatePushRuntime extends AbstractRunningAggregatePushRuntime<IR
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         tAccess.reset(buffer);
-        produceTuples(tAccess, 0, tAccess.getTupleCount() - 1);
+        produceTuples(tAccess, 0, tAccess.getTupleCount() - 1, tRef);
     }
 }

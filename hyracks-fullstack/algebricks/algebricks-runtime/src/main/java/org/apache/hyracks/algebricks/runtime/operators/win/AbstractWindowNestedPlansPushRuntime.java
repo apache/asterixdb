@@ -26,6 +26,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -49,9 +50,10 @@ abstract class AbstractWindowNestedPlansPushRuntime extends WindowMaterializingP
             IBinaryComparatorFactory[] partitionComparatorFactories,
             IBinaryComparatorFactory[] orderComparatorFactories, int[] projectionColumns, int[] runningAggOutColumns,
             IRunningAggregateEvaluatorFactory[] runningAggFactories, int nestedAggOutSchemaSize,
-            WindowAggregatorDescriptorFactory nestedAggFactory, IHyracksTaskContext ctx) {
+            WindowAggregatorDescriptorFactory nestedAggFactory, IHyracksTaskContext ctx, int memSizeInFrames,
+            SourceLocation sourceLoc) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories, projectionColumns,
-                runningAggOutColumns, runningAggFactories, ctx);
+                runningAggOutColumns, runningAggFactories, ctx, memSizeInFrames, sourceLoc);
         this.nestedAggFactory = nestedAggFactory;
         this.nestedAggOutSchemaSize = nestedAggOutSchemaSize;
     }
@@ -75,23 +77,23 @@ abstract class AbstractWindowNestedPlansPushRuntime extends WindowMaterializingP
 
     /**
      * Aggregator created by
-     * {@link WindowAggregatorDescriptorFactory#createAggregator(IHyracksTaskContext, RecordDescriptor, RecordDescriptor, int[], int[], long)
-     *        WindowAggregatorDescriptorFactory.createAggregator(...)}
+     * {@link WindowAggregatorDescriptorFactory#createAggregator(IHyracksTaskContext, RecordDescriptor,
+     * RecordDescriptor, int[], int[], long) WindowAggregatorDescriptorFactory.createAggregator(...)}
      * does not process argument tuple in init()
      */
-    void nestedAggInit() throws HyracksDataException {
+    final void nestedAggInit() throws HyracksDataException {
         nestedAgg.init(null, null, -1, null);
     }
 
-    void nestedAggAggregate(FrameTupleAccessor tAccess, int tIndex) throws HyracksDataException {
+    final void nestedAggAggregate(FrameTupleAccessor tAccess, int tIndex) throws HyracksDataException {
         nestedAgg.aggregate(tAccess, tIndex, null, -1, null);
     }
 
-    void nestedAggOutputFinalResult(ArrayTupleBuilder outTupleBuilder) throws HyracksDataException {
+    final void nestedAggOutputFinalResult(ArrayTupleBuilder outTupleBuilder) throws HyracksDataException {
         nestedAgg.outputFinalResult(outTupleBuilder, null, -1, null);
     }
 
-    void nestedAggOutputPartialResult(ArrayTupleBuilder outTupleBuilder) throws HyracksDataException {
+    final void nestedAggOutputPartialResult(ArrayTupleBuilder outTupleBuilder) throws HyracksDataException {
         nestedAgg.outputPartialResult(outTupleBuilder, null, -1, null);
     }
 

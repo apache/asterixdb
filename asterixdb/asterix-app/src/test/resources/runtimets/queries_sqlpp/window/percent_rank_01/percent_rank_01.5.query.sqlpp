@@ -21,6 +21,8 @@
  * Expected Res : SUCCESS
  */
 
+set `compiler.windowmemory` "192KB";
+
 use test;
 
 q1_percent_rank(10, 1000, 3)

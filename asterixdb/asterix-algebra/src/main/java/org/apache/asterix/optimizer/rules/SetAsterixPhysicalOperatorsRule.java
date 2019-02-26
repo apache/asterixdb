@@ -20,7 +20,6 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.asterix.algebra.operators.physical.BTreeSearchPOperator;
 import org.apache.asterix.algebra.operators.physical.InvertedIndexPOperator;
@@ -68,7 +67,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.Preclustere
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.WindowPOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
-import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.rewriter.util.JoinUtils;
@@ -285,7 +283,7 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                 }
                 case WINDOW: {
                     WindowOperator winOp = (WindowOperator) op;
-                    WindowPOperator physOp = createWindowPOperator(winOp);
+                    WindowPOperator physOp = createWindowPOperator(winOp, context);
                     op.setPhysicalOperator(physOp);
                     break;
                 }
@@ -344,7 +342,8 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
         aggOp.setMergeExpressions(mergeExpressionRefs);
     }
 
-    private static WindowPOperator createWindowPOperator(WindowOperator winOp) throws CompilationException {
+    private static WindowPOperator createWindowPOperator(WindowOperator winOp, IOptimizationContext context)
+            throws CompilationException {
         List<Mutable<ILogicalExpression>> partitionExprs = winOp.getPartitionExpressions();
         List<LogicalVariable> partitionColumns = new ArrayList<>(partitionExprs.size());
         for (Mutable<ILogicalExpression> pe : partitionExprs) {
@@ -377,7 +376,9 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
         boolean nestedTrivialAggregates = winOp.hasNestedPlans()
                 && winOp.getNestedPlans().stream().allMatch(AnalysisUtil::isTrivialAggregateSubplan);
 
+        int memSizeInFrames = context.getPhysicalOptimizationConfig().getMaxFramesForWindow();
+
         return new WindowPOperator(partitionColumns, partitionMaterialization, orderColumns, frameStartIsMonotonic,
-                frameEndIsMonotonic, nestedTrivialAggregates);
+                frameEndIsMonotonic, nestedTrivialAggregates, memSizeInFrames);
     }
 }

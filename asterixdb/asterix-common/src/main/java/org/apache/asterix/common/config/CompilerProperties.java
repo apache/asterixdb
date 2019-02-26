@@ -43,6 +43,10 @@ public class CompilerProperties extends AbstractProperties {
                 LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for a group by operator instance in a partition"),
+        COMPILER_WINDOWMEMORY(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(4L, MEGABYTE),
+                "The memory budget (in bytes) for a window operator instance in a partition"),
         COMPILER_TEXTSEARCHMEMORY(
                 LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
@@ -108,6 +112,8 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final String COMPILER_JOINMEMORY_KEY = Option.COMPILER_JOINMEMORY.ini();
 
+    public static final String COMPILER_WINDOWMEMORY_KEY = Option.COMPILER_WINDOWMEMORY.ini();
+
     public static final String COMPILER_TEXTSEARCHMEMORY_KEY = Option.COMPILER_TEXTSEARCHMEMORY.ini();
 
     public static final String COMPILER_PARALLELISM_KEY = Option.COMPILER_PARALLELISM.ini();
@@ -132,6 +138,10 @@ public class CompilerProperties extends AbstractProperties {
 
     public long getGroupMemorySize() {
         return accessor.getLong(Option.COMPILER_GROUPMEMORY);
+    }
+
+    public long getWindowMemorySize() {
+        return accessor.getLong(Option.COMPILER_WINDOWMEMORY);
     }
 
     public long getTextSearchMemorySize() {

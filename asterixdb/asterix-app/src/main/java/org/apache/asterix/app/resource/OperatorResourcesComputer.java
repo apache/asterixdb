@@ -36,15 +36,17 @@ public class OperatorResourcesComputer {
     private final long groupByMemorySize;
     private final long joinMemorySize;
     private final long sortMemorySize;
+    private final long windowMemorySize;
     private final long textSearchMemorySize;
     private final long frameSize;
 
     public OperatorResourcesComputer(int numComputationPartitions, int sortFrameLimit, int groupFrameLimit,
-            int joinFrameLimit, int textSearchFrameLimit, long frameSize) {
+            int joinFrameLimit, int windowFrameLimit, int textSearchFrameLimit, long frameSize) {
         this.numComputationPartitions = numComputationPartitions;
         this.groupByMemorySize = groupFrameLimit * frameSize;
         this.joinMemorySize = joinFrameLimit * frameSize;
         this.sortMemorySize = sortFrameLimit * frameSize;
+        this.windowMemorySize = windowFrameLimit * frameSize;
         this.textSearchMemorySize = textSearchFrameLimit * frameSize;
         this.frameSize = frameSize;
     }
@@ -145,13 +147,9 @@ public class OperatorResourcesComputer {
 
     private long getWindowRequiredMemory(WindowOperator op) {
         WindowPOperator physOp = (WindowPOperator) op.getPhysicalOperator();
-        int frameCount = 2;
-        if (physOp.isPartitionMaterialization()) {
-            frameCount++;
-        }
-        if (op.hasNestedPlans()) {
-            frameCount += 2;
-        }
-        return getOperatorRequiredMemory(op, frameSize * frameCount);
+        // memory budget configuration only applies to window operators that materialize partitions (non-streaming)
+        // streaming window operators only need 2 frames: output + copy
+        long memorySize = physOp.isPartitionMaterialization() ? windowMemorySize : 2 * frameSize;
+        return getOperatorRequiredMemory(op, memorySize);
     }
 }

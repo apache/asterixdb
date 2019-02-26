@@ -68,10 +68,10 @@ public class WindowNestedPlansRuntimeFactory extends AbstractWindowNestedPlansRu
             IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory, int frameMaxObjects,
             int[] projectionColumnsExcludingSubplans, int[] runningAggOutColumns,
             IRunningAggregateEvaluatorFactory[] runningAggFactories, int nestedAggOutSchemaSize,
-            WindowAggregatorDescriptorFactory nestedAggFactory) {
+            WindowAggregatorDescriptorFactory nestedAggFactory, int memSizeInFrames) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories,
                 projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize,
-                nestedAggFactory);
+                nestedAggFactory, memSizeInFrames);
         this.frameValueEvalFactories = frameValueEvalFactories;
         this.frameValueComparatorFactories = frameValueComparatorFactories;
         this.frameStartEvalFactories = frameStartEvalFactories;
@@ -92,7 +92,7 @@ public class WindowNestedPlansRuntimeFactory extends AbstractWindowNestedPlansRu
                 frameStartEvalFactories, frameStartIsMonotonic, frameEndEvalFactories, frameExcludeEvalFactories,
                 frameExcludeNegationStartIdx, frameExcludeComparatorFactories, frameOffsetEvalFactory,
                 binaryIntegerInspectorFactory, frameMaxObjects, projectionList, runningAggOutColumns,
-                runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, ctx);
+                runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, ctx, memSizeInFrames, sourceLoc);
     }
 
     @Override

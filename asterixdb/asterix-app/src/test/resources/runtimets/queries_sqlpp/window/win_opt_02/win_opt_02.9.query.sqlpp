@@ -22,6 +22,9 @@
  * Expected Res : SUCCESS
  */
 
+/* 1 frame for partition writer */
+set `compiler.windowmemory` "160KB";
+
 use test;
 
 q2_max_unbounded_preceding_n_following(5000);

@@ -19,27 +19,23 @@
 
 package org.apache.hyracks.algebricks.runtime.operators.win;
 
-import java.nio.ByteBuffer;
-
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspector;
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.comm.IFrame;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.DataUtils;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.PointableTupleReference;
-import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.storage.common.MultiComparator;
 
 /**
@@ -47,6 +43,14 @@ import org.apache.hyracks.storage.common.MultiComparator;
  * as well as regular aggregates (in nested plans) over window frames.
  */
 class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime {
+
+    private static final int PARTITION_POSITION_SLOT = 0;
+
+    private static final int FRAME_POSITION_SLOT = 1;
+
+    private static final int TMP_POSITION_SLOT = 2;
+
+    private static final int PARTITION_READER_SLOT_COUNT = TMP_POSITION_SLOT + 1;
 
     private final boolean frameValueExists;
 
@@ -106,14 +110,6 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
 
     private final int frameMaxObjects;
 
-    private IFrame copyFrame2;
-
-    private IFrame runFrame;
-
-    private int runFrameChunkId;
-
-    private long runFrameSize;
-
     private FrameTupleAccessor tAccess2;
 
     private FrameTupleReference tRef2;
@@ -124,8 +120,6 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
 
     private int tBeginIdxFrameStartGlobal;
 
-    private long readerPosFrameStartGlobal;
-
     WindowNestedPlansPushRuntime(int[] partitionColumns, IBinaryComparatorFactory[] partitionComparatorFactories,
             IBinaryComparatorFactory[] orderComparatorFactories, IScalarEvaluatorFactory[] frameValueEvalFactories,
             IBinaryComparatorFactory[] frameValueComparatorFactories, IScalarEvaluatorFactory[] frameStartEvalFactories,
@@ -134,9 +128,11 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
             IBinaryComparatorFactory[] frameExcludeComparatorFactories, IScalarEvaluatorFactory frameOffsetEvalFactory,
             IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory, int frameMaxObjects, int[] projectionColumns,
             int[] runningAggOutColumns, IRunningAggregateEvaluatorFactory[] runningAggFactories,
-            int nestedAggOutSchemaSize, WindowAggregatorDescriptorFactory nestedAggFactory, IHyracksTaskContext ctx) {
+            int nestedAggOutSchemaSize, WindowAggregatorDescriptorFactory nestedAggFactory, IHyracksTaskContext ctx,
+            int memSizeInFrames, SourceLocation sourceLoc) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories, projectionColumns,
-                runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, ctx);
+                runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, ctx,
+                memSizeInFrames, sourceLoc);
         this.frameValueEvalFactories = frameValueEvalFactories;
         this.frameValueExists = frameValueEvalFactories != null && frameValueEvalFactories.length > 0;
         this.frameStartEvalFactories = frameStartEvalFactories;
@@ -158,7 +154,6 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
     @Override
     protected void init() throws HyracksDataException {
         super.init();
-
         if (frameValueExists) {
             frameValueEvals = createEvaluators(frameValueEvalFactories, ctx);
             frameValueComparators = MultiComparator.create(frameValueComparatorFactories);
@@ -183,9 +178,6 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
             frameOffsetPointable = VoidPointable.FACTORY.createPointable();
             bii = binaryIntegerInspectorFactory.createBinaryIntegerInspector(ctx);
         }
-
-        runFrame = new VSizeFrame(ctx);
-        copyFrame2 = new VSizeFrame(ctx);
         tAccess2 = new FrameTupleAccessor(inputRecordDesc);
         tRef2 = new FrameTupleReference();
     }
@@ -195,31 +187,22 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
         super.beginPartitionImpl();
         chunkIdxFrameStartGlobal = -1;
         tBeginIdxFrameStartGlobal = -1;
-        readerPosFrameStartGlobal = -1;
-        runFrameChunkId = -1;
     }
 
     @Override
-    protected void producePartitionTuples(int chunkIdx, GeneratedRunFileReader reader) throws HyracksDataException {
-        boolean frameStartForward = frameStartIsMonotonic && chunkIdxFrameStartGlobal >= 0;
+    protected void producePartitionTuples(int chunkIdx, IFrame chunkFrame) throws HyracksDataException {
+        partitionReader.savePosition(PARTITION_POSITION_SLOT);
 
-        long readerPos = -1;
         int nChunks = getPartitionChunkCount();
-        if (nChunks > 1) {
-            readerPos = reader.position();
-            if (chunkIdx == 0) {
-                ByteBuffer curFrameBuffer = curFrame.getBuffer();
-                int pos = curFrameBuffer.position();
-                copyFrame2.ensureFrameSize(curFrameBuffer.capacity());
-                FrameUtils.copyAndFlip(curFrameBuffer, copyFrame2.getBuffer());
-                curFrameBuffer.position(pos);
-            }
-        }
+        boolean isFirstChunkInPartition = chunkIdx == 0;
 
-        tAccess.reset(curFrame.getBuffer());
+        tAccess.reset(chunkFrame.getBuffer());
         int tBeginIdx = getTupleBeginIdx(chunkIdx);
         int tEndIdx = getTupleEndIdx(chunkIdx);
+
         for (int tIdx = tBeginIdx; tIdx <= tEndIdx; tIdx++) {
+            boolean isFirstTupleInPartition = isFirstChunkInPartition && tIdx == tBeginIdx;
+
             tRef.reset(tAccess, tIdx);
 
             // running aggregates
@@ -245,34 +228,23 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
 
             nestedAggInit();
 
+            boolean frameStartForward = frameStartIsMonotonic && chunkIdxFrameStartGlobal >= 0;
             int chunkIdxInnerStart = frameStartForward ? chunkIdxFrameStartGlobal : 0;
             int tBeginIdxInnerStart = frameStartForward ? tBeginIdxFrameStartGlobal : -1;
-            if (nChunks > 1) {
-                reader.seek(frameStartForward ? readerPosFrameStartGlobal : 0);
+
+            if (chunkIdxInnerStart < nChunks) {
+                if (frameStartForward && !isFirstTupleInPartition) {
+                    partitionReader.restorePosition(FRAME_POSITION_SLOT);
+                } else {
+                    partitionReader.rewind();
+                }
             }
 
             int chunkIdxFrameStartLocal = -1, tBeginIdxFrameStartLocal = -1;
-            long readerPosFrameStartLocal = -1;
 
             frame_loop: for (int chunkIdxInner = chunkIdxInnerStart; chunkIdxInner < nChunks; chunkIdxInner++) {
-                long readerPosFrameInner;
-                IFrame frameInner;
-                if (chunkIdxInner == 0) {
-                    // first chunk's frame is always in memory
-                    frameInner = chunkIdx == 0 ? curFrame : copyFrame2;
-                    readerPosFrameInner = 0;
-                } else {
-                    readerPosFrameInner = reader.position();
-                    if (runFrameChunkId == chunkIdxInner) {
-                        // runFrame has this chunk, so just advance the reader
-                        reader.seek(readerPosFrameInner + runFrameSize);
-                    } else {
-                        reader.nextFrame(runFrame);
-                        runFrameSize = reader.position() - readerPosFrameInner;
-                        runFrameChunkId = chunkIdxInner;
-                    }
-                    frameInner = runFrame;
-                }
+                partitionReader.savePosition(TMP_POSITION_SLOT);
+                IFrame frameInner = partitionReader.nextFrame(false);
                 tAccess2.reset(frameInner.getBuffer());
 
                 int tBeginIdxInner;
@@ -294,17 +266,19 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
                                 // skip if value < start
                                 continue;
                             }
+                            // inside the frame
                             if (chunkIdxFrameStartLocal < 0) {
-                                // save position of the first tuple that matches the frame start.
-                                // we'll continue from it in the next frame iteration
+                                // save position of the first tuple in this frame
+                                // will continue from it in the next frame iteration
                                 chunkIdxFrameStartLocal = chunkIdxInner;
                                 tBeginIdxFrameStartLocal = tIdxInner;
-                                readerPosFrameStartLocal = readerPosFrameInner;
+                                partitionReader.copyPosition(TMP_POSITION_SLOT, FRAME_POSITION_SLOT);
                             }
                         }
                         if (frameEndExists
                                 && frameValueComparators.compare(frameValuePointables, frameEndPointables) > 0) {
-                            // skip and exit if value > end
+                            // value > end => beyond the frame end
+                            // exit the frame loop
                             break frame_loop;
                         }
                     }
@@ -331,27 +305,22 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
                 }
             }
 
-            nestedAggOutputFinalResult(tupleBuilder);
-            appendToFrameFromTupleBuilder(tupleBuilder);
-
             if (frameStartIsMonotonic) {
-                frameStartForward = true;
                 if (chunkIdxFrameStartLocal >= 0) {
                     chunkIdxFrameStartGlobal = chunkIdxFrameStartLocal;
                     tBeginIdxFrameStartGlobal = tBeginIdxFrameStartLocal;
-                    readerPosFrameStartGlobal = readerPosFrameStartLocal;
                 } else {
-                    // frame start not found, set start beyond the last chunk
+                    // frame start not found, set it beyond the last chunk
                     chunkIdxFrameStartGlobal = nChunks;
                     tBeginIdxFrameStartGlobal = 0;
-                    readerPosFrameStartGlobal = 0;
                 }
             }
+
+            nestedAggOutputFinalResult(tupleBuilder);
+            appendToFrameFromTupleBuilder(tupleBuilder);
         }
 
-        if (nChunks > 1) {
-            reader.seek(readerPos);
-        }
+        partitionReader.restorePosition(PARTITION_POSITION_SLOT);
     }
 
     private boolean isExcluded() throws HyracksDataException {
@@ -367,5 +336,10 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
             }
         }
         return true;
+    }
+
+    @Override
+    protected int getPartitionReaderSlotCount() {
+        return PARTITION_READER_SLOT_COUNT;
     }
 }

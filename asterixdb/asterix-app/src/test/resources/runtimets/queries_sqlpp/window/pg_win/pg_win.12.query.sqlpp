@@ -21,6 +21,8 @@
  * Expected Res : SUCCESS
  */
 
+set `compiler.windowmemory` "224KB";
+
 use test;
 
 FROM tenk1

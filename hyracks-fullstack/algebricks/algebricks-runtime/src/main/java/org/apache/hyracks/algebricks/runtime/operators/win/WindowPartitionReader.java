@@ -16,16 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Test window operator with monotonic frame start expression
- *              : on a dataset that fits into one physical frame
- * Expected Res : SUCCESS
- */
 
-/* 1 frame for partition writer */
-set `compiler.windowmemory` "160KB";
+package org.apache.hyracks.algebricks.runtime.operators.win;
 
-use test;
+import org.apache.hyracks.api.comm.IFrame;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-q1_sum_1_preceding_1_following(10);
+interface WindowPartitionReader {
 
+    void open() throws HyracksDataException;
+
+    IFrame nextFrame(boolean primaryScan) throws HyracksDataException;
+
+    void close() throws HyracksDataException;
+
+    // position manipulation
+
+    void rewind();
+
+    void savePosition(int slotNo);
+
+    void restorePosition(int slotNo);
+
+    void copyPosition(int slotFrom, int slotTo);
+}

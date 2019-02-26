@@ -58,10 +58,11 @@ public class ResourceUtils {
         final int sortFrameLimit = physicalOptimizationConfig.getMaxFramesExternalSort();
         final int groupFrameLimit = physicalOptimizationConfig.getMaxFramesForGroupBy();
         final int joinFrameLimit = physicalOptimizationConfig.getMaxFramesForJoin();
+        final int windowFrameLimit = physicalOptimizationConfig.getMaxFramesForWindow();
         final int textSearchFrameLimit = physicalOptimizationConfig.getMaxFramesForTextSearch();
         final List<PlanStage> planStages = getStages(plan);
         return getStageBasedRequiredCapacity(planStages, computationLocations.getLocations().length, sortFrameLimit,
-                groupFrameLimit, joinFrameLimit, textSearchFrameLimit, frameSize);
+                groupFrameLimit, joinFrameLimit, windowFrameLimit, textSearchFrameLimit, frameSize);
     }
 
     public static List<PlanStage> getStages(ILogicalPlan plan) throws AlgebricksException {
@@ -73,9 +74,10 @@ public class ResourceUtils {
     }
 
     public static IClusterCapacity getStageBasedRequiredCapacity(List<PlanStage> stages, int computationLocations,
-            int sortFrameLimit, int groupFrameLimit, int joinFrameLimit, int textSearchFrameLimit, int frameSize) {
+            int sortFrameLimit, int groupFrameLimit, int joinFrameLimit, int windowFrameLimit, int textSearchFrameLimit,
+            int frameSize) {
         final OperatorResourcesComputer computer = new OperatorResourcesComputer(computationLocations, sortFrameLimit,
-                groupFrameLimit, joinFrameLimit, textSearchFrameLimit, frameSize);
+                groupFrameLimit, joinFrameLimit, windowFrameLimit, textSearchFrameLimit, frameSize);
         final IClusterCapacity clusterCapacity = new ClusterCapacity();
         final Long maxRequiredMemory = stages.stream().mapToLong(stage -> stage.getRequiredMemory(computer)).max()
                 .orElseThrow(IllegalStateException::new);

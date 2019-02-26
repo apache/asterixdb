@@ -86,10 +86,11 @@ public abstract class AbstractRunningAggregatePushRuntime<T extends IRunningAggr
         return new ArrayTupleBuilder(projectionList.length);
     }
 
-    protected void produceTuples(IFrameTupleAccessor accessor, int beginIdx, int endIdx) throws HyracksDataException {
+    protected void produceTuples(IFrameTupleAccessor accessor, int beginIdx, int endIdx, FrameTupleReference tupleRef)
+            throws HyracksDataException {
         for (int t = beginIdx; t <= endIdx; t++) {
-            tRef.reset(accessor, t);
-            produceTuple(tupleBuilder, accessor, t, tRef);
+            tupleRef.reset(accessor, t);
+            produceTuple(tupleBuilder, accessor, t, tupleRef);
             appendToFrameFromTupleBuilder(tupleBuilder);
         }
     }

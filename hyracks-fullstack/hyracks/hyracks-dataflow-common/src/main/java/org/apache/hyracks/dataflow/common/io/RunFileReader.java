@@ -73,7 +73,7 @@ public class RunFileReader implements IFrameReader {
 
         int readLength = ioManager.syncRead(handle, readPtr, frame.getBuffer());
         if (readLength <= 0) {
-            throw new HyracksDataException("Premature end of file");
+            throw HyracksDataException.create(ErrorCode.EOF);
         }
         readPtr += readLength;
         frame.ensureFrameSize(frame.getMinSize() * FrameHelper.deserializeNumOfMinFrame(frame.getBuffer()));
@@ -81,7 +81,7 @@ public class RunFileReader implements IFrameReader {
             if (readPtr < size) {
                 readLength = ioManager.syncRead(handle, readPtr, frame.getBuffer());
                 if (readLength < 0) {
-                    throw new HyracksDataException("Premature end of file");
+                    throw HyracksDataException.create(ErrorCode.EOF);
                 }
                 readPtr += readLength;
             }

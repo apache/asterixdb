@@ -33,6 +33,8 @@ public class OptimizationConfUtil {
     private static final int MIN_FRAME_LIMIT_FOR_SORT = 3;
     private static final int MIN_FRAME_LIMIT_FOR_GROUP_BY = 4;
     private static final int MIN_FRAME_LIMIT_FOR_JOIN = 5;
+    // 1 (output) + 1 (input copy) + 1 (partition writer) + 2 (seekable partition reader)
+    private static final int MIN_FRAME_LIMIT_FOR_WINDOW = 5;
     // one for query, two for intermediate results, one for final result, and one for reading an inverted list
     private static final int MIN_FRAME_LIMIT_FOR_TEXT_SEARCH = 5;
 
@@ -49,6 +51,9 @@ public class OptimizationConfUtil {
         int joinFrameLimit = getFrameLimit(CompilerProperties.COMPILER_JOINMEMORY_KEY,
                 (String) querySpecificConfig.get(CompilerProperties.COMPILER_JOINMEMORY_KEY),
                 compilerProperties.getJoinMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_JOIN, sourceLoc);
+        int windowFrameLimit = getFrameLimit(CompilerProperties.COMPILER_WINDOWMEMORY_KEY,
+                (String) querySpecificConfig.get(CompilerProperties.COMPILER_WINDOWMEMORY_KEY),
+                compilerProperties.getWindowMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_WINDOW, sourceLoc);
         int textSearchFrameLimit = getTextSearchNumFrames(compilerProperties, querySpecificConfig, sourceLoc);
         int sortNumSamples = getSortSamples(compilerProperties, querySpecificConfig, sourceLoc);
         boolean fullParallelSort = getSortParallel(compilerProperties, querySpecificConfig);
@@ -58,6 +63,7 @@ public class OptimizationConfUtil {
         physOptConf.setMaxFramesExternalSort(sortFrameLimit);
         physOptConf.setMaxFramesExternalGroupBy(groupFrameLimit);
         physOptConf.setMaxFramesForJoin(joinFrameLimit);
+        physOptConf.setMaxFramesForWindow(windowFrameLimit);
         physOptConf.setMaxFramesForTextSearch(textSearchFrameLimit);
         physOptConf.setSortParallel(fullParallelSort);
         physOptConf.setSortSamples(sortNumSamples);

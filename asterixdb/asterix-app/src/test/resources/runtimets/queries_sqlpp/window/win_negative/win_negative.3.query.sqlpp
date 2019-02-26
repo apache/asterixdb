@@ -17,15 +17,12 @@
  * under the License.
  */
 /*
- * Description  : Test window operator with monotonic frame start expression
- *              : on a dataset that fits into one physical frame
- * Expected Res : SUCCESS
+ * Description  : Test illegal value for 'compiler.windowmemory'
+ *              : Must be at least 160KB (5 frames)
+ * Expected Res : FAILURE
  */
 
-/* 1 frame for partition writer */
-set `compiler.windowmemory` "160KB";
+set `compiler.windowmemory` "100KB";
 
-use test;
-
-q1_sum_1_preceding_1_following(10);
-
+from range(1, 10) t
+select t, first_value(t) over(order by t)

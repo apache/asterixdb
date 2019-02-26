@@ -21,6 +21,8 @@
  * Expected Res : SUCCESS
  */
 
+set `compiler.windowmemory` "256KB";
+
 use test;
 
 q1_ntile(10, 1000, 4)

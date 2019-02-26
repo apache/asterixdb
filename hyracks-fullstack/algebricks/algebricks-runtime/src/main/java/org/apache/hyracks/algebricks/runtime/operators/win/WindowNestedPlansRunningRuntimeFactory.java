@@ -50,10 +50,10 @@ public class WindowNestedPlansRunningRuntimeFactory extends AbstractWindowNested
             IBinaryComparatorFactory[] frameValueComparatorFactories, IScalarEvaluatorFactory[] frameEndEvalFactories,
             int frameMaxObjects, int[] projectionColumnsExcludingSubplans, int[] runningAggOutColumns,
             IRunningAggregateEvaluatorFactory[] runningAggFactories, int nestedAggOutSchemaSize,
-            WindowAggregatorDescriptorFactory nestedAggFactory) {
+            WindowAggregatorDescriptorFactory nestedAggFactory, int memSizeInFrames) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories,
                 projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize,
-                nestedAggFactory);
+                nestedAggFactory, memSizeInFrames);
         this.frameValueEvalFactories = frameValueEvalFactories;
         this.frameValueComparatorFactories = frameValueComparatorFactories;
         this.frameEndEvalFactories = frameEndEvalFactories;
@@ -65,7 +65,7 @@ public class WindowNestedPlansRunningRuntimeFactory extends AbstractWindowNested
         return new WindowNestedPlansRunningPushRuntime(partitionColumns, partitionComparatorFactories,
                 orderComparatorFactories, frameValueEvalFactories, frameValueComparatorFactories, frameEndEvalFactories,
                 frameMaxObjects, projectionList, runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize,
-                nestedAggFactory, ctx);
+                nestedAggFactory, ctx, memSizeInFrames, sourceLoc);
     }
 
     @Override

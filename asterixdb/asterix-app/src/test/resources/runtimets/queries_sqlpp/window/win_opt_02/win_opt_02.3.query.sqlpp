@@ -22,6 +22,9 @@
  * Expected Res : SUCCESS
  */
 
+/* 1 frame for partition writer */
+set `compiler.windowmemory` "160KB";
+
 use test;
 
 q1_sum_1_preceding_1_following(10000);

@@ -30,12 +30,14 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupWriter;
 
 public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregatePushRuntime<IWindowAggregateEvaluator> {
 
+    protected final SourceLocation sourceLoc;
     private final int[] partitionColumns;
     private final IBinaryComparatorFactory[] partitionComparatorFactories;
     private IBinaryComparator[] partitionComparators;
@@ -48,11 +50,20 @@ public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregate
 
     AbstractWindowPushRuntime(int[] partitionColumns, IBinaryComparatorFactory[] partitionComparatorFactories,
             IBinaryComparatorFactory[] orderComparatorFactories, int[] projectionColumns, int[] runningAggOutColumns,
-            IRunningAggregateEvaluatorFactory[] runningAggFactories, IHyracksTaskContext ctx) {
+            IRunningAggregateEvaluatorFactory[] runningAggFactories, IHyracksTaskContext ctx,
+            SourceLocation sourceLoc) {
         super(projectionColumns, runningAggOutColumns, runningAggFactories, IWindowAggregateEvaluator.class, ctx);
         this.partitionColumns = partitionColumns;
         this.partitionComparatorFactories = partitionComparatorFactories;
         this.orderComparatorFactories = orderComparatorFactories;
+        this.sourceLoc = sourceLoc;
+    }
+
+    /**
+     * Number of frames reserved by this operator: {@link #frame}, {@link #copyFrame}
+     */
+    int getReservedFrameCount() {
+        return 2;
     }
 
     @Override
@@ -78,7 +89,7 @@ public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregate
 
     @Override
     public void close() throws HyracksDataException {
-        if (inPartition) {
+        if (inPartition && !failed) {
             endPartition();
         }
         super.close();

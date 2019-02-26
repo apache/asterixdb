@@ -43,7 +43,7 @@ public class WindowSimpleRuntimeFactory extends AbstractWindowRuntimeFactory {
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(IHyracksTaskContext ctx) {
         return new WindowSimplePushRuntime(partitionColumns, partitionComparatorFactories, orderComparatorFactories,
-                projectionList, runningAggOutColumns, runningAggFactories, ctx);
+                projectionList, runningAggOutColumns, runningAggFactories, ctx, sourceLoc);
     }
 
     @Override

@@ -34,18 +34,22 @@ public class WindowMaterializingRuntimeFactory extends AbstractWindowRuntimeFact
 
     private static final long serialVersionUID = 1L;
 
+    final int memSizeInFrames;
+
     public WindowMaterializingRuntimeFactory(int[] partitionColumns,
             IBinaryComparatorFactory[] partitionComparatorFactories,
             IBinaryComparatorFactory[] orderComparatorFactories, int[] projectionColumnsExcludingSubplans,
-            int[] runningAggOutColumns, IRunningAggregateEvaluatorFactory[] runningAggFactories) {
+            int[] runningAggOutColumns, IRunningAggregateEvaluatorFactory[] runningAggFactories, int memSizeInFrames) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories,
                 projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories);
+        this.memSizeInFrames = memSizeInFrames;
     }
 
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(IHyracksTaskContext ctx) {
         return new WindowMaterializingPushRuntime(partitionColumns, partitionComparatorFactories,
-                orderComparatorFactories, projectionList, runningAggOutColumns, runningAggFactories, ctx);
+                orderComparatorFactories, projectionList, runningAggOutColumns, runningAggFactories, ctx,
+                memSizeInFrames, sourceLoc);
     }
 
     @Override
