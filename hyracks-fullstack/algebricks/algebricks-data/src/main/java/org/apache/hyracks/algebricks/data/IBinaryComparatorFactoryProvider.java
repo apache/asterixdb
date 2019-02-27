@@ -22,33 +22,49 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 
 /**
- * Provides {@link org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory} for different types
+ * Provides {@link org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory} for different types. Whether a
+ * factory is stateful or stateless is implementation-specific. Also, whether a new factory is created each time or a
+ * single instance factory is returned is implementation-specific. Therefore, no assumptions should be made about
+ * these two aspects.
  */
 public interface IBinaryComparatorFactoryProvider {
 
     /**
-     * @param type
-     *            the type of the binary data
-     * @param ascending
-     *            the order direction. true if ascending order is desired, false otherwise
+     * @param type the type of the left binary data
+     * @param ascending the order direction. true if ascending order is desired, false otherwise
      * @return the appropriate {@link org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory} instance
-     * @throws AlgebricksException
-     *             if the comparator factory for the passed type could not be created
+     * @throws AlgebricksException if the comparator factory for the passed type could not be created
      */
     IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending) throws AlgebricksException;
 
     /**
-     *
-     * @param type
-     *            the type of the binary data
-     * @param ascending
-     *            the order direction. true if ascending order is desired, false otherwise
-     * @param ignoreCase
-     *            ignore case for strings
+     * @param type the type of the left binary data
+     * @param ascending the order direction. true if ascending order is desired, false otherwise
+     * @param ignoreCase ignore case for strings
      * @return the appropriate {@link org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory} instance
-     * @throws AlgebricksException
-     *             if the comparator factory for the passed type could not be created
+     * @throws AlgebricksException if the comparator factory for the passed type could not be created
      */
     IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending, boolean ignoreCase)
             throws AlgebricksException;
+
+    /**
+     * @param leftType the type of the left binary data
+     * @param rightType the type of the right binary data
+     * @param ascending the order direction. true if ascending order is desired, false otherwise
+     * @return the appropriate {@link org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory} instance
+     * @throws AlgebricksException if the comparator factory for the passed type could not be created
+     */
+    IBinaryComparatorFactory getBinaryComparatorFactory(Object leftType, Object rightType, boolean ascending)
+            throws AlgebricksException;
+
+    /**
+     * @param leftType the type of the left binary data
+     * @param rightType the type of the right binary data
+     * @param ascending the order direction. true if ascending order is desired, false otherwise
+     * @param ignoreCase ignore case for strings
+     * @return the appropriate {@link org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory} instance
+     * @throws AlgebricksException if the comparator factory for the passed type could not be created
+     */
+    IBinaryComparatorFactory getBinaryComparatorFactory(Object leftType, Object rightType, boolean ascending,
+            boolean ignoreCase) throws AlgebricksException;
 }

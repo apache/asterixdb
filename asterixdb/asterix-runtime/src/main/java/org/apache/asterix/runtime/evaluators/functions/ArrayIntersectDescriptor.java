@@ -30,9 +30,9 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -193,7 +193,8 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             finalResult = new ArrayBackedValueStorage();
             listAccessor = new ListAccessor();
             caster = new CastTypeEvaluator();
-            comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
+                    .createBinaryComparator();
             listsArgs = new IPointable[args.length];
             listsEval = new IScalarEvaluator[args.length];
             pointable = new VoidPointable();

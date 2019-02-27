@@ -21,9 +21,9 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.IOException;
 
 import org.apache.asterix.builders.IAsterixListBuilder;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -108,7 +108,8 @@ public class ArrayPutDescriptor extends AbstractScalarFunctionDynamicDescriptor 
 
         public ArrayPutEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             super(args, ctx, 0, 1, args.length - 1, argTypes, true, sourceLoc, true, false);
-            comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
+                    .createBinaryComparator();
             storage = new ArrayBackedValueStorage();
             item = new VoidPointable();
             add = new boolean[args.length - 1];

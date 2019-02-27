@@ -24,8 +24,9 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.base.AMutableInt32;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -39,6 +40,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractArraySearchEval implements IScalarEvaluator {
+    private IAType[] argTypes;
     private final IPointable listArg;
     private final IPointable searchedValueArg;
     private final IPointable tempVal;
@@ -50,18 +52,25 @@ public abstract class AbstractArraySearchEval implements IScalarEvaluator {
     private final AMutableInt32 intValue;
     protected final ArrayBackedValueStorage storage;
 
-    public AbstractArraySearchEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLoc)
-            throws HyracksDataException {
+    public AbstractArraySearchEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLoc,
+            IAType[] argTypes) throws HyracksDataException {
+        this.argTypes = argTypes;
         storage = new ArrayBackedValueStorage();
         listArg = new VoidPointable();
         searchedValueArg = new VoidPointable();
         tempVal = new VoidPointable();
         listEval = args[0].createScalarEvaluator(ctx);
         searchedValueEval = args[1].createScalarEvaluator(ctx);
-        comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        comp = createComparator();
         listAccessor = new ListAccessor();
         intValue = new AMutableInt32(-1);
         sourceLocation = sourceLoc;
+    }
+
+    private IBinaryComparator createComparator() {
+        // TODO(ali): using old comparator behaviour for now. Should compute proper types based on args
+        return BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
+                .createBinaryComparator();
     }
 
     @Override

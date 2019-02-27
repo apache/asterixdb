@@ -30,8 +30,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
@@ -84,6 +84,12 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
             pp = IPartitioningProperty.UNPARTITIONED;
         }
         this.deliveredProperties = new StructuralPropertiesVector(pp, deliveredLocalProperties(iop, context));
+    }
+
+    static void validateNumKeys(List<LogicalVariable> keysLeftBranch, List<LogicalVariable> keysRightBranch) {
+        if (keysLeftBranch.size() != keysRightBranch.size()) {
+            throw new IllegalStateException("Number of keys of left and right branch are not equal in hash join");
+        }
     }
 
     @Override

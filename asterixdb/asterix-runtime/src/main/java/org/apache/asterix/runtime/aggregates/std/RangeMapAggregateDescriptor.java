@@ -25,8 +25,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectDescBinaryComparatorFactory;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -266,11 +265,9 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
             // create the generic comparator for each sort field
             IBinaryComparator[] fieldsComparators = new IBinaryComparator[ascending.length];
             for (int i = 0; i < ascending.length; i++) {
-                if (ascending[i]) {
-                    fieldsComparators[i] = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-                } else {
-                    fieldsComparators[i] = AObjectDescBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-                }
+                // TODO(ali): this is temporary
+                fieldsComparators[i] = BinaryComparatorFactoryProvider.INSTANCE
+                        .getBinaryComparatorFactory(null, null, ascending[i]).createBinaryComparator();
             }
 
             return (splitPoint1, splitPoint2) -> {

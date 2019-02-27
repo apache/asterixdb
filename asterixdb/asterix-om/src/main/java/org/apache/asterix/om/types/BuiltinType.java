@@ -1153,7 +1153,7 @@ public abstract class BuiltinType implements IAType {
             case SHORTWITHOUTTYPEINFO:
                 return SHORTWITHOUTTYPEINFO;
             default:
-                throw new IllegalStateException();
+                throw new UnsupportedOperationException(typeTag.toString());
         }
     }
 }

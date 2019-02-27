@@ -20,11 +20,9 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.util.List;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.apache.asterix.builders.ArrayListFactory;
 import org.apache.asterix.builders.IAsterixListBuilder;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -46,6 +44,9 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
+
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 /**
  * <pre>
@@ -114,7 +115,8 @@ public class ArrayUnionDescriptor extends AbstractScalarFunctionDynamicDescripto
             super(args, ctx, true, sourceLoc, argTypes);
             pointableListAllocator = new ListObjectPool<>(new ArrayListFactory<>());
             hashes = new Int2ObjectOpenHashMap<>();
-            comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
+                    .createBinaryComparator();
             binaryHashFunction = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(null)
                     .createBinaryHashFunction();
         }

@@ -27,7 +27,7 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -154,7 +154,8 @@ public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescrip
             caster = new CastTypeEvaluator();
             orderedListBuilder = null;
             unorderedListBuilder = null;
-            comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
+                    .createBinaryComparator();
         }
 
         @Override

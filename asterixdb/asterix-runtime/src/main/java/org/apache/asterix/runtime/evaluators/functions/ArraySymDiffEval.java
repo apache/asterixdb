@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.asterix.builders.ArrayListFactory;
 import org.apache.asterix.builders.IAsterixListBuilder;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -57,7 +57,8 @@ public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
         arrayListAllocator = new ListObjectPool<>(new ArrayListFactory<>());
         valueCounterAllocator = new ListObjectPool<>(new ValueCounterFactory());
         hashes = new Int2ObjectOpenHashMap<>();
-        comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
+                .createBinaryComparator();
         intHashes = new IntArrayList(50, 10);
         binaryHashFunction = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(null)
                 .createBinaryHashFunction();

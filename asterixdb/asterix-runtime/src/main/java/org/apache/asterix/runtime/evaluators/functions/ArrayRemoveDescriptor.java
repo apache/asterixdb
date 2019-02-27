@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.IOException;
 
 import org.apache.asterix.builders.IAsterixListBuilder;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -106,7 +106,8 @@ public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescript
             super(args, ctx, 0, 1, args.length - 1, argTypes, true, sourceLoc, false, false);
             storage = new ArrayBackedValueStorage();
             item = new VoidPointable();
-            comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
+                    .createBinaryComparator();
         }
 
         @Override

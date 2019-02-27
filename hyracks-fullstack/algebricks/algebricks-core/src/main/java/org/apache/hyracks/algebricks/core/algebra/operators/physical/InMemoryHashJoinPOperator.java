@@ -84,17 +84,20 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
+        validateNumKeys(keysLeftBranch, keysRightBranch);
         int[] keysLeft = JobGenHelper.variablesToFieldIndexes(keysLeftBranch, inputSchemas[0]);
         int[] keysRight = JobGenHelper.variablesToFieldIndexes(keysRightBranch, inputSchemas[1]);
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
         IBinaryHashFunctionFactory[] hashFunFactories =
                 JobGenHelper.variablesToBinaryHashFunctionFactories(keysLeftBranch, env, context);
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keysLeft.length];
-        int i = 0;
         IBinaryComparatorFactoryProvider bcfp = context.getBinaryComparatorFactoryProvider();
-        for (LogicalVariable v : keysLeftBranch) {
-            Object t = env.getVarType(v);
-            comparatorFactories[i++] = bcfp.getBinaryComparatorFactory(t, true);
+        Object leftType;
+        Object rightType;
+        for (int i = 0; i < keysLeftBranch.size(); i++) {
+            leftType = env.getVarType(keysLeftBranch.get(i));
+            rightType = env.getVarType(keysRightBranch.get(i));
+            comparatorFactories[i] = bcfp.getBinaryComparatorFactory(leftType, rightType, true);
         }
 
         IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider =
@@ -142,9 +145,9 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
         List<ILocalStructuralProperty> lp0 = pv0.getLocalProperties();
         if (lp0 != null) {
             // maintains the local properties on the probe side
-            return new LinkedList<ILocalStructuralProperty>(lp0);
+            return new LinkedList<>(lp0);
         }
-        return new LinkedList<ILocalStructuralProperty>();
+        return new LinkedList<>();
     }
 
 }

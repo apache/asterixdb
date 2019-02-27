@@ -110,17 +110,22 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
+        validateNumKeys(keysLeftBranch, keysRightBranch);
         int[] keysLeft = JobGenHelper.variablesToFieldIndexes(keysLeftBranch, inputSchemas[0]);
         int[] keysRight = JobGenHelper.variablesToFieldIndexes(keysRightBranch, inputSchemas[1]);
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
         IBinaryHashFunctionFamily[] hashFunFamilies =
                 JobGenHelper.variablesToBinaryHashFunctionFamilies(keysLeftBranch, env, context);
-        IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keysLeft.length];
-        int i = 0;
+        IBinaryComparatorFactory[] leftCompFactories = new IBinaryComparatorFactory[keysLeft.length];
+        IBinaryComparatorFactory[] rightCompFactories = new IBinaryComparatorFactory[keysRight.length];
         IBinaryComparatorFactoryProvider bcfp = context.getBinaryComparatorFactoryProvider();
-        for (LogicalVariable v : keysLeftBranch) {
-            Object t = env.getVarType(v);
-            comparatorFactories[i++] = bcfp.getBinaryComparatorFactory(t, true);
+        Object leftType;
+        Object rightType;
+        for (int i = 0; i < keysLeftBranch.size(); i++) {
+            leftType = env.getVarType(keysLeftBranch.get(i));
+            rightType = env.getVarType(keysRightBranch.get(i));
+            leftCompFactories[i] = bcfp.getBinaryComparatorFactory(leftType, rightType, true);
+            rightCompFactories[i] = bcfp.getBinaryComparatorFactory(rightType, leftType, true);
         }
 
         IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider =
@@ -134,7 +139,7 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
         IOperatorDescriptor opDesc;
 
         opDesc = generateOptimizedHashJoinRuntime(context, inputSchemas, keysLeft, keysRight, hashFunFamilies,
-                comparatorFactories, predEvaluatorFactory, recDescriptor, spec);
+                leftCompFactories, rightCompFactories, predEvaluatorFactory, recDescriptor, spec);
         opDesc.setSourceLocation(op.getSourceLocation());
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
@@ -146,15 +151,16 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
 
     private IOperatorDescriptor generateOptimizedHashJoinRuntime(JobGenContext context, IOperatorSchema[] inputSchemas,
             int[] keysLeft, int[] keysRight, IBinaryHashFunctionFamily[] hashFunFamilies,
-            IBinaryComparatorFactory[] comparatorFactories, IPredicateEvaluatorFactory predEvaluatorFactory,
-            RecordDescriptor recDescriptor, IOperatorDescriptorRegistry spec) throws AlgebricksException {
+            IBinaryComparatorFactory[] leftCompFactories, IBinaryComparatorFactory[] rightCompFactories,
+            IPredicateEvaluatorFactory predEvaluatorFactory, RecordDescriptor recDescriptor,
+            IOperatorDescriptorRegistry spec) {
         switch (kind) {
             case INNER:
                 return new OptimizedHybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(),
                         maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, hashFunFamilies,
-                        comparatorFactories, recDescriptor,
-                        new JoinMultiComparatorFactory(comparatorFactories, keysLeft, keysRight),
-                        new JoinMultiComparatorFactory(comparatorFactories, keysRight, keysLeft), predEvaluatorFactory);
+                        leftCompFactories, rightCompFactories, recDescriptor,
+                        new JoinMultiComparatorFactory(leftCompFactories, keysLeft, keysRight),
+                        new JoinMultiComparatorFactory(rightCompFactories, keysRight, keysLeft), predEvaluatorFactory);
             case LEFT_OUTER:
                 IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
                 for (int j = 0; j < nonMatchWriterFactories.length; j++) {
@@ -162,9 +168,9 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                 }
                 return new OptimizedHybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(),
                         maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, hashFunFamilies,
-                        comparatorFactories, recDescriptor,
-                        new JoinMultiComparatorFactory(comparatorFactories, keysLeft, keysRight),
-                        new JoinMultiComparatorFactory(comparatorFactories, keysRight, keysLeft), predEvaluatorFactory,
+                        leftCompFactories, rightCompFactories, recDescriptor,
+                        new JoinMultiComparatorFactory(leftCompFactories, keysLeft, keysRight),
+                        new JoinMultiComparatorFactory(rightCompFactories, keysRight, keysLeft), predEvaluatorFactory,
                         true, nonMatchWriterFactories);
             default:
                 throw new NotImplementedException();
@@ -216,8 +222,7 @@ class JoinMultiComparatorFactory implements ITuplePairComparatorFactory {
     private final int[] keysLeft;
     private final int[] keysRight;
 
-    public JoinMultiComparatorFactory(IBinaryComparatorFactory[] binaryComparatorFactory, int[] keysLeft,
-            int[] keysRight) {
+    JoinMultiComparatorFactory(IBinaryComparatorFactory[] binaryComparatorFactory, int[] keysLeft, int[] keysRight) {
         this.binaryComparatorFactories = binaryComparatorFactory;
         this.keysLeft = keysLeft;
         this.keysRight = keysRight;
@@ -234,7 +239,7 @@ class JoinMultiComparatorFactory implements ITuplePairComparatorFactory {
 }
 
 /**
- * {@ ITuplePairComparator} implementation for optimized hybrid hash join.
+ * {@code ITuplePairComparator} implementation for optimized hybrid hash join.
  * The comparator applies multiple binary comparators, one for each key pairs
  */
 class JoinMultiComparator implements ITuplePairComparator {
@@ -242,7 +247,7 @@ class JoinMultiComparator implements ITuplePairComparator {
     private final int[] keysLeft;
     private final int[] keysRight;
 
-    public JoinMultiComparator(IBinaryComparator[] bComparator, int[] keysLeft, int[] keysRight) {
+    JoinMultiComparator(IBinaryComparator[] bComparator, int[] keysLeft, int[] keysRight) {
         this.binaryComparators = bComparator;
         this.keysLeft = keysLeft;
         this.keysRight = keysRight;

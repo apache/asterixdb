@@ -27,7 +27,7 @@ import java.util.PriorityQueue;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -104,7 +104,8 @@ public class ArraySortDescriptor extends AbstractScalarFunctionDynamicDescriptor
     }
 
     protected class ArraySortComparator implements Comparator<IPointable> {
-        private final IBinaryComparator comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        private final IBinaryComparator comp = BinaryComparatorFactoryProvider.INSTANCE
+                .getBinaryComparatorFactory(null, null, true).createBinaryComparator();
 
         @Override
         public int compare(IPointable val1, IPointable val2) {
