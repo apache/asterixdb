@@ -62,11 +62,9 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
                  * 3. if returnValue == false
                  * 3-1. flush all entries (which already acquired locks) to the next operator
                  * : this will make all those entries reach commit operator so that corresponding commit logs will be created.
-                 * 3-2. create a WAIT log and wait until logFlusher thread will flush the WAIT log and gives notification
-                 * : this notification guarantees that all locks acquired by this transactor (or all locks acquired for the entries)
-                 * were released.
-                 * 3-3. acquire lock using lock() instead of tryLock() for the failed entry
-                 * : we know for sure this lock call will not cause deadlock since the transactor doesn't hold any other locks.
+                 * 3-2. acquire lock using lock() instead of tryLock() for the failed entry
+                 * : we know for sure this lock call will not cause deadlock since the locks held by the transactor
+                 * will be eventually released by the log flusher.
                  * 4. create an update log and insert the entry
                  * From the above logic, step 2 and 3 are implemented in this before() method.
                  **********************/
@@ -76,9 +74,6 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
                 if (!tryLockSucceed) {
                     //flush entries which have been inserted already to release locks hold by them
                     operatorNodePushable.flushPartialFrame();
-
-                    //create WAIT log and wait until the WAIT log is flushed and notified by LogFlusher thread
-                    logWait();
 
                     //acquire lock
                     lockManager.lock(datasetId, pkHash, LockMode.X, txnCtx);
@@ -101,13 +96,5 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
         } catch (ACIDException e) {
             throw HyracksDataException.create(e);
         }
-    }
-
-    private void logWait() throws ACIDException {
-        indexRecord.setLogType(LogType.WAIT);
-        indexRecord.computeAndSetLogSize();
-        txnSubsystem.getLogManager().log(indexRecord);
-        // set the log type back to UPDATE for normal updates
-        indexRecord.setLogType(LogType.UPDATE);
     }
 }
