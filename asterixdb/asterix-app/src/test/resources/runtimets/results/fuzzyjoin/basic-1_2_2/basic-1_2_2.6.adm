@@ -1,120 +1,120 @@
-{ "DBLP": [ "ronald", "minnich", "matthew", "j", "sottile", "sung", "eun", "choi", "erik", "a", "hendriks", "jim", "mckie" ], "CSX": [ "ronald", "g", "minnich", "matthew", "j", "sottile", "sung", "eun", "choi", "erik", "hendriks", "jim", "mckie" ], "sim": 0.85714287 }
-{ "DBLP": [ "bryan", "ford", "mike", "hibler", "jay", "lepreau", "patrick", "tullmann", "godmar", "back", "stephen", "clawson" ], "CSX": [ "bryan", "ford", "mike", "hibler", "jay", "lepreau", "patrick", "tullmann", "godmar", "back", "stephen", "clawson" ], "sim": 1.0 }
-{ "DBLP": [ "christina", "s", "leslie", "eleazar", "eskin", "adiel", "cohen", "jason", "weston", "william", "stafford", "noble" ], "CSX": [ "christina", "s", "leslie", "eleazar", "eskin", "adiel", "cohen", "jason", "weston", "william", "stafford", "noble" ], "sim": 1.0 }
-{ "DBLP": [ "antti", "airola", "sampo", "pyysalo", "jari", "björne", "tapio", "pahikkala", "filip", "ginter", "tapio", "salakoski" ], "CSX": [ "antti", "airola", "sampo", "pyysalo", "jari", "björne", "tapio", "pahikkala", "filip", "ginter", "tapio", "salakoski" ], "sim": 1.0 }
-{ "DBLP": [ "dominique", "chanet", "bjorn", "de", "sutter", "bruno", "de", "bus", "ludo", "van", "put", "koen", "de", "bosschere" ], "CSX": [ "bruno", "de", "bus", "dominique", "chanet", "ludo", "van", "put", "bjorn", "de", "sutter", "koen", "de", "bosschere" ], "sim": 1.0 }
-{ "DBLP": [ "bastian", "blankenburg", "rajdeep", "k", "dash", "sarvapali", "d", "ramchurn", "matthias", "klusch", "nicholas", "r", "jennings" ], "CSX": [ "bastian", "blankenburg", "rajdeep", "k", "dash", "sarvapali", "d", "ramchurn", "matthias", "klusch", "nicholas", "r", "jennings" ], "sim": 1.0 }
-{ "DBLP": [ "rafael", "serrano", "gotarredona", "teresa", "serrano", "gotarredona", "antonio", "acosta", "jimenez", "bernabé", "linares", "barranco" ], "CSX": [ "rafael", "serrano", "gotarredona", "teresa", "serrano", "gotarredona", "antonio", "acosta", "jiménez", "bernabé", "linares", "barranco" ], "sim": 0.84615386 }
-{ "DBLP": [ "jason", "weston", "christina", "s", "leslie", "eugene", "ie", "dengyong", "zhou", "andré", "elisseeff", "william", "stafford", "noble" ], "CSX": [ "jason", "weston", "christina", "leslie", "eugene", "ie", "dengyong", "zhou", "andre", "elisseeff", "william", "stafford", "noble" ], "sim": 0.8 }
-{ "DBLP": [ "bart", "baesens", "stijn", "viaene", "tony", "van", "gestel", "johan", "a", "k", "suykens", "guido", "dedene", "bart", "de", "moor", "jan", "vanthienen" ], "CSX": [ "tony", "van", "gestel", "johan", "a", "k", "suykens", "bart", "baesens", "stijn", "viaene", "jan", "vanthienen", "guido", "dedene", "bart", "de", "moor", "joos", "vandewalle" ], "sim": 0.9 }
-{ "DBLP": [ "tony", "van", "gestel", "bart", "baesens", "johan", "a", "k", "suykens", "dirk", "van", "den", "poel", "dirk", "emma", "baestaens", "marleen", "willekens" ], "CSX": [ "en", "bedrijfskunde", "gent", "tony", "van", "gestel", "bart", "baesens", "johan", "a", "k", "suykens", "dirk", "van", "den", "poel", "dirk", "emma", "baestaens", "marleen", "willekens" ], "sim": 0.85714287 }
-{ "DBLP": [ "karsten", "m", "borgwardt", "cheng", "soon", "ong", "stefan", "schönauer", "s", "v", "n", "vishwanathan", "alexander", "j", "smola", "hans", "peter", "kriegel" ], "CSX": [ "karsten", "m", "borgwardt", "cheng", "soon", "ong", "stefan", "schönauer", "s", "v", "n", "vishwanathan", "alex", "j", "smola", "hans", "peter", "kriegel" ], "sim": 0.8947368 }
-{ "DBLP": [ "w", "chen" ], "CSX": [ "w", "chen" ], "sim": 1.0 }
-{ "DBLP": [ "hujun", "yin" ], "CSX": [ "hujun", "yin" ], "sim": 1.0 }
-{ "DBLP": [ "michel", "gien" ], "CSX": [ "michel", "gien" ], "sim": 1.0 }
-{ "DBLP": [ "roland", "opfer" ], "CSX": [ "roland", "opfer" ], "sim": 1.0 }
-{ "DBLP": [ "carsten", "ditze" ], "CSX": [ "carsten", "ditze" ], "sim": 1.0 }
-{ "DBLP": [ "matthew", "brand" ], "CSX": [ "matthew", "brand" ], "sim": 1.0 }
-{ "DBLP": [ "annegret", "weng" ], "CSX": [ "annegret", "weng" ], "sim": 1.0 }
-{ "DBLP": [ "greg", "kuperberg" ], "CSX": [ "greg", "kuperberg" ], "sim": 1.0 }
-{ "DBLP": [ "ingo", "steinwart" ], "CSX": [ "ingo", "steinwart" ], "sim": 1.0 }
-{ "DBLP": [ "peter", "druschel" ], "CSX": [ "peter", "druschel" ], "sim": 1.0 }
-{ "DBLP": [ "charles", "crowley" ], "CSX": [ "charles", "crowley" ], "sim": 1.0 }
-{ "DBLP": [ "carl", "g", "looney" ], "CSX": [ "carl", "g", "looney" ], "sim": 1.0 }
-{ "DBLP": [ "ding", "xuan", "zhou" ], "CSX": [ "ding", "xuan", "zhou" ], "sim": 1.0 }
-{ "DBLP": [ "francis", "r", "bach" ], "CSX": [ "francis", "r", "bach" ], "sim": 1.0 }
-{ "DBLP": [ "brian", "n", "bershad" ], "CSX": [ "brian", "n", "bershad" ], "sim": 1.0 }
-{ "DBLP": [ "zheng", "rong", "yang" ], "CSX": [ "zheng", "rong", "yang" ], "sim": 1.0 }
-{ "DBLP": [ "mark", "baker", "hong", "ong" ], "CSX": [ "mark", "baker", "hong", "ong" ], "sim": 1.0 }
-{ "DBLP": [ "qun", "dai", "songcan", "chen" ], "CSX": [ "qun", "dai", "songcan", "chen" ], "sim": 1.0 }
-{ "DBLP": [ "zhe", "wang", "songcan", "chen" ], "CSX": [ "zhe", "wang", "songcan", "chen" ], "sim": 1.0 }
-{ "DBLP": [ "majid", "beigi", "andreas", "zell" ], "CSX": [ "majid", "m", "beigi", "andreas", "zell" ], "sim": 0.8 }
-{ "DBLP": [ "keith", "sullivan", "sean", "luke" ], "CSX": [ "sean", "luke", "keith", "sullivan" ], "sim": 1.0 }
-{ "DBLP": [ "keith", "sullivan", "sean", "luke" ], "CSX": [ "keith", "sullivan", "sean", "luke" ], "sim": 1.0 }
-{ "DBLP": [ "moonsang", "kwon", "yookun", "cho" ], "CSX": [ "moonsang", "kwon", "yookun", "cho" ], "sim": 1.0 }
-{ "DBLP": [ "nail", "akar", "khosrow", "sohraby" ], "CSX": [ "nail", "akar", "khosrow", "sohraby" ], "sim": 1.0 }
-{ "DBLP": [ "volker", "roth", "bernd", "fischer" ], "CSX": [ "volker", "roth", "bernd", "fischer" ], "sim": 1.0 }
-{ "DBLP": [ "shun", "ichi", "amari", "si", "wu" ], "CSX": [ "si", "wu", "shun", "ichi", "amari" ], "sim": 1.0 }
-{ "DBLP": [ "michel", "neuhaus", "horst", "bunke" ], "CSX": [ "michel", "neuhaus", "horst", "bunke" ], "sim": 1.0 }
-{ "DBLP": [ "carlos", "soares", "pavel", "brazdil" ], "CSX": [ "pavel", "b", "brazdil", "carlos", "soares" ], "sim": 0.8 }
-{ "DBLP": [ "songcan", "chen", "daoqiang", "zhang" ], "CSX": [ "songcan", "chen", "daoqiang", "zhang" ], "sim": 1.0 }
-{ "DBLP": [ "guang", "dai", "dit", "yan", "yeung" ], "CSX": [ "guang", "dai", "dit", "yan", "yeung" ], "sim": 1.0 }
-{ "DBLP": [ "ingo", "mierswa", "katharina", "morik" ], "CSX": [ "ingo", "mierswa", "katharina", "morik" ], "sim": 1.0 }
-{ "DBLP": [ "shiliang", "sun", "changshui", "zhang" ], "CSX": [ "shiliang", "sun", "changshui", "zhang" ], "sim": 1.0 }
-{ "DBLP": [ "johnny", "mariéthoz", "samy", "bengio" ], "CSX": [ "samy", "bengio", "johnny", "mariéthoz" ], "sim": 1.0 }
-{ "DBLP": [ "huzefa", "rangwala", "george", "karypis" ], "CSX": [ "huzefa", "rangwala", "george", "karypis" ], "sim": 1.0 }
 { "DBLP": [ "alexei", "pozdnoukhov", "samy", "bengio" ], "CSX": [ "alexei", "pozdnoukhov", "samy", "bengio" ], "sim": 1.0 }
-{ "DBLP": [ "michael", "engel", "bernd", "freisleben" ], "CSX": [ "michael", "engel", "bernd", "freisleben" ], "sim": 1.0 }
-{ "DBLP": [ "robert", "jenssen", "torbjørn", "eltoft" ], "CSX": [ "robert", "jenssen", "torbjørn", "eltoft" ], "sim": 1.0 }
-{ "DBLP": [ "tatsuo", "nakajima", "hideyuki", "tokuda" ], "CSX": [ "tatsuo", "nakajima", "hideyuki", "tokuda" ], "sim": 1.0 }
-{ "DBLP": [ "tatsuo", "nakajima", "hideyuki", "tokuda" ], "CSX": [ "hideyuki", "tokuda", "tatsuo", "nakajima" ], "sim": 1.0 }
+{ "DBLP": [ "andreas", "argyriou", "raphael", "hauser", "charles", "a", "micchelli", "massimiliano", "pontil" ], "CSX": [ "andreas", "argyriou", "raphael", "hauser", "charles", "a", "micchelli", "massimiliano", "pontil" ], "sim": 1.0 }
+{ "DBLP": [ "annalisa", "barla", "francesca", "odone", "alessandro", "verri" ], "CSX": [ "francesca", "odone", "annalisa", "barla", "alessandro", "verri" ], "sim": 1.0 }
+{ "DBLP": [ "annegret", "weng" ], "CSX": [ "annegret", "weng" ], "sim": 1.0 }
+{ "DBLP": [ "antti", "airola", "sampo", "pyysalo", "jari", "björne", "tapio", "pahikkala", "filip", "ginter", "tapio", "salakoski" ], "CSX": [ "antti", "airola", "sampo", "pyysalo", "jari", "björne", "tapio", "pahikkala", "filip", "ginter", "tapio", "salakoski" ], "sim": 1.0 }
+{ "DBLP": [ "arindam", "choudhury", "prasanth", "b", "nair", "andy", "j", "keane" ], "CSX": [ "prasanth", "b", "nair", "arindam", "choudhury", "andy", "j", "keane" ], "sim": 1.0 }
+{ "DBLP": [ "arvind", "seshadri", "mark", "luk", "ning", "qu", "adrian", "perrig" ], "CSX": [ "arvind", "seshadri", "mark", "luk", "ning", "qu", "adrian", "perrig" ], "sim": 1.0 }
+{ "DBLP": [ "bart", "baesens", "stijn", "viaene", "tony", "van", "gestel", "johan", "a", "k", "suykens", "guido", "dedene", "bart", "de", "moor", "jan", "vanthienen" ], "CSX": [ "tony", "van", "gestel", "johan", "a", "k", "suykens", "bart", "baesens", "stijn", "viaene", "jan", "vanthienen", "guido", "dedene", "bart", "de", "moor", "joos", "vandewalle" ], "sim": 0.9 }
+{ "DBLP": [ "bastian", "blankenburg", "rajdeep", "k", "dash", "sarvapali", "d", "ramchurn", "matthias", "klusch", "nicholas", "r", "jennings" ], "CSX": [ "bastian", "blankenburg", "rajdeep", "k", "dash", "sarvapali", "d", "ramchurn", "matthias", "klusch", "nicholas", "r", "jennings" ], "sim": 1.0 }
+{ "DBLP": [ "benjamin", "schrauwen", "jan", "m", "van", "campenhout" ], "CSX": [ "benjamin", "schrauwen", "jan", "van", "campenhout" ], "sim": 0.8333333 }
+{ "DBLP": [ "benjamin", "schrauwen", "jan", "van", "campenhout" ], "CSX": [ "benjamin", "schrauwen", "jan", "van", "campenhout" ], "sim": 1.0 }
+{ "DBLP": [ "brett", "d", "fleisch", "mark", "allan", "a", "co" ], "CSX": [ "brett", "fleisch", "mark", "allan", "a", "co" ], "sim": 0.85714287 }
+{ "DBLP": [ "brian", "kulis", "sugato", "basu", "inderjit", "s", "dhillon", "raymond", "j", "mooney" ], "CSX": [ "brian", "kulis", "sugato", "basu", "inderjit", "dhillon", "raymond", "mooney" ], "sim": 0.8 }
+{ "DBLP": [ "brian", "n", "bershad" ], "CSX": [ "brian", "n", "bershad" ], "sim": 1.0 }
+{ "DBLP": [ "bryan", "ford", "mike", "hibler", "jay", "lepreau", "patrick", "tullmann", "godmar", "back", "stephen", "clawson" ], "CSX": [ "bryan", "ford", "mike", "hibler", "jay", "lepreau", "patrick", "tullmann", "godmar", "back", "stephen", "clawson" ], "sim": 1.0 }
+{ "DBLP": [ "carl", "g", "looney" ], "CSX": [ "carl", "g", "looney" ], "sim": 1.0 }
+{ "DBLP": [ "carlos", "soares", "pavel", "brazdil" ], "CSX": [ "pavel", "b", "brazdil", "carlos", "soares" ], "sim": 0.8 }
+{ "DBLP": [ "carsten", "ditze" ], "CSX": [ "carsten", "ditze" ], "sim": 1.0 }
+{ "DBLP": [ "charles", "crowley" ], "CSX": [ "charles", "crowley" ], "sim": 1.0 }
+{ "DBLP": [ "cheng", "soon", "ong", "alexander", "j", "smola", "robert", "c", "williamson" ], "CSX": [ "cheng", "soon", "ong", "alexander", "j", "smola", "robert", "c", "williamson" ], "sim": 1.0 }
+{ "DBLP": [ "cheng", "soon", "ong", "alexander", "j", "smola", "robert", "c", "williamson" ], "CSX": [ "cheng", "soon", "ong", "er", "j", "smola", "robert", "c", "williamson" ], "sim": 0.8 }
+{ "DBLP": [ "cheng", "soon", "ong", "xavier", "mary", "stéphane", "canu", "alexander", "j", "smola" ], "CSX": [ "cheng", "soon", "ong", "stéphane", "canu", "alexander", "j", "smola" ], "sim": 0.8 }
+{ "DBLP": [ "christian", "poellabauer", "karsten", "schwan", "richard", "west" ], "CSX": [ "christian", "poellabauer", "karsten", "schwan", "richard", "west" ], "sim": 1.0 }
+{ "DBLP": [ "christian", "poellabauer", "karsten", "schwan", "richard", "west" ], "CSX": [ "richard", "west", "karsten", "schwan", "christian", "poellabauer" ], "sim": 1.0 }
+{ "DBLP": [ "christina", "s", "leslie", "eleazar", "eskin", "adiel", "cohen", "jason", "weston", "william", "stafford", "noble" ], "CSX": [ "christina", "s", "leslie", "eleazar", "eskin", "adiel", "cohen", "jason", "weston", "william", "stafford", "noble" ], "sim": 1.0 }
 { "DBLP": [ "christoph", "heinz", "bernhard", "seeger" ], "CSX": [ "christoph", "heinz", "bernhard", "seeger" ], "sim": 1.0 }
-{ "DBLP": [ "zhiqian", "wang", "jezekiel", "ben", "arie" ], "CSX": [ "jezekiel", "ben", "arie", "zhiqian", "wang" ], "sim": 1.0 }
-{ "DBLP": [ "zhiqian", "wang", "jezekiel", "ben", "arie" ], "CSX": [ "jezekiel", "ben", "arie", "zhiqian", "wang" ], "sim": 1.0 }
-{ "DBLP": [ "yu", "chieh", "wu", "chia", "hui", "chang" ], "CSX": [ "chia", "hui", "chang", "yu", "chieh", "wu" ], "sim": 1.0 }
+{ "DBLP": [ "christopher", "j", "c", "burges", "david", "j", "crisp" ], "CSX": [ "david", "j", "crisp", "christopher", "j", "c", "burges" ], "sim": 1.0 }
+{ "DBLP": [ "chunhua", "shen", "anton", "van", "den", "hengel", "michael", "j", "brooks" ], "CSX": [ "chunhua", "shen", "anton", "van", "den", "hengel", "anthony", "dick", "michael", "j", "brooks" ], "sim": 0.8181818 }
+{ "DBLP": [ "chunhua", "shen", "anton", "van", "den", "hengel", "michael", "j", "brooks" ], "CSX": [ "chunhua", "shen", "michael", "j", "brooks", "anton", "van", "den", "hengel" ], "sim": 1.0 }
+{ "DBLP": [ "cyril", "allauzen", "mehryar", "mohri", "ameet", "talwalkar" ], "CSX": [ "cyril", "allauzen", "mehryar", "mohri", "ameet", "talwalkar" ], "sim": 1.0 }
 { "DBLP": [ "dao", "qiang", "zhang", "song", "can", "chen" ], "CSX": [ "dao", "qiang", "zhang", "song", "can", "chen" ], "sim": 1.0 }
 { "DBLP": [ "dao", "qiang", "zhang", "song", "can", "chen" ], "CSX": [ "zhang", "dao", "qiang", "chen", "song", "can" ], "sim": 1.0 }
-{ "DBLP": [ "italo", "j", "dejter", "abel", "a", "delgado" ], "CSX": [ "italo", "j", "dejter", "abel", "a", "delgado" ], "sim": 1.0 }
-{ "DBLP": [ "hiren", "d", "patel", "sandeep", "k", "shukla" ], "CSX": [ "hiren", "d", "patel", "sandeep", "k", "shukla" ], "sim": 1.0 }
+{ "DBLP": [ "darrin", "p", "lewis", "tony", "jebara", "william", "stafford", "noble" ], "CSX": [ "darrin", "p", "lewis", "tony", "jebara", "william", "stafford", "noble" ], "sim": 1.0 }
+{ "DBLP": [ "ding", "xuan", "zhou" ], "CSX": [ "ding", "xuan", "zhou" ], "sim": 1.0 }
+{ "DBLP": [ "dit", "yan", "yeung", "hong", "chang", "guang", "dai" ], "CSX": [ "guang", "dai", "dit", "yan", "yeung", "hong", "chang" ], "sim": 1.0 }
+{ "DBLP": [ "dominique", "chanet", "bjorn", "de", "sutter", "bruno", "de", "bus", "ludo", "van", "put", "koen", "de", "bosschere" ], "CSX": [ "bruno", "de", "bus", "dominique", "chanet", "ludo", "van", "put", "bjorn", "de", "sutter", "koen", "de", "bosschere" ], "sim": 1.0 }
+{ "DBLP": [ "erik", "h", "w", "meijering", "karel", "j", "zuiderveld", "max", "a", "viergever" ], "CSX": [ "erik", "h", "w", "meijering", "karel", "j", "zuiderveld", "max", "a", "viergever" ], "sim": 1.0 }
+{ "DBLP": [ "ernest", "artiaga", "albert", "serra", "marisa", "gil" ], "CSX": [ "ernest", "artiaga", "albert", "serra", "marisa", "gil" ], "sim": 1.0 }
+{ "DBLP": [ "faisal", "n", "abu", "khzam", "michael", "a", "langston", "w", "henry", "suters" ], "CSX": [ "faisal", "n", "abu", "khzam", "michael", "a", "langston", "w", "henry", "suters" ], "sim": 1.0 }
+{ "DBLP": [ "florent", "lafarge", "xavier", "descombes", "josiane", "zerubia" ], "CSX": [ "florent", "lafarge", "xavier", "descombes", "josiane", "zerubia" ], "sim": 1.0 }
+{ "DBLP": [ "francis", "r", "bach" ], "CSX": [ "francis", "r", "bach" ], "sim": 1.0 }
+{ "DBLP": [ "francis", "r", "bach", "gert", "r", "g", "lanckriet", "michael", "i", "jordan" ], "CSX": [ "francis", "r", "bach", "gert", "r", "g", "lanckriet", "michael", "i", "jordan" ], "sim": 1.0 }
 { "DBLP": [ "francis", "r", "bach", "michael", "i", "jordan" ], "CSX": [ "francis", "bach", "michael", "i", "jordan" ], "sim": 0.8333333 }
 { "DBLP": [ "francis", "r", "bach", "michael", "i", "jordan" ], "CSX": [ "francis", "r", "bach", "michael", "i", "jordan" ], "sim": 1.0 }
-{ "DBLP": [ "matthew", "burnside", "angelos", "d", "keromytis" ], "CSX": [ "matthew", "burnside", "angelos", "d", "keromytis" ], "sim": 1.0 }
+{ "DBLP": [ "francis", "r", "bach", "romain", "thibaux", "michael", "i", "jordan" ], "CSX": [ "francis", "r", "bach", "romain", "thibaux", "michael", "i", "jordan" ], "sim": 1.0 }
+{ "DBLP": [ "greg", "kuperberg" ], "CSX": [ "greg", "kuperberg" ], "sim": 1.0 }
 { "DBLP": [ "gregory", "d", "benson", "ronald", "a", "olsson" ], "CSX": [ "gregory", "d", "benson", "ronald", "a", "olsson" ], "sim": 1.0 }
-{ "DBLP": [ "benjamin", "schrauwen", "jan", "van", "campenhout" ], "CSX": [ "benjamin", "schrauwen", "jan", "van", "campenhout" ], "sim": 1.0 }
-{ "DBLP": [ "samuel", "g", "steckley", "shane", "g", "henderson" ], "CSX": [ "samuel", "g", "steckley", "shane", "g", "henderson" ], "sim": 1.0 }
 { "DBLP": [ "gregory", "e", "fasshauer", "joseph", "w", "jerome" ], "CSX": [ "gregory", "e", "fasshauer", "joseph", "w", "jerome" ], "sim": 1.0 }
+{ "DBLP": [ "guang", "dai", "dit", "yan", "yeung" ], "CSX": [ "guang", "dai", "dit", "yan", "yeung" ], "sim": 1.0 }
+{ "DBLP": [ "hiren", "d", "patel", "sandeep", "k", "shukla" ], "CSX": [ "hiren", "d", "patel", "sandeep", "k", "shukla" ], "sim": 1.0 }
+{ "DBLP": [ "holger", "fröhlich", "jörg", "k", "wegner", "florian", "sieker", "andreas", "zell" ], "CSX": [ "holger", "fröhlich", "jörg", "k", "wegner", "florian", "sieker", "andreas", "zell" ], "sim": 1.0 }
+{ "DBLP": [ "hujun", "yin" ], "CSX": [ "hujun", "yin" ], "sim": 1.0 }
+{ "DBLP": [ "huzefa", "rangwala", "george", "karypis" ], "CSX": [ "huzefa", "rangwala", "george", "karypis" ], "sim": 1.0 }
+{ "DBLP": [ "hyun", "wook", "jin", "sayantan", "sur", "lei", "chai", "dhabaleswar", "k", "panda" ], "CSX": [ "sayantan", "sur", "hyun", "wook", "jin", "dhabaleswar", "k", "panda" ], "sim": 0.8 }
+{ "DBLP": [ "hyun", "wook", "jin", "sayantan", "sur", "lei", "chai", "dhabaleswar", "k", "panda" ], "CSX": [ "sayantan", "sur", "lei", "chai", "hyun", "wook", "jin", "dhabaleswar", "k", "panda", "sun", "microsystems" ], "sim": 0.8333333 }
+{ "DBLP": [ "ingo", "mierswa", "katharina", "morik" ], "CSX": [ "ingo", "mierswa", "katharina", "morik" ], "sim": 1.0 }
+{ "DBLP": [ "ingo", "steinwart" ], "CSX": [ "ingo", "steinwart" ], "sim": 1.0 }
+{ "DBLP": [ "italo", "j", "dejter", "abel", "a", "delgado" ], "CSX": [ "italo", "j", "dejter", "abel", "a", "delgado" ], "sim": 1.0 }
+{ "DBLP": [ "jason", "weston", "christina", "s", "leslie", "eugene", "ie", "dengyong", "zhou", "andré", "elisseeff", "william", "stafford", "noble" ], "CSX": [ "jason", "weston", "christina", "leslie", "eugene", "ie", "dengyong", "zhou", "andre", "elisseeff", "william", "stafford", "noble" ], "sim": 0.8 }
 { "DBLP": [ "jieping", "ye", "jianhui", "chen", "shuiwang", "ji" ], "CSX": [ "jieping", "ye", "jianhui", "chen", "shuiwang", "ji" ], "sim": 1.0 }
 { "DBLP": [ "jieping", "ye", "shuiwang", "ji", "jianhui", "chen" ], "CSX": [ "jieping", "ye", "jianhui", "chen", "shuiwang", "ji" ], "sim": 1.0 }
-{ "DBLP": [ "brett", "d", "fleisch", "mark", "allan", "a", "co" ], "CSX": [ "brett", "fleisch", "mark", "allan", "a", "co" ], "sim": 0.85714287 }
-{ "DBLP": [ "ernest", "artiaga", "albert", "serra", "marisa", "gil" ], "CSX": [ "ernest", "artiaga", "albert", "serra", "marisa", "gil" ], "sim": 1.0 }
-{ "DBLP": [ "dit", "yan", "yeung", "hong", "chang", "guang", "dai" ], "CSX": [ "guang", "dai", "dit", "yan", "yeung", "hong", "chang" ], "sim": 1.0 }
-{ "DBLP": [ "benjamin", "schrauwen", "jan", "m", "van", "campenhout" ], "CSX": [ "benjamin", "schrauwen", "jan", "van", "campenhout" ], "sim": 0.8333333 }
-{ "DBLP": [ "christopher", "j", "c", "burges", "david", "j", "crisp" ], "CSX": [ "david", "j", "crisp", "christopher", "j", "c", "burges" ], "sim": 1.0 }
-{ "DBLP": [ "thomas", "röblitz", "frank", "mueller", "oliver", "bühn" ], "CSX": [ "thomas", "röblitz", "oliver", "bühn", "frank", "mueller" ], "sim": 1.0 }
-{ "DBLP": [ "cyril", "allauzen", "mehryar", "mohri", "ameet", "talwalkar" ], "CSX": [ "cyril", "allauzen", "mehryar", "mohri", "ameet", "talwalkar" ], "sim": 1.0 }
-{ "DBLP": [ "sauro", "menchetti", "fabrizio", "costa", "paolo", "frasconi" ], "CSX": [ "sauro", "menchetti", "fabrizio", "costa", "paolo", "frasconi" ], "sim": 1.0 }
-{ "DBLP": [ "vojislav", "kecman", "michael", "vogt", "te", "ming", "huang" ], "CSX": [ "vojislav", "kecman", "te", "ming", "huang", "michael", "vogt" ], "sim": 1.0 }
+{ "DBLP": [ "johannes", "aßfalg", "karsten", "m", "borgwardt", "hans", "peter", "kriegel" ], "CSX": [ "johannes", "aßfalg", "karsten", "m", "borgwardt", "hans", "peter", "kriegel" ], "sim": 1.0 }
+{ "DBLP": [ "john", "penix", "willem", "visser", "eric", "engstrom", "aaron", "larson", "nicholas", "weininger" ], "CSX": [ "john", "penix", "willem", "visser", "eric", "engstrom", "aaron", "larson", "nicholas", "weininger" ], "sim": 1.0 }
+{ "DBLP": [ "john", "penix", "willem", "visser", "eric", "engstrom", "aaron", "larson", "nicholas", "weininger" ], "CSX": [ "john", "penix", "willem", "visser", "seungjoon", "park", "eric", "engstrom", "aaron", "larson", "nicholas", "weininger" ], "sim": 0.8333333 }
+{ "DBLP": [ "johnny", "mariéthoz", "samy", "bengio" ], "CSX": [ "samy", "bengio", "johnny", "mariéthoz" ], "sim": 1.0 }
 { "DBLP": [ "joseph", "reisinger", "peter", "stone", "risto", "miikkulainen" ], "CSX": [ "joseph", "reisinger", "peter", "stone", "risto", "miikkulainen" ], "sim": 1.0 }
-{ "DBLP": [ "annalisa", "barla", "francesca", "odone", "alessandro", "verri" ], "CSX": [ "francesca", "odone", "annalisa", "barla", "alessandro", "verri" ], "sim": 1.0 }
-{ "DBLP": [ "paul", "e", "mckenney", "jack", "slingwine", "phil", "krueger" ], "CSX": [ "paul", "mckenney", "jack", "slingwine", "phil", "krueger" ], "sim": 0.85714287 }
-{ "DBLP": [ "florent", "lafarge", "xavier", "descombes", "josiane", "zerubia" ], "CSX": [ "florent", "lafarge", "xavier", "descombes", "josiane", "zerubia" ], "sim": 1.0 }
+{ "DBLP": [ "karsten", "m", "borgwardt", "cheng", "soon", "ong", "stefan", "schönauer", "s", "v", "n", "vishwanathan", "alexander", "j", "smola", "hans", "peter", "kriegel" ], "CSX": [ "karsten", "m", "borgwardt", "cheng", "soon", "ong", "stefan", "schönauer", "s", "v", "n", "vishwanathan", "alex", "j", "smola", "hans", "peter", "kriegel" ], "sim": 0.8947368 }
+{ "DBLP": [ "keith", "sullivan", "sean", "luke" ], "CSX": [ "keith", "sullivan", "sean", "luke" ], "sim": 1.0 }
+{ "DBLP": [ "keith", "sullivan", "sean", "luke" ], "CSX": [ "sean", "luke", "keith", "sullivan" ], "sim": 1.0 }
+{ "DBLP": [ "kenji", "hisazumi", "tsuneo", "nakanishi", "teruaki", "kitasuka", "akira", "fukuda" ], "CSX": [ "kenji", "hisazumi", "teruaki", "kitasuka", "tsuneo", "nakanishi", "akira", "fukuda" ], "sim": 1.0 }
+{ "DBLP": [ "khawar", "m", "zuberi", "padmanabhan", "pillai", "kang", "g", "shin" ], "CSX": [ "khawar", "m", "zuberi", "y", "padmanabhan", "pillai", "kang", "g", "shin" ], "sim": 0.8888889 }
+{ "DBLP": [ "majid", "beigi", "andreas", "zell" ], "CSX": [ "majid", "m", "beigi", "andreas", "zell" ], "sim": 0.8 }
+{ "DBLP": [ "maria", "florina", "balcan", "avrim", "blum", "santosh", "vempala" ], "CSX": [ "maria", "florina", "balcan", "avrim", "blum", "santosh", "vempala" ], "sim": 1.0 }
+{ "DBLP": [ "mark", "baker", "hong", "ong" ], "CSX": [ "mark", "baker", "hong", "ong" ], "sim": 1.0 }
+{ "DBLP": [ "matthew", "brand" ], "CSX": [ "matthew", "brand" ], "sim": 1.0 }
+{ "DBLP": [ "matthew", "burnside", "angelos", "d", "keromytis" ], "CSX": [ "matthew", "burnside", "angelos", "d", "keromytis" ], "sim": 1.0 }
 { "DBLP": [ "matthias", "daum", "jan", "dörrenbächer", "sebastian", "bogan" ], "CSX": [ "matthias", "daum", "jan", "dörrenbächer", "sebastian", "bogan" ], "sim": 1.0 }
-{ "DBLP": [ "yoshisato", "yanagisawa", "kenichi", "kourai", "shigeru", "chiba" ], "CSX": [ "yoshisato", "yanagisawa", "shigeru", "chiba", "kenichi", "kourai" ], "sim": 1.0 }
-{ "DBLP": [ "christian", "poellabauer", "karsten", "schwan", "richard", "west" ], "CSX": [ "richard", "west", "karsten", "schwan", "christian", "poellabauer" ], "sim": 1.0 }
-{ "DBLP": [ "christian", "poellabauer", "karsten", "schwan", "richard", "west" ], "CSX": [ "christian", "poellabauer", "karsten", "schwan", "richard", "west" ], "sim": 1.0 }
+{ "DBLP": [ "michael", "engel", "bernd", "freisleben" ], "CSX": [ "michael", "engel", "bernd", "freisleben" ], "sim": 1.0 }
 { "DBLP": [ "michael", "hohmuth", "hendrik", "tews", "shane", "g", "stephens" ], "CSX": [ "michael", "hohmuth", "hendrik", "tews", "shane", "g", "stephens" ], "sim": 1.0 }
+{ "DBLP": [ "michel", "gien" ], "CSX": [ "michel", "gien" ], "sim": 1.0 }
+{ "DBLP": [ "michel", "neuhaus", "horst", "bunke" ], "CSX": [ "michel", "neuhaus", "horst", "bunke" ], "sim": 1.0 }
+{ "DBLP": [ "min", "xu", "xuxian", "jiang", "ravi", "s", "sandhu", "xinwen", "zhang" ], "CSX": [ "min", "xu", "ravi", "sandhu", "xuxian", "jiang", "xinwen", "zhang" ], "sim": 0.8888889 }
+{ "DBLP": [ "moonsang", "kwon", "yookun", "cho" ], "CSX": [ "moonsang", "kwon", "yookun", "cho" ], "sim": 1.0 }
+{ "DBLP": [ "nail", "akar", "khosrow", "sohraby" ], "CSX": [ "nail", "akar", "khosrow", "sohraby" ], "sim": 1.0 }
+{ "DBLP": [ "paul", "e", "mckenney", "jack", "slingwine", "phil", "krueger" ], "CSX": [ "paul", "mckenney", "jack", "slingwine", "phil", "krueger" ], "sim": 0.85714287 }
+{ "DBLP": [ "pavel", "p", "kuksa", "pai", "hsi", "huang", "vladimir", "pavlovic" ], "CSX": [ "pavel", "p", "kuksa", "pai", "hsi", "huang", "vladimir", "pavlovic" ], "sim": 1.0 }
+{ "DBLP": [ "peter", "druschel" ], "CSX": [ "peter", "druschel" ], "sim": 1.0 }
+{ "DBLP": [ "qun", "dai", "songcan", "chen" ], "CSX": [ "qun", "dai", "songcan", "chen" ], "sim": 1.0 }
+{ "DBLP": [ "r", "venkatesh", "babu", "patrick", "pérez", "patrick", "bouthemy" ], "CSX": [ "r", "venkatesh", "babu", "patrick", "pérez", "patrick", "bouthemy" ], "sim": 1.0 }
+{ "DBLP": [ "rafael", "serrano", "gotarredona", "teresa", "serrano", "gotarredona", "antonio", "acosta", "jimenez", "bernabé", "linares", "barranco" ], "CSX": [ "rafael", "serrano", "gotarredona", "teresa", "serrano", "gotarredona", "antonio", "acosta", "jiménez", "bernabé", "linares", "barranco" ], "sim": 0.84615386 }
+{ "DBLP": [ "robert", "jenssen", "torbjørn", "eltoft" ], "CSX": [ "robert", "jenssen", "torbjørn", "eltoft" ], "sim": 1.0 }
+{ "DBLP": [ "roland", "opfer" ], "CSX": [ "roland", "opfer" ], "sim": 1.0 }
+{ "DBLP": [ "ronald", "minnich", "matthew", "j", "sottile", "sung", "eun", "choi", "erik", "a", "hendriks", "jim", "mckie" ], "CSX": [ "ronald", "g", "minnich", "matthew", "j", "sottile", "sung", "eun", "choi", "erik", "hendriks", "jim", "mckie" ], "sim": 0.85714287 }
+{ "DBLP": [ "samuel", "g", "steckley", "shane", "g", "henderson" ], "CSX": [ "samuel", "g", "steckley", "shane", "g", "henderson" ], "sim": 1.0 }
+{ "DBLP": [ "sauro", "menchetti", "fabrizio", "costa", "paolo", "frasconi" ], "CSX": [ "sauro", "menchetti", "fabrizio", "costa", "paolo", "frasconi" ], "sim": 1.0 }
+{ "DBLP": [ "seung", "jean", "kim", "alessandro", "magnani", "stephen", "p", "boyd" ], "CSX": [ "seung", "jean", "kim", "alessandro", "magnani", "stephen", "boyd" ], "sim": 0.875 }
+{ "DBLP": [ "shiliang", "sun", "changshui", "zhang" ], "CSX": [ "shiliang", "sun", "changshui", "zhang" ], "sim": 1.0 }
+{ "DBLP": [ "shun", "ichi", "amari", "si", "wu" ], "CSX": [ "si", "wu", "shun", "ichi", "amari" ], "sim": 1.0 }
+{ "DBLP": [ "songcan", "chen", "daoqiang", "zhang" ], "CSX": [ "songcan", "chen", "daoqiang", "zhang" ], "sim": 1.0 }
 { "DBLP": [ "steven", "c", "h", "hoi", "rong", "jin", "michael", "r", "lyu" ], "CSX": [ "steven", "c", "h", "hoi", "rong", "jin", "jianke", "zhu", "michael", "r", "lyu" ], "sim": 0.8181818 }
 { "DBLP": [ "subhransu", "maji", "alexander", "c", "berg", "jitendra", "malik" ], "CSX": [ "subhransu", "maji", "alexander", "c", "berg", "jitendra", "malik" ], "sim": 1.0 }
-{ "DBLP": [ "maria", "florina", "balcan", "avrim", "blum", "santosh", "vempala" ], "CSX": [ "maria", "florina", "balcan", "avrim", "blum", "santosh", "vempala" ], "sim": 1.0 }
-{ "DBLP": [ "r", "venkatesh", "babu", "patrick", "pérez", "patrick", "bouthemy" ], "CSX": [ "r", "venkatesh", "babu", "patrick", "pérez", "patrick", "bouthemy" ], "sim": 1.0 }
-{ "DBLP": [ "pavel", "p", "kuksa", "pai", "hsi", "huang", "vladimir", "pavlovic" ], "CSX": [ "pavel", "p", "kuksa", "pai", "hsi", "huang", "vladimir", "pavlovic" ], "sim": 1.0 }
+{ "DBLP": [ "tatsuo", "nakajima", "hideyuki", "tokuda" ], "CSX": [ "hideyuki", "tokuda", "tatsuo", "nakajima" ], "sim": 1.0 }
+{ "DBLP": [ "tatsuo", "nakajima", "hideyuki", "tokuda" ], "CSX": [ "tatsuo", "nakajima", "hideyuki", "tokuda" ], "sim": 1.0 }
+{ "DBLP": [ "thomas", "röblitz", "frank", "mueller", "oliver", "bühn" ], "CSX": [ "thomas", "röblitz", "oliver", "bühn", "frank", "mueller" ], "sim": 1.0 }
+{ "DBLP": [ "tony", "van", "gestel", "bart", "baesens", "johan", "a", "k", "suykens", "dirk", "van", "den", "poel", "dirk", "emma", "baestaens", "marleen", "willekens" ], "CSX": [ "en", "bedrijfskunde", "gent", "tony", "van", "gestel", "bart", "baesens", "johan", "a", "k", "suykens", "dirk", "van", "den", "poel", "dirk", "emma", "baestaens", "marleen", "willekens" ], "sim": 0.85714287 }
 { "DBLP": [ "vikas", "sindhwani", "s", "sathiya", "keerthi", "olivier", "chapelle" ], "CSX": [ "olivier", "chapelle", "s", "sathiya", "keerthi", "vikas", "sindhwani" ], "sim": 1.0 }
-{ "DBLP": [ "khawar", "m", "zuberi", "padmanabhan", "pillai", "kang", "g", "shin" ], "CSX": [ "khawar", "m", "zuberi", "y", "padmanabhan", "pillai", "kang", "g", "shin" ], "sim": 0.8888889 }
-{ "DBLP": [ "arvind", "seshadri", "mark", "luk", "ning", "qu", "adrian", "perrig" ], "CSX": [ "arvind", "seshadri", "mark", "luk", "ning", "qu", "adrian", "perrig" ], "sim": 1.0 }
-{ "DBLP": [ "francis", "r", "bach", "romain", "thibaux", "michael", "i", "jordan" ], "CSX": [ "francis", "r", "bach", "romain", "thibaux", "michael", "i", "jordan" ], "sim": 1.0 }
-{ "DBLP": [ "arindam", "choudhury", "prasanth", "b", "nair", "andy", "j", "keane" ], "CSX": [ "prasanth", "b", "nair", "arindam", "choudhury", "andy", "j", "keane" ], "sim": 1.0 }
-{ "DBLP": [ "seung", "jean", "kim", "alessandro", "magnani", "stephen", "p", "boyd" ], "CSX": [ "seung", "jean", "kim", "alessandro", "magnani", "stephen", "boyd" ], "sim": 0.875 }
-{ "DBLP": [ "darrin", "p", "lewis", "tony", "jebara", "william", "stafford", "noble" ], "CSX": [ "darrin", "p", "lewis", "tony", "jebara", "william", "stafford", "noble" ], "sim": 1.0 }
-{ "DBLP": [ "min", "xu", "xuxian", "jiang", "ravi", "s", "sandhu", "xinwen", "zhang" ], "CSX": [ "min", "xu", "ravi", "sandhu", "xuxian", "jiang", "xinwen", "zhang" ], "sim": 0.8888889 }
+{ "DBLP": [ "vojislav", "kecman", "michael", "vogt", "te", "ming", "huang" ], "CSX": [ "vojislav", "kecman", "te", "ming", "huang", "michael", "vogt" ], "sim": 1.0 }
+{ "DBLP": [ "volker", "roth", "bernd", "fischer" ], "CSX": [ "volker", "roth", "bernd", "fischer" ], "sim": 1.0 }
+{ "DBLP": [ "w", "chen" ], "CSX": [ "w", "chen" ], "sim": 1.0 }
+{ "DBLP": [ "wim", "van", "de", "velde", "johan", "opsommer", "erik", "h", "d", "hollander" ], "CSX": [ "wim", "van", "de", "velde", "johan", "opsommer", "erik", "h", "d", "hollander" ], "sim": 1.0 }
+{ "DBLP": [ "xuanlong", "nguyen", "martin", "j", "wainwright", "michael", "i", "jordan" ], "CSX": [ "experimental", "design", "xuanlong", "nguyen", "martin", "j", "wainwright", "michael", "i", "jordan" ], "sim": 0.8 }
 { "DBLP": [ "xuanlong", "nguyen", "martin", "j", "wainwright", "michael", "i", "jordan" ], "CSX": [ "xuanlong", "nguyen", "martin", "j", "wainwright", "michael", "i", "jordan" ], "sim": 1.0 }
 { "DBLP": [ "xuanlong", "nguyen", "martin", "j", "wainwright", "michael", "i", "jordan" ], "CSX": [ "xuanlong", "nguyen", "xuanlong", "martin", "j", "wainwright", "michael", "i", "jordan" ], "sim": 0.8888889 }
-{ "DBLP": [ "xuanlong", "nguyen", "martin", "j", "wainwright", "michael", "i", "jordan" ], "CSX": [ "experimental", "design", "xuanlong", "nguyen", "martin", "j", "wainwright", "michael", "i", "jordan" ], "sim": 0.8 }
-{ "DBLP": [ "chunhua", "shen", "anton", "van", "den", "hengel", "michael", "j", "brooks" ], "CSX": [ "chunhua", "shen", "michael", "j", "brooks", "anton", "van", "den", "hengel" ], "sim": 1.0 }
-{ "DBLP": [ "chunhua", "shen", "anton", "van", "den", "hengel", "michael", "j", "brooks" ], "CSX": [ "chunhua", "shen", "anton", "van", "den", "hengel", "anthony", "dick", "michael", "j", "brooks" ], "sim": 0.8181818 }
-{ "DBLP": [ "johannes", "aßfalg", "karsten", "m", "borgwardt", "hans", "peter", "kriegel" ], "CSX": [ "johannes", "aßfalg", "karsten", "m", "borgwardt", "hans", "peter", "kriegel" ], "sim": 1.0 }
-{ "DBLP": [ "cheng", "soon", "ong", "alexander", "j", "smola", "robert", "c", "williamson" ], "CSX": [ "cheng", "soon", "ong", "er", "j", "smola", "robert", "c", "williamson" ], "sim": 0.8 }
-{ "DBLP": [ "cheng", "soon", "ong", "alexander", "j", "smola", "robert", "c", "williamson" ], "CSX": [ "cheng", "soon", "ong", "alexander", "j", "smola", "robert", "c", "williamson" ], "sim": 1.0 }
-{ "DBLP": [ "wim", "van", "de", "velde", "johan", "opsommer", "erik", "h", "d", "hollander" ], "CSX": [ "wim", "van", "de", "velde", "johan", "opsommer", "erik", "h", "d", "hollander" ], "sim": 1.0 }
-{ "DBLP": [ "francis", "r", "bach", "gert", "r", "g", "lanckriet", "michael", "i", "jordan" ], "CSX": [ "francis", "r", "bach", "gert", "r", "g", "lanckriet", "michael", "i", "jordan" ], "sim": 1.0 }
-{ "DBLP": [ "faisal", "n", "abu", "khzam", "michael", "a", "langston", "w", "henry", "suters" ], "CSX": [ "faisal", "n", "abu", "khzam", "michael", "a", "langston", "w", "henry", "suters" ], "sim": 1.0 }
-{ "DBLP": [ "kenji", "hisazumi", "tsuneo", "nakanishi", "teruaki", "kitasuka", "akira", "fukuda" ], "CSX": [ "kenji", "hisazumi", "teruaki", "kitasuka", "tsuneo", "nakanishi", "akira", "fukuda" ], "sim": 1.0 }
-{ "DBLP": [ "erik", "h", "w", "meijering", "karel", "j", "zuiderveld", "max", "a", "viergever" ], "CSX": [ "erik", "h", "w", "meijering", "karel", "j", "zuiderveld", "max", "a", "viergever" ], "sim": 1.0 }
 { "DBLP": [ "yoav", "etsion", "dan", "tsafrir", "scott", "kirkpatrick", "dror", "g", "feitelson" ], "CSX": [ "dan", "tsafrir", "yoav", "etsion", "dror", "g", "feitelson", "scott", "kirkpatrick" ], "sim": 1.0 }
-{ "DBLP": [ "holger", "fröhlich", "jörg", "k", "wegner", "florian", "sieker", "andreas", "zell" ], "CSX": [ "holger", "fröhlich", "jörg", "k", "wegner", "florian", "sieker", "andreas", "zell" ], "sim": 1.0 }
-{ "DBLP": [ "hyun", "wook", "jin", "sayantan", "sur", "lei", "chai", "dhabaleswar", "k", "panda" ], "CSX": [ "sayantan", "sur", "lei", "chai", "hyun", "wook", "jin", "dhabaleswar", "k", "panda", "sun", "microsystems" ], "sim": 0.8333333 }
-{ "DBLP": [ "hyun", "wook", "jin", "sayantan", "sur", "lei", "chai", "dhabaleswar", "k", "panda" ], "CSX": [ "sayantan", "sur", "hyun", "wook", "jin", "dhabaleswar", "k", "panda" ], "sim": 0.8 }
-{ "DBLP": [ "cheng", "soon", "ong", "xavier", "mary", "stéphane", "canu", "alexander", "j", "smola" ], "CSX": [ "cheng", "soon", "ong", "stéphane", "canu", "alexander", "j", "smola" ], "sim": 0.8 }
-{ "DBLP": [ "brian", "kulis", "sugato", "basu", "inderjit", "s", "dhillon", "raymond", "j", "mooney" ], "CSX": [ "brian", "kulis", "sugato", "basu", "inderjit", "dhillon", "raymond", "mooney" ], "sim": 0.8 }
-{ "DBLP": [ "andreas", "argyriou", "raphael", "hauser", "charles", "a", "micchelli", "massimiliano", "pontil" ], "CSX": [ "andreas", "argyriou", "raphael", "hauser", "charles", "a", "micchelli", "massimiliano", "pontil" ], "sim": 1.0 }
-{ "DBLP": [ "john", "penix", "willem", "visser", "eric", "engstrom", "aaron", "larson", "nicholas", "weininger" ], "CSX": [ "john", "penix", "willem", "visser", "seungjoon", "park", "eric", "engstrom", "aaron", "larson", "nicholas", "weininger" ], "sim": 0.8333333 }
-{ "DBLP": [ "john", "penix", "willem", "visser", "eric", "engstrom", "aaron", "larson", "nicholas", "weininger" ], "CSX": [ "john", "penix", "willem", "visser", "eric", "engstrom", "aaron", "larson", "nicholas", "weininger" ], "sim": 1.0 }
+{ "DBLP": [ "yoshisato", "yanagisawa", "kenichi", "kourai", "shigeru", "chiba" ], "CSX": [ "yoshisato", "yanagisawa", "shigeru", "chiba", "kenichi", "kourai" ], "sim": 1.0 }
+{ "DBLP": [ "yu", "chieh", "wu", "chia", "hui", "chang" ], "CSX": [ "chia", "hui", "chang", "yu", "chieh", "wu" ], "sim": 1.0 }
+{ "DBLP": [ "zhe", "wang", "songcan", "chen" ], "CSX": [ "zhe", "wang", "songcan", "chen" ], "sim": 1.0 }
+{ "DBLP": [ "zheng", "rong", "yang" ], "CSX": [ "zheng", "rong", "yang" ], "sim": 1.0 }
+{ "DBLP": [ "zhiqian", "wang", "jezekiel", "ben", "arie" ], "CSX": [ "jezekiel", "ben", "arie", "zhiqian", "wang" ], "sim": 1.0 }
+{ "DBLP": [ "zhiqian", "wang", "jezekiel", "ben", "arie" ], "CSX": [ "jezekiel", "ben", "arie", "zhiqian", "wang" ], "sim": 1.0 }

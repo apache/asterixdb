@@ -16,19 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.comparators;
 
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+use test;
 
-class AGenericAscBinaryComparator extends AbstractAGenericBinaryComparator {
-
-    AGenericAscBinaryComparator(IAType leftType, IAType rightType) {
-        super(leftType, rightType);
-    }
-
-    @Override
-    public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
-        return compare(leftType, b1, s1, l1, rightType, b2, s2, l2);
-    }
-}
+select value v from closedDs v order by v.dept_ids, v.id;

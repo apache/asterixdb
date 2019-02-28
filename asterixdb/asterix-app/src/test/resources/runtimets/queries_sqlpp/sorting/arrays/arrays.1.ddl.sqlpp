@@ -16,19 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.comparators;
 
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+drop  dataverse test if exists;
+create  dataverse test;
+use test;
 
-class AGenericAscBinaryComparator extends AbstractAGenericBinaryComparator {
+create type closedType as closed {
+id:int,
+name:string,
+dept_ids:[int]?
+};
 
-    AGenericAscBinaryComparator(IAType leftType, IAType rightType) {
-        super(leftType, rightType);
-    }
+create type openType as {
+id:int,
+name:string
+};
 
-    @Override
-    public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
-        return compare(leftType, b1, s1, l1, rightType, b2, s2, l2);
-    }
-}
+create dataset closedDs(closedType) primary key id;
+create dataset openDs(openType) primary key id;

@@ -21,25 +21,31 @@ package org.apache.asterix.dataflow.data.nontagged.comparators;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 
-class AGenericDescBinaryComparator extends AbstractAGenericBinaryComparator {
+import com.fasterxml.jackson.databind.JsonNode;
 
-    // interval asc and desc comparators are not the inverse of each other.
-    // thus, we need to specify the interval desc comparator factory for descending comparisons.
-    private final IBinaryComparator descIntervalComp =
-            AIntervalDescPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+public class AGenericAscBinaryComparatorFactory extends AbstractAGenericBinaryComparatorFactory {
 
-    AGenericDescBinaryComparator(IAType leftType, IAType rightType) {
+    private static final long serialVersionUID = 1L;
+
+    public AGenericAscBinaryComparatorFactory(IAType leftType, IAType rightType) {
         super(leftType, rightType);
     }
 
     @Override
-    public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
-        return -compare(leftType, b1, s1, l1, rightType, b2, s2, l2);
+    public IBinaryComparator createBinaryComparator() {
+        return new AGenericAscBinaryComparator(leftType, rightType);
     }
 
     @Override
-    protected int compareInterval(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
-        return -descIntervalComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        return convertToJson(registry, getClass(), serialVersionUID);
+    }
+
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
+            throws HyracksDataException {
+        return convertToObject(registry, json, true);
     }
 }

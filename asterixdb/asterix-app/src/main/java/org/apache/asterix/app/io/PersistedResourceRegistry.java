@@ -40,8 +40,8 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.ADurationPartialBi
 import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalAscPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalDescPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ALinePartialBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectDescBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AGenericAscBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AGenericDescBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.APoint3DPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.APointPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.APolygonPartialBinaryComparatorFactory;
@@ -189,8 +189,8 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         REGISTERED_CLASSES.put("AIntervalDescPartialBinaryComparatorFactory",
                 AIntervalDescPartialBinaryComparatorFactory.class);
         REGISTERED_CLASSES.put("ALinePartialBinaryComparatorFactory", ALinePartialBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("AObjectAscBinaryComparatorFactory", AObjectAscBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("AObjectDescBinaryComparatorFactory", AObjectDescBinaryComparatorFactory.class);
+        REGISTERED_CLASSES.put("AObjectAscBinaryComparatorFactory", AGenericAscBinaryComparatorFactory.class);
+        REGISTERED_CLASSES.put("AObjectDescBinaryComparatorFactory", AGenericDescBinaryComparatorFactory.class);
         REGISTERED_CLASSES.put("APoint3DPartialBinaryComparatorFactory", APoint3DPartialBinaryComparatorFactory.class);
         REGISTERED_CLASSES.put("APointPartialBinaryComparatorFactory", APointPartialBinaryComparatorFactory.class);
         REGISTERED_CLASSES.put("APolygonPartialBinaryComparatorFactory", APolygonPartialBinaryComparatorFactory.class);

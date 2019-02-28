@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
@@ -28,33 +28,16 @@ import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFactory {
+public abstract class AbstractAGenericBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
     // these fields can be null
-    private final IAType leftType;
-    private final IAType rightType;
-    private final boolean ascending;
+    protected final IAType leftType;
+    protected final IAType rightType;
 
-    public AObjectAscBinaryComparatorFactory(IAType leftType, IAType rightType) {
-        this(leftType, rightType, true);
-    }
-
-    protected AObjectAscBinaryComparatorFactory(IAType leftType, IAType rightType, boolean ascending) {
-        this.leftType = leftType;
-        this.rightType = rightType;
-        this.ascending = ascending;
-    }
-
-    @Override
-    public IBinaryComparator createBinaryComparator() {
-        return ascending ? new AGenericAscBinaryComparator(leftType, rightType)
-                : new AGenericDescBinaryComparator(leftType, rightType);
-    }
-
-    @Override
-    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
-        return convertToJson(registry, getClass(), serialVersionUID);
+    AbstractAGenericBinaryComparatorFactory(IAType leftType, IAType rightType) {
+        this.leftType = leftType == null ? null : TypeComputeUtils.getActualType(leftType);
+        this.rightType = rightType == null ? null : TypeComputeUtils.getActualType(rightType);
     }
 
     JsonNode convertToJson(IPersistedResourceRegistry registry, Class<? extends IJsonSerializable> clazz, long version)
@@ -69,18 +52,13 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
         return jsonNode;
     }
 
-    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
-            throws HyracksDataException {
-        return convertToObject(registry, json, true);
-    }
-
     static IJsonSerializable convertToObject(IPersistedResourceRegistry registry, JsonNode json, boolean asc)
             throws HyracksDataException {
         JsonNode leftNode = json.get("leftType");
         JsonNode rightNode = json.get("rightType");
         IAType leftType = leftNode == null || leftNode.isNull() ? null : (IAType) registry.deserialize(leftNode);
         IAType rightType = rightNode == null || rightNode.isNull() ? null : (IAType) registry.deserialize(rightNode);
-        return asc ? new AObjectAscBinaryComparatorFactory(leftType, rightType)
-                : new AObjectDescBinaryComparatorFactory(leftType, rightType);
+        return asc ? new AGenericAscBinaryComparatorFactory(leftType, rightType)
+                : new AGenericDescBinaryComparatorFactory(leftType, rightType);
     }
 }

@@ -19,18 +19,24 @@
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class AObjectDescBinaryComparatorFactory extends AObjectAscBinaryComparatorFactory {
+public class AGenericDescBinaryComparatorFactory extends AbstractAGenericBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    public AObjectDescBinaryComparatorFactory(IAType leftType, IAType rightType) {
-        super(leftType, rightType, false);
+    public AGenericDescBinaryComparatorFactory(IAType leftType, IAType rightType) {
+        super(leftType, rightType);
+    }
+
+    @Override
+    public IBinaryComparator createBinaryComparator() {
+        return new AGenericDescBinaryComparator(leftType, rightType);
     }
 
     @Override

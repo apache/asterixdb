@@ -25,8 +25,8 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.ADurationPartialBi
 import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalAscPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalDescPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ALinePartialBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectDescBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AGenericAscBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AGenericDescBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.APoint3DPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.APointPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.APolygonPartialBinaryComparatorFactory;
@@ -111,7 +111,7 @@ public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactory
     @Override
     public IBinaryComparatorFactory getBinaryComparatorFactory(Object leftType, Object rightType, boolean ascending) {
         // During a comparison, since proper type promotion among several numeric types are required,
-        // we will use AObjectAscBinaryComparatorFactory, instead of using a specific comparator
+        // we will use AGenericAscBinaryComparatorFactory, instead of using a specific comparator
         return createGenericBinaryComparatorFactory((IAType) leftType, (IAType) rightType, ascending);
     }
 
@@ -177,9 +177,9 @@ public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactory
     private IBinaryComparatorFactory createGenericBinaryComparatorFactory(IAType leftType, IAType rightType,
             boolean ascending) {
         if (ascending) {
-            return new AObjectAscBinaryComparatorFactory(leftType, rightType);
+            return new AGenericAscBinaryComparatorFactory(leftType, rightType);
         } else {
-            return new AObjectDescBinaryComparatorFactory(leftType, rightType);
+            return new AGenericDescBinaryComparatorFactory(leftType, rightType);
         }
     }
 
