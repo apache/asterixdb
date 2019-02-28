@@ -33,7 +33,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
-    private final AbstractAggregateFunctionDynamicDescriptor aggFuncDesc;
+    protected final AbstractAggregateFunctionDynamicDescriptor aggFuncDesc;
 
     protected AbstractScalarAggregateDescriptor(IFunctionDescriptor aggFuncDesc) {
         this.aggFuncDesc = (AbstractAggregateFunctionDynamicDescriptor) aggFuncDesc;

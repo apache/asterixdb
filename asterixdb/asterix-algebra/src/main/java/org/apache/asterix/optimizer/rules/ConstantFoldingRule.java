@@ -21,8 +21,10 @@ package org.apache.asterix.optimizer.rules;
 
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -94,14 +96,16 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
     // Function Identifier sets that the ConstantFolding rule should skip to apply.
     // Most of them are record-related functions.
-    private static final ImmutableSet<FunctionIdentifier> FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED = ImmutableSet.of(
-            BuiltinFunctions.RECORD_MERGE, BuiltinFunctions.ADD_FIELDS, BuiltinFunctions.REMOVE_FIELDS,
-            BuiltinFunctions.GET_RECORD_FIELDS, BuiltinFunctions.GET_RECORD_FIELD_VALUE,
-            BuiltinFunctions.FIELD_ACCESS_NESTED, BuiltinFunctions.GET_ITEM, BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
-            BuiltinFunctions.FIELD_ACCESS_BY_INDEX, BuiltinFunctions.CAST_TYPE, BuiltinFunctions.META,
-            BuiltinFunctions.META_KEY, BuiltinFunctions.RECORD_CONCAT, BuiltinFunctions.RECORD_CONCAT_STRICT,
-            BuiltinFunctions.RECORD_PAIRS, BuiltinFunctions.PAIRS, BuiltinFunctions.TO_ATOMIC,
-            BuiltinFunctions.TO_ARRAY);
+
+    private static final Set<FunctionIdentifier> FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED =
+            new HashSet<>(ImmutableSet.of(BuiltinFunctions.RECORD_MERGE, BuiltinFunctions.ADD_FIELDS,
+                    BuiltinFunctions.REMOVE_FIELDS, BuiltinFunctions.GET_RECORD_FIELDS,
+                    BuiltinFunctions.GET_RECORD_FIELD_VALUE, BuiltinFunctions.FIELD_ACCESS_NESTED,
+                    BuiltinFunctions.GET_ITEM, BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
+                    BuiltinFunctions.FIELD_ACCESS_BY_INDEX, BuiltinFunctions.CAST_TYPE, BuiltinFunctions.META,
+                    BuiltinFunctions.META_KEY, BuiltinFunctions.RECORD_CONCAT, BuiltinFunctions.RECORD_CONCAT_STRICT,
+                    BuiltinFunctions.RECORD_PAIRS, BuiltinFunctions.PAIRS, BuiltinFunctions.TO_ATOMIC,
+                    BuiltinFunctions.TO_ARRAY)); //Initialize with BUILTIN FUNC ID SET THAT SHOULD NOT BE APPLIED
 
     private static final Map<FunctionIdentifier, IAObject> FUNC_ID_TO_CONSTANT = ImmutableMap
             .of(BuiltinFunctions.NUMERIC_E, new ADouble(Math.E), BuiltinFunctions.NUMERIC_PI, new ADouble(Math.PI));
@@ -148,6 +152,10 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 BinaryIntegerInspector.FACTORY, ADMPrinterFactoryProvider.INSTANCE, MissingWriterFactory.INSTANCE, null,
                 new ExpressionRuntimeProvider(new QueryLogicalExpressionJobGen(metadataProvider.getFunctionManager())),
                 ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
+    }
+
+    public static void addNonFoldableFunction(FunctionIdentifier fid) {
+        FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED.add(fid);
     }
 
     @Override
