@@ -94,6 +94,7 @@
             <exclude>**/DEPENDENCIES</exclude>
           </excludes>
           <archive>
+            <addMavenDescriptor>false</addMavenDescriptor>
             <manifest>
               <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
               <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
@@ -641,6 +642,7 @@
             <artifactId>maven-jar-plugin</artifactId>
             <configuration>
               <archive>
+                <addMavenDescriptor>true</addMavenDescriptor>
                 <manifest>
                   <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                   <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>

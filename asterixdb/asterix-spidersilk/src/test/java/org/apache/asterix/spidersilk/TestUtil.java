@@ -18,16 +18,18 @@
  */
 package org.apache.asterix.spidersilk;
 
+import java.io.File;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import org.apache.asterix.test.common.TestExecutor;
+
 import me.arminb.spidersilk.SpiderSilkRunner;
 import me.arminb.spidersilk.dsl.entities.Deployment;
 import me.arminb.spidersilk.dsl.entities.PortType;
 import me.arminb.spidersilk.dsl.entities.ServiceType;
 import me.arminb.spidersilk.exceptions.RuntimeEngineException;
-import org.apache.asterix.test.common.TestExecutor;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
 
 public class TestUtil {
     private static String mavenVersion;
@@ -54,13 +56,12 @@ public class TestUtil {
     }
 
     public static String getMavenArtifactVersion() {
-        Properties mavenProperties = new Properties();
-        try {
-            mavenProperties.load(new FileInputStream("../asterix-server/target/maven-archiver/pom.properties"));
-            return mavenProperties.getProperty("version");
-        } catch (IOException e) {
-            throw new RuntimeException("Cannot open pom.properties to get the maven version");
-        }
+        Optional<String> version = Stream
+                .of(Objects.requireNonNull(new File("../asterix-server/target")
+                        .list((dir, name) -> name.matches("asterix-server-.*-binary-assembly.zip"))))
+                .map(foo -> foo.replace("asterix-server-", "")).map(foo -> foo.replace("-binary-assembly.zip", ""))
+                .findFirst();
+        return version.orElseThrow(IllegalStateException::new);
     }
 
     public static void waitForClusterToBeUp(SpiderSilkRunner runner) throws RuntimeEngineException {
