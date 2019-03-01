@@ -121,6 +121,11 @@
         <output-dir compare="Text">arrays</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="sorting">
+      <compilation-unit name="records">
+        <output-dir compare="Text">records</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="explain">
     <test-case FilePath="explain">
