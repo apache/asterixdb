@@ -565,7 +565,7 @@ public class NCConfig extends ControllerConfig {
     }
 
     public void setKeyStorePath(String keyStorePath) {
-        configManager.set(Option.KEY_STORE_PATH, keyStorePath);
+        configManager.set(nodeId, Option.KEY_STORE_PATH, keyStorePath);
     }
 
     public String getTrustStorePath() {
@@ -573,6 +573,6 @@ public class NCConfig extends ControllerConfig {
     }
 
     public void setTrustStorePath(String keyStorePath) {
-        configManager.set(CCConfig.Option.TRUST_STORE_PATH, keyStorePath);
+        configManager.set(nodeId, Option.TRUST_STORE_PATH, keyStorePath);
     }
 }
