@@ -1483,7 +1483,7 @@ public class BuiltinFunctions {
         addFunction(CREATE_QUERY_UID, ABinaryTypeComputer.INSTANCE, false);
         addFunction(UUID_CONSTRUCTOR, AUUIDTypeComputer.INSTANCE, true);
         addFunction(RANDOM, ADoubleTypeComputer.INSTANCE, false);
-        addFunction(RANDOM_WITH_SEED, ADoubleTypeComputer.INSTANCE, false);
+        addFunction(RANDOM_WITH_SEED, ADoubleTypeComputer.INSTANCE_NULLABLE, false);
 
         addFunction(DATE_CONSTRUCTOR, ADateTypeComputer.INSTANCE, true);
         addFunction(DATETIME_CONSTRUCTOR, ADateTimeTypeComputer.INSTANCE, true);

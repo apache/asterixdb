@@ -19,6 +19,7 @@
 package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -26,14 +27,19 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class ADoubleTypeComputer extends AbstractResultTypeComputer {
 
-    public static final ADoubleTypeComputer INSTANCE = new ADoubleTypeComputer();
+    public static final ADoubleTypeComputer INSTANCE = new ADoubleTypeComputer(false);
 
-    private ADoubleTypeComputer() {
+    public static final ADoubleTypeComputer INSTANCE_NULLABLE = new ADoubleTypeComputer(true);
+
+    private final IAType type;
+
+    private ADoubleTypeComputer(boolean nullable) {
+        IAType t = BuiltinType.ADOUBLE;
+        type = nullable ? AUnionType.createNullableType(t) : t;
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return BuiltinType.ADOUBLE;
+        return type;
     }
-
 }

@@ -87,8 +87,7 @@
  * Return Value:
     * A random number of type `double` between 0 and 1,
     * `missing` if the argument is a `missing` value,
-    * `null` if the argument is a `null` value,
-    * any other non-numeric input value will cause a type error.
+    * `null` if the argument is a `null` value or a non-numeric value.
 
  * Example:
 

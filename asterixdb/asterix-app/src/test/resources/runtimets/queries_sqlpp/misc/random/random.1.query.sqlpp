@@ -38,5 +38,7 @@
     select distinct value random(t)
   )),
 
-  "t5": [ random(missing) is missing, random(null) is null ]
+  "t5": [ random(missing) is missing, random(null) is null ],
+
+  "t6": [ random("ILLEGAL_TYPE") ]
 }
