@@ -114,8 +114,10 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
         int[] keysLeft = JobGenHelper.variablesToFieldIndexes(keysLeftBranch, inputSchemas[0]);
         int[] keysRight = JobGenHelper.variablesToFieldIndexes(keysRightBranch, inputSchemas[1]);
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
-        IBinaryHashFunctionFamily[] hashFunFamilies =
+        IBinaryHashFunctionFamily[] leftHashFunFamilies =
                 JobGenHelper.variablesToBinaryHashFunctionFamilies(keysLeftBranch, env, context);
+        IBinaryHashFunctionFamily[] rightHashFunFamilies =
+                JobGenHelper.variablesToBinaryHashFunctionFamilies(keysRightBranch, env, context);
         IBinaryComparatorFactory[] leftCompFactories = new IBinaryComparatorFactory[keysLeft.length];
         IBinaryComparatorFactory[] rightCompFactories = new IBinaryComparatorFactory[keysRight.length];
         IBinaryComparatorFactoryProvider bcfp = context.getBinaryComparatorFactoryProvider();
@@ -138,8 +140,8 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         IOperatorDescriptor opDesc;
 
-        opDesc = generateOptimizedHashJoinRuntime(context, inputSchemas, keysLeft, keysRight, hashFunFamilies,
-                leftCompFactories, rightCompFactories, predEvaluatorFactory, recDescriptor, spec);
+        opDesc = generateOptimizedHashJoinRuntime(context, inputSchemas, keysLeft, keysRight, leftHashFunFamilies,
+                rightHashFunFamilies, leftCompFactories, rightCompFactories, predEvaluatorFactory, recDescriptor, spec);
         opDesc.setSourceLocation(op.getSourceLocation());
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
@@ -150,15 +152,15 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
     }
 
     private IOperatorDescriptor generateOptimizedHashJoinRuntime(JobGenContext context, IOperatorSchema[] inputSchemas,
-            int[] keysLeft, int[] keysRight, IBinaryHashFunctionFamily[] hashFunFamilies,
-            IBinaryComparatorFactory[] leftCompFactories, IBinaryComparatorFactory[] rightCompFactories,
-            IPredicateEvaluatorFactory predEvaluatorFactory, RecordDescriptor recDescriptor,
-            IOperatorDescriptorRegistry spec) {
+            int[] keysLeft, int[] keysRight, IBinaryHashFunctionFamily[] leftHashFunFamilies,
+            IBinaryHashFunctionFamily[] rightHashFunFamilies, IBinaryComparatorFactory[] leftCompFactories,
+            IBinaryComparatorFactory[] rightCompFactories, IPredicateEvaluatorFactory predEvaluatorFactory,
+            RecordDescriptor recDescriptor, IOperatorDescriptorRegistry spec) {
         switch (kind) {
             case INNER:
                 return new OptimizedHybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(),
-                        maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, hashFunFamilies,
-                        leftCompFactories, rightCompFactories, recDescriptor,
+                        maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, leftHashFunFamilies,
+                        rightHashFunFamilies, leftCompFactories, rightCompFactories, recDescriptor,
                         new JoinMultiComparatorFactory(leftCompFactories, keysLeft, keysRight),
                         new JoinMultiComparatorFactory(rightCompFactories, keysRight, keysLeft), predEvaluatorFactory);
             case LEFT_OUTER:
@@ -167,8 +169,8 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                     nonMatchWriterFactories[j] = context.getMissingWriterFactory();
                 }
                 return new OptimizedHybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(),
-                        maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, hashFunFamilies,
-                        leftCompFactories, rightCompFactories, recDescriptor,
+                        maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, leftHashFunFamilies,
+                        rightHashFunFamilies, leftCompFactories, rightCompFactories, recDescriptor,
                         new JoinMultiComparatorFactory(leftCompFactories, keysLeft, keysRight),
                         new JoinMultiComparatorFactory(rightCompFactories, keysRight, keysLeft), predEvaluatorFactory,
                         true, nonMatchWriterFactories);

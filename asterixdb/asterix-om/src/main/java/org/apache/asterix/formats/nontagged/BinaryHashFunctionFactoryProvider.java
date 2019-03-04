@@ -21,6 +21,7 @@ package org.apache.asterix.formats.nontagged;
 import java.io.Serializable;
 
 import org.apache.asterix.dataflow.data.nontagged.hash.AMurmurHash3BinaryHashFunctionFamily;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
@@ -45,8 +46,8 @@ public class BinaryHashFunctionFactoryProvider implements IBinaryHashFunctionFac
 
             @Override
             public IBinaryHashFunction createBinaryHashFunction() {
-                // Actual numeric type promotion happens in the createBinaryHashFunction()
-                return AMurmurHash3BinaryHashFunctionFamily.INSTANCE.createBinaryHashFunction(0);
+                // actual numeric type promotion happens in the createBinaryHashFunction()
+                return AMurmurHash3BinaryHashFunctionFamily.createBinaryHashFunction((IAType) type, 0);
             }
         };
     }

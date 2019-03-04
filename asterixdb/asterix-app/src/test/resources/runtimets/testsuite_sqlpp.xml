@@ -3998,6 +3998,11 @@
   </test-group>
   <test-group name="group-by">
     <test-case FilePath="group-by">
+      <compilation-unit name="gby-array">
+        <output-dir compare="Text">gby-array</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
       <compilation-unit name="core-01">
         <output-dir compare="Text">core-01</output-dir>
       </compilation-unit>
@@ -4602,6 +4607,13 @@
     <test-case FilePath="inverted-index-join-noeqjoin">
       <compilation-unit name="word-jaccard-inline">
         <output-dir compare="Text">word-jaccard-inline</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="join">
+    <test-case FilePath="join">
+      <compilation-unit name="hash_join_array">
+        <output-dir compare="Text">hash_join_array</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -10322,6 +10334,11 @@
     </test-case>
   </test-group>
   <test-group name="distinct">
+    <test-case FilePath="distinct">
+      <compilation-unit name="array">
+        <output-dir compare="Text">array</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="distinct">
       <compilation-unit name="query-issue443">
         <output-dir compare="Text">query-issue443</output-dir>

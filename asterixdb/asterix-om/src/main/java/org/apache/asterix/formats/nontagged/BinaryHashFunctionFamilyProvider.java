@@ -16,19 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.formats.nontagged;
 
 import java.io.Serializable;
 
 import org.apache.asterix.dataflow.data.nontagged.hash.AMurmurHash3BinaryHashFunctionFamily;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.data.IBinaryHashFunctionFamilyProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 
 /**
- * We use a binary hash function that promotes numeric types (tinyint,smallint,integer,bigint,float) to double
- * if requested.
+ * We use a binary hash function that promotes numeric types (tinyint,smallint,integer,bigint,float) to double.
  * Non-numeric types will be hashed without type promotion.
  */
 public class BinaryHashFunctionFamilyProvider implements IBinaryHashFunctionFamilyProvider, Serializable {
@@ -37,13 +35,11 @@ public class BinaryHashFunctionFamilyProvider implements IBinaryHashFunctionFami
     public static final BinaryHashFunctionFamilyProvider INSTANCE = new BinaryHashFunctionFamilyProvider();
 
     private BinaryHashFunctionFamilyProvider() {
-
     }
 
     @Override
-    public IBinaryHashFunctionFamily getBinaryHashFunctionFamily(Object type) throws AlgebricksException {
+    public IBinaryHashFunctionFamily getBinaryHashFunctionFamily(Object type) {
         // AMurmurHash3BinaryHashFunctionFamily converts numeric type to double type before doing hash()
-        return AMurmurHash3BinaryHashFunctionFamily.INSTANCE;
+        return new AMurmurHash3BinaryHashFunctionFamily((IAType) type);
     }
-
 }

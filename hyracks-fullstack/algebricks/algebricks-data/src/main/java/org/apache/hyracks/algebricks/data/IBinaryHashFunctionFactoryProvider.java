@@ -18,9 +18,22 @@
  */
 package org.apache.hyracks.algebricks.data;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 
+/**
+ * Ideally, {@code IBinaryHashFunctionFactoryProvider} should be stateless and thread-safe. Also, it should be made into
+ * a singleton. However, this is implementation-dependent.
+ */
 public interface IBinaryHashFunctionFactoryProvider {
-    public IBinaryHashFunctionFactory getBinaryHashFunctionFactory(Object type) throws AlgebricksException;
+
+    /**
+     * Whether a singleton factory instance is returned or a new factory instance is created is implementation-specific.
+     * Therefore, no assumption should be made in this regard.
+     * TODO: some existing implementations create a new factory instance
+     *
+     * @param type the type of the data that will be hashed.
+     *
+     * @return a {@link IBinaryHashFunctionFactory} instance.
+     */
+    IBinaryHashFunctionFactory getBinaryHashFunctionFactory(Object type);
 }

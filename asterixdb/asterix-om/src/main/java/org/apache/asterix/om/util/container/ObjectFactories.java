@@ -16,16 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.dataflow.value;
+package org.apache.asterix.om.util.container;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.builders.AbvsBuilderFactory;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.data.std.api.IMutableValueStorage;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 
-/**
- * Ideally, {@code IBinaryHashFunction} should be stateless and thread-safe. Also, it should be made into a singleton.
- * However, this is implementation-dependent.
- * TODO: current implementations are stateful and are not thread-safe.
- */
-public interface IBinaryHashFunction {
+// TODO(ali): look for all classes creating factories and extract them to here
+public class ObjectFactories {
 
-    int hash(byte[] bytes, int offset, int length) throws HyracksDataException;
+    private ObjectFactories() {
+    }
+
+    public static final IObjectFactory<IPointable, Void> VOID_FACTORY = (type) -> new VoidPointable();
+    // TODO(ali): use lambda for the storage, too
+    public static final IObjectFactory<IMutableValueStorage, ATypeTag> STORAGE_FACTORY = new AbvsBuilderFactory();
 }

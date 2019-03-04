@@ -20,6 +20,18 @@ package org.apache.hyracks.api.dataflow.value;
 
 import java.io.Serializable;
 
+/**
+ * Ideally, {@code IBinaryHashFunctionFactory} should be stateless and thread-safe. Also, it should be made into
+ * a singleton. However, this is implementation-dependant.
+ * TODO: some existing implementations are not singleton
+ */
 public interface IBinaryHashFunctionFactory extends Serializable {
-    public IBinaryHashFunction createBinaryHashFunction();
+
+    /**
+     * Whether a singleton hash function instance is returned or a new hash function instance is created is
+     * implementation-specific. Therefore, no assumption should be made in this regard.
+     *
+     * @return a {@link IBinaryHashFunction} instance.
+     */
+    IBinaryHashFunction createBinaryHashFunction();
 }

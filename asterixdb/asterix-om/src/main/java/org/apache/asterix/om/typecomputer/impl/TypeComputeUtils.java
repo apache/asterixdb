@@ -20,6 +20,7 @@ package org.apache.asterix.om.typecomputer.impl;
 
 import java.util.List;
 
+import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -236,4 +237,9 @@ public class TypeComputeUtils {
         return null;
     }
 
+    // this is for complex types. it will return null when asking for a default type for a primitive tag
+    public static IAType getActualTypeOrOpen(IAType type, ATypeTag tag) {
+        IAType actualType = TypeComputeUtils.getActualType(type);
+        return actualType.getTypeTag() == ATypeTag.ANY ? DefaultOpenFieldType.getDefaultOpenFieldType(tag) : actualType;
+    }
 }

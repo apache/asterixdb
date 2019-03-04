@@ -16,19 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.om.util.container;
 
 /**
  * A factory interface to create objects.
  */
+@FunctionalInterface
 public interface IObjectFactory<E, T> {
 
     /**
-     * create an element of type E
+     * Creates an element of type E.
      *
-     * @param arg
-     * @return an E element
+     * @param arg additional argument to create the proper element.
+     *
+     * @return an E element.
      */
-    public E create(T arg);
+    E create(T arg);
 }

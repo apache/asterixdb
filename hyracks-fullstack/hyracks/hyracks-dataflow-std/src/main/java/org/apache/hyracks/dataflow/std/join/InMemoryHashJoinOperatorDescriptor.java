@@ -61,7 +61,8 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
     private static final long serialVersionUID = 1L;
     private final int[] keys0;
     private final int[] keys1;
-    private final IBinaryHashFunctionFactory[] hashFunctionFactories;
+    private final IBinaryHashFunctionFactory[] hashFunctionFactories0;
+    private final IBinaryHashFunctionFactory[] hashFunctionFactories1;
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final IPredicateEvaluatorFactory predEvaluatorFactory;
     private final boolean isLeftOuter;
@@ -71,13 +72,14 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
     private final int memSizeInFrames;
 
     public InMemoryHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys0, int[] keys1,
-            IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor, int tableSize, IPredicateEvaluatorFactory predEvalFactory,
-            int memSizeInFrames) {
+            IBinaryHashFunctionFactory[] hashFunctionFactories0, IBinaryHashFunctionFactory[] hashFunctionFactories1,
+            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor, int tableSize,
+            IPredicateEvaluatorFactory predEvalFactory, int memSizeInFrames) {
         super(spec, 2, 1);
         this.keys0 = keys0;
         this.keys1 = keys1;
-        this.hashFunctionFactories = hashFunctionFactories;
+        this.hashFunctionFactories0 = hashFunctionFactories0;
+        this.hashFunctionFactories1 = hashFunctionFactories1;
         this.comparatorFactories = comparatorFactories;
         this.predEvaluatorFactory = predEvalFactory;
         outRecDescs[0] = recordDescriptor;
@@ -88,13 +90,15 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
     }
 
     public InMemoryHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys0, int[] keys1,
-            IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
-            IPredicateEvaluatorFactory predEvalFactory, RecordDescriptor recordDescriptor, boolean isLeftOuter,
-            IMissingWriterFactory[] missingWriterFactories1, int tableSize, int memSizeInFrames) {
+            IBinaryHashFunctionFactory[] hashFunctionFactories0, IBinaryHashFunctionFactory[] hashFunctionFactories1,
+            IBinaryComparatorFactory[] comparatorFactories, IPredicateEvaluatorFactory predEvalFactory,
+            RecordDescriptor recordDescriptor, boolean isLeftOuter, IMissingWriterFactory[] missingWriterFactories1,
+            int tableSize, int memSizeInFrames) {
         super(spec, 2, 1);
         this.keys0 = keys0;
         this.keys1 = keys1;
-        this.hashFunctionFactories = hashFunctionFactories;
+        this.hashFunctionFactories0 = hashFunctionFactories0;
+        this.hashFunctionFactories1 = hashFunctionFactories1;
         this.comparatorFactories = comparatorFactories;
         this.predEvaluatorFactory = predEvalFactory;
         outRecDescs[0] = recordDescriptor;
@@ -182,9 +186,9 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                 @Override
                 public void open() throws HyracksDataException {
                     ITuplePartitionComputer hpc0 =
-                            new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories).createPartitioner(ctx);
+                            new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories0).createPartitioner(ctx);
                     ITuplePartitionComputer hpc1 =
-                            new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories).createPartitioner(ctx);
+                            new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories1).createPartitioner(ctx);
                     state = new HashBuildTaskState(ctx.getJobletContext().getJobId(),
                             new TaskId(getActivityId(), partition));
                     ISerializableTable table = new SerializableHashTable(tableSize, ctx, bufferManager);

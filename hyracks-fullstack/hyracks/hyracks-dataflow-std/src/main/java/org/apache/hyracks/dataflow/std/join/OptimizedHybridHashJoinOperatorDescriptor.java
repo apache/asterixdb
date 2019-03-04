@@ -123,7 +123,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private final double fudgeFactor;
     private final int[] probeKeys;
     private final int[] buildKeys;
-    private final IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories;
+    private final IBinaryHashFunctionFamily[] propHashFunctionFactories;
+    private final IBinaryHashFunctionFamily[] buildHashFunctionFactories;
     private final IBinaryComparatorFactory[] probCompFactories; //For in-mem HJ
     private final IBinaryComparatorFactory[] buildCompFactories; //For in-mem HJ
     private final ITuplePairComparatorFactory tuplePairComparatorFactoryProbe2Build; //For NLJ in probe
@@ -142,7 +143,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
     public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memSizeInFrames,
             int inputsize0, double factor, int[] keys0, int[] keys1,
-            IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories, IBinaryComparatorFactory[] probCompFactories,
+            IBinaryHashFunctionFamily[] propHashFunctionFactories,
+            IBinaryHashFunctionFamily[] buildHashFunctionFactories, IBinaryComparatorFactory[] probCompFactories,
             IBinaryComparatorFactory[] buildCompFactories, RecordDescriptor recordDescriptor,
             ITuplePairComparatorFactory tupPaircomparatorFactory01,
             ITuplePairComparatorFactory tupPaircomparatorFactory10, IPredicateEvaluatorFactory predEvaluatorFactory,
@@ -153,7 +155,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
         this.fudgeFactor = factor;
         this.probeKeys = keys0;
         this.buildKeys = keys1;
-        this.hashFunctionGeneratorFactories = hashFunctionGeneratorFactories;
+        this.propHashFunctionFactories = propHashFunctionFactories;
+        this.buildHashFunctionFactories = buildHashFunctionFactories;
         this.probCompFactories = probCompFactories;
         this.buildCompFactories = buildCompFactories;
         this.tuplePairComparatorFactoryProbe2Build = tupPaircomparatorFactory01;
@@ -166,13 +169,14 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
     public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memSizeInFrames,
             int inputsize0, double factor, int[] keys0, int[] keys1,
-            IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories, IBinaryComparatorFactory[] probCompFactories,
+            IBinaryHashFunctionFamily[] propHashFunctionFactories,
+            IBinaryHashFunctionFamily[] buildHashFunctionFactories, IBinaryComparatorFactory[] probCompFactories,
             IBinaryComparatorFactory[] buildCompFactories, RecordDescriptor recordDescriptor,
             ITuplePairComparatorFactory tupPaircomparatorFactory01,
             ITuplePairComparatorFactory tupPaircomparatorFactory10, IPredicateEvaluatorFactory predEvaluatorFactory) {
-        this(spec, memSizeInFrames, inputsize0, factor, keys0, keys1, hashFunctionGeneratorFactories, probCompFactories,
-                buildCompFactories, recordDescriptor, tupPaircomparatorFactory01, tupPaircomparatorFactory10,
-                predEvaluatorFactory, false, null);
+        this(spec, memSizeInFrames, inputsize0, factor, keys0, keys1, propHashFunctionFactories,
+                buildHashFunctionFactories, probCompFactories, buildCompFactories, recordDescriptor,
+                tupPaircomparatorFactory01, tupPaircomparatorFactory10, predEvaluatorFactory, false, null);
     }
 
     @Override
@@ -279,10 +283,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         ctx.getJobletContext().getJobId(), new TaskId(getActivityId(), partition));
 
                 ITuplePartitionComputer probeHpc =
-                        new FieldHashPartitionComputerFamily(probeKeys, hashFunctionGeneratorFactories)
-                                .createPartitioner(0);
+                        new FieldHashPartitionComputerFamily(probeKeys, propHashFunctionFactories).createPartitioner(0);
                 ITuplePartitionComputer buildHpc =
-                        new FieldHashPartitionComputerFamily(buildKeys, hashFunctionGeneratorFactories)
+                        new FieldHashPartitionComputerFamily(buildKeys, buildHashFunctionFactories)
                                 .createPartitioner(0);
                 boolean isFailed = false;
 
@@ -483,10 +486,10 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 private void joinPartitionPair(RunFileReader buildSideReader, RunFileReader probeSideReader,
                         int buildSizeInTuple, int probeSizeInTuple, int level) throws HyracksDataException {
                     ITuplePartitionComputer probeHpc =
-                            new FieldHashPartitionComputerFamily(probeKeys, hashFunctionGeneratorFactories)
+                            new FieldHashPartitionComputerFamily(probeKeys, propHashFunctionFactories)
                                     .createPartitioner(level);
                     ITuplePartitionComputer buildHpc =
-                            new FieldHashPartitionComputerFamily(buildKeys, hashFunctionGeneratorFactories)
+                            new FieldHashPartitionComputerFamily(buildKeys, buildHashFunctionFactories)
                                     .createPartitioner(level);
 
                     int frameSize = ctx.getInitialFrameSize();

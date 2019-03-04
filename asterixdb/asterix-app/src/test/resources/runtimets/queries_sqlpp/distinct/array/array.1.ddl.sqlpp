@@ -16,16 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.dataflow.value;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+// testing comparing and hashing fields whose values are arrays
+drop  dataverse test if exists;
+create  dataverse test;
+use test;
 
-/**
- * Ideally, {@code IBinaryHashFunction} should be stateless and thread-safe. Also, it should be made into a singleton.
- * However, this is implementation-dependent.
- * TODO: current implementations are stateful and are not thread-safe.
- */
-public interface IBinaryHashFunction {
+create type closedType as closed {
+id: int,
+name: string,
+dept_ids: [int]?
+};
 
-    int hash(byte[] bytes, int offset, int length) throws HyracksDataException;
-}
+create type openType as {
+id: int,
+name: string
+};
+
+create dataset closedDs(closedType) primary key id;
+create dataset openDs(openType) primary key id;

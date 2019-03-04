@@ -26,7 +26,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import org.apache.asterix.builders.AbvsBuilderFactory;
 import org.apache.asterix.dataflow.data.common.ListAccessorUtil;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
@@ -41,10 +40,9 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
-import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
-import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.asterix.om.util.container.ObjectFactories;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -57,7 +55,6 @@ import org.apache.hyracks.data.std.primitive.FloatPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
@@ -115,16 +112,11 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
     // RAW
     private final IBinaryComparator rawComp = RawBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-    // a storage to promote a value
-    private final ArrayBackedValueStorage castBuffer;
-
-    // TODO(ali): extract IObjectFactory factories into a separate unit and share
-    private static final IObjectFactory<IPointable, Void> VOID_FACTORY = (type) -> new VoidPointable();
-    private static final IObjectFactory<IMutableValueStorage, ATypeTag> STORAGE_FACTORY = new AbvsBuilderFactory();
-
     // these fields can be null
     protected final IAType leftType;
     protected final IAType rightType;
+    // a storage to promote a value
+    private final ArrayBackedValueStorage castBuffer;
     private final IObjectPool<IMutableValueStorage, ATypeTag> storageAllocator;
     private final IObjectPool<IPointable, Void> voidPointableAllocator;
     // used for record comparison, sorting field names
@@ -137,8 +129,8 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
         this.leftType = leftType;
         this.rightType = rightType;
         this.castBuffer = new ArrayBackedValueStorage();
-        this.storageAllocator = new ListObjectPool<>(STORAGE_FACTORY);
-        this.voidPointableAllocator = new ListObjectPool<>(VOID_FACTORY);
+        this.storageAllocator = new ListObjectPool<>(ObjectFactories.STORAGE_FACTORY);
+        this.voidPointableAllocator = new ListObjectPool<>(ObjectFactories.VOID_FACTORY);
         this.recordAllocator = new PointableAllocator();
         this.fieldNamesComparator = createFieldNamesComp(ascStrComp);
         this.heapAllocator = new ListObjectPool<>((type) -> new PriorityQueue<>(fieldNamesComparator));
@@ -360,8 +352,8 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
         }
         int leftNumItems = ListAccessorUtil.numberOfItems(b1, s1);
         int rightNumItems = ListAccessorUtil.numberOfItems(b2, s2);
-        IAType leftArrayType = getActualTypeOrOpen(leftType, ATypeTag.ARRAY);
-        IAType rightArrayType = getActualTypeOrOpen(rightType, ATypeTag.ARRAY);
+        IAType leftArrayType = TypeComputeUtils.getActualTypeOrOpen(leftType, ATypeTag.ARRAY);
+        IAType rightArrayType = TypeComputeUtils.getActualTypeOrOpen(rightType, ATypeTag.ARRAY);
         IAType leftItemType = ((AbstractCollectionType) leftArrayType).getItemType();
         IAType rightItemType = ((AbstractCollectionType) rightArrayType).getItemType();
         ATypeTag leftItemTag = leftItemType.getTypeTag();
@@ -399,8 +391,8 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
         if (leftType == null || rightType == null) {
             return rawComp.compare(b1, s1, l1, b2, s2, l2);
         }
-        ARecordType leftRecordType = (ARecordType) getActualTypeOrOpen(leftType, ATypeTag.OBJECT);
-        ARecordType rightRecordType = (ARecordType) getActualTypeOrOpen(rightType, ATypeTag.OBJECT);
+        ARecordType leftRecordType = (ARecordType) TypeComputeUtils.getActualTypeOrOpen(leftType, ATypeTag.OBJECT);
+        ARecordType rightRecordType = (ARecordType) TypeComputeUtils.getActualTypeOrOpen(rightType, ATypeTag.OBJECT);
         ARecordVisitablePointable leftRecord = recordAllocator.allocateRecordValue(leftRecordType);
         ARecordVisitablePointable rightRecord = recordAllocator.allocateRecordValue(rightRecordType);
         PriorityQueue<IVisitablePointable> leftNamesHeap = null, rightNamesHeap = null;
@@ -465,11 +457,6 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
                 heapAllocator.free(leftNamesHeap);
             }
         }
-    }
-
-    private static IAType getActualTypeOrOpen(IAType type, ATypeTag tag) {
-        IAType actualType = TypeComputeUtils.getActualType(type);
-        return actualType.getTypeTag() == ATypeTag.ANY ? DefaultOpenFieldType.getDefaultOpenFieldType(tag) : actualType;
     }
 
     private static int addToHeap(List<IVisitablePointable> recordFNames, List<IVisitablePointable> recordFValues,

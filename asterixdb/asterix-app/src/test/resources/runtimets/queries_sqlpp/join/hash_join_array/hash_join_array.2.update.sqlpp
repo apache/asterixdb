@@ -16,16 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.dataflow.value;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+use test;
 
-/**
- * Ideally, {@code IBinaryHashFunction} should be stateless and thread-safe. Also, it should be made into a singleton.
- * However, this is implementation-dependent.
- * TODO: current implementations are stateful and are not thread-safe.
- */
-public interface IBinaryHashFunction {
+load dataset closedDs1 using localfs (("path"="asterix_nc1://data/complex/arrays1.adm"),("format"="adm"));
+load dataset openDs1 using localfs (("path"="asterix_nc1://data/complex/arrays1.adm"),("format"="adm"));
 
-    int hash(byte[] bytes, int offset, int length) throws HyracksDataException;
-}
+load dataset closedDs2 using localfs (("path"="asterix_nc1://data/complex/arrays2.adm"),("format"="adm"));
+load dataset openDs2 using localfs (("path"="asterix_nc1://data/complex/arrays2.adm"),("format"="adm"));
