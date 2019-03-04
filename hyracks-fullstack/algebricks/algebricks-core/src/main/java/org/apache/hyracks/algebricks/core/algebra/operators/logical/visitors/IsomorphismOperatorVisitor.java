@@ -136,8 +136,9 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         AbstractLogicalOperator aop = (AbstractLogicalOperator) arg;
         // require the same physical operator, otherwise delivers different data
         // properties
-        if (aop.getOperatorTag() != LogicalOperatorTag.GROUP
-                || aop.getPhysicalOperator().getOperatorTag() != op.getPhysicalOperator().getOperatorTag()) {
+        if (aop.getOperatorTag() != LogicalOperatorTag.GROUP || op.getPhysicalOperator() == null
+                || aop.getPhysicalOperator() == null
+                || op.getPhysicalOperator().getOperatorTag() != aop.getPhysicalOperator().getOperatorTag()) {
             return Boolean.FALSE;
         }
 
@@ -471,7 +472,8 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         // require the same partition property
-        if (!(op.getPhysicalOperator().getOperatorTag() == aop.getPhysicalOperator().getOperatorTag())) {
+        if (op.getPhysicalOperator() == null || aop.getPhysicalOperator() == null
+                || op.getPhysicalOperator().getOperatorTag() != aop.getPhysicalOperator().getOperatorTag()) {
             return Boolean.FALSE;
         }
         variableMapping.clear();

@@ -4172,6 +4172,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
+      <compilation-unit name="listify-3">
+        <output-dir compare="Text">listify-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
       <compilation-unit name="redundant-var-in-groupby">
         <output-dir compare="Text">redundant-var-in-groupby</output-dir>
       </compilation-unit>

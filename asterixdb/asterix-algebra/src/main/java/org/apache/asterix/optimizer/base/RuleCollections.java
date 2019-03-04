@@ -135,6 +135,7 @@ import org.apache.hyracks.algebricks.rewriter.rules.SetAlgebricksPhysicalOperato
 import org.apache.hyracks.algebricks.rewriter.rules.SetExecutionModeRule;
 import org.apache.hyracks.algebricks.rewriter.rules.SimpleUnnestToProductRule;
 import org.apache.hyracks.algebricks.rewriter.rules.SwitchInnerJoinBranchRule;
+import org.apache.hyracks.algebricks.rewriter.rules.subplan.EliminateIsomorphicSubplanRule;
 import org.apache.hyracks.algebricks.rewriter.rules.subplan.EliminateSubplanRule;
 import org.apache.hyracks.algebricks.rewriter.rules.subplan.EliminateSubplanWithInputCardinalityOneRule;
 import org.apache.hyracks.algebricks.rewriter.rules.subplan.NestedSubplanToJoinRule;
@@ -224,6 +225,10 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new PushMapOperatorDownThroughProductRule());
         condPushDownAndJoinInference.add(new PushSubplanWithAggregateDownThroughProductRule());
         condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
+        // The following rule must run before PushAggregateIntoNestedSubplanRule
+        // (before common subplans diverge due to aggregate pushdown)
+        condPushDownAndJoinInference.add(new EliminateIsomorphicSubplanRule());
+
         condPushDownAndJoinInference.add(new AsterixExtractFunctionsFromJoinConditionRule());
 
         condPushDownAndJoinInference.add(new RemoveRedundantVariablesRule());
