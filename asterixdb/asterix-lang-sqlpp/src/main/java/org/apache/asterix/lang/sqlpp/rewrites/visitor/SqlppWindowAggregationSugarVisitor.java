@@ -36,7 +36,6 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
-import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -87,7 +86,6 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
         FunctionIdentifier winfi = FunctionMapUtil.getInternalWindowFunction(signature);
         if (winfi != null) {
             winExpr.setFunctionSignature(new FunctionSignature(winfi));
-            rewriteSpecificWindowFunctions(winfi, winExpr);
             if (BuiltinFunctions.builtinFunctionHasProperty(winfi,
                     BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG)) {
                 wrapAggregationArguments(winExpr, 1);
@@ -100,7 +98,7 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
         return super.visit(winExpr, arg);
     }
 
-    private void wrapAggregationArguments(WindowExpression winExpr, int limit) throws CompilationException {
+    void wrapAggregationArguments(WindowExpression winExpr, int limit) throws CompilationException {
         Set<VariableExpr> liveVars = scopeChecker.getCurrentScope().getLiveVariables();
 
         VariableExpr winVar = winExpr.getWindowVar();
@@ -138,28 +136,5 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
                 SqlppVariableUtil.addToFieldVariableList(varExpr, outFieldList);
             }
         }
-    }
-
-    /**
-     * Apply rewritings for specific window functions:
-     * <ul>
-     * <li>
-     * {@code ratio_to_report(x) -> ratio_to_report_impl(x, x)}.
-     * The first argument will then be rewritten by {@link #wrapAggregationArguments(WindowExpression, int)}.
-     * The remaining rewriting to {@code x/sum(x)} will be done by the expression to plan translator
-     * </li>
-     * </ul>
-     */
-    private void rewriteSpecificWindowFunctions(FunctionIdentifier winfi, WindowExpression winExpr)
-            throws CompilationException {
-        if (BuiltinFunctions.RATIO_TO_REPORT_IMPL.equals(winfi)) {
-            duplicateLastArgument(winExpr);
-        }
-    }
-
-    private void duplicateLastArgument(WindowExpression winExpr) throws CompilationException {
-        List<Expression> exprList = winExpr.getExprList();
-        Expression arg = exprList.get(exprList.size() - 1);
-        exprList.add((Expression) SqlppRewriteUtil.deepCopy(arg));
     }
 }
