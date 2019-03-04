@@ -88,6 +88,24 @@ public class FunctionMapUtil {
     }
 
     /**
+     * Whether a function signature is a SQL++ core aggregate function.
+     *
+     * @param fs,
+     *            the function signature.
+     * @return true if the function signature is a SQL++ core aggregate,
+     *         false otherwise.
+     */
+    public static boolean isCoreAggregateFunction(FunctionSignature fs) {
+        String internalName = getInternalCoreAggregateFunctionName(fs);
+        if (internalName != null) {
+            FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, internalName, fs.getArity());
+            IFunctionInfo finfo = FunctionUtil.getFunctionInfo(fi);
+            return finfo != null && BuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null;
+        }
+        return false;
+    }
+
+    /**
      * Maps a user invoked function signature to a system internal function signature.
      *
      * @param fs

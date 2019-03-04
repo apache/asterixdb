@@ -80,6 +80,9 @@ public final class SqlppWindowRewriteVisitor extends AbstractSqlppExpressionExtr
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, winExpr.getSourceLocation(), "");
             }
             winExpr.setExprList(newExprList);
+        } else if (!FunctionMapUtil.isCoreAggregateFunction(signature)) {
+            throw new CompilationException(ErrorCode.COMPILATION_EXPECTED_WINDOW_FUNCTION, winExpr.getSourceLocation(),
+                    signature.getName());
         }
 
         return winExpr;

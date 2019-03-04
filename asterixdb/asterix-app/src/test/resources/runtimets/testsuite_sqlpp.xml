@@ -9325,6 +9325,7 @@
         <expected-error>ASX0002: Type mismatch</expected-error>
         <expected-error>ASX1101: Unexpected ORDER BY clause in window expression</expected-error>
         <expected-error>ASX1037: Invalid query parameter compiler.windowmemory</expected-error>
+        <expected-error>ASX1102: Expected window or aggregate function, got: unknown_func</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
