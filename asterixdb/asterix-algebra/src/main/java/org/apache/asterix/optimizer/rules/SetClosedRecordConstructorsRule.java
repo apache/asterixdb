@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import static org.apache.asterix.common.config.GlobalConfig.ASTERIX_LOGGER;
-
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -43,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.AbstractConstVarFunVisitor;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
+import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.util.LogRedactionUtil;
 
@@ -137,7 +135,7 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                     }
                     if (allClosed) {
                         expr.setFunctionInfo(FunctionUtil.getFunctionInfo(BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR));
-                        ASTERIX_LOGGER.trace(() -> "Switching to CLOSED record constructor in "
+                        AlgebricksConfig.ALGEBRICKS_LOGGER.trace(() -> "Switching to CLOSED record constructor in "
                                 + LogRedactionUtil.userData(expr.toString()) + ".\n");
                         changed = true;
                     }

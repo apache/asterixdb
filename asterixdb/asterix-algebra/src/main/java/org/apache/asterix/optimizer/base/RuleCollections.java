@@ -293,6 +293,8 @@ public final class RuleCollections {
         consolidation.add(new InlineAssignIntoAggregateRule());
         consolidation.add(new AsterixIntroduceGroupByCombinerRule());
         consolidation.add(new IntroduceAggregateCombinerRule());
+        // Re-infer all types after introducing aggregate combiners
+        consolidation.add(new ReinferAllTypesRule());
         consolidation.add(new CountVarToCountOneRule());
         consolidation.add(new RemoveUnusedAssignAndAggregateRule());
         consolidation.add(new RemoveRedundantGroupByDecorVarsRule());

@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.rewriter.rules;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -144,21 +143,24 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
         List<LogicalVariable> gbyVars = gbyOp.getGbyVarList();
 
         // Backup nested plans since tryToPushSubplan(...) may mutate them.
-        List<ILogicalPlan> copiedNestedPlans = new ArrayList<>();
-        for (ILogicalPlan nestedPlan : gbyOp.getNestedPlans()) {
-            ILogicalPlan copiedNestedPlan = OperatorManipulationUtil.deepCopy(nestedPlan, gbyOp);
-            OperatorManipulationUtil.computeTypeEnvironment(copiedNestedPlan, context);
-            copiedNestedPlans.add(copiedNestedPlan);
-        }
+        List<ILogicalPlan> gbyNestedPlans = gbyOp.getNestedPlans();
+        List<ILogicalPlan> backupNestedPlans = new ArrayList<>(gbyNestedPlans);
 
-        for (ILogicalPlan p : gbyOp.getNestedPlans()) {
+        for (int i = 0, n = gbyNestedPlans.size(); i < n; i++) {
+            ILogicalPlan nestedPlan = gbyNestedPlans.get(i);
+
+            // Replace nested plan with its copy
+            ILogicalPlan p = OperatorManipulationUtil.deepCopy(nestedPlan, gbyOp);
+            OperatorManipulationUtil.computeTypeEnvironment(p, context);
+            gbyNestedPlans.set(i, p);
+
             // NOTE: tryToPushSubplan(...) can mutate the nested subplan p.
             Pair<Boolean, ILogicalPlan> bip = tryToPushSubplan(p, gbyOp, newGbyOp, bi, gbyVars, context);
             if (!bip.first) {
                 // For now, if we cannot push everything, give up.
-                // Resets the group-by operator with backup nested plans.
-                gbyOp.getNestedPlans().clear();
-                gbyOp.getNestedPlans().addAll(copiedNestedPlans);
+                // Resets the group-by operator with original nested plans.
+                gbyNestedPlans.clear();
+                gbyNestedPlans.addAll(backupNestedPlans);
                 return null;
             }
             ILogicalPlan pushedSubplan = bip.second;

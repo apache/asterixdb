@@ -3995,6 +3995,11 @@
         <output-dir compare="Text">query-ASTERIXDB-1626-2</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="global-aggregate">
+      <compilation-unit name="query-ASTERIXDB-2525">
+        <output-dir compare="Text">query-ASTERIXDB-2525</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="group-by">
     <test-case FilePath="group-by">
