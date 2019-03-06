@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.transaction.management.service.logging;
 
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategy;
@@ -30,11 +27,15 @@ import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.hyracks.api.util.InvokeUtil;
 
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.LongSets;
+
 public class LogManagerWithReplication extends LogManager {
 
     private IReplicationManager replicationManager;
     private IReplicationStrategy replicationStrategy;
-    private final Set<Long> replicatedTxn = ConcurrentHashMap.newKeySet();
+    private final LongSet replicatedTxn = LongSets.synchronize(new LongOpenHashSet());
 
     public LogManagerWithReplication(ITransactionSubsystem txnSubsystem) {
         super(txnSubsystem);
@@ -52,7 +53,7 @@ public class LogManagerWithReplication extends LogManager {
                 case LogType.FLUSH:
                 case LogType.FILTER:
                     shouldReplicate = replicationStrategy.isMatch(logRecord.getDatasetId());
-                    if (shouldReplicate && !replicatedTxn.contains(logRecord.getTxnId())) {
+                    if (shouldReplicate) {
                         replicatedTxn.add(logRecord.getTxnId());
                     }
                     break;
