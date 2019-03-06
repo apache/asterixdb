@@ -66,6 +66,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -2624,9 +2625,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 hcc.waitForCompletion(jobId);
                 printer.print(jobId);
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, clientRequest.getId());
+        } catch (Exception e) {
+            if (ExceptionUtils.getRootCause(e) instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, clientRequest.getId());
+            }
+            throw e;
         } finally {
             // complete async jobs after their job completes
             if (ResultDelivery.ASYNC == resultDelivery) {
