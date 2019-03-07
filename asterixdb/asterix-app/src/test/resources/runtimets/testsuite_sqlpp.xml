@@ -4008,6 +4008,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
+      <compilation-unit name="gby-record">
+        <output-dir compare="Text">gby-record</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
       <compilation-unit name="core-01">
         <output-dir compare="Text">core-01</output-dir>
       </compilation-unit>
@@ -4619,6 +4624,11 @@
     <test-case FilePath="join">
       <compilation-unit name="hash_join_array">
         <output-dir compare="Text">hash_join_array</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
+      <compilation-unit name="hash_join_record">
+        <output-dir compare="Text">hash_join_record</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -10342,6 +10352,11 @@
     <test-case FilePath="distinct">
       <compilation-unit name="array">
         <output-dir compare="Text">array</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="distinct">
+      <compilation-unit name="record">
+        <output-dir compare="Text">record</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="distinct">

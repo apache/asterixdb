@@ -18,18 +18,15 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
-import static org.apache.asterix.om.types.ATypeTag.SERIALIZED_MISSING_TYPE_TAG;
-import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
-
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 
 import org.apache.asterix.dataflow.data.common.ListAccessorUtil;
+import org.apache.asterix.dataflow.data.nontagged.CompareHashUtil;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
-import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
@@ -37,7 +34,6 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
 import org.apache.asterix.om.util.container.IObjectPool;
@@ -132,7 +128,7 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
         this.storageAllocator = new ListObjectPool<>(ObjectFactories.STORAGE_FACTORY);
         this.voidPointableAllocator = new ListObjectPool<>(ObjectFactories.VOID_FACTORY);
         this.recordAllocator = new PointableAllocator();
-        this.fieldNamesComparator = createFieldNamesComp(ascStrComp);
+        this.fieldNamesComparator = CompareHashUtil.createFieldNamesComp(ascStrComp);
         this.heapAllocator = new ListObjectPool<>((type) -> new PriorityQueue<>(fieldNamesComparator));
     }
 
@@ -407,8 +403,8 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
             rightNamesHeap = heapAllocator.allocate(null);
             leftNamesHeap.clear();
             rightNamesHeap.clear();
-            int numLeftValuedFields = addToHeap(leftFieldsNames, leftFieldsValues, leftNamesHeap);;
-            int numRightValuedFields = addToHeap(rightFieldsNames, rightFieldsValues, rightNamesHeap);
+            int numLeftValuedFields = CompareHashUtil.addToHeap(leftFieldsNames, leftFieldsValues, leftNamesHeap);
+            int numRightValuedFields = CompareHashUtil.addToHeap(rightFieldsNames, rightFieldsValues, rightNamesHeap);
             if (numLeftValuedFields == 0 && numRightValuedFields == 0) {
                 return 0;
             } else if (numLeftValuedFields == 0) {
@@ -431,12 +427,12 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
                     return result;
                 }
                 // then compare the values if the names are equal
-                leftFieldIdx = getIndex(leftFieldsNames, leftFieldName);
-                rightFieldIdx = getIndex(rightFieldsNames, rightFieldName);
+                leftFieldIdx = CompareHashUtil.getIndex(leftFieldsNames, leftFieldName);
+                rightFieldIdx = CompareHashUtil.getIndex(rightFieldsNames, rightFieldName);
                 leftFieldValue = leftFieldsValues.get(leftFieldIdx);
                 rightFieldValue = rightFieldsValues.get(rightFieldIdx);
-                leftFieldType = getType(leftRecordType, leftFieldIdx, leftFieldValue);
-                rightFieldType = getType(rightRecordType, rightFieldIdx, rightFieldValue);
+                leftFieldType = CompareHashUtil.getType(leftRecordType, leftFieldIdx, leftFieldValue);
+                rightFieldType = CompareHashUtil.getType(rightRecordType, rightFieldIdx, rightFieldValue);
 
                 result = compare(leftFieldType, leftFieldValue.getByteArray(), leftFieldValue.getStartOffset(),
                         leftFieldValue.getLength(), rightFieldType, rightFieldValue.getByteArray(),
@@ -457,57 +453,5 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
                 heapAllocator.free(leftNamesHeap);
             }
         }
-    }
-
-    private static int addToHeap(List<IVisitablePointable> recordFNames, List<IVisitablePointable> recordFValues,
-            PriorityQueue<IVisitablePointable> names) {
-        // do not add fields whose value is missing, they don't exist in reality
-        int length = recordFNames.size();
-        IVisitablePointable fieldValue;
-        int count = 0;
-        for (int i = 0; i < length; i++) {
-            fieldValue = recordFValues.get(i);
-            if (fieldValue.getByteArray()[fieldValue.getStartOffset()] != SERIALIZED_MISSING_TYPE_TAG) {
-                names.add(recordFNames.get(i));
-                count++;
-            }
-        }
-        return count;
-    }
-
-    private static int getIndex(List<IVisitablePointable> names, IVisitablePointable instance) {
-        int size = names.size();
-        for (int i = 0; i < size; i++) {
-            if (instance == names.get(i)) {
-                return i;
-            }
-        }
-        throw new IllegalStateException();
-    }
-
-    private static IAType getType(ARecordType recordType, int fieldIdx, IVisitablePointable fieldValue)
-            throws HyracksDataException {
-        IAType[] fieldTypes = recordType.getFieldTypes();
-        if (fieldIdx >= fieldTypes.length) {
-            byte tag = fieldValue.getByteArray()[fieldValue.getStartOffset()];
-            ATypeTag fieldRuntimeTag = VALUE_TYPE_MAPPING[tag];
-            return fieldRuntimeTag.isDerivedType() ? DefaultOpenFieldType.getDefaultOpenFieldType(fieldRuntimeTag)
-                    : TypeTagUtil.getBuiltinTypeByTag(fieldRuntimeTag);
-        }
-        return fieldTypes[fieldIdx];
-    }
-
-    private static Comparator<IVisitablePointable> createFieldNamesComp(IBinaryComparator stringComp) {
-        return new Comparator<IVisitablePointable>() {
-            @Override
-            public int compare(IVisitablePointable name1, IVisitablePointable name2) {
-                try {
-                    return stringComp.compare(name1.getByteArray(), name1.getStartOffset() + 1, name1.getLength() - 1,
-                            name2.getByteArray(), name2.getStartOffset() + 1, name2.getLength() - 1);
-                } catch (HyracksDataException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        };
     }
 }

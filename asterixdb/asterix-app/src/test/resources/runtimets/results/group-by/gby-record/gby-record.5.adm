@@ -1,0 +1,27 @@
+{ "count": 2 }
+{ "count": 3, "address": null }
+{ "count": 1, "address": { "state": "CO", "country": "USA", "street": null, "apt": null } }
+{ "count": 2, "address": { "state": "MO", "country": "USA", "street": "10th", "apt": null } }
+{ "count": 1, "address": { "state": "MN", "country": "USA", "street": "14th", "apt": 1, "zipcode": 78812 } }
+{ "count": 1, "address": { "state": "CA", "country": "USA", "street": "11th", "apt": 2, "zipcode": 92211 } }
+{ "count": 2, "address": { "state": "CA", "country": "USA", "street": "11th", "apt": 2, "zipcode": 92212 } }
+{ "count": 1, "address": { "state": "CA", "country": "USA", "street": "17th", "apt": 2, "zipcode": 92212 } }
+{ "count": 2, "address": { "state": "CO", "country": "USA", "street": "13th", "apt": 6, "zipcode": 44321 } }
+{ "count": 1, "address": { "state": "CO", "country": "USA", "street": "15th", "apt": 6, "zipcode": 44321 } }
+{ "count": 1, "address": { "state": "OR", "country": "USA", "street": null, "apt": 7, "zipcode": 97402 } }
+{ "count": 1, "address": { "state": "OR", "country": "USA", "street": "16th", "apt": 7, "zipcode": 97403 } }
+{ "count": 1, "address": { "state": "AL", "country": "USA", "street": "12th", "apt": 8, "zipcode": 33212 } }
+{ "count": 1, "address": { "state": "AL", "country": "USA", "street": "18th", "apt": 8, "zipcode": 33212 } }
+{ "count": 1, "address": { "state": "ON", "country": "Canada", "street": "10th", "apt": 9 } }
+{ "count": 1, "address": { "state": "MO", "country": "USA", "street": "10th", "apt": 9 } }
+{ "count": 1, "address": { "state": "MO", "country": "USA", "street": "18th", "apt": 9 } }
+{ "count": 2, "address": { "state": "BC", "country": "Canada" } }
+{ "count": 1, "address": { "state": "BC", "country": "Canada", "street": "16th" } }
+{ "count": 1, "address": { "state": "ON", "country": "Canada" } }
+{ "count": 3, "address": { "state": "AL", "country": "USA" } }
+{ "count": 3, "address": { "state": "CA", "country": "USA" } }
+{ "count": 1, "address": { "state": "CA", "country": "USA", "zipcode": 92212 } }
+{ "count": 3, "address": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 } }
+{ "count": 1, "address": { "state": "MN", "country": "USA", "street": "14th", "zipcode": 78812 } }
+{ "count": 2, "address": { "state": "OR", "country": "USA" } }
+{ "count": 1, "address": { "state": "OR", "country": "USA", "zipcode": 97444 } }

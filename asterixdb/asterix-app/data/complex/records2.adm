@@ -33,3 +33,11 @@
 {"id":33, "name":"Tiger", "address": {"street": null, "apt": null, "state": "CO", "country": "USA"} }
 {"id":34, "name":"Nicole", "address": {"street": null, "apt": 7, "state": "OR", "zipcode": 97402, "country": "USA"} }
 {"id":35, "name":"Adam", "address": {"street": "18th", "apt": 8, "state": "AL", "zipcode": 33212, "country": "USA"} }
+{"id":36, "name":"Smith", "address": {"street": "19th", "state": "IN", "zipcode": 88232, "country": "USA"} }
+{"id":37, "name":"James", "address": {"street": "10th", "apt": null, "state": "MO", "country": "USA"} }
+{"id":38, "name":"Charles", "address": {"state": "AL", "country": "USA"} }
+{"id":39, "name":"Flex", "address": {"street": "13th", "apt": 6, "state": "CO", "zipcode": 44321, "country": "USA"} }
+{"id":40, "name":"Simone", "address": {"state": "OR", "country": "USA"} }
+{"id":41, "name":"Roy", "address": {"state": "AL", "country": "USA"} }
+{"id":42, "name":"Albert", "address": {"state": "CA", "country": "USA"} }
+{"id":43, "name":"Jacob", "address": {"state": "CA", "country": "USA"} }
