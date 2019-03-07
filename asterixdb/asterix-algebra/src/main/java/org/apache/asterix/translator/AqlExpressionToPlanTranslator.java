@@ -175,7 +175,7 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
     }
 
     @Override
-    protected boolean expressionNeedsNoNesting(Expression expr) {
+    protected boolean expressionNeedsNoNesting(Expression expr) throws CompilationException {
         boolean isFLWOGR = expr.getKind() == Kind.FLWOGR_EXPRESSION;
         boolean letOnly = true;
         // No nesting is needed for a FLWOR expression that only has LETs and RETURN.

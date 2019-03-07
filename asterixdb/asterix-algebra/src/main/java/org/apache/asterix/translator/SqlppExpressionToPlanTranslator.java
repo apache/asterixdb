@@ -868,7 +868,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     }
 
     @Override
-    protected boolean expressionNeedsNoNesting(Expression expr) {
+    protected boolean expressionNeedsNoNesting(Expression expr) throws CompilationException {
         return super.expressionNeedsNoNesting(expr) || (translateInAsOr && expr.getKind() == Kind.QUANTIFIED_EXPRESSION
                 && isInOperatorWithStaticList((QuantifiedExpression) expr));
     }
@@ -884,7 +884,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     // "some $y in list_expr satisfies $x = $y"
     // Look for such quantified expression with a constant list_expr ([e1, e2, ... eN])
     // and translate it into "$x=e1 || $x=e2 || ... || $x=eN"
-    private boolean isInOperatorWithStaticList(QuantifiedExpression qe) {
+    private boolean isInOperatorWithStaticList(QuantifiedExpression qe) throws CompilationException {
         if (qe.getQuantifier() != QuantifiedExpression.Quantifier.SOME) {
             return false;
         }
@@ -906,10 +906,17 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         if (operandExprs.size() != 2) {
             return false;
         }
-        int varPos = operandExprs.indexOf(qp.getVarExpr());
+        VariableExpr varExpr = qp.getVarExpr();
+        int varPos = operandExprs.indexOf(varExpr);
         if (varPos < 0) {
             return false;
         }
+        Expression operandExpr = operandExprs.get(1 - varPos);
+
+        if (SqlppRewriteUtil.getFreeVariable(operandExpr).contains(varExpr)) {
+            return false;
+        }
+
         Expression inExpr = qp.getExpr();
         switch (inExpr.getKind()) {
             case LIST_CONSTRUCTOR_EXPRESSION:

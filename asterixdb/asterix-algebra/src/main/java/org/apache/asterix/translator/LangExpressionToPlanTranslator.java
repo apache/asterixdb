@@ -1667,7 +1667,7 @@ class LangExpressionToPlanTranslator
 
     }
 
-    protected boolean expressionNeedsNoNesting(Expression expr) {
+    protected boolean expressionNeedsNoNesting(Expression expr) throws CompilationException {
         Kind k = expr.getKind();
         boolean noNesting = k == Kind.LITERAL_EXPRESSION || k == Kind.LIST_CONSTRUCTOR_EXPRESSION
                 || k == Kind.RECORD_CONSTRUCTOR_EXPRESSION || k == Kind.VARIABLE_EXPRESSION;
