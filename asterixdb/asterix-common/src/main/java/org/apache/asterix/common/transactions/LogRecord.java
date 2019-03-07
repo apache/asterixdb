@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.transactions;
 
+import static org.apache.asterix.common.transactions.LogConstants.*;
+
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,14 +27,15 @@ import java.util.zip.CRC32;
 
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.tuples.SimpleTupleReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.storage.am.common.tuples.SimpleTupleReferenceV0;
 import org.apache.hyracks.storage.am.common.tuples.SimpleTupleWriter;
 
 /**
  * == LogRecordFormat ==
  * ---------------------------
  * [Header1] (10 bytes) : for all log types
- * LogSource(1)
+ * LogSourceVersion(1) : high 5 bits are used for log record version; low 3 bits are reserved for LogSource
  * LogType(1)
  * TxnId(8)
  * ---------------------------
@@ -60,15 +63,15 @@ import org.apache.hyracks.storage.am.common.tuples.SimpleTupleWriter;
  * ---------------------------
  */
 public class LogRecord implements ILogRecord {
-
     // ------------- fields in a log record (begin) ------------//
-    private byte logSource;
+    private int version = V_CURRENT;
+    private byte logSource = LogSource.LOCAL;
     private byte logType;
     private long txnId;
     private int datasetId;
-    private int PKHashValue;
-    private int PKValueSize;
-    private ITupleReference PKValue;
+    private int pKHashValue;
+    private int pKValueSize;
+    private ITupleReference pKValue;
     private long resourceId;
     private int resourcePartition;
     private int logSize;
@@ -86,15 +89,17 @@ public class LogRecord implements ILogRecord {
     private long flushingComponentMaxId;
     // ------------- fields in a log record (end) --------------//
     private final ILogMarkerCallback callback; // A callback for log mark operations
-    private int PKFieldCnt;
+    private int pKFieldCnt;
     private ITransactionContext txnCtx;
     private volatile long LSN;
     private final AtomicBoolean isFlushed;
     private final PrimaryKeyTupleReference readPKValue;
-    private final SimpleTupleReference readNewValue;
-    private final SimpleTupleReference readOldValue;
+    private final ITreeIndexTupleReference readNewValue;
+    private final ITreeIndexTupleReference readOldValue;
+    private ITreeIndexTupleReference readNewValueV0;
+    private ITreeIndexTupleReference readOldValueV0;
     private final CRC32 checksumGen;
-    private int[] PKFields;
+    private int[] pKFields;
     private PrimaryIndexOperationTracker opTracker;
 
     /**
@@ -113,7 +118,6 @@ public class LogRecord implements ILogRecord {
         readNewValue = SimpleTupleWriter.INSTANCE.createTupleReference();
         readOldValue = SimpleTupleWriter.INSTANCE.createTupleReference();
         checksumGen = new CRC32();
-        logSource = LogSource.LOCAL;
     }
 
     public LogRecord() {
@@ -121,7 +125,7 @@ public class LogRecord implements ILogRecord {
     }
 
     private void doWriteLogRecord(ByteBuffer buffer) {
-        buffer.put(logSource);
+        buffer.put((byte) (version << 2 | (logSource & 0xff)));
         buffer.put(logType);
         buffer.putLong(txnId);
         switch (logType) {
@@ -172,11 +176,11 @@ public class LogRecord implements ILogRecord {
     }
 
     private void writeEntityValue(ByteBuffer buffer) {
-        buffer.putInt(PKHashValue);
-        if (PKValueSize <= 0) {
+        buffer.putInt(pKHashValue);
+        if (pKValueSize <= 0) {
             throw new IllegalStateException("Primary Key Size is less than or equal to 0");
         }
-        buffer.putInt(PKValueSize);
+        buffer.putInt(pKValueSize);
         writePKValue(buffer);
     }
 
@@ -203,13 +207,13 @@ public class LogRecord implements ILogRecord {
 
     private void writePKValue(ByteBuffer buffer) {
         if (logSource == LogSource.LOCAL) {
-            for (int i = 0; i < PKFieldCnt; i++) {
-                buffer.put(PKValue.getFieldData(0), PKValue.getFieldStart(PKFields[i]),
-                        PKValue.getFieldLength(PKFields[i]));
+            for (int i = 0; i < pKFieldCnt; i++) {
+                buffer.put(pKValue.getFieldData(0), pKValue.getFieldStart(pKFields[i]),
+                        pKValue.getFieldLength(pKFields[i]));
             }
         } else {
-            // since PKValue is already serialized in remote logs, just put it into buffer
-            buffer.put(PKValue.getFieldData(0), 0, PKValueSize);
+            // since pKValue is already serialized in remote logs, just put it into buffer
+            buffer.put(pKValue.getFieldData(0), 0, pKValueSize);
         }
     }
 
@@ -253,7 +257,22 @@ public class LogRecord implements ILogRecord {
         if (buffer.remaining() < ALL_RECORD_HEADER_LEN) {
             return RecordReadStatus.TRUNCATED;
         }
-        logSource = buffer.get();
+        byte logSourceVersion = buffer.get();
+        logSource = (byte) (logSourceVersion & 0x3);
+        version = (byte) ((logSourceVersion & 0xff) >> 2);
+        ITreeIndexTupleReference readOld;
+        ITreeIndexTupleReference readNew;
+        if (version == V_0) {
+            if (readOldValueV0 == null) {
+                readOldValueV0 = new SimpleTupleReferenceV0();
+                readNewValueV0 = new SimpleTupleReferenceV0();
+            }
+            readOld = readOldValueV0;
+            readNew = readNewValueV0;
+        } else {
+            readOld = readOldValue;
+            readNew = readNewValue;
+        }
         logType = buffer.get();
         txnId = buffer.getLong();
         switch (logType) {
@@ -276,7 +295,7 @@ public class LogRecord implements ILogRecord {
             case LogType.JOB_COMMIT:
             case LogType.ABORT:
                 datasetId = -1;
-                PKHashValue = -1;
+                pKHashValue = -1;
                 computeAndSetLogSize();
                 break;
             case LogType.ENTITY_COMMIT:
@@ -288,7 +307,7 @@ public class LogRecord implements ILogRecord {
                 break;
             case LogType.UPDATE:
                 if (readEntityResource(buffer) && readEntityValue(buffer)) {
-                    return readUpdateInfo(buffer);
+                    return readUpdateInfo(buffer, readNew, readOld);
                 } else {
                     return RecordReadStatus.TRUNCATED;
                 }
@@ -316,7 +335,7 @@ public class LogRecord implements ILogRecord {
                 break;
             case LogType.FILTER:
                 if (readEntityResource(buffer)) {
-                    return readUpdateInfo(buffer);
+                    return readUpdateInfo(buffer, readNew, readOld);
                 } else {
                     return RecordReadStatus.TRUNCATED;
                 }
@@ -331,16 +350,16 @@ public class LogRecord implements ILogRecord {
         if (buffer.remaining() < ENTITY_VALUE_HEADER_LEN) {
             return false;
         }
-        PKHashValue = buffer.getInt();
-        PKValueSize = buffer.getInt();
+        pKHashValue = buffer.getInt();
+        pKValueSize = buffer.getInt();
         // attempt to read in the PK
-        if (buffer.remaining() < PKValueSize) {
+        if (buffer.remaining() < pKValueSize) {
             return false;
         }
-        if (PKValueSize <= 0) {
+        if (pKValueSize <= 0) {
             throw new IllegalStateException("Primary Key Size is less than or equal to 0");
         }
-        PKValue = readPKValue(buffer);
+        pKValue = readPKValue(buffer);
         return true;
     }
 
@@ -354,7 +373,8 @@ public class LogRecord implements ILogRecord {
         return true;
     }
 
-    private RecordReadStatus readUpdateInfo(ByteBuffer buffer) {
+    private RecordReadStatus readUpdateInfo(ByteBuffer buffer, ITreeIndexTupleReference newRead,
+            ITreeIndexTupleReference oldRead) {
         if (buffer.remaining() < UPDATE_LSN_HEADER + UPDATE_BODY_HEADER) {
             return RecordReadStatus.TRUNCATED;
         }
@@ -369,7 +389,7 @@ public class LogRecord implements ILogRecord {
             }
             return RecordReadStatus.TRUNCATED;
         }
-        newValue = readTuple(buffer, readNewValue, newValueFieldCount, newValueSize);
+        newValue = readTuple(buffer, newRead, newValueFieldCount, newValueSize);
         if (logSize > getUpdateLogSizeWithoutOldValue()) {
             // Prev Image exists
             if (buffer.remaining() < Integer.BYTES) {
@@ -383,7 +403,7 @@ public class LogRecord implements ILogRecord {
             if (buffer.remaining() < oldValueSize) {
                 return RecordReadStatus.TRUNCATED;
             }
-            oldValue = readTuple(buffer, readOldValue, oldValueFieldCount, oldValueSize);
+            oldValue = readTuple(buffer, oldRead, oldValueFieldCount, oldValueSize);
         } else {
             oldValueSize = 0;
             oldValue = null;
@@ -402,15 +422,15 @@ public class LogRecord implements ILogRecord {
     }
 
     private ITupleReference readPKValue(ByteBuffer buffer) {
-        if (buffer.position() + PKValueSize > buffer.limit()) {
+        if (buffer.position() + pKValueSize > buffer.limit()) {
             throw new BufferUnderflowException();
         }
-        readPKValue.reset(buffer.array(), buffer.position(), PKValueSize);
-        buffer.position(buffer.position() + PKValueSize);
+        readPKValue.reset(buffer.array(), buffer.position(), pKValueSize);
+        buffer.position(buffer.position() + pKValueSize);
         return readPKValue;
     }
 
-    private static ITupleReference readTuple(ByteBuffer srcBuffer, SimpleTupleReference destTuple, int fieldCnt,
+    private static ITupleReference readTuple(ByteBuffer srcBuffer, ITreeIndexTupleReference destTuple, int fieldCnt,
             int size) {
         if (srcBuffer.position() + size > srcBuffer.limit()) {
             throw new BufferUnderflowException();
@@ -424,9 +444,9 @@ public class LogRecord implements ILogRecord {
     @Override
     public void computeAndSetPKValueSize() {
         int i;
-        PKValueSize = 0;
-        for (i = 0; i < PKFieldCnt; i++) {
-            PKValueSize += PKValue.getFieldLength(PKFields[i]);
+        pKValueSize = 0;
+        for (i = 0; i < pKFieldCnt; i++) {
+            pKValueSize += pKValue.getFieldLength(pKFields[i]);
         }
     }
 
@@ -442,7 +462,7 @@ public class LogRecord implements ILogRecord {
     }
 
     private int getUpdateLogSizeWithoutOldValue() {
-        return UPDATE_LOG_BASE_SIZE + PKValueSize + newValueSize;
+        return UPDATE_LOG_BASE_SIZE + pKValueSize + newValueSize;
     }
 
     @Override
@@ -456,7 +476,7 @@ public class LogRecord implements ILogRecord {
                 logSize = JOB_TERMINATE_LOG_SIZE;
                 break;
             case LogType.ENTITY_COMMIT:
-                logSize = ENTITY_COMMIT_LOG_BASE_SIZE + PKValueSize;
+                logSize = ENTITY_COMMIT_LOG_BASE_SIZE + pKValueSize;
                 break;
             case LogType.FLUSH:
                 logSize = FLUSH_LOG_SIZE;
@@ -491,13 +511,14 @@ public class LogRecord implements ILogRecord {
         if (logType == LogType.ENTITY_COMMIT || logType == LogType.UPDATE) {
             builder.append(" DatasetId : ").append(datasetId);
             builder.append(" ResourcePartition : ").append(resourcePartition);
-            builder.append(" PKHashValue : ").append(PKHashValue);
-            builder.append(" PKFieldCnt : ").append(PKFieldCnt);
-            builder.append(" PKSize: ").append(PKValueSize);
+            builder.append(" PKHashValue : ").append(pKHashValue);
+            builder.append(" PKFieldCnt : ").append(pKFieldCnt);
+            builder.append(" PKSize: ").append(pKValueSize);
         }
         if (logType == LogType.UPDATE) {
             builder.append(" ResourceId : ").append(resourceId);
         }
+        builder.append(" Version : ").append(version);
         return builder.toString();
     }
 
@@ -557,12 +578,12 @@ public class LogRecord implements ILogRecord {
 
     @Override
     public int getPKHashValue() {
-        return PKHashValue;
+        return pKHashValue;
     }
 
     @Override
-    public void setPKHashValue(int PKHashValue) {
-        this.PKHashValue = PKHashValue;
+    public void setPKHashValue(int pKHashValue) {
+        this.pKHashValue = pKHashValue;
     }
 
     @Override
@@ -644,23 +665,23 @@ public class LogRecord implements ILogRecord {
 
     @Override
     public int getPKValueSize() {
-        return PKValueSize;
+        return pKValueSize;
     }
 
     @Override
     public ITupleReference getPKValue() {
-        return PKValue;
+        return pKValue;
     }
 
     @Override
     public void setPKFields(int[] primaryKeyFields) {
-        PKFields = primaryKeyFields;
-        PKFieldCnt = PKFields.length;
+        pKFields = primaryKeyFields;
+        pKFieldCnt = pKFields.length;
     }
 
     @Override
-    public void setPKValue(ITupleReference PKValue) {
-        this.PKValue = PKValue;
+    public void setPKValue(ITupleReference pKValue) {
+        this.pKValue = pKValue;
     }
 
     public PrimaryIndexOperationTracker getOpTracker() {
@@ -669,6 +690,11 @@ public class LogRecord implements ILogRecord {
 
     @Override
     public void setLogSource(byte logSource) {
+        if (logSource < LOG_SOURCE_MIN) {
+            throw new IllegalArgumentException("logSource underflow: " + logSource);
+        } else if (logSource > LOG_SOURCE_MAX) {
+            throw new IllegalArgumentException("logSource overflow: " + logSource);
+        }
         this.logSource = logSource;
     }
 
@@ -678,7 +704,7 @@ public class LogRecord implements ILogRecord {
     }
 
     public void setPKFieldCnt(int pKFieldCnt) {
-        PKFieldCnt = pKFieldCnt;
+        this.pKFieldCnt = pKFieldCnt;
     }
 
     public void setOpTracker(PrimaryIndexOperationTracker opTracker) {
@@ -781,5 +807,20 @@ public class LogRecord implements ILogRecord {
     @Override
     public void setFlushingComponentMaxId(long flushingComponentMaxId) {
         this.flushingComponentMaxId = flushingComponentMaxId;
+    }
+
+    @Override
+    public int getVersion() {
+        return version;
+    }
+
+    @Override
+    public void setVersion(int version) {
+        if (version < VERSION_MIN) {
+            throw new IllegalArgumentException("version underflow: " + version);
+        } else if (version > VERSION_MAX) {
+            throw new IllegalArgumentException("version overflow: " + version);
+        }
+        this.version = (byte) version;
     }
 }

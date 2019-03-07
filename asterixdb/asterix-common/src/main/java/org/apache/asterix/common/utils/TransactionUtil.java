@@ -58,15 +58,15 @@ public class TransactionUtil {
     }
 
     public static void formEntityCommitLogRecord(LogRecord logRecord, ITransactionContext txnCtx, int datasetId,
-            int PKHashValue, ITupleReference PKValue, int[] PKFields, int resourcePartition, byte entityCommitType) {
+            int pKHashValue, ITupleReference pKValue, int[] pKFields, int resourcePartition, byte entityCommitType) {
         logRecord.setTxnCtx(txnCtx);
         logRecord.setLogType(entityCommitType);
         logRecord.setTxnId(txnCtx.getTxnId().getId());
         logRecord.setDatasetId(datasetId);
-        logRecord.setPKHashValue(PKHashValue);
-        logRecord.setPKFieldCnt(PKFields.length);
-        logRecord.setPKValue(PKValue);
-        logRecord.setPKFields(PKFields);
+        logRecord.setPKHashValue(pKHashValue);
+        logRecord.setPKFieldCnt(pKFields.length);
+        logRecord.setPKValue(pKValue);
+        logRecord.setPKFields(pKFields);
         logRecord.setResourcePartition(resourcePartition);
         logRecord.computeAndSetPKValueSize();
         logRecord.computeAndSetLogSize();

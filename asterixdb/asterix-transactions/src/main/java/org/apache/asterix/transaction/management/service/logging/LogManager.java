@@ -19,7 +19,6 @@
 package org.apache.asterix.transaction.management.service.logging;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
@@ -47,6 +46,7 @@ import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
+import org.apache.asterix.common.transactions.LogConstants;
 import org.apache.asterix.common.transactions.LogManagerProperties;
 import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
@@ -83,8 +83,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private FileChannel appendChannel;
     private ILogBuffer appendPage;
     private LogFlusher logFlusher;
-    private Future<? extends Object> futureLogFlusher;
-    protected LinkedBlockingQueue<ILogRecord> flushLogsQ;
+    private Future<?> futureLogFlusher;
+    private LinkedBlockingQueue<ILogRecord> flushLogsQ;
     private long currentLogFileId;
 
     public LogManager(ITransactionSubsystem txnSubsystem) {
@@ -448,15 +448,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         if (!fileLogDir.isDirectory()) {
             throw new IllegalStateException("log dir " + logDir + " exists but it is not a directory");
         }
-        logFileNames = fileLogDir.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                if (name.startsWith(logFilePrefix)) {
-                    return true;
-                }
-                return false;
-            }
-        });
+        logFileNames = fileLogDir.list((dir, name) -> name.startsWith(logFilePrefix));
         if (logFileNames == null) {
             throw new IllegalStateException("listing of log dir (" + logDir + ") files returned null. "
                     + "Either an IO error occurred or the dir was just deleted by another process/thread");
@@ -627,7 +619,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
 class LogFlusher implements Callable<Boolean> {
     private static final Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger();
-    private static final ILogBuffer POISON_PILL = new LogBuffer(null, ILogRecord.JOB_TERMINATE_LOG_SIZE, null);
+    private static final ILogBuffer POISON_PILL = new LogBuffer(null, LogConstants.JOB_TERMINATE_LOG_SIZE, null);
     private final LogManager logMgr;//for debugging
     private final LinkedBlockingQueue<ILogBuffer> emptyQ;
     private final LinkedBlockingQueue<ILogBuffer> flushQ;

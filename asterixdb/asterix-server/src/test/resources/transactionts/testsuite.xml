@@ -163,6 +163,12 @@
         <!-- <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error> -->
       </compilation-unit>
     </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="large_object_100K">
+        <output-dir compare="Text">large_object_100K</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 
   <test-group name="recovery_ddl">

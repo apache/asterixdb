@@ -239,37 +239,37 @@ public class LogReader implements ILogReader {
             throw new ACIDException(e);
         }
 
-        ByteBuffer readBuffer = this.readBuffer;
+        readRecord(lsn);
+        logRecord.setLSN(readLSN);
+        readLSN += logRecord.getLogSize();
+        return logRecord;
+    }
+
+    private void readRecord(long lsn) {
+        ByteBuffer buffer = this.readBuffer;
         while (true) {
-            RecordReadStatus status = logRecord.readLogRecord(readBuffer);
+            RecordReadStatus status = logRecord.readLogRecord(buffer);
             switch (status) {
-                case LARGE_RECORD: {
-                    readBuffer = ByteBuffer.allocate(logRecord.getLogSize());
-                    fillLogReadBuffer(logRecord.getLogSize(), readBuffer);
+                case LARGE_RECORD:
+                    buffer = ByteBuffer.allocate(logRecord.getLogSize());
+                    fillLogReadBuffer(logRecord.getLogSize(), buffer);
                     //now see what we have in the refilled buffer
-                    continue;
-                }
-                case TRUNCATED: {
+                    break;
+                case TRUNCATED:
                     if (!fillLogReadBuffer()) {
                         throw new IllegalStateException(
                                 "Could not read LSN(" + lsn + ") from log file id " + logFile.getLogFileId());
                     }
                     //now read the complete log record
-                    continue;
-                }
-                case BAD_CHKSUM: {
-                    throw new ACIDException("Log record has incorrect checksum");
-                }
-                case OK:
                     break;
+                case BAD_CHKSUM:
+                    throw new ACIDException("Log record has incorrect checksum");
+                case OK:
+                    return;
                 default:
                     throw new IllegalStateException("Unexpected log read status: " + status);
             }
-            break;
         }
-        logRecord.setLSN(readLSN);
-        readLSN += logRecord.getLogSize();
-        return logRecord;
     }
 
     private void getLogFile() {

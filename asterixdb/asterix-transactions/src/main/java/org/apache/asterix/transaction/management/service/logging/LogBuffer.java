@@ -31,6 +31,7 @@ import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ILogRequester;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
+import org.apache.asterix.common.transactions.LogConstants;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
@@ -74,7 +75,7 @@ public class LogBuffer implements ILogBuffer {
         full = new AtomicBoolean(false);
         appendOffset = 0;
         flushOffset = 0;
-        syncCommitQ = new LinkedBlockingQueue<>(logPageSize / ILogRecord.JOB_TERMINATE_LOG_SIZE);
+        syncCommitQ = new LinkedBlockingQueue<>(logPageSize / LogConstants.JOB_TERMINATE_LOG_SIZE);
         flushQ = new LinkedBlockingQueue<>();
         remoteJobsQ = new LinkedBlockingQueue<>();
         reusableTxnId = new MutableTxnId(-1);

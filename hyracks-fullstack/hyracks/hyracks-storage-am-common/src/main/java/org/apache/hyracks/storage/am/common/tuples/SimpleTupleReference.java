@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.storage.am.common.tuples;
 
-import org.apache.hyracks.data.std.primitive.ShortPointable;
+import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
@@ -71,10 +71,10 @@ public class SimpleTupleReference implements ITreeIndexTupleReference {
     @Override
     public int getFieldLength(int fIdx) {
         if (fIdx == 0) {
-            return ShortPointable.getShort(buf, tupleStartOff + nullFlagsBytes);
+            return IntegerPointable.getInteger(buf, tupleStartOff + nullFlagsBytes);
         } else {
-            return ShortPointable.getShort(buf, tupleStartOff + nullFlagsBytes + fIdx * 2)
-                    - ShortPointable.getShort(buf, tupleStartOff + nullFlagsBytes + ((fIdx - 1) * 2));
+            return IntegerPointable.getInteger(buf, tupleStartOff + nullFlagsBytes + fIdx * Integer.BYTES)
+                    - IntegerPointable.getInteger(buf, tupleStartOff + nullFlagsBytes + ((fIdx - 1) * Integer.BYTES));
         }
     }
 
@@ -84,7 +84,7 @@ public class SimpleTupleReference implements ITreeIndexTupleReference {
             return tupleStartOff + nullFlagsBytes + fieldSlotsBytes;
         } else {
             return tupleStartOff + nullFlagsBytes + fieldSlotsBytes
-                    + ShortPointable.getShort(buf, tupleStartOff + nullFlagsBytes + ((fIdx - 1) * 2));
+                    + IntegerPointable.getInteger(buf, tupleStartOff + nullFlagsBytes + ((fIdx - 1) * Integer.BYTES));
         }
     }
 
@@ -93,12 +93,12 @@ public class SimpleTupleReference implements ITreeIndexTupleReference {
     }
 
     protected int getFieldSlotsBytes() {
-        return fieldCount * 2;
+        return fieldCount * Integer.BYTES;
     }
 
     @Override
     public int getTupleSize() {
         return nullFlagsBytes + fieldSlotsBytes
-                + ShortPointable.getShort(buf, tupleStartOff + nullFlagsBytes + (fieldCount - 1) * 2);
+                + IntegerPointable.getInteger(buf, tupleStartOff + nullFlagsBytes + (fieldCount - 1) * Integer.BYTES);
     }
 }

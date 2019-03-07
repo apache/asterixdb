@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.common.tuples;
 
 import java.nio.ByteBuffer;
 
+import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
@@ -33,12 +34,6 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
     public static final SimpleTupleWriter INSTANCE = new SimpleTupleWriter();
 
     private SimpleTupleWriter() {
-    }
-
-    // Write short in little endian to target byte array at given offset.
-    private static void writeShortL(short s, byte[] buf, int targetOff) {
-        buf[targetOff] = (byte) (s >> 8);
-        buf[targetOff + 1] = (byte) (s >> 0);
     }
 
     @Override
@@ -83,7 +78,7 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
             System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf, runner, tuple.getFieldLength(i));
             fieldEndOff += tuple.getFieldLength(i);
             runner += tuple.getFieldLength(i);
-            writeShortL((short) fieldEndOff, targetBuf, targetOff + nullFlagsBytes + i * 2);
+            IntegerPointable.setInteger(targetBuf, targetOff + nullFlagsBytes + i * Integer.BYTES, fieldEndOff);
         }
         return runner - targetOff;
     }
@@ -103,7 +98,8 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
             System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf, runner, tuple.getFieldLength(i));
             fieldEndOff += tuple.getFieldLength(i);
             runner += tuple.getFieldLength(i);
-            writeShortL((short) fieldEndOff, targetBuf, targetOff + nullFlagsBytes + fieldCounter * 2);
+            IntegerPointable.setInteger(targetBuf, targetOff + nullFlagsBytes + fieldCounter * Integer.BYTES,
+                    fieldEndOff);
             fieldCounter++;
         }
 
@@ -115,7 +111,7 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
     }
 
     protected int getFieldSlotsBytes(ITupleReference tuple) {
-        return tuple.getFieldCount() * 2;
+        return tuple.getFieldCount() * Integer.BYTES;
     }
 
     protected int getNullFlagsBytes(ITupleReference tuple, int startField, int numFields) {
@@ -123,7 +119,7 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
     }
 
     protected int getFieldSlotsBytes(ITupleReference tuple, int startField, int numFields) {
-        return numFields * 2;
+        return numFields * Integer.BYTES;
     }
 
     @Override

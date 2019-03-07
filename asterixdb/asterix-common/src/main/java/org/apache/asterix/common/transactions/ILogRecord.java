@@ -31,42 +31,6 @@ public interface ILogRecord {
         LARGE_RECORD
     }
 
-    int CHKSUM_LEN = Long.BYTES;
-    int FLDCNT_LEN = Integer.BYTES;
-    int DS_LEN = Integer.BYTES;
-    int LOG_SOURCE_LEN = Byte.BYTES;
-    int LOGRCD_SZ_LEN = Integer.BYTES;
-    int NEWOP_LEN = Byte.BYTES;
-    int NEWVALSZ_LEN = Integer.BYTES;
-    int PKHASH_LEN = Integer.BYTES;
-    int PKSZ_LEN = Integer.BYTES;
-    int PRVLSN_LEN = Long.BYTES;
-    int RS_PARTITION_LEN = Integer.BYTES;
-    int RSID_LEN = Long.BYTES;
-    int SEQ_NUM_LEN = Long.BYTES;
-    int TYPE_LEN = Byte.BYTES;
-    int UUID_LEN = Long.BYTES;
-    int FLUSHING_COMPONENT_MINID_LEN = Long.BYTES;
-    int FLUSHING_COMPONENT_MAXID_LEN = Long.BYTES;
-
-    int ALL_RECORD_HEADER_LEN = LOG_SOURCE_LEN + TYPE_LEN + TxnId.BYTES;
-    int ENTITY_RESOURCE_HEADER_LEN = RS_PARTITION_LEN + DatasetId.BYTES;
-    int ENTITY_VALUE_HEADER_LEN = PKHASH_LEN + PKSZ_LEN;
-    int UPDATE_LSN_HEADER = RSID_LEN + LOGRCD_SZ_LEN;
-    int UPDATE_BODY_HEADER = FLDCNT_LEN + NEWOP_LEN + NEWVALSZ_LEN;
-
-    int JOB_TERMINATE_LOG_SIZE = ALL_RECORD_HEADER_LEN + CHKSUM_LEN;
-    int ENTITY_COMMIT_LOG_BASE_SIZE =
-            ALL_RECORD_HEADER_LEN + ENTITY_RESOURCE_HEADER_LEN + ENTITY_VALUE_HEADER_LEN + CHKSUM_LEN;
-    int UPDATE_LOG_BASE_SIZE = ENTITY_COMMIT_LOG_BASE_SIZE + UPDATE_LSN_HEADER + UPDATE_BODY_HEADER;
-    int FILTER_LOG_BASE_SIZE =
-            ALL_RECORD_HEADER_LEN + ENTITY_RESOURCE_HEADER_LEN + UPDATE_BODY_HEADER + UPDATE_LSN_HEADER + CHKSUM_LEN;
-    int FLUSH_LOG_SIZE = ALL_RECORD_HEADER_LEN + DS_LEN + RS_PARTITION_LEN + FLUSHING_COMPONENT_MINID_LEN
-            + FLUSHING_COMPONENT_MAXID_LEN + CHKSUM_LEN;
-    int WAIT_LOG_SIZE = ALL_RECORD_HEADER_LEN + CHKSUM_LEN;
-    int MARKER_BASE_LOG_SIZE =
-            ALL_RECORD_HEADER_LEN + CHKSUM_LEN + DS_LEN + RS_PARTITION_LEN + PRVLSN_LEN + LOGRCD_SZ_LEN;
-
     RecordReadStatus readLogRecord(ByteBuffer buffer);
 
     void writeLogRecord(ByteBuffer buffer);
@@ -93,7 +57,7 @@ public interface ILogRecord {
 
     int getPKHashValue();
 
-    void setPKHashValue(int PKHashValue);
+    void setPKHashValue(int pkHashValue);
 
     long getResourceId();
 
@@ -133,7 +97,7 @@ public interface ILogRecord {
 
     void computeAndSetPKValueSize();
 
-    void setPKValue(ITupleReference PKValue);
+    void setPKValue(ITupleReference pKValue);
 
     void readRemoteLog(ByteBuffer buffer);
 
@@ -191,4 +155,8 @@ public interface ILogRecord {
     long getFlushingComponentMaxId();
 
     void setFlushingComponentMaxId(long flushingComponentMaxId);
+
+    int getVersion();
+
+    void setVersion(int version);
 }
