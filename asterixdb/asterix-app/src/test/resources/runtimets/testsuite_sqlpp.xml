@@ -4119,6 +4119,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
+      <compilation-unit name="sugar-08-negative">
+        <output-dir compare="Text">core-01</output-dir>
+        <expected-error>ASX1103: Illegal use of identifier: x</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
       <compilation-unit name="null">
         <output-dir compare="Text">null</output-dir>
       </compilation-unit>

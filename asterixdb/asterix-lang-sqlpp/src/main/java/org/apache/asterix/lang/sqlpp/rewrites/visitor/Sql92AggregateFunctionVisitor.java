@@ -70,12 +70,15 @@ class Sql92AggregateFunctionVisitor extends AbstractSqlppSimpleExpressionVisitor
 
     private final Collection<VariableExpr> outerVars;
 
+    private final Set<VariableExpr> prohibitVars;
+
     Sql92AggregateFunctionVisitor(LangRewritingContext context, VariableExpr groupVar,
-            Map<Expression, Identifier> fieldVars, Collection<VariableExpr> outerVars) {
+            Map<Expression, Identifier> fieldVars, Collection<VariableExpr> outerVars, Set<VariableExpr> prohibitVars) {
         this.context = context;
         this.groupVar = groupVar;
         this.fieldVars = fieldVars;
         this.outerVars = outerVars;
+        this.prohibitVars = prohibitVars;
     }
 
     @Override
@@ -85,8 +88,8 @@ class Sql92AggregateFunctionVisitor extends AbstractSqlppSimpleExpressionVisitor
         boolean aggregate = FunctionMapUtil.isSql92AggregateFunction(signature);
         boolean rewritten = false;
         for (Expression expr : callExpr.getExprList()) {
-            Expression newExpr =
-                    aggregate ? wrapAggregationArgument(expr, groupVar, fieldVars, outerVars, context) : expr;
+            Expression newExpr = aggregate
+                    ? wrapAggregationArgument(expr, groupVar, fieldVars, outerVars, prohibitVars, context) : expr;
             rewritten |= newExpr != expr;
             newExprList.add(newExpr.accept(this, arg));
         }
@@ -100,8 +103,8 @@ class Sql92AggregateFunctionVisitor extends AbstractSqlppSimpleExpressionVisitor
     }
 
     static Expression wrapAggregationArgument(Expression expr, Expression groupVar,
-            Map<Expression, Identifier> fieldVars, Collection<VariableExpr> outerVars, LangRewritingContext context)
-            throws CompilationException {
+            Map<Expression, Identifier> fieldVars, Collection<VariableExpr> outerVars,
+            Collection<VariableExpr> prohibitVars, LangRewritingContext context) throws CompilationException {
         SourceLocation sourceLoc = expr.getSourceLocation();
         Set<VariableExpr> freeVars = SqlppRewriteUtil.getFreeVariable(expr);
 
@@ -124,6 +127,9 @@ class Sql92AggregateFunctionVisitor extends AbstractSqlppSimpleExpressionVisitor
                 varExprMap.put(usedVar, fa);
             } else if (outerVars.contains(usedVar)) {
                 // Do nothing
+            } else if (prohibitVars != null && prohibitVars.contains(usedVar)) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_USE_OF_IDENTIFIER, sourceLoc,
+                        SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar().getValue()).getValue());
             } else {
                 // Rewrites to a reference to a single field in the group variable.
                 Identifier ident = findField(fieldVars, usedVar, context);

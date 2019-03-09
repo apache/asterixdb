@@ -189,6 +189,7 @@ public class ErrorCode {
     public static final int COMPILATION_UNEXPECTED_WINDOW_EXPRESSION = 1100;
     public static final int COMPILATION_UNEXPECTED_WINDOW_ORDERBY = 1101;
     public static final int COMPILATION_EXPECTED_WINDOW_FUNCTION = 1102;
+    public static final int COMPILATION_ILLEGAL_USE_OF_IDENTIFIER = 1103;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

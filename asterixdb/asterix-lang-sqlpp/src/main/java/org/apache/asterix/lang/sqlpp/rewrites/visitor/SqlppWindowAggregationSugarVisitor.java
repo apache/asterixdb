@@ -110,9 +110,8 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
         List<Expression> newExprList = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
             Expression expr = exprList.get(i);
-            Expression newExpr = i < limit
-                    ? Sql92AggregateFunctionVisitor.wrapAggregationArgument(expr, winVar, fieldMap, liveVars, context)
-                    : expr;
+            Expression newExpr = i < limit ? Sql92AggregateFunctionVisitor.wrapAggregationArgument(expr, winVar,
+                    fieldMap, liveVars, null, context) : expr;
             newExprList.add(newExpr);
         }
         winExpr.setExprList(newExprList);
