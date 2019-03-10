@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
+import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
+
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
@@ -113,7 +115,7 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
     protected final IAType rightType;
     // a storage to promote a value
     private final ArrayBackedValueStorage castBuffer;
-    private final IObjectPool<IMutableValueStorage, ATypeTag> storageAllocator;
+    private final IObjectPool<IMutableValueStorage, Void> storageAllocator;
     private final IObjectPool<IPointable, Void> voidPointableAllocator;
     // used for record comparison, sorting field names
     private final PointableAllocator recordAllocator;
@@ -416,6 +418,7 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
             int leftFieldIdx, rightFieldIdx;
             IAType leftFieldType, rightFieldType;
             IVisitablePointable leftFieldName, leftFieldValue, rightFieldName, rightFieldValue;
+            ATypeTag fieldTag;
             while (!leftNamesHeap.isEmpty() && !rightNamesHeap.isEmpty()) {
                 leftFieldName = leftNamesHeap.poll();
                 rightFieldName = rightNamesHeap.poll();
@@ -431,9 +434,10 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
                 rightFieldIdx = CompareHashUtil.getIndex(rightFieldsNames, rightFieldName);
                 leftFieldValue = leftFieldsValues.get(leftFieldIdx);
                 rightFieldValue = rightFieldsValues.get(rightFieldIdx);
-                leftFieldType = CompareHashUtil.getType(leftRecordType, leftFieldIdx, leftFieldValue);
-                rightFieldType = CompareHashUtil.getType(rightRecordType, rightFieldIdx, rightFieldValue);
-
+                fieldTag = VALUE_TYPE_MAPPING[leftFieldValue.getByteArray()[leftFieldValue.getStartOffset()]];
+                leftFieldType = CompareHashUtil.getType(leftRecordType, leftFieldIdx, fieldTag);
+                fieldTag = VALUE_TYPE_MAPPING[rightFieldValue.getByteArray()[rightFieldValue.getStartOffset()]];
+                rightFieldType = CompareHashUtil.getType(rightRecordType, rightFieldIdx, fieldTag);
                 result = compare(leftFieldType, leftFieldValue.getByteArray(), leftFieldValue.getStartOffset(),
                         leftFieldValue.getLength(), rightFieldType, rightFieldValue.getByteArray(),
                         rightFieldValue.getStartOffset(), rightFieldValue.getLength());

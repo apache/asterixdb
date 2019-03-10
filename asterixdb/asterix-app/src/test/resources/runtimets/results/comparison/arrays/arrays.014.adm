@@ -1,2 +1,1 @@
-{ "id": 3, "array1": [ 2, 1 ], "OP": "< is_missing", "array2": [ null, 3, 3 ] }
 { "id": 7, "array1": [ 2, 1 ], "OP": "< is_missing" }

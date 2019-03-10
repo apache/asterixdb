@@ -18,19 +18,26 @@
  */
 package org.apache.asterix.om.util.container;
 
-import org.apache.asterix.builders.AbvsBuilderFactory;
-import org.apache.asterix.om.types.ATypeTag;
+import java.util.BitSet;
+
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 // TODO(ali): look for all classes creating factories and extract them to here
+
+/**
+ * Object factories must be used in conjunction with {@link IObjectPool} to reuse objects. They should not be used
+ * to create objects outside the context of a pool.
+ */
 public class ObjectFactories {
 
     private ObjectFactories() {
     }
 
     public static final IObjectFactory<IPointable, Void> VOID_FACTORY = (type) -> new VoidPointable();
-    // TODO(ali): use lambda for the storage, too
-    public static final IObjectFactory<IMutableValueStorage, ATypeTag> STORAGE_FACTORY = new AbvsBuilderFactory();
+    public static final IObjectFactory<IMutableValueStorage, Void> STORAGE_FACTORY =
+            (type) -> new ArrayBackedValueStorage();
+    public static final IObjectFactory<BitSet, Void> BIT_SET_FACTORY = (type) -> new BitSet();
 }

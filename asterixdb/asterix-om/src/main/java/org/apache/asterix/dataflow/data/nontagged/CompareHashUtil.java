@@ -79,14 +79,11 @@ public class CompareHashUtil {
         throw new IllegalStateException();
     }
 
-    public static IAType getType(ARecordType recordType, int fieldIdx, IVisitablePointable fieldValue)
-            throws HyracksDataException {
+    public static IAType getType(ARecordType recordType, int fieldIdx, ATypeTag fieldTag) throws HyracksDataException {
         IAType[] fieldTypes = recordType.getFieldTypes();
         if (fieldIdx >= fieldTypes.length) {
-            byte tag = fieldValue.getByteArray()[fieldValue.getStartOffset()];
-            ATypeTag fieldRuntimeTag = VALUE_TYPE_MAPPING[tag];
-            return fieldRuntimeTag.isDerivedType() ? DefaultOpenFieldType.getDefaultOpenFieldType(fieldRuntimeTag)
-                    : TypeTagUtil.getBuiltinTypeByTag(fieldRuntimeTag);
+            return fieldTag.isDerivedType() ? DefaultOpenFieldType.getDefaultOpenFieldType(fieldTag)
+                    : TypeTagUtil.getBuiltinTypeByTag(fieldTag);
         }
         return fieldTypes[fieldIdx];
     }

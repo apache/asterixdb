@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.hash;
 
+import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Comparator;
@@ -82,7 +84,7 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
         private final ArrayBackedValueStorage valueBuffer = new ArrayBackedValueStorage();
         private final DataOutput valueOut = valueBuffer.getDataOutput();
         private final IObjectPool<IPointable, Void> voidPointableAllocator;
-        private final IObjectPool<IMutableValueStorage, ATypeTag> storageAllocator;
+        private final IObjectPool<IMutableValueStorage, Void> storageAllocator;
         private final IAType type;
         private final int seed;
         // used for record hashing, sorting field names first
@@ -189,6 +191,7 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
                 CompareHashUtil.addToHeap(fieldsNames, fieldsValues, namesHeap);
                 IVisitablePointable fieldName, fieldValue;
                 IAType fieldType;
+                ATypeTag fieldTag;
                 int hash = 0;
                 int fieldIdx;
                 while (!namesHeap.isEmpty()) {
@@ -196,7 +199,8 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
                     // TODO(ali): currently doing another lookup to find the target field index and get its value & type
                     fieldIdx = CompareHashUtil.getIndex(fieldsNames, fieldName);
                     fieldValue = fieldsValues.get(fieldIdx);
-                    fieldType = CompareHashUtil.getType(recordType, fieldIdx, fieldValue);
+                    fieldTag = VALUE_TYPE_MAPPING[fieldValue.getByteArray()[fieldValue.getStartOffset()]];
+                    fieldType = CompareHashUtil.getType(recordType, fieldIdx, fieldTag);
                     hash ^= MurmurHash3BinaryHash.hash(fieldName.getByteArray(), fieldName.getStartOffset(),
                             fieldName.getLength(), seed)
                             ^ hash(fieldType, fieldValue.getByteArray(), fieldValue.getStartOffset(),

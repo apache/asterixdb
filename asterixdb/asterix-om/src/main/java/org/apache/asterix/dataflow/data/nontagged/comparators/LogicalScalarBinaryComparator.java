@@ -74,7 +74,7 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
 
     private final boolean isEquality;
 
-    public LogicalScalarBinaryComparator(boolean isEquality) {
+    LogicalScalarBinaryComparator(boolean isEquality) {
         this.isEquality = isEquality;
     }
 
