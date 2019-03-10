@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -319,8 +320,8 @@ public class HttpServerTest {
         int queueSize = 1;
         final HttpServerConfig config =
                 HttpServerConfigBuilder.custom().setThreadCount(numExecutors).setRequestQueueSize(queueSize).build();
-        HttpServer server =
-                new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, config, InterruptOnCloseHandler.INSTANCE);
+        HttpServer server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), new InetSocketAddress(PORT), config,
+                InterruptOnCloseHandler.INSTANCE);
         SleepyServlet servlet = new SleepyServlet(server.ctx(), new String[] { PATH });
         server.addServlet(servlet);
         webMgr.add(server);

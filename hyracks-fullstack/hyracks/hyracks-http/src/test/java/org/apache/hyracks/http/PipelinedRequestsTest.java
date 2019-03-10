@@ -19,6 +19,7 @@
 package org.apache.hyracks.http;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -83,8 +84,8 @@ public class PipelinedRequestsTest {
         final WebManager webMgr = new WebManager();
         final HttpServerConfig config =
                 HttpServerConfigBuilder.custom().setThreadCount(16).setRequestQueueSize(16).build();
-        final HttpServer server =
-                new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, config, InterruptOnCloseHandler.INSTANCE);
+        final HttpServer server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), new InetSocketAddress(PORT),
+                config, InterruptOnCloseHandler.INSTANCE);
         final SleepyServlet servlet = new SleepyServlet(server.ctx(), new String[] { PATH });
         server.addServlet(servlet);
         webMgr.add(server);
