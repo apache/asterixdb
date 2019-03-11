@@ -6,6 +6,7 @@
    Portions of the AsterixDB WebUI
        located at:
          webui/static/js/jquery.min.js,
+       and
          webui/static/js/jquery.autosize-min.js
 
    are available under an MIT-style license:
@@ -470,3 +471,4 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ---
+=======

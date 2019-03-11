@@ -207,9 +207,8 @@
    Portions of the AsterixDB WebUI
        located at:
          asterix-app/src/main/resources/webui/static/js/jquery.min.js,
-         asterix-app/src/main/resources/webui/static/js/jquery.autosize-min.js,
        and
-         asterix-app/src/main/resources/queryui/js/jquery-1.12.4.min.js
+         asterix-app/src/main/resources/webui/static/js/jquery.autosize-min.js
 
    are available under an MIT-style license:
 ---

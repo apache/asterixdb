@@ -50,7 +50,7 @@
     <#assign licenseComponent="AsterixDB WebUI"/>
     <#assign licenseLocation="${asterixAppLocation!}"/>
     <#assign licenseFilePrefix="${asterixAppResourcesPrefix!}"/>
-    <@license files=["webui/static/js/jquery.min.js", "webui/static/js/jquery.autosize-min.js", "queryui/js/jquery-1.12.4.min.js"]
+    <@license files=["webui/static/js/jquery.min.js", "webui/static/js/jquery.autosize-min.js"]
               licenseName="an MIT-style license">
    Copyright jQuery Foundation and other contributors, https://jquery.org/
 
