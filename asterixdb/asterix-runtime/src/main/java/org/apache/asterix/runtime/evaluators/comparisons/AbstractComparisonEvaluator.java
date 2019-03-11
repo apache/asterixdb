@@ -109,17 +109,14 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
                 return logicalComparator.compare(leftConstant, rightConstant);
             } else {
                 // left is constant, right isn't
-                return logicalComparator.compare(leftConstant, argRight.getByteArray(), argRight.getStartOffset(),
-                        argRight.getLength());
+                return logicalComparator.compare(leftConstant, argRight);
             }
         } else {
             if (rightConstant != null) {
                 // right is constant, left isn't
-                return logicalComparator.compare(argLeft.getByteArray(), argLeft.getStartOffset(), argLeft.getLength(),
-                        rightConstant);
+                return logicalComparator.compare(argLeft, rightConstant);
             } else {
-                return logicalComparator.compare(argLeft.getByteArray(), argLeft.getStartOffset(), argLeft.getLength(),
-                        argRight.getByteArray(), argRight.getStartOffset(), argRight.getLength());
+                return logicalComparator.compare(argLeft, argRight);
             }
         }
     }

@@ -26,6 +26,7 @@ import static org.apache.asterix.om.types.ATypeTag.POINT;
 import static org.apache.asterix.om.types.ATypeTag.POINT3D;
 import static org.apache.asterix.om.types.ATypeTag.POLYGON;
 import static org.apache.asterix.om.types.ATypeTag.RECTANGLE;
+import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
 
 import java.util.EnumSet;
 
@@ -38,10 +39,10 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerial
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 
 public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
@@ -80,10 +81,9 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
 
     @SuppressWarnings("squid:S1226") // asking for introducing a new variable for incremented local variables
     @Override
-    public Result compare(byte[] leftBytes, int leftStart, int leftLen, byte[] rightBytes, int rightStart, int rightLen)
-            throws HyracksDataException {
-        ATypeTag leftTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(leftBytes[leftStart]);
-        ATypeTag rightTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(rightBytes[rightStart]);
+    public Result compare(IPointable left, IPointable right) throws HyracksDataException {
+        ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
+        ATypeTag rightTag = VALUE_TYPE_MAPPING[right.getByteArray()[right.getStartOffset()]];
         Result comparisonResult = LogicalComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
         if (comparisonResult != null) {
             return comparisonResult;
@@ -92,8 +92,7 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
             return Result.INCOMPARABLE;
         }
         // compare number if one of args is number
-        comparisonResult =
-                LogicalComparatorUtil.compareNumbers(leftTag, leftBytes, leftStart, rightTag, rightBytes, rightStart);
+        comparisonResult = LogicalComparatorUtil.compareNumbers(leftTag, left, rightTag, right);
         if (comparisonResult != null) {
             return comparisonResult;
         }
@@ -104,10 +103,12 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
             throw new IllegalStateException("Two different non-numeric tags but they are compatible");
         }
 
-        leftStart++;
-        leftLen--;
-        rightStart++;
-        rightLen--;
+        byte[] leftBytes = left.getByteArray();
+        byte[] rightBytes = right.getByteArray();
+        int leftStart = left.getStartOffset() + 1;
+        int rightStart = right.getStartOffset() + 1;
+        int leftLen = left.getLength() - 1;
+        int rightLen = right.getLength() - 1;
 
         int result;
         switch (leftTag) {
@@ -177,9 +178,9 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
     }
 
     @Override
-    public Result compare(byte[] leftBytes, int leftStart, int leftLen, IAObject rightConstant) {
+    public Result compare(IPointable left, IAObject rightConstant) {
         // TODO(ali): currently defined for numbers only
-        ATypeTag leftTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(leftBytes[leftStart]);
+        ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
         Result comparisonResult = LogicalComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
         if (comparisonResult != null) {
@@ -188,7 +189,7 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
         if (comparisonUndefined(leftTag, rightTag, isEquality)) {
             return Result.NULL;
         }
-        comparisonResult = LogicalComparatorUtil.compareNumWithConstant(leftTag, leftBytes, leftStart, rightConstant);
+        comparisonResult = LogicalComparatorUtil.compareNumWithConstant(leftTag, left, rightConstant);
         if (comparisonResult != null) {
             return comparisonResult;
         }
@@ -196,9 +197,9 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
     }
 
     @Override
-    public Result compare(IAObject leftConstant, byte[] rightBytes, int rightStart, int rightLen) {
+    public Result compare(IAObject leftConstant, IPointable right) {
         // TODO(ali): currently defined for numbers only
-        Result result = compare(rightBytes, rightStart, rightLen, leftConstant);
+        Result result = compare(right, leftConstant);
         if (result == Result.LT) {
             return Result.GT;
         } else if (result == Result.GT) {

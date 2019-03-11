@@ -20,6 +20,7 @@ package org.apache.asterix.dataflow.data.common;
 
 import org.apache.asterix.om.base.IAObject;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 
 public interface ILogicalBinaryComparator {
 
@@ -36,12 +37,11 @@ public interface ILogicalBinaryComparator {
         return result < 0 ? Result.LT : (result == 0 ? Result.EQ : Result.GT);
     }
 
-    Result compare(byte[] leftBytes, int leftStart, int leftLen, byte[] rightBytes, int rightStart, int rightLen)
-            throws HyracksDataException;
+    Result compare(IPointable left, IPointable right) throws HyracksDataException;
 
-    Result compare(byte[] leftBytes, int leftStart, int leftLen, IAObject rightConstant);
+    Result compare(IPointable left, IAObject rightConstant);
 
-    Result compare(IAObject leftConstant, byte[] rightBytes, int rightStart, int rightLen);
+    Result compare(IAObject leftConstant, IPointable right);
 
     Result compare(IAObject leftConstant, IAObject rightConstant);
 }

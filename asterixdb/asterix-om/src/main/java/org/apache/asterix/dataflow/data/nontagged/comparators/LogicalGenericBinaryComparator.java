@@ -18,47 +18,48 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
+import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
+
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 
 public class LogicalGenericBinaryComparator implements ILogicalBinaryComparator {
 
     private final LogicalComplexBinaryComparator complexComparator;
     private final LogicalScalarBinaryComparator scalarComparator;
 
-    public LogicalGenericBinaryComparator(IAType leftType, IAType rightType, boolean isEquality) {
+    LogicalGenericBinaryComparator(IAType leftType, IAType rightType, boolean isEquality) {
         complexComparator = new LogicalComplexBinaryComparator(leftType, rightType, isEquality);
         scalarComparator = new LogicalScalarBinaryComparator(isEquality);
     }
 
     @Override
-    public Result compare(byte[] leftBytes, int leftStart, int leftLen, byte[] rightBytes, int rightStart, int rightLen)
-            throws HyracksDataException {
-        ATypeTag leftTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(leftBytes[leftStart]);
-        ATypeTag rightTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(rightBytes[rightStart]);
+    public Result compare(IPointable left, IPointable right) throws HyracksDataException {
+        ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
+        ATypeTag rightTag = VALUE_TYPE_MAPPING[right.getByteArray()[right.getStartOffset()]];
         if (leftTag.isDerivedType() && rightTag.isDerivedType()) {
-            return complexComparator.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
+            return complexComparator.compare(left, right);
         }
-        return scalarComparator.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
+        return scalarComparator.compare(left, right);
     }
 
     @Override
-    public Result compare(byte[] leftBytes, int leftStart, int leftLen, IAObject rightConstant) {
-        ATypeTag leftTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(leftBytes[leftStart]);
+    public Result compare(IPointable left, IAObject rightConstant) {
+        ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
         if (leftTag.isDerivedType() && rightTag.isDerivedType()) {
-            return complexComparator.compare(leftBytes, leftStart, leftLen, rightConstant);
+            return complexComparator.compare(left, rightConstant);
         }
-        return scalarComparator.compare(leftBytes, leftStart, leftLen, rightConstant);
+        return scalarComparator.compare(left, rightConstant);
     }
 
     @Override
-    public Result compare(IAObject leftConstant, byte[] rightBytes, int rightStart, int rightLen) {
-        Result result = compare(rightBytes, rightStart, rightLen, leftConstant);
+    public Result compare(IAObject leftConstant, IPointable right) {
+        Result result = compare(right, leftConstant);
         if (result == Result.LT) {
             return Result.GT;
         } else if (result == Result.GT) {

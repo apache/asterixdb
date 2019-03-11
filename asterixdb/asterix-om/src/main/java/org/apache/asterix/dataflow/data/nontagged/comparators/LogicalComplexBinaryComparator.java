@@ -76,10 +76,9 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
     }
 
     @Override
-    public Result compare(byte[] leftBytes, int leftStart, int leftLen, byte[] rightBytes, int rightStart, int rightLen)
-            throws HyracksDataException {
-        ATypeTag leftRuntimeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(leftBytes[leftStart]);
-        ATypeTag rightRuntimeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(rightBytes[rightStart]);
+    public Result compare(IPointable left, IPointable right) throws HyracksDataException {
+        ATypeTag leftRuntimeTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
+        ATypeTag rightRuntimeTag = VALUE_TYPE_MAPPING[right.getByteArray()[right.getStartOffset()]];
         Result comparisonResult = LogicalComparatorUtil.returnMissingOrNullOrMismatch(leftRuntimeTag, rightRuntimeTag);
         if (comparisonResult != null) {
             return comparisonResult;
@@ -88,14 +87,13 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
         if (!leftRuntimeTag.isDerivedType() || !rightRuntimeTag.isDerivedType()) {
             throw new IllegalStateException("Input data is not complex type");
         }
-        return compareComplex(leftType, leftRuntimeTag, leftBytes, leftStart, leftLen, rightType, rightRuntimeTag,
-                rightBytes, rightStart, rightLen);
+        return compareComplex(leftType, leftRuntimeTag, left, rightType, rightRuntimeTag, right);
     }
 
     @Override
-    public Result compare(byte[] leftBytes, int leftStart, int leftLen, IAObject rightConstant) {
+    public Result compare(IPointable left, IAObject rightConstant) {
         // TODO(ali): not defined currently for constant complex types
-        ATypeTag leftTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(leftBytes[leftStart]);
+        ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
         Result comparisonResult = LogicalComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
         if (comparisonResult != null) {
@@ -106,9 +104,9 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
     }
 
     @Override
-    public Result compare(IAObject leftConstant, byte[] rightBytes, int rightStart, int rightLen) {
+    public Result compare(IAObject leftConstant, IPointable right) {
         // TODO(ali): not defined currently for constant complex types
-        Result result = compare(rightBytes, rightStart, rightLen, leftConstant);
+        Result result = compare(right, leftConstant);
         switch (result) {
             case LT:
                 return Result.GT;
@@ -132,32 +130,32 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
         return Result.NULL;
     }
 
-    private Result compareComplex(IAType leftType, ATypeTag leftRuntimeTag, byte[] leftBytes, int leftStart,
-            int leftLen, IAType rightType, ATypeTag rightRuntimeTag, byte[] rightBytes, int rightStart, int rightLen)
-            throws HyracksDataException {
-        if (leftRuntimeTag != rightRuntimeTag) {
+    private Result compareComplex(IAType leftType, ATypeTag leftTag, IPointable left, IAType rightType,
+            ATypeTag rightTag, IPointable right) throws HyracksDataException {
+        if (leftTag != rightTag) {
             return Result.INCOMPARABLE;
         }
-        IAType leftCompileType = TypeComputeUtils.getActualTypeOrOpen(leftType, leftRuntimeTag);
-        IAType rightCompileType = TypeComputeUtils.getActualTypeOrOpen(rightType, rightRuntimeTag);
-        switch (leftRuntimeTag) {
+        IAType leftCompileType = TypeComputeUtils.getActualTypeOrOpen(leftType, leftTag);
+        IAType rightCompileType = TypeComputeUtils.getActualTypeOrOpen(rightType, rightTag);
+        switch (leftTag) {
             case MULTISET:
-                return compareMultisets(leftCompileType, leftRuntimeTag, leftBytes, leftStart, rightCompileType,
-                        rightRuntimeTag, rightBytes, rightStart);
+                return compareMultisets(leftCompileType, leftTag, left, rightCompileType, rightTag, right);
             case ARRAY:
-                return compareArrays(leftCompileType, leftRuntimeTag, leftBytes, leftStart, rightCompileType,
-                        rightRuntimeTag, rightBytes, rightStart);
+                return compareArrays(leftCompileType, leftTag, left, rightCompileType, rightTag, right);
             case OBJECT:
-                return compareRecords(leftCompileType, leftBytes, leftStart, leftLen, rightCompileType, rightBytes,
-                        rightStart, rightLen);
+                return compareRecords(leftCompileType, left, rightCompileType, right);
             default:
                 return Result.NULL;
         }
     }
 
-    private Result compareArrays(IAType leftType, ATypeTag leftListTag, byte[] leftBytes, int leftStart,
-            IAType rightType, ATypeTag rightListTag, byte[] rightBytes, int rightStart) throws HyracksDataException {
+    private Result compareArrays(IAType leftType, ATypeTag leftListTag, IPointable left, IAType rightType,
+            ATypeTag rightListTag, IPointable right) throws HyracksDataException {
         // reaching here, both left and right have to be arrays (should be enforced)
+        byte[] leftBytes = left.getByteArray();
+        byte[] rightBytes = right.getByteArray();
+        int leftStart = left.getStartOffset();
+        int rightStart = right.getStartOffset();
         int leftNumItems = ListAccessorUtil.numberOfItems(leftBytes, leftStart);
         int rightNumItems = ListAccessorUtil.numberOfItems(rightBytes, rightStart);
         IAType leftItemCompileType = ((AbstractCollectionType) leftType).getItemType();
@@ -187,13 +185,10 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
                 leftItemRuntimeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(leftItemTagByte);
                 rightItemRuntimeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(rightItemTagByte);
                 if (leftItemRuntimeTag.isDerivedType() && rightItemRuntimeTag.isDerivedType()) {
-                    tempResult = compareComplex(leftItemCompileType, leftItemRuntimeTag, leftItem.getByteArray(),
-                            leftItem.getStartOffset(), leftItem.getLength(), rightItemCompileType, rightItemRuntimeTag,
-                            rightItem.getByteArray(), rightItem.getStartOffset(), rightItem.getLength());
+                    tempResult = compareComplex(leftItemCompileType, leftItemRuntimeTag, leftItem, rightItemCompileType,
+                            rightItemRuntimeTag, rightItem);
                 } else {
-                    tempResult = scalarComparator.compare(leftItem.getByteArray(), leftItem.getStartOffset(),
-                            leftItem.getLength(), rightItem.getByteArray(), rightItem.getStartOffset(),
-                            rightItem.getLength());
+                    tempResult = scalarComparator.compare(leftItem, rightItem);
                 }
 
                 if (tempResult == Result.INCOMPARABLE || tempResult == Result.MISSING || tempResult == Result.NULL) {
@@ -220,8 +215,8 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
         }
     }
 
-    private Result compareMultisets(IAType leftType, ATypeTag leftListTag, byte[] leftBytes, int leftStart,
-            IAType rightType, ATypeTag rightListTag, byte[] rightBytes, int rightStart) throws HyracksDataException {
+    private Result compareMultisets(IAType leftType, ATypeTag leftListTag, IPointable left, IAType rightType,
+            ATypeTag rightListTag, IPointable right) throws HyracksDataException {
         // TODO(ali): multiset comparison logic here
         // equality is the only operation defined for multiset
         if (!isEquality) {
@@ -230,8 +225,8 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
         return Result.NULL;
     }
 
-    private Result compareRecords(IAType leftType, byte[] leftBytes, int leftStart, int leftLen, IAType rightType,
-            byte[] rightBytes, int rightStart, int rightLen) throws HyracksDataException {
+    private Result compareRecords(IAType leftType, IPointable left, IAType rightType, IPointable right)
+            throws HyracksDataException {
         // equality is the only operation defined for records
         if (!isEquality) {
             return Result.INCOMPARABLE;
@@ -243,8 +238,8 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
         // keeps track of the fields in the right record that have not been matched
         BitSet notMatched = bitSetAllocator.allocate(null);
         try {
-            leftRecord.set(leftBytes, leftStart, leftLen);
-            rightRecord.set(rightBytes, rightStart, rightLen);
+            leftRecord.set(left);
+            rightRecord.set(right);
             List<IVisitablePointable> leftFieldValues = leftRecord.getFieldValues();
             List<IVisitablePointable> leftFieldNames = leftRecord.getFieldNames();
             List<IVisitablePointable> rightFieldValues = rightRecord.getFieldValues();
@@ -282,16 +277,10 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
                                 } else if (leftFTag.isDerivedType() && rightFTag.isDerivedType()) {
                                     leftFieldType = CompareHashUtil.getType(leftRecordType, i, leftFTag);
                                     rightFieldType = CompareHashUtil.getType(rightRecordType, k, rightFTag);
-                                    tempCompResult =
-                                            compareComplex(leftFieldType, leftFTag, leftFieldValue.getByteArray(),
-                                                    leftFieldValue.getStartOffset(), leftFieldValue.getLength(),
-                                                    rightFieldType, rightFTag, rightFieldValue.getByteArray(),
-                                                    rightFieldValue.getStartOffset(), rightFieldValue.getLength());
+                                    tempCompResult = compareComplex(leftFieldType, leftFTag, leftFieldValue,
+                                            rightFieldType, rightFTag, rightFieldValue);
                                 } else {
-                                    tempCompResult = scalarComparator.compare(leftFieldValue.getByteArray(),
-                                            leftFieldValue.getStartOffset(), leftFieldValue.getLength(),
-                                            rightFieldValue.getByteArray(), rightFieldValue.getStartOffset(),
-                                            rightFieldValue.getLength());
+                                    tempCompResult = scalarComparator.compare(leftFieldValue, rightFieldValue);
                                 }
 
                                 if (tempCompResult == Result.INCOMPARABLE || tempCompResult == Result.MISSING

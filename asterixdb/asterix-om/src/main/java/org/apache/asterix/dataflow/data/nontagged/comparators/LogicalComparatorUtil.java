@@ -28,6 +28,7 @@ import static org.apache.asterix.om.types.ATypeTag.SMALLINT;
 import static org.apache.asterix.om.types.ATypeTag.TINYINT;
 
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
+import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.Result;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -45,6 +46,7 @@ import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.hyracks.data.std.api.IPointable;
 
 public class LogicalComparatorUtil {
 
@@ -65,31 +67,30 @@ public class LogicalComparatorUtil {
         }
     }
 
-    static ILogicalBinaryComparator.Result returnMissingOrNullOrMismatch(ATypeTag leftTag, ATypeTag rightTag) {
+    static Result returnMissingOrNullOrMismatch(ATypeTag leftTag, ATypeTag rightTag) {
         if (leftTag == MISSING || rightTag == MISSING) {
-            return ILogicalBinaryComparator.Result.MISSING;
+            return Result.MISSING;
         }
         if (leftTag == NULL || rightTag == NULL) {
-            return ILogicalBinaryComparator.Result.NULL;
+            return Result.NULL;
         }
         if (!ATypeHierarchy.isCompatible(leftTag, rightTag)) {
-            return ILogicalBinaryComparator.Result.INCOMPARABLE;
+            return Result.INCOMPARABLE;
         }
         return null;
     }
 
     // checking that left and right are compatible has to be done before calling this
-    static ILogicalBinaryComparator.Result compareNumbers(ATypeTag leftTag, byte[] b1, int s1, ATypeTag rightTag,
-            byte[] b2, int s2) {
+    static Result compareNumbers(ATypeTag leftTag, IPointable left, ATypeTag rightTag, IPointable right) {
         int result;
         if (leftTag == DOUBLE || rightTag == DOUBLE) {
-            result = Double.compare(getDoubleValue(leftTag, b1, s1), getDoubleValue(rightTag, b2, s2));
+            result = Double.compare(getDoubleValue(leftTag, left), getDoubleValue(rightTag, right));
         } else if (leftTag == FLOAT || rightTag == FLOAT) {
-            result = Float.compare((float) getDoubleValue(leftTag, b1, s1), (float) getDoubleValue(rightTag, b2, s2));
+            result = Float.compare((float) getDoubleValue(leftTag, left), (float) getDoubleValue(rightTag, right));
         } else if (leftTag == BIGINT || rightTag == BIGINT) {
-            result = Long.compare(getLongValue(leftTag, b1, s1), getLongValue(rightTag, b2, s2));
+            result = Long.compare(getLongValue(leftTag, left), getLongValue(rightTag, right));
         } else if (leftTag == INTEGER || leftTag == SMALLINT || leftTag == TINYINT) {
-            result = Integer.compare((int) getLongValue(leftTag, b1, s1), (int) getLongValue(rightTag, b2, s2));
+            result = Integer.compare((int) getLongValue(leftTag, left), (int) getLongValue(rightTag, right));
         } else {
             return null;
         }
@@ -97,18 +98,17 @@ public class LogicalComparatorUtil {
     }
 
     // checking that left and right are compatible has to be done before calling this
-    static ILogicalBinaryComparator.Result compareNumWithConstant(ATypeTag leftTag, byte[] b1, int s1,
-            IAObject rightConstant) {
+    static Result compareNumWithConstant(ATypeTag leftTag, IPointable left, IAObject rightConstant) {
         int result;
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
         if (leftTag == DOUBLE || rightTag == DOUBLE) {
-            result = Double.compare(getDoubleValue(leftTag, b1, s1), getConstantDouble(rightConstant));
+            result = Double.compare(getDoubleValue(leftTag, left), getConstantDouble(rightConstant));
         } else if (leftTag == FLOAT || rightTag == FLOAT) {
-            result = Float.compare((float) getDoubleValue(leftTag, b1, s1), (float) getConstantDouble(rightConstant));
+            result = Float.compare((float) getDoubleValue(leftTag, left), (float) getConstantDouble(rightConstant));
         } else if (leftTag == BIGINT || rightTag == BIGINT) {
-            result = Long.compare(getLongValue(leftTag, b1, s1), getConstantLong(rightConstant));
+            result = Long.compare(getLongValue(leftTag, left), getConstantLong(rightConstant));
         } else if (leftTag == INTEGER || leftTag == SMALLINT || leftTag == TINYINT) {
-            result = Integer.compare((int) getLongValue(leftTag, b1, s1), (int) getConstantLong(rightConstant));
+            result = Integer.compare((int) getLongValue(leftTag, left), (int) getConstantLong(rightConstant));
         } else {
             return null;
         }
@@ -116,7 +116,7 @@ public class LogicalComparatorUtil {
     }
 
     // checking that left and right are compatible has to be done before calling this
-    static ILogicalBinaryComparator.Result compareConstants(IAObject leftConstant, IAObject rightConstant) {
+    static Result compareConstants(IAObject leftConstant, IAObject rightConstant) {
         int result;
         ATypeTag leftTag = leftConstant.getType().getTypeTag();
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
@@ -134,40 +134,38 @@ public class LogicalComparatorUtil {
         return ILogicalBinaryComparator.asResult(result);
     }
 
-    @SuppressWarnings("squid:S1226") // asking for introducing a new variable for s
-    private static double getDoubleValue(ATypeTag numericTag, byte[] b, int s) {
-        s++;
+    private static double getDoubleValue(ATypeTag numericTag, IPointable value) {
+        int start = value.getStartOffset() + 1;
         switch (numericTag) {
             case TINYINT:
-                return AInt8SerializerDeserializer.getByte(b, s);
+                return AInt8SerializerDeserializer.getByte(value.getByteArray(), start);
             case SMALLINT:
-                return AInt16SerializerDeserializer.getShort(b, s);
+                return AInt16SerializerDeserializer.getShort(value.getByteArray(), start);
             case INTEGER:
-                return AInt32SerializerDeserializer.getInt(b, s);
+                return AInt32SerializerDeserializer.getInt(value.getByteArray(), start);
             case BIGINT:
-                return AInt64SerializerDeserializer.getLong(b, s);
+                return AInt64SerializerDeserializer.getLong(value.getByteArray(), start);
             case FLOAT:
-                return AFloatSerializerDeserializer.getFloat(b, s);
+                return AFloatSerializerDeserializer.getFloat(value.getByteArray(), start);
             case DOUBLE:
-                return ADoubleSerializerDeserializer.getDouble(b, s);
+                return ADoubleSerializerDeserializer.getDouble(value.getByteArray(), start);
             default:
                 // TODO(ali): use unsupported type
                 throw new UnsupportedOperationException();
         }
     }
 
-    @SuppressWarnings("squid:S1226") // asking for introducing a new variable for s
-    private static long getLongValue(ATypeTag numericTag, byte[] b, int s) {
-        s++;
+    private static long getLongValue(ATypeTag numericTag, IPointable value) {
+        int start = value.getStartOffset() + 1;
         switch (numericTag) {
             case TINYINT:
-                return AInt8SerializerDeserializer.getByte(b, s);
+                return AInt8SerializerDeserializer.getByte(value.getByteArray(), start);
             case SMALLINT:
-                return AInt16SerializerDeserializer.getShort(b, s);
+                return AInt16SerializerDeserializer.getShort(value.getByteArray(), start);
             case INTEGER:
-                return AInt32SerializerDeserializer.getInt(b, s);
+                return AInt32SerializerDeserializer.getInt(value.getByteArray(), start);
             case BIGINT:
-                return AInt64SerializerDeserializer.getLong(b, s);
+                return AInt64SerializerDeserializer.getLong(value.getByteArray(), start);
             default:
                 // TODO(ali): use unsupported type
                 throw new UnsupportedOperationException();
