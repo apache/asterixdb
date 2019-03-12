@@ -18,86 +18,36 @@
  */
 package org.apache.hyracks.http.server;
 
-import java.io.IOException;
+import java.nio.charset.Charset;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import io.netty.handler.codec.http.multipart.Attribute;
-import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
-import io.netty.handler.codec.http.multipart.InterfaceHttpData;
-import io.netty.handler.codec.http.multipart.MixedAttribute;
 
 public class FormUrlEncodedRequest extends BaseRequest implements IServletRequest {
 
-    private final List<String> names;
-    private final List<String> values;
-
-    public static IServletRequest create(ChannelHandlerContext ctx, FullHttpRequest request) throws IOException {
-        List<String> names = new ArrayList<>();
-        List<String> values = new ArrayList<>();
-        HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(request);
-        try {
-            List<InterfaceHttpData> bodyHttpDatas = decoder.getBodyHttpDatas();
-            for (InterfaceHttpData data : bodyHttpDatas) {
-                if (data.getHttpDataType().equals(InterfaceHttpData.HttpDataType.Attribute)) {
-                    Attribute attr = (MixedAttribute) data;
-                    names.add(data.getName());
-                    values.add(attr.getValue());
-                }
-            }
-        } finally {
-            decoder.destroy();
-        }
+    public static IServletRequest create(ChannelHandlerContext ctx, FullHttpRequest request) {
+        Charset charset = HttpUtil.getRequestCharset(request);
+        Map<String, List<String>> parameters = new LinkedHashMap<>();
+        URLEncodedUtils.parse(request.content().toString(charset), charset).forEach(
+                pair -> parameters.computeIfAbsent(pair.getName(), a -> new ArrayList<>()).add(pair.getValue()));
+        new QueryStringDecoder(request.uri()).parameters()
+                .forEach((name, value) -> parameters.computeIfAbsent(name, a -> new ArrayList<>()).addAll(value));
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        return new FormUrlEncodedRequest(request, remoteAddress, new QueryStringDecoder(request.uri()).parameters(),
-                names, values);
+        return new FormUrlEncodedRequest(request, remoteAddress, parameters);
     }
 
-    protected FormUrlEncodedRequest(FullHttpRequest request, InetSocketAddress remoteAddress,
-            Map<String, List<String>> parameters, List<String> names, List<String> values) {
+    private FormUrlEncodedRequest(FullHttpRequest request, InetSocketAddress remoteAddress,
+            Map<String, List<String>> parameters) {
         super(request, remoteAddress, parameters);
-        this.names = names;
-        this.values = values;
-    }
-
-    @Override
-    public String getParameter(CharSequence name) {
-        for (int i = 0; i < names.size(); i++) {
-            if (name.equals(names.get(i))) {
-                return values.get(i);
-            }
-        }
-        return HttpUtil.getParameter(parameters, name);
-    }
-
-    @Override
-    public Set<String> getParameterNames() {
-        HashSet<String> paramNames = new HashSet<>();
-        paramNames.addAll(parameters.keySet());
-        paramNames.addAll(names);
-        return Collections.unmodifiableSet(paramNames);
-    }
-
-    @Override
-    public Map<String, String> getParameters() {
-        HashMap<String, String> paramMap = new HashMap<>();
-        paramMap.putAll(super.getParameters());
-        for (int i = 0; i < names.size(); i++) {
-            paramMap.put(names.get(i), values.get(i));
-        }
-
-        return Collections.unmodifiableMap(paramMap);
     }
 }
