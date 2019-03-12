@@ -39,16 +39,18 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -143,6 +145,7 @@ public class TestExecutor {
     public static final int TRUNCATE_THRESHOLD = 16384;
     public static final Set<String> NON_CANCELLABLE =
             Collections.unmodifiableSet(new HashSet<>(Arrays.asList("store", "validate")));
+    private static final int MAX_NON_UTF_8_STATEMENT_SIZE = 64 * 1024;
 
     private final IPollTask plainExecutor = this::executeTestFile;
 
@@ -156,7 +159,8 @@ public class TestExecutor {
     private static Map<String, InetSocketAddress> ncEndPoints;
     private static Map<String, InetSocketAddress> replicationAddress;
 
-    private static final List<Charset> charsetsRemaining = new ArrayList<>();
+    private final List<Charset> allCharsets;
+    private final Queue<Charset> charsetsRemaining = new ArrayDeque<>();
 
     /*
      * Instance members
@@ -181,6 +185,10 @@ public class TestExecutor {
 
     public TestExecutor(List<InetSocketAddress> endpoints) {
         this.endpoints = endpoints;
+        this.allCharsets = Stream
+                .of("UTF-8", "UTF-16", "UTF-16BE", "UTF-16LE", "UTF-32", "UTF-32BE", "UTF-32LE", "x-UTF-32BE-BOM",
+                        "x-UTF-32LE-BOM", "x-UTF-16LE-BOM")
+                .filter(Charset::isSupported).map(Charset::forName).collect(Collectors.toList());
     }
 
     public void setLibrarian(IExternalUDFLibrarian librarian) {
@@ -612,33 +620,20 @@ public class TestExecutor {
         return response.getEntity().getContent();
     }
 
-    private Charset selectCharset(File result) throws IOException {
-        // choose an encoding that works for this input
-        return selectCharset(FileUtils.readFileToString(result, UTF_8));
+    public synchronized void setAvailableCharsets(Charset... charsets) {
+        allCharsets.clear();
+        allCharsets.addAll(Arrays.asList(charsets));
+        charsetsRemaining.clear();
     }
 
-    private Charset selectCharset(String payload) {
-        // choose an encoding that works for this input
-        return nextCharset(charset -> canEncodeDecode(charset, payload));
-    }
-
-    public static Charset nextCharset(Predicate<Charset> test) {
-        synchronized (charsetsRemaining) {
-            while (true) {
-                for (Iterator<Charset> iter = charsetsRemaining.iterator(); iter.hasNext();) {
-                    Charset next = iter.next();
-                    if (test.test(next)) {
-                        iter.remove();
-                        return next;
-                    }
-                }
-                List<Charset> allCharsets = Stream
-                        .of("UTF-8", "UTF-16", "UTF-16BE", "UTF-16LE", "UTF-32", "UTF-32BE", "UTF-32LE",
-                                "x-UTF-32BE-BOM", "x-UTF-32LE-BOM", "x-UTF-16LE-BOM")
-                        .filter(Charset::isSupported).map(Charset::forName).collect(Collectors.toList());
-                Collections.shuffle(allCharsets);
-                charsetsRemaining.addAll(allCharsets);
+    private synchronized Charset nextCharset() {
+        while (true) {
+            Charset nextCharset = charsetsRemaining.poll();
+            if (nextCharset != null) {
+                return nextCharset;
             }
+            Collections.shuffle(allCharsets);
+            charsetsRemaining.addAll(allCharsets);
         }
     }
 
@@ -739,12 +734,12 @@ public class TestExecutor {
             for (Parameter param : upsertParam(otherParams, stmtParam, ParameterTypeEnum.STRING, statement)) {
                 builder.addParameter(param.getName(), param.getValue());
             }
-            builder.addParameter(stmtParam, statement);
+            builder.setCharset(statement.length() > MAX_NON_UTF_8_STATEMENT_SIZE ? UTF_8 : nextCharset());
         } else {
             // this seems pretty bad - we should probably fix the API and not the client
-            builder.setEntity(new StringEntity(statement, UTF_8));
+            builder.setEntity(new StringEntity(statement,
+                    statement.length() > MAX_NON_UTF_8_STATEMENT_SIZE ? UTF_8 : nextCharset()));
         }
-        builder.setCharset(UTF_8);
         return builder.build();
     }
 
@@ -775,11 +770,12 @@ public class TestExecutor {
             }
         }
         try {
-            builder.setEntity(new StringEntity(om.writeValueAsString(content), ContentType.APPLICATION_JSON));
+            builder.setEntity(new StringEntity(om.writeValueAsString(content),
+                    ContentType.create(ContentType.APPLICATION_JSON.getMimeType(),
+                            statement.length() > MAX_NON_UTF_8_STATEMENT_SIZE ? UTF_8 : nextCharset())));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        builder.setCharset(UTF_8);
         return builder.build();
     }
 
@@ -1253,7 +1249,7 @@ public class TestExecutor {
         URI uri = testFile.getName().endsWith("aql") ? getEndpoint(Servlets.QUERY_AQL)
                 : getEndpoint(Servlets.QUERY_SERVICE);
         boolean isJsonEncoded = isJsonEncoded(extractHttpRequestType(statement));
-        Charset responseCharset = expectedResultFile == null ? UTF_8 : selectCharset(expectedResultFile);
+        Charset responseCharset = expectedResultFile == null ? UTF_8 : nextCharset();
         InputStream resultStream;
         if (DELIVERY_IMMEDIATE.equals(delivery)) {
             resultStream = executeQueryService(statement, fmt, uri, params, isJsonEncoded, responseCharset, null,
