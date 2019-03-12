@@ -1,3 +1,3 @@
-{ "id": -1, "text": "LOWER TEXT" }
-{ "id": -1, "text": "LOWER TEXT" }
-{ "field1": { "id": -1, "text": "LOWER TEXT" }, "field2": 123 }
+{ "id": -1, "text_list": [ { "text": "lower text1" }, { "text": "lower text2" } ], "element_n": 2, "capitalized_list": [ "LOWER TEXT1", "LOWER TEXT2" ] }
+{ "id": -1, "text_list": [ { "text": "lower text" } ], "element_n": 1, "capitalized_list": [ "LOWER TEXT" ] }
+{ "field1": { "id": -1, "text_list": [ { "text": "lower text" } ], "element_n": 1, "capitalized_list": [ "LOWER TEXT" ] }, "field2": 123 }

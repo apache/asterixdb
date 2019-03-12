@@ -20,7 +20,11 @@ DROP DATAVERSE externallibtest if exists;
 CREATE DATAVERSE  externallibtest;
 USE externallibtest;
 
+create type list_element as open{
+    text: string
+};
+
 create type TextType if not exists as open {
     id: int32,
-    text: string
+    text_list: [list_element]
 };

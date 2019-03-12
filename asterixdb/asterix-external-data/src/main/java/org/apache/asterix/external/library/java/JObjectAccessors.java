@@ -82,8 +82,10 @@ import org.apache.asterix.om.pointables.AFlatValuePointable;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
@@ -582,17 +584,12 @@ public class JObjectAccessors {
         public IJObject access(AListVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool,
                 IAType listType, JObjectPointableVisitor pointableVisitor) throws HyracksDataException {
             List<IVisitablePointable> items = pointable.getItems();
-            List<IVisitablePointable> itemTags = pointable.getItemTags();
             JList list = pointable.ordered() ? new JOrderedList(listType) : new JUnorderedList(listType);
             IJObject listItem;
-            int index = 0;
             for (IVisitablePointable itemPointable : items) {
-                IVisitablePointable itemTagPointable = itemTags.get(index);
-                ATypeTag itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                        .deserialize(itemTagPointable.getByteArray()[itemTagPointable.getStartOffset()]);
-                final IAType fieldType = TypeTagUtil.getBuiltinTypeByTag(itemTypeTag);
-                typeInfo.reset(fieldType, itemTypeTag);
-                switch (itemTypeTag) {
+                final IAType fieldType = ((AbstractCollectionType) listType).getItemType();
+                typeInfo.reset(fieldType, fieldType.getTypeTag());
+                switch (typeInfo.getTypeTag()) {
                     case OBJECT:
                         listItem = pointableVisitor.visit((ARecordVisitablePointable) itemPointable, typeInfo);
                         break;

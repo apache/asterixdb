@@ -21,8 +21,10 @@ package org.apache.asterix.external.library;
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.external.library.java.base.JInt;
+import org.apache.asterix.external.library.java.base.JOrderedList;
 import org.apache.asterix.external.library.java.base.JRecord;
 import org.apache.asterix.external.library.java.base.JString;
+import org.apache.asterix.om.types.BuiltinType;
 
 /**
  * Accepts an input record of type Open{ id: int32, text: string }
@@ -43,16 +45,23 @@ public class UpperCaseFunction implements IExternalScalarFunction {
     @Override
     public void evaluate(IFunctionHelper functionHelper) throws Exception {
         JRecord inputRecord = (JRecord) functionHelper.getArgument(0);
+        JOrderedList textList = (JOrderedList) inputRecord.getValueByName("text_list");
+        JOrderedList capList = new JOrderedList(BuiltinType.ASTRING);
         JInt id = (JInt) inputRecord.getValueByName("id");
-        id.setValue(id.getValue() * -1); // for maintaining uniqueness
-                                         // constraint in the case when
-                                         // output is re-inserted into source
-                                         // dataset
-        JString text = (JString) inputRecord.getValueByName("text");
-        text.setValue(text.getValue().toUpperCase());
+        id.setValue(id.getValue() * -1);
+
+        for (int iter1 = 0; iter1 < textList.getValue().size(); iter1++) {
+            JRecord originalElement = (JRecord) textList.getValue().get(iter1);
+            JString originalText = (JString) originalElement.getValueByName("text");
+            JString capText = new JString(originalText.getValue().toUpperCase());
+            capList.getValue().add(capText);
+        }
+        JInt element_n = new JInt(textList.size());
         JRecord result = (JRecord) functionHelper.getResultObject();
         result.setField("id", id);
-        result.setField("text", text);
+        result.setField("text_list", textList);
+        result.setField("element_n", element_n);
+        result.setField("capitalized_list", capList);
         functionHelper.setResult(result);
     }
 }
