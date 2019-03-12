@@ -24,6 +24,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.mutable.MutableLong;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -90,8 +91,13 @@ public class ExitUtil {
         exit(status);
     }
 
-    public static synchronized void halt(int status) {
-        LOGGER.fatal("JVM halting with status {}; thread dump at halt: {}", status, ThreadDumpUtil.takeDumpString());
+    public static void halt(int status) {
+        halt(status, Level.FATAL);
+    }
+
+    public static synchronized void halt(int status, Level logLevel) {
+        LOGGER.log(logLevel, "JVM halting with status {}; thread dump at halt: {}", status,
+                ThreadDumpUtil.takeDumpString());
         // try to give time for the log to be emitted...
         LogManager.shutdown();
         Runtime.getRuntime().halt(status);
