@@ -21,6 +21,7 @@ package org.apache.asterix.optimizer.rules.typecast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +42,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -234,11 +236,11 @@ public class StaticTypeCastUtil {
             switch (arg.getExpressionTag()) {
                 case FUNCTION_CALL:
                     ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) arg;
-                    changed = rewriteFuncExpr(argFunc, requiredItemType, currentItemType, env) || changed;
+                    changed |= rewriteFuncExpr(argFunc, requiredItemType, currentItemType, env);
                     changed |= castItem(requiredItemType, currentItemType, argFunc, args.get(j));
                     break;
                 case VARIABLE:
-                    changed = injectCastToRelaxType(args.get(j), currentItemType, env) || changed;
+                    changed |= injectCastToRelaxType(args.get(j), currentItemType, env);
                     break;
             }
         }
@@ -278,41 +280,44 @@ public class StaticTypeCastUtil {
                 || func.getFunctionIdentifier() == BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
             return false;
         }
+
+        List<Mutable<ILogicalExpression>> arguments = func.getArguments();
+        int fieldArgumentCount = arguments.size() / 2;
+
         IAType[] reqFieldTypes = reqType.getFieldTypes();
         String[] reqFieldNames = reqType.getFieldNames();
         IAType[] inputFieldTypes = inputType.getFieldTypes();
         String[] inputFieldNames = inputType.getFieldNames();
 
         int[] fieldPermutation = new int[reqFieldTypes.length];
-        boolean[] nullFields = new boolean[reqFieldTypes.length];
-        boolean[] openFields = new boolean[inputFieldTypes.length];
+        BitSet nullFields = new BitSet(reqFieldTypes.length);
+        BitSet openFields = new BitSet(fieldArgumentCount);
 
-        Arrays.fill(nullFields, false);
-        Arrays.fill(openFields, true);
         Arrays.fill(fieldPermutation, -1);
+        openFields.set(0, fieldArgumentCount);
 
         // forward match: match from actual to required
-        boolean matched = false;
         for (int i = 0; i < inputFieldNames.length; i++) {
             String fieldName = inputFieldNames[i];
             IAType fieldType = inputFieldTypes[i];
 
-            if (2 * i + 1 > func.getArguments().size()) {
-                // it is not a record constructor function
+            int fieldNameArgumentIdx = findFieldNameArgumentIdx(arguments, fieldName);
+            if (fieldNameArgumentIdx < 0) {
                 return false;
             }
+            int fieldValueArgumentIdx = fieldNameArgumentIdx + 1;
+            int fieldArgumentIdx = fieldNameArgumentIdx / 2;
 
-            // 2*i+1 is the index of field value expression
-            ILogicalExpression arg = func.getArguments().get(2 * i + 1).getValue();
-            matched = false;
+            ILogicalExpression arg = arguments.get(fieldValueArgumentIdx).getValue();
+            boolean matched = false;
             for (int j = 0; j < reqFieldNames.length; j++) {
                 String reqFieldName = reqFieldNames[j];
                 IAType reqFieldType = reqFieldTypes[j];
                 if (fieldName.equals(reqFieldName)) {
                     //type matched
                     if (fieldType.equals(reqFieldType)) {
-                        fieldPermutation[j] = i;
-                        openFields[i] = false;
+                        fieldPermutation[j] = fieldNameArgumentIdx;
+                        openFields.clear(fieldArgumentIdx);
                         matched = true;
 
                         if (arg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
@@ -327,8 +332,8 @@ public class StaticTypeCastUtil {
                         IAType itemType = ((AUnionType) reqFieldType).getActualType();
                         reqFieldType = itemType;
                         if (fieldType.equals(BuiltinType.AMISSING) || fieldType.equals(itemType)) {
-                            fieldPermutation[j] = i;
-                            openFields[i] = false;
+                            fieldPermutation[j] = fieldNameArgumentIdx;
+                            openFields.clear(fieldArgumentIdx);
                             matched = true;
 
                             // rewrite record expr
@@ -345,15 +350,15 @@ public class StaticTypeCastUtil {
                     if (NonTaggedFormatUtil.isOptional(fieldType)) {
                         IAType itemType = ((AUnionType) fieldType).getActualType();
                         if (reqFieldType.equals(itemType)) {
-                            fieldPermutation[j] = i;
-                            openFields[i] = false;
+                            fieldPermutation[j] = fieldNameArgumentIdx;
+                            openFields.clear(fieldArgumentIdx);
                             matched = true;
 
                             ScalarFunctionCallExpression notNullFunc = new ScalarFunctionCallExpression(
                                     FunctionUtil.getFunctionInfo(BuiltinFunctions.CHECK_UNKNOWN));
-                            notNullFunc.getArguments().add(new MutableObject<ILogicalExpression>(arg));
+                            notNullFunc.getArguments().add(new MutableObject<>(arg));
                             //wrap the not null function to the original function
-                            func.getArguments().get(2 * i + 1).setValue(notNullFunc);
+                            arguments.get(fieldValueArgumentIdx).setValue(notNullFunc);
                             break;
                         }
                     }
@@ -362,8 +367,8 @@ public class StaticTypeCastUtil {
                     if (arg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                         ScalarFunctionCallExpression scalarFunc = (ScalarFunctionCallExpression) arg;
                         rewriteFuncExpr(scalarFunc, reqFieldType, fieldType, env);
-                        fieldPermutation[j] = i;
-                        openFields[i] = false;
+                        fieldPermutation[j] = fieldNameArgumentIdx;
+                        openFields.clear(fieldArgumentIdx);
                         matched = true;
                         break;
                     }
@@ -380,7 +385,7 @@ public class StaticTypeCastUtil {
         for (int i = 0; i < reqFieldNames.length; i++) {
             String reqFieldName = reqFieldNames[i];
             IAType reqFieldType = reqFieldTypes[i];
-            matched = false;
+            boolean matched = false;
             for (int j = 0; j < inputFieldNames.length; j++) {
                 String fieldName = inputFieldNames[j];
                 IAType fieldType = inputFieldTypes[j];
@@ -388,11 +393,16 @@ public class StaticTypeCastUtil {
                     continue;
                 }
                 // should check open field here
-                // because number of entries in fieldPermuations is the
+                // because number of entries in fieldPermutations is the
                 // number of required schema fields
                 // here we want to check if an input field is matched
-                // the entry index of fieldPermuatons is req field index
-                if (!openFields[j]) {
+                // the entry index of fieldPermutations is req field index
+                int fieldNameArgumentIdx = findFieldNameArgumentIdx(arguments, fieldName);
+                if (fieldNameArgumentIdx < 0) {
+                    return false;
+                }
+                int fieldArgumentIdx = fieldNameArgumentIdx / 2;
+                if (!openFields.get(fieldArgumentIdx)) {
                     matched = true;
                     break;
                 }
@@ -413,7 +423,7 @@ public class StaticTypeCastUtil {
 
             if (NonTaggedFormatUtil.isOptional(reqFieldType)) {
                 // add a null field
-                nullFields[i] = true;
+                nullFields.set(i);
             } else {
                 // no matched field in the input for a required closed field
                 if (inputType.isOpen()) {
@@ -427,36 +437,47 @@ public class StaticTypeCastUtil {
             }
         }
 
-        List<Mutable<ILogicalExpression>> arguments = func.getArguments();
-        List<Mutable<ILogicalExpression>> originalArguments = new ArrayList<Mutable<ILogicalExpression>>();
-        originalArguments.addAll(arguments);
-        arguments.clear();
+        List<Mutable<ILogicalExpression>> newArguments = new ArrayList<>(arguments.size());
+
         // re-order the closed part and fill in null fields
-        for (int i = 0; i < fieldPermutation.length; i++) {
+        for (int i = 0; i < reqFieldTypes.length; i++) {
             int pos = fieldPermutation[i];
             if (pos >= 0) {
-                arguments.add(originalArguments.get(2 * pos));
-                arguments.add(originalArguments.get(2 * pos + 1));
+                newArguments.add(arguments.get(pos));
+                newArguments.add(arguments.get(pos + 1));
             }
-            if (nullFields[i]) {
+            if (nullFields.get(i)) {
                 // add a null field
-                arguments.add(new MutableObject<ILogicalExpression>(
+                newArguments.add(new MutableObject<>(
                         new ConstantExpression(new AsterixConstantValue(new AString(reqFieldNames[i])))));
-                arguments.add(new MutableObject<ILogicalExpression>(
-                        new ConstantExpression(new AsterixConstantValue(ANull.NULL))));
+                newArguments.add(new MutableObject<>(new ConstantExpression(new AsterixConstantValue(ANull.NULL))));
             }
         }
 
         // add the open part
-        for (int i = 0; i < openFields.length; i++) {
-            if (openFields[i]) {
-                arguments.add(originalArguments.get(2 * i));
-                Mutable<ILogicalExpression> expRef = originalArguments.get(2 * i + 1);
-                injectCastToRelaxType(expRef, inputFieldTypes[i], env);
-                arguments.add(expRef);
+        for (int i = openFields.nextSetBit(0); i >= 0; i = openFields.nextSetBit(i + 1)) {
+            newArguments.add(arguments.get(i * 2));
+            Mutable<ILogicalExpression> expRef = arguments.get(i * 2 + 1);
+            injectCastToRelaxType(expRef, inputFieldTypes[i], env);
+            newArguments.add(expRef);
+        }
+
+        arguments.clear();
+        arguments.addAll(newArguments);
+
+        return true;
+    }
+
+    private static int findFieldNameArgumentIdx(List<Mutable<ILogicalExpression>> arguments, String fieldName) {
+        for (int i = 0, ln = arguments.size(); i < ln; i += 2) {
+            String n = ConstantExpressionUtil.getStringConstant(arguments.get(i).getValue());
+            if (n == null) {
+                break;
+            } else if (fieldName.equals(n)) {
+                return i;
             }
         }
-        return true;
+        return -1;
     }
 
     private static boolean injectCastToRelaxType(Mutable<ILogicalExpression> expRef, IAType inputFieldType,

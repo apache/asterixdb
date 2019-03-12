@@ -201,4 +201,9 @@
       <output-dir compare="Text">pairs</output-dir>
     </compilation-unit>
   </test-case>
+  <test-case FilePath="objects">
+    <compilation-unit name="query-ASTERIXDB-2529">
+      <output-dir compare="Text">query-ASTERIXDB-2529</output-dir>
+    </compilation-unit>
+  </test-case>
 </test-group>
