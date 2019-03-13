@@ -841,10 +841,8 @@ class LangExpressionToPlanTranslator
         }
 
         SourceLocation sourceLoc = fcall.getSourceLocation();
-        AbstractFunctionCallExpression f;
-        if ((f = lookupUserDefinedFunction(signature, args, sourceLoc)) == null) {
-            f = lookupBuiltinFunction(signature.getName(), signature.getArity(), args, sourceLoc);
-        }
+
+        AbstractFunctionCallExpression f = lookupFunction(signature, args, sourceLoc);
 
         if (f == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc,
@@ -876,6 +874,15 @@ class LangExpressionToPlanTranslator
         VariableReferenceExpression varRef = new VariableReferenceExpression(var);
         varRef.setSourceLocation(varExpr.getSourceLocation());
         return varRef;
+    }
+
+    protected AbstractFunctionCallExpression lookupFunction(FunctionSignature signature,
+            List<Mutable<ILogicalExpression>> args, SourceLocation sourceLoc) throws CompilationException {
+        AbstractFunctionCallExpression f;
+        if ((f = lookupUserDefinedFunction(signature, args, sourceLoc)) == null) {
+            f = lookupBuiltinFunction(signature.getName(), signature.getArity(), args, sourceLoc);
+        }
+        return f;
     }
 
     private AbstractFunctionCallExpression lookupUserDefinedFunction(FunctionSignature signature,

@@ -77,17 +77,7 @@ public class HttpUtil {
 
     public static String getParameter(Map<String, List<String>> parameters, CharSequence name) {
         List<String> parameter = parameters.get(String.valueOf(name));
-        if (parameter == null) {
-            return null;
-        } else if (parameter.size() == 1) {
-            return parameter.get(0);
-        } else {
-            StringBuilder aString = new StringBuilder(parameter.get(0));
-            for (int i = 1; i < parameter.size(); i++) {
-                aString.append(",").append(parameter.get(i));
-            }
-            return aString.toString();
-        }
+        return parameter == null ? null : String.join(",", parameter);
     }
 
     public static IServletRequest toServletRequest(ChannelHandlerContext ctx, FullHttpRequest request)
