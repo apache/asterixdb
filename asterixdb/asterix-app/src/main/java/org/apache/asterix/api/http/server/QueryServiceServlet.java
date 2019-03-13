@@ -459,9 +459,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     private void setParamFromRequest(IServletRequest request, QueryServiceRequestParameters param,
             Map<String, String> optionalParameters) throws IOException {
         param.setStatement(getParameter(request, Parameter.STATEMENT));
-        if (param.getStatement() == null) {
-            param.setStatement(HttpUtil.getRequestBody(request));
-        }
         param.setFormat(toLower(getParameter(request, Parameter.FORMAT)));
         param.setPretty(Boolean.parseBoolean(getParameter(request, Parameter.PRETTY)));
         param.setMode(toLower(getParameter(request, Parameter.MODE)));

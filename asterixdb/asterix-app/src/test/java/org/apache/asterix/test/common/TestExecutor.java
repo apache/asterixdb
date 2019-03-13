@@ -43,13 +43,13 @@ import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
@@ -749,25 +749,18 @@ public class TestExecutor {
 
     protected HttpUriRequest constructPostMethodUrl(String statement, URI uri, String stmtParam,
             List<Parameter> otherParams) {
+        Objects.requireNonNull(stmtParam, "statement parameter required");
         RequestBuilder builder = RequestBuilder.post(uri);
-        if (stmtParam != null) {
-            for (Parameter param : upsertParam(otherParams, stmtParam, ParameterTypeEnum.STRING, statement)) {
-                builder.addParameter(param.getName(), param.getValue());
-            }
-            builder.setCharset(statement.length() > MAX_NON_UTF_8_STATEMENT_SIZE ? UTF_8 : nextCharset());
-        } else {
-            // this seems pretty bad - we should probably fix the API and not the client
-            builder.setEntity(new StringEntity(statement,
-                    statement.length() > MAX_NON_UTF_8_STATEMENT_SIZE ? UTF_8 : nextCharset()));
+        for (Parameter param : upsertParam(otherParams, stmtParam, ParameterTypeEnum.STRING, statement)) {
+            builder.addParameter(param.getName(), param.getValue());
         }
+        builder.setCharset(statement.length() > MAX_NON_UTF_8_STATEMENT_SIZE ? UTF_8 : nextCharset());
         return builder.build();
     }
 
     protected HttpUriRequest constructPostMethodJson(String statement, URI uri, String stmtParam,
             List<Parameter> otherParams) {
-        if (stmtParam == null) {
-            throw new NullPointerException("Statement parameter required.");
-        }
+        Objects.requireNonNull(stmtParam, "statement parameter required");
         RequestBuilder builder = RequestBuilder.post(uri);
         ObjectMapper om = new ObjectMapper();
         ObjectNode content = om.createObjectNode();
