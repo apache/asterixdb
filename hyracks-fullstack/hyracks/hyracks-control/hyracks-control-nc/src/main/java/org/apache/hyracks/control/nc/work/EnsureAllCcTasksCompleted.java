@@ -40,7 +40,7 @@ public class EnsureAllCcTasksCompleted implements Runnable {
     private final CcId ccId;
     private final Deque<Task> runningTasks;
 
-    public EnsureAllCcTasksCompleted(NodeControllerService ncs, CcId ccId, Deque<Task> runningTasks) {
+    EnsureAllCcTasksCompleted(NodeControllerService ncs, CcId ccId, Deque<Task> runningTasks) {
         this.ncs = ncs;
         this.ccId = ccId;
         this.runningTasks = runningTasks;
@@ -48,40 +48,47 @@ public class EnsureAllCcTasksCompleted implements Runnable {
 
     @Override
     public void run() {
+        LOGGER.info("Ensuring all tasks of CC {} have completed", ccId);
         try {
-            LOGGER.info("Ensuring all tasks of CC {} have completed", ccId);
-            final Span maxWaitTime = Span.start(2, TimeUnit.MINUTES);
-            while (!maxWaitTime.elapsed()) {
-                removeCompleted();
-                if (runningTasks.isEmpty()) {
-                    break;
-                }
-                LOGGER.info("{} tasks are still running", runningTasks.size());
-                TimeUnit.SECONDS.sleep(1); // Check once a second
-            }
+            waitForTaskCompletion();
+        } catch (InterruptedException e) {
+            LOGGER.info("interrupted waiting for CC tasks to complete; giving up");
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void waitForTaskCompletion() throws InterruptedException {
+        final Span maxWaitTime = Span.start(TIMEOUT, TimeUnit.MILLISECONDS);
+        while (!maxWaitTime.elapsed()) {
+            removeCompleted();
             if (runningTasks.isEmpty()) {
-                LOGGER.info("All tasks of CC {} have completed", ccId);
-                ncs.notifyTasksCompleted(ccId);
-            } else {
-                LOGGER.error("{} tasks associated with CC {} failed to complete after {}ms. Giving up",
-                        runningTasks.size(), ccId, TIMEOUT);
-                logPendingTasks();
-                ExitUtil.halt(ExitUtil.EC_NC_FAILED_TO_ABORT_ALL_PREVIOUS_TASKS);
+                break;
             }
-        } catch (Throwable th) {
-            LOGGER.error("Failed to abort all previous tasks associated with CC {}", ccId, th);
+            LOGGER.info("{} tasks are still running", runningTasks.size());
+            TimeUnit.SECONDS.sleep(1); // Check once a second
+        }
+        removeCompleted();
+        if (runningTasks.isEmpty()) {
+            LOGGER.info("all tasks of CC {} have completed", ccId);
+            try {
+                ncs.notifyTasksCompleted(ccId);
+            } catch (InterruptedException e) {
+                LOGGER.info("interrupted during notifyTasksCompleted");
+                throw e;
+            } catch (Exception e) {
+                LOGGER.error("unexpected error during notifyTasksCompleted", e);
+                ExitUtil.halt(ExitUtil.EC_NC_FAILED_TO_NOTIFY_TASKS_COMPLETED);
+            }
+        } else {
+            LOGGER.error("{} tasks associated with CC {} failed to complete after {}ms. Giving up", runningTasks.size(),
+                    ccId, TIMEOUT);
+            logPendingTasks();
             ExitUtil.halt(ExitUtil.EC_NC_FAILED_TO_ABORT_ALL_PREVIOUS_TASKS);
         }
     }
 
     private void removeCompleted() {
-        final int numTasks = runningTasks.size();
-        for (int i = 0; i < numTasks; i++) {
-            Task task = runningTasks.poll();
-            if (!task.isCompleted()) {
-                runningTasks.add(task);
-            }
-        }
+        runningTasks.removeIf(Task::isCompleted);
     }
 
     private void logPendingTasks() {
@@ -89,7 +96,7 @@ public class EnsureAllCcTasksCompleted implements Runnable {
             final List<Thread> pendingThreads = task.getPendingThreads();
             LOGGER.error("task {} was stuck. Stuck thread count = {}", task.getTaskAttemptId(), pendingThreads.size());
             for (Thread thread : pendingThreads) {
-                LOGGER.error("Stuck thread trace", ExceptionUtils.fromThreadStack(thread));
+                LOGGER.error("stuck thread trace", ExceptionUtils.fromThreadStack(thread));
             }
         }
     }
