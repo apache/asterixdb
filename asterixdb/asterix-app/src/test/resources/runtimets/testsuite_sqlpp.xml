@@ -6852,6 +6852,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="query-ASTERIXDB-2530">
+        <output-dir compare="Text">query-ASTERIXDB-2530</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="radians">
         <output-dir compare="Text">radians</output-dir>
       </compilation-unit>

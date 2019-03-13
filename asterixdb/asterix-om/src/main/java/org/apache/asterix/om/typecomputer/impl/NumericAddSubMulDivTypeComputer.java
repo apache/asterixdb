@@ -195,8 +195,14 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                     case INTEGER:
                     case BIGINT:
                     case FLOAT:
-                    case ANY:
                     case DOUBLE:
+                    case DATE:
+                    case TIME:
+                    case DATETIME:
+                    case DURATION:
+                    case YEARMONTHDURATION:
+                    case DAYTIMEDURATION:
+                    case ANY:
                         type = BuiltinType.ANY;
                         break;
                     default:
