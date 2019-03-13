@@ -34,57 +34,105 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
+/**
+ * This rule breaks the select operator condition into conjuncts and create a different select operator per conjunct
+ * when applicable.
+ *
+ * Example (simplified):
+ * Before:
+ * select (and(lt($$test.getField("field1"), 100), lt($$test.getField("field2"), 20)))
+ * unnest $$test <- dataset("test.test")
+ *
+ * After:
+ * select (lt($$test.getField("field1"), 100))
+ * select (lt($$test.getField("field2"), 20))
+ * unnest $$test <- dataset("test.test")
+ */
 public class BreakSelectIntoConjunctsRule implements IAlgebraicRewriteRule {
 
-    private List<Mutable<ILogicalExpression>> conjs = new ArrayList<Mutable<ILogicalExpression>>();
+    // Conjuncts of the select operator condition
+    private List<Mutable<ILogicalExpression>> selectOperatorConditionConjuncts = new ArrayList<>();
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
+    public boolean rewritePost(Mutable<ILogicalOperator> operatorRef, IOptimizationContext context) {
         return false;
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+    public boolean rewritePre(Mutable<ILogicalOperator> operatorRef, IOptimizationContext context)
             throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        if (op.getOperatorTag() != LogicalOperatorTag.SELECT) {
-            return false;
-        }
-        SelectOperator select = (SelectOperator) op;
+        // Expected select operator
+        AbstractLogicalOperator expectedSelectOperator = (AbstractLogicalOperator) operatorRef.getValue();
 
-        ILogicalExpression cond = select.getCondition().getValue();
-
-        conjs.clear();
-        if (!cond.splitIntoConjuncts(conjs)) {
+        // Bail if it's not a select operator
+        if (expectedSelectOperator.getOperatorTag() != LogicalOperatorTag.SELECT) {
             return false;
         }
 
-        SourceLocation sourceLoc = select.getSourceLocation();
+        // Select operator
+        SelectOperator originalSelectOperator = (SelectOperator) expectedSelectOperator;
 
-        Mutable<ILogicalOperator> childOfSelect = select.getInputs().get(0);
-        boolean fst = true;
-        ILogicalOperator botOp = select;
-        ILogicalExpression firstExpr = null;
-        for (Mutable<ILogicalExpression> eRef : conjs) {
-            ILogicalExpression e = eRef.getValue();
-            if (fst) {
-                fst = false;
-                firstExpr = e;
+        // Select operator condition
+        ILogicalExpression selectOperatorCondition = originalSelectOperator.getCondition().getValue();
+
+        // Clear the condition conjuncts
+        selectOperatorConditionConjuncts.clear();
+
+        // Break the condition into conjuncts, bail if it's not applicable
+        if (!selectOperatorCondition.splitIntoConjuncts(selectOperatorConditionConjuncts)) {
+            return false;
+        }
+
+        // Source location
+        SourceLocation sourceLoc = originalSelectOperator.getSourceLocation();
+
+        // Inputs of original select operator
+        Mutable<ILogicalOperator> originalSelectOperatorInputs = originalSelectOperator.getInputs().get(0);
+
+        // First expression read of the conjuncts, this will be set to the original select operator at the end
+        boolean isFirst = true;
+        ILogicalExpression firstExpression = null;
+
+        // Bottom operator points to the original select operator at first
+        ILogicalOperator bottomOperator = originalSelectOperator;
+
+        // Start creating the select operators for the condition conjuncts
+        for (Mutable<ILogicalExpression> expressionRef : selectOperatorConditionConjuncts) {
+            ILogicalExpression expression = expressionRef.getValue();
+
+            // Hold reference to the first condition
+            if (isFirst) {
+                isFirst = false;
+                firstExpression = expression;
             } else {
-                SelectOperator newSelect = new SelectOperator(new MutableObject<ILogicalExpression>(e),
-                        select.getRetainMissing(), select.getMissingPlaceholderVariable());
-                newSelect.setSourceLocation(sourceLoc);
-                List<Mutable<ILogicalOperator>> botInpList = botOp.getInputs();
-                botInpList.clear();
-                botInpList.add(new MutableObject<ILogicalOperator>(newSelect));
-                context.computeAndSetTypeEnvironmentForOperator(botOp);
-                botOp = newSelect;
+                // New select operator
+                SelectOperator newSelectOperator =
+                        new SelectOperator(new MutableObject<>(expression), originalSelectOperator.getRetainMissing(),
+                                originalSelectOperator.getMissingPlaceholderVariable());
+                newSelectOperator.setSourceLocation(sourceLoc);
+
+                // Put the new operator at the bottom (child of current operator)
+                List<Mutable<ILogicalOperator>> bottomOperatorInputs = bottomOperator.getInputs();
+                bottomOperatorInputs.clear();
+                bottomOperatorInputs.add(new MutableObject<>(newSelectOperator));
+
+                // Compute the output type environment
+                context.computeAndSetTypeEnvironmentForOperator(bottomOperator);
+
+                // Bottom operator points to the new operator
+                bottomOperator = newSelectOperator;
             }
         }
-        botOp.getInputs().add(childOfSelect);
-        select.getCondition().setValue(firstExpr);
-        context.computeAndSetTypeEnvironmentForOperator(botOp);
-        context.computeAndSetTypeEnvironmentForOperator(select);
+
+        // Add the original select operator inputs to the bottom operator
+        bottomOperator.getInputs().add(originalSelectOperatorInputs);
+
+        // Assign the first expression to the original operator (top)
+        originalSelectOperator.getCondition().setValue(firstExpression);
+
+        // (Re)compute the output type environment
+        context.computeAndSetTypeEnvironmentForOperator(bottomOperator);
+        context.computeAndSetTypeEnvironmentForOperator(originalSelectOperator);
 
         return true;
     }
