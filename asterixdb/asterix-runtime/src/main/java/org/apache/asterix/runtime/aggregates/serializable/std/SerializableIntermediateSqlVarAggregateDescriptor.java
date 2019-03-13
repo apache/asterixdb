@@ -43,7 +43,7 @@ public class SerializableIntermediateSqlVarAggregateDescriptor
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_INTERMEDIATE_SQL_VAR;
+        return BuiltinFunctions.SERIAL_INTERMEDIATE_SQL_VAR_SAMP;
     }
 
     @Override

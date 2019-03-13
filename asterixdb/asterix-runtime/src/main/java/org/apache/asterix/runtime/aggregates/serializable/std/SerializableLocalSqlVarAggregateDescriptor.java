@@ -42,7 +42,7 @@ public class SerializableLocalSqlVarAggregateDescriptor extends AbstractSerializ
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_LOCAL_SQL_VAR;
+        return BuiltinFunctions.SERIAL_LOCAL_SQL_VAR_SAMP;
     }
 
     @Override

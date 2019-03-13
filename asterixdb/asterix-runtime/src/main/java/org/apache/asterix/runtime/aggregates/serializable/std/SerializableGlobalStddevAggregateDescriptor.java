@@ -43,7 +43,7 @@ public class SerializableGlobalStddevAggregateDescriptor
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_GLOBAL_STDDEV;
+        return BuiltinFunctions.SERIAL_GLOBAL_STDDEV_SAMP;
     }
 
     @Override

@@ -42,7 +42,7 @@ public class VarAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.VAR;
+        return BuiltinFunctions.VAR_SAMP;
     }
 
     @Override

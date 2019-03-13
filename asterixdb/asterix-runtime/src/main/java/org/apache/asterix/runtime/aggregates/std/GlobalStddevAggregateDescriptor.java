@@ -43,7 +43,7 @@ public class GlobalStddevAggregateDescriptor extends AbstractAggregateFunctionDy
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.GLOBAL_STDDEV;
+        return BuiltinFunctions.GLOBAL_STDDEV_SAMP;
     }
 
     @Override

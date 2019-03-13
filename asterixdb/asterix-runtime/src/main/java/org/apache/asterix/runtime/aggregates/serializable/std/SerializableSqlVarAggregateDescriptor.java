@@ -41,7 +41,7 @@ public class SerializableSqlVarAggregateDescriptor extends AbstractSerializableA
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_SQL_VAR;
+        return BuiltinFunctions.SERIAL_SQL_VAR_SAMP;
     }
 
     @Override

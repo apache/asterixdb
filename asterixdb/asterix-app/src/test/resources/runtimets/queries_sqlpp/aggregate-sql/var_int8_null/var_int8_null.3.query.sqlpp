@@ -20,7 +20,7 @@
 use test;
 
 
-{'var':test.array_var((
+{'var_samp':test.array_var_samp((
     select element x.int8Field
     from  Numeric as x
 )), 'var_pop':test.array_var_pop((

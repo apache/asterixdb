@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that var and var_pop aggregation correctly returns null for an empty stream,
+ * Description    : Tests that var_samp and var_pop aggregation correctly returns null for an empty stream,
  *                  without an aggregate combiner.
  * Success        : Yes
  */
@@ -25,7 +25,7 @@
 use test;
 
 
-{'var': (select element test.array_var((
+{'var_samp': (select element test.array_var_samp((
     select element x
     from  [1,2,3] as x
     where (x > 10)

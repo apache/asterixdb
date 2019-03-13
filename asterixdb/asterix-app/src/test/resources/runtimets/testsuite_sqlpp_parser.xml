@@ -170,6 +170,30 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_mixed">
+        <output-dir compare="AST">kurtosis_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_mixed">
+        <output-dir compare="AST">serial_kurtosis_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_mixed">
+        <output-dir compare="AST">skewness_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_mixed">
+        <output-dir compare="AST">serial_skewness_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="agg_number">
         <output-dir compare="AST">agg_number</output-dir>
       </compilation-unit>
@@ -386,6 +410,76 @@
         </test-case>
         -->
     <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_double">
+        <output-dir compare="AST">kurtosis_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_double_null">
+        <output-dir compare="AST">kurtosis_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_empty_01">
+        <output-dir compare="AST">kurtosis_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_empty_02">
+        <output-dir compare="AST">kurtosis_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_float">
+        <output-dir compare="AST">kurtosis_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_float_null">
+        <output-dir compare="AST">kurtosis_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int16">
+        <output-dir compare="AST">kurtosis_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int16_null">
+        <output-dir compare="AST">kurtosis_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int32">
+        <output-dir compare="AST">kurtosis_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int32_null">
+        <output-dir compare="AST">kurtosis_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int64">
+        <output-dir compare="AST">kurtosis_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int64_null">
+        <output-dir compare="AST">kurtosis_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int8">
+        <output-dir compare="AST">kurtosis_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int8_null">
+        <output-dir compare="AST">kurtosis_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="max_empty_01">
         <output-dir compare="AST">max_empty_01</output-dir>
       </compilation-unit>
@@ -436,6 +530,21 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_kurtosis">
+        <output-dir compare="AST">scalar_kurtosis</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_kurtosis_empty">
+        <output-dir compare="AST">scalar_kurtosis_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_kurtosis_null">
+        <output-dir compare="AST">scalar_kurtosis_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="scalar_max">
         <output-dir compare="AST">scalar_max</output-dir>
       </compilation-unit>
@@ -463,6 +572,21 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="scalar_min_null">
         <output-dir compare="AST">scalar_min_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_skewness">
+        <output-dir compare="AST">scalar_skewness</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_skewness_empty">
+        <output-dir compare="AST">scalar_skewness_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_skewness_null">
+        <output-dir compare="AST">scalar_skewness_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -511,8 +635,133 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_stddev_int8_null">
-        <output-dir compare="AST">serial_stddev_int8_null</output-dir>
+      <compilation-unit name="serial_kurtosis_double">
+        <output-dir compare="AST">serial_kurtosis_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_double_null">
+        <output-dir compare="AST">serial_kurtosis_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_empty">
+        <output-dir compare="AST">serial_kurtosis_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_float">
+        <output-dir compare="AST">serial_kurtosis_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_float_null">
+        <output-dir compare="AST">serial_kurtosis_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int16">
+        <output-dir compare="AST">serial_kurtosis_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int16_null">
+        <output-dir compare="AST">serial_kurtosis_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int32">
+        <output-dir compare="AST">serial_kurtosis_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int32_null">
+        <output-dir compare="AST">serial_kurtosis_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int64">
+        <output-dir compare="AST">serial_kurtosis_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int64_null">
+        <output-dir compare="AST">serial_kurtosis_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int8">
+        <output-dir compare="AST">serial_kurtosis_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int8_null">
+        <output-dir compare="AST">serial_kurtosis_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_double">
+        <output-dir compare="AST">serial_skewness_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_double_null">
+        <output-dir compare="AST">serial_skewness_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_empty">
+        <output-dir compare="AST">serial_skewness_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_float">
+        <output-dir compare="AST">serial_skewness_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_float_null">
+        <output-dir compare="AST">serial_skewness_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int16">
+        <output-dir compare="AST">serial_skewness_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int16_null">
+        <output-dir compare="AST">serial_skewness_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int32">
+        <output-dir compare="AST">serial_skewness_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int32_null">
+        <output-dir compare="AST">serial_skewness_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int64">
+        <output-dir compare="AST">serial_skewness_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int64_null">
+        <output-dir compare="AST">serial_skewness_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int8">
+        <output-dir compare="AST">serial_skewness_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int8_null">
+        <output-dir compare="AST">serial_skewness_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -581,11 +830,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_var_int8_null">
-        <output-dir compare="AST">serial_var_int8_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
       <compilation-unit name="serial_var_double">
         <output-dir compare="AST">serial_var_double</output-dir>
       </compilation-unit>
@@ -648,6 +892,76 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="serial_var_int8_null">
         <output-dir compare="AST">serial_var_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_double">
+        <output-dir compare="AST">skewness_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_double_null">
+        <output-dir compare="AST">skewness_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_empty_01">
+        <output-dir compare="AST">skewness_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_empty_02">
+        <output-dir compare="AST">skewness_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_float">
+        <output-dir compare="AST">skewness_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_float_null">
+        <output-dir compare="AST">skewness_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int16">
+        <output-dir compare="AST">skewness_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int16_null">
+        <output-dir compare="AST">skewness_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int32">
+        <output-dir compare="AST">skewness_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int32_null">
+        <output-dir compare="AST">skewness_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int64">
+        <output-dir compare="AST">skewness_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int64_null">
+        <output-dir compare="AST">skewness_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int8">
+        <output-dir compare="AST">skewness_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int8_null">
+        <output-dir compare="AST">skewness_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -964,6 +1278,30 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_mixed">
+        <output-dir compare="AST">serial_kurtosis_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_mixed">
+        <output-dir compare="AST">kurtosis_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_mixed">
+        <output-dir compare="AST">serial_skewness_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_mixed">
+        <output-dir compare="AST">skewness_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
       <compilation-unit name="agg_number">
         <output-dir compare="AST">agg_number</output-dir>
       </compilation-unit>
@@ -1099,6 +1437,76 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_double">
+        <output-dir compare="AST">kurtosis_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_double_null">
+        <output-dir compare="AST">kurtosis_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_empty_01">
+        <output-dir compare="AST">kurtosis_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_empty_02">
+        <output-dir compare="AST">kurtosis_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_float">
+        <output-dir compare="AST">kurtosis_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_float_null">
+        <output-dir compare="AST">kurtosis_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int16">
+        <output-dir compare="AST">kurtosis_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int16_null">
+        <output-dir compare="AST">kurtosis_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int32">
+        <output-dir compare="AST">kurtosis_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int32_null">
+        <output-dir compare="AST">kurtosis_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int64">
+        <output-dir compare="AST">kurtosis_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int64_null">
+        <output-dir compare="AST">kurtosis_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int8">
+        <output-dir compare="AST">kurtosis_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int8_null">
+        <output-dir compare="AST">kurtosis_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
       <compilation-unit name="max_empty_01">
         <output-dir compare="AST">max_empty_01</output-dir>
       </compilation-unit>
@@ -1149,6 +1557,21 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_kurtosis">
+        <output-dir compare="AST">scalar_kurtosis</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_kurtosis_empty">
+        <output-dir compare="AST">scalar_kurtosis_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_kurtosis_null">
+        <output-dir compare="AST">scalar_kurtosis_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
       <compilation-unit name="scalar_max">
         <output-dir compare="AST">scalar_max</output-dir>
       </compilation-unit>
@@ -1176,6 +1599,21 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="scalar_min_null">
         <output-dir compare="AST">scalar_min_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_skewness">
+        <output-dir compare="AST">scalar_skewness</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_skewness_empty">
+        <output-dir compare="AST">scalar_skewness_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_skewness_null">
+        <output-dir compare="AST">scalar_skewness_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1221,6 +1659,136 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="scalar_var_null">
         <output-dir compare="AST">scalar_var_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_double">
+        <output-dir compare="AST">serial_kurtosis_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_double_null">
+        <output-dir compare="AST">serial_kurtosis_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_empty">
+        <output-dir compare="AST">serial_kurtosis_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_float">
+        <output-dir compare="AST">serial_kurtosis_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_float_null">
+        <output-dir compare="AST">serial_kurtosis_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int16">
+        <output-dir compare="AST">serial_kurtosis_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int16_null">
+        <output-dir compare="AST">serial_kurtosis_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int32">
+        <output-dir compare="AST">serial_kurtosis_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int32_null">
+        <output-dir compare="AST">serial_kurtosis_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int64">
+        <output-dir compare="AST">serial_kurtosis_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int64_null">
+        <output-dir compare="AST">serial_kurtosis_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int8">
+        <output-dir compare="AST">serial_kurtosis_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int8_null">
+        <output-dir compare="AST">serial_kurtosis_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_double">
+        <output-dir compare="AST">serial_skewness_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_double_null">
+        <output-dir compare="AST">serial_skewness_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_empty">
+        <output-dir compare="AST">serial_skewness_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_float">
+        <output-dir compare="AST">serial_skewness_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_float_null">
+        <output-dir compare="AST">serial_skewness_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int16">
+        <output-dir compare="AST">serial_skewness_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int16_null">
+        <output-dir compare="AST">serial_skewness_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int32">
+        <output-dir compare="AST">serial_skewness_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int32_null">
+        <output-dir compare="AST">serial_skewness_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int64">
+        <output-dir compare="AST">serial_skewness_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int64_null">
+        <output-dir compare="AST">serial_skewness_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int8">
+        <output-dir compare="AST">serial_skewness_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int8_null">
+        <output-dir compare="AST">serial_skewness_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1286,6 +1854,76 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="serial_stddev_int8_null">
         <output-dir compare="AST">serial_stddev_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_double">
+        <output-dir compare="AST">skewness_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_double_null">
+        <output-dir compare="AST">skewness_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_empty_01">
+        <output-dir compare="AST">skewness_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_empty_02">
+        <output-dir compare="AST">skewness_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_float">
+        <output-dir compare="AST">skewness_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_float_null">
+        <output-dir compare="AST">skewness_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int16">
+        <output-dir compare="AST">skewness_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int16_null">
+        <output-dir compare="AST">skewness_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int32">
+        <output-dir compare="AST">skewness_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int32_null">
+        <output-dir compare="AST">skewness_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int64">
+        <output-dir compare="AST">skewness_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int64_null">
+        <output-dir compare="AST">skewness_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int8">
+        <output-dir compare="AST">skewness_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int8_null">
+        <output-dir compare="AST">skewness_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">

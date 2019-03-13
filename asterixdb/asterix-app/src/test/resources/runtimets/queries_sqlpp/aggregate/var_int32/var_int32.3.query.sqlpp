@@ -20,7 +20,7 @@
 use test;
 
 
-{'var': (select element test.strict_var((
+{'var_samp': (select element test.strict_var_samp((
     select element x
     from  [1,2,3] as x
 ))), 'var_pop': (select element test.strict_var_pop((

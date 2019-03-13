@@ -43,7 +43,7 @@ public class SerializableIntermediateSqlStddevAggregateDescriptor
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_INTERMEDIATE_SQL_STDDEV;
+        return BuiltinFunctions.SERIAL_INTERMEDIATE_SQL_STDDEV_SAMP;
     }
 
     @Override

@@ -2,11 +2,11 @@ DataverseUse test
 Query:
 RecordConstructor [
   (
-    LiteralExpr [STRING] [var]
+    LiteralExpr [STRING] [var_samp]
     :
     (
       SELECT ELEMENT [
-      FunctionCall asterix.sql-var@1[
+      FunctionCall asterix.sql-var_samp@1[
         (
           SELECT ELEMENT [
           FieldAccessor [

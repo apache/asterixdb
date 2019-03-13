@@ -17,14 +17,14 @@
  * under the License.
  */
 /*
- * Description    : Tests that stddev aggregation correctly returns null for an empty stream,
+ * Description    : Tests that stddev_samp aggregation correctly returns null for an empty stream,
  *                  without an aggregate combiner.
  * Success        : Yes
  */
 
 use test;
 
-{'stddev': (select element test.strict_stddev((
+{'stddev_samp': (select element test.strict_stddev_samp((
     select element x
     from  [1,2,3] as x
     where (x > 10)

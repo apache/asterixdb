@@ -1,0 +1,23 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [skewness]
+    :
+    FunctionCall asterix.sql-skewness@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=$x ]
+          Field=doubleField
+        ]
+        ]
+        FROM [          FunctionCall asterix.dataset@1[
+            LiteralExpr [STRING] [test.Numeric]
+          ]
+          AS Variable [ Name=$x ]
+        ]
+      )
+    ]
+  )
+]

@@ -42,7 +42,7 @@ public class LocalSqlStddevAggregateDescriptor extends AbstractAggregateFunction
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.LOCAL_SQL_STDDEV;
+        return BuiltinFunctions.LOCAL_SQL_STDDEV_SAMP;
     }
 
     @Override

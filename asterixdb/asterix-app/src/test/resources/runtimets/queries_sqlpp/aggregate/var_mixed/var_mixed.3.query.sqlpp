@@ -17,12 +17,12 @@
  * under the License.
  */
 /*
-* Description  : Run var over an multiset with mixed types
+* Description  : Run var_samp over an multiset with mixed types
 * Expected Res : Failure
 * Date         : March 5th 2018
 */
 
-select element strict_var((
+select element strict_var_samp((
     select element x
     from  [float('2.0'),'hello world',93847382783847382,date('2013-01-01')] as x
 ));

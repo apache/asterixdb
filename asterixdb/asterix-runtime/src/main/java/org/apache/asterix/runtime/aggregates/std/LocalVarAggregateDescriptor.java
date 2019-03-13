@@ -42,7 +42,7 @@ public class LocalVarAggregateDescriptor extends AbstractAggregateFunctionDynami
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.LOCAL_VAR;
+        return BuiltinFunctions.LOCAL_VAR_SAMP;
     }
 
     @Override

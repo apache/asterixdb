@@ -73,7 +73,17 @@ public class SerializableLocalVarAggregateFunction
         if (isPop) {
             return BuiltinFunctions.VAR_POP;
         } else {
-            return BuiltinFunctions.VAR;
+            return BuiltinFunctions.VAR_SAMP;
         }
+    }
+
+    @Override
+    protected boolean getM3Flag() {
+        return false;
+    }
+
+    @Override
+    protected boolean getM4Flag() {
+        return false;
     }
 }

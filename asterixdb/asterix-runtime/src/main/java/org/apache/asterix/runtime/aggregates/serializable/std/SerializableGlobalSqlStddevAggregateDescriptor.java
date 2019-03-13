@@ -43,7 +43,7 @@ public class SerializableGlobalSqlStddevAggregateDescriptor
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_GLOBAL_SQL_STDDEV;
+        return BuiltinFunctions.SERIAL_GLOBAL_SQL_STDDEV_SAMP;
     }
 
     @Override

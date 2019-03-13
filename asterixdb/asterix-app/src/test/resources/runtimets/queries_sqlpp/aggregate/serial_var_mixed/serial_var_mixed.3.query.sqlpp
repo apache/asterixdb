@@ -17,14 +17,14 @@
  * under the License.
  */
  /*
- * Description  : Run serial-var over an multiset with mixed types
+ * Description  : Run serial-var_samp over an multiset with mixed types
  * Expected Res : Failure
  * Date         : March 5th 2018
  */
 
 use test;
 
-select gid, strict_var((select value g.valplus from g)) as var
+select gid, strict_var_samp((select value g.valplus from g)) as var_samp
 from Test as t
 /* +hash */
 group by t.gid as gid group as g(valplus as valplus);

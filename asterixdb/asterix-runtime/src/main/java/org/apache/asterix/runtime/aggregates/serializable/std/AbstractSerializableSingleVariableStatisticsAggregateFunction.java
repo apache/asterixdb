@@ -53,12 +53,16 @@ public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunct
      */
     private static final int M1_FIELD_ID = 0;
     private static final int M2_FIELD_ID = 1;
-    private static final int COUNT_FIELD_ID = 2;
+    private static final int M3_FIELD_ID = 2;
+    private static final int M4_FIELD_ID = 3;
+    private static final int COUNT_FIELD_ID = 4;
 
     private static final int M1_OFFSET = 0;
     private static final int M2_OFFSET = 8;
-    private static final int COUNT_OFFSET = 16;
-    protected static final int AGG_TYPE_OFFSET = 24;
+    private static final int M3_OFFSET = 16;
+    private static final int M4_OFFSET = 24;
+    private static final int COUNT_OFFSET = 32;
+    protected static final int AGG_TYPE_OFFSET = 40;
 
     private IPointable inputVal = new VoidPointable();
     private IScalarEvaluator eval;
@@ -71,10 +75,16 @@ public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunct
     private DataOutput m1BytesOutput = new DataOutputStream(m1Bytes);
     private ByteArrayAccessibleOutputStream m2Bytes = new ByteArrayAccessibleOutputStream();
     private DataOutput m2BytesOutput = new DataOutputStream(m2Bytes);
+    private ByteArrayAccessibleOutputStream m3Bytes = new ByteArrayAccessibleOutputStream();
+    private DataOutput m3BytesOutput = new DataOutputStream(m3Bytes);
+    private ByteArrayAccessibleOutputStream m4Bytes = new ByteArrayAccessibleOutputStream();
+    private DataOutput m4BytesOutput = new DataOutputStream(m4Bytes);
     private ByteArrayAccessibleOutputStream countBytes = new ByteArrayAccessibleOutputStream();
     private DataOutput countBytesOutput = new DataOutputStream(countBytes);
     private IScalarEvaluator evalM1 = new AccessibleByteArrayEval(m1Bytes);
     private IScalarEvaluator evalM2 = new AccessibleByteArrayEval(m2Bytes);
+    private IScalarEvaluator evalM3 = new AccessibleByteArrayEval(m3Bytes);
+    private IScalarEvaluator evalM4 = new AccessibleByteArrayEval(m4Bytes);
     private IScalarEvaluator evalCount = new AccessibleByteArrayEval(countBytes);
     private ClosedRecordConstructorEval recordEval;
 
@@ -99,9 +109,11 @@ public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunct
         try {
             state.writeDouble(0.0);
             state.writeDouble(0.0);
+            state.writeDouble(0.0);
+            state.writeDouble(0.0);
             state.writeLong(0L);
             state.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
-            moments.set(0, 0, 0);
+            moments.set(0, 0, 0, 0, 0, getM3Flag(), getM4Flag());
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -120,6 +132,10 @@ public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunct
 
     protected abstract FunctionIdentifier getFunctionIdentifier();
 
+    protected abstract boolean getM3Flag();
+
+    protected abstract boolean getM4Flag();
+
     protected void processDataValues(IFrameTupleReference tuple, byte[] state, int start, int len)
             throws HyracksDataException {
         if (skipStep(state, start)) {
@@ -131,8 +147,10 @@ public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunct
 
         double m1 = BufferSerDeUtil.getDouble(state, start + M1_OFFSET);
         double m2 = BufferSerDeUtil.getDouble(state, start + M2_OFFSET);
+        double m3 = BufferSerDeUtil.getDouble(state, start + M3_OFFSET);
+        double m4 = BufferSerDeUtil.getDouble(state, start + M4_OFFSET);
         long count = BufferSerDeUtil.getLong(state, start + COUNT_OFFSET);
-        moments.set(m1, m2, count);
+        moments.set(m1, m2, m3, m4, count, getM3Flag(), getM4Flag());
 
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
         ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
@@ -183,6 +201,8 @@ public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunct
         }
         BufferSerDeUtil.writeDouble(moments.getM1(), state, start + M1_OFFSET);
         BufferSerDeUtil.writeDouble(moments.getM2(), state, start + M2_OFFSET);
+        BufferSerDeUtil.writeDouble(moments.getM3(), state, start + M3_OFFSET);
+        BufferSerDeUtil.writeDouble(moments.getM4(), state, start + M4_OFFSET);
         BufferSerDeUtil.writeLong(moments.getCount(), state, start + COUNT_OFFSET);
         state[start + AGG_TYPE_OFFSET] = aggType.serialize();
     }
@@ -191,12 +211,18 @@ public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunct
             throws HyracksDataException {
         double m1 = BufferSerDeUtil.getDouble(state, start + M1_OFFSET);
         double m2 = BufferSerDeUtil.getDouble(state, start + M2_OFFSET);
+        double m3 = BufferSerDeUtil.getDouble(state, start + M3_OFFSET);
+        double m4 = BufferSerDeUtil.getDouble(state, start + M4_OFFSET);
         long count = BufferSerDeUtil.getLong(state, start + COUNT_OFFSET);
         ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
         if (recordEval == null) {
-            ARecordType recType = new ARecordType(null, new String[] { "m1", "m2", "count" },
-                    new IAType[] { BuiltinType.ADOUBLE, BuiltinType.ADOUBLE, BuiltinType.AINT64 }, false);
-            recordEval = new ClosedRecordConstructorEval(recType, new IScalarEvaluator[] { evalM1, evalM2, evalCount });
+            ARecordType recType =
+                    new ARecordType(null,
+                            new String[] { "m1", "m2", "m3", "m4", "count" }, new IAType[] { BuiltinType.ADOUBLE,
+                                    BuiltinType.ADOUBLE, BuiltinType.ADOUBLE, BuiltinType.ADOUBLE, BuiltinType.AINT64 },
+                            false);
+            recordEval = new ClosedRecordConstructorEval(recType,
+                    new IScalarEvaluator[] { evalM1, evalM2, evalM3, evalM4, evalCount });
         }
 
         try {
@@ -214,6 +240,12 @@ public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunct
                 m2Bytes.reset();
                 aDouble.setValue(m2);
                 doubleSerde.serialize(aDouble, m2BytesOutput);
+                m3Bytes.reset();
+                aDouble.setValue(m3);
+                doubleSerde.serialize(aDouble, m3BytesOutput);
+                m4Bytes.reset();
+                aDouble.setValue(m4);
+                doubleSerde.serialize(aDouble, m4BytesOutput);
                 countBytes.reset();
                 aInt64.setValue(count);
                 longSerde.serialize(aInt64, countBytesOutput);
@@ -232,8 +264,10 @@ public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunct
         }
         double m1 = BufferSerDeUtil.getDouble(state, start + M1_OFFSET);
         double m2 = BufferSerDeUtil.getDouble(state, start + M2_OFFSET);
+        double m3 = BufferSerDeUtil.getDouble(state, start + M3_OFFSET);
+        double m4 = BufferSerDeUtil.getDouble(state, start + M4_OFFSET);
         long count = BufferSerDeUtil.getLong(state, start + COUNT_OFFSET);
-        moments.set(m1, m2, count);
+        moments.set(m1, m2, m3, m4, count, getM3Flag(), getM4Flag());
 
         eval.evaluate(tuple, inputVal);
         byte[] serBytes = inputVal.getByteArray();
@@ -255,15 +289,23 @@ public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunct
                         nullBitmapSize, false);
                 int offset2 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, offset, M2_FIELD_ID,
                         nullBitmapSize, false);
-                int offset3 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, offset, COUNT_FIELD_ID,
+                int offset3 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, offset, M3_FIELD_ID,
+                        nullBitmapSize, false);
+                int offset4 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, offset, M4_FIELD_ID,
+                        nullBitmapSize, false);
+                int offset5 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, offset, COUNT_FIELD_ID,
                         nullBitmapSize, false);
                 double temp_m1 = ADoubleSerializerDeserializer.getDouble(serBytes, offset1);
                 double temp_m2 = ADoubleSerializerDeserializer.getDouble(serBytes, offset2);
-                long temp_count = AInt64SerializerDeserializer.getLong(serBytes, offset3);
-                moments.combine(temp_m1, temp_m2, temp_count);
+                double temp_m3 = ADoubleSerializerDeserializer.getDouble(serBytes, offset3);
+                double temp_m4 = ADoubleSerializerDeserializer.getDouble(serBytes, offset4);
+                long temp_count = AInt64SerializerDeserializer.getLong(serBytes, offset5);
+                moments.combine(temp_m1, temp_m2, temp_m3, temp_m4, temp_count);
 
                 BufferSerDeUtil.writeDouble(moments.getM1(), state, start + M1_OFFSET);
                 BufferSerDeUtil.writeDouble(moments.getM2(), state, start + M2_OFFSET);
+                BufferSerDeUtil.writeDouble(moments.getM3(), state, start + M3_OFFSET);
+                BufferSerDeUtil.writeDouble(moments.getM4(), state, start + M4_OFFSET);
                 BufferSerDeUtil.writeLong(moments.getCount(), state, start + COUNT_OFFSET);
                 state[start + AGG_TYPE_OFFSET] = aggType.serialize();
                 break;
@@ -299,6 +341,42 @@ public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunct
                 nullSerde.serialize(ANull.NULL, result);
             } else {
                 aDouble.setValue(m2 / (count - delta));
+                doubleSerde.serialize(aDouble, result);
+            }
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    protected void finishSkewFinalResults(byte[] state, int start, int len, DataOutput result)
+            throws HyracksDataException {
+        double m2 = BufferSerDeUtil.getDouble(state, start + M2_OFFSET);
+        double m3 = BufferSerDeUtil.getDouble(state, start + M3_OFFSET);
+        long count = BufferSerDeUtil.getLong(state, start + COUNT_OFFSET);
+        ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
+        try {
+            if (count <= 1 || aggType == ATypeTag.NULL || (m2 < Double.MIN_VALUE && m2 > -Double.MIN_VALUE)) {
+                nullSerde.serialize(ANull.NULL, result);
+            } else {
+                aDouble.setValue(Math.sqrt(count) * m3 / Math.pow(m2, 1.5));
+                doubleSerde.serialize(aDouble, result);
+            }
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    protected void finishKurtFinalResults(byte[] state, int start, int len, DataOutput result)
+            throws HyracksDataException {
+        double m2 = BufferSerDeUtil.getDouble(state, start + M2_OFFSET);
+        double m4 = BufferSerDeUtil.getDouble(state, start + M4_OFFSET);
+        long count = BufferSerDeUtil.getLong(state, start + COUNT_OFFSET);
+        ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
+        try {
+            if (count <= 1 || aggType == ATypeTag.NULL || (m2 < Double.MIN_VALUE && m2 > -Double.MIN_VALUE)) {
+                nullSerde.serialize(ANull.NULL, result);
+            } else {
+                aDouble.setValue(m4 * count / (m2 * m2 - 3));
                 doubleSerde.serialize(aDouble, result);
             }
         } catch (IOException e) {

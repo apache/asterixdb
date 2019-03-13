@@ -42,7 +42,7 @@ public class SerializableStddevAggregateDescriptor extends AbstractSerializableA
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_STDDEV;
+        return BuiltinFunctions.SERIAL_STDDEV_SAMP;
     }
 
     @Override

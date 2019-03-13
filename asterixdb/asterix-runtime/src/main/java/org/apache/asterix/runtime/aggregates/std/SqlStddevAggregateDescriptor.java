@@ -42,7 +42,7 @@ public class SqlStddevAggregateDescriptor extends AbstractAggregateFunctionDynam
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SQL_STDDEV;
+        return BuiltinFunctions.SQL_STDDEV_SAMP;
     }
 
     @Override

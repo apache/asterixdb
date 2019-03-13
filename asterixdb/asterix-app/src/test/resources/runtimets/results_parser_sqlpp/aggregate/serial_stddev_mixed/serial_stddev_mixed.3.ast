@@ -3,7 +3,7 @@ Query:
 SELECT [
 Variable [ Name=$gid ]
 gid
-FunctionCall asterix.stddev@1[
+FunctionCall asterix.stddev_samp@1[
   (
     SELECT ELEMENT [
     FieldAccessor [
@@ -16,7 +16,7 @@ FunctionCall asterix.stddev@1[
     ]
   )
 ]
-stddev
+stddev_samp
 ]
 FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [test.Test]

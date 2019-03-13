@@ -19,7 +19,7 @@
 
 use test;
 
-select gid, strict_var((select value g.valplus from g)) as var,
+select gid, strict_var_samp((select value g.valplus from g)) as var_samp,
    strict_var_pop((select value g.valplus from g)) as var_pop
 from Test as t
 /* +hash */

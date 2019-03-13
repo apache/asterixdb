@@ -52,7 +52,7 @@ use test;
         select element t
         from  Test as t
     ) as i
-)),'stddev':test.strict_stddev((
+)),'stddev_samp':test.strict_stddev_samp((
     select element i.val
     from  (
         select element t
@@ -64,13 +64,25 @@ use test;
         select element t
         from  Test as t
     ) as i
-)),'var':test.strict_var((
+)),'var_samp':test.strict_var_samp((
     select element i.val
     from  (
         select element t
         from  Test as t
     ) as i
 )),'var_pop':test.strict_var_pop((
+    select element i.val
+    from  (
+        select element t
+        from  Test as t
+    ) as i
+)),'skewness':test.strict_skewness((
+    select element i.val
+    from  (
+        select element t
+        from  Test as t
+    ) as i
+)),'kurtosis':test.strict_kurtosis((
     select element i.val
     from  (
         select element t

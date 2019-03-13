@@ -122,9 +122,9 @@ RecordConstructor [
     ]
   )
   (
-    LiteralExpr [STRING] [sql-stddev]
+    LiteralExpr [STRING] [sql-stddev_samp]
     :
-    FunctionCall asterix.sql-stddev@1[
+    FunctionCall asterix.sql-stddev_samp@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -174,9 +174,9 @@ RecordConstructor [
     ]
   )
   (
-    LiteralExpr [STRING] [sql-var]
+    LiteralExpr [STRING] [sql-var_samp]
     :
-    FunctionCall asterix.sql-var@1[
+    FunctionCall asterix.sql-var_samp@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -203,6 +203,58 @@ RecordConstructor [
     LiteralExpr [STRING] [sql-var_pop]
     :
     FunctionCall asterix.sql-var_pop@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=$i ]
+          Field=valplus
+        ]
+        ]
+        FROM [          (
+            SELECT ELEMENT [
+            Variable [ Name=$t ]
+            ]
+            FROM [              FunctionCall asterix.dataset@1[
+                LiteralExpr [STRING] [test.Test]
+              ]
+              AS Variable [ Name=$t ]
+            ]
+          )
+          AS Variable [ Name=$i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-skewness]
+    :
+    FunctionCall asterix.sql-skewness@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=$i ]
+          Field=valplus
+        ]
+        ]
+        FROM [          (
+            SELECT ELEMENT [
+            Variable [ Name=$t ]
+            ]
+            FROM [              FunctionCall asterix.dataset@1[
+                LiteralExpr [STRING] [test.Test]
+              ]
+              AS Variable [ Name=$t ]
+            ]
+          )
+          AS Variable [ Name=$i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-kurtosis]
+    :
+    FunctionCall asterix.sql-kurtosis@1[
       (
         SELECT ELEMENT [
         FieldAccessor [

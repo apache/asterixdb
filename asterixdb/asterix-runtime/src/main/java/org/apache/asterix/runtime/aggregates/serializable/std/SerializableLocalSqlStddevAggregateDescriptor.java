@@ -43,7 +43,7 @@ public class SerializableLocalSqlStddevAggregateDescriptor
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_LOCAL_SQL_STDDEV;
+        return BuiltinFunctions.SERIAL_LOCAL_SQL_STDDEV_SAMP;
     }
 
     @Override

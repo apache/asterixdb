@@ -17,12 +17,12 @@
  * under the License.
  */
 /*
-* Description  : Run array_stddev over an multiset with mixed types
+* Description  : Run array_stddev_samp over an multiset with mixed types
 * Expected Res : Failure
 * Date         : March 5th 2018
 */
 
-select element array_stddev((
+select element array_stddev_samp((
     select element x
     from  [float('2.0'),'hello world',93847382783847382,date('2013-01-01')] as x
 ));

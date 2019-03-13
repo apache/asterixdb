@@ -1,6 +1,6 @@
 Query:
 SELECT ELEMENT [
-FunctionCall asterix.sql-var@1[
+FunctionCall asterix.sql-var_samp@1[
   (
     SELECT ELEMENT [
     Variable [ Name=$x ]

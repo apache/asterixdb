@@ -43,7 +43,7 @@ public class SerializableIntermediateVarAggregateDescriptor
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_INTERMEDIATE_VAR;
+        return BuiltinFunctions.SERIAL_INTERMEDIATE_VAR_SAMP;
     }
 
     @Override

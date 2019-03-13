@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that array_stddev aggregation correctly returns null for an empty stream,
+ * Description    : Tests that stddev_samp and stddev_pop aggregation correctly returns null for an empty stream,
  *                  with an aggregate combiner.
  * Success        : Yes
  */

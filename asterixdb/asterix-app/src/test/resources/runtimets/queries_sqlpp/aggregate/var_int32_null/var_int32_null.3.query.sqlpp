@@ -20,7 +20,7 @@
 use test;
 
 
-{'var':test.strict_var((
+{'var_samp':test.strict_var_samp((
     select element x.int32Field
     from  Numeric as x
 )), 'var_pop':test.strict_var_pop((

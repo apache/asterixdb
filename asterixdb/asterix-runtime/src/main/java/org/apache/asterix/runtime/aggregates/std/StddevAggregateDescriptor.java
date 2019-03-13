@@ -42,7 +42,7 @@ public class StddevAggregateDescriptor extends AbstractAggregateFunctionDynamicD
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.STDDEV;
+        return BuiltinFunctions.STDDEV_SAMP;
     }
 
     @Override

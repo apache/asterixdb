@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that stddev aggregation correctly returns null for an empty stream,
+ * Description    : Tests that stddev_samp aggregation correctly returns null for an empty stream,
  *                  without an aggregate combiner.
  * Success        : Yes
  */

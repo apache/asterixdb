@@ -52,7 +52,7 @@ use test;
         select element t
         from  Test as t
     ) as i
-)),'sql-stddev':test.array_stddev((
+)),'sql-stddev_samp':test.array_stddev_samp((
     select element i.valplus
     from  (
         select element t
@@ -64,13 +64,25 @@ use test;
         select element t
         from  Test as t
     ) as i
-)),'sql-var':test.array_var((
+)),'sql-var_samp':test.array_var_samp((
     select element i.valplus
     from  (
         select element t
         from  Test as t
     ) as i
 )),'sql-var_pop':test.array_var_pop((
+    select element i.valplus
+    from  (
+        select element t
+        from  Test as t
+    ) as i
+)),'sql-skewness':test.array_skewness((
+    select element i.valplus
+    from  (
+        select element t
+        from  Test as t
+    ) as i
+)),'sql-kurtosis':test.array_kurtosis((
     select element i.valplus
     from  (
         select element t

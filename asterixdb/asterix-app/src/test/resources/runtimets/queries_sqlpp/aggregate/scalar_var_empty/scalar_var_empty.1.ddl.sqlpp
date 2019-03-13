@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of var and var_pop with an empty list.
+ * Description    : Tests the scalar version of var_samp and var_pop with an empty list.
  * Success        : Yes
  */
 

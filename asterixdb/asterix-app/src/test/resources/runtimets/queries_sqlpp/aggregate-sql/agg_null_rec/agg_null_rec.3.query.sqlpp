@@ -40,16 +40,22 @@ use test;
 )),'sql-max':test.array_max((
     select element t.valplus
     from  Test as t
-)),'sql-stddev':test.array_stddev((
+)),'sql-stddev_samp':test.array_stddev_samp((
     select element t.valplus
     from  Test as t
 )),'sql-stddev_pop':test.array_stddev_pop((
     select element t.valplus
     from  Test as t
-)),'sql-var':test.array_var((
+)),'sql-var_samp':test.array_var_samp((
     select element t.valplus
     from  Test as t
 )),'sql-var_pop':test.array_var_pop((
+    select element t.valplus
+    from  Test as t
+)),'sql-skewness':test.array_skewness((
+    select element t.valplus
+    from  Test as t
+)),'sql-kurtosis':test.array_kurtosis((
     select element t.valplus
     from  Test as t
 ))};

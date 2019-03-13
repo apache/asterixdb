@@ -43,7 +43,7 @@ public class SerializableGlobalSqlVarAggregateDescriptor
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_GLOBAL_SQL_VAR;
+        return BuiltinFunctions.SERIAL_GLOBAL_SQL_VAR_SAMP;
     }
 
     @Override

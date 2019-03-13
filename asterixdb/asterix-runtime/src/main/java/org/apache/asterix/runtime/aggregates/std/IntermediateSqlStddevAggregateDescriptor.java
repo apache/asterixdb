@@ -42,7 +42,7 @@ public class IntermediateSqlStddevAggregateDescriptor extends AbstractAggregateF
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.INTERMEDIATE_SQL_STDDEV;
+        return BuiltinFunctions.INTERMEDIATE_SQL_STDDEV_SAMP;
     }
 
     @Override

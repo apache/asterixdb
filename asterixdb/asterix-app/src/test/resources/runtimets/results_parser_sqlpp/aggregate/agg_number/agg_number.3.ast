@@ -81,9 +81,9 @@ RecordConstructor [
     ]
   )
   (
-    LiteralExpr [STRING] [stddev1]
+    LiteralExpr [STRING] [stddev_samp1]
     :
-    FunctionCall asterix.stddev@1[
+    FunctionCall asterix.stddev_samp@1[
       OrderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -113,9 +113,9 @@ RecordConstructor [
     ]
   )
   (
-    LiteralExpr [STRING] [var1]
+    LiteralExpr [STRING] [var_samp1]
     :
-    FunctionCall asterix.var@1[
+    FunctionCall asterix.var_samp@1[
       OrderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -132,6 +132,38 @@ RecordConstructor [
     LiteralExpr [STRING] [var_pop1]
     :
     FunctionCall asterix.var_pop@1[
+      OrderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [skewness1]
+    :
+    FunctionCall asterix.skewness@1[
+      OrderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [kurtosis1]
+    :
+    FunctionCall asterix.kurtosis@1[
       OrderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -225,9 +257,9 @@ RecordConstructor [
     ]
   )
   (
-    LiteralExpr [STRING] [stddev2]
+    LiteralExpr [STRING] [stddev_samp2]
     :
-    FunctionCall asterix.stddev@1[
+    FunctionCall asterix.stddev_samp@1[
       OrderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -257,9 +289,9 @@ RecordConstructor [
     ]
   )
   (
-    LiteralExpr [STRING] [var2]
+    LiteralExpr [STRING] [var_samp2]
     :
-    FunctionCall asterix.var@1[
+    FunctionCall asterix.var_samp@1[
       OrderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -276,6 +308,38 @@ RecordConstructor [
     LiteralExpr [STRING] [var_pop2]
     :
     FunctionCall asterix.var_pop@1[
+      OrderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [skewness2]
+    :
+    FunctionCall asterix.skewness@1[
+      OrderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [kurtosis2]
+    :
+    FunctionCall asterix.kurtosis@1[
       OrderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]

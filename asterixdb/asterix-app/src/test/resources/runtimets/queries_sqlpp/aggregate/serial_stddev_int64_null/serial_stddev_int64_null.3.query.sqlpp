@@ -19,7 +19,7 @@
 
 use test;
 
-select gid, strict_stddev((select value g.valplus from g)) as stddev,
+select gid, strict_stddev_samp((select value g.valplus from g)) as stddev_samp,
    strict_stddev_pop((select value g.valplus from g)) as stddev_pop
 from Test as t
 /* +hash */

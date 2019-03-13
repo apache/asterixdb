@@ -167,11 +167,11 @@ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
         3.4
 
 
-### array_stddev ###
+### array_stddev_samp ###
 
  * Syntax:
 
-        array_stddev(num_collection)
+        array_stddev_samp(num_collection)
 
  * Gets the sample standard deviation value of the non-null and non-missing numeric items in the given collection.
  * Arguments:
@@ -188,7 +188,7 @@ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
  * Example:
 
-        array_stddev( [1.2, 2.3, 3.4, 0, null] );
+        array_stddev_samp( [1.2, 2.3, 3.4, 0, null] );
 
  * The expected result is:
 
@@ -221,11 +221,11 @@ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
         1.2636751956100112
 
-### array_var ###
+### array_var_samp ###
 
  * Syntax:
 
-        array_var(num_collection)
+        array_var_samp(num_collection)
 
  * Gets the sample variance value of the non-null and non-missing numeric items in the given collection.
  * Arguments:
@@ -242,7 +242,7 @@ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
  * Example:
 
-        array_var( [1.2, 2.3, 3.4, 0, null] );
+        array_var_samp( [1.2, 2.3, 3.4, 0, null] );
 
  * The expected result is:
 
@@ -275,6 +275,59 @@ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
         1.5968749999999998
 
+### array_skewness ###
+
+ * Syntax:
+
+        array_skewness(num_collection)
+
+ * Gets the skewness value of the non-null and non-missing numeric items in the given collection.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Return Value:
+    * a `double` value representing the skewness of the non-null and non-missing numbers in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if the given collection does not contain any non-null and non-missing items,
+    * any other non-array and non-multiset input value will cause a type error,
+    * any other non-numeric value in the input collection will cause a type error.
+
+ * Example:
+
+        array_skewness( [1.2, 2.3, 3.4, 0, null] );
+
+ * The expected result is:
+
+        -0.04808451539164242
+
+### array_kurtosis ###
+
+ * Syntax:
+
+        array_kurtosis(num_collection)
+
+ * Gets the kurtosis value from the normal distribution of the non-null and non-missing numeric items in the given collection.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Return Value:
+    * a `double` value representing the kurtosis from a normal distribution of the non-null and non-missing numbers in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if the given collection does not contain any non-null and non-missing items,
+    * any other non-array and non-multiset input value will cause a type error,
+    * any other non-numeric value in the input collection will cause a type error.
+
+ * Example:
+
+        array_kurtosis( [1.2, 2.3, 3.4, 0, null] );
+
+ * The expected result is:
+
+        -1.342049701096427
 
 ### strict_count ###
  * Syntax:
@@ -408,10 +461,10 @@ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
         100.0
 
-### strict_stddev ###
+### strict_stddev_samp ###
  * Syntax:
 
-        strict_stddev(num_collection)
+        strict_stddev_samp(num_collection)
 
  * Gets the sample standard deviation value of the numeric items in the given collection.
  * Arguments:
@@ -427,7 +480,7 @@ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
  * Example:
 
-        strict_stddev( [100, 200, 300] );
+        strict_stddev_samp( [100, 200, 300] );
 
  * The expected result is:
 
@@ -458,10 +511,10 @@ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
         81.64965809277261
 
-### strict_var ###
+### strict_var_samp ###
  * Syntax:
 
-        strict_var(num_collection)
+        strict_var_samp(num_collection)
 
  * Gets the sample variance value of the numeric items in the given collection.
  * Arguments:
@@ -477,7 +530,7 @@ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
  * Example:
 
-        strict_var( [100, 200, 300] );
+        strict_var_samp( [100, 200, 300] );
 
  * The expected result is:
 
@@ -507,3 +560,53 @@ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
  * The expected result is:
 
         6666.666666666667
+
+### strict_skewness ###
+ * Syntax:
+
+        strict_skewness(num_collection)
+
+ * Gets the skewness value of the numeric items in the given collection.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Return Value:
+    * a `double` value representing the skewness of the numbers in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if there is a `null` or `missing` in the input collection,
+    * any other non-numeric value in the input collection will cause a type error.
+
+ * Example:
+
+        strict_skewness( [100, 200, 300] );
+
+ * The expected result is:
+
+        0.0
+
+### strict_kurtosis ###
+ * Syntax:
+
+        strict_kurtosis(num_collection)
+
+ * Gets the kurtosis value from the normal distribution of the numeric items in the given collection.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Return Value:
+    * a `double` value representing the kurtosis from a normal distribution of the numbers in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if there is a `null` or `missing` in the input collection,
+    * any other non-numeric value in the input collection will cause a type error.
+
+ * Example:
+
+        strict_kurtosis( [100, 200, 300] );
+
+ * The expected result is:
+
+        -1.5

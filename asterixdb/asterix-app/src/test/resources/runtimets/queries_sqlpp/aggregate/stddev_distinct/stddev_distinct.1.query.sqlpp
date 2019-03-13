@@ -17,10 +17,10 @@
  * under the License.
  */
  {
-   't1': to_bigint(strict_stddev(distinct [10,20,30,10,20,30,10])),
-   't2': to_bigint(strict_stddev(distinct [null,missing,null,missing])),
-   't3': to_bigint(strict_stddev(distinct [40,null,missing,50,40,null,missing,50,40])),
-   't4': to_bigint(strict_stddev(distinct [])),
+   't1': to_bigint(strict_stddev_samp(distinct [10,20,30,10,20,30,10])),
+   't2': to_bigint(strict_stddev_samp(distinct [null,missing,null,missing])),
+   't3': to_bigint(strict_stddev_samp(distinct [40,null,missing,50,40,null,missing,50,40])),
+   't4': to_bigint(strict_stddev_samp(distinct [])),
    't5': to_bigint(strict_stddev_pop(distinct [10,20,30,10,20,30,10])),
    't6': to_bigint(strict_stddev_pop(distinct [null,missing,null,missing])),
    't7': to_bigint(strict_stddev_pop(distinct [40,null,missing,50,40,null,missing,50,40])),

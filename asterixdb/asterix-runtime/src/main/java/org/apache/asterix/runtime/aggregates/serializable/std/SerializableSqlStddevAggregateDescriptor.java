@@ -41,7 +41,7 @@ public class SerializableSqlStddevAggregateDescriptor extends AbstractSerializab
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_SQL_STDDEV;
+        return BuiltinFunctions.SERIAL_SQL_STDDEV_SAMP;
     }
 
     @Override

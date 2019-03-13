@@ -43,7 +43,7 @@ public class GlobalSqlVarAggregateDescriptor extends AbstractAggregateFunctionDy
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.GLOBAL_SQL_VAR;
+        return BuiltinFunctions.GLOBAL_SQL_VAR_SAMP;
     }
 
     @Override

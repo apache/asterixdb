@@ -42,7 +42,7 @@ public class SerializableGlobalVarAggregateDescriptor extends AbstractSerializab
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_GLOBAL_VAR;
+        return BuiltinFunctions.SERIAL_GLOBAL_VAR_SAMP;
     }
 
     @Override

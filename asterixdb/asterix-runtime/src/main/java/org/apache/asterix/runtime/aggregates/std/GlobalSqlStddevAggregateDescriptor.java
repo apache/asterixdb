@@ -43,7 +43,7 @@ public class GlobalSqlStddevAggregateDescriptor extends AbstractAggregateFunctio
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.GLOBAL_SQL_STDDEV;
+        return BuiltinFunctions.GLOBAL_SQL_STDDEV_SAMP;
     }
 
     @Override

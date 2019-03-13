@@ -17,7 +17,7 @@
  * under the License.
  */
 
-{'stddev':(select element strict_stddev((
+{'stddev_samp':(select element strict_stddev_samp((
     select element x
     from  [1.0,2.0,double('3.0')] as x
 ))), 'stddev_pop': (select element strict_stddev_pop((

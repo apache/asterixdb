@@ -40,16 +40,22 @@ use test;
 )),'max':test.strict_max((
     select element t.valplus
     from  Test as t
-)),'stddev':test.strict_stddev((
+)),'stddev_samp':test.strict_stddev_samp((
     select element t.valplus
     from  Test as t
 )),'stddev_pop':test.strict_stddev_pop((
     select element t.valplus
     from  Test as t
-)),'var':test.strict_var((
+)),'var_samp':test.strict_var_samp((
     select element t.valplus
     from  Test as t
 )),'var_pop':test.strict_var_pop((
+    select element t.valplus
+    from  Test as t
+)),'skewness':test.strict_skewness((
+    select element t.valplus
+    from  Test as t
+)),'kurtosis':test.strict_kurtosis((
     select element t.valplus
     from  Test as t
 ))};

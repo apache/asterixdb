@@ -28,7 +28,7 @@ public class ScalarSqlVarAggregateDescriptor extends AbstractScalarAggregateDesc
 
     private static final long serialVersionUID = 1L;
 
-    public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_VAR;
+    public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_VAR_SAMP;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override

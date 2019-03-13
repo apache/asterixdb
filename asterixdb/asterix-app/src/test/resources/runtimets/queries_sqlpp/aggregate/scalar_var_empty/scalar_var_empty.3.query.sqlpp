@@ -17,9 +17,9 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of var and var_pop with an empty list.
+ * Description    : Tests the scalar version of var_samp and var_pop with an empty list.
  * Success        : Yes
  */
 
-{'var': (select element strict_var([])),
+{'var_samp': (select element strict_var_samp([])),
 'var_pop': (select element strict_var_pop([]))};

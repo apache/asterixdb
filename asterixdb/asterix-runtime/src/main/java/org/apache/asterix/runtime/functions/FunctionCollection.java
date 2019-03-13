@@ -34,12 +34,16 @@ import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescrip
 import org.apache.asterix.runtime.aggregates.collections.LocalFirstElementAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarCountAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarMaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarMinAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlCountAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlMaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlMinAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlSumAggregateDescriptor;
@@ -53,7 +57,11 @@ import org.apache.asterix.runtime.aggregates.scalar.ScalarVarPopAggregateDescrip
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableCountAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalSqlAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalSqlKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalSqlSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalSqlSumAggregateDescriptor;
@@ -65,7 +73,11 @@ import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobal
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalVarAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSqlAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSqlKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSqlSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSqlSumAggregateDescriptor;
@@ -76,8 +88,13 @@ import org.apache.asterix.runtime.aggregates.serializable.std.SerializableInterm
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSumAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateVarAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateVarPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalStddevAggregateDescriptor;
@@ -88,8 +105,11 @@ import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalS
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalVarAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalVarPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlCountAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlSumAggregateDescriptor;
@@ -108,7 +128,11 @@ import org.apache.asterix.runtime.aggregates.std.GlobalSumAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateSqlSumAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateSumAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.RangeMapAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.GlobalKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.GlobalSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalSqlAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.GlobalSqlKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.GlobalSqlSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalStddevAggregateDescriptor;
@@ -118,7 +142,11 @@ import org.apache.asterix.runtime.aggregates.std.GlobalSqlVarPopAggregateDescrip
 import org.apache.asterix.runtime.aggregates.std.GlobalVarAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.IntermediateKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.IntermediateSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateSqlAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.IntermediateSqlKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.IntermediateSqlSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateStddevAggregateDescriptor;
@@ -127,13 +155,18 @@ import org.apache.asterix.runtime.aggregates.std.IntermediateSqlVarAggregateDesc
 import org.apache.asterix.runtime.aggregates.std.IntermediateSqlVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateVarAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateVarPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.KurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.LocalKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalMaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalMinAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSamplingAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.LocalSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.LocalSqlKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlMaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlMinAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.LocalSqlSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlSumAggregateDescriptor;
@@ -146,10 +179,13 @@ import org.apache.asterix.runtime.aggregates.std.LocalVarAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.MaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.MinAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.SkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlCountAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.SqlKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlMaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlMinAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.SqlSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlSumAggregateDescriptor;
@@ -555,6 +591,14 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(LocalVarPopAggregateDescriptor.FACTORY);
         fc.add(IntermediateVarPopAggregateDescriptor.FACTORY);
         fc.add(GlobalVarPopAggregateDescriptor.FACTORY);
+        fc.add(KurtosisAggregateDescriptor.FACTORY);
+        fc.add(LocalKurtosisAggregateDescriptor.FACTORY);
+        fc.add(IntermediateKurtosisAggregateDescriptor.FACTORY);
+        fc.add(GlobalKurtosisAggregateDescriptor.FACTORY);
+        fc.add(SkewnessAggregateDescriptor.FACTORY);
+        fc.add(LocalSkewnessAggregateDescriptor.FACTORY);
+        fc.add(IntermediateSkewnessAggregateDescriptor.FACTORY);
+        fc.add(GlobalSkewnessAggregateDescriptor.FACTORY);
 
         // serializable aggregates
         fc.add(SerializableCountAggregateDescriptor.FACTORY);
@@ -582,6 +626,14 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(SerializableLocalVarPopAggregateDescriptor.FACTORY);
         fc.add(SerializableIntermediateVarPopAggregateDescriptor.FACTORY);
         fc.add(SerializableGlobalVarPopAggregateDescriptor.FACTORY);
+        fc.add(SerializableKurtosisAggregateDescriptor.FACTORY);
+        fc.add(SerializableLocalKurtosisAggregateDescriptor.FACTORY);
+        fc.add(SerializableIntermediateKurtosisAggregateDescriptor.FACTORY);
+        fc.add(SerializableGlobalKurtosisAggregateDescriptor.FACTORY);
+        fc.add(SerializableSkewnessAggregateDescriptor.FACTORY);
+        fc.add(SerializableLocalSkewnessAggregateDescriptor.FACTORY);
+        fc.add(SerializableIntermediateSkewnessAggregateDescriptor.FACTORY);
+        fc.add(SerializableGlobalSkewnessAggregateDescriptor.FACTORY);
 
         // scalar aggregates
         fc.add(ScalarCountAggregateDescriptor.FACTORY);
@@ -595,6 +647,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ScalarStddevPopAggregateDescriptor.FACTORY);
         fc.add(ScalarVarAggregateDescriptor.FACTORY);
         fc.add(ScalarVarPopAggregateDescriptor.FACTORY);
+        fc.add(ScalarKurtosisAggregateDescriptor.FACTORY);
+        fc.add(ScalarSkewnessAggregateDescriptor.FACTORY);
 
         // SQL aggregates
         fc.add(SqlCountAggregateDescriptor.FACTORY);
@@ -626,6 +680,14 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(LocalSqlVarPopAggregateDescriptor.FACTORY);
         fc.add(IntermediateSqlVarPopAggregateDescriptor.FACTORY);
         fc.add(GlobalSqlVarPopAggregateDescriptor.FACTORY);
+        fc.add(SqlKurtosisAggregateDescriptor.FACTORY);
+        fc.add(LocalSqlKurtosisAggregateDescriptor.FACTORY);
+        fc.add(IntermediateSqlKurtosisAggregateDescriptor.FACTORY);
+        fc.add(GlobalSqlKurtosisAggregateDescriptor.FACTORY);
+        fc.add(SqlSkewnessAggregateDescriptor.FACTORY);
+        fc.add(LocalSqlSkewnessAggregateDescriptor.FACTORY);
+        fc.add(IntermediateSqlSkewnessAggregateDescriptor.FACTORY);
+        fc.add(GlobalSqlSkewnessAggregateDescriptor.FACTORY);
 
         // SQL serializable aggregates
         fc.add(SerializableSqlCountAggregateDescriptor.FACTORY);
@@ -653,6 +715,14 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(SerializableLocalSqlVarPopAggregateDescriptor.FACTORY);
         fc.add(SerializableIntermediateSqlVarPopAggregateDescriptor.FACTORY);
         fc.add(SerializableGlobalSqlVarPopAggregateDescriptor.FACTORY);
+        fc.add(SerializableSqlKurtosisAggregateDescriptor.FACTORY);
+        fc.add(SerializableLocalSqlKurtosisAggregateDescriptor.FACTORY);
+        fc.add(SerializableIntermediateSqlKurtosisAggregateDescriptor.FACTORY);
+        fc.add(SerializableGlobalSqlKurtosisAggregateDescriptor.FACTORY);
+        fc.add(SerializableSqlSkewnessAggregateDescriptor.FACTORY);
+        fc.add(SerializableLocalSqlSkewnessAggregateDescriptor.FACTORY);
+        fc.add(SerializableIntermediateSqlSkewnessAggregateDescriptor.FACTORY);
+        fc.add(SerializableGlobalSqlSkewnessAggregateDescriptor.FACTORY);
 
         // SQL scalar aggregates
         fc.add(ScalarSqlCountAggregateDescriptor.FACTORY);
@@ -664,6 +734,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ScalarSqlStddevPopAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlVarAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlVarPopAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlKurtosisAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlSkewnessAggregateDescriptor.FACTORY);
 
         // window functions
         fc.add(DenseRankRunningAggregateDescriptor.FACTORY);

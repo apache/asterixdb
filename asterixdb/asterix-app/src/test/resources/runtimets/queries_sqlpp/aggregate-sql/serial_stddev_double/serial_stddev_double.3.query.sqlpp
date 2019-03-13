@@ -19,7 +19,7 @@
 
 use test;
 
-select gid, stddev(t.val) as stddev, stddev_pop(t.val) as stddev_pop
+select gid, stddev_samp(t.val) as stddev_samp, stddev_pop(t.val) as stddev_pop
 from Test as t
 /* +hash */
 group by t.gid as gid;

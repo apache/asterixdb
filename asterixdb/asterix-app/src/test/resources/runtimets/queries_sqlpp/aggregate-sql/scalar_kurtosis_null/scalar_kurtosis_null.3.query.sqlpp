@@ -1,0 +1,35 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Tests the scalar version of array_kurtosis with nulls.
+ * Success        : Yes
+ */
+
+use test;
+
+
+with  i8 as test.array_kurtosis([test.tinyint('1'),test.tinyint('2'),test.tinyint('3'),null]),
+      i16 as test.array_kurtosis([test.smallint('1'),test.smallint('2'),test.smallint('3'),null]),
+      i32 as test.array_kurtosis([test.integer('1'),test.integer('2'),test.integer('3'),null]),
+      i64 as test.array_kurtosis([test.bigint('1'),test.bigint('2'),test.bigint('3'),null]),
+      f as test.array_kurtosis([test.float('1'),test.float('2'),test.float('3'),null]),
+      d as test.array_kurtosis([test.double('1'),test.double('2'),test.double('3'),null])
+select element i
+from  [i8,i16,i32,i64,f,d] as i
+;

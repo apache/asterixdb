@@ -42,7 +42,7 @@ public class LocalStddevAggregateDescriptor extends AbstractAggregateFunctionDyn
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.LOCAL_STDDEV;
+        return BuiltinFunctions.LOCAL_STDDEV_SAMP;
     }
 
     @Override

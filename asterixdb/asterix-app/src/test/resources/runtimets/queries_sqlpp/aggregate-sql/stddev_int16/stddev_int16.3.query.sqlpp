@@ -20,7 +20,7 @@
 use test;
 
 
-{'stddev': (select element test.array_stddev((
+{'stddev_samp': (select element test.array_stddev_samp((
     select element x
     from  [test.smallint('1'),test.smallint('2'),test.smallint('3')] as x
 ))), 'stddev_pop': (select element test.array_stddev_pop((

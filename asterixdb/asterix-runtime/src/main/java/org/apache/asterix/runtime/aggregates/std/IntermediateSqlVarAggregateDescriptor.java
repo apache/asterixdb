@@ -42,7 +42,7 @@ public class IntermediateSqlVarAggregateDescriptor extends AbstractAggregateFunc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.INTERMEDIATE_SQL_VAR;
+        return BuiltinFunctions.INTERMEDIATE_SQL_VAR_SAMP;
     }
 
     @Override

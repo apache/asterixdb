@@ -46,9 +46,9 @@ RecordConstructor [
     ]
   )
   (
-    LiteralExpr [STRING] [sql-stddev1]
+    LiteralExpr [STRING] [sql-stddev_samp1]
     :
-    FunctionCall asterix.sql-stddev@1[
+    FunctionCall asterix.sql-stddev_samp@1[
       OrderedListConstructor [
         LiteralExpr [NULL]
       ]
@@ -64,9 +64,9 @@ RecordConstructor [
     ]
   )
   (
-    LiteralExpr [STRING] [sql-var1]
+    LiteralExpr [STRING] [sql-var_samp1]
     :
-    FunctionCall asterix.sql-var@1[
+    FunctionCall asterix.sql-var_samp@1[
       OrderedListConstructor [
         LiteralExpr [NULL]
       ]
@@ -76,6 +76,24 @@ RecordConstructor [
     LiteralExpr [STRING] [sql-var_pop1]
     :
     FunctionCall asterix.sql-var_pop@1[
+      OrderedListConstructor [
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-skewness1]
+    :
+    FunctionCall asterix.sql-skewness@1[
+      OrderedListConstructor [
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-kurtosis1]
+    :
+    FunctionCall asterix.sql-kurtosis@1[
       OrderedListConstructor [
         LiteralExpr [NULL]
       ]
@@ -132,9 +150,9 @@ RecordConstructor [
     ]
   )
   (
-    LiteralExpr [STRING] [sql-stddev2]
+    LiteralExpr [STRING] [sql-stddev_samp2]
     :
-    FunctionCall asterix.sql-stddev@1[
+    FunctionCall asterix.sql-stddev_samp@1[
       UnorderedListConstructor [
         LiteralExpr [NULL]
         LiteralExpr [NULL]
@@ -152,9 +170,9 @@ RecordConstructor [
     ]
   )
   (
-    LiteralExpr [STRING] [sql-var2]
+    LiteralExpr [STRING] [sql-var_samp2]
     :
-    FunctionCall asterix.sql-var@1[
+    FunctionCall asterix.sql-var_samp@1[
       UnorderedListConstructor [
         LiteralExpr [NULL]
         LiteralExpr [NULL]
@@ -165,6 +183,26 @@ RecordConstructor [
     LiteralExpr [STRING] [sql-var_pop2]
     :
     FunctionCall asterix.sql-var_pop@1[
+      UnorderedListConstructor [
+        LiteralExpr [NULL]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-skewness2]
+    :
+    FunctionCall asterix.sql-skewness@1[
+      UnorderedListConstructor [
+        LiteralExpr [NULL]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-kurtosis2]
+    :
+    FunctionCall asterix.sql-kurtosis@1[
       UnorderedListConstructor [
         LiteralExpr [NULL]
         LiteralExpr [NULL]

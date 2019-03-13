@@ -216,13 +216,13 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="stddev_mixed">
         <output-dir compare="Text">stddev_mixed</output-dir>
-        <expected-error>Type incompatibility: function agg-stddev gets incompatible input values: string and float</expected-error>
+        <expected-error>Type incompatibility: function agg-stddev_samp gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
       <compilation-unit name="serial_stddev_mixed">
         <output-dir compare="Text">serial_stddev_mixed</output-dir>
-        <expected-error>Type incompatibility: function agg-stddev gets incompatible input values: string and float</expected-error>
+        <expected-error>Type incompatibility: function agg-stddev_samp gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -252,13 +252,13 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="var_mixed">
         <output-dir compare="Text">var_mixed</output-dir>
-        <expected-error>Type incompatibility: function agg-var gets incompatible input values: string and float</expected-error>
+        <expected-error>Type incompatibility: function agg-var_samp gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
       <compilation-unit name="serial_var_mixed">
         <output-dir compare="Text">serial_var_mixed</output-dir>
-        <expected-error>Type incompatibility: function agg-var gets incompatible input values: string and float</expected-error>
+        <expected-error>Type incompatibility: function agg-var_samp gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -271,6 +271,30 @@
       <compilation-unit name="serial_var_pop_mixed">
         <output-dir compare="Text">serial_var_pop_mixed</output-dir>
         <expected-error>Type incompatibility: function agg-var_pop gets incompatible input values: string and float</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_mixed">
+        <output-dir compare="Text">kurtosis_mixed</output-dir>
+        <expected-error>Type incompatibility: function agg-kurtosis gets incompatible input values: string and float</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_mixed">
+        <output-dir compare="Text">serial_kurtosis_mixed</output-dir>
+        <expected-error>Type incompatibility: function agg-kurtosis gets incompatible input values: string and float</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_mixed">
+        <output-dir compare="Text">skewness_mixed</output-dir>
+        <expected-error>Type incompatibility: function agg-skewness gets incompatible input values: string and float</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_mixed">
+        <output-dir compare="Text">serial_skewness_mixed</output-dir>
+        <expected-error>Type incompatibility: function agg-skewness gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -505,6 +529,81 @@
         </test-case>
         -->
     <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_double">
+        <output-dir compare="Text">kurtosis_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_double_null">
+        <output-dir compare="Text">kurtosis_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_empty_01">
+        <output-dir compare="Text">kurtosis_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_empty_02">
+        <output-dir compare="Text">kurtosis_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_float">
+        <output-dir compare="Text">kurtosis_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_float_null">
+        <output-dir compare="Text">kurtosis_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int16">
+        <output-dir compare="Text">kurtosis_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int16_null">
+        <output-dir compare="Text">kurtosis_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int32">
+        <output-dir compare="Text">kurtosis_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int32_null">
+        <output-dir compare="Text">kurtosis_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int64">
+        <output-dir compare="Text">kurtosis_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int64_null">
+        <output-dir compare="Text">kurtosis_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int8">
+        <output-dir compare="Text">kurtosis_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_int8_null">
+        <output-dir compare="Text">kurtosis_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="kurtosis_distinct">
+        <output-dir compare="Text">kurtosis_distinct</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="max_empty_01">
         <output-dir compare="Text">max_empty_01</output-dir>
       </compilation-unit>
@@ -565,6 +664,21 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_kurtosis">
+        <output-dir compare="Text">scalar_kurtosis</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_kurtosis_empty">
+        <output-dir compare="Text">scalar_kurtosis_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_kurtosis_null">
+        <output-dir compare="Text">scalar_kurtosis_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="scalar_max">
         <output-dir compare="Text">scalar_max</output-dir>
       </compilation-unit>
@@ -592,6 +706,21 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="scalar_min_null">
         <output-dir compare="Text">scalar_min_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_skewness">
+        <output-dir compare="Text">scalar_skewness</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_skewness_empty">
+        <output-dir compare="Text">scalar_skewness_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_skewness_null">
+        <output-dir compare="Text">scalar_skewness_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -637,6 +766,136 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="scalar_var_null">
         <output-dir compare="Text">scalar_var_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_double">
+        <output-dir compare="Text">serial_kurtosis_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_double_null">
+        <output-dir compare="Text">serial_kurtosis_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_empty">
+        <output-dir compare="Text">serial_kurtosis_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_float">
+        <output-dir compare="Text">serial_kurtosis_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_float_null">
+        <output-dir compare="Text">serial_kurtosis_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int16">
+        <output-dir compare="Text">serial_kurtosis_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int16_null">
+        <output-dir compare="Text">serial_kurtosis_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int32">
+        <output-dir compare="Text">serial_kurtosis_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int32_null">
+        <output-dir compare="Text">serial_kurtosis_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int64">
+        <output-dir compare="Text">serial_kurtosis_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int64_null">
+        <output-dir compare="Text">serial_kurtosis_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int8">
+        <output-dir compare="Text">serial_kurtosis_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_kurtosis_int8_null">
+        <output-dir compare="Text">serial_kurtosis_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_double">
+        <output-dir compare="Text">serial_skewness_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_double_null">
+        <output-dir compare="Text">serial_skewness_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_empty">
+        <output-dir compare="Text">serial_skewness_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_float">
+        <output-dir compare="Text">serial_skewness_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_float_null">
+        <output-dir compare="Text">serial_skewness_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int16">
+        <output-dir compare="Text">serial_skewness_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int16_null">
+        <output-dir compare="Text">serial_skewness_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int32">
+        <output-dir compare="Text">serial_skewness_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int32_null">
+        <output-dir compare="Text">serial_skewness_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int64">
+        <output-dir compare="Text">serial_skewness_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int64_null">
+        <output-dir compare="Text">serial_skewness_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int8">
+        <output-dir compare="Text">serial_skewness_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_skewness_int8_null">
+        <output-dir compare="Text">serial_skewness_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -840,6 +1099,81 @@
         <output-dir compare="Text">serial_var_int8_null</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_double">
+        <output-dir compare="Text">skewness_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_double_null">
+        <output-dir compare="Text">skewness_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_empty_01">
+        <output-dir compare="Text">skewness_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_empty_02">
+        <output-dir compare="Text">skewness_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_float">
+        <output-dir compare="Text">skewness_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_float_null">
+        <output-dir compare="Text">skewness_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int16">
+        <output-dir compare="Text">skewness_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int16_null">
+        <output-dir compare="Text">skewness_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int32">
+        <output-dir compare="Text">skewness_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int32_null">
+        <output-dir compare="Text">skewness_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int64">
+        <output-dir compare="Text">skewness_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int64_null">
+        <output-dir compare="Text">skewness_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int8">
+        <output-dir compare="Text">skewness_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="skewness_int8_null">
+        <output-dir compare="Text">skewness_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+      <test-case FilePath="aggregate">
+          <compilation-unit name="skewness_distinct">
+              <output-dir compare="Text">skewness_distinct</output-dir>
+          </compilation-unit>
+      </test-case>
     <test-case FilePath="aggregate">
       <compilation-unit name="stddev_double">
         <output-dir compare="Text">stddev_double</output-dir>
@@ -1128,13 +1462,13 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="serial_stddev_mixed">
         <output-dir compare="Text">serial_stddev_mixed</output-dir>
-        <expected-error>Invalid item type: function agg-stddev cannot process item type string in an input array (or multiset)</expected-error>
+        <expected-error>Invalid item type: function agg-stddev_samp cannot process item type string in an input array (or multiset)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="stddev_mixed">
         <output-dir compare="Text">stddev_mixed</output-dir>
-        <expected-error>Type incompatibility: function agg-stddev gets incompatible input values: string and float</expected-error>
+        <expected-error>Type incompatibility: function agg-stddev_samp gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1164,13 +1498,13 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="serial_var_mixed">
         <output-dir compare="Text">serial_var_mixed</output-dir>
-        <expected-error>Invalid item type: function agg-var cannot process item type string in an input array (or multiset)</expected-error>
+        <expected-error>Invalid item type: function agg-var_samp cannot process item type string in an input array (or multiset)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="var_mixed">
         <output-dir compare="Text">var_mixed</output-dir>
-        <expected-error>Type incompatibility: function agg-var gets incompatible input values: string and float</expected-error>
+        <expected-error>Type incompatibility: function agg-var_samp gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1183,6 +1517,18 @@
       <compilation-unit name="var_pop_mixed">
         <output-dir compare="Text">var_pop_mixed</output-dir>
         <expected-error>Type incompatibility: function agg-var_pop gets incompatible input values: string and float</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_mixed">
+        <output-dir compare="Text">serial_skewness_mixed</output-dir>
+        <expected-error>Invalid item type: function agg-skewness cannot process item type string in an input array (or multiset)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_mixed">
+        <output-dir compare="Text">skewness_mixed</output-dir>
+        <expected-error>Type incompatibility: function agg-skewness gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1346,6 +1692,81 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_double">
+        <output-dir compare="Text">kurtosis_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_double_null">
+        <output-dir compare="Text">kurtosis_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_empty_01">
+        <output-dir compare="Text">kurtosis_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_empty_02">
+        <output-dir compare="Text">kurtosis_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_float">
+        <output-dir compare="Text">kurtosis_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_float_null">
+        <output-dir compare="Text">kurtosis_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int16">
+        <output-dir compare="Text">kurtosis_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int16_null">
+        <output-dir compare="Text">kurtosis_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int32">
+        <output-dir compare="Text">kurtosis_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int32_null">
+        <output-dir compare="Text">kurtosis_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int64">
+        <output-dir compare="Text">kurtosis_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int64_null">
+        <output-dir compare="Text">kurtosis_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int8">
+        <output-dir compare="Text">kurtosis_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_int8_null">
+        <output-dir compare="Text">kurtosis_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="kurtosis_distinct">
+        <output-dir compare="Text">kurtosis_distinct</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
       <compilation-unit name="max_empty_01">
         <output-dir compare="Text">max_empty_01</output-dir>
       </compilation-unit>
@@ -1406,6 +1827,21 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_kurtosis">
+        <output-dir compare="Text">scalar_kurtosis</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_kurtosis_empty">
+        <output-dir compare="Text">scalar_kurtosis_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_kurtosis_null">
+        <output-dir compare="Text">scalar_kurtosis_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
       <compilation-unit name="scalar_max">
         <output-dir compare="Text">scalar_max</output-dir>
       </compilation-unit>
@@ -1433,6 +1869,21 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="scalar_min_null">
         <output-dir compare="Text">scalar_min_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_skewness">
+        <output-dir compare="Text">scalar_skewness</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_skewness_empty">
+        <output-dir compare="Text">scalar_skewness_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_skewness_null">
+        <output-dir compare="Text">scalar_skewness_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1478,6 +1929,136 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="scalar_var_null">
         <output-dir compare="Text">scalar_var_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_double">
+        <output-dir compare="Text">serial_kurtosis_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_double_null">
+        <output-dir compare="Text">serial_kurtosis_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_empty">
+        <output-dir compare="Text">serial_kurtosis_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_float">
+        <output-dir compare="Text">serial_kurtosis_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_float_null">
+        <output-dir compare="Text">serial_kurtosis_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int16">
+        <output-dir compare="Text">serial_kurtosis_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int16_null">
+        <output-dir compare="Text">serial_kurtosis_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int32">
+        <output-dir compare="Text">serial_kurtosis_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int32_null">
+        <output-dir compare="Text">serial_kurtosis_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int64">
+        <output-dir compare="Text">serial_kurtosis_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int64_null">
+        <output-dir compare="Text">serial_kurtosis_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int8">
+        <output-dir compare="Text">serial_kurtosis_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_kurtosis_int8_null">
+        <output-dir compare="Text">serial_kurtosis_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_double">
+        <output-dir compare="Text">serial_skewness_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_double_null">
+        <output-dir compare="Text">serial_skewness_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_empty">
+        <output-dir compare="Text">serial_skewness_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_float">
+        <output-dir compare="Text">serial_skewness_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_float_null">
+        <output-dir compare="Text">serial_skewness_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int16">
+        <output-dir compare="Text">serial_skewness_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int16_null">
+        <output-dir compare="Text">serial_skewness_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int32">
+        <output-dir compare="Text">serial_skewness_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int32_null">
+        <output-dir compare="Text">serial_skewness_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int64">
+        <output-dir compare="Text">serial_skewness_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int64_null">
+        <output-dir compare="Text">serial_skewness_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int8">
+        <output-dir compare="Text">serial_skewness_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_skewness_int8_null">
+        <output-dir compare="Text">serial_skewness_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1679,6 +2260,81 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="serial_var_int8_null">
         <output-dir compare="Text">serial_var_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_double">
+        <output-dir compare="Text">skewness_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_double_null">
+        <output-dir compare="Text">skewness_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_empty_01">
+        <output-dir compare="Text">skewness_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_empty_02">
+        <output-dir compare="Text">skewness_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_float">
+        <output-dir compare="Text">skewness_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_float_null">
+        <output-dir compare="Text">skewness_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int16">
+        <output-dir compare="Text">skewness_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int16_null">
+        <output-dir compare="Text">skewness_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int32">
+        <output-dir compare="Text">skewness_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int32_null">
+        <output-dir compare="Text">skewness_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int64">
+        <output-dir compare="Text">skewness_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int64_null">
+        <output-dir compare="Text">skewness_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int8">
+        <output-dir compare="Text">skewness_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_int8_null">
+        <output-dir compare="Text">skewness_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="skewness_distinct">
+        <output-dir compare="Text">skewness_distinct</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">

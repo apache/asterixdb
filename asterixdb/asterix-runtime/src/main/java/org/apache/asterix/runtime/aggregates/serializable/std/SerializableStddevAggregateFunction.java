@@ -77,8 +77,17 @@ public class SerializableStddevAggregateFunction extends AbstractSerializableSin
         if (isPop) {
             return BuiltinFunctions.STDDEV_POP;
         } else {
-            return BuiltinFunctions.STDDEV;
+            return BuiltinFunctions.STDDEV_SAMP;
         }
     }
 
+    @Override
+    protected boolean getM3Flag() {
+        return false;
+    }
+
+    @Override
+    protected boolean getM4Flag() {
+        return false;
+    }
 }

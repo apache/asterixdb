@@ -36,8 +36,10 @@ public class LocalSingleVarStatisticsTypeComputer implements IResultTypeComputer
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        return new ARecordType(null, new String[] { "m1", "m2", "count" },
+        return new ARecordType(null, new String[] { "m1", "m2", "m3", "m4", "count" },
                 new IAType[] { AUnionType.createNullableType(BuiltinType.ADOUBLE, "OptionalDouble"),
+                        AUnionType.createNullableType(BuiltinType.ADOUBLE, "OptionalDouble"),
+                        AUnionType.createNullableType(BuiltinType.ADOUBLE, "OptionalDouble"),
                         AUnionType.createNullableType(BuiltinType.ADOUBLE, "OptionalDouble"), BuiltinType.AINT64 },
                 false);
     }

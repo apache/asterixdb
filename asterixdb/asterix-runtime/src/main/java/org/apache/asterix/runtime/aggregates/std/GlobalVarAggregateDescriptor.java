@@ -43,7 +43,7 @@ public class GlobalVarAggregateDescriptor extends AbstractAggregateFunctionDynam
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.GLOBAL_VAR;
+        return BuiltinFunctions.GLOBAL_VAR_SAMP;
     }
 
     @Override

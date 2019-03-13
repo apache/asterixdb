@@ -42,7 +42,7 @@ public class LocalSqlVarAggregateDescriptor extends AbstractAggregateFunctionDyn
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.LOCAL_SQL_VAR;
+        return BuiltinFunctions.LOCAL_SQL_VAR_SAMP;
     }
 
     @Override

@@ -19,7 +19,7 @@
 
 use test;
 
-select gid, var(t.val) as var, var_pop(t.val) as var_pop
+select gid, var_samp(t.val) as var_samp, var_pop(t.val) as var_pop
 from Test as t
 /* +hash */
 group by t.gid as gid;

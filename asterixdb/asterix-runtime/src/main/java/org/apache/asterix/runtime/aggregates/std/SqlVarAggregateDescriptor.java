@@ -42,7 +42,7 @@ public class SqlVarAggregateDescriptor extends AbstractAggregateFunctionDynamicD
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SQL_VAR;
+        return BuiltinFunctions.SQL_VAR_SAMP;
     }
 
     @Override

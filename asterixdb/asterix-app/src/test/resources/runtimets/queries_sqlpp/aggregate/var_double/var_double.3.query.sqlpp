@@ -17,7 +17,7 @@
  * under the License.
  */
 
-{'var':(select element strict_var((
+{'var_samp':(select element strict_var_samp((
     select element x
     from  [1.0,2.0,double('3.0')] as x
 ))), 'var_pop': (select element strict_var_pop((

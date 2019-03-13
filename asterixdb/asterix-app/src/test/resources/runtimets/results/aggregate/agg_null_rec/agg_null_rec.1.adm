@@ -1,1 +1,1 @@
-{ "count": 3, "average": null, "stddev": null, "stddev_pop": null, "var": null, "var_pop": null, "sum": null, "min": null, "max": null }
+{ "count": 3, "average": null, "stddev_samp": null, "stddev_pop": null, "var_samp": null, "var_pop": null, "skewness": null, "kurtosis": null, "sum": null, "min": null, "max": null }

@@ -29,7 +29,11 @@ SAND2008-6212, Sandia National Laboratories.
 public class SingleVarFunctionsUtil {
     private double m1;
     private double m2;
+    private double m3;
+    private double m4;
     private long count;
+    private boolean m3Flag;
+    private boolean m4Flag;
 
     public SingleVarFunctionsUtil() {
         m1 = 0.0;
@@ -42,18 +46,27 @@ public class SingleVarFunctionsUtil {
      *
      * @param  moment1  first moment (mean) of the data sample
      * @param  moment2  second moment of the data sample
+     * @param  moment3  third moment of the data sample
+     * @param  moment4  fourth moment of the data sample
      * @param  cnt      number of samples
+     * @param  moment3Flag   boolean flag to update the value of the third moment when adding values to the data sample
+     * @param  moment4Flag   boolean flag to update the value of the fourth moment when adding values to the data sample
      */
-    public void set(double moment1, double moment2, long cnt) {
+    public void set(double moment1, double moment2, double moment3, double moment4, long cnt, boolean moment3Flag,
+            boolean moment4Flag) {
         m1 = moment1;
         m2 = moment2;
+        m3 = moment3;
+        m4 = moment4;
         count = cnt;
+        m3Flag = moment3Flag;
+        m4Flag = moment4Flag;
     }
 
     /**
      * Update the central moments after adding val to your data sample
      *
-     * @param  val  value to add to the data sample
+     * @param  val      value to add to the data sample
      */
     public void push(double val) {
         count++;
@@ -61,6 +74,13 @@ public class SingleVarFunctionsUtil {
         double delta_n = delta / count;
         double term1 = delta * delta_n * (count - 1);
         m1 += delta / count;
+        if (m4Flag) {
+            m4 += term1 * delta_n * delta_n * (count * count - 3 * count + 3);
+            m4 += 6 * delta_n * delta_n * m2 - 4 * delta_n * m3;
+        }
+        if (m3Flag) {
+            m3 += term1 * delta_n * (count - 2) - 3 * delta_n * m2;
+        }
         m2 += term1;
     }
 
@@ -69,11 +89,24 @@ public class SingleVarFunctionsUtil {
      *
      * @param  moment1  first moment (mean) of the data sample
      * @param  moment2  second moment of the data sample
+     * @param  moment3  third moment of the data sample
+     * @param  moment4  fourth moment of the data sample
      * @param  cnt      number of samples
      */
-    public void combine(double moment1, double moment2, long cnt) {
+    public void combine(double moment1, double moment2, double moment3, double moment4, long cnt) {
         double delta = moment1 - m1;
         long combined_count = count + cnt;
+        if (m3Flag) {
+            double delta3 = delta * delta * delta;
+            if (m4Flag) {
+                m4 += moment4 + delta3 * delta * count * cnt * (count * count - count * cnt + cnt * cnt)
+                        / (combined_count * combined_count * combined_count);
+                m4 += 6 * delta * delta * (count * count * moment2 + cnt * cnt * m2) / (combined_count * combined_count)
+                        + 4 * delta * (count * moment3 - cnt * m3) / combined_count;
+            }
+            m3 += moment3 + delta3 * count * cnt * (count - cnt) / (combined_count * combined_count);
+            m3 += 3 * delta * (count * moment2 - cnt * m2) / combined_count;
+        }
         m1 = (count * m1 + cnt * moment1) / combined_count;
         m2 += moment2 + delta * delta * count * cnt / combined_count;
         count = combined_count;
@@ -85,6 +118,14 @@ public class SingleVarFunctionsUtil {
 
     public double getM2() {
         return m2;
+    }
+
+    public double getM3() {
+        return m3;
+    }
+
+    public double getM4() {
+        return m4;
     }
 
     public long getCount() {

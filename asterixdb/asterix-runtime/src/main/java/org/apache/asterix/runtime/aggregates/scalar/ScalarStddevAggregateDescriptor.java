@@ -28,7 +28,7 @@ public class ScalarStddevAggregateDescriptor extends AbstractScalarAggregateDesc
 
     private static final long serialVersionUID = 1L;
 
-    public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_STDDEV;
+    public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_STDDEV_SAMP;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override

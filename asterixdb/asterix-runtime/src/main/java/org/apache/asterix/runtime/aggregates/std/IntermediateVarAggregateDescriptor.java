@@ -43,7 +43,7 @@ public class IntermediateVarAggregateDescriptor extends AbstractAggregateFunctio
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.INTERMEDIATE_VAR;
+        return BuiltinFunctions.INTERMEDIATE_VAR_SAMP;
     }
 
     @Override

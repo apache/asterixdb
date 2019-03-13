@@ -43,7 +43,7 @@ public class IntermediateStddevAggregateDescriptor extends AbstractAggregateFunc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.INTERMEDIATE_STDDEV;
+        return BuiltinFunctions.INTERMEDIATE_STDDEV_SAMP;
     }
 
     @Override

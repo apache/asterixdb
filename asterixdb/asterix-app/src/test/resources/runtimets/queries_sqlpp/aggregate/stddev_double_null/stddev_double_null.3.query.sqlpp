@@ -19,7 +19,7 @@
 
 use test;
 
-{'stddev':test.strict_stddev((
+{'stddev_samp':test.strict_stddev_samp((
     select element x.doubleField
     from  Numeric as x
 )), 'stddev_pop':test.strict_stddev_pop((

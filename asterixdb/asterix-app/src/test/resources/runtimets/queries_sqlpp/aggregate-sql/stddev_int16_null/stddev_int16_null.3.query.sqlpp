@@ -20,7 +20,7 @@
 use test;
 
 
-{'stddev':test.array_stddev((
+{'stddev_samp':test.array_stddev_samp((
     select element x.int16Field
     from  Numeric as x
 )), 'stddev_pop':test.array_stddev_pop((

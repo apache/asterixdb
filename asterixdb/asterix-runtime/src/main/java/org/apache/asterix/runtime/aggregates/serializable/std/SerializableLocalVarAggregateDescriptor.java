@@ -42,7 +42,7 @@ public class SerializableLocalVarAggregateDescriptor extends AbstractSerializabl
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_LOCAL_VAR;
+        return BuiltinFunctions.SERIAL_LOCAL_VAR_SAMP;
     }
 
     @Override

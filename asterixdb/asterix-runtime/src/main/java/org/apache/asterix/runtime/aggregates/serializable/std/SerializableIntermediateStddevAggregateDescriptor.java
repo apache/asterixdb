@@ -43,7 +43,7 @@ public class SerializableIntermediateStddevAggregateDescriptor
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SERIAL_INTERMEDIATE_STDDEV;
+        return BuiltinFunctions.SERIAL_INTERMEDIATE_STDDEV_SAMP;
     }
 
     @Override
