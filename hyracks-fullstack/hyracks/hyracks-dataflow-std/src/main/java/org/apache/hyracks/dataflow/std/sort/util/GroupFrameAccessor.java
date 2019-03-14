@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -37,7 +38,7 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
  */
 public class GroupFrameAccessor implements IFrameTupleAccessor {
 
-    private class InnerFrameInfo implements Comparable<Integer> {
+    private class InnerFrameInfo implements Comparable<MutableInt> {
         int start;
         int length;
         int tupleCount;
@@ -49,27 +50,29 @@ public class GroupFrameAccessor implements IFrameTupleAccessor {
         }
 
         @Override
-        public int compareTo(Integer o) {
-            return -o.compareTo(tupleCount);
+        public int compareTo(MutableInt other) {
+            return -Integer.compare(other.intValue(), tupleCount);
         }
     }
 
     private final RecordDescriptor recordDescriptor;
     private final int minFrameSize;
     private final FrameTupleAccessor frameTupleAccessor;
+    private final List<InnerFrameInfo> innerFrameInfos;
+    private final MutableInt binarySearchKey;
     private int lastFrameId;
     // the start tuple index of the last accessed frame (inclusive)
     private int lastFrameStart;
     // the end tuple index of the last accessed frame (exclusive)
     private int lastFrameEnd;
     private ByteBuffer buffer;
-    private final List<InnerFrameInfo> innerFrameInfos;
 
     public GroupFrameAccessor(int minFrameSize, RecordDescriptor recordDescriptor) {
         this.minFrameSize = minFrameSize;
         this.recordDescriptor = (recordDescriptor);
         this.frameTupleAccessor = new FrameTupleAccessor(recordDescriptor);
         this.innerFrameInfos = new ArrayList<>();
+        binarySearchKey = new MutableInt();
     }
 
     @Override
@@ -164,7 +167,8 @@ public class GroupFrameAccessor implements IFrameTupleAccessor {
             return tupleIndex - lastFrameStart;
         }
         // we perform binary search to get the frame Id
-        int subFrameId = Collections.binarySearch(innerFrameInfos, tupleIndex);
+        binarySearchKey.setValue(tupleIndex);
+        int subFrameId = Collections.binarySearch(innerFrameInfos, binarySearchKey);
         if (subFrameId >= 0) {
             subFrameId++;
         } else {
@@ -174,7 +178,6 @@ public class GroupFrameAccessor implements IFrameTupleAccessor {
         lastFrameId = subFrameId;
         lastFrameStart = lastFrameId > 0 ? innerFrameInfos.get(lastFrameId - 1).tupleCount : 0;
         lastFrameEnd = innerFrameInfos.get(lastFrameId).tupleCount;
-
         return tupleIndex - lastFrameStart;
     }
 
