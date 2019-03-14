@@ -22,7 +22,7 @@ import java.io.DataOutput;
 
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.Result;
-import org.apache.asterix.dataflow.data.nontagged.comparators.LogicalComparatorUtil;
+import org.apache.asterix.dataflow.data.nontagged.comparators.ComparatorUtil;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -80,7 +80,7 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
         this.evalLeft = evalLeftFactory.createScalarEvaluator(ctx);
         this.evalRight = evalRightFactory.createScalarEvaluator(ctx);
         this.sourceLoc = sourceLoc;
-        logicalComparator = LogicalComparatorUtil.createLogicalComparator(leftType, rightType, isEquality);
+        logicalComparator = ComparatorUtil.createLogicalComparator(leftType, rightType, isEquality);
         leftConstant = getValueOfConstantEval(evalLeftFactory);
         rightConstant = getValueOfConstantEval(evalRightFactory);
     }

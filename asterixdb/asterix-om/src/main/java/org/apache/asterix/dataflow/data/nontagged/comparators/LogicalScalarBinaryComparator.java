@@ -39,6 +39,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerial
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -79,22 +80,20 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
         this.isEquality = isEquality;
     }
 
-    @SuppressWarnings("squid:S1226") // asking for introducing a new variable for incremented local variables
     @Override
     public Result compare(IPointable left, IPointable right) throws HyracksDataException {
         ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
         ATypeTag rightTag = VALUE_TYPE_MAPPING[right.getByteArray()[right.getStartOffset()]];
-        Result comparisonResult = LogicalComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
+        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
         if (comparisonResult != null) {
             return comparisonResult;
         }
         if (comparisonUndefined(leftTag, rightTag, isEquality)) {
             return Result.INCOMPARABLE;
         }
-        // compare number if one of args is number
-        comparisonResult = LogicalComparatorUtil.compareNumbers(leftTag, left, rightTag, right);
-        if (comparisonResult != null) {
-            return comparisonResult;
+        // compare number if one of args is number since compatibility has already been checked above
+        if (ATypeHierarchy.getTypeDomain(leftTag) == ATypeHierarchy.Domain.NUMERIC) {
+            return ComparatorUtil.compareNumbers(leftTag, left, rightTag, right);
         }
 
         // comparing non-numeric
@@ -182,16 +181,15 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
         // TODO(ali): currently defined for numbers only
         ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
-        Result comparisonResult = LogicalComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
+        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
         if (comparisonResult != null) {
             return comparisonResult;
         }
         if (comparisonUndefined(leftTag, rightTag, isEquality)) {
             return Result.NULL;
         }
-        comparisonResult = LogicalComparatorUtil.compareNumWithConstant(leftTag, left, rightConstant);
-        if (comparisonResult != null) {
-            return comparisonResult;
+        if (ATypeHierarchy.getTypeDomain(leftTag) == ATypeHierarchy.Domain.NUMERIC) {
+            return ComparatorUtil.compareNumWithConstant(leftTag, left, rightConstant);
         }
         return Result.NULL;
     }
@@ -213,16 +211,15 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
         // TODO(ali): currently defined for numbers only
         ATypeTag leftTag = leftConstant.getType().getTypeTag();
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
-        Result comparisonResult = LogicalComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
+        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
         if (comparisonResult != null) {
             return comparisonResult;
         }
         if (comparisonUndefined(leftTag, rightTag, isEquality)) {
             return Result.NULL;
         }
-        comparisonResult = LogicalComparatorUtil.compareConstants(leftConstant, rightConstant);
-        if (comparisonResult != null) {
-            return comparisonResult;
+        if (ATypeHierarchy.getTypeDomain(leftTag) == ATypeHierarchy.Domain.NUMERIC) {
+            return ComparatorUtil.compareConstants(leftConstant, rightConstant);
         }
         return Result.NULL;
     }

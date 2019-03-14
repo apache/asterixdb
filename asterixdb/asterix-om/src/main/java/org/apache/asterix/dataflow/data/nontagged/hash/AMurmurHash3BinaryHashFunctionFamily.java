@@ -126,7 +126,6 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
                     }
                     return MurmurHash3BinaryHash.hash(valueBuffer.getByteArray(), valueBuffer.getStartOffset(),
                             valueBuffer.getLength(), seed);
-
                 case FLOAT:
                     try {
                         FloatToDoubleTypeConvertComputer.getInstance().convertType(bytes, offset + 1, length - 1,
@@ -136,9 +135,6 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
                     }
                     return MurmurHash3BinaryHash.hash(valueBuffer.getByteArray(), valueBuffer.getStartOffset(),
                             valueBuffer.getLength(), seed);
-
-                case DOUBLE:
-                    return MurmurHash3BinaryHash.hash(bytes, offset, length, seed);
                 case ARRAY:
                     try {
                         return hashArray(type, bytes, offset, length);
@@ -147,6 +143,7 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
                     }
                 case OBJECT:
                     return hashRecord(type, bytes, offset, length);
+                case DOUBLE:
                 default:
                     return MurmurHash3BinaryHash.hash(bytes, offset, length, seed);
             }
@@ -160,7 +157,7 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
             IAType itemType = ((AbstractCollectionType) arrayType).getItemType();
             ATypeTag itemTag = itemType.getTypeTag();
             int numItems = ListAccessorUtil.numberOfItems(bytes, offset);
-            int hash = 0;
+            int hash = seed;
             IPointable item = voidPointableAllocator.allocate(null);
             ArrayBackedValueStorage storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
             try {
@@ -192,7 +189,7 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
                 IVisitablePointable fieldName, fieldValue;
                 IAType fieldType;
                 ATypeTag fieldTag;
-                int hash = 0;
+                int hash = seed;
                 int fieldIdx;
                 while (!namesHeap.isEmpty()) {
                     fieldName = namesHeap.poll();

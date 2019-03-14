@@ -107,8 +107,8 @@ public enum ATypeTag implements IEnumSerializer {
      * Serialized Tags end
      */
     public static final int TYPE_COUNT = ATypeTag.values().length;
-    private byte value;
     public static final ATypeTag[] VALUE_TYPE_MAPPING;
+    private byte value;
 
     static {
         List<ATypeTag> typeList = new ArrayList<>();
@@ -122,7 +122,7 @@ public enum ATypeTag implements IEnumSerializer {
         VALUE_TYPE_MAPPING = typeList.toArray(new ATypeTag[typeList.size()]);
     }
 
-    private ATypeTag(int value) {
+    ATypeTag(int value) {
         this.value = (byte) value;
     }
 
@@ -135,6 +135,7 @@ public enum ATypeTag implements IEnumSerializer {
         return this == ATypeTag.OBJECT || this == ATypeTag.ARRAY || this == ATypeTag.MULTISET || this == ATypeTag.UNION;
     }
 
+    // TODO(ali): remove and use ATypeHierarchy getTypeDomain()
     public final boolean isListType() {
         return this == ATypeTag.ARRAY || this == ATypeTag.MULTISET;
     }

@@ -79,7 +79,7 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
     public Result compare(IPointable left, IPointable right) throws HyracksDataException {
         ATypeTag leftRuntimeTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
         ATypeTag rightRuntimeTag = VALUE_TYPE_MAPPING[right.getByteArray()[right.getStartOffset()]];
-        Result comparisonResult = LogicalComparatorUtil.returnMissingOrNullOrMismatch(leftRuntimeTag, rightRuntimeTag);
+        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftRuntimeTag, rightRuntimeTag);
         if (comparisonResult != null) {
             return comparisonResult;
         }
@@ -95,7 +95,7 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
         // TODO(ali): not defined currently for constant complex types
         ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
-        Result comparisonResult = LogicalComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
+        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
         if (comparisonResult != null) {
             return comparisonResult;
         }
@@ -122,7 +122,7 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
         // TODO(ali): not defined currently for constant complex types
         ATypeTag leftTag = leftConstant.getType().getTypeTag();
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
-        Result comparisonResult = LogicalComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
+        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
         if (comparisonResult != null) {
             return comparisonResult;
         }
