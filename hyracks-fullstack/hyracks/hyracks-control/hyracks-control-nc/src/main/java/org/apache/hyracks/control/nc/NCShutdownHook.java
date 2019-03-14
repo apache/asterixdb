@@ -45,7 +45,7 @@ public class NCShutdownHook extends Thread {
                 LOGGER.info("Shutdown hook called");
             } catch (Throwable th) {//NOSONAR
             }
-            LOGGER.log(Level.INFO, () -> "Thread dump at shutdown: " + ThreadDumpUtil.takeDumpString());
+            LOGGER.log(Level.DEBUG, () -> "Thread dump at shutdown: " + ThreadDumpUtil.takeDumpString());
             nodeControllerService.stop();
         } catch (Throwable th) { // NOSONAR... This is fine since this is shutdown hook
             LOGGER.log(Level.WARN, "Exception in executing shutdown hook", th);
