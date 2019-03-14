@@ -29,6 +29,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class StringIntToStringTypeComputer extends AbstractResultTypeComputer {
@@ -63,7 +64,7 @@ public class StringIntToStringTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    public void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+    public void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
             throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         boolean expectedStringType = false;
@@ -86,7 +87,7 @@ public class StringIntToStringTypeComputer extends AbstractResultTypeComputer {
             expectedIntType = true;
         }
 
-        throw new TypeMismatchException(sourceLoc, funcName, argIndex, tag,
+        throw new TypeMismatchException(sourceLoc, funcId, argIndex, tag,
                 getExpectedTypes(expectedStringType, expectedIntType));
     }
 

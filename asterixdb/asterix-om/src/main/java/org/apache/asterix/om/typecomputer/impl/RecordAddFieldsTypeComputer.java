@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
@@ -58,12 +59,12 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expression;
-        String funcName = funcExpr.getFunctionIdentifier().getName();
+        FunctionIdentifier funcId = funcExpr.getFunctionIdentifier();
 
         IAType type0 = (IAType) env.getType(funcExpr.getArguments().get(0).getValue());
         ARecordType inputRecordType = TypeComputeUtils.extractRecordType(type0);
         if (inputRecordType == null) {
-            throw new TypeMismatchException(funcExpr.getSourceLocation(), funcName, 0, type0.getTypeTag(),
+            throw new TypeMismatchException(funcExpr.getSourceLocation(), funcId, 0, type0.getTypeTag(),
                     ATypeTag.OBJECT);
         }
 
@@ -110,7 +111,7 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
                         if (fn[j].equals(FIELD_NAME_NAME)) {
                             ILogicalExpression fieldNameExpr = recConsExpr.getArguments().get(j).getValue();
                             if (ConstantExpressionUtil.getStringConstant(fieldNameExpr) == null) {
-                                throw new InvalidExpressionException(funcExpr.getSourceLocation(), funcName, 1,
+                                throw new InvalidExpressionException(funcExpr.getSourceLocation(), funcId, 1,
                                         fieldNameExpr, LogicalExpressionTag.CONSTANT);
                             }
                             // Get the actual "field-name" string

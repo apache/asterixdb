@@ -81,7 +81,7 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                             int size;
 
                             if (ATypeTag.VALUE_TYPE_MAPPING[serOrderedList[offset]] != ATypeTag.ARRAY) {
-                                throw new TypeMismatchException(getIdentifier().getName(), 0, serOrderedList[offset]);
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, serOrderedList[offset]);
                             } else {
                                 switch (ATypeTag.VALUE_TYPE_MAPPING[serOrderedList[offset + 1]]) {
                                     case TINYINT:

@@ -39,11 +39,13 @@ public class UnsupportedTypeException extends CompilationException {
     }
 
     // Unsupported input type.
+    @Deprecated
     public UnsupportedTypeException(String funcName, ATypeTag actualTypeTag) {
         super(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, funcName, actualTypeTag);
     }
 
     // Unsupported input type.
+    @Deprecated
     public UnsupportedTypeException(SourceLocation sourceLoc, String funcName, ATypeTag actualTypeTag) {
         super(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, funcName, actualTypeTag);
     }

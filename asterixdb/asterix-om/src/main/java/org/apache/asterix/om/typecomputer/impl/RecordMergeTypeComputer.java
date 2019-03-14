@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -50,19 +51,19 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
-        String funcName = f.getFunctionIdentifier().getName();
+        FunctionIdentifier funcId = f.getFunctionIdentifier();
 
         IAType t0 = (IAType) env.getType(f.getArguments().get(0).getValue());
         IAType t1 = (IAType) env.getType(f.getArguments().get(1).getValue());
         boolean unknownable = TypeHelper.canBeUnknown(t0) || TypeHelper.canBeUnknown(t1);
         ARecordType recType0 = TypeComputeUtils.extractRecordType(t0);
         if (recType0 == null) {
-            throw new TypeMismatchException(f.getSourceLocation(), funcName, 0, t0.getTypeTag(), ATypeTag.OBJECT);
+            throw new TypeMismatchException(f.getSourceLocation(), funcId, 0, t0.getTypeTag(), ATypeTag.OBJECT);
         }
 
         ARecordType recType1 = TypeComputeUtils.extractRecordType(t1);
         if (recType1 == null) {
-            throw new TypeMismatchException(f.getSourceLocation(), funcName, 1, t1.getTypeTag(), ATypeTag.OBJECT);
+            throw new TypeMismatchException(f.getSourceLocation(), funcId, 1, t1.getTypeTag(), ATypeTag.OBJECT);
         }
 
         List<String> resultFieldNames = new ArrayList<>();

@@ -66,7 +66,7 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractBinaryScalarEvaluator(ctx, args, sourceLoc) {
+                return new AbstractBinaryScalarEvaluator(ctx, args, getIdentifier(), sourceLoc) {
 
                     private final ListAccessor listAccessor = new ListAccessor();
                     private final byte[] metaBuffer = new byte[5];

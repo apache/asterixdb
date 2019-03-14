@@ -20,7 +20,7 @@
     <test-case FilePath="async-deferred">
         <compilation-unit name="async-failed">
             <output-dir compare="Text">async-failed</output-dir>
-            <expected-error>Injected failure in asterix:inject-failure</expected-error>
+            <expected-error>Injected failure in inject-failure</expected-error>
         </compilation-unit>
     </test-case>
     <test-case FilePath="async-deferred">

@@ -26,6 +26,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class NumericSumAggTypeComputer extends AbstractResultTypeComputer {
@@ -35,7 +36,7 @@ public class NumericSumAggTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+    protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
             throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         switch (tag) {
@@ -48,7 +49,7 @@ public class NumericSumAggTypeComputer extends AbstractResultTypeComputer {
             case ANY:
                 break;
             default:
-                throw new UnsupportedTypeException(sourceLoc, funcName, tag);
+                throw new UnsupportedTypeException(sourceLoc, funcId, tag);
         }
     }
 

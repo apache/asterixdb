@@ -40,11 +40,13 @@ public class IncompatibleTypeException extends CompilationException {
     }
 
     // Incompatible input parameters, e.g., "1.0" > 1.0
+    @Deprecated
     public IncompatibleTypeException(String functionName, ATypeTag typeTagLeft, ATypeTag typeTagRight) {
         super(ErrorCode.COMPILATION_TYPE_INCOMPATIBLE, functionName, typeTagLeft, typeTagRight);
     }
 
     // Incompatible input parameters, e.g., "1.0" > 1.0
+    @Deprecated
     public IncompatibleTypeException(SourceLocation sourceLoc, String functionName, ATypeTag typeTagLeft,
             ATypeTag typeTagRight) {
         super(ErrorCode.COMPILATION_TYPE_INCOMPATIBLE, sourceLoc, functionName, typeTagLeft, typeTagRight);

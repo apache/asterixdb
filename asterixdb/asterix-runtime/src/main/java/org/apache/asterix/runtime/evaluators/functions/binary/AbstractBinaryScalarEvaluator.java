@@ -24,6 +24,7 @@ import java.io.DataOutput;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -39,26 +40,29 @@ public abstract class AbstractBinaryScalarEvaluator implements IScalarEvaluator 
     protected DataOutput dataOutput = resultStorage.getDataOutput();
     protected IPointable[] pointables;
     protected IScalarEvaluator[] evaluators;
-    protected SourceLocation sourceLoc;
+    // Function ID, for error reporting.
+    protected final FunctionIdentifier funcId;
+    protected final SourceLocation sourceLoc;
 
     public AbstractBinaryScalarEvaluator(IHyracksTaskContext context,
-            final IScalarEvaluatorFactory[] evaluatorFactories, SourceLocation sourceLoc) throws HyracksDataException {
+            final IScalarEvaluatorFactory[] evaluatorFactories, FunctionIdentifier funcId, SourceLocation sourceLoc)
+            throws HyracksDataException {
         pointables = new IPointable[evaluatorFactories.length];
         evaluators = new IScalarEvaluator[evaluatorFactories.length];
         for (int i = 0; i < evaluators.length; ++i) {
             pointables[i] = new VoidPointable();
             evaluators[i] = evaluatorFactories[i].createScalarEvaluator(context);
         }
+        this.funcId = funcId;
         this.sourceLoc = sourceLoc;
     }
 
-    protected void checkTypeMachingThrowsIfNot(String title, ATypeTag[] expected, ATypeTag... actual)
-            throws HyracksDataException {
+    protected void checkTypeMachingThrowsIfNot(ATypeTag[] expected, ATypeTag... actual) throws HyracksDataException {
         for (int i = 0; i < expected.length; i++) {
             if (expected[i] != actual[i]) {
                 if (!ATypeHierarchy.canPromote(actual[i], expected[i])
                         && !ATypeHierarchy.canPromote(expected[i], actual[i])) {
-                    throw new TypeMismatchException(sourceLoc, title, i, actual[i].serialize(),
+                    throw new TypeMismatchException(sourceLoc, funcId, i, actual[i].serialize(),
                             expected[i].serialize());
                 }
             }

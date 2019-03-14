@@ -24,13 +24,14 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * The first argument of INJECT_FAILURE can be any data model instance and will be passed verbatim to the
  * caller. The second argument is a boolean that determines if the invocation throws an exception.
  *
- * Consequently {@link AbstractResultTypeComputer#checkArgType(String, int, IAType, SourceLocation)} validates that the second argument is a
+ * Consequently {@link AbstractResultTypeComputer#checkArgType(FunctionIdentifier, int, IAType, SourceLocation)} validates that the second argument is a
  * boolean and {@link #getResultType(ILogicalExpression, IAType...)} returns the type of the first
  * argument.
  */
@@ -39,10 +40,10 @@ public class InjectFailureTypeComputer extends AbstractResultTypeComputer {
     public static final InjectFailureTypeComputer INSTANCE = new InjectFailureTypeComputer();
 
     @Override
-    protected void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+    protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
             throws AlgebricksException {
         if (argIndex == 1 && type.getTypeTag() != ATypeTag.BOOLEAN) {
-            throw new TypeMismatchException(sourceLoc, funcName, argIndex, type.getTypeTag(), ATypeTag.BOOLEAN);
+            throw new TypeMismatchException(sourceLoc, funcId, argIndex, type.getTypeTag(), ATypeTag.BOOLEAN);
         }
     }
 

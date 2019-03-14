@@ -99,7 +99,7 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
 
                             if (typeTag != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                     && typeTag != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                                throw new RuntimeDataException(ErrorCode.COERCION, getIdentifier());
+                                throw new RuntimeDataException(ErrorCode.COERCION, getIdentifier().getName());
                             }
                             if (typeTag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
                                 numItemsMax = AOrderedListSerializerDeserializer.getNumberOfItems(serList, offset);

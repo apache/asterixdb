@@ -24,6 +24,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -39,9 +40,9 @@ public abstract class AbstractResultTypeComputer implements IResultTypeComputer 
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression functionCallExpression = (AbstractFunctionCallExpression) expression;
-        String funcName = functionCallExpression.getFunctionIdentifier().getName();
+        FunctionIdentifier funcId = functionCallExpression.getFunctionIdentifier();
         return TypeComputeUtils.resolveResultType(expression, env,
-                (index, type, sourceLoc) -> checkArgType(funcName, index, type, sourceLoc), this::getResultType,
+                (index, type, sourceLoc) -> checkArgType(funcId, index, type, sourceLoc), this::getResultType,
                 propagateNullAndMissing());
     }
 
@@ -52,13 +53,13 @@ public abstract class AbstractResultTypeComputer implements IResultTypeComputer 
      *            the index of the argument to consider.
      * @param type,
      *            the type of the input argument.
-     * @param funcName
-     *            the function name.
+     * @param funcId
+     *            the function identifier.
      * @param sourceLoc
      *            the source location
      * @throws AlgebricksException
      */
-    protected void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+    protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
             throws AlgebricksException {
     }
 

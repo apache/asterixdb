@@ -46,12 +46,14 @@ public class TypeMismatchException extends CompilationException {
     }
 
     // Function parameter type mismatch.
+    @Deprecated
     public TypeMismatchException(String functionName, Integer i, ATypeTag actualTypeTag, ATypeTag... expectedTypeTags) {
         super(ErrorCode.COMPILATION_TYPE_MISMATCH_FUNCTION, functionName, indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags), actualTypeTag);
     }
 
     // Function parameter type mismatch.
+    @Deprecated
     public TypeMismatchException(SourceLocation sourceLoc, String functionName, Integer i, ATypeTag actualTypeTag,
             ATypeTag... expectedTypeTags) {
         super(ErrorCode.COMPILATION_TYPE_MISMATCH_FUNCTION, sourceLoc, functionName, indexToPosition(i),

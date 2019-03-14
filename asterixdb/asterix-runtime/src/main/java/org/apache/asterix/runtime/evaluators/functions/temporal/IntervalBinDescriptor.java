@@ -187,7 +187,7 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                         + ((totalChronon < 0 && totalChronon % dayTime != 0) ? -1 : 0);
                                 break;
                             default:
-                                throw new TypeMismatchException(getIdentifier().getName(), 2, bytes2[offset2],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 2, bytes2[offset2],
                                         ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG,
                                         ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG);
                         }

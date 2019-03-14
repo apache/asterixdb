@@ -26,6 +26,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class TypeCastUtils {
 
@@ -43,8 +44,8 @@ public class TypeCastUtils {
             ATypeTag requiredTypeTag = requiredType.getTypeTag();
             ATypeTag actualTypeTag = TypeComputeUtils.getActualType(inputType).getTypeTag();
             if (!ATypeHierarchy.isCompatible(requiredTypeTag, actualTypeTag)) {
-                String funcName = expr.getFunctionIdentifier().getName();
-                throw new IncompatibleTypeException(expr.getSourceLocation(), funcName, actualTypeTag, requiredTypeTag);
+                FunctionIdentifier funcId = expr.getFunctionIdentifier();
+                throw new IncompatibleTypeException(expr.getSourceLocation(), funcId, actualTypeTag, requiredTypeTag);
             }
             expr.setOpaqueParameters(opaqueParameters);
             changed = true;

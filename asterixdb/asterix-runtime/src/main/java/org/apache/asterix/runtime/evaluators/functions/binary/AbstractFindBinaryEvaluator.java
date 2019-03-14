@@ -24,6 +24,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -37,7 +38,6 @@ public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEv
 
     private static final ATypeTag[] EXPECTED_INPUT_TAG = { ATypeTag.BINARY, ATypeTag.BINARY };
     protected final int baseOffset;
-    protected final String functionName;
     protected final AMutableInt64 result = new AMutableInt64(-1);
     protected final ByteArrayPointable textPtr = new ByteArrayPointable();
     protected final ByteArrayPointable wordPtr = new ByteArrayPointable();
@@ -47,10 +47,9 @@ public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEv
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
     public AbstractFindBinaryEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,
-            int baseOffset, String functionName, SourceLocation sourceLoc) throws HyracksDataException {
-        super(context, copyEvaluatorFactories, sourceLoc);
+            int baseOffset, FunctionIdentifier funcId, SourceLocation sourceLoc) throws HyracksDataException {
+        super(context, copyEvaluatorFactories, funcId, sourceLoc);
         this.baseOffset = baseOffset;
-        this.functionName = functionName;
     }
 
     @Override
@@ -64,7 +63,7 @@ public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEv
         ATypeTag textTag = ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0].getStartOffset()]];
         ATypeTag wordTag = ATypeTag.VALUE_TYPE_MAPPING[pointables[1].getByteArray()[pointables[1].getStartOffset()]];
 
-        checkTypeMachingThrowsIfNot(functionName, EXPECTED_INPUT_TAG, textTag, wordTag);
+        checkTypeMachingThrowsIfNot(EXPECTED_INPUT_TAG, textTag, wordTag);
         textPtr.set(pointables[0].getByteArray(), pointables[0].getStartOffset() + 1, pointables[0].getLength() - 1);
         wordPtr.set(pointables[1].getByteArray(), pointables[0].getStartOffset() + 1, pointables[1].getLength() - 1);
         int pos = indexOf(textPtr.getByteArray(), textPtr.getContentStartOffset(), textPtr.getContentLength(),

@@ -4118,31 +4118,31 @@
     <test-case FilePath="failure">
       <compilation-unit name="group_by_failure">
         <output-dir compare="Text">group_by_failure</output-dir>
-        <expected-error>Injected failure in asterix:inject-failure</expected-error>
+        <expected-error>Injected failure in inject-failure</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="failure">
       <compilation-unit name="group_by_hash_failure">
         <output-dir compare="Text">group_by_hash_failure</output-dir>
-        <expected-error>Injected failure in asterix:inject-failure</expected-error>
+        <expected-error>Injected failure in inject-failure</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="failure">
       <compilation-unit name="q01_pricing_summary_report_failure">
         <output-dir compare="Text">q01_pricing_summary_report_failure</output-dir>
-        <expected-error>Injected failure in asterix:inject-failure</expected-error>
+        <expected-error>Injected failure in inject-failure</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="failure">
       <compilation-unit name="q18_large_volume_customer_failure">
         <output-dir compare="Text">q18_large_volume_customer_failure</output-dir>
-        <expected-error>Injected failure in asterix:inject-failure</expected-error>
+        <expected-error>Injected failure in inject-failure</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="failure">
       <compilation-unit name="order_by_failure">
         <output-dir compare="Text">order_by_failure</output-dir>
-        <expected-error>Injected failure in asterix:inject-failure</expected-error>
+        <expected-error>Injected failure in inject-failure</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -8301,7 +8301,7 @@
     <test-case FilePath="string">
       <compilation-unit name="repeat_error">
         <output-dir compare="Text">repeat</output-dir>
-        <expected-error>Invalid value: function asterix:repeat expects its 1 input parameter to be a non-negative value, but gets -1</expected-error>
+        <expected-error>Invalid value: function repeat expects its 1 input parameter to be a non-negative value, but gets -1</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">

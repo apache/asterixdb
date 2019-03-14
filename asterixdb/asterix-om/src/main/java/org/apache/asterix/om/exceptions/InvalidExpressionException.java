@@ -44,12 +44,14 @@ public class InvalidExpressionException extends CompilationException {
                 actualExpr.toString(), toExpectedTypeString(exprKinds));
     }
 
+    @Deprecated
     public InvalidExpressionException(String functionName, int index, ILogicalExpression actualExpr,
             LogicalExpressionTag... exprKinds) {
         super(ErrorCode.COMPILATION_INVALID_EXPRESSION, functionName, indexToPosition(index), actualExpr.toString(),
                 toExpectedTypeString(exprKinds));
     }
 
+    @Deprecated
     public InvalidExpressionException(SourceLocation sourceLoc, String functionName, int index,
             ILogicalExpression actualExpr, LogicalExpressionTag... exprKinds) {
         super(ErrorCode.COMPILATION_INVALID_EXPRESSION, sourceLoc, functionName, indexToPosition(index),

@@ -87,8 +87,8 @@ public class StringRepeatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1, bytes, offset);
                         // Checks repeatingTimes. It should be a non-negative value.
                         if (repeatingTimes < 0) {
-                            throw new RuntimeDataException(ErrorCode.NEGATIVE_VALUE, sourceLoc, getIdentifier(), 1,
-                                    repeatingTimes);
+                            throw new RuntimeDataException(ErrorCode.NEGATIVE_VALUE, sourceLoc,
+                                    getIdentifier().getName(), 1, repeatingTimes);
                         }
 
                         // Gets the input string.

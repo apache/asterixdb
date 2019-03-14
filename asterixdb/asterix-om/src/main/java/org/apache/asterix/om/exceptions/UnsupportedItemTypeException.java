@@ -39,11 +39,13 @@ public class UnsupportedItemTypeException extends CompilationException {
     }
 
     // Unsupported item type.
+    @Deprecated
     public UnsupportedItemTypeException(String functionName, ATypeTag itemTypeTag) {
         super(ErrorCode.COMPILATION_TYPE_ITEM, functionName, itemTypeTag);
     }
 
     // Unsupported item type.
+    @Deprecated
     public UnsupportedItemTypeException(SourceLocation sourceLoc, String functionName, ATypeTag itemTypeTag) {
         super(ErrorCode.COMPILATION_TYPE_ITEM, sourceLoc, functionName, itemTypeTag);
     }

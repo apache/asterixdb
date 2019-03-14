@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 public class SubsetCollectionTypeComputer implements IResultTypeComputer {
@@ -42,7 +43,7 @@ public class SubsetCollectionTypeComputer implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env, IMetadataProvider<?, ?> mp)
             throws AlgebricksException {
         AbstractFunctionCallExpression fun = (AbstractFunctionCallExpression) expression;
-        String funcName = fun.getFunctionIdentifier().getName();
+        FunctionIdentifier funcId = fun.getFunctionIdentifier();
 
         IAType t = (IAType) env.getType(fun.getArguments().get(0).getValue());
         ATypeTag actualTypeTag = t.getTypeTag();
@@ -55,7 +56,7 @@ public class SubsetCollectionTypeComputer implements IResultTypeComputer {
             case UNION: {
                 AUnionType ut = (AUnionType) t;
                 if (!ut.isUnknownableType()) {
-                    throw new TypeMismatchException(fun.getSourceLocation(), funcName, 0, actualTypeTag,
+                    throw new TypeMismatchException(fun.getSourceLocation(), funcId, 0, actualTypeTag,
                             ATypeTag.MULTISET, ATypeTag.ARRAY);
                 }
                 IAType t2 = ut.getActualType();
@@ -64,13 +65,13 @@ public class SubsetCollectionTypeComputer implements IResultTypeComputer {
                     AbstractCollectionType act = (AbstractCollectionType) t2;
                     return act.getItemType();
                 }
-                throw new TypeMismatchException(fun.getSourceLocation(), funcName, 0, actualTypeTag, ATypeTag.MULTISET,
+                throw new TypeMismatchException(fun.getSourceLocation(), funcId, 0, actualTypeTag, ATypeTag.MULTISET,
                         ATypeTag.ARRAY);
             }
             case ANY:
                 return BuiltinType.ANY;
             default:
-                throw new TypeMismatchException(fun.getSourceLocation(), funcName, 0, actualTypeTag, ATypeTag.MULTISET,
+                throw new TypeMismatchException(fun.getSourceLocation(), funcId, 0, actualTypeTag, ATypeTag.MULTISET,
                         ATypeTag.ARRAY);
         }
     }

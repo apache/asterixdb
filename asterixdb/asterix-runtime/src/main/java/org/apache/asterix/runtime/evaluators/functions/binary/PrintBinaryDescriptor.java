@@ -66,7 +66,7 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractBinaryScalarEvaluator(ctx, args, sourceLoc) {
+                return new AbstractBinaryScalarEvaluator(ctx, args, getIdentifier(), sourceLoc) {
 
                     private StringBuilder stringBuilder = new StringBuilder();
                     private final ByteArrayPointable byteArrayPtr = new ByteArrayPointable();
@@ -84,8 +84,7 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                                     .getStartOffset()]];
                             ATypeTag arg1Tag = ATypeTag.VALUE_TYPE_MAPPING[pointables[1].getByteArray()[pointables[1]
                                     .getStartOffset()]];
-                            checkTypeMachingThrowsIfNot(getIdentifier().getName(), EXPECTED_INPUT_TAGS, arg0Tag,
-                                    arg1Tag);
+                            checkTypeMachingThrowsIfNot(EXPECTED_INPUT_TAGS, arg0Tag, arg1Tag);
 
                             byteArrayPtr.set(pointables[0].getByteArray(), pointables[0].getStartOffset() + 1,
                                     pointables[0].getLength());

@@ -47,7 +47,6 @@ public class ClosedRecordConstructorResultType implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
-        String funcName = f.getFunctionIdentifier().getName();
 
         /**
          * if type has been top-down propagated, use the enforced type
@@ -72,7 +71,7 @@ public class ClosedRecordConstructorResultType implements IResultTypeComputer {
             }
             String fieldName = ConstantExpressionUtil.getStringConstant(e1);
             if (fieldName == null) {
-                throw new InvalidExpressionException(f.getSourceLocation(), funcName, 2 * i, e1,
+                throw new InvalidExpressionException(f.getSourceLocation(), f.getFunctionIdentifier(), 2 * i, e1,
                         LogicalExpressionTag.CONSTANT);
             }
             for (int j = 0; j < i; j++) {

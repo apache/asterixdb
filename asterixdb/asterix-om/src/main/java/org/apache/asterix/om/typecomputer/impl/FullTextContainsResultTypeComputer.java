@@ -25,6 +25,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class FullTextContainsResultTypeComputer extends AbstractResultTypeComputer {
@@ -35,17 +36,17 @@ public class FullTextContainsResultTypeComputer extends AbstractResultTypeComput
     }
 
     @Override
-    protected void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+    protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
             throws AlgebricksException {
         ATypeTag actualTypeTag = type.getTypeTag();
         // Expression1 should be a string.
         if (argIndex == 0 && actualTypeTag != ATypeTag.STRING && actualTypeTag != ATypeTag.ANY) {
-            throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.STRING);
+            throw new TypeMismatchException(sourceLoc, funcId, argIndex, actualTypeTag, ATypeTag.STRING);
         }
         // Expression2 should be a string, or an (un)ordered list.
         if (argIndex == 1 && (actualTypeTag != ATypeTag.STRING && actualTypeTag != ATypeTag.MULTISET
                 && actualTypeTag != ATypeTag.ARRAY && actualTypeTag != ATypeTag.ANY)) {
-            throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.STRING,
+            throw new TypeMismatchException(sourceLoc, funcId, argIndex, actualTypeTag, ATypeTag.STRING,
                     ATypeTag.MULTISET, ATypeTag.ARRAY);
         }
         // Each option name should be a string if it is already processed by FullTextContainsParameterCheckRule.
@@ -53,7 +54,7 @@ public class FullTextContainsResultTypeComputer extends AbstractResultTypeComput
         // The structure is: arg2 = optionName1, arg3 = optionValue1, arg4 = optionName1, arg5 = optionValue2, ...
         if (argIndex > 1 && argIndex % 2 == 0 && (actualTypeTag != ATypeTag.STRING && actualTypeTag != ATypeTag.OBJECT
                 && actualTypeTag != ATypeTag.ANY)) {
-            throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.STRING,
+            throw new TypeMismatchException(sourceLoc, funcId, argIndex, actualTypeTag, ATypeTag.STRING,
                     ATypeTag.OBJECT);
         }
     }

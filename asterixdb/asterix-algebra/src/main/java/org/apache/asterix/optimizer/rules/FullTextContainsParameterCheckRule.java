@@ -145,7 +145,7 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
                 // The number of parameters should be three: exp1, exp2, and the option
                 if (oldExprs.size() != numberOfCorrectArguments) {
                     throw CompilationException.create(ErrorCode.COMPILATION_INVALID_PARAMETER_NUMBER,
-                            funcExpr.getSourceLocation(), fi, oldExprs.size());
+                            funcExpr.getSourceLocation(), fi.getName(), oldExprs.size());
                 }
 
                 // The last expression before the option needs to be copied first.

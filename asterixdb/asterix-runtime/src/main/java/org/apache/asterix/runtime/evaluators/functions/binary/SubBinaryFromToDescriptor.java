@@ -62,7 +62,7 @@ public class SubBinaryFromToDescriptor extends AbstractStringOffsetConfigurableD
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
 
-                return new AbstractSubBinaryEvaluator(ctx, args, baseOffset, getIdentifier().getName(), sourceLoc) {
+                return new AbstractSubBinaryEvaluator(ctx, args, baseOffset, getIdentifier(), sourceLoc) {
                     @Override
                     protected int getSubLength(IFrameTupleReference tuple) throws HyracksDataException {
                         return ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 2,

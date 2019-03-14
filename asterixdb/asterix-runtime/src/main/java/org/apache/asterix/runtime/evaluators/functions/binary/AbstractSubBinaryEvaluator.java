@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -38,15 +39,13 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
     private ByteArrayPointable byteArrayPointable = new ByteArrayPointable();
     private byte[] metaBuffer = new byte[5];
     protected final int baseOffset;
-    protected final String functionName;
 
     private static final ATypeTag[] EXPECTED_INPUT_TAGS = { ATypeTag.BINARY, ATypeTag.INTEGER };
 
     public AbstractSubBinaryEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,
-            int baseOffset, String functionName, SourceLocation sourceLoc) throws HyracksDataException {
-        super(context, copyEvaluatorFactories, sourceLoc);
+            int baseOffset, FunctionIdentifier funcId, SourceLocation sourceLoc) throws HyracksDataException {
+        super(context, copyEvaluatorFactories, funcId, sourceLoc);
         this.baseOffset = baseOffset;
-        this.functionName = functionName;
     }
 
     @Override
@@ -61,7 +60,7 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
                     ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0].getStartOffset()]];
             ATypeTag argTag1 =
                     ATypeTag.VALUE_TYPE_MAPPING[pointables[1].getByteArray()[pointables[1].getStartOffset()]];
-            checkTypeMachingThrowsIfNot(functionName, EXPECTED_INPUT_TAGS, argTag0, argTag1);
+            checkTypeMachingThrowsIfNot(EXPECTED_INPUT_TAGS, argTag0, argTag1);
 
             byteArrayPointable.set(pointables[0].getByteArray(), pointables[0].getStartOffset() + 1,
                     pointables[0].getLength() - 1);

@@ -67,7 +67,7 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractBinaryScalarEvaluator(ctx, args, sourceLoc) {
+                return new AbstractBinaryScalarEvaluator(ctx, args, getIdentifier(), sourceLoc) {
 
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ABinary> binarySerde =
@@ -91,8 +91,7 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
 
                         ATypeTag formatTag = ATypeTag.VALUE_TYPE_MAPPING[pointables[1].getByteArray()[pointables[1]
                                 .getStartOffset()]];
-                        checkTypeMachingThrowsIfNot(getIdentifier().getName(), EXPECTED_INPUT_TAGS, binaryTag,
-                                formatTag);
+                        checkTypeMachingThrowsIfNot(EXPECTED_INPUT_TAGS, binaryTag, formatTag);
                         stringPointable.set(pointables[0].getByteArray(), pointables[0].getStartOffset() + 1,
                                 pointables[0].getLength());
                         formatPointable.set(pointables[1].getByteArray(), pointables[1].getStartOffset() + 1,
