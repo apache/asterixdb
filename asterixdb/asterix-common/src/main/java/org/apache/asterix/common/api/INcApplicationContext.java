@@ -40,6 +40,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
+import org.apache.hyracks.util.cache.ICacheManager;
 
 public interface INcApplicationContext extends IApplicationContext {
 
@@ -125,4 +126,11 @@ public interface INcApplicationContext extends IApplicationContext {
     long getMaxTxnId();
 
     IPersistedResourceRegistry getPersistedResourceRegistry();
+
+    /**
+     * Gets the cache manager of this {@link INcApplicationContext}
+     *
+     * @return the cache manager
+     */
+    ICacheManager getCacheManager();
 }

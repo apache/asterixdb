@@ -108,6 +108,8 @@ import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 import org.apache.hyracks.util.MaintainedThreadNameExecutorService;
+import org.apache.hyracks.util.cache.CacheManager;
+import org.apache.hyracks.util.cache.ICacheManager;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -149,6 +151,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     private IReplicaManager replicaManager;
     private IReceptionist receptionist;
+    private ICacheManager cacheManager;
 
     public NCAppRuntimeContext(INCServiceContext ncServiceContext, List<AsterixExtension> extensions,
             IPropertiesFactory propertiesFactory) throws AsterixException, InstantiationException,
@@ -175,6 +178,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         componentProvider = new StorageComponentProvider();
         resourceIdFactory = new GlobalResourceIdFactoryProvider(ncServiceContext).createResourceIdFactory();
         persistedResourceRegistry = ncServiceContext.getPersistedResourceRegistry();
+        cacheManager = new CacheManager();
     }
 
     @Override
@@ -542,5 +546,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IReceptionist getReceptionist() {
         return receptionist;
+    }
+
+    @Override
+    public ICacheManager getCacheManager() {
+        return cacheManager;
     }
 }
