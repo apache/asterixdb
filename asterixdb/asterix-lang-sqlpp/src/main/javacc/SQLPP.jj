@@ -2726,7 +2726,7 @@ Expression FunctionCallExpr() throws ParseException:
     {
       String name = funcName.function;
       if (distinct) {
-        name += "-distinct";
+        name += FunctionMapUtil.DISTINCT_AGGREGATE_SUFFIX;
       }
       // TODO use funcName.library
       String fqFunctionName = funcName.library == null ? name : funcName.library + "#" + name;

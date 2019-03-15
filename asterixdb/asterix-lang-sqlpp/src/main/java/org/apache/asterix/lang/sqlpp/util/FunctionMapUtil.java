@@ -39,6 +39,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class FunctionMapUtil {
 
     public static final String CONCAT = "concat";
+    public static final String DISTINCT_AGGREGATE_SUFFIX = "-distinct";
     private final static String CORE_AGGREGATE_PREFIX = "strict_";
     // This is a transitional case. The ALT_CORE_AGGREGATE_PREFIX should be removed again.
     private final static String ALT_CORE_AGGREGATE_PREFIX = "coll_";
@@ -64,8 +65,9 @@ public class FunctionMapUtil {
      *         false otherwise.
      */
     public static boolean isSql92AggregateFunction(FunctionSignature signature) {
-        IFunctionInfo finfo = FunctionUtil.getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-                signature.getName().toLowerCase(), signature.getArity()));
+        String name = applySql92AggregateNameMapping(signature.getName().toLowerCase());
+        IFunctionInfo finfo = FunctionUtil
+                .getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS, name, signature.getArity()));
         if (finfo == null) {
             return false;
         }
@@ -83,8 +85,8 @@ public class FunctionMapUtil {
         if (!isSql92AggregateFunction(fs)) {
             return fs;
         }
-        return new FunctionSignature(FunctionConstants.ASTERIX_NS, CORE_SQL_AGGREGATE_PREFIX + fs.getName(),
-                fs.getArity());
+        String name = applySql92AggregateNameMapping(fs.getName().toLowerCase());
+        return new FunctionSignature(FunctionConstants.ASTERIX_NS, CORE_SQL_AGGREGATE_PREFIX + name, fs.getArity());
     }
 
     /**
@@ -192,5 +194,26 @@ public class FunctionMapUtil {
         IFunctionInfo finfo = FunctionUtil.getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
                 signature.getName().toLowerCase(), signature.getArity()));
         return finfo != null ? BuiltinFunctions.getWindowFunction(finfo.getFunctionIdentifier()) : null;
+    }
+
+    /**
+     * Returns original function name for a SQL-92 aggregate function alias or given name if there is no mapping
+     * defined for it
+     */
+    private static String applySql92AggregateNameMapping(String functionName) {
+        boolean distinct = functionName.endsWith(DISTINCT_AGGREGATE_SUFFIX);
+        if (distinct) {
+            String mainName = CommonFunctionMapUtil.getFunctionMapping(
+                    functionName.substring(0, functionName.length() - DISTINCT_AGGREGATE_SUFFIX.length()));
+            if (mainName != null) {
+                return mainName + DISTINCT_AGGREGATE_SUFFIX;
+            }
+        } else {
+            String mainName = CommonFunctionMapUtil.getFunctionMapping(functionName);
+            if (mainName != null) {
+                return mainName;
+            }
+        }
+        return functionName;
     }
 }

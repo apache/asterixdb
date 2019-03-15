@@ -1238,7 +1238,8 @@ This query returns:
 
 ### <a id="SQL-92_aggregation_functions">SQL-92 Aggregation Functions</a>
 For compatibility with the traditional SQL aggregation functions, the query language also offers SQL-92's
-aggregation function symbols (`COUNT`, `SUM`, `MAX`, `MIN`, and `AVG`) as supported syntactic sugar.
+aggregation function symbols (`COUNT`, `SUM`, `MAX`, `MIN`, `AVG`, `STDDEV_SAMP`, `STDDEV_POP`, `VAR_SAMP`, `VAR_POP`) 
+as supported syntactic sugar.
 The query compiler rewrites queries that utilize these function symbols into queries that only
 use the collection aggregate functions of the query language. The following example uses the SQL-92 syntax approach
 to compute a result that is identical to that of the more explicit example above:
@@ -1259,11 +1260,20 @@ will rewrite as follows:
     GROUP AS `$1`(msg AS msg);
 
 
-The same sort of rewritings apply to the function symbols `SUM`, `MAX`, `MIN`, and `AVG`.
+The same sort of rewritings apply to the function symbols `SUM`, `MAX`, `MIN`, `AVG`, `STDDEV_SAMP`, `STDDEV_POP`, 
+`VAR_SAMP`, and `VAR_POP`. 
 In contrast to the collection aggregate functions of the query language, these special SQL-92 function symbols
 can only be used in the same way they are in standard SQL (i.e., with the same restrictions).
 
 DISTINCT modifier is also supported for these aggregate functions.
+
+The following aggregate function aliases are supported
+ 
+| Function       | Aliases                 | 
+|----------------|-------------------------|
+| STDDEV_SAMP    | STDDEV                  |
+| VAR_SAMP       | VARIANCE, VARIANCE_SAMP |
+| VAR_POP        | VARIANCE_POP            |
 
 ### <a id="SQL-92_compliant_gby">SQL-92 Compliant GROUP BY Aggregations</a>
 The query language provides full support for SQL-92 `GROUP BY` aggregation queries.

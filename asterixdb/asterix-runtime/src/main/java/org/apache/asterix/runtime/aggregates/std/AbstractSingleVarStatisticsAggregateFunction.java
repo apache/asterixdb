@@ -269,10 +269,11 @@ public abstract class AbstractSingleVarStatisticsAggregateFunction extends Abstr
     protected void finishStddevFinalResults(IPointable result, int delta) throws HyracksDataException {
         resultStorage.reset();
         try {
-            if (moments.getCount() <= 1 || aggType == ATypeTag.NULL) {
+            long count = moments.getCount();
+            if (count <= delta || aggType == ATypeTag.NULL) {
                 nullSerde.serialize(ANull.NULL, resultStorage.getDataOutput());
             } else {
-                aDouble.setValue(Math.sqrt(moments.getM2() / (moments.getCount() - delta)));
+                aDouble.setValue(Math.sqrt(moments.getM2() / (count - delta)));
                 doubleSerde.serialize(aDouble, resultStorage.getDataOutput());
             }
         } catch (IOException e) {
@@ -284,10 +285,11 @@ public abstract class AbstractSingleVarStatisticsAggregateFunction extends Abstr
     protected void finishVarFinalResults(IPointable result, int delta) throws HyracksDataException {
         resultStorage.reset();
         try {
-            if (moments.getCount() <= 1 || aggType == ATypeTag.NULL) {
+            long count = moments.getCount();
+            if (count <= delta || aggType == ATypeTag.NULL) {
                 nullSerde.serialize(ANull.NULL, resultStorage.getDataOutput());
             } else {
-                aDouble.setValue(moments.getM2() / (moments.getCount() - delta));
+                aDouble.setValue(moments.getM2() / (count - delta));
                 doubleSerde.serialize(aDouble, resultStorage.getDataOutput());
             }
         } catch (IOException e) {

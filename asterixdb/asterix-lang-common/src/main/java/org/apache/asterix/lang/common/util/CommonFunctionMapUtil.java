@@ -114,6 +114,12 @@ public class CommonFunctionMapUtil {
 
         // Array/Mutliset functions
         addFunctionMapping("array_length", "len");
+
+        // Aggregate functions
+        addFunctionMapping("stddev", "stddev_samp");
+        addFunctionMapping("variance", "var_samp");
+        addFunctionMapping("variance_samp", "var_samp");
+        addFunctionMapping("variance_pop", "var_pop");
     }
 
     private CommonFunctionMapUtil() {
@@ -132,13 +138,17 @@ public class CommonFunctionMapUtil {
             throws CompilationException {
         String name = fs.getName();
         String lowerCaseName = name.toLowerCase();
-        String mappedName = FUNCTION_NAME_MAP.get(lowerCaseName);
+        String mappedName = getFunctionMapping(lowerCaseName);
         if (mappedName != null) {
             return new FunctionSignature(fs.getNamespace(), mappedName, fs.getArity());
         }
         String understoreName = lowerCaseName.replace('_', '-');
         FunctionSignature newFs = new FunctionSignature(fs.getNamespace(), understoreName, fs.getArity());
         return BuiltinFunctions.isBuiltinCompilerFunction(newFs, true) ? newFs : fs;
+    }
+
+    public static String getFunctionMapping(String alias) {
+        return FUNCTION_NAME_MAP.get(alias);
     }
 
     public static void addFunctionMapping(String alias, String functionName) {
