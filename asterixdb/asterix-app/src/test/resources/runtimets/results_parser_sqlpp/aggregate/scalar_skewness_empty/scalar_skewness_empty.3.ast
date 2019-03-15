@@ -1,7 +1,0 @@
-Query:
-SELECT ELEMENT [
-FunctionCall asterix.skewness@1[
-  OrderedListConstructor [
-  ]
-]
-]
