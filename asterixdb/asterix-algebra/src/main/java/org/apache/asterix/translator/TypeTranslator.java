@@ -48,6 +48,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
+import static org.apache.asterix.om.types.BuiltinType.ANY;
+
 public class TypeTranslator {
 
     private TypeTranslator() {
@@ -200,7 +202,7 @@ public class TypeTranslator {
             throws AlgebricksException {
         TypeExpression tExpr = oltd.getItemTypeExpression();
         String typeName = typeSignature != null ? typeSignature.getName() : null;
-        AOrderedListType aolt = new AOrderedListType(null, typeName);
+        AOrderedListType aolt = new AOrderedListType(ANY, typeName);
         setCollectionItemType(tExpr, typeMap, incompleteItemTypes, incompleteFieldTypes, aolt, defaultDataverse);
         return aolt;
     }
@@ -212,7 +214,7 @@ public class TypeTranslator {
             throws AlgebricksException {
         TypeExpression tExpr = ultd.getItemTypeExpression();
         String typeName = typeSignature != null ? typeSignature.getName() : null;
-        AUnorderedListType ault = new AUnorderedListType(null, typeName);
+        AUnorderedListType ault = new AUnorderedListType(ANY, typeName);
         setCollectionItemType(tExpr, typeMap, incompleteItemTypes, incompleteFieldTypes, ault, defaulDataverse);
         return ault;
     }

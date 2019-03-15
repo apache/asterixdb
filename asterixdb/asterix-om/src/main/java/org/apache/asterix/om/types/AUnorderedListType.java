@@ -31,8 +31,7 @@ public class AUnorderedListType extends AbstractCollectionType {
 
     private static final long serialVersionUID = 1L;
 
-    // TODO: why is the item type "null"? why not ANY?
-    public static final AUnorderedListType FULLY_OPEN_UNORDEREDLIST_TYPE = new AUnorderedListType(null, "");
+    public static final AUnorderedListType FULLY_OPEN_UNORDEREDLIST_TYPE = new AUnorderedListType(BuiltinType.ANY, "");
 
     /**
      * @param itemType

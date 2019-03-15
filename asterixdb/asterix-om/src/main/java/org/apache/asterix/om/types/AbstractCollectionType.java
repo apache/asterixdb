@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.om.types;
 
+import java.util.Objects;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
@@ -33,7 +35,7 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
 
     AbstractCollectionType(IAType itemType, String typeName) {
         super(typeName);
-        this.itemType = itemType;
+        this.itemType = Objects.requireNonNull(itemType);
     }
 
     public boolean isTyped() {
