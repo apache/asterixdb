@@ -332,11 +332,11 @@ class SQLPPParser extends ScopeChecker implements IParser {
             // this is here as the JavaCharStream that's below the lexer sometimes throws Errors that are not handled
             // by the ANTLR-generated lexer or parser (e.g it does this for invalid backslash u + 4 hex digits escapes)
             final String msg = e.getClass().getSimpleName() + (e.getMessage() != null ? ": " + e.getMessage() : "");
-            throw new CompilationException(ErrorCode.PARSE_ERROR, msg);
+            throw new CompilationException(ErrorCode.PARSE_ERROR, LogRedactionUtil.userData(msg));
         } catch (SqlppParseException e) {
-            throw new CompilationException(ErrorCode.PARSE_ERROR, e.getSourceLocation(), getMessage(e));
+            throw new CompilationException(ErrorCode.PARSE_ERROR, e.getSourceLocation(), LogRedactionUtil.userData(getMessage(e)));
         } catch (ParseException e) {
-            throw new CompilationException(ErrorCode.PARSE_ERROR, getMessage(e));
+            throw new CompilationException(ErrorCode.PARSE_ERROR, LogRedactionUtil.userData(getMessage(e)));
         }
     }
 
