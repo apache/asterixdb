@@ -154,6 +154,14 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return UTF8StringUtil.compareTo(this.bytes, this.start, bytes, start);
     }
 
+    // TODO(ali): could use the normalized key, too.
+    // takes advantage of cached utf8 length and meta length
+    public static int compare(UTF8StringPointable pointable1, UTF8StringPointable pointable2) {
+        return UTF8StringUtil.compareTo(pointable1.bytes, pointable1.start + pointable1.metaLength,
+                pointable1.utf8Length, pointable2.bytes, pointable2.start + pointable2.metaLength,
+                pointable2.utf8Length);
+    }
+
     @Override
     public int hash() {
         if (hashValue == 0) {

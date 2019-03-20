@@ -241,6 +241,12 @@ public class UTF8StringUtil {
         return compareTo(thisBytes, thisStart, thatBytes, thatStart, false, false);
     }
 
+    // the start and length of each are the ones calculated by UTF8StringPointable. caller should provide proper values
+    public static int compareTo(byte[] thisBytes, int thisStart, int thisLength, byte[] thatBytes, int thatStart,
+            int thatLength) {
+        return compareTo(thisBytes, thisStart, thisLength, thatBytes, thatStart, thatLength, false, false);
+    }
+
     /**
      * This function provides the raw bytes-based comparison for UTF8 strings.
      * Note that the comparison may not deliver the correct ordering for certain languages that include 2 or 3 bytes characters.

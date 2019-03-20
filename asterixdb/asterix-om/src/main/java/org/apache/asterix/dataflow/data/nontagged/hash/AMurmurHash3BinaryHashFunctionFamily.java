@@ -18,19 +18,16 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.hash;
 
-import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
+import static org.apache.asterix.om.util.container.ObjectFactories.RECORD_FACTORY;
+import static org.apache.asterix.om.util.container.ObjectFactories.STORAGE_FACTORY;
+import static org.apache.asterix.om.util.container.ObjectFactories.VOID_FACTORY;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.List;
-import java.util.PriorityQueue;
 
 import org.apache.asterix.dataflow.data.common.ListAccessorUtil;
-import org.apache.asterix.dataflow.data.nontagged.CompareHashUtil;
-import org.apache.asterix.om.pointables.ARecordVisitablePointable;
-import org.apache.asterix.om.pointables.PointableAllocator;
-import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.pointables.nonvisitor.RecordField;
+import org.apache.asterix.om.pointables.nonvisitor.SortedRecord;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -41,16 +38,13 @@ import org.apache.asterix.om.types.hierachy.FloatToDoubleTypeConvertComputer;
 import org.apache.asterix.om.types.hierachy.IntegerToDoubleTypeConvertComputer;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
-import org.apache.asterix.om.util.container.ObjectFactories;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.MurmurHash3BinaryHash;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunctionFamily {
@@ -83,24 +77,15 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
 
         private final ArrayBackedValueStorage valueBuffer = new ArrayBackedValueStorage();
         private final DataOutput valueOut = valueBuffer.getDataOutput();
-        private final IObjectPool<IPointable, Void> voidPointableAllocator;
-        private final IObjectPool<IMutableValueStorage, Void> storageAllocator;
+        private final IObjectPool<IPointable, Void> voidPointableAllocator = new ListObjectPool<>(VOID_FACTORY);
+        private final IObjectPool<IMutableValueStorage, Void> storageAllocator = new ListObjectPool<>(STORAGE_FACTORY);
+        private final IObjectPool<SortedRecord, ARecordType> recordPool = new ListObjectPool<>(RECORD_FACTORY);
         private final IAType type;
         private final int seed;
-        // used for record hashing, sorting field names first
-        private final PointableAllocator recordAllocator;
-        private final IObjectPool<PriorityQueue<IVisitablePointable>, Void> heapAllocator;
-        private final Comparator<IVisitablePointable> fieldNamesComparator;
 
         private GenericHashFunction(IAType type, int seed) {
             this.type = type;
             this.seed = seed;
-            this.voidPointableAllocator = new ListObjectPool<>(ObjectFactories.VOID_FACTORY);
-            this.storageAllocator = new ListObjectPool<>(ObjectFactories.STORAGE_FACTORY);
-            this.recordAllocator = new PointableAllocator();
-            this.fieldNamesComparator = CompareHashUtil.createFieldNamesComp(
-                    new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY).createBinaryComparator());
-            this.heapAllocator = new ListObjectPool<>((arg) -> new PriorityQueue<>(fieldNamesComparator));
         }
 
         @Override
@@ -178,35 +163,28 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
                 return MurmurHash3BinaryHash.hash(bytes, offset, length, seed);
             }
             ARecordType recordType = (ARecordType) TypeComputeUtils.getActualTypeOrOpen(type, ATypeTag.OBJECT);
-            ARecordVisitablePointable record = recordAllocator.allocateRecordValue(recordType);
-            PriorityQueue<IVisitablePointable> namesHeap = heapAllocator.allocate(null);
+            SortedRecord record = recordPool.allocate(recordType);
+            IPointable fieldValue = voidPointableAllocator.allocate(null);
+            // TODO(ali): this is not ideal. should be removed when tagged pointables are introduced
+            ArrayBackedValueStorage storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
             try {
-                record.set(bytes, offset, length);
-                namesHeap.clear();
-                List<IVisitablePointable> fieldsNames = record.getFieldNames();
-                List<IVisitablePointable> fieldsValues = record.getFieldValues();
-                CompareHashUtil.addToHeap(fieldsNames, fieldsValues, namesHeap);
-                IVisitablePointable fieldName, fieldValue;
-                IAType fieldType;
-                ATypeTag fieldTag;
+                record.reset(bytes, offset);
                 int hash = seed;
-                int fieldIdx;
-                while (!namesHeap.isEmpty()) {
-                    fieldName = namesHeap.poll();
-                    // TODO(ali): currently doing another lookup to find the target field index and get its value & type
-                    fieldIdx = CompareHashUtil.getIndex(fieldsNames, fieldName);
-                    fieldValue = fieldsValues.get(fieldIdx);
-                    fieldTag = VALUE_TYPE_MAPPING[fieldValue.getByteArray()[fieldValue.getStartOffset()]];
-                    fieldType = CompareHashUtil.getType(recordType, fieldIdx, fieldTag);
-                    hash ^= MurmurHash3BinaryHash.hash(fieldName.getByteArray(), fieldName.getStartOffset(),
-                            fieldName.getLength(), seed)
-                            ^ hash(fieldType, fieldValue.getByteArray(), fieldValue.getStartOffset(),
-                                    fieldValue.getLength());
+                while (!record.isEmpty()) {
+                    RecordField field = record.poll();
+                    storage.reset();
+                    record.getFieldValue(field, fieldValue, storage);
+                    IAType fieldType = record.getFieldType(field);
+                    hash ^= field.getName().hash() ^ hash(fieldType, fieldValue.getByteArray(),
+                            fieldValue.getStartOffset(), fieldValue.getLength());
                 }
                 return hash;
+            } catch (IOException e) {
+                throw HyracksDataException.create(e);
             } finally {
-                recordAllocator.freeRecord(record);
-                heapAllocator.free(namesHeap);
+                recordPool.free(record);
+                voidPointableAllocator.free(fieldValue);
+                storageAllocator.free(storage);
             }
         }
     }

@@ -18,23 +18,20 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
-import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
+import static org.apache.asterix.om.util.container.ObjectFactories.RECORD_FACTORY;
+import static org.apache.asterix.om.util.container.ObjectFactories.STORAGE_FACTORY;
+import static org.apache.asterix.om.util.container.ObjectFactories.VOID_FACTORY;
 
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.List;
-import java.util.PriorityQueue;
 
 import org.apache.asterix.dataflow.data.common.ListAccessorUtil;
-import org.apache.asterix.dataflow.data.nontagged.CompareHashUtil;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
-import org.apache.asterix.om.pointables.ARecordVisitablePointable;
-import org.apache.asterix.om.pointables.PointableAllocator;
-import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.pointables.nonvisitor.RecordField;
+import org.apache.asterix.om.pointables.nonvisitor.SortedRecord;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -43,9 +40,7 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy.Domain;
-import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
-import org.apache.asterix.om.util.container.ObjectFactories;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -61,64 +56,43 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
  */
 abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
 
-    // BOOLEAN
     private final IBinaryComparator ascBoolComp = BooleanBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    // STRING
     private final IBinaryComparator ascStrComp =
             new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY).createBinaryComparator();
-    // BINARY
     private final IBinaryComparator ascByteArrayComp =
             new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY).createBinaryComparator();
-    // RECTANGLE
     private final IBinaryComparator ascRectangleComp =
             ARectanglePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    // CIRCLE
     private final IBinaryComparator ascCircleComp =
             ACirclePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    // DURATION
     private final IBinaryComparator ascDurationComp =
             ADurationPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    // INTERVAL
     private final IBinaryComparator ascIntervalComp =
             AIntervalAscPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    // LINE
     private final IBinaryComparator ascLineComp = ALinePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    // POINT
     private final IBinaryComparator ascPointComp =
             APointPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    // POINT3D
     private final IBinaryComparator ascPoint3DComp =
             APoint3DPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    // POLYGON
     private final IBinaryComparator ascPolygonComp =
             APolygonPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    // UUID
     private final IBinaryComparator ascUUIDComp = AUUIDPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    // RAW
     private final IBinaryComparator rawComp = RawBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-    // these fields can be null
+    // the type fields can be null
     protected final IAType leftType;
     protected final IAType rightType;
-    private final IObjectPool<IMutableValueStorage, Void> storageAllocator;
-    private final IObjectPool<IPointable, Void> voidPointableAllocator;
-    // used for record comparison, sorting field names
-    private final PointableAllocator recordAllocator;
-    private final IObjectPool<PriorityQueue<IVisitablePointable>, Void> heapAllocator;
-    private final Comparator<IVisitablePointable> fieldNamesComparator;
+    private final ListObjectPool<IMutableValueStorage, Void> storageAllocator = new ListObjectPool<>(STORAGE_FACTORY);
+    private final ListObjectPool<IPointable, Void> voidPointableAllocator = new ListObjectPool<>(VOID_FACTORY);
+    private final ListObjectPool<SortedRecord, ARecordType> recordPool = new ListObjectPool<>(RECORD_FACTORY);
 
     AbstractAGenericBinaryComparator(IAType leftType, IAType rightType) {
         // factory should have already made sure to get the actual type
         this.leftType = leftType;
         this.rightType = rightType;
-        this.storageAllocator = new ListObjectPool<>(ObjectFactories.STORAGE_FACTORY);
-        this.voidPointableAllocator = new ListObjectPool<>(ObjectFactories.VOID_FACTORY);
-        this.recordAllocator = new PointableAllocator();
-        this.fieldNamesComparator = CompareHashUtil.createFieldNamesComp(ascStrComp);
-        this.heapAllocator = new ListObjectPool<>((type) -> new PriorityQueue<>(fieldNamesComparator));
     }
 
-    protected int compare(IAType leftType, byte[] b1, int s1, int l1, IAType rightType, byte[] b2, int s2, int l2)
+    protected final int compare(IAType leftType, byte[] b1, int s1, int l1, IAType rightType, byte[] b2, int s2, int l2)
             throws HyracksDataException {
         if (b1[s1] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
             return b2[s2] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG ? 0 : -1;
@@ -132,16 +106,14 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
         }
         ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b1[s1]);
         ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b2[s2]);
-        // if one of tag is null, that means we are dealing with an empty byte array in one side.
-        // and, we don't need to continue. We just compare raw byte by byte.
+        // tag being null could mean several things among of which is that the passed args are not tagged
         if (tag1 == null || tag2 == null) {
             return rawComp.compare(b1, s1, l1, b2, s2, l2);
         }
         if (ATypeHierarchy.isCompatible(tag1, tag2) && ATypeHierarchy.getTypeDomain(tag1) == Domain.NUMERIC) {
             return ComparatorUtil.compareNumbers(tag1, b1, s1 + 1, tag2, b2, s2 + 1);
         }
-        // currently only numbers are compatible. if two tags are not compatible, we compare the tags.
-        // this is especially useful when we need to generate some order between any two types.
+        // currently only numbers are compatible. if two tags are not compatible, we compare the tags to generate order
         if (tag1 != tag2) {
             return Byte.compare(b1[s1], b2[s2]);
         }
@@ -191,7 +163,6 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
             case OBJECT:
                 return compareRecords(leftType, b1, s1, l1, rightType, b2, s2, l2);
             default:
-                // we include typeTag in comparison to compare between two type to enforce some ordering
                 return rawComp.compare(b1, s1, l1, b2, s2, l2);
         }
     }
@@ -248,53 +219,34 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
         }
         ARecordType leftRecordType = (ARecordType) TypeComputeUtils.getActualTypeOrOpen(leftType, ATypeTag.OBJECT);
         ARecordType rightRecordType = (ARecordType) TypeComputeUtils.getActualTypeOrOpen(rightType, ATypeTag.OBJECT);
-        ARecordVisitablePointable leftRecord = recordAllocator.allocateRecordValue(leftRecordType);
-        ARecordVisitablePointable rightRecord = recordAllocator.allocateRecordValue(rightRecordType);
-        PriorityQueue<IVisitablePointable> leftNamesHeap = null, rightNamesHeap = null;
+        SortedRecord leftRecord = recordPool.allocate(leftRecordType);
+        SortedRecord rightRecord = recordPool.allocate(rightRecordType);
+        IPointable leftFieldValue = voidPointableAllocator.allocate(null);
+        IPointable rightFieldValue = voidPointableAllocator.allocate(null);
+        // TODO(ali): this is not ideal. should be removed when tagged pointables are introduced
+        ArrayBackedValueStorage leftStorage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
+        ArrayBackedValueStorage rightStorage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
         try {
-            leftRecord.set(b1, s1, l1);
-            rightRecord.set(b2, s2, l2);
-            List<IVisitablePointable> leftFieldsNames = leftRecord.getFieldNames();
-            List<IVisitablePointable> rightFieldsNames = rightRecord.getFieldNames();
-            List<IVisitablePointable> leftFieldsValues = leftRecord.getFieldValues();
-            List<IVisitablePointable> rightFieldsValues = rightRecord.getFieldValues();
-            leftNamesHeap = heapAllocator.allocate(null);
-            rightNamesHeap = heapAllocator.allocate(null);
-            leftNamesHeap.clear();
-            rightNamesHeap.clear();
-            int numLeftValuedFields = CompareHashUtil.addToHeap(leftFieldsNames, leftFieldsValues, leftNamesHeap);
-            int numRightValuedFields = CompareHashUtil.addToHeap(rightFieldsNames, rightFieldsValues, rightNamesHeap);
-            if (numLeftValuedFields == 0 && numRightValuedFields == 0) {
-                return 0;
-            } else if (numLeftValuedFields == 0) {
-                return -1;
-            } else if (numRightValuedFields == 0) {
-                return 1;
-            }
-            int result;
-            int leftFieldIdx, rightFieldIdx;
+            leftRecord.reset(b1, s1);
+            rightRecord.reset(b2, s2);
             IAType leftFieldType, rightFieldType;
-            IVisitablePointable leftFieldName, leftFieldValue, rightFieldName, rightFieldValue;
-            ATypeTag fieldTag;
-            while (!leftNamesHeap.isEmpty() && !rightNamesHeap.isEmpty()) {
-                leftFieldName = leftNamesHeap.poll();
-                rightFieldName = rightNamesHeap.poll();
+            RecordField leftField, rightField;
+            int result;
+            while (!leftRecord.isEmpty() && !rightRecord.isEmpty()) {
+                leftField = leftRecord.poll();
+                rightField = rightRecord.poll();
                 // compare the names first
-                result = ascStrComp.compare(leftFieldName.getByteArray(), leftFieldName.getStartOffset() + 1,
-                        leftFieldName.getLength() - 1, rightFieldName.getByteArray(),
-                        rightFieldName.getStartOffset() + 1, rightFieldName.getLength() - 1);
+                result = RecordField.FIELD_NAME_COMP.compare(leftField, rightField);
                 if (result != 0) {
                     return result;
                 }
                 // then compare the values if the names are equal
-                leftFieldIdx = CompareHashUtil.getIndex(leftFieldsNames, leftFieldName);
-                rightFieldIdx = CompareHashUtil.getIndex(rightFieldsNames, rightFieldName);
-                leftFieldValue = leftFieldsValues.get(leftFieldIdx);
-                rightFieldValue = rightFieldsValues.get(rightFieldIdx);
-                fieldTag = VALUE_TYPE_MAPPING[leftFieldValue.getByteArray()[leftFieldValue.getStartOffset()]];
-                leftFieldType = CompareHashUtil.getType(leftRecordType, leftFieldIdx, fieldTag);
-                fieldTag = VALUE_TYPE_MAPPING[rightFieldValue.getByteArray()[rightFieldValue.getStartOffset()]];
-                rightFieldType = CompareHashUtil.getType(rightRecordType, rightFieldIdx, fieldTag);
+                leftStorage.reset();
+                rightStorage.reset();
+                leftRecord.getFieldValue(leftField, leftFieldValue, leftStorage);
+                rightRecord.getFieldValue(rightField, rightFieldValue, rightStorage);
+                leftFieldType = leftRecord.getFieldType(leftField);
+                rightFieldType = rightRecord.getFieldType(rightField);
                 result = compare(leftFieldType, leftFieldValue.getByteArray(), leftFieldValue.getStartOffset(),
                         leftFieldValue.getLength(), rightFieldType, rightFieldValue.getByteArray(),
                         rightFieldValue.getStartOffset(), rightFieldValue.getLength());
@@ -302,17 +254,16 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
                     return result;
                 }
             }
-
-            return Integer.compare(numLeftValuedFields, numRightValuedFields);
+            return Integer.compare(leftRecord.size(), rightRecord.size());
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
         } finally {
-            recordAllocator.freeRecord(rightRecord);
-            recordAllocator.freeRecord(leftRecord);
-            if (rightNamesHeap != null) {
-                heapAllocator.free(rightNamesHeap);
-            }
-            if (leftNamesHeap != null) {
-                heapAllocator.free(leftNamesHeap);
-            }
+            recordPool.free(rightRecord);
+            recordPool.free(leftRecord);
+            voidPointableAllocator.free(rightFieldValue);
+            voidPointableAllocator.free(leftFieldValue);
+            storageAllocator.free(rightStorage);
+            storageAllocator.free(leftStorage);
         }
     }
 }

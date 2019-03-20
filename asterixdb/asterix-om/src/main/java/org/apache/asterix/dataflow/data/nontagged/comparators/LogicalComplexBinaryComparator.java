@@ -30,7 +30,6 @@ import java.util.List;
 
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.dataflow.data.common.ListAccessorUtil;
-import org.apache.asterix.dataflow.data.nontagged.CompareHashUtil;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
@@ -44,6 +43,7 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
@@ -275,8 +275,8 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
                                 if (leftFTag == ATypeTag.NULL || rightFTag == ATypeTag.NULL) {
                                     tempCompResult = Result.NULL;
                                 } else if (leftFTag.isDerivedType() && rightFTag.isDerivedType()) {
-                                    leftFieldType = CompareHashUtil.getType(leftRecordType, i, leftFTag);
-                                    rightFieldType = CompareHashUtil.getType(rightRecordType, k, rightFTag);
+                                    leftFieldType = RecordUtil.getType(leftRecordType, i, leftFTag);
+                                    rightFieldType = RecordUtil.getType(rightRecordType, k, rightFTag);
                                     tempCompResult = compareComplex(leftFieldType, leftFTag, leftFieldValue,
                                             rightFieldType, rightFTag, rightFieldValue);
                                 } else {

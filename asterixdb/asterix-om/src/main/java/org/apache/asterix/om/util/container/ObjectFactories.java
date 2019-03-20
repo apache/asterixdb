@@ -20,8 +20,11 @@ package org.apache.asterix.om.util.container;
 
 import java.util.BitSet;
 
+import org.apache.asterix.om.pointables.nonvisitor.SortedRecord;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
@@ -36,8 +39,10 @@ public class ObjectFactories {
     private ObjectFactories() {
     }
 
-    public static final IObjectFactory<IPointable, Void> VOID_FACTORY = (type) -> new VoidPointable();
+    public static final IObjectFactory<IPointable, Void> VOID_FACTORY = type -> new VoidPointable();
     public static final IObjectFactory<IMutableValueStorage, Void> STORAGE_FACTORY =
-            (type) -> new ArrayBackedValueStorage();
-    public static final IObjectFactory<BitSet, Void> BIT_SET_FACTORY = (type) -> new BitSet();
+            type -> new ArrayBackedValueStorage();
+    public static final IObjectFactory<BitSet, Void> BIT_SET_FACTORY = type -> new BitSet();
+    public static final IObjectFactory<UTF8StringPointable, Void> UTF8_FACTORY = type -> new UTF8StringPointable();
+    public static final IObjectFactory<SortedRecord, ARecordType> RECORD_FACTORY = SortedRecord::new;
 }

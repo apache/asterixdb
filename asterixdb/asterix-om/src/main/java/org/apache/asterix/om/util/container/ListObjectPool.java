@@ -24,10 +24,8 @@ import java.util.BitSet;
 import java.util.List;
 
 /**
- * Object pool backed by a list.
- * The argument for creating E instances could be different. This class also
- * considers arguments in object reusing, e.g., it reuses an E instances ONLY
- * when the construction argument is "equal".
+ * Object pool backed by a list. The argument for creating E instances could be different. This class also considers
+ * arguments in object reusing, e.g., it reuses an E instances ONLY when the construction argument is "equal".
  */
 public class ListObjectPool<E, T> implements IObjectPool<E, T> {
 
@@ -36,12 +34,12 @@ public class ListObjectPool<E, T> implements IObjectPool<E, T> {
     /**
      * cache of objects
      */
-    private List<E> pool = new ArrayList<E>();
+    private List<E> pool = new ArrayList<>();
 
     /**
      * args that are used to create each element in the pool
      */
-    private List<T> args = new ArrayList<T>();
+    private List<T> args = new ArrayList<>();
 
     /**
      * bits indicating which element is in use
@@ -85,7 +83,7 @@ public class ListObjectPool<E, T> implements IObjectPool<E, T> {
 
     @Override
     public boolean free(E element) {
-        for (int i = pool.size() - 1; i >= 0; i--) {
+        for (int i = usedBits.length(); (i = usedBits.previousSetBit(i - 1)) >= 0;) {
             if (element == pool.get(i)) {
                 usedBits.clear(i);
                 return true;

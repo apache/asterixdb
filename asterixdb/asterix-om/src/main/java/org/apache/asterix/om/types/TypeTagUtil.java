@@ -85,7 +85,6 @@ public class TypeTagUtil {
             case OBJECT:
                 return RecordUtil.FULLY_OPEN_RECORD_TYPE;
             case MULTISET:
-                // TODO: how come the item type in this instance is "null"
                 return AUnorderedListType.FULLY_OPEN_UNORDEREDLIST_TYPE;
             case ARRAY:
                 return AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;

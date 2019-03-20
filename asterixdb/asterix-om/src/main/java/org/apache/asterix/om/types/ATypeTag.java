@@ -122,7 +122,7 @@ public enum ATypeTag implements IEnumSerializer {
         VALUE_TYPE_MAPPING = typeList.toArray(new ATypeTag[typeList.size()]);
     }
 
-    ATypeTag(int value) {
+    private ATypeTag(int value) {
         this.value = (byte) value;
     }
 

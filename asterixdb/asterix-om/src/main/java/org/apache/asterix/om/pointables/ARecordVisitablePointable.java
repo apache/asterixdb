@@ -34,6 +34,7 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.om.utils.ResettableByteArrayOutputStream;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.string.UTF8StringWriter;
@@ -197,14 +198,12 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                 for (int fieldNumber = 0; fieldNumber < numberOfSchemaFields; fieldNumber++) {
                     if (hasOptionalFields) {
                         byte b1 = b[nullBitMapOffset + fieldNumber / 4];
-                        int p = 1 << (7 - 2 * (fieldNumber % 4));
-                        if ((b1 & p) == 0) {
+                        if (RecordUtil.isNull(b1, fieldNumber)) {
                             // set null value (including type tag inside)
                             fieldValues.add(nullReference);
                             continue;
                         }
-                        p = 1 << (7 - 2 * (fieldNumber % 4) - 1);
-                        if ((b1 & p) == 0) {
+                        if (RecordUtil.isMissing(b1, fieldNumber)) {
                             // set missing value (including type tag inside)
                             fieldValues.add(missingReference);
                             continue;
