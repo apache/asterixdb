@@ -98,7 +98,8 @@ public class BaseNCApplication implements INCApplication {
         return new DefaultDeviceResolver();
     }
 
-    protected void configureLoggingLevel(Level level) {
+    @Override
+    public void configureLoggingLevel(Level level) {
         LoggingConfigUtil.defaultIfMissing(HyracksConstants.HYRACKS_LOGGER_NAME, level);
     }
 

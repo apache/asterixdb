@@ -19,10 +19,12 @@
 package org.apache.hyracks.api.application;
 
 import org.apache.hyracks.api.config.IConfigManager;
+import org.apache.logging.log4j.Level;
 import org.kohsuke.args4j.OptionHandlerFilter;
 
 @SuppressWarnings("squid:S00112") // define and throw specific class of Exception
 public interface IApplication {
+
     void init(IServiceContext serviceCtx) throws Exception;
 
     void start(String[] args) throws Exception;
@@ -38,4 +40,11 @@ public interface IApplication {
     default OptionHandlerFilter getUsageFilter() {
         return OptionHandlerFilter.PUBLIC;
     }
+
+    /**
+     * Configures the application loggers with the given level.
+     *
+     * @param level the logging level desired.
+     */
+    void configureLoggingLevel(Level level);
 }

@@ -83,7 +83,8 @@ public class BaseCCApplication implements ICCApplication {
         return null;
     }
 
-    protected void configureLoggingLevel(Level level) {
+    @Override
+    public void configureLoggingLevel(Level level) {
         LoggingConfigUtil.defaultIfMissing(HyracksConstants.HYRACKS_LOGGER_NAME, level);
     }
 
