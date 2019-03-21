@@ -204,33 +204,37 @@ public class QueryServiceRequestParameters {
         this.multiStatement = multiStatement;
     }
 
+    public ObjectNode asJson() {
+        ObjectNode object = OBJECT_MAPPER.createObjectNode();
+        object.put("host", host);
+        object.put("path", path);
+        object.put("statement", statement != null ? JSONUtil.escape(new StringBuilder(), statement).toString() : null);
+        object.put("pretty", pretty);
+        object.put("mode", mode);
+        object.put("clientContextID", clientContextID);
+        object.put("format", format);
+        object.put("timeout", timeout);
+        object.put("maxResultReads", maxResultReads);
+        object.put("planFormat", planFormat);
+        object.put("expressionTree", expressionTree);
+        object.put("rewrittenExpressionTree", rewrittenExpressionTree);
+        object.put("logicalPlan", logicalPlan);
+        object.put("optimizedLogicalPlan", optimizedLogicalPlan);
+        object.put("job", job);
+        object.put("signature", signature);
+        object.put("multiStatement", multiStatement);
+        if (statementParams != null) {
+            for (Map.Entry<String, JsonNode> statementParam : statementParams.entrySet()) {
+                object.set('$' + statementParam.getKey(), statementParam.getValue());
+            }
+        }
+        return object;
+    }
+
     @Override
     public String toString() {
         try {
-            ObjectNode on = OBJECT_MAPPER.createObjectNode();
-            on.put("host", host);
-            on.put("path", path);
-            on.put("statement", statement != null ? JSONUtil.escape(new StringBuilder(), statement).toString() : null);
-            on.put("pretty", pretty);
-            on.put("mode", mode);
-            on.put("clientContextID", clientContextID);
-            on.put("format", format);
-            on.put("timeout", timeout);
-            on.put("maxResultReads", maxResultReads);
-            on.put("planFormat", planFormat);
-            on.put("expressionTree", expressionTree);
-            on.put("rewrittenExpressionTree", rewrittenExpressionTree);
-            on.put("logicalPlan", logicalPlan);
-            on.put("optimizedLogicalPlan", optimizedLogicalPlan);
-            on.put("job", job);
-            on.put("signature", signature);
-            on.put("multiStatement", multiStatement);
-            if (statementParams != null) {
-                for (Map.Entry<String, JsonNode> statementParam : statementParams.entrySet()) {
-                    on.set('$' + statementParam.getKey(), statementParam.getValue());
-                }
-            }
-            return OBJECT_MAPPER.writeValueAsString(on);
+            return OBJECT_MAPPER.writeValueAsString(asJson());
         } catch (JsonProcessingException e) {
             QueryServiceServlet.LOGGER.debug("unexpected exception marshalling {} instance to json", getClass(), e);
             return e.toString();

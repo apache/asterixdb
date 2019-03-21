@@ -87,6 +87,7 @@ import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class QueryServiceServlet extends AbstractQueryApiServlet {
@@ -449,10 +450,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         param.setStatementParams(
                 getOptStatementParameters(jsonRequest, jsonRequest.fieldNames(), JsonNode::get, v -> v));
         param.setMultiStatement(getOptBoolean(jsonRequest, Parameter.MULTI_STATEMENT, true));
-        setJsonOptionalParameters(jsonRequest, optionalParameters);
+        setJsonOptionalParameters(jsonRequest, param, optionalParameters);
     }
 
-    protected void setJsonOptionalParameters(JsonNode jsonRequest, Map<String, String> optionalParameters) {
+    protected void setJsonOptionalParameters(JsonNode jsonRequest, QueryServiceRequestParameters param,
+            Map<String, String> optionalParameters) {
         // allows extensions to set extra parameters
     }
 
@@ -474,10 +476,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         } catch (JsonParseException | JsonMappingException e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
         }
-        setOptionalParameters(request, optionalParameters);
+        setOptionalParameters(request, param, optionalParameters);
     }
 
-    protected void setOptionalParameters(IServletRequest request, Map<String, String> optionalParameters) {
+    protected void setOptionalParameters(IServletRequest request, QueryServiceRequestParameters param,
+            Map<String, String> optionalParameters) {
         // allows extensions to set extra parameters
     }
 
@@ -538,7 +541,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         Charset resultCharset = HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         PrintWriter httpWriter = response.writer();
         SessionOutput sessionOutput = createSessionOutput(httpWriter);
-        QueryServiceRequestParameters param = new QueryServiceRequestParameters();
+        QueryServiceRequestParameters param = newRequestParameters();
         try {
             // buffer the output until we are ready to set the status of the response message correctly
             sessionOutput.hold();
@@ -746,6 +749,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 throw new IllegalStateException("Unrecognized plan format: " + planFormat);
         }
         pw.print(",\n");
+    }
+
+    protected QueryServiceRequestParameters newRequestParameters() {
+        return new QueryServiceRequestParameters();
     }
 
     private static boolean isJsonFormat(String format) {
