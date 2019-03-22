@@ -18,12 +18,12 @@
  */
 package org.apache.hyracks.control.nc.service;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.ini4j.Ini;
 import org.kohsuke.args4j.Option;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Command-line arguments for NC Service.

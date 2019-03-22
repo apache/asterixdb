@@ -28,8 +28,8 @@ import java.util.Map;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import org.apache.hyracks.util.IntSerDeUtils;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
+import org.apache.hyracks.util.IntSerDeUtils;
 import org.junit.Before;
 import org.junit.Test;
 

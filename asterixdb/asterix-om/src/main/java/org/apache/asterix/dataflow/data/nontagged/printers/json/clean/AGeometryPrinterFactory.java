@@ -18,15 +18,16 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
-import com.esri.core.geometry.ogc.OGCGeometry;
-import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
-import org.apache.hyracks.algebricks.data.IPrinter;
-import org.apache.hyracks.algebricks.data.IPrinterFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.PrintStream;
+
+import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
+import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
+
+import com.esri.core.geometry.ogc.OGCGeometry;
 
 public class AGeometryPrinterFactory implements IPrinterFactory {
 

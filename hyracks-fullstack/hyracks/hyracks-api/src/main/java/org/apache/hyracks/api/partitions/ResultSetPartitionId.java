@@ -20,8 +20,8 @@ package org.apache.hyracks.api.partitions;
 
 import java.io.Serializable;
 
-import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.ResultSetId;
 
 public final class ResultSetPartitionId implements Serializable {
     private static final long serialVersionUID = 1L;

@@ -21,15 +21,14 @@ package org.apache.asterix.replication.sync;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
-import java.nio.channels.SocketChannel;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
-import org.apache.asterix.replication.messaging.ReplicationProtocol;
+import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.asterix.replication.messaging.DeleteFileTask;
 import org.apache.asterix.replication.messaging.ReplicateFileTask;
-import org.apache.asterix.replication.api.PartitionReplica;
+import org.apache.asterix.replication.messaging.ReplicationProtocol;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.network.ISocketChannel;

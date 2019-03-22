@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.external.input.record.CharArrayRecord;
-import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.parser.TweetParser;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;

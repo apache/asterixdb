@@ -21,10 +21,8 @@ package org.apache.asterix.lexergenerator;
 import static org.apache.asterix.lexergenerator.Fixtures.*;
 import static org.junit.Assert.*;
 
-import org.junit.Test;
-
-import org.apache.asterix.lexergenerator.LexerNode;
 import org.apache.asterix.lexergenerator.rules.RuleEpsilon;
+import org.junit.Test;
 
 public class LexerNodeAppendNodeTest {
 

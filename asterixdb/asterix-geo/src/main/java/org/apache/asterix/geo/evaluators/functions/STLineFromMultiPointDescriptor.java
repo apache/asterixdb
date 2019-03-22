@@ -18,17 +18,18 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
+import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionDescriptor;
+import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polyline;
 import com.esri.core.geometry.SpatialReference;
 import com.esri.core.geometry.ogc.OGCGeometry;
 import com.esri.core.geometry.ogc.OGCLineString;
 import com.esri.core.geometry.ogc.OGCMultiPoint;
-import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
-import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class STLineFromMultiPointDescriptor extends AbstractSTSingleGeometryDescriptor {
 

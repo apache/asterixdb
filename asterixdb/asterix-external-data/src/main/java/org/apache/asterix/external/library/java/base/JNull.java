@@ -18,14 +18,14 @@
  */
 package org.apache.asterix.external.library.java.base;
 
+import java.io.DataOutput;
+
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import java.io.DataOutput;
 
 /*
  *  This class is necessary to be able to serialize null base

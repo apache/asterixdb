@@ -20,13 +20,13 @@ package org.apache.asterix.app.replication.message;
 
 import java.util.List;
 
-import org.apache.asterix.common.utils.NcLocalCounters;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.CcIdentifiedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
+import org.apache.asterix.common.utils.NcLocalCounters;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;

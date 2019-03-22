@@ -25,12 +25,9 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
-import org.junit.Test;
-
-import org.apache.asterix.lexergenerator.LexerNode;
-import org.apache.asterix.lexergenerator.Token;
 import org.apache.asterix.lexergenerator.rules.RuleEpsilon;
 import org.apache.asterix.lexergenerator.rules.RulePartial;
+import org.junit.Test;
 
 public class LexerNodeAuxFunctionsTest {
     String expectedDifferentReturn = "return TOKEN_AUX_NOT_FOUND;\n";

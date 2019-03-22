@@ -21,12 +21,11 @@ package org.apache.hyracks.storage.am.bloomfilter.util;
 
 import java.util.Random;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
-
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractBloomFilterTest {
     protected final Logger LOGGER = LogManager.getLogger();

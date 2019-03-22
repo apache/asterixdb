@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.runtime.aggregates.serializable.std;
 
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.dataflow.data.nontagged.serde.*;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -35,15 +39,11 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.api.exceptions.SourceLocation;
-
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
 
 public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunction
         extends AbstractSerializableAggregateFunction {

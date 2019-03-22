@@ -25,6 +25,8 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.asterix.test.base.AsterixTestHelper;
+import org.apache.asterix.tools.datagen.AdmDataGen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
@@ -34,9 +36,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import org.apache.asterix.test.base.AsterixTestHelper;
-import org.apache.asterix.tools.datagen.AdmDataGen;
 
 @RunWith(Parameterized.class)
 public class AdmDataGenTest {

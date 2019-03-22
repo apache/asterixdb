@@ -18,11 +18,11 @@
  */
 package org.apache.asterix.om.pointables.printer;
 
+import java.io.PrintStream;
+
 import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-
-import java.io.PrintStream;
 
 public interface IPrintVisitor extends IVisitablePointableVisitor<Void, Pair<PrintStream, ATypeTag>> {
 }

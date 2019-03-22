@@ -19,13 +19,13 @@
 
 package org.apache.asterix.metadata.entities;
 
+import java.util.List;
+
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
-
-import java.util.List;
 
 /**
  * Feed connection records the feed --> dataset mapping.

@@ -1,5 +1,3 @@
-package org.apache.asterix.common.api;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +16,8 @@ package org.apache.asterix.common.api;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.common.api;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;

@@ -21,7 +21,6 @@ package org.apache.hyracks.hdfs.lib;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;

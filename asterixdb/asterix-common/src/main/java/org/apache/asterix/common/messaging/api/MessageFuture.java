@@ -19,9 +19,9 @@
 
 package org.apache.asterix.common.messaging.api;
 
-import org.apache.hyracks.api.messages.IMessage;
-
 import java.util.concurrent.CompletableFuture;
+
+import org.apache.hyracks.api.messages.IMessage;
 
 /**
  * A {@link CompletableFuture} associated with an identifier

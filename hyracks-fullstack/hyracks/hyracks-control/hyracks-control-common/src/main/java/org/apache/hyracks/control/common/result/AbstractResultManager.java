@@ -22,9 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.IResultManager;
 import org.apache.hyracks.api.result.IResultStateRecord;
-import org.apache.hyracks.api.job.JobId;
 
 public abstract class AbstractResultManager implements IResultManager {
 

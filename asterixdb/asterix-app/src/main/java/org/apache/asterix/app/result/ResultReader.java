@@ -20,12 +20,12 @@ package org.apache.asterix.app.result;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
-import org.apache.hyracks.api.result.IResultSet;
-import org.apache.hyracks.api.result.ResultJobRecord.Status;
-import org.apache.hyracks.api.result.IResultSetReader;
-import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.IResultSet;
+import org.apache.hyracks.api.result.IResultSetReader;
+import org.apache.hyracks.api.result.ResultJobRecord.Status;
+import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 
 public class ResultReader {

@@ -19,11 +19,10 @@
 
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
+import java.util.List;
+
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
-
-import java.util.List;
 
 public abstract class AbstractDataSourceOperator extends AbstractScanOperator {
     protected IDataSource<?> dataSource;

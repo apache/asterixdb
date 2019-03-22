@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.om.functions;
 
+import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.*;
+
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -82,6 +84,7 @@ import org.apache.asterix.om.typecomputer.impl.IfMissingTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.IfNanOrInfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.IfNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ListOfSamplesTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.LocalAvgTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.LocalSingleVarStatisticsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.MinMaxAggTypeComputer;
@@ -91,11 +94,11 @@ import org.apache.asterix.om.typecomputer.impl.NotUnknownTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NullIfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NullableDoubleTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericAddSubMulDivTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.NumericSumAggTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericDivideTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericDoubleOutputFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericInt8OutputFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericRound2TypeComputer;
+import org.apache.asterix.om.typecomputer.impl.NumericSumAggTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericUnaryFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OpenARecordTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OpenRecordConstructorResultType;
@@ -105,7 +108,6 @@ import org.apache.asterix.om.typecomputer.impl.OrderedListOfAIntervalTypeCompute
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAPointTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAStringTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAnyTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.ListOfSamplesTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.PropagateTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordAddFieldsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
@@ -141,8 +143,6 @@ import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFun
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.properties.UnpartitionedPropertyComputer;
-
-import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.*;
 
 public class BuiltinFunctions {
 

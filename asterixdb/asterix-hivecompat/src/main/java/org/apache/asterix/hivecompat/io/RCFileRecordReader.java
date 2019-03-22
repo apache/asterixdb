@@ -23,12 +23,12 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import org.apache.asterix.hivecompat.io.RCFile.KeyBuffer;
+import org.apache.asterix.hivecompat.io.RCFile.Reader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.asterix.hivecompat.io.RCFile.KeyBuffer;
-import org.apache.asterix.hivecompat.io.RCFile.Reader;
 import org.apache.hadoop.hive.serde2.columnar.BytesRefArrayWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapred.FileSplit;

@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.library.java.base;
 
+import java.io.DataOutput;
+import java.util.List;
+
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.external.api.IJObject;
@@ -28,9 +31,6 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-
-import java.io.DataOutput;
-import java.util.List;
 
 public final class JOrderedList extends JList {
 

@@ -21,10 +21,6 @@ package org.apache.hyracks.storage.am.btree;
 
 import java.util.Random;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -32,6 +28,9 @@ import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerD
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexTestDriver {

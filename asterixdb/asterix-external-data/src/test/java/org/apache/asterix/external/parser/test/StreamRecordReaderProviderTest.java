@@ -18,16 +18,16 @@
  */
 package org.apache.asterix.external.parser.test;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.provider.StreamRecordReaderProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class StreamRecordReaderProviderTest {
 

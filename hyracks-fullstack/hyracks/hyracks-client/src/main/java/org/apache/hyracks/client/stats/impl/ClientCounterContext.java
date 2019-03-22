@@ -25,14 +25,14 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 import org.apache.hyracks.client.stats.AggregateCounter;
 import org.apache.hyracks.client.stats.Counters;
 import org.apache.hyracks.client.stats.IClusterCounterContext;
 import org.apache.hyracks.control.common.job.profiling.counters.Counter;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author yingyib

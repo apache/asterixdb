@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.test.runtime;
 
-import static org.apache.hyracks.util.file.FileUtil.joinPath;
-
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;

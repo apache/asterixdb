@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.external.api;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
 import java.io.DataOutput;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IRecordDataParser<T> extends IDataParser {
 

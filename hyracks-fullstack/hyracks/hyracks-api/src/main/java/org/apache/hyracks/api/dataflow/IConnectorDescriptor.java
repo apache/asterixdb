@@ -21,7 +21,6 @@ package org.apache.hyracks.api.dataflow;
 import java.io.Serializable;
 import java.util.BitSet;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.IPartitionCollector;
@@ -31,6 +30,8 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.ActivityCluster;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Connector that connects operators in a Job.

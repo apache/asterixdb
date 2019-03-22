@@ -25,7 +25,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.api.http.server.CcQueryCancellationServlet;

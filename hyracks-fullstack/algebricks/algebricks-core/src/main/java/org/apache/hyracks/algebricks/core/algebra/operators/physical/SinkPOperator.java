@@ -33,8 +33,8 @@ import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalProperties
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
-import org.apache.hyracks.dataflow.std.misc.SinkOperatorDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.dataflow.std.misc.SinkOperatorDescriptor;
 
 public class SinkPOperator extends AbstractPhysicalOperator {
 

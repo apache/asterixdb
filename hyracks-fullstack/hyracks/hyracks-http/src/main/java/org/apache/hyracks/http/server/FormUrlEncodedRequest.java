@@ -18,8 +18,8 @@
  */
 package org.apache.hyracks.http.server;
 
-import java.nio.charset.Charset;
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

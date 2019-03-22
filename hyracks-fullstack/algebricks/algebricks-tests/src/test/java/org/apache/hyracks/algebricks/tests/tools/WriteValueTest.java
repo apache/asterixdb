@@ -21,10 +21,9 @@ package org.apache.hyracks.algebricks.tests.tools;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 
-import org.junit.Test;
-
 import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import org.junit.Test;
 
 public class WriteValueTest {
 

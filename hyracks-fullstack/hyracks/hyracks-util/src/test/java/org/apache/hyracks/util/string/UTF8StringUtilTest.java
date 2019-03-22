@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.util.string;
 
-import static org.apache.hyracks.util.string.UTF8StringUtil.writeStringToBytes;
 import static org.apache.hyracks.util.string.UTF8StringSample.STRING_LEN_127;
 import static org.apache.hyracks.util.string.UTF8StringSample.STRING_LEN_128;
 import static org.apache.hyracks.util.string.UTF8StringSample.STRING_LEN_MEDIUM;
@@ -33,11 +32,12 @@ import static org.apache.hyracks.util.string.UTF8StringUtil.getModifiedUTF8Len;
 import static org.apache.hyracks.util.string.UTF8StringUtil.getNumBytesToStoreLength;
 import static org.apache.hyracks.util.string.UTF8StringUtil.getStringLength;
 import static org.apache.hyracks.util.string.UTF8StringUtil.getUTFLength;
+import static org.apache.hyracks.util.string.UTF8StringUtil.hash;
 import static org.apache.hyracks.util.string.UTF8StringUtil.lowerCaseCompareTo;
 import static org.apache.hyracks.util.string.UTF8StringUtil.lowerCaseHash;
 import static org.apache.hyracks.util.string.UTF8StringUtil.normalize;
 import static org.apache.hyracks.util.string.UTF8StringUtil.rawByteCompareTo;
-import static org.apache.hyracks.util.string.UTF8StringUtil.hash;
+import static org.apache.hyracks.util.string.UTF8StringUtil.writeStringToBytes;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

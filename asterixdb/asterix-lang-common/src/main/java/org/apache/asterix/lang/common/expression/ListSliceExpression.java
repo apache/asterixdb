@@ -18,11 +18,11 @@
  */
 package org.apache.asterix.lang.common.expression;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-
-import java.util.Objects;
 
 public class ListSliceExpression extends AbstractAccessor {
     private Expression startIndexExpression;

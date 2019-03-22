@@ -18,6 +18,12 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
+import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionDescriptor;
+import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 import com.esri.core.geometry.ogc.OGCCurve;
 import com.esri.core.geometry.ogc.OGCGeometry;
 import com.esri.core.geometry.ogc.OGCGeometryCollection;
@@ -26,11 +32,6 @@ import com.esri.core.geometry.ogc.OGCMultiPoint;
 import com.esri.core.geometry.ogc.OGCMultiPolygon;
 import com.esri.core.geometry.ogc.OGCPoint;
 import com.esri.core.geometry.ogc.OGCPolygon;
-import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
-import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class STIsClosedDescriptor extends AbstractSTSingleGeometryDescriptor {
 

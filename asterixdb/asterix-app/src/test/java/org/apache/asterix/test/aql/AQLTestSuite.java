@@ -22,11 +22,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import org.apache.asterix.lang.aql.parser.ParseException;
 import org.apache.commons.lang3.StringUtils;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 public class AQLTestSuite extends TestSuite {
     private static String AQLTS_PATH = StringUtils

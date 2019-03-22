@@ -39,7 +39,6 @@ import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.dataflow.std.group.AbstractAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.AggregateState;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor;
-import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 public class NestedPlansRunningAggregatorFactory extends AbstractAggregatorDescriptorFactory {
 

@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.external.library.java.base;
 
-import org.apache.asterix.external.api.IJObject;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.asterix.external.api.IJObject;
 
 public abstract class JList implements IJObject {
     protected List<IJObject> jObjects;

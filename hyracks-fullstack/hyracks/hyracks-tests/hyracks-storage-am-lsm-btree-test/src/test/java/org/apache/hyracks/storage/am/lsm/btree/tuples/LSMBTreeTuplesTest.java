@@ -26,8 +26,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -38,6 +36,7 @@ import org.apache.hyracks.dataflow.common.utils.SerdeUtils;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.common.datagen.DataGenUtils;
 import org.apache.hyracks.storage.am.common.datagen.IFieldValueGenerator;
+import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
 public class LSMBTreeTuplesTest {

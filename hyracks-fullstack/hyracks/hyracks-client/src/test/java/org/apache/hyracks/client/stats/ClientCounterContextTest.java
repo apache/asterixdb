@@ -21,10 +21,9 @@ package org.apache.hyracks.client.stats;
 
 import java.util.Arrays;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 import org.apache.hyracks.client.stats.impl.ClientCounterContext;
+import org.junit.Test;
 
 public class ClientCounterContextTest {
 

@@ -21,7 +21,6 @@ package org.apache.asterix.translator;
 import java.util.Map;
 
 import org.apache.asterix.common.api.ICommonRequestParameters;
-import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.hyracks.api.result.IResultSet;

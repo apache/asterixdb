@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.library.java.base;
 
+import java.io.DataOutput;
+
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.IAObject;
@@ -25,8 +27,6 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import java.io.DataOutput;
 
 public final class JBoolean extends JObject {
 

@@ -19,7 +19,6 @@
 package org.apache.hyracks.algebricks.core.algebra.visitors;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 

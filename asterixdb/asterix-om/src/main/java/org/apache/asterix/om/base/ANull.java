@@ -19,9 +19,10 @@
 
 package org.apache.asterix.om.base;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ANull implements IAObject {

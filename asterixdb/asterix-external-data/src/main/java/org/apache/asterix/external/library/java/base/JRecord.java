@@ -18,6 +18,11 @@
  */
 package org.apache.asterix.external.library.java.base;
 
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -32,11 +37,6 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public final class JRecord implements IJObject {
 

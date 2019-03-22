@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.app.replication.message;
 
-import org.apache.asterix.common.utils.NcLocalCounters;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
+import org.apache.asterix.common.utils.NcLocalCounters;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class NCLifecycleTaskReportMessage implements INCLifecycleMessage, ICcAddressedMessage {

@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.external.api;
 
+import java.util.List;
+
 import org.apache.asterix.external.library.java.JTypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import java.util.List;
 
 public interface IFunctionHelper {
 

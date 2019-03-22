@@ -22,10 +22,6 @@ package org.apache.hyracks.storage.am.bloomfilter;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -35,6 +31,9 @@ import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerD
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.bloomfilter.impls.MurmurHash128Bit;
 import org.apache.hyracks.storage.am.bloomfilter.util.AbstractBloomFilterTest;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
 public class MurmurHashForITupleReferenceTest extends AbstractBloomFilterTest {

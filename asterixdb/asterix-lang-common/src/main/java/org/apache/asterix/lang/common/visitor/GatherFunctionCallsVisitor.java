@@ -1,5 +1,3 @@
-package org.apache.asterix.lang.common.visitor;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +16,8 @@ package org.apache.asterix.lang.common.visitor;
  * specific language governing permissions and limitations
  * under the License.
  */
+
+package org.apache.asterix.lang.common.visitor;
 
 import java.util.HashSet;
 import java.util.Map;

@@ -23,7 +23,6 @@ import java.util.Collection;
 
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

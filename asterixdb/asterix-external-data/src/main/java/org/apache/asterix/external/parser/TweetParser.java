@@ -18,8 +18,10 @@
  */
 package org.apache.asterix.external.parser;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.Iterator;
+
 import org.apache.asterix.builders.AbvsBuilderFactory;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.IAsterixListBuilder;
@@ -43,9 +45,8 @@ import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.Iterator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * This class was introduced to parse Twitter data. As Tweets are JSON formatted records, we can use the JSON parser to

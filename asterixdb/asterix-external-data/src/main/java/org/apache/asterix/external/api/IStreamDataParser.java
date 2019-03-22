@@ -18,11 +18,11 @@
  */
 package org.apache.asterix.external.api;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IStreamDataParser extends IDataParser {
     /**

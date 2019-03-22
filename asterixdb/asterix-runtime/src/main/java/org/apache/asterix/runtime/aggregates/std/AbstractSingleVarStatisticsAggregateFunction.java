@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.runtime.aggregates.std;
 
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.dataflow.data.nontagged.serde.*;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -41,10 +45,6 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
 
 public abstract class AbstractSingleVarStatisticsAggregateFunction extends AbstractAggregateFunction {
 

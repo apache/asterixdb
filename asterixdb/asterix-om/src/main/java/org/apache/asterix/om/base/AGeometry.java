@@ -18,13 +18,14 @@
  */
 package org.apache.asterix.om.base;
 
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.IOException;
+
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 
-import java.io.IOException;
+import com.esri.core.geometry.ogc.OGCGeometry;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AGeometry implements IAObject {
 

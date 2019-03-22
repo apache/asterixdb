@@ -18,9 +18,13 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
-import com.esri.core.geometry.MapOGCStructure;
-import com.esri.core.geometry.OperatorImportFromGeoJson;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import org.apache.asterix.geo.evaluators.GeoFunctionTypeInferers;
 import org.apache.asterix.om.base.AOrderedList;
@@ -45,12 +49,9 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import com.esri.core.geometry.MapOGCStructure;
+import com.esri.core.geometry.OperatorImportFromGeoJson;
+import com.esri.core.geometry.ogc.OGCGeometry;
 
 public class ParseGeoJSONDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 

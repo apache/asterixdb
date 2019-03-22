@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.http.server;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;

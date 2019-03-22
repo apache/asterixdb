@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.aggregates.std;
 
+import java.io.IOException;
+
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
@@ -27,8 +29,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import java.io.IOException;
 
 public class LocalSumAggregateFunction extends AbstractSumAggregateFunction {
 

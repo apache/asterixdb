@@ -20,7 +20,6 @@ package org.apache.hyracks.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class MiniDFSClusterFactory {

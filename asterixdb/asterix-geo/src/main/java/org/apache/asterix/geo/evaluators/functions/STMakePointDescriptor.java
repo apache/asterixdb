@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
-import com.esri.core.geometry.Point;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.ogc.OGCPoint;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
 import org.apache.asterix.om.base.AGeometry;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -37,8 +37,9 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-import java.io.DataOutput;
-import java.io.IOException;
+import com.esri.core.geometry.Point;
+import com.esri.core.geometry.SpatialReference;
+import com.esri.core.geometry.ogc.OGCPoint;
 
 public class STMakePointDescriptor extends AbstractGetValDescriptor {
 

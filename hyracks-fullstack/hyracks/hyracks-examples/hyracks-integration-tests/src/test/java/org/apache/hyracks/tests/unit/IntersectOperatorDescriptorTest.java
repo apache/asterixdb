@@ -42,10 +42,10 @@ import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.std.intersect.IntersectOperatorDescriptor;
+import org.apache.hyracks.test.support.TestUtils;
 import org.apache.hyracks.tests.util.InputFrameGenerator;
 import org.apache.hyracks.tests.util.MultiThreadTaskEmulator;
 import org.apache.hyracks.tests.util.OutputFrameVerifier;
-import org.apache.hyracks.test.support.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 

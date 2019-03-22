@@ -19,8 +19,8 @@
 package org.apache.hyracks.api.result;
 
 import org.apache.hyracks.api.comm.IFrame;
-import org.apache.hyracks.api.result.ResultJobRecord.Status;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.result.ResultJobRecord.Status;
 
 public interface IResultSetReader {
     Status getResultStatus();

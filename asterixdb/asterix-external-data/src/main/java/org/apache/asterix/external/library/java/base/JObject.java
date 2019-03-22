@@ -18,13 +18,13 @@
  */
 package org.apache.asterix.external.library.java.base;
 
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.asterix.external.api.IJObject;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import java.io.DataOutput;
-import java.io.IOException;
 
 public abstract class JObject implements IJObject {
 

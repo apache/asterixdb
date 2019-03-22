@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.comparisons;
 
+import static org.apache.asterix.om.types.ATypeTag.TINYINT;
+
 import java.io.Serializable;
 
 import org.apache.asterix.dataflow.data.nontagged.comparators.ACirclePartialBinaryComparatorFactory;
@@ -46,8 +48,6 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
-
-import static org.apache.asterix.om.types.ATypeTag.TINYINT;
 
 public class ComparisonHelper implements Serializable {
     private static final long serialVersionUID = 1L;

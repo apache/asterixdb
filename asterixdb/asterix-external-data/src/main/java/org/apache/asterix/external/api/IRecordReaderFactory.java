@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.external.api;
 
+import java.util.List;
+
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import java.util.List;
 
 public interface IRecordReaderFactory<T> extends IExternalDataSourceFactory {
 

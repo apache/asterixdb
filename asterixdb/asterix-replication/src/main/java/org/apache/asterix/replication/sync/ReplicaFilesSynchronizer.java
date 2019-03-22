@@ -20,7 +20,6 @@ package org.apache.asterix.replication.sync;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

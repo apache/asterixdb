@@ -20,11 +20,12 @@ package org.apache.hyracks.api.dataflow;
 
 import java.io.Serializable;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.constraints.IConstraintAcceptor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Descriptor for operators in Hyracks.

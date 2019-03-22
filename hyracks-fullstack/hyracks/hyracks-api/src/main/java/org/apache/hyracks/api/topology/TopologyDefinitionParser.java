@@ -25,14 +25,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.hyracks.api.topology.NetworkEndpoint.EndpointType;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
-
-import org.apache.hyracks.api.topology.NetworkEndpoint.EndpointType;
 
 public class TopologyDefinitionParser {
     private final Stack<ElementStackEntry> stack;

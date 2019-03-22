@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.app.result;
 
-import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.ResultSetId;
 
 public class ResultHandle {
     private final JobId jobId;

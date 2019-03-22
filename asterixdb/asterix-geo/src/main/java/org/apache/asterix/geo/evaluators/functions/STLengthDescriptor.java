@@ -18,16 +18,17 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
-import com.esri.core.geometry.Geometry;
-import com.esri.core.geometry.GeometryCursor;
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCLineString;
-import com.esri.core.geometry.ogc.OGCMultiLineString;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+
+import com.esri.core.geometry.Geometry;
+import com.esri.core.geometry.GeometryCursor;
+import com.esri.core.geometry.ogc.OGCGeometry;
+import com.esri.core.geometry.ogc.OGCLineString;
+import com.esri.core.geometry.ogc.OGCMultiLineString;
 
 public class STLengthDescriptor extends AbstractSTSingleGeometryDescriptor {
 

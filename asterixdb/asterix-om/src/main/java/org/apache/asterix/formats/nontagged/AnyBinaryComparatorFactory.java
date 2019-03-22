@@ -18,12 +18,13 @@
  */
 package org.apache.asterix.formats.nontagged;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class AnyBinaryComparatorFactory implements IBinaryComparatorFactory {
 

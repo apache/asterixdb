@@ -19,7 +19,6 @@
 package org.apache.asterix.external.parser;
 
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;

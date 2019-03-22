@@ -18,7 +18,11 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
-import com.esri.core.geometry.ogc.OGCGeometry;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABinary;
@@ -40,10 +44,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.IOException;
+import com.esri.core.geometry.ogc.OGCGeometry;
 
 public abstract class AbstractSTSingleGeometryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 

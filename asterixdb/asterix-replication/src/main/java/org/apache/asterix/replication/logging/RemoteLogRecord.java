@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.replication.logging;
 
-import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.replication.api.IReplicationWorker;
 
 public class RemoteLogRecord extends LogRecord {
 

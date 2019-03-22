@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.runtime.aggregates.serializable.std;
 
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.dataflow.data.nontagged.serde.*;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -39,9 +42,6 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import java.io.DataOutput;
-import java.io.IOException;
 
 public abstract class AbstractSerializableSumAggregateFunction extends AbstractSerializableAggregateFunction {
 

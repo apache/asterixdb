@@ -22,13 +22,13 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.IJobLifecycleListener;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.IResultManager;
 import org.apache.hyracks.api.result.ResultDirectoryRecord;
 import org.apache.hyracks.api.result.ResultJobRecord.Status;
 import org.apache.hyracks.api.result.ResultSetId;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.job.IJobLifecycleListener;
-import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.common.work.IResultCallback;
 
 public interface IResultDirectoryService extends IJobLifecycleListener, IResultManager {

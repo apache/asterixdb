@@ -24,8 +24,8 @@ import java.io.IOException;
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
-import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestUtils;
+import org.apache.hyracks.storage.common.IIndex;
 import org.junit.Test;
 
 public abstract class AbstractInvertedIndexLoadTest extends AbstractInvertedIndexTest {

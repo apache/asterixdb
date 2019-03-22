@@ -21,11 +21,11 @@ package org.apache.hyracks.test.http.servlet;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.hyracks.test.http.HttpTestUtil;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.hyracks.test.http.HttpTestUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

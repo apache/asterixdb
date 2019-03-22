@@ -19,23 +19,17 @@
 package org.apache.asterix.test.txn;
 
 import java.io.File;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.TestDataUtil;
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.StorageProperties;
-import org.apache.asterix.common.utils.Servlets;
-import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
-import org.apache.asterix.test.common.TestHelper;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class RecoveryManagerTest {
 

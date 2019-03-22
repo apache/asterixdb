@@ -559,9 +559,7 @@ public class ConfigManager implements IConfigManager, Serializable {
         if (description != null && !"".equals(description)) {
             usage.append(description).append(" ");
         } else {
-            LOGGER.warn("missing description for option: "
-                    + option.getClass().getName().substring(option.getClass().getName().lastIndexOf(".") + 1) + "."
-                    + option.name());
+            LOGGER.warn("missing description for option: {}.{}", option.getClass().getSimpleName(), option.name());
         }
         usage.append("(default: ");
         usage.append(defaultTextForUsage(option, IOption::cmdline));

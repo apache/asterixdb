@@ -32,10 +32,9 @@ import static org.junit.Assert.assertTrue;
 import java.nio.ByteBuffer;
 import java.util.Set;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class VariableFramePoolTest extends AbstractFramePoolTest {
 

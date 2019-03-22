@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
+
+import java.io.IOException;
+
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
@@ -47,10 +51,6 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import java.io.IOException;
-
-import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
 
 /**
  * <pre>

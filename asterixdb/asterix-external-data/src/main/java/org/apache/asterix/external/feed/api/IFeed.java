@@ -20,6 +20,7 @@ package org.apache.asterix.external.feed.api;
 
 import java.io.Serializable;
 import java.util.Map;
+
 import org.apache.asterix.active.EntityId;
 
 public interface IFeed extends Serializable {

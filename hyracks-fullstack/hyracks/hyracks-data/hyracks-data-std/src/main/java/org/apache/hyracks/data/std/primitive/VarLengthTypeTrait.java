@@ -18,11 +18,12 @@
  */
 package org.apache.hyracks.data.std.primitive;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class VarLengthTypeTrait implements ITypeTraits {
     public static final VarLengthTypeTrait INSTANCE = new VarLengthTypeTrait();

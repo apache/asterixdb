@@ -21,6 +21,7 @@ package org.apache.asterix.hivecompat.io;
 import java.io.InputStream;
 
 import org.apache.hadoop.io.compress.*;
+
 /**
  *
  * SchemaAwareCompressionInputStream adds the ability to inform the compression

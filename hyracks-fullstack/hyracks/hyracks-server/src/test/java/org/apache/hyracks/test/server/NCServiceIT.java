@@ -19,12 +19,9 @@
 package org.apache.hyracks.test.server;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 
@@ -35,8 +32,6 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.hyracks.test.server.process.HyracksCCProcess;
-import org.apache.hyracks.test.server.process.HyracksNCServiceProcess;
 import org.apache.hyracks.test.server.process.HyracksVirtualCluster;
 import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;

@@ -23,13 +23,12 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
 
-import org.junit.Test;
-
 import org.apache.asterix.fuzzyjoin.FuzzyJoinMemory;
 import org.apache.asterix.fuzzyjoin.ResultSelfJoin;
 import org.apache.asterix.fuzzyjoin.tests.dataset.AbstractDataset;
 import org.apache.asterix.fuzzyjoin.tests.dataset.AbstractDataset.Directory;
 import org.apache.asterix.fuzzyjoin.tests.dataset.DBLPSmallDataset;
+import org.junit.Test;
 
 public class FuzzyJoinTest {
 

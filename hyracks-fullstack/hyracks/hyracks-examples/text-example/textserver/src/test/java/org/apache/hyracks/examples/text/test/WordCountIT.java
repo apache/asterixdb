@@ -20,9 +20,8 @@ package org.apache.hyracks.examples.text.test;
 
 import java.io.File;
 
-import org.junit.Test;
-
 import org.apache.hyracks.examples.text.client.WordCountMain;
+import org.junit.Test;
 
 public class WordCountIT {
     @Test

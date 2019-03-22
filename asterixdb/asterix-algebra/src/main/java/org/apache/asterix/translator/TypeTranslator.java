@@ -19,6 +19,8 @@
 
 package org.apache.asterix.translator;
 
+import static org.apache.asterix.om.types.BuiltinType.ANY;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -47,8 +49,6 @@ import org.apache.asterix.om.types.AbstractComplexType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-
-import static org.apache.asterix.om.types.BuiltinType.ANY;
 
 public class TypeTranslator {
 

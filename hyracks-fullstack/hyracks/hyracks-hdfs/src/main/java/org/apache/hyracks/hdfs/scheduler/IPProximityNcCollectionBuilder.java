@@ -28,7 +28,6 @@ import java.util.TreeMap;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.InputSplit;
-
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.hdfs.api.INcCollection;
 import org.apache.hyracks.hdfs.api.INcCollectionBuilder;

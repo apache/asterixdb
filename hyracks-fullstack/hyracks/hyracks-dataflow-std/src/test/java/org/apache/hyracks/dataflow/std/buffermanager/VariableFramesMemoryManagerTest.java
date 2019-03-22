@@ -32,9 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.hyracks.api.comm.FixedSizeFrame;
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrame;
@@ -44,6 +41,8 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import org.junit.Before;
+import org.junit.Test;
 
 public class VariableFramesMemoryManagerTest {
     VariableFrameMemoryManager framesMemoryManager;

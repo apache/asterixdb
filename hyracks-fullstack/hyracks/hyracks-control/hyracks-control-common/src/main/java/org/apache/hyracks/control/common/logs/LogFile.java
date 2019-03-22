@@ -18,11 +18,11 @@
  */
 package org.apache.hyracks.control.common.logs;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class LogFile {
     private final File root;

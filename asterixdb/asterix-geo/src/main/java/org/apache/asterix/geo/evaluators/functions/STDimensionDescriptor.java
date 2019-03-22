@@ -18,12 +18,13 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
-import com.esri.core.geometry.ogc.OGCGeometry;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+
+import com.esri.core.geometry.ogc.OGCGeometry;
 
 public class STDimensionDescriptor extends AbstractSTSingleGeometryDescriptor {
 

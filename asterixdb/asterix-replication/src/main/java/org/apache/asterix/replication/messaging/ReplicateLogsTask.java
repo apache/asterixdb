@@ -23,13 +23,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
-import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.replication.api.IReplicaTask;
+import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.replication.logging.RemoteLogRecord;
 import org.apache.asterix.replication.logging.RemoteLogsProcessor;
 import org.apache.asterix.replication.management.ReplicationChannel;

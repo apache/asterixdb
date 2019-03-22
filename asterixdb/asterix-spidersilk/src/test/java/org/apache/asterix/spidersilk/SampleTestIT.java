@@ -18,14 +18,12 @@
  */
 package org.apache.asterix.spidersilk;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import me.arminb.spidersilk.SpiderSilkRunner;
-import me.arminb.spidersilk.dsl.entities.Deployment;
-import me.arminb.spidersilk.exceptions.RuntimeEngineException;
-import me.arminb.spidersilk.execution.single_node.SingleNodeRuntimeEngine;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
-
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -33,10 +31,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.List;
-import java.util.Map;
+import me.arminb.spidersilk.SpiderSilkRunner;
+import me.arminb.spidersilk.dsl.entities.Deployment;
+import me.arminb.spidersilk.exceptions.RuntimeEngineException;
 
 public class SampleTestIT {
     private static final Logger logger = LoggerFactory.getLogger(SampleTestIT.class);

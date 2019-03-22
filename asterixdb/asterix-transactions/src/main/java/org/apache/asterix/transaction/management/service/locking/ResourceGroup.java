@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.transaction.management.service.locking;
 
-import org.apache.asterix.common.transactions.ITransactionContext;
-
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.apache.asterix.common.transactions.ITransactionContext;
 
 /**
  * A ResourceGroup represents a group of resources that are manged by a ConcurrentLockManager.

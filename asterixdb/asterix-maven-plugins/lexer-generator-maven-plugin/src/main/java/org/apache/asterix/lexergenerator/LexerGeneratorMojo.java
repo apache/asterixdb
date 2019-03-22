@@ -18,16 +18,15 @@
  */
 package org.apache.asterix.lexergenerator;
 
-import org.apache.asterix.lexergenerator.LexerGenerator;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-
-import java.io.File;
 
 /**
  * @goal generate-lexer

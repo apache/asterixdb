@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.mapreduce.InputSplit;
-
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;

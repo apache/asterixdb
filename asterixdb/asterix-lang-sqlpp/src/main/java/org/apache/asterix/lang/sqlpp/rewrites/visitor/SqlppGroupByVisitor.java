@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -32,10 +36,6 @@ import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.CheckSql92AggregateVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * A pre-processor that

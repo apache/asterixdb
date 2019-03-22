@@ -50,6 +50,8 @@
     <javac.xlint.value>all</javac.xlint.value>
     <source-format.goal>format</source-format.goal>
     <source-format.skip>false</source-format.skip>
+    <import-sort.goal>sort</import-sort.goal>
+    <import-sort.skip>false</import-sort.skip>
     <runSlowAQLTests>false</runSlowAQLTests>
     <appendedResourcesDirectory>${root.dir}/src/main/appended-resources</appendedResourcesDirectory>
     <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
@@ -317,6 +319,22 @@
           <skipFormatting>${source-format.skip}</skipFormatting>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>net.revelc.code</groupId>
+        <artifactId>impsort-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>${import-sort.goal}</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <groups>java,javax,org,com,*</groups>
+          <removeUnused>true</removeUnused>
+          <skip>${import-sort.skip}</skip>
+        </configuration>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -561,6 +579,11 @@
           <groupId>net.revelc.code.formatter</groupId>
           <artifactId>formatter-maven-plugin</artifactId>
           <version>2.0.1</version>
+        </plugin>
+        <plugin>
+          <groupId>net.revelc.code</groupId>
+          <artifactId>impsort-maven-plugin</artifactId>
+          <version>1.2.0</version>
         </plugin>
       </plugins>
     </pluginManagement>

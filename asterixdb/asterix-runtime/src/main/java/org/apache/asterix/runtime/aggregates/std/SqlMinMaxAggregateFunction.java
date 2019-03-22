@@ -22,9 +22,9 @@ import java.io.IOException;
 
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class SqlMinMaxAggregateFunction extends AbstractMinMaxAggregateFunction {

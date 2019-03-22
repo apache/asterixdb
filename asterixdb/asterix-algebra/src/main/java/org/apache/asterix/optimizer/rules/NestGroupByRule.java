@@ -21,9 +21,8 @@ package org.apache.asterix.optimizer.rules;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;

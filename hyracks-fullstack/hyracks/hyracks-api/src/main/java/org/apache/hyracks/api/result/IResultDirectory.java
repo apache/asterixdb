@@ -18,8 +18,8 @@
  */
 package org.apache.hyracks.api.result;
 
-import org.apache.hyracks.api.result.ResultJobRecord.Status;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.ResultJobRecord.Status;
 
 public interface IResultDirectory {
     /**

@@ -20,9 +20,9 @@
 package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;

@@ -21,7 +21,6 @@ package org.apache.asterix.api.http.server;
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 import java.io.PrintWriter;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.common.api.IApplicationContext;

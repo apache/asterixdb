@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.input.record.reader.http;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;

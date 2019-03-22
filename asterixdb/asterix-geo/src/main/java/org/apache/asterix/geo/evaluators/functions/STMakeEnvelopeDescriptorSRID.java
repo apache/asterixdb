@@ -18,9 +18,10 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
-import com.esri.core.geometry.Envelope;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -36,9 +37,9 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-import java.io.DataOutput;
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import com.esri.core.geometry.Envelope;
+import com.esri.core.geometry.SpatialReference;
+import com.esri.core.geometry.ogc.OGCGeometry;
 
 public class STMakeEnvelopeDescriptorSRID extends AbstractGetValDescriptor {
 

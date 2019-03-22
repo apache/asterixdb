@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.runtime.aggregates.serializable.std.AbstractSerializableSingleVariableStatisticsAggregateFunction;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;

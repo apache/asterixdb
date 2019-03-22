@@ -22,7 +22,6 @@ package org.apache.hyracks.storage.am.bloomfilter;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.TreeSet;
-import java.util.logging.Level;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;

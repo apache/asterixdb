@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.client.result;
 
+import org.apache.hyracks.api.client.HyracksClientInterfaceFunctions;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.IResultDirectory;
 import org.apache.hyracks.api.result.ResultDirectoryRecord;
@@ -25,7 +26,6 @@ import org.apache.hyracks.api.result.ResultJobRecord.Status;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.RPCInterface;
-import org.apache.hyracks.api.client.HyracksClientInterfaceFunctions;
 
 //TODO(madhusudancs): Should this implementation be moved to org.apache.hyracks.client?
 public class ResultDirectoryRemoteProxy implements IResultDirectory {

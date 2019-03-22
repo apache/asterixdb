@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.test;
 
-import java.nio.ByteBuffer;
-
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;

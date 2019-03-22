@@ -23,8 +23,6 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import org.apache.asterix.lexergenerator.LexerNode;
-
 public class LexerNodeAddRuleTest {
 
     @Test

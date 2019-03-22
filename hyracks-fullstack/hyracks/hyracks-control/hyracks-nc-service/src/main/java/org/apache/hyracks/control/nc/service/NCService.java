@@ -36,9 +36,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.apache.hyracks.control.common.controllers.NCConfig;
-import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.common.controllers.ServiceConstants;
 import org.apache.hyracks.control.common.controllers.ServiceConstants.ServiceCommand;
 import org.apache.logging.log4j.Level;

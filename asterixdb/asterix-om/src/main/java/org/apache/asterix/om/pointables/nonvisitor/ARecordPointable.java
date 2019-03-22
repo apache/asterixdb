@@ -38,7 +38,6 @@ import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
-import org.apache.hyracks.data.std.primitive.BytePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.VarLengthTypeTrait;
 import org.apache.hyracks.util.string.UTF8StringUtil;

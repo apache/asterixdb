@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.common.storage;
 
-import java.util.Optional;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IIndexCheckpointManager {

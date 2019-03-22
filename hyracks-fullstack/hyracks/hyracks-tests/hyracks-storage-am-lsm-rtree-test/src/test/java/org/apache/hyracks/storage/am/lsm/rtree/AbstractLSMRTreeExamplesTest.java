@@ -19,8 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.rtree;
 
-import java.util.logging.Level;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;

@@ -22,8 +22,8 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.search;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 
 public class InvertedListCursorFactory implements IObjectFactory<InvertedListCursor> {
 

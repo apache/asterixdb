@@ -18,9 +18,9 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.work.AbstractWork;
 

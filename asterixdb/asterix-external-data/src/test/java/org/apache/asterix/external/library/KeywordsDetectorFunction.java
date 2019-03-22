@@ -19,16 +19,16 @@
 
 package org.apache.asterix.external.library;
 
-import org.apache.asterix.external.api.IExternalScalarFunction;
-import org.apache.asterix.external.api.IFunctionHelper;
-import org.apache.asterix.external.library.java.base.JRecord;
-import org.apache.asterix.external.library.java.base.JBoolean;
-import org.apache.asterix.external.library.java.base.JString;
-
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.asterix.external.api.IExternalScalarFunction;
+import org.apache.asterix.external.api.IFunctionHelper;
+import org.apache.asterix.external.library.java.base.JBoolean;
+import org.apache.asterix.external.library.java.base.JRecord;
+import org.apache.asterix.external.library.java.base.JString;
 
 public class KeywordsDetectorFunction implements IExternalScalarFunction {
 

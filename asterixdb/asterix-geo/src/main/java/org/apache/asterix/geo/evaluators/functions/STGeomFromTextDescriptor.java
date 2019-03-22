@@ -18,11 +18,12 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
-import com.esri.core.geometry.OGCStructure;
-import com.esri.core.geometry.OperatorImportFromWkt;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.WktImportFlags;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -41,11 +42,11 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import com.esri.core.geometry.OGCStructure;
+import com.esri.core.geometry.OperatorImportFromWkt;
+import com.esri.core.geometry.SpatialReference;
+import com.esri.core.geometry.WktImportFlags;
+import com.esri.core.geometry.ogc.OGCGeometry;
 
 public class STGeomFromTextDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 

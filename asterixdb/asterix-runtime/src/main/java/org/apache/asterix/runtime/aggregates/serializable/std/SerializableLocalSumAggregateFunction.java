@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.runtime.aggregates.serializable.std;
 
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -27,9 +30,6 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import java.io.DataOutput;
-import java.io.IOException;
 
 public class SerializableLocalSumAggregateFunction extends AbstractSerializableSumAggregateFunction {
 
