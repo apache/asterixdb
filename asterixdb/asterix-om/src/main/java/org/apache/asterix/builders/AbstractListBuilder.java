@@ -32,16 +32,15 @@ import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.storage.common.arraylist.IntArrayList;
 
 public abstract class AbstractListBuilder implements IAsterixListBuilder {
-    protected final GrowableArray outputStorage;
-    protected final DataOutputStream outputStream;
-    protected final IntArrayList offsets;
-    protected int metadataInfoSize;
-    protected byte[] offsetArray;
-    protected int offsetPosition;
-    protected int headerSize;
-    protected ATypeTag itemTypeTag;
     protected final ATypeTag listType;
-
+    protected final GrowableArray outputStorage;
+    protected final IntArrayList offsets;
+    private final DataOutputStream outputStream;
+    private int metadataInfoSize;
+    private byte[] offsetArray;
+    private int offsetPosition;
+    private int headerSize;
+    private ATypeTag itemTypeTag;
     protected boolean fixedSize = false;
     protected int numberOfItems;
 
@@ -58,7 +57,6 @@ public abstract class AbstractListBuilder implements IAsterixListBuilder {
     @Override
     public void reset(AbstractCollectionType listType) {
         this.outputStorage.reset();
-        this.offsetArray = null;
         this.offsets.clear();
         this.offsetPosition = 0;
         this.numberOfItems = 0;
@@ -79,7 +77,6 @@ public abstract class AbstractListBuilder implements IAsterixListBuilder {
             byte[] data = item.getByteArray();
             int start = item.getStartOffset();
             int len = item.getLength();
-
             byte serializedTypeTag = data[start];
             if (!fixedSize && ((serializedTypeTag != ATypeTag.SERIALIZED_NULL_TYPE_TAG
                     && serializedTypeTag != ATypeTag.SERIALIZED_MISSING_TYPE_TAG) || itemTypeTag == ATypeTag.ANY)) {
