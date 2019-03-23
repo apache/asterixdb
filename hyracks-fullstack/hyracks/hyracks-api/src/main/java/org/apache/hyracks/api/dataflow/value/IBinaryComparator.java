@@ -20,6 +20,8 @@ package org.apache.hyracks.api.dataflow.value;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+@FunctionalInterface
 public interface IBinaryComparator {
-    public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException;
+
+    int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException;
 }

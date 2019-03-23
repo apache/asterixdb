@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
@@ -31,23 +30,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class AUUIDPartialBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
-
     public static final AUUIDPartialBinaryComparatorFactory INSTANCE = new AUUIDPartialBinaryComparatorFactory();
 
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return new IBinaryComparator() {
+        return AUUIDPartialBinaryComparatorFactory::compare;
+    }
 
-            @Override
-            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                int msbCompare = Long.compare(LongPointable.getLong(b1, s1), LongPointable.getLong(b2, s2));
-                if (msbCompare == 0) {
-                    return Long.compare(LongPointable.getLong(b1, s1 + 8), LongPointable.getLong(b2, s2 + 8));
-                } else {
-                    return msbCompare;
-                }
-            }
-        };
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+        int msbCompare = Long.compare(LongPointable.getLong(b1, s1), LongPointable.getLong(b2, s2));
+        if (msbCompare == 0) {
+            return Long.compare(LongPointable.getLong(b1, s1 + 8), LongPointable.getLong(b2, s2 + 8));
+        } else {
+            return msbCompare;
+        }
     }
 
     @Override

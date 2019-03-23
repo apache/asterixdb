@@ -33,64 +33,46 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class APolygonPartialBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
-
-    public final static APolygonPartialBinaryComparatorFactory INSTANCE = new APolygonPartialBinaryComparatorFactory();
+    public static final APolygonPartialBinaryComparatorFactory INSTANCE = new APolygonPartialBinaryComparatorFactory();
 
     private APolygonPartialBinaryComparatorFactory() {
-
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory#createBinaryComparator()
-     */
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return new IBinaryComparator() {
+        return APolygonPartialBinaryComparatorFactory::compare;
+    }
 
-            @Override
-            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                try {
-                    short pointCount1 = AInt16SerializerDeserializer.getShort(b1,
-                            s1 + APolygonSerializerDeserializer.getNumberOfPointsOffset() - 1);
-                    int c = Short.compare(pointCount1, AInt16SerializerDeserializer.getShort(b2,
-                            s2 + APolygonSerializerDeserializer.getNumberOfPointsOffset() - 1));
-
-                    if (c == 0) {
-                        int ci = 0;
-                        for (int i = 0; i < pointCount1; i++) {
-                            ci = Double
-                                    .compare(
-                                            DoublePointable.getDouble(b1,
-                                                    s1 + APolygonSerializerDeserializer.getCoordinateOffset(i,
-                                                            Coordinate.X) - 1),
-                                            DoublePointable.getDouble(b2, s1 + APolygonSerializerDeserializer
-                                                    .getCoordinateOffset(i, Coordinate.X) - 1));
-                            if (ci == 0) {
-                                ci = Double
-                                        .compare(
-                                                DoublePointable.getDouble(b1,
-                                                        s1 + APolygonSerializerDeserializer.getCoordinateOffset(i,
-                                                                Coordinate.Y) - 1),
-                                                DoublePointable
-                                                        .getDouble(
-                                                                b2, s1
-                                                                        + APolygonSerializerDeserializer
-                                                                                .getCoordinateOffset(i, Coordinate.Y)
-                                                                        - 1));
-                                if (ci == 0) {
-                                    continue;
-                                }
-                            }
-                            return ci;
-                        }
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
+        short pointCount1 = AInt16SerializerDeserializer.getShort(b1,
+                s1 + APolygonSerializerDeserializer.getNumberOfPointsOffset() - 1);
+        int c = Short.compare(pointCount1, AInt16SerializerDeserializer.getShort(b2,
+                s2 + APolygonSerializerDeserializer.getNumberOfPointsOffset() - 1));
+        if (c == 0) {
+            int ci;
+            for (int i = 0; i < pointCount1; i++) {
+                ci = Double.compare(
+                        DoublePointable.getDouble(b1,
+                                s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X) - 1),
+                        DoublePointable.getDouble(b2,
+                                s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X) - 1));
+                if (ci == 0) {
+                    ci = Double
+                            .compare(
+                                    DoublePointable.getDouble(
+                                            b1, s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y)
+                                                    - 1),
+                                    DoublePointable.getDouble(b2, s1
+                                            + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y) - 1));
+                    if (ci == 0) {
+                        continue;
                     }
-
-                    return c;
-                } catch (HyracksDataException hex) {
-                    throw new IllegalStateException(hex);
                 }
+                return ci;
             }
-        };
+        }
+        return c;
     }
 
     @Override

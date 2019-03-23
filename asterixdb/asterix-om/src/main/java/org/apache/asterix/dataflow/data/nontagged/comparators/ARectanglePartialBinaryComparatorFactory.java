@@ -28,9 +28,9 @@ import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class ARectanglePartialBinaryComparatorFactory implements IBinaryComparatorFactory {
-    private static final long serialVersionUID = 1L;
 
-    public final static ARectanglePartialBinaryComparatorFactory INSTANCE =
+    private static final long serialVersionUID = 1L;
+    public static final ARectanglePartialBinaryComparatorFactory INSTANCE =
             new ARectanglePartialBinaryComparatorFactory();
 
     private ARectanglePartialBinaryComparatorFactory() {
@@ -38,34 +38,32 @@ public class ARectanglePartialBinaryComparatorFactory implements IBinaryComparat
 
     @Override
     public IBinaryComparator createBinaryComparator() {
+        return ARectanglePartialBinaryComparatorFactory::compare;
+    }
 
-        return new IBinaryComparator() {
-
-            @Override
-            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                int c1 = Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1),
-                        ADoubleSerializerDeserializer.getDouble(b2, s2));
-                if (c1 == 0) {
-                    int c2 = Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1 + 8),
-                            ADoubleSerializerDeserializer.getDouble(b2, s2 + 8));
-                    if (c2 == 0) {
-                        int c3 = Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1 + 16),
-                                ADoubleSerializerDeserializer.getDouble(b2, s2 + 16));
-                        if (c3 == 0) {
-                            int c4 = Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1 + 24),
-                                    ADoubleSerializerDeserializer.getDouble(b2, s2 + 24));
-                            return c4;
-                        } else {
-                            return c3;
-                        }
-                    } else {
-                        return c2;
-                    }
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+        int c1 = Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1),
+                ADoubleSerializerDeserializer.getDouble(b2, s2));
+        if (c1 == 0) {
+            int c2 = Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1 + 8),
+                    ADoubleSerializerDeserializer.getDouble(b2, s2 + 8));
+            if (c2 == 0) {
+                int c3 = Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1 + 16),
+                        ADoubleSerializerDeserializer.getDouble(b2, s2 + 16));
+                if (c3 == 0) {
+                    int c4 = Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1 + 24),
+                            ADoubleSerializerDeserializer.getDouble(b2, s2 + 24));
+                    return c4;
                 } else {
-                    return c1;
+                    return c3;
                 }
+            } else {
+                return c2;
             }
-        };
+        } else {
+            return c1;
+        }
     }
 
     @Override

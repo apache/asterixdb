@@ -32,38 +32,30 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class ADurationPartialBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
-
     public static final ADurationPartialBinaryComparatorFactory INSTANCE =
             new ADurationPartialBinaryComparatorFactory();
 
     private ADurationPartialBinaryComparatorFactory() {
-
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory#createBinaryComparator()
-     */
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return new IBinaryComparator() {
+        return ADurationPartialBinaryComparatorFactory::compare;
+    }
 
-            @Override
-            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                int c = Integer.compare(
-                        AInt32SerializerDeserializer.getInt(b1,
-                                s1 + ADurationSerializerDeserializer.getYearMonthOffset()),
-                        AInt32SerializerDeserializer.getInt(b2,
-                                s2 + ADurationSerializerDeserializer.getYearMonthOffset()));
-                if (c == 0) {
-                    return Double.compare(
-                            ADoubleSerializerDeserializer.getDouble(b1,
-                                    s1 + ADurationSerializerDeserializer.getDayTimeOffset()),
-                            ADoubleSerializerDeserializer.getDouble(b2,
-                                    s2 + ADurationSerializerDeserializer.getDayTimeOffset()));
-                }
-                return c;
-            }
-        };
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+        int c = Integer.compare(
+                AInt32SerializerDeserializer.getInt(b1, s1 + ADurationSerializerDeserializer.getYearMonthOffset()),
+                AInt32SerializerDeserializer.getInt(b2, s2 + ADurationSerializerDeserializer.getYearMonthOffset()));
+        if (c == 0) {
+            return Double.compare(
+                    ADoubleSerializerDeserializer.getDouble(b1,
+                            s1 + ADurationSerializerDeserializer.getDayTimeOffset()),
+                    ADoubleSerializerDeserializer.getDouble(b2,
+                            s2 + ADurationSerializerDeserializer.getDayTimeOffset()));
+        }
+        return c;
     }
 
     @Override

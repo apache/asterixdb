@@ -24,7 +24,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.APoint3DSerializerDeseri
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 
@@ -33,56 +32,38 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class APoint3DPartialBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
-
     public static final APoint3DPartialBinaryComparatorFactory INSTANCE = new APoint3DPartialBinaryComparatorFactory();
 
     private APoint3DPartialBinaryComparatorFactory() {
-
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory#createBinaryComparator()
-     */
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return new IBinaryComparator() {
+        return APoint3DPartialBinaryComparatorFactory::compare;
+    }
 
-            @Override
-            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                try {
-                    int c = Double
-                            .compare(
-                                    ADoubleSerializerDeserializer
-                                            .getDouble(b1,
-                                                    s1 + APoint3DSerializerDeserializer
-                                                            .getCoordinateOffset(Coordinate.X) - 1),
-                                    ADoubleSerializerDeserializer.getDouble(b2,
-                                            s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1));
-                    if (c == 0) {
-                        c = Double
-                                .compare(
-                                        ADoubleSerializerDeserializer.getDouble(
-                                                b1, s1 + APoint3DSerializerDeserializer
-                                                        .getCoordinateOffset(Coordinate.Y) - 1),
-                                        ADoubleSerializerDeserializer.getDouble(b2,
-                                                s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Y)
-                                                        - 1));
-                        if (c == 0) {
-                            return Double.compare(
-                                    ADoubleSerializerDeserializer
-                                            .getDouble(b1,
-                                                    s1 + APoint3DSerializerDeserializer
-                                                            .getCoordinateOffset(Coordinate.Z) - 1),
-                                    ADoubleSerializerDeserializer.getDouble(b2,
-                                            s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Z) - 1));
-                        }
-                    }
-                    return c;
-                } catch (HyracksException hex) {
-                    throw new IllegalStateException(hex);
-                }
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
+        int c = Double.compare(
+                ADoubleSerializerDeserializer.getDouble(b1,
+                        s1 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1),
+                ADoubleSerializerDeserializer.getDouble(b2,
+                        s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1));
+        if (c == 0) {
+            c = Double.compare(
+                    ADoubleSerializerDeserializer.getDouble(b1,
+                            s1 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1),
+                    ADoubleSerializerDeserializer.getDouble(b2,
+                            s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1));
+            if (c == 0) {
+                return Double.compare(
+                        ADoubleSerializerDeserializer.getDouble(b1,
+                                s1 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Z) - 1),
+                        ADoubleSerializerDeserializer.getDouble(b2,
+                                s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Z) - 1));
             }
-        };
+        }
+        return c;
     }
 
     @Override

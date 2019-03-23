@@ -50,7 +50,6 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinary
 import org.apache.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ListItemBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.LongBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.RawBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.valueproviders.PrimitiveValueProviderFactory;
 import org.apache.asterix.formats.nontagged.AnyBinaryComparatorFactory;
 import org.apache.asterix.formats.nontagged.OrderedBinaryComparatorFactory;
@@ -72,6 +71,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.RawBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.data.std.primitive.BytePointable;

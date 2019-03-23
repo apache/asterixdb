@@ -27,10 +27,10 @@ import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+// TODO(ali): move to Hyracks
 public class BooleanBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
-
     public static final BooleanBinaryComparatorFactory INSTANCE = new BooleanBinaryComparatorFactory();
 
     private BooleanBinaryComparatorFactory() {
@@ -38,19 +38,13 @@ public class BooleanBinaryComparatorFactory implements IBinaryComparatorFactory 
 
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return new IBinaryComparator() {
+        return BooleanBinaryComparatorFactory::compare;
+    }
 
-            @Override
-            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                boolean v1 = ABooleanSerializerDeserializer.getBoolean(b1, s1);
-                boolean v2 = ABooleanSerializerDeserializer.getBoolean(b2, s2);
-                if (v1) {
-                    return v2 ? 0 : 1;
-                } else {
-                    return v2 ? -1 : 0;
-                }
-            }
-        };
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+        return Boolean.compare(ABooleanSerializerDeserializer.getBoolean(b1, s1),
+                ABooleanSerializerDeserializer.getBoolean(b2, s2));
     }
 
     @Override

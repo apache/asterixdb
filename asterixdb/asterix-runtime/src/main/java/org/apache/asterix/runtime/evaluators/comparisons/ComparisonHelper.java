@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.runtime.evaluators.comparisons;
 
-import static org.apache.asterix.om.types.ATypeTag.TINYINT;
-
 import java.io.Serializable;
 
 import org.apache.asterix.dataflow.data.nontagged.comparators.ACirclePartialBinaryComparatorFactory;
@@ -31,6 +29,10 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.APointPartialBinar
 import org.apache.asterix.dataflow.data.nontagged.comparators.APolygonPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ARectanglePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.ComparatorUtil;
+import org.apache.asterix.dataflow.data.nontagged.comparators.LogicalComplexBinaryComparator;
+import org.apache.asterix.dataflow.data.nontagged.comparators.LogicalGenericBinaryComparator;
+import org.apache.asterix.dataflow.data.nontagged.comparators.LogicalScalarBinaryComparator;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -49,6 +51,11 @@ import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 
+/**
+ * @deprecated replaced by {@link LogicalGenericBinaryComparator}, {@link LogicalScalarBinaryComparator},
+ * {@link LogicalComplexBinaryComparator}, and {@link ComparatorUtil}.
+ */
+@Deprecated
 public class ComparisonHelper implements Serializable {
     private static final long serialVersionUID = 1L;
     static final String COMPARISON = "comparison operations (>, >=, <, and <=)";
@@ -78,6 +85,11 @@ public class ComparisonHelper implements Serializable {
 
     private final SourceLocation sourceLoc;
 
+    /**
+     * @deprecated replaced by {@link LogicalGenericBinaryComparator}, {@link LogicalScalarBinaryComparator},
+     * {@link LogicalComplexBinaryComparator}, and {@link ComparatorUtil}.
+     */
+    @Deprecated
     public ComparisonHelper(SourceLocation sourceLoc) {
         this.sourceLoc = sourceLoc;
     }

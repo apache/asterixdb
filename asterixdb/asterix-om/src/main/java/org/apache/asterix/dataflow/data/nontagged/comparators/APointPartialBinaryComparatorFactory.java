@@ -32,40 +32,31 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class APointPartialBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
-
-    public final static APointPartialBinaryComparatorFactory INSTANCE = new APointPartialBinaryComparatorFactory();
+    public static final APointPartialBinaryComparatorFactory INSTANCE = new APointPartialBinaryComparatorFactory();
 
     private APointPartialBinaryComparatorFactory() {
-
     }
 
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return new IBinaryComparator() {
+        return APointPartialBinaryComparatorFactory::compare;
+    }
 
-            @Override
-            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                try {
-                    int c = Double.compare(
-                            ADoubleSerializerDeserializer.getDouble(b1,
-                                    s1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1),
-                            ADoubleSerializerDeserializer.getDouble(b2,
-                                    s2 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1));
-                    if (c == 0) {
-                        return Double
-                                .compare(
-                                        ADoubleSerializerDeserializer.getDouble(
-                                                b1, s1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)
-                                                        - 1),
-                                        ADoubleSerializerDeserializer.getDouble(b2, s2
-                                                + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1));
-                    }
-                    return c;
-                } catch (HyracksDataException hex) {
-                    throw new IllegalStateException(hex);
-                }
-            }
-        };
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
+        int c = Double.compare(
+                ADoubleSerializerDeserializer.getDouble(b1,
+                        s1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1),
+                ADoubleSerializerDeserializer.getDouble(b2,
+                        s2 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1));
+        if (c == 0) {
+            return Double.compare(
+                    ADoubleSerializerDeserializer.getDouble(b1,
+                            s1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1),
+                    ADoubleSerializerDeserializer.getDouble(b2,
+                            s2 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1));
+        }
+        return c;
     }
 
     @Override

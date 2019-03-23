@@ -33,12 +33,12 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.APolygonPartialBin
 import org.apache.asterix.dataflow.data.nontagged.comparators.ARectanglePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.RawBinaryComparatorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.RawBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.data.std.primitive.BytePointable;
 import org.apache.hyracks.data.std.primitive.DoublePointable;

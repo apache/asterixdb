@@ -16,15 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.hdfs.lib;
+package org.apache.hyracks.data.std.accessors;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class RawBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
-    private static final IBinaryComparator comparator = RawBinaryComparatorFactory::compare;
     public static final IBinaryComparatorFactory INSTANCE = new RawBinaryComparatorFactory();
 
     private RawBinaryComparatorFactory() {
@@ -32,17 +36,26 @@ public class RawBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return comparator;
+        return RawBinaryComparatorFactory::compare;
     }
 
-    public static final int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
         int commonLength = Math.min(l1, l2);
         for (int i = 0; i < commonLength; i++) {
             if (b1[s1 + i] != b2[s2 + i]) {
                 return b1[s1 + i] - b2[s2 + i];
             }
         }
-        int difference = l1 - l2;
-        return difference == 0 ? 0 : (difference > 0 ? 1 : -1);
+        return Integer.compare(l1, l2);
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        return registry.getClassIdentifier(getClass(), serialVersionUID);
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        return INSTANCE;
     }
 }

@@ -32,60 +32,43 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class ACirclePartialBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
-
     public static final ACirclePartialBinaryComparatorFactory INSTANCE = new ACirclePartialBinaryComparatorFactory();
 
     private ACirclePartialBinaryComparatorFactory() {
-
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory#createBinaryComparator()
-     */
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return new IBinaryComparator() {
+        return ACirclePartialBinaryComparatorFactory::compare;
+    }
 
-            @Override
-            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                try {
-                    // center.x
-                    int c = Double
-                            .compare(
-                                    ADoubleSerializerDeserializer.getDouble(
-                                            b1, s1 + ACircleSerializerDeserializer
-                                                    .getCenterPointCoordinateOffset(Coordinate.X) - 1),
-                                    ADoubleSerializerDeserializer.getDouble(b2, s2
-                                            + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X)
-                                            - 1));
-                    if (c == 0) {
-                        // center.y
-                        c = Double
-                                .compare(
-                                        ADoubleSerializerDeserializer.getDouble(b1,
-                                                s1 + ACircleSerializerDeserializer
-                                                        .getCenterPointCoordinateOffset(Coordinate.Y) - 1),
-                                        ADoubleSerializerDeserializer
-                                                .getDouble(
-                                                        b2, s2
-                                                                + ACircleSerializerDeserializer
-                                                                        .getCenterPointCoordinateOffset(Coordinate.Y)
-                                                                - 1));
-                        if (c == 0) {
-                            // radius
-                            return Double.compare(
-                                    ADoubleSerializerDeserializer.getDouble(b1,
-                                            s1 + ACircleSerializerDeserializer.getRadiusOffset() - 1),
-                                    ADoubleSerializerDeserializer.getDouble(b2,
-                                            s2 + ACircleSerializerDeserializer.getRadiusOffset() - 1));
-                        }
-                    }
-                    return c;
-                } catch (HyracksDataException hex) {
-                    throw new IllegalStateException(hex);
-                }
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
+        // center.x
+        int c = Double.compare(
+                ADoubleSerializerDeserializer.getDouble(b1,
+                        s1 + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X) - 1),
+                ADoubleSerializerDeserializer.getDouble(b2,
+                        s2 + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X) - 1));
+        if (c == 0) {
+            // center.y
+            c = Double
+                    .compare(
+                            ADoubleSerializerDeserializer.getDouble(
+                                    b1, s1 + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y)
+                                            - 1),
+                            ADoubleSerializerDeserializer.getDouble(b2, s2
+                                    + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y) - 1));
+            if (c == 0) {
+                // radius
+                return Double.compare(
+                        ADoubleSerializerDeserializer.getDouble(b1,
+                                s1 + ACircleSerializerDeserializer.getRadiusOffset() - 1),
+                        ADoubleSerializerDeserializer.getDouble(b2,
+                                s2 + ACircleSerializerDeserializer.getRadiusOffset() - 1));
             }
-        };
+        }
+        return c;
     }
 
     @Override

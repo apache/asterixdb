@@ -27,42 +27,37 @@ import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+/**
+ * The ascending interval comparator sorts intervals first by start point, then by end point. If the intervals have
+ * the same point values, the final comparison orders the intervals by type (datetime, date, time).
+ */
 public class AIntervalAscPartialBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
-
     public static final AIntervalAscPartialBinaryComparatorFactory INSTANCE =
             new AIntervalAscPartialBinaryComparatorFactory();
 
     private AIntervalAscPartialBinaryComparatorFactory() {
-
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory#createBinaryComparator()
-     */
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return new IBinaryComparator() {
+        return AIntervalAscPartialBinaryComparatorFactory::compare;
+    }
 
-            @Override
-            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                // The ascending interval comparator sorts intervals first by start point, then by end point.
-                // If the interval have the same point values, the final comparison orders the intervals by type
-                // (datetime, date, time).
-                int c = Long.compare(AIntervalSerializerDeserializer.getIntervalStart(b1, s1),
-                        AIntervalSerializerDeserializer.getIntervalStart(b2, s2));
-                if (c == 0) {
-                    c = Long.compare(AIntervalSerializerDeserializer.getIntervalEnd(b1, s1),
-                            AIntervalSerializerDeserializer.getIntervalEnd(b2, s2));
-                    if (c == 0) {
-                        c = Byte.compare(AIntervalSerializerDeserializer.getIntervalTimeType(b1, s1),
-                                AIntervalSerializerDeserializer.getIntervalTimeType(b2, s2));
-                    }
-                }
-                return c;
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+        int c = Long.compare(AIntervalSerializerDeserializer.getIntervalStart(b1, s1),
+                AIntervalSerializerDeserializer.getIntervalStart(b2, s2));
+        if (c == 0) {
+            c = Long.compare(AIntervalSerializerDeserializer.getIntervalEnd(b1, s1),
+                    AIntervalSerializerDeserializer.getIntervalEnd(b2, s2));
+            if (c == 0) {
+                c = Byte.compare(AIntervalSerializerDeserializer.getIntervalTimeType(b1, s1),
+                        AIntervalSerializerDeserializer.getIntervalTimeType(b2, s2));
             }
-        };
+        }
+        return c;
     }
 
     @Override
