@@ -158,7 +158,6 @@ final class IPCHandle implements IIPCHandle {
             final boolean error = message.getFlag() == Message.ERROR;
             if (!error && state == HandleState.CONNECT_RECEIVED) {
                 remoteAddress = (InetSocketAddress) message.getPayload();
-                system.getConnectionManager().registerHandle(this);
                 setState(HandleState.CONNECTED);
                 system.getConnectionManager().ack(this, message);
             } else if (!error && state == HandleState.CONNECT_SENT) {

@@ -36,7 +36,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.NetworkUtil;
@@ -135,6 +134,17 @@ public class IPCConnectionManager {
 
     synchronized void registerHandle(IPCHandle handle) {
         ipcHandleMap.put(handle.getRemoteAddress(), handle);
+    }
+
+    synchronized void unregisterHandle(IPCHandle handle) {
+        final InetSocketAddress remoteAddress = handle.getRemoteAddress();
+        if (remoteAddress != null) {
+            final IPCHandle ipcHandle = ipcHandleMap.get(remoteAddress);
+            // remove only if in closed state to avoid removing a new handle that was created for the same destination
+            if (ipcHandle != null && ipcHandle.getState() == HandleState.CLOSED) {
+                ipcHandleMap.remove(remoteAddress);
+            }
+        }
     }
 
     synchronized void write(Message msg) {
@@ -411,7 +421,9 @@ public class IPCConnectionManager {
             if (key != null) {
                 final Object attachment = key.attachment();
                 if (attachment != null) {
-                    ((IPCHandle) attachment).close();
+                    final IPCHandle handle = (IPCHandle) attachment;
+                    handle.close();
+                    unregisterHandle(handle);
                 }
                 key.cancel();
             }
