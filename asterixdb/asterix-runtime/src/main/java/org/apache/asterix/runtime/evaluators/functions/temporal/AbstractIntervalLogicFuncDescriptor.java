@@ -79,7 +79,7 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
                             throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, typeTag0,
                                     ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
-                        byte typeTag1 = argPtr0.getTag();
+                        byte typeTag1 = argPtr1.getTag();
                         if (typeTag1 != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
                             throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, typeTag1,
                                     ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
