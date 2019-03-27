@@ -20,7 +20,17 @@ package org.apache.asterix.lexergenerator;
 
 import java.util.HashMap;
 
-import org.apache.asterix.lexergenerator.rulegenerators.*;
+import org.apache.asterix.lexergenerator.rulegenerators.RuleGenerator;
+import org.apache.asterix.lexergenerator.rulegenerators.RuleGeneratorAnythingUntil;
+import org.apache.asterix.lexergenerator.rulegenerators.RuleGeneratorCaseInsensitiveChar;
+import org.apache.asterix.lexergenerator.rulegenerators.RuleGeneratorChar;
+import org.apache.asterix.lexergenerator.rulegenerators.RuleGeneratorCharOrNothing;
+import org.apache.asterix.lexergenerator.rulegenerators.RuleGeneratorDigitSequence;
+import org.apache.asterix.lexergenerator.rulegenerators.RuleGeneratorNothing;
+import org.apache.asterix.lexergenerator.rulegenerators.RuleGeneratorSign;
+import org.apache.asterix.lexergenerator.rulegenerators.RuleGeneratorSignOrNothing;
+import org.apache.asterix.lexergenerator.rulegenerators.RuleGeneratorString;
+import org.apache.asterix.lexergenerator.rulegenerators.RuleGeneratorToken;
 
 public class NodeChainFactory {
     static private HashMap<String, RuleGenerator> ruleGenerators = new HashMap<String, RuleGenerator>();

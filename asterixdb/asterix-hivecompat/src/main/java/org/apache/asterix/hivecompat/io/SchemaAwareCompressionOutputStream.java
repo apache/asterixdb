@@ -20,7 +20,7 @@ package org.apache.asterix.hivecompat.io;
 
 import java.io.OutputStream;
 
-import org.apache.hadoop.io.compress.*;
+import org.apache.hadoop.io.compress.CompressionOutputStream;
 
 /**
  *
