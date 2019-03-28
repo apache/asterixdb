@@ -21,6 +21,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
@@ -399,7 +400,7 @@ public class PrintTools {
         }
         final char lowSurrogate = UTF8StringUtil.charAt(src, lowSurrogatePos);
         final int lowSurrogateSize = UTF8StringUtil.charSize(src, lowSurrogatePos);
-        os.write(new String(new char[] { highSurrogate, lowSurrogate }).getBytes());
+        os.write(new String(new char[] { highSurrogate, lowSurrogate }).getBytes(StandardCharsets.UTF_8));
         return highSurrogateSize + lowSurrogateSize;
     }
 

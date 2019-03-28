@@ -163,7 +163,7 @@ public class NCApplication extends BaseNCApplication {
     }
 
     @Override
-    protected void configureLoggingLevel(Level level) {
+    public void configureLoggingLevel(Level level) {
         super.configureLoggingLevel(level);
         LoggingConfigUtil.defaultIfMissing(GlobalConfig.ASTERIX_LOGGER_NAME, level);
     }

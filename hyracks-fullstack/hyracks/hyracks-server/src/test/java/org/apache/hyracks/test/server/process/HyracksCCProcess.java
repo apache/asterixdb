@@ -49,5 +49,6 @@ public class HyracksCCProcess extends HyracksServerProcess {
         args.add("-Xmx1024m");
         cList.addAll(args);
         // cList.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005");
+        cList.add("-Dfile.encoding=us-ascii");
     }
 }

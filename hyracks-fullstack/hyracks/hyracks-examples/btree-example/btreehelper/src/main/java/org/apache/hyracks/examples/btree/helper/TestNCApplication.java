@@ -25,6 +25,7 @@ import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
+import org.apache.logging.log4j.Level;
 
 public class TestNCApplication implements INCApplication {
 
@@ -79,6 +80,11 @@ public class TestNCApplication implements INCApplication {
     @Override
     public IFileDeviceResolver getFileDeviceResolver() {
         return null;
+    }
+
+    @Override
+    public void configureLoggingLevel(Level level) {
+        // No-op
     }
 
     @Override

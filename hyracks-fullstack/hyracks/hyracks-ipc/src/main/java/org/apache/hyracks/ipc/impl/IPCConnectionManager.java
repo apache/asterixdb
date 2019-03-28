@@ -143,6 +143,17 @@ public class IPCConnectionManager {
         ipcHandleMap.put(handle.getRemoteAddress(), handle);
     }
 
+    synchronized void unregisterHandle(IPCHandle handle) {
+        final InetSocketAddress remoteAddress = handle.getRemoteAddress();
+        if (remoteAddress != null) {
+            final IPCHandle ipcHandle = ipcHandleMap.get(remoteAddress);
+            // remove only if in closed state to avoid removing a new handle that was created for the same destination
+            if (ipcHandle != null && ipcHandle.getState() == HandleState.CLOSED) {
+                ipcHandleMap.remove(remoteAddress);
+            }
+        }
+    }
+
     synchronized void write(Message msg) {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("Enqueued message: " + msg);
@@ -434,7 +445,9 @@ public class IPCConnectionManager {
             if (key != null) {
                 final Object attachment = key.attachment();
                 if (attachment != null) {
-                    ((IPCHandle) attachment).close();
+                    final IPCHandle handle = (IPCHandle) attachment;
+                    handle.close();
+                    unregisterHandle(handle);
                 }
                 key.cancel();
             }
