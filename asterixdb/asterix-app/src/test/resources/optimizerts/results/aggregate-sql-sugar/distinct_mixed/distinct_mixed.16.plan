@@ -1,0 +1,49 @@
+-- DISTRIBUTE_RESULT  |LOCAL|
+  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    -- STREAM_PROJECT  |LOCAL|
+      -- ASSIGN  |LOCAL|
+        -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+          -- PRE_CLUSTERED_GROUP_BY[$$g]  |LOCAL|
+                  {
+                    -- AGGREGATE  |LOCAL|
+                      -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                        -- IN_MEMORY_STABLE_SORT [$$x(ASC)]  |LOCAL|
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                  }
+                  {
+                    -- AGGREGATE  |LOCAL|
+                      -- AGGREGATE  |LOCAL|
+                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                  }
+                  {
+                    -- AGGREGATE  |LOCAL|
+                      -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                        -- IN_MEMORY_STABLE_SORT [$$z(ASC)]  |LOCAL|
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                  }
+                  {
+                    -- AGGREGATE  |LOCAL|
+                      -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                        -- IN_MEMORY_STABLE_SORT [$$y(ASC)]  |LOCAL|
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                  }
+            -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+              -- STABLE_SORT [$$g(ASC)]  |LOCAL|
+                -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                  -- NESTED_LOOP  |UNPARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                      -- NESTED_LOOP  |UNPARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                          -- NESTED_LOOP  |UNPARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                              -- UNNEST  |UNPARTITIONED|
+                                -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                              -- UNNEST  |UNPARTITIONED|
+                                -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                          -- UNNEST  |UNPARTITIONED|
+                            -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                      -- UNNEST  |UNPARTITIONED|
+                        -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

@@ -29,7 +29,6 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
-import org.apache.asterix.runtime.utils.ArrayFunctionsUtil;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
@@ -150,7 +149,7 @@ public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
             return true;
         } else {
             // potentially, item already exists
-            ValueCounter itemListIdxCounter = ArrayFunctionsUtil.findItem(item, sameHashes, comp);
+            ValueCounter itemListIdxCounter = PointableHelper.findItem(item, sameHashes, comp);
             if (itemListIdxCounter == null) {
                 // new item having the same hash as a different item
                 addItem(item, listIndex, sameHashes);

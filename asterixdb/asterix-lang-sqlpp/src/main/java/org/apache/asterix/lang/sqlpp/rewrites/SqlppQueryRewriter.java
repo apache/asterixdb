@@ -64,7 +64,6 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineWithExpressionVisito
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.OperatorExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SetOperationVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppBuiltinFunctionRewriteVisitor;
-import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppDistinctAggregationSugarVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByAggregationSugarVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppInlineUdfsVisitor;
@@ -166,9 +165,6 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // names could be case sensitive.
         rewriteFunctionNames();
 
-        // Rewrites distinct aggregates into regular aggregates
-        rewriteDistinctAggregations();
-
         // Sets the var counter of the query.
         topStatement.setVarCounter(context.getVarCounter().get());
     }
@@ -176,12 +172,6 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     protected void rewriteGroupByAggregationSugar() throws CompilationException {
         SqlppGroupByAggregationSugarVisitor visitor = new SqlppGroupByAggregationSugarVisitor(context);
         rewriteTopExpr(visitor, null);
-    }
-
-    protected void rewriteDistinctAggregations() throws CompilationException {
-        SqlppDistinctAggregationSugarVisitor distinctAggregationVisitor =
-                new SqlppDistinctAggregationSugarVisitor(context);
-        rewriteTopExpr(distinctAggregationVisitor, null);
     }
 
     protected void rewriteListInputFunctions() throws CompilationException {

@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Collection;
 
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
@@ -116,6 +117,17 @@ public class PointableHelper {
         byte[] bytes = visitablePointable.getByteArray();
         int s = visitablePointable.getStartOffset();
         return EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[s]);
+    }
+
+    public static <T extends IValueReference> T findItem(IValueReference item, Collection<T> list,
+            IBinaryComparator comparator) throws HyracksDataException {
+        for (T listItem : list) {
+            if (comparator.compare(item.getByteArray(), item.getStartOffset(), item.getLength(),
+                    listItem.getByteArray(), listItem.getStartOffset(), listItem.getLength()) == 0) {
+                return listItem;
+            }
+        }
+        return null;
     }
 
     /**

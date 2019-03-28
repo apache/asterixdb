@@ -18,40 +18,28 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
-
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.asterix.builders.IAsterixListBuilder;
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.aggregates.utils.PointableHashSet;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
-import org.apache.asterix.runtime.utils.ArrayFunctionsUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 /**
  * <pre>
@@ -112,60 +100,36 @@ public class ArrayDistinctDescriptor extends AbstractScalarFunctionDynamicDescri
     }
 
     public class ArrayDistinctFunction extends AbstractArrayProcessEval {
-        private final SourceLocation sourceLoc;
-        private final IBinaryHashFunction binaryHashFunction;
-        private final Int2ObjectMap<List<IPointable>> hashes;
-        private final IBinaryComparator comp;
+        private final PointableHashSet itemSet;
         private IPointable item;
         private ArrayBackedValueStorage storage;
 
         public ArrayDistinctFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLoc)
                 throws HyracksDataException {
             super(args, ctx, inputListType);
-            this.sourceLoc = sourceLoc;
-            hashes = new Int2ObjectOpenHashMap<>();
-            comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
-                    .createBinaryComparator();
-            binaryHashFunction = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(null)
-                    .createBinaryHashFunction();
+            itemSet = new PointableHashSet(arrayListAllocator, sourceLoc);
         }
 
         @Override
         protected void processList(ListAccessor listAccessor, IAsterixListBuilder listBuilder) throws IOException {
-            int hash;
-            boolean itemInStorage;
-            boolean nullMissingWasAdded = false;
-            List<IPointable> sameHashes;
-            hashes.clear();
+            itemSet.clear();
             item = pointableAllocator.allocateEmpty();
             storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
+            boolean nullMissingWasAdded = false;
             for (int i = 0; i < listAccessor.size(); i++) {
                 // get the item and compute its hash
-                itemInStorage = listAccessor.getOrWriteItem(i, item, storage);
-                if (ATYPETAGDESERIALIZER.deserialize(item.getByteArray()[item.getStartOffset()]).isDerivedType()) {
-                    throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLoc);
-                }
+                boolean itemInStorage = listAccessor.getOrWriteItem(i, item, storage);
                 if (isNullOrMissing(item)) {
                     if (!nullMissingWasAdded) {
                         listBuilder.addItem(item);
                         nullMissingWasAdded = true;
                     }
-                } else {
-                    // look up if it already exists
-                    hash = binaryHashFunction.hash(item.getByteArray(), item.getStartOffset(), item.getLength());
-                    hashes.get(hash);
-                    sameHashes = hashes.get(hash);
-                    if (sameHashes == null) {
-                        // new item
-                        sameHashes = arrayListAllocator.allocate(null);
-                        sameHashes.clear();
-                        addItem(item, listBuilder, itemInStorage, sameHashes);
-                        hashes.put(hash, sameHashes);
-                        item = pointableAllocator.allocateEmpty();
-                    } else if (ArrayFunctionsUtil.findItem(item, sameHashes, comp) == null) {
-                        // new item, it could happen that two hashes are the same but they are for different items
-                        addItem(item, listBuilder, itemInStorage, sameHashes);
-                        item = pointableAllocator.allocateEmpty();
+                } else if (itemSet.add(item)) {
+                    listBuilder.addItem(item);
+                    item = pointableAllocator.allocateEmpty();
+                    if (itemInStorage) {
+                        // create new storage since the added item is using it now
+                        storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
                     }
                 }
             }
@@ -174,16 +138,6 @@ public class ArrayDistinctDescriptor extends AbstractScalarFunctionDynamicDescri
         private boolean isNullOrMissing(IPointable item) {
             byte tag = item.getByteArray()[item.getStartOffset()];
             return tag == ATypeTag.SERIALIZED_NULL_TYPE_TAG || tag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG;
-        }
-
-        private void addItem(IPointable item, IAsterixListBuilder listBuilder, boolean itemInStorage,
-                List<IPointable> sameHashes) throws HyracksDataException {
-            sameHashes.add(item);
-            listBuilder.addItem(item);
-            if (itemInStorage) {
-                // create new storage since the added item is using it now
-                storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
-            }
         }
     }
 }

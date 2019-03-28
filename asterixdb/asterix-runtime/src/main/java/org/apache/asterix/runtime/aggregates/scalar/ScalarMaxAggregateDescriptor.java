@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.std.MaxAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -28,17 +27,12 @@ public class ScalarMaxAggregateDescriptor extends AbstractScalarAggregateDescrip
 
     private static final long serialVersionUID = 1L;
 
-    public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_MAX;
+    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_MAX;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ScalarMaxAggregateDescriptor(MaxAggregateDescriptor.FACTORY.createFunctionDescriptor());
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = ScalarMaxAggregateDescriptor::new;
 
-    private ScalarMaxAggregateDescriptor(IFunctionDescriptor aggFuncDesc) {
-        super(aggFuncDesc);
+    private ScalarMaxAggregateDescriptor() {
+        super(MaxAggregateDescriptor.FACTORY);
     }
 
     @Override

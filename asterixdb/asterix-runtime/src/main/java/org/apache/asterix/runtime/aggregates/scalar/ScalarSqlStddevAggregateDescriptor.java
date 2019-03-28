@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.std.SqlStddevAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -28,18 +27,12 @@ public class ScalarSqlStddevAggregateDescriptor extends AbstractScalarAggregateD
 
     private static final long serialVersionUID = 1L;
 
-    public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_STDDEV_SAMP;
+    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_STDDEV_SAMP;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ScalarSqlStddevAggregateDescriptor(
-                    SqlStddevAggregateDescriptor.FACTORY.createFunctionDescriptor());
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = ScalarSqlStddevAggregateDescriptor::new;
 
-    private ScalarSqlStddevAggregateDescriptor(IFunctionDescriptor aggFuncDesc) {
-        super(aggFuncDesc);
+    private ScalarSqlStddevAggregateDescriptor() {
+        super(SqlStddevAggregateDescriptor.FACTORY);
     }
 
     @Override

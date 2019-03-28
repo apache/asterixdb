@@ -462,7 +462,10 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                     equivalentClass.add(candidates.get(i));
                     for (int j = i - 1; j >= 0; j--) {
                         ILogicalOperator peer = candidates.get(j).getValue();
-                        if (IsomorphismUtilities.isOperatorIsomorphic(candidate, peer)) {
+                        boolean isomorphic = candidate.getInputs().size() > 1
+                                ? IsomorphismUtilities.isOperatorIsomorphicPlanSegment(candidate, peer)
+                                : IsomorphismUtilities.isOperatorIsomorphic(candidate, peer);
+                        if (isomorphic) {
                             reserved[i] = true;
                             reserved[j] = true;
                             equivalentClass.add(candidates.get(j));

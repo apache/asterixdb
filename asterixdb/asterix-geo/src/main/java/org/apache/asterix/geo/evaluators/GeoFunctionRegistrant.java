@@ -20,6 +20,7 @@ package org.apache.asterix.geo.evaluators;
 
 import org.apache.asterix.geo.aggregates.STUnionAggregateDescriptor;
 import org.apache.asterix.geo.aggregates.ScalarSTUnionAggregateDescriptor;
+import org.apache.asterix.geo.aggregates.ScalarSTUnionDistinctAggregateDescriptor;
 import org.apache.asterix.geo.evaluators.functions.ParseGeoJSONDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STAreaDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STAsBinaryDescriptor;
@@ -88,6 +89,7 @@ public class GeoFunctionRegistrant implements IFunctionRegistrant {
     public void register(IFunctionCollection fc) {
         //Geo functions
         fc.add(ScalarSTUnionAggregateDescriptor.FACTORY);
+        fc.add(ScalarSTUnionDistinctAggregateDescriptor.FACTORY);
         fc.add(STUnionAggregateDescriptor.FACTORY);
 
         //GeoJSON

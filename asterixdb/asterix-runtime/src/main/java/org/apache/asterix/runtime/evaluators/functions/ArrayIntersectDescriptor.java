@@ -49,7 +49,6 @@ import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
-import org.apache.asterix.runtime.utils.ArrayFunctionsUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -363,7 +362,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
                 newHashes.add(valueListIndex);
                 hashes.put(hash, newHashes);
                 return true;
-            } else if (ArrayFunctionsUtil.findItem(item, sameHashes, comp) == null) {
+            } else if (PointableHelper.findItem(item, sameHashes, comp) == null) {
                 ValueListIndex valueListIndex = valueListIndexAllocator.allocate(null);
                 valueListIndex.set(item, -1);
                 sameHashes.add(valueListIndex);
@@ -388,7 +387,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
 
         private void incrementIfExists(List<ValueListIndex> sameHashes, IPointable item, int listIndex,
                 IAsterixListBuilder listBuilder) throws HyracksDataException {
-            ValueListIndex sameValue = ArrayFunctionsUtil.findItem(item, sameHashes, comp);
+            ValueListIndex sameValue = PointableHelper.findItem(item, sameHashes, comp);
             if (sameValue != null && listIndex - sameValue.listIndex == 1) {
                 // found the item, its stamp is OK (stamp saves the index of the last list that has seen this item)
                 // increment stamp of this item

@@ -19,7 +19,6 @@
 package org.apache.asterix.geo.aggregates;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.scalar.AbstractScalarAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -27,16 +26,13 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 public class ScalarSTUnionAggregateDescriptor extends AbstractScalarAggregateDescriptor {
 
     private static final long serialVersionUID = 1L;
+
     public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_ST_UNION_AGG;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ScalarSTUnionAggregateDescriptor(STUnionAggregateDescriptor.FACTORY.createFunctionDescriptor());
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = ScalarSTUnionAggregateDescriptor::new;
 
-    private ScalarSTUnionAggregateDescriptor(IFunctionDescriptor aggFuncDesc) {
-        super(aggFuncDesc);
+    private ScalarSTUnionAggregateDescriptor() {
+        super(STUnionAggregateDescriptor.FACTORY);
     }
 
     @Override

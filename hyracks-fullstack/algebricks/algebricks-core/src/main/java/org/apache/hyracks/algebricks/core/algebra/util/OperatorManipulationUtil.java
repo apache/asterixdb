@@ -20,6 +20,7 @@ package org.apache.hyracks.algebricks.core.algebra.util;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
@@ -428,5 +429,26 @@ public class OperatorManipulationUtil {
             }
         }
         return null;
+    }
+
+    /**
+     * Retains variables and expressions in provided lists as specified by given bitset
+     */
+    public static void retainAssignVariablesAndExpressions(List<LogicalVariable> assignVarList,
+            List<Mutable<ILogicalExpression>> assignExprList, BitSet retainIndexes) {
+        int targetIdx = 0;
+        for (int sourceIdx = retainIndexes.nextSetBit(0); sourceIdx >= 0; sourceIdx =
+                retainIndexes.nextSetBit(sourceIdx + 1)) {
+            if (targetIdx != sourceIdx) {
+                assignVarList.set(targetIdx, assignVarList.get(sourceIdx));
+                assignExprList.set(targetIdx, assignExprList.get(sourceIdx));
+            }
+            targetIdx++;
+        }
+
+        for (int i = assignVarList.size() - 1; i >= targetIdx; i--) {
+            assignVarList.remove(i);
+            assignExprList.remove(i);
+        }
     }
 }

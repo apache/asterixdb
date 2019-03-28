@@ -33,27 +33,49 @@ import org.apache.asterix.runtime.aggregates.collections.LastElementAggregateDes
 import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.collections.LocalFirstElementAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarAvgDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarCountAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarCountDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarKurtosisDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarMaxAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarMaxDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarMinAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarMinDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSkewnessAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSkewnessDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlAvgDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlCountAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlCountDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlKurtosisAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlKurtosisDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlMaxAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlMaxDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlMinAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlMinDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlSkewnessAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlSkewnessDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlStddevAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlStddevDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlStddevPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlStddevPopDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlSumAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlSumDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlVarDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlVarPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlVarPopDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarStddevAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarStddevDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarStddevPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarStddevPopDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSumAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSumDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarVarDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarVarPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarVarPopDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableCountAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalAvgAggregateDescriptor;
@@ -599,6 +621,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(LocalSkewnessAggregateDescriptor.FACTORY);
         fc.add(IntermediateSkewnessAggregateDescriptor.FACTORY);
         fc.add(GlobalSkewnessAggregateDescriptor.FACTORY);
+        fc.add(EmptyStreamAggregateDescriptor.FACTORY);
+        fc.add(NonEmptyStreamAggregateDescriptor.FACTORY);
 
         // serializable aggregates
         fc.add(SerializableCountAggregateDescriptor.FACTORY);
@@ -637,18 +661,27 @@ public final class FunctionCollection implements IFunctionCollection {
 
         // scalar aggregates
         fc.add(ScalarCountAggregateDescriptor.FACTORY);
+        fc.add(ScalarCountDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarAvgAggregateDescriptor.FACTORY);
+        fc.add(ScalarAvgDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSumAggregateDescriptor.FACTORY);
+        fc.add(ScalarSumDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarMaxAggregateDescriptor.FACTORY);
+        fc.add(ScalarMaxDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarMinAggregateDescriptor.FACTORY);
-        fc.add(EmptyStreamAggregateDescriptor.FACTORY);
-        fc.add(NonEmptyStreamAggregateDescriptor.FACTORY);
+        fc.add(ScalarMinDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarStddevAggregateDescriptor.FACTORY);
+        fc.add(ScalarStddevDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarStddevPopAggregateDescriptor.FACTORY);
+        fc.add(ScalarStddevPopDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarVarAggregateDescriptor.FACTORY);
+        fc.add(ScalarVarDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarVarPopAggregateDescriptor.FACTORY);
+        fc.add(ScalarVarPopDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarKurtosisAggregateDescriptor.FACTORY);
+        fc.add(ScalarKurtosisDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSkewnessAggregateDescriptor.FACTORY);
+        fc.add(ScalarSkewnessDistinctAggregateDescriptor.FACTORY);
 
         // SQL aggregates
         fc.add(SqlCountAggregateDescriptor.FACTORY);
@@ -726,16 +759,27 @@ public final class FunctionCollection implements IFunctionCollection {
 
         // SQL scalar aggregates
         fc.add(ScalarSqlCountAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlCountDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlAvgAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlAvgDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlSumAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlSumDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlMaxAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlMaxDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlMinAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlMinDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlStddevAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlStddevDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlStddevPopAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlStddevPopDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlVarAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlVarDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlVarPopAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlVarPopDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlKurtosisAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlKurtosisDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlSkewnessAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlSkewnessDistinctAggregateDescriptor.FACTORY);
 
         // window functions
         fc.add(DenseRankRunningAggregateDescriptor.FACTORY);

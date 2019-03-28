@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.std.SumAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -28,15 +27,16 @@ public class ScalarSumAggregateDescriptor extends AbstractScalarAggregateDescrip
 
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY =
-            () -> new ScalarSumAggregateDescriptor(SumAggregateDescriptor.FACTORY.createFunctionDescriptor());
+    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SUM;
 
-    private ScalarSumAggregateDescriptor(IFunctionDescriptor aggFuncDesc) {
-        super(aggFuncDesc);
+    public static final IFunctionDescriptorFactory FACTORY = ScalarSumAggregateDescriptor::new;
+
+    private ScalarSumAggregateDescriptor() {
+        super(SumAggregateDescriptor.FACTORY);
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SCALAR_SUM;
+        return FID;
     }
 }

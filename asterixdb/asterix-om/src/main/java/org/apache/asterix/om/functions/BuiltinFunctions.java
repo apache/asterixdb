@@ -169,8 +169,7 @@ public class BuiltinFunctions {
     private static final Map<IFunctionInfo, IFunctionInfo> aggregateToSerializableAggregate = new HashMap<>();
     private static final Map<IFunctionInfo, Boolean> builtinUnnestingFunctions = new HashMap<>();
     private static final Map<IFunctionInfo, IFunctionInfo> scalarToAggregateFunctionMap = new HashMap<>();
-    private static final Map<IFunctionInfo, IFunctionInfo> distinctToRegularScalarAggregateFunctionMap =
-            new HashMap<>();
+    private static final Map<IFunctionInfo, IFunctionInfo> distinctToRegularAggregateFunctionMap = new HashMap<>();
     private static final Map<IFunctionInfo, IFunctionInfo> sqlToWindowFunctions = new HashMap<>();
     private static final Set<IFunctionInfo> windowFunctions = new HashSet<>();
 
@@ -1304,8 +1303,12 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-length", 1);
     public static final FunctionIdentifier SCALAR_ST_UNION_AGG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-union", 1);
+    public static final FunctionIdentifier SCALAR_ST_UNION_AGG_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-union-distinct", 1);
     public static final FunctionIdentifier ST_UNION_AGG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-union-agg", 1);
+    public static final FunctionIdentifier ST_UNION_AGG_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-union-agg-distinct", 1);
     public static final FunctionIdentifier ST_GEOM_FROM_TEXT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-geom-from-text", 1);
     public static final FunctionIdentifier ST_GEOM_FROM_TEXT_SRID =
@@ -2120,6 +2123,7 @@ public class BuiltinFunctions {
         addFunction(ST_INTERSECTION, AGeometryTypeComputer.INSTANCE, true);
         addFunction(ST_SYM_DIFFERENCE, AGeometryTypeComputer.INSTANCE, true);
         addFunction(SCALAR_ST_UNION_AGG, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_ST_UNION_AGG_DISTINCT, AGeometryTypeComputer.INSTANCE, true);
         addPrivateFunction(ST_UNION_AGG, AGeometryTypeComputer.INSTANCE, true);
         addFunction(ST_POLYGONIZE, AGeometryTypeComputer.INSTANCE, true);
 
@@ -2319,7 +2323,7 @@ public class BuiltinFunctions {
 
         // AVG DISTINCT
 
-        addDistinctAgg(AVG_DISTINCT, SCALAR_AVG);
+        addDistinctAgg(AVG_DISTINCT, AVG);
         addScalarAgg(AVG_DISTINCT, SCALAR_AVG_DISTINCT);
 
         // COUNT
@@ -2339,7 +2343,7 @@ public class BuiltinFunctions {
 
         // COUNT DISTINCT
 
-        addDistinctAgg(COUNT_DISTINCT, SCALAR_COUNT);
+        addDistinctAgg(COUNT_DISTINCT, COUNT);
         addScalarAgg(COUNT_DISTINCT, SCALAR_COUNT_DISTINCT);
 
         // MAX
@@ -2355,7 +2359,7 @@ public class BuiltinFunctions {
 
         // MAX DISTINCT
 
-        addDistinctAgg(MAX_DISTINCT, SCALAR_MAX);
+        addDistinctAgg(MAX_DISTINCT, MAX);
         addScalarAgg(MAX_DISTINCT, SCALAR_MAX_DISTINCT);
 
         // STDDEV_SAMP
@@ -2387,7 +2391,7 @@ public class BuiltinFunctions {
 
         // STDDEV_SAMP DISTINCT
 
-        addDistinctAgg(STDDEV_SAMP_DISTINCT, SCALAR_STDDEV_SAMP);
+        addDistinctAgg(STDDEV_SAMP_DISTINCT, STDDEV_SAMP);
         addScalarAgg(STDDEV_SAMP_DISTINCT, SCALAR_STDDEV_SAMP_DISTINCT);
 
         // STDDEV_POP
@@ -2419,7 +2423,7 @@ public class BuiltinFunctions {
 
         // STDDEV_POP DISTINCT
 
-        addDistinctAgg(STDDEV_POP_DISTINCT, SCALAR_STDDEV_POP);
+        addDistinctAgg(STDDEV_POP_DISTINCT, STDDEV_POP);
         addScalarAgg(STDDEV_POP_DISTINCT, SCALAR_STDDEV_POP_DISTINCT);
 
         // VAR_SAMP
@@ -2451,7 +2455,7 @@ public class BuiltinFunctions {
 
         // VAR_SAMP DISTINCT
 
-        addDistinctAgg(VAR_SAMP_DISTINCT, SCALAR_VAR_SAMP);
+        addDistinctAgg(VAR_SAMP_DISTINCT, VAR_SAMP);
         addScalarAgg(VAR_SAMP_DISTINCT, SCALAR_VAR_SAMP_DISTINCT);
 
         // VAR_POP
@@ -2483,7 +2487,7 @@ public class BuiltinFunctions {
 
         // VAR_POP DISTINCT
 
-        addDistinctAgg(VAR_POP_DISTINCT, SCALAR_VAR_POP);
+        addDistinctAgg(VAR_POP_DISTINCT, VAR_POP);
         addScalarAgg(VAR_POP_DISTINCT, SCALAR_VAR_POP_DISTINCT);
 
         // SKEWNESS
@@ -2515,7 +2519,7 @@ public class BuiltinFunctions {
 
         // SKEWNESS DISTINCT
 
-        addDistinctAgg(SKEWNESS_DISTINCT, SCALAR_SKEWNESS);
+        addDistinctAgg(SKEWNESS_DISTINCT, SKEWNESS);
         addScalarAgg(SKEWNESS_DISTINCT, SCALAR_SKEWNESS_DISTINCT);
 
         // KURTOSIS
@@ -2547,7 +2551,7 @@ public class BuiltinFunctions {
 
         // KURTOSIS DISTINCT
 
-        addDistinctAgg(KURTOSIS_DISTINCT, SCALAR_KURTOSIS);
+        addDistinctAgg(KURTOSIS_DISTINCT, KURTOSIS);
         addScalarAgg(KURTOSIS_DISTINCT, SCALAR_KURTOSIS_DISTINCT);
 
         // FIRST_ELEMENT
@@ -2587,7 +2591,7 @@ public class BuiltinFunctions {
 
         // MIN DISTINCT
 
-        addDistinctAgg(MIN_DISTINCT, SCALAR_MIN);
+        addDistinctAgg(MIN_DISTINCT, MIN);
         addScalarAgg(MIN_DISTINCT, SCALAR_MIN_DISTINCT);
 
         // SUM
@@ -2614,7 +2618,7 @@ public class BuiltinFunctions {
         addGlobalAgg(SERIAL_SUM, SERIAL_GLOBAL_SUM);
 
         // SUM Distinct
-        addDistinctAgg(SUM_DISTINCT, SCALAR_SUM);
+        addDistinctAgg(SUM_DISTINCT, SUM);
         addScalarAgg(SUM_DISTINCT, SCALAR_SUM_DISTINCT);
 
         // LISTIFY
@@ -2814,37 +2818,37 @@ public class BuiltinFunctions {
 
         // SQL AVG DISTINCT
 
-        addDistinctAgg(SQL_AVG_DISTINCT, SCALAR_SQL_AVG);
+        addDistinctAgg(SQL_AVG_DISTINCT, SQL_AVG);
         addScalarAgg(SQL_AVG_DISTINCT, SCALAR_SQL_AVG_DISTINCT);
 
         // SQL STDDEV_SAMP DISTINCT
 
-        addDistinctAgg(SQL_STDDEV_SAMP_DISTINCT, SCALAR_SQL_STDDEV_SAMP);
+        addDistinctAgg(SQL_STDDEV_SAMP_DISTINCT, SQL_STDDEV_SAMP);
         addScalarAgg(SQL_STDDEV_SAMP_DISTINCT, SCALAR_SQL_STDDEV_SAMP_DISTINCT);
 
         // SQL STDDEV_POP DISTINCT
 
-        addDistinctAgg(SQL_STDDEV_POP_DISTINCT, SCALAR_SQL_STDDEV_POP);
+        addDistinctAgg(SQL_STDDEV_POP_DISTINCT, SQL_STDDEV_POP);
         addScalarAgg(SQL_STDDEV_POP_DISTINCT, SCALAR_SQL_STDDEV_POP_DISTINCT);
 
         // SQL VAR_SAMP DISTINCT
 
-        addDistinctAgg(SQL_VAR_SAMP_DISTINCT, SCALAR_SQL_VAR_SAMP);
+        addDistinctAgg(SQL_VAR_SAMP_DISTINCT, SQL_VAR_SAMP);
         addScalarAgg(SQL_VAR_SAMP_DISTINCT, SCALAR_SQL_VAR_SAMP_DISTINCT);
 
         // SQL VAR_POP DISTINCT
 
-        addDistinctAgg(SQL_VAR_POP_DISTINCT, SCALAR_SQL_VAR_POP);
+        addDistinctAgg(SQL_VAR_POP_DISTINCT, SQL_VAR_POP);
         addScalarAgg(SQL_VAR_POP_DISTINCT, SCALAR_SQL_VAR_POP_DISTINCT);
 
         // SQL SKEWNESS DISTINCT
 
-        addDistinctAgg(SQL_SKEWNESS_DISTINCT, SCALAR_SQL_SKEWNESS);
+        addDistinctAgg(SQL_SKEWNESS_DISTINCT, SQL_SKEWNESS);
         addScalarAgg(SQL_SKEWNESS_DISTINCT, SCALAR_SQL_SKEWNESS_DISTINCT);
 
         // SQL KURTOSIS DISTINCT
 
-        addDistinctAgg(SQL_KURTOSIS_DISTINCT, SCALAR_SQL_KURTOSIS);
+        addDistinctAgg(SQL_KURTOSIS_DISTINCT, SQL_KURTOSIS);
         addScalarAgg(SQL_KURTOSIS_DISTINCT, SCALAR_SQL_KURTOSIS_DISTINCT);
 
         // SQL COUNT
@@ -2864,7 +2868,7 @@ public class BuiltinFunctions {
 
         // SQL COUNT DISTINCT
 
-        addDistinctAgg(SQL_COUNT_DISTINCT, SCALAR_SQL_COUNT);
+        addDistinctAgg(SQL_COUNT_DISTINCT, SQL_COUNT);
         addScalarAgg(SQL_COUNT_DISTINCT, SCALAR_SQL_COUNT_DISTINCT);
 
         // SQL MAX
@@ -2880,7 +2884,7 @@ public class BuiltinFunctions {
 
         // SQL MAX DISTINCT
 
-        addDistinctAgg(SQL_MAX_DISTINCT, SCALAR_SQL_MAX);
+        addDistinctAgg(SQL_MAX_DISTINCT, SQL_MAX);
         addScalarAgg(SQL_MAX_DISTINCT, SCALAR_SQL_MAX_DISTINCT);
 
         // SQL MIN
@@ -2895,7 +2899,7 @@ public class BuiltinFunctions {
 
         // SQL MIN DISTINCT
 
-        addDistinctAgg(SQL_MIN_DISTINCT, SCALAR_SQL_MIN);
+        addDistinctAgg(SQL_MIN_DISTINCT, SQL_MIN);
         addScalarAgg(SQL_MIN_DISTINCT, SCALAR_SQL_MIN_DISTINCT);
 
         // SQL SUM
@@ -2922,7 +2926,7 @@ public class BuiltinFunctions {
         addGlobalAgg(SERIAL_SQL_SUM, SERIAL_GLOBAL_SQL_SUM);
 
         // SQL SUM DISTINCT
-        addDistinctAgg(SQL_SUM_DISTINCT, SCALAR_SQL_SUM);
+        addDistinctAgg(SQL_SUM_DISTINCT, SQL_SUM);
         addScalarAgg(SQL_SUM_DISTINCT, SCALAR_SQL_SUM_DISTINCT);
 
         // SPATIAL AGGREGATES
@@ -2931,6 +2935,9 @@ public class BuiltinFunctions {
         addLocalAgg(ST_UNION_AGG, ST_UNION_AGG);
         addIntermediateAgg(ST_UNION_AGG, ST_UNION_AGG);
         addGlobalAgg(ST_UNION_AGG, ST_UNION_AGG);
+        addScalarAgg(ST_UNION_AGG, SCALAR_ST_UNION_AGG);
+        addDistinctAgg(ST_UNION_AGG_DISTINCT, ST_UNION_AGG);
+        addScalarAgg(ST_UNION_AGG_DISTINCT, SCALAR_ST_UNION_AGG_DISTINCT);
     }
 
     interface BuiltinFunctionProperty {
@@ -3088,7 +3095,7 @@ public class BuiltinFunctions {
 
     public static FunctionIdentifier getAggregateFunctionForDistinct(FunctionIdentifier distinctVersionOfAggregate) {
         IFunctionInfo finfo =
-                distinctToRegularScalarAggregateFunctionMap.get(getAsterixFunctionInfo(distinctVersionOfAggregate));
+                distinctToRegularAggregateFunctionMap.get(getAsterixFunctionInfo(distinctVersionOfAggregate));
         return finfo == null ? null : finfo.getFunctionIdentifier();
     }
 
@@ -3157,9 +3164,8 @@ public class BuiltinFunctions {
         scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(scalarfi), getAsterixFunctionInfo(fi));
     }
 
-    public static void addDistinctAgg(FunctionIdentifier distinctfi, FunctionIdentifier regularscalarfi) {
-        distinctToRegularScalarAggregateFunctionMap.put(getAsterixFunctionInfo(distinctfi),
-                getAsterixFunctionInfo(regularscalarfi));
+    public static void addDistinctAgg(FunctionIdentifier distinctfi, FunctionIdentifier fi) {
+        distinctToRegularAggregateFunctionMap.put(getAsterixFunctionInfo(distinctfi), getAsterixFunctionInfo(fi));
     }
 
     public static void addWindowFunction(FunctionIdentifier sqlfi, FunctionIdentifier winfi,

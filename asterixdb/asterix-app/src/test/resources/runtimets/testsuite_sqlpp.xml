@@ -2621,6 +2621,11 @@
   </test-group>
   <test-group name="aggregate-sql-sugar">
     <test-case FilePath="aggregate-sql-sugar">
+      <compilation-unit name="distinct_mixed">
+        <output-dir compare="Text">distinct_mixed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql-sugar">
       <compilation-unit name="stddev">
         <output-dir compare="Text">stddev</output-dir>
       </compilation-unit>

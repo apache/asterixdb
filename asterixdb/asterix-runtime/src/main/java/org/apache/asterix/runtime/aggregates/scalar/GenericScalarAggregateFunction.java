@@ -25,36 +25,54 @@ import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * Implements scalar aggregates by iterating over a collection with the ScanCollection unnesting function,
- * and applying the corresponding ICopyAggregateFunction to each collection-item.
+ * and applying the corresponding aggregate function to each collection-item.
  */
 public class GenericScalarAggregateFunction implements IScalarEvaluator {
 
-    private final IPointable listItemOut = new VoidPointable();
     private final IAggregateEvaluator aggFunc;
+
     private final IUnnestingEvaluator scanCollection;
+
+    private final IPointable listItemOut = new VoidPointable();
 
     private final SingleFieldFrameTupleReference itemTuple = new SingleFieldFrameTupleReference();
 
+    protected final SourceLocation sourceLoc;
+
     public GenericScalarAggregateFunction(IAggregateEvaluator aggFunc, IUnnestingEvaluatorFactory scanCollectionFactory,
-            IHyracksTaskContext context) throws HyracksDataException {
+            IHyracksTaskContext context, SourceLocation sourceLoc) throws HyracksDataException {
         this.aggFunc = aggFunc;
         this.scanCollection = scanCollectionFactory.createUnnestingEvaluator(context);
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         scanCollection.init(tuple);
-        aggFunc.init();
+        aggInit();
         while (scanCollection.step(listItemOut)) {
-            itemTuple.reset(listItemOut.getByteArray(), listItemOut.getStartOffset(), listItemOut.getLength());
-            aggFunc.step(itemTuple);
+            aggStep(listItemOut);
         }
+        aggFinish(result);
+    }
+
+    protected void aggInit() throws HyracksDataException {
+        aggFunc.init();
+    }
+
+    protected void aggStep(IPointable item) throws HyracksDataException {
+        itemTuple.reset(item.getByteArray(), item.getStartOffset(), item.getLength());
+        aggFunc.step(itemTuple);
+    }
+
+    protected void aggFinish(IPointable result) throws HyracksDataException {
         aggFunc.finish(result);
     }
 }

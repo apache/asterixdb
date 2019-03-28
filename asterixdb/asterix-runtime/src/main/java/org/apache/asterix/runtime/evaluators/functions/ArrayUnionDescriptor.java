@@ -34,7 +34,6 @@ import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
-import org.apache.asterix.runtime.utils.ArrayFunctionsUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -148,7 +147,7 @@ public class ArrayUnionDescriptor extends AbstractScalarFunctionDynamicDescripto
                 addItem(listBuilder, item, sameHashes);
                 hashes.put(hash, sameHashes);
                 return true;
-            } else if (ArrayFunctionsUtil.findItem(item, sameHashes, comp) == null) {
+            } else if (PointableHelper.findItem(item, sameHashes, comp) == null) {
                 // new item, it could happen that two hashes are the same but they are for different items
                 addItem(listBuilder, item, sameHashes);
                 return true;

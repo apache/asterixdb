@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.std.StddevPopAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -28,18 +27,12 @@ public class ScalarStddevPopAggregateDescriptor extends AbstractScalarAggregateD
 
     private static final long serialVersionUID = 1L;
 
-    public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_STDDEV_POP;
+    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_STDDEV_POP;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ScalarStddevPopAggregateDescriptor(
-                    StddevPopAggregateDescriptor.FACTORY.createFunctionDescriptor());
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = ScalarStddevPopAggregateDescriptor::new;
 
-    private ScalarStddevPopAggregateDescriptor(IFunctionDescriptor aggFuncDesc) {
-        super(aggFuncDesc);
+    private ScalarStddevPopAggregateDescriptor() {
+        super(StddevPopAggregateDescriptor.FACTORY);
     }
 
     @Override
