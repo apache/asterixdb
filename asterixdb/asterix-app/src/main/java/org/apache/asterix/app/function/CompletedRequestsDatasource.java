@@ -27,13 +27,14 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
-public class ActiveRequestsDatasource extends FunctionDataSource {
+public class CompletedRequestsDatasource extends FunctionDataSource {
 
-    private static final DataSourceId ACTIVE_REQUESTS_DATASOURCE_ID = new DataSourceId(
-            ActiveRequestsRewriter.ACTIVE_REQUESTS.getNamespace(), ActiveRequestsRewriter.ACTIVE_REQUESTS.getName());
+    private static final DataSourceId COMPLETED_REQUESTS_DATASOURCE_ID =
+            new DataSourceId(ActiveRequestsRewriter.ACTIVE_REQUESTS.getNamespace(),
+                    CompletedRequestsRewriter.COMPLETED_REQUESTS.getName());
 
-    public ActiveRequestsDatasource(INodeDomain domain) throws AlgebricksException {
-        super(ACTIVE_REQUESTS_DATASOURCE_ID, domain);
+    public CompletedRequestsDatasource(INodeDomain domain) throws AlgebricksException {
+        super(COMPLETED_REQUESTS_DATASOURCE_ID, domain);
     }
 
     @Override
@@ -41,6 +42,6 @@ public class ActiveRequestsDatasource extends FunctionDataSource {
             AlgebricksAbsolutePartitionConstraint locations) {
         AlgebricksAbsolutePartitionConstraint randomLocation =
                 AlgebricksAbsolutePartitionConstraint.randomLocation(locations.getLocations());
-        return new ClientRequestsFunction(randomLocation, ClientRequestsRequest.RequestType.RUNNING);
+        return new ClientRequestsFunction(randomLocation, ClientRequestsRequest.RequestType.COMPLETED);
     }
 }

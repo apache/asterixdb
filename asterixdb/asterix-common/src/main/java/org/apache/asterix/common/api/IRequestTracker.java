@@ -68,4 +68,11 @@ public interface IRequestTracker {
      * @return the currently running requests
      */
     Collection<IClientRequest> getRunningRequests();
+
+    /**
+     * Gets the recently completed requests
+     *
+     * @return the recently completed requests
+     */
+    Collection<IClientRequest> getCompletedRequests();
 }

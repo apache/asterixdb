@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -27,16 +28,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.asterix.common.api.IClientRequest;
 import org.apache.asterix.common.api.IRequestTracker;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class RequestTracker implements IRequestTracker {
 
     private final Map<String, IClientRequest> runningRequests = new ConcurrentHashMap<>();
     private final Map<String, IClientRequest> clientIdRequests = new ConcurrentHashMap<>();
+    private final CircularFifoQueue<IClientRequest> completedRequests;
     private final ICcApplicationContext ccAppCtx;
 
     public RequestTracker(ICcApplicationContext ccAppCtx) {
         this.ccAppCtx = ccAppCtx;
+        completedRequests = new CircularFifoQueue<>(ccAppCtx.getExternalProperties().getRequestsArchiveSize());
     }
 
     @Override
@@ -84,6 +88,11 @@ public class RequestTracker implements IRequestTracker {
         return Collections.unmodifiableCollection(runningRequests.values());
     }
 
+    @Override
+    public synchronized Collection<IClientRequest> getCompletedRequests() {
+        return Collections.unmodifiableCollection(new ArrayList<>(completedRequests));
+    }
+
     private void cancel(IClientRequest request) throws HyracksDataException {
         request.cancel(ccAppCtx);
         untrack(request);
@@ -95,5 +104,10 @@ public class RequestTracker implements IRequestTracker {
         if (clientContextId != null) {
             clientIdRequests.remove(request.getClientContextId());
         }
+        archive(request);
+    }
+
+    private synchronized void archive(IClientRequest request) {
+        completedRequests.add(request);
     }
 }

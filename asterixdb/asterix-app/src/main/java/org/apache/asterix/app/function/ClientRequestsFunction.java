@@ -18,12 +18,13 @@
  */
 package org.apache.asterix.app.function;
 
+import static org.apache.asterix.app.message.ClientRequestsRequest.RequestType;
 import static org.apache.asterix.app.message.ExecuteStatementRequestMessage.DEFAULT_NC_TIMEOUT_MILLIS;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.asterix.app.message.ActiveRequestsRequest;
-import org.apache.asterix.app.message.ActiveRequestsResponse;
+import org.apache.asterix.app.message.ClientRequestsRequest;
+import org.apache.asterix.app.message.ClientRequestsResponse;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.asterix.external.api.IRecordReader;
@@ -35,13 +36,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ActiveRequestsFunction extends AbstractDatasourceFunction {
+public class ClientRequestsFunction extends AbstractDatasourceFunction {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
+    private final RequestType requestType;
 
-    public ActiveRequestsFunction(AlgebricksAbsolutePartitionConstraint locations) {
+    public ClientRequestsFunction(AlgebricksAbsolutePartitionConstraint locations, RequestType requestType) {
         super(locations);
+        this.requestType = requestType;
     }
 
     @Override
@@ -51,12 +54,12 @@ public class ActiveRequestsFunction extends AbstractDatasourceFunction {
         INCMessageBroker messageBroker = (INCMessageBroker) serviceCtx.getMessageBroker();
         MessageFuture messageFuture = messageBroker.registerMessageFuture();
         long futureId = messageFuture.getFutureId();
-        ActiveRequestsRequest request = new ActiveRequestsRequest(serviceCtx.getNodeId(), futureId);
+        ClientRequestsRequest request = new ClientRequestsRequest(serviceCtx.getNodeId(), futureId, requestType);
         try {
             messageBroker.sendMessageToPrimaryCC(request);
-            ActiveRequestsResponse response =
-                    (ActiveRequestsResponse) messageFuture.get(DEFAULT_NC_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-            return new ActiveRequestsReader(response.getRequests());
+            ClientRequestsResponse response =
+                    (ClientRequestsResponse) messageFuture.get(DEFAULT_NC_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+            return new ClientRequestsReader(response.getRequests());
         } catch (Exception e) {
             LOGGER.warn("Could not retrieve active requests", e);
             throw HyracksDataException.create(e);

@@ -24,13 +24,13 @@ import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class ActiveRequestsResponse implements INcAddressedMessage {
+public class ClientRequestsResponse implements INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
     private final long reqId;
     private final String[] requests;
 
-    public ActiveRequestsResponse(long reqId, String[] requests) {
+    public ClientRequestsResponse(long reqId, String[] requests) {
         this.reqId = reqId;
         this.requests = requests;
     }

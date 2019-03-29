@@ -29,23 +29,40 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ActiveRequestsRequest implements ICcAddressedMessage {
+public class ClientRequestsRequest implements ICcAddressedMessage {
+
+    public enum RequestType {
+        RUNNING,
+        COMPLETED
+    }
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
     private final String nodeId;
     private final long reqId;
+    private final RequestType requestType;
 
-    public ActiveRequestsRequest(String nodeId, long reqId) {
+    public ClientRequestsRequest(String nodeId, long reqId, RequestType requestType) {
         this.nodeId = nodeId;
         this.reqId = reqId;
+        this.requestType = requestType;
     }
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
-        final Collection<IClientRequest> runningRequests = appCtx.getRequestTracker().getRunningRequests();
-        final String[] requests = runningRequests.stream().map(IClientRequest::toJson).toArray(String[]::new);
-        ActiveRequestsResponse response = new ActiveRequestsResponse(reqId, requests);
+        Collection<IClientRequest> clientRequests;
+        switch (requestType) {
+            case RUNNING:
+                clientRequests = appCtx.getRequestTracker().getRunningRequests();
+                break;
+            case COMPLETED:
+                clientRequests = appCtx.getRequestTracker().getCompletedRequests();
+                break;
+            default:
+                throw new IllegalStateException("unrecognized request type: " + requestType);
+        }
+        final String[] requests = clientRequests.stream().map(IClientRequest::toJson).toArray(String[]::new);
+        ClientRequestsResponse response = new ClientRequestsResponse(reqId, requests);
         CCMessageBroker messageBroker = (CCMessageBroker) appCtx.getServiceContext().getMessageBroker();
         try {
             messageBroker.sendApplicationMessageToNC(response, nodeId);

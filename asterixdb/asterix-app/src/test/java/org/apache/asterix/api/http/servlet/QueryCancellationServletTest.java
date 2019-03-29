@@ -31,6 +31,7 @@ import org.apache.asterix.api.http.server.CcQueryCancellationServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.api.RequestReference;
+import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.runtime.utils.RequestTracker;
 import org.apache.asterix.translator.ClientRequest;
@@ -50,6 +51,9 @@ public class QueryCancellationServletTest {
     @Test
     public void testDelete() throws Exception {
         ICcApplicationContext appCtx = mock(ICcApplicationContext.class);
+        ExternalProperties externalProperties = mock(ExternalProperties.class);
+        Mockito.when(externalProperties.getRequestsArchiveSize()).thenReturn(50);
+        Mockito.when(appCtx.getExternalProperties()).thenReturn(externalProperties);
         RequestTracker tracker = new RequestTracker(appCtx);
         Mockito.when(appCtx.getRequestTracker()).thenReturn(tracker);
         // Creates a query cancellation servlet.

@@ -33,7 +33,7 @@ public abstract class BaseClientRequest implements IClientRequest {
     private boolean complete;
     private final IRequestReference requestReference;
     private boolean cancellable = false;
-    protected volatile String state = "received";
+    protected volatile State state = State.RECEIVED;
 
     public BaseClientRequest(IRequestReference requestReference) {
         this.requestReference = requestReference;
@@ -45,6 +45,7 @@ public abstract class BaseClientRequest implements IClientRequest {
             return;
         }
         complete = true;
+        state = State.COMPLETED;
     }
 
     @Override
@@ -53,6 +54,7 @@ public abstract class BaseClientRequest implements IClientRequest {
             return;
         }
         complete();
+        state = State.CANCELLED;
         if (cancellable) {
             doCancel(appCtx);
         }
@@ -76,7 +78,7 @@ public abstract class BaseClientRequest implements IClientRequest {
     }
 
     public void setRunning() {
-        state = "running";
+        state = State.RUNNING;
     }
 
     @Override
@@ -90,7 +92,7 @@ public abstract class BaseClientRequest implements IClientRequest {
         json.put("requestTime", new ADateTime(requestReference.getTime()).toSimpleString());
         json.put("elapsedTime", getElapsedTime());
         json.put("node", requestReference.getNode());
-        json.put("state", state);
+        json.put("state", state.getLabel());
         json.put("userAgent", ((RequestReference) requestReference).getUserAgent());
         json.put("remoteAddr", ((RequestReference) requestReference).getRemoteAddr());
         json.put("cancellable", cancellable);

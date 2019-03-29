@@ -5752,6 +5752,11 @@
         <output-dir compare="Text">jobs</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="completed_requests">
+        <output-dir compare="Text">completed_requests</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index">
     <test-group name="index/validations">

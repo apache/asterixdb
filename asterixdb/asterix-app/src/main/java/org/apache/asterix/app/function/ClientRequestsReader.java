@@ -23,26 +23,26 @@ import java.io.IOException;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 
-public class ActiveRequestsReader extends FunctionReader {
+public class ClientRequestsReader extends FunctionReader {
 
-    private final String[] activeRequests;
+    private final String[] requests;
     private CharArrayRecord record;
     private int recordIndex;
 
-    public ActiveRequestsReader(String[] activeRequests) {
-        this.activeRequests = activeRequests;
+    public ClientRequestsReader(String[] requests) {
+        this.requests = requests;
         record = new CharArrayRecord();
     }
 
     @Override
     public boolean hasNext() throws Exception {
-        return recordIndex < activeRequests.length;
+        return recordIndex < requests.length;
     }
 
     @Override
     public IRawRecord<char[]> next() throws IOException {
         record.reset();
-        record.append((activeRequests[recordIndex++]).toCharArray());
+        record.append((requests[recordIndex++]).toCharArray());
         record.endRecord();
         return record;
     }

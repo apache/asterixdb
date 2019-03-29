@@ -48,7 +48,8 @@ public class ExternalProperties extends AbstractProperties {
         MAX_WEB_REQUEST_SIZE(
                 UNSIGNED_INTEGER,
                 StorageUtil.getIntSizeInBytes(50, StorageUtil.StorageUnit.MEGABYTE),
-                "The maximum accepted web request size in bytes");
+                "The maximum accepted web request size in bytes"),
+        REQUESTS_ARCHIVE_SIZE(UNSIGNED_INTEGER, 50, "The maximum number of archived requests to maintain");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -67,6 +68,7 @@ public class ExternalProperties extends AbstractProperties {
                 case WEB_QUERYINTERFACE_PORT:
                 case API_PORT:
                 case ACTIVE_PORT:
+                case REQUESTS_ARCHIVE_SIZE:
                     return Section.CC;
                 case NC_API_PORT:
                     return Section.NC;
@@ -140,5 +142,9 @@ public class ExternalProperties extends AbstractProperties {
 
     public int getMaxWebRequestSize() {
         return accessor.getInt(Option.MAX_WEB_REQUEST_SIZE);
+    }
+
+    public int getRequestsArchiveSize() {
+        return accessor.getInt(Option.REQUESTS_ARCHIVE_SIZE);
     }
 }

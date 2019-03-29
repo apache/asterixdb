@@ -19,6 +19,7 @@
 package org.apache.asterix.util;
 
 import org.apache.asterix.app.function.ActiveRequestsRewriter;
+import org.apache.asterix.app.function.CompletedRequestsRewriter;
 import org.apache.asterix.app.function.DatasetResourcesRewriter;
 import org.apache.asterix.app.function.DatasetRewriter;
 import org.apache.asterix.app.function.FeedRewriter;
@@ -66,6 +67,12 @@ public class MetadataBuiltinFunctions {
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
         BuiltinFunctions.addUnnestFun(JobSummariesRewriter.JOBSUMMARIES, true);
         BuiltinFunctions.addDatasourceFunction(JobSummariesRewriter.JOBSUMMARIES, JobSummariesRewriter.INSTANCE);
+        // completed requests function
+        BuiltinFunctions.addFunction(CompletedRequestsRewriter.COMPLETED_REQUESTS,
+                (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
+        BuiltinFunctions.addUnnestFun(CompletedRequestsRewriter.COMPLETED_REQUESTS, true);
+        BuiltinFunctions.addDatasourceFunction(CompletedRequestsRewriter.COMPLETED_REQUESTS,
+                CompletedRequestsRewriter.INSTANCE);
     }
 
     private MetadataBuiltinFunctions() {
