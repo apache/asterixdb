@@ -60,6 +60,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="flwor">
+      <compilation-unit name="at07">
+        <output-dir compare="Text">at07</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
       <compilation-unit name="order-by-13">
         <output-dir compare="Text">order-by-13</output-dir>
       </compilation-unit>
