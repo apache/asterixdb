@@ -316,6 +316,7 @@ public class OperatorPropertiesUtil {
                     }
                 }
                 break;
+            case RUNNINGAGGREGATE:
             case WINDOW:
                 return false;
         }
