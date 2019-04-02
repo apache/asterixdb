@@ -218,8 +218,11 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
 
             List<Mutable<ILogicalExpression>> aggArgs = new ArrayList<Mutable<ILogicalExpression>>();
             aggArgs.add(aggOpExpr.getArguments().get(0));
+            int sz = assignFuncExpr.getArguments().size();
+            aggArgs.addAll(assignFuncExpr.getArguments().subList(1, sz));
             AggregateFunctionCallExpression aggFuncExpr =
                     BuiltinFunctions.makeAggregateFunctionExpression(aggFuncIdent, aggArgs);
+
             aggFuncExpr.setSourceLocation(assignFuncExpr.getSourceLocation());
             LogicalVariable newVar = context.newVar();
             aggOp.getVariables().add(newVar);
@@ -241,10 +244,9 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         for (Mutable<ILogicalExpression> exprRef : exprRefs) {
             ILogicalExpression expr = exprRef.getValue();
 
-            if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                if (((VariableReferenceExpression) expr).getVariableReference().equals(aggVar)) {
-                    return false;
-                }
+            if ((expr.getExpressionTag() == LogicalExpressionTag.VARIABLE)
+                    && ((VariableReferenceExpression) expr).getVariableReference().equals(aggVar)) {
+                return false;
             }
 
             if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {

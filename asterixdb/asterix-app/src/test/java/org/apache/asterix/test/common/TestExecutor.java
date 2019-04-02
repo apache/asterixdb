@@ -252,7 +252,8 @@ public class TestExecutor {
                     throw new NullPointerException("Error parsing expected or actual result file for " + scriptFile);
                 }
                 if (!TestHelper.equalJson(expectedJson, actualJson)) {
-                    throw new ComparisonException("Result for " + scriptFile + " didn't match the expected JSON");
+                    throw new ComparisonException(
+                            "Result for " + scriptFile + " didn't match the expected JSON" + "\n" + actualJson);
                 }
                 return;
             }

@@ -43,10 +43,18 @@ public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFu
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
-        // The aggregate function will get a SingleFieldFrameTupleReference that points to the result of the ScanCollection.
-        // The list-item will always reside in the first field (column) of the SingleFieldFrameTupleReference.
-        IScalarEvaluatorFactory[] aggFuncArgs = new IScalarEvaluatorFactory[1];
+
+        // The aggregate function will get a SingleFieldFrameTupleReference that points to the result of the
+        // ScanCollection. The list-item will always reside in the first field (column) of the
+        // SingleFieldFrameTupleReference.
+        int numArgs = args.length;
+        IScalarEvaluatorFactory[] aggFuncArgs = new IScalarEvaluatorFactory[numArgs];
+
         aggFuncArgs[0] = new ColumnAccessEvalFactory(0);
+
+        for (int i = 1; i < numArgs; ++i) {
+            aggFuncArgs[i] = args[i];
+        }
         // Create aggregate function from this scalar version.
         final IAggregateEvaluatorFactory aggFuncFactory = aggFuncDesc.createAggregateEvaluatorFactory(aggFuncArgs);
 

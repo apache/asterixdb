@@ -59,8 +59,11 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
             for (AggregateExprInfo aei : sai.simAggs) {
                 AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) aei.aggExprRef.getValue();
                 afce.setFunctionInfo(aei.newFunInfo);
+                List<Mutable<ILogicalExpression>> args = new ArrayList<Mutable<ILogicalExpression>>();
+                args.addAll(afce.getArguments());
                 afce.getArguments().clear();
                 afce.getArguments().add(new MutableObject<>(sai.stepOneResult));
+                afce.getArguments().addAll(args.subList(1, args.size()));
             }
         }
     }
@@ -126,7 +129,7 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
                     return new Pair<>(false, null);
                 }
                 Mutable<ILogicalOperator> bottomRef = inputRef;
-                while (bottomRef.getValue().getInputs().size() > 0) {
+                while (!bottomRef.getValue().getInputs().isEmpty()) {
                     bottomRef = bottomRef.getValue().getInputs().get(0);
                     if (!isPushableInput(bottomRef.getValue())) {
                         return new Pair<>(false, null);
