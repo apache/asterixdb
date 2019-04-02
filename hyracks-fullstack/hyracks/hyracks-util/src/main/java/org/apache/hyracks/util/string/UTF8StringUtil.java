@@ -33,6 +33,10 @@ import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
  * Most of the codes were migrated from asterix-fuzzyjoin and hyracks-storage-am-invertedindex
  */
 public class UTF8StringUtil {
+
+    private UTF8StringUtil() {
+    }
+
     public static char charAt(byte[] b, int s) {
         if (s >= b.length) {
             throw new ArrayIndexOutOfBoundsException(s);
@@ -54,7 +58,7 @@ public class UTF8StringUtil {
                 return (char) (((c & 0x1F) << 6) | ((b[s + 1]) & 0x3F));
 
             case 14:
-                return (char) (((c & 0x0F) << 12) | (((b[s + 1]) & 0x3F) << 6) | (((b[s + 2]) & 0x3F) << 0));
+                return (char) (((c & 0x0F) << 12) | (((b[s + 1]) & 0x3F) << 6) | (b[s + 2] & 0x3F));
 
             default:
                 throw new IllegalArgumentException();
@@ -80,8 +84,10 @@ public class UTF8StringUtil {
 
             case 14:
                 return 3;
+
+            default:
+                throw new IllegalStateException();
         }
-        throw new IllegalStateException();
     }
 
     public static boolean isCharStart(byte[] b, int s) {
@@ -353,12 +359,9 @@ public class UTF8StringUtil {
         }
         while (position < maxPosition) {
             char c = charAt(b, position);
-            switch (c) {
+            if (c == '\\' || c == '"') {
                 // escape
-                case '\\':
-                case '"':
-                    os.write('\\');
-                    break;
+                os.write('\\');
             }
             int sz = charSize(b, position);
             while (sz > 0) {
@@ -557,8 +560,7 @@ public class UTF8StringUtil {
                     if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80)) {
                         throw new UTFDataFormatException("malformed input around byte " + (count - 1));
                     }
-                    chararr[chararr_count++] =
-                            (char) (((c & 0x0F) << 12) | ((char2 & 0x3F) << 6) | ((char3 & 0x3F) << 0));
+                    chararr[chararr_count++] = (char) (((c & 0x0F) << 12) | ((char2 & 0x3F) << 6) | (char3 & 0x3F));
                     break;
                 default:
                     /* 10xx xxxx,  1111 xxxx */
@@ -648,10 +650,10 @@ public class UTF8StringUtil {
         } else if (c > 0x07FF) {
             tempBytes[count++] = (byte) (0xE0 | ((c >> 12) & 0x0F));
             tempBytes[count++] = (byte) (0x80 | ((c >> 6) & 0x3F));
-            tempBytes[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
+            tempBytes[count++] = (byte) (0x80 | (c & 0x3F));
         } else {
             tempBytes[count++] = (byte) (0xC0 | ((c >> 6) & 0x1F));
-            tempBytes[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
+            tempBytes[count++] = (byte) (0x80 | (c & 0x3F));
         }
         return count - orig;
     }
@@ -661,10 +663,10 @@ public class UTF8StringUtil {
         if (writer == null) {
             tempBytes = new byte[utflen + 5];
         } else {
-            if (writer.getTempBytes() == null || writer.getTempBytes().length < utflen + 5) {
-                writer.setTempBytes(new byte[utflen + 5]);
+            if (writer.tempBytes == null || writer.tempBytes.length < utflen + 5) {
+                writer.tempBytes = new byte[utflen + 5];
             }
-            tempBytes = writer.getTempBytes();
+            tempBytes = writer.tempBytes;
         }
         return tempBytes;
     }

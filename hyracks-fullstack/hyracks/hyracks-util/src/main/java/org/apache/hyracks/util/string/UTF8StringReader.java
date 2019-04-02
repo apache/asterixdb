@@ -22,12 +22,15 @@ package org.apache.hyracks.util.string;
 import java.io.DataInput;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.UTFDataFormatException;
 
-public class UTF8StringReader {
+public class UTF8StringReader implements Serializable {
 
-    byte[] bytearr = null;
-    char[] chararr = null;
+    private static final long serialVersionUID = 1L;
+
+    transient byte[] bytearr = null;
+    transient char[] chararr = null;
 
     /**
      * Reads from the

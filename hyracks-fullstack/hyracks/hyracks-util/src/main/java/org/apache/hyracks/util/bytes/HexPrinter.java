@@ -22,26 +22,26 @@ package org.apache.hyracks.util.bytes;
 import java.io.IOException;
 
 public class HexPrinter {
-    public enum CASE {
-        LOWER_CASE,
-        UPPER_CASE,
+    public enum Case {
+        LOWER_CASE('a'),
+        UPPER_CASE('A');
+
+        private final char a;
+
+        Case(char a) {
+            this.a = a;
+        }
     }
 
-    public static byte hex(int i, CASE c) {
-        switch (c) {
-            case LOWER_CASE:
-                return (byte) (i < 10 ? i + '0' : i + ('a' - 10));
-            case UPPER_CASE:
-                return (byte) (i < 10 ? i + '0' : i + ('A' - 10));
-        }
-        return Byte.parseByte(null);
+    public static byte hex(int i, Case c) {
+        return (byte) (i < 10 ? i + '0' : i + (c.a - 10));
     }
 
     public static Appendable printHexString(byte[] bytes, int start, int length, Appendable appendable)
             throws IOException {
         for (int i = 0; i < length; ++i) {
-            appendable.append((char) hex((bytes[start + i] >>> 4) & 0x0f, CASE.UPPER_CASE));
-            appendable.append((char) hex((bytes[start + i] & 0x0f), CASE.UPPER_CASE));
+            appendable.append((char) hex((bytes[start + i] >>> 4) & 0x0f, Case.UPPER_CASE));
+            appendable.append((char) hex((bytes[start + i] & 0x0f), Case.UPPER_CASE));
         }
         return appendable;
     }

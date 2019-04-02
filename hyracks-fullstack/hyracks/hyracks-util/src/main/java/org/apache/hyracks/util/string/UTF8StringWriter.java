@@ -25,7 +25,7 @@ import java.io.Serializable;
 public class UTF8StringWriter implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private byte[] tempBytes;
+    transient byte[] tempBytes;
 
     public final void writeUTF8(CharSequence str, DataOutput out) throws IOException {
         UTF8StringUtil.writeUTF8(str, out, this);
@@ -33,14 +33,6 @@ public class UTF8StringWriter implements Serializable {
 
     public final void writeUTF8(char[] buffer, int start, int length, DataOutput out) throws IOException {
         UTF8StringUtil.writeUTF8(buffer, start, length, out, this);
-    }
-
-    public byte[] getTempBytes() {
-        return tempBytes;
-    }
-
-    public void setTempBytes(byte[] tempBytes) {
-        this.tempBytes = tempBytes;
     }
 
 }
