@@ -25,6 +25,7 @@ import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexBulkLoadOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -37,10 +38,10 @@ public class ExternalIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOper
 
     public ExternalIndexBulkLoadOperatorNodePushable(IIndexDataflowHelperFactory indexDataflowHelperFactory,
             IHyracksTaskContext ctx, int partition, int[] fieldPermutation, float fillFactor, boolean verifyInput,
-            long numElementsHint, boolean checkIfEmptyIndex, RecordDescriptor recDesc, int version)
-            throws HyracksDataException {
+            long numElementsHint, boolean checkIfEmptyIndex, RecordDescriptor recDesc, int version,
+            ITupleFilterFactory tupleFilterFactory) throws HyracksDataException {
         super(indexDataflowHelperFactory, ctx, partition, fieldPermutation, fillFactor, verifyInput, numElementsHint,
-                checkIfEmptyIndex, recDesc);
+                checkIfEmptyIndex, recDesc, tupleFilterFactory);
         this.version = version;
     }
 

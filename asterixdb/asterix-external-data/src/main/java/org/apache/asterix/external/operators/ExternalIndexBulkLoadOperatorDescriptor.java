@@ -24,6 +24,7 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 
@@ -31,13 +32,16 @@ public class ExternalIndexBulkLoadOperatorDescriptor extends TreeIndexBulkLoadOp
 
     private static final long serialVersionUID = 1L;
     private final int version;
+    private final ITupleFilterFactory tupleFilterFactory;
 
     public ExternalIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, IIndexDataflowHelperFactory indexHelperFactory, int version) {
+            boolean checkIfEmptyIndex, IIndexDataflowHelperFactory indexHelperFactory, int version,
+            ITupleFilterFactory tupleFilterFactory) {
         super(spec, outRecDesc, fieldPermutation, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
                 indexHelperFactory);
         this.version = version;
+        this.tupleFilterFactory = tupleFilterFactory;
     }
 
     @Override
@@ -45,7 +49,7 @@ public class ExternalIndexBulkLoadOperatorDescriptor extends TreeIndexBulkLoadOp
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new ExternalIndexBulkLoadOperatorNodePushable(indexHelperFactory, ctx, partition, fieldPermutation,
                 fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
-                recordDescProvider.getInputRecordDescriptor(this.getActivityId(), 0), version);
+                recordDescProvider.getInputRecordDescriptor(this.getActivityId(), 0), version, tupleFilterFactory);
     }
 
 }
