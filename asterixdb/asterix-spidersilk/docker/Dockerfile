@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM java:8-jre
+FROM centos:7
 
-RUN apt update && apt install -y iptables
+USER root
+
+RUN yum install -y unzip git which docker-client java-1.8.0-openjdk-headless
