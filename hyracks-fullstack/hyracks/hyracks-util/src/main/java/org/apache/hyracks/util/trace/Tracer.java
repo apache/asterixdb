@@ -44,7 +44,7 @@ public class Tracer implements ITracer {
     private long categories;
     private final TraceCategoryRegistry registry;
 
-    private static final int pid = PidHelper.getPid();
+    private static final long pid = PidHelper.getPid();
 
     public Tracer(String name, long categories, TraceCategoryRegistry registry) {
         final String traceLoggerName = Tracer.class.getName() + ".Traces." + name;

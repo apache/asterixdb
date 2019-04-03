@@ -75,7 +75,7 @@ public final class NodeRegistration implements Serializable {
 
     private final NetworkAddress messagingPort;
 
-    private final int pid;
+    private final long pid;
 
     private final NodeCapacity capacity;
 
@@ -190,7 +190,7 @@ public final class NodeRegistration implements Serializable {
         return messagingPort;
     }
 
-    public int getPid() {
+    public long getPid() {
         return pid;
     }
 }

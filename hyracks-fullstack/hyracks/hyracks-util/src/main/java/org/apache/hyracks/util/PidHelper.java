@@ -21,6 +21,7 @@ package org.apache.hyracks.util;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.apache.logging.log4j.Level;
@@ -34,11 +35,20 @@ public class PidHelper {
     private PidHelper() {
     }
 
-    public static int getPid() {
+    public static long getPid() {
         return getPid(ManagementFactory.getRuntimeMXBean());
     }
 
-    public static int getPid(RuntimeMXBean runtimeMXBean) {
+    public static long getPid(RuntimeMXBean runtimeMXBean) {
+        // TODO: replace with direct invoke of getPid() once compatibility is at JDK 10 or higher
+        try {
+            Method getPidMethod = runtimeMXBean.getClass().getMethod("getPid");
+            return (Long) getPidMethod.invoke(runtimeMXBean);
+        } catch (NoSuchMethodException e) {
+            LOGGER.debug("ignoring exception trying to find getPid() (expected pre-JDK 10)", e);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            LOGGER.debug("ignoring exception trying to execute getPid()", e);
+        }
         try {
             Field jvmField = runtimeMXBean.getClass().getDeclaredField("jvm");
             jvmField.setAccessible(true);

@@ -79,7 +79,7 @@ public class NodeControllerData {
 
     private final Map<String, String> systemProperties;
 
-    private final int pid;
+    private final long pid;
 
     private final HeartbeatSchema hbSchema;
 
