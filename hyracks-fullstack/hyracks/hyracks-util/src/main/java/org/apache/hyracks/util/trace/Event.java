@@ -28,14 +28,14 @@ final class Event {
     public final long cat;
     public final ITracer.Phase ph;
     public final long ts;
-    public final int pid;
+    public final long pid;
     public final long tid;
     public final ITracer.Scope scope;
     public final String args;
     public final TraceCategoryRegistry registry;
 
-    private Event(String name, long cat, ITracer.Phase ph, long ts, int pid, long tid, ITracer.Scope scope, String args,
-            TraceCategoryRegistry registry) {
+    private Event(String name, long cat, ITracer.Phase ph, long ts, long pid, long tid, ITracer.Scope scope,
+            String args, TraceCategoryRegistry registry) {
         this.name = name;
         this.cat = cat;
         this.ph = ph;
@@ -51,7 +51,7 @@ final class Event {
         return (System.nanoTime() - NANOTIME_DELTA_TO_EPOCH) / 1000;
     }
 
-    public static Event create(String name, long cat, ITracer.Phase ph, int pid, long tid, ITracer.Scope scope,
+    public static Event create(String name, long cat, ITracer.Phase ph, long pid, long tid, ITracer.Scope scope,
             String args, TraceCategoryRegistry registry) {
         return new Event(name, cat, ph, timestamp(), pid, tid, scope, args, registry);
     }
