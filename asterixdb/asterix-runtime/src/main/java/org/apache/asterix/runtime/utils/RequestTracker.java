@@ -99,12 +99,14 @@ public class RequestTracker implements IRequestTracker {
     }
 
     private void untrack(IClientRequest request) {
-        runningRequests.remove(request.getId());
-        final String clientContextId = request.getClientContextId();
-        if (clientContextId != null) {
-            clientIdRequests.remove(request.getClientContextId());
+        final IClientRequest completedRequest = runningRequests.remove(request.getId());
+        if (completedRequest != null) {
+            final String clientContextId = completedRequest.getClientContextId();
+            if (clientContextId != null) {
+                clientIdRequests.remove(completedRequest.getClientContextId());
+            }
+            archive(completedRequest);
         }
-        archive(request);
     }
 
     private synchronized void archive(IClientRequest request) {

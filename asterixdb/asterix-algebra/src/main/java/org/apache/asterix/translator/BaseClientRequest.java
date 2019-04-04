@@ -33,6 +33,7 @@ public abstract class BaseClientRequest implements IClientRequest {
     private boolean complete;
     private final IRequestReference requestReference;
     private boolean cancellable = false;
+    private volatile long completionTime = -1;
     protected volatile State state = State.RECEIVED;
 
     public BaseClientRequest(IRequestReference requestReference) {
@@ -46,6 +47,7 @@ public abstract class BaseClientRequest implements IClientRequest {
         }
         complete = true;
         state = State.COMPLETED;
+        completionTime = System.currentTimeMillis();
     }
 
     @Override
@@ -63,6 +65,11 @@ public abstract class BaseClientRequest implements IClientRequest {
     @Override
     public synchronized void markCancellable() {
         cancellable = true;
+    }
+
+    @Override
+    public synchronized boolean isCancelled() {
+        return state == State.CANCELLED;
     }
 
     @Override
@@ -102,7 +109,8 @@ public abstract class BaseClientRequest implements IClientRequest {
     private String getElapsedTime() {
         // this is just an estimation as the request might have been received on a node with a different system time
         // TODO add dynamic time unit
-        return System.currentTimeMillis() - requestReference.getTime() + "ms";
+        long runningTime = completionTime > 0 ? completionTime : System.currentTimeMillis();
+        return runningTime - requestReference.getTime() + "ms";
     }
 
     protected abstract void doCancel(ICcApplicationContext appCtx) throws HyracksDataException;

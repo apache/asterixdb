@@ -42,6 +42,13 @@ public interface IClientRequest {
     }
 
     /**
+     * A flag indicating if the request has been cancelled
+     *
+     * @return true if the request was cancelled, otherwise false
+     */
+    boolean isCancelled();
+
+    /**
      * A system wide unique id representing this {@link IClientRequest}
      *
      * @return the system request id

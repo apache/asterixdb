@@ -2623,6 +2623,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 hcc.waitForCompletion(jobId);
             } else {
                 hcc.waitForCompletion(jobId);
+                ensureNotCancelled(clientRequest);
                 printer.print(jobId);
             }
         } catch (Exception e) {
@@ -2996,5 +2997,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void validateDatasetState(MetadataProvider metadataProvider, Dataset dataset, SourceLocation sourceLoc)
             throws Exception {
         validateIfResourceIsActiveInFeed(metadataProvider.getApplicationContext(), dataset, sourceLoc);
+    }
+
+    private static void ensureNotCancelled(ClientRequest clientRequest) throws RuntimeDataException {
+        if (clientRequest.isCancelled()) {
+            throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, clientRequest.getId());
+        }
     }
 }
