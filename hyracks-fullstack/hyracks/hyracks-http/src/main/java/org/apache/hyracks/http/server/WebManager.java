@@ -24,11 +24,17 @@ import java.util.List;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.internal.logging.Log4J2LoggerFactory;
 
 public class WebManager {
     private final List<HttpServer> servers;
     private final EventLoopGroup bosses;
     private final EventLoopGroup workers;
+
+    static {
+        // bootstrap netty with log4j2 logging
+        io.netty.util.internal.logging.InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
+    }
 
     /**
      * Create a web manager with number of bosses = 1

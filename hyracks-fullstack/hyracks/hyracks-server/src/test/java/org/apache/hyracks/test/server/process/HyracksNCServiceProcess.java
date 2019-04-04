@@ -20,21 +20,19 @@ package org.apache.hyracks.test.server.process;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.control.nc.service.NCService;
 
 public class HyracksNCServiceProcess extends HyracksServerProcess {
+    private static final AtomicInteger ncServiceCounter = new AtomicInteger();
 
-    public HyracksNCServiceProcess(File configFile, File logFile, File appHome, File workingDir) {
+    HyracksNCServiceProcess(File configFile, File logFile, File appHome, File workingDir) {
+        super("nc" + ncServiceCounter.incrementAndGet());
         this.configFile = configFile;
         this.logFile = logFile;
         this.appHome = appHome;
         this.workingDir = workingDir;
-    }
-
-    public HyracksNCServiceProcess(File configFile, File logFile, File appHome, File workingDir, File log4jPath) {
-        this(configFile, logFile, appHome, workingDir);
-        args.add("-Dlog4j.configurationFile=file://" + log4jPath.getAbsolutePath());
     }
 
     @Override

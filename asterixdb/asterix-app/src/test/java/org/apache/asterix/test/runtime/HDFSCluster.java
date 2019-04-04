@@ -59,17 +59,18 @@ public class HDFSCluster {
 
     /**
      * Instantiates the (Mini) DFS Cluster with the configured number of datanodes.
-     * Post instantiation, data is laoded to HDFS.
+     * Post instantiation, data is loaded to HDFS.
      * Called prior to running the Runtime test suite.
      */
     public void setup() throws Exception {
-        setup("");
+        setup(new File("."));
     }
 
-    public void setup(String basePath) throws Exception {
-        conf.addResource(new Path(basePath + PATH_TO_HADOOP_CONF + "/core-site.xml"));
-        conf.addResource(new Path(basePath + PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
-        conf.addResource(new Path(basePath + PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
+    public void setup(File basePath) throws Exception {
+        File hadoopConfDir = new File(basePath, PATH_TO_HADOOP_CONF);
+        conf.addResource(new Path(new File(hadoopConfDir, "core-site.xml").getPath()));
+        conf.addResource(new Path(new File(hadoopConfDir, "mapred-site.xml").getPath()));
+        conf.addResource(new Path(new File(hadoopConfDir, "hdfs-site.xml").getPath()));
         cleanupLocal();
         conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, MINIDFS_BASEDIR);
         MiniDFSCluster.Builder build = new MiniDFSCluster.Builder(conf);
@@ -81,10 +82,10 @@ public class HDFSCluster {
         loadData(basePath);
     }
 
-    private void loadData(String localDataRoot) throws IOException {
+    private void loadData(File localDataRoot) throws IOException {
         Path destDir = new Path(HDFS_PATH);
         dfs.mkdirs(destDir);
-        File srcDir = new File(localDataRoot + DATA_PATH);
+        File srcDir = new File(localDataRoot, DATA_PATH);
         if (srcDir.exists()) {
             File[] listOfFiles = srcDir.listFiles();
             for (File srcFile : listOfFiles) {

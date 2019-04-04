@@ -18,17 +18,19 @@
  */
 package org.apache.asterix.test.server;
 
+import static org.apache.hyracks.util.file.FileUtil.joinPath;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
@@ -44,9 +46,9 @@ import org.junit.runners.Parameterized.Parameters;
 public class RecoveryIT {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String PATH_ACTUAL = "target" + File.separator + "rttest" + File.separator;
+    private static final String PATH_ACTUAL = joinPath("target", "rttest");
     private static final String PATH_BASE = "src/test/resources/transactionts/";
-    private static final String HDFS_BASE = "../asterix-app/";
+    private static final File HDFS_BASE = new File("..", "asterix-app");
     private TestCaseContext tcCtx;
     private static File asterixInstallerPath;
     private static File installerTargetPath;
@@ -68,17 +70,17 @@ public class RecoveryIT {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
-        File externalTestsJar =
-                new File(StringUtils.join(new String[] { "..", "asterix-external-data", "target" }, File.separator))
-                        .listFiles((dir, name) -> name.matches("asterix-external-data-.*-tests.jar"))[0];
+        File externalTestsJar = Objects.requireNonNull(new File(joinPath("..", "asterix-external-data", "target"))
+                .listFiles((dir, name) -> name.matches("asterix-external-data-.*-tests.jar")))[0];
 
         asterixInstallerPath = new File(System.getProperty("user.dir"));
         installerTargetPath = new File(new File(asterixInstallerPath.getParentFile(), "asterix-server"), "target");
         reportPath = new File(installerTargetPath, "failsafe-reports").getAbsolutePath();
-        ncServiceSubDirName =
-                installerTargetPath.list((dir, name) -> name.matches("asterix-server.*binary-assembly"))[0];
+        ncServiceSubDirName = Objects.requireNonNull(
+                installerTargetPath.list((dir, name) -> name.matches("asterix-server.*binary-assembly")))[0];
         ncServiceSubPath = new File(installerTargetPath, ncServiceSubDirName).getAbsolutePath();
-        ncServiceHomeDirName = new File(ncServiceSubPath).list(((dir, name) -> name.matches("apache-asterixdb.*")))[0];
+        ncServiceHomeDirName = Objects.requireNonNull(
+                new File(ncServiceSubPath).list(((dir, name) -> name.matches("apache-asterixdb.*"))))[0];
         ncServiceHomePath = new File(ncServiceSubPath, ncServiceHomeDirName).getAbsolutePath();
 
         LOGGER.info("NCSERVICE_HOME=" + ncServiceHomePath);
@@ -89,14 +91,12 @@ public class RecoveryIT {
         env = pb.environment();
         env.put("NCSERVICE_HOME", ncServiceHomePath);
         env.put("JAVA_HOME", System.getProperty("java.home"));
-        scriptHomePath = asterixInstallerPath + File.separator + "src" + File.separator + "test" + File.separator
-                + "resources" + File.separator + "transactionts" + File.separator + "scripts";
+        scriptHomePath =
+                joinPath(asterixInstallerPath.getPath(), "src", "test", "resources", "transactionts", "scripts");
         env.put("SCRIPT_HOME", scriptHomePath);
 
-        TestExecutor.executeScript(pb,
-                scriptHomePath + File.separator + "setup_teardown" + File.separator + "configure_and_validate.sh");
-        TestExecutor.executeScript(pb,
-                scriptHomePath + File.separator + "setup_teardown" + File.separator + "stop_and_delete.sh");
+        TestExecutor.executeScript(pb, joinPath(scriptHomePath, "setup_teardown", "configure_and_validate.sh"));
+        TestExecutor.executeScript(pb, joinPath(scriptHomePath, "setup_teardown", "stop_and_delete.sh"));
         HDFSCluster.getInstance().setup(HDFS_BASE);
     }
 
@@ -104,11 +104,9 @@ public class RecoveryIT {
     public static void tearDown() throws Exception {
         File outdir = new File(PATH_ACTUAL);
         FileUtils.deleteDirectory(outdir);
-        File dataCopyDir =
-                new File(ncServiceHomePath + File.separator + ".." + File.separator + ".." + File.separator + "data");
+        File dataCopyDir = new File(joinPath(ncServiceHomePath, "..", "..", "data"));
         FileUtils.deleteDirectory(dataCopyDir);
-        TestExecutor.executeScript(pb,
-                scriptHomePath + File.separator + "setup_teardown" + File.separator + "stop_and_delete.sh");
+        TestExecutor.executeScript(pb, joinPath(scriptHomePath, "setup_teardown", "stop_and_delete.sh"));
         HDFSCluster.getInstance().cleanup();
     }
 

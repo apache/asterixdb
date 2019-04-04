@@ -18,11 +18,8 @@
  */
 package org.apache.asterix.test.server;
 
-import static org.apache.asterix.test.server.NCServiceExecutionIT.APP_HOME;
-import static org.apache.asterix.test.server.NCServiceExecutionIT.ASTERIX_APP_DIR;
-import static org.apache.asterix.test.server.NCServiceExecutionIT.INSTANCE_DIR;
-import static org.apache.asterix.test.server.NCServiceExecutionIT.LOG_DIR;
-import static org.apache.asterix.test.server.NCServiceExecutionIT.TARGET_DIR;
+import static org.apache.asterix.test.server.NCServiceExecutionIT.*;
+import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -33,12 +30,11 @@ import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.test.server.process.HyracksVirtualCluster;
-import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,13 +45,11 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class NcLifecycleIT {
 
-    private static final String PATH_BASE =
-            FileUtil.joinPath("src", "test", "resources", "integrationts", "NcLifecycle");
-    private static final String CONF_DIR =
-            StringUtils.join(new String[] { TARGET_DIR, "test-classes", "NcLifecycleIT" }, File.separator);
-    private static final String PATH_ACTUAL = FileUtil.joinPath("target", "ittest");
+    private static final String PATH_BASE = joinPath("src", "test", "resources", "integrationts", "NcLifecycle");
+    private static final String CONF_DIR = joinPath(TARGET_DIR, "test-classes", "NcLifecycleIT");
+    private static final String PATH_ACTUAL = joinPath("target", "ittest");
     private static final Logger LOGGER = LogManager.getLogger();
-    private static String reportPath = new File(FileUtil.joinPath("target", "failsafe-reports")).getAbsolutePath();
+    private static final File reportPath = new File("target", "failsafe-reports");
     private static final TestExecutor testExecutor = new TestExecutor();
     private static HyracksVirtualCluster cluster;
 
@@ -66,7 +60,7 @@ public class NcLifecycleIT {
     }
 
     @Rule
-    public TestRule retainLogs = new RetainLogsRule(NCServiceExecutionIT.ASTERIX_APP_DIR, reportPath, this);
+    public TestRule retainLogs = new RetainLogsRule(ASTERIX_APP_DIR, reportPath, this);
 
     @Before
     public void before() throws Exception {
@@ -76,12 +70,12 @@ public class NcLifecycleIT {
             FileUtils.deleteDirectory(instanceDir);
         }
 
-        cluster = new HyracksVirtualCluster(new File(APP_HOME), new File(ASTERIX_APP_DIR));
-        cluster.addNCService(new File(CONF_DIR, "ncservice1.conf"), new File(LOG_DIR, "ncservice1.log"));
-        cluster.addNCService(new File(CONF_DIR, "ncservice2.conf"), new File(LOG_DIR, "ncservice2.log"));
+        cluster = new HyracksVirtualCluster(APP_HOME, ASTERIX_APP_DIR);
+        cluster.addNCService(new File(CONF_DIR, "ncservice1.conf"), null);
+        cluster.addNCService(new File(CONF_DIR, "ncservice2.conf"), null);
 
         // Start CC
-        cluster.start(new File(CONF_DIR, "cc.conf"), new File(LOG_DIR, "cc.log"));
+        cluster.start(new File(CONF_DIR, "cc.conf"), null);
         LOGGER.info("Instance created.");
         testExecutor.waitForClusterActive(30, TimeUnit.SECONDS);
         LOGGER.info("Instance is in ACTIVE state.");
@@ -92,6 +86,12 @@ public class NcLifecycleIT {
         LOGGER.info("Destroying instance...");
         cluster.stop();
         LOGGER.info("Instance destroyed.");
+    }
+
+    @AfterClass
+    public static void checkLogFiles() {
+        NCServiceExecutionIT.checkLogFiles(new File(TARGET_DIR, NcLifecycleIT.class.getSimpleName()), "asterix_nc1",
+                "asterix_nc2");
     }
 
     @Test

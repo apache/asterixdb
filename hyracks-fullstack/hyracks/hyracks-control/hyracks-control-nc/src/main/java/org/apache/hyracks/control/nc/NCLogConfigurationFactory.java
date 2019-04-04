@@ -23,6 +23,8 @@ import java.net.URI;
 
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.ConfigurationFactory;
@@ -34,6 +36,7 @@ import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
 public class NCLogConfigurationFactory extends ConfigurationFactory {
+    private static final Logger LOGGER = LogManager.getLogger();
     private NCConfig config;
 
     public NCLogConfigurationFactory(NCConfig config) {
@@ -43,6 +46,8 @@ public class NCLogConfigurationFactory extends ConfigurationFactory {
     public Configuration createConfiguration(ConfigurationBuilder<BuiltConfiguration> builder) {
         String nodeId = config.getNodeId();
         File logDir = new File(config.getLogDir());
+        File ncLog = new File(logDir, "nc-" + nodeId + ".log");
+        LOGGER.warn("logs are being redirected to: {}", ncLog::getAbsolutePath);
         builder.setStatusLevel(Level.WARN);
         builder.setConfigurationName("RollingBuilder");
         // create a rolling file appender
@@ -51,11 +56,11 @@ public class NCLogConfigurationFactory extends ConfigurationFactory {
         ComponentBuilder triggeringPolicy = builder.newComponent("Policies")
                 .addComponent(builder.newComponent("CronTriggeringPolicy").addAttribute("schedule", "0 0 0 * * ?"))
                 .addComponent(builder.newComponent("SizeBasedTriggeringPolicy").addAttribute("size", "50M"));
-        AppenderComponentBuilder defaultRoll = builder.newAppender("default", "RollingFile")
-                .addAttribute("fileName", new File(logDir, "nc-" + nodeId + ".log").getAbsolutePath())
-                .addAttribute("filePattern",
-                        new File(logDir, "nc-" + nodeId + "-%d{MM-dd-yy-ss}.log.gz").getAbsolutePath())
-                .add(defaultLayout).addComponent(triggeringPolicy);
+        AppenderComponentBuilder defaultRoll =
+                builder.newAppender("default", "RollingFile").addAttribute("fileName", ncLog.getAbsolutePath())
+                        .addAttribute("filePattern",
+                                new File(logDir, "nc-" + nodeId + "-%d{MM-dd-yy-ss}.log.gz").getAbsolutePath())
+                        .add(defaultLayout).addComponent(triggeringPolicy);
         builder.add(defaultRoll);
 
         // create the new logger
@@ -74,9 +79,9 @@ public class NCLogConfigurationFactory extends ConfigurationFactory {
         LayoutComponentBuilder traceLayout = builder.newLayout("PatternLayout").addAttribute("pattern", "%m,%n")
                 .addAttribute("header", "[").addAttribute("footer", "]");
         AppenderComponentBuilder traceRoll = builder.newAppender("trace", "RollingFile")
-                .addAttribute("fileName", logDir + "trace-" + nodeId + ".log")
-                .addAttribute("filePattern", logDir + "trace-" + nodeId + "-%d{MM-dd-yy-ss}.log.gz").add(traceLayout)
-                .addComponent(triggeringPolicy);
+                .addAttribute("fileName", new File(logDir, "trace-" + nodeId + ".log"))
+                .addAttribute("filePattern", new File(logDir, "trace-" + nodeId + "-%d{MM-dd-yy-ss}.log.gz"))
+                .add(traceLayout).addComponent(triggeringPolicy);
         builder.add(traceRoll);
         builder.add(builder.newLogger("org.apache.hyracks.util.trace.Tracer.Traces", Level.forName("TRACER", 570))
                 .add(builder.newAppenderRef("trace")).addAttribute("additivity", false));

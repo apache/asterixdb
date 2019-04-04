@@ -14,12 +14,15 @@
  */
 package org.apache.asterix.test.server;
 
+import static org.apache.asterix.test.server.NCServiceExecutionIT.APP_HOME;
+import static org.apache.asterix.test.server.NCServiceExecutionIT.ASTERIX_APP_DIR;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
@@ -29,7 +32,6 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.FileUtils;
@@ -75,20 +77,18 @@ public abstract class AbstractExecutionIT {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
-        File externalTestsJar =
-                new File(StringUtils.join(new String[] { "..", "asterix-external-data", "target" }, File.separator))
-                        .listFiles((dir, name) -> name.matches("asterix-external-data-.*-tests.jar"))[0];
+        File externalTestsJar = Objects.requireNonNull(new File(joinPath("..", "asterix-external-data", "target"))
+                .listFiles((dir, name) -> name.matches("asterix-external-data-.*-tests.jar")))[0];
 
-        FileUtils.copyFile(externalTestsJar,
-                new File(NCServiceExecutionIT.APP_HOME + "/repo", externalTestsJar.getName()));
+        FileUtils.copyFile(externalTestsJar, new File(APP_HOME, joinPath("repo", externalTestsJar.getName())));
 
         NCServiceExecutionIT.setUp();
 
         FileUtils.copyDirectoryStructure(new File(joinPath("..", "asterix-app", "data")),
-                new File(NCServiceExecutionIT.ASTERIX_APP_DIR + "/clusters/local/working_dir/data"));
+                new File(ASTERIX_APP_DIR, joinPath("clusters", "local", "working_dir", "data")));
 
         FileUtils.copyDirectoryStructure(new File(joinPath("..", "asterix-app", "target", "data")),
-                new File(NCServiceExecutionIT.ASTERIX_APP_DIR + "/clusters/local/working_dir/target/data"));
+                new File(ASTERIX_APP_DIR, joinPath("clusters", "local", "working_dir", "target", "data")));
 
         // Set the node resolver to be the identity resolver that expects node names
         // to be node controller ids; a valid assumption in test environment.

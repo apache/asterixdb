@@ -23,6 +23,8 @@ import java.net.URI;
 
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.ConfigurationFactory;
@@ -34,6 +36,7 @@ import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
 public class CCLogConfigurationFactory extends ConfigurationFactory {
+    private static final Logger LOGGER = LogManager.getLogger();
     private CCConfig config;
 
     public CCLogConfigurationFactory(CCConfig config) {
@@ -42,6 +45,8 @@ public class CCLogConfigurationFactory extends ConfigurationFactory {
 
     public Configuration createConfiguration(ConfigurationBuilder<BuiltConfiguration> builder) {
         File logDir = new File(config.getLogDir());
+        File ccLog = new File(logDir, "cc.log");
+        LOGGER.warn("logs are being redirected to: {}", ccLog::getAbsolutePath);
         builder.setStatusLevel(Level.WARN);
         builder.setConfigurationName("RollingBuilder");
         // create a rolling file appender
@@ -50,10 +55,9 @@ public class CCLogConfigurationFactory extends ConfigurationFactory {
         ComponentBuilder triggeringPolicy = builder.newComponent("Policies")
                 .addComponent(builder.newComponent("CronTriggeringPolicy").addAttribute("schedule", "0 0 0 * * ?"))
                 .addComponent(builder.newComponent("SizeBasedTriggeringPolicy").addAttribute("size", "50M"));
-        AppenderComponentBuilder defaultRoll =
-                builder.newAppender("default", "RollingFile").addAttribute("fileName", new File(logDir, "cc.log"))
-                        .addAttribute("filePattern", new File(logDir, "cc-%d{MM-dd-yy}.log.gz")).add(defaultLayout)
-                        .addComponent(triggeringPolicy);
+        AppenderComponentBuilder defaultRoll = builder.newAppender("default", "RollingFile")
+                .addAttribute("fileName", ccLog).addAttribute("filePattern", new File(logDir, "cc-%d{MM-dd-yy}.log.gz"))
+                .add(defaultLayout).addComponent(triggeringPolicy);
         builder.add(defaultRoll);
 
         // create the new logger

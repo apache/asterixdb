@@ -33,13 +33,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.common.config.BuildProperties;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
-import org.apache.asterix.test.runtime.SqlppExecutionTest;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,19 +44,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.util.internal.logging.Log4J2LoggerFactory;
 
 public class VersionApiServletTest {
-
-    @Before
-    public void setup() throws Exception {
-        // Starts test asterixdb cluster.
-        SqlppExecutionTest.setUp();
-    }
-
-    @After
-    public void teardown() throws Exception {
-        // Tears down the asterixdb cluster.
-        SqlppExecutionTest.tearDown();
+    static {
+        // bootstrap netty with log4j2 logging
+        io.netty.util.internal.logging.InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
     }
 
     @Test

@@ -65,22 +65,6 @@ public class HyracksVirtualCluster {
     }
 
     /**
-     * Creates and starts an NCService.
-     *
-     * @param configFile
-     *            - full path to an ncservice.conf. May be null to accept all defaults.
-     * @throws IOException
-     *             - if there are errors starting the process.
-     */
-    public HyracksNCServiceProcess addNCService(File configFile, File logFile, File log4jConfig) throws IOException {
-        HyracksNCServiceProcess proc =
-                new HyracksNCServiceProcess(configFile, logFile, appHome, workingDir, log4jConfig);
-        proc.start();
-        ncProcs.add(proc);
-        return proc;
-    }
-
-    /**
      * Starts the CC, initializing the cluster. Expects that any NCs referenced
      * in the cluster configuration have already been started with addNCService().
      *
@@ -92,22 +76,6 @@ public class HyracksVirtualCluster {
      */
     public HyracksCCProcess start(File ccConfigFile, File logFile) throws IOException {
         ccProc = new HyracksCCProcess(ccConfigFile, logFile, appHome, workingDir);
-        ccProc.start();
-        return ccProc;
-    }
-
-    /**
-     * Starts the CC, initializing the cluster. Expects that any NCs referenced
-     * in the cluster configuration have already been started with addNCService().
-     *
-     * @param ccConfigFile
-     *            - full path to a cluster conf file. May be null to accept all
-     *            defaults, although this is seldom useful since there are no NCs.
-     * @throws IOException
-     *             - if there are errors starting the process.
-     */
-    public HyracksCCProcess start(File ccConfigFile, File logFile, File log4jConfig) throws IOException {
-        ccProc = new HyracksCCProcess(ccConfigFile, logFile, appHome, workingDir, log4jConfig);
         ccProc.start();
         return ccProc;
     }

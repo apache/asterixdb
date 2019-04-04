@@ -18,9 +18,12 @@
  */
 package org.apache.hyracks.test.server.process;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,14 +35,21 @@ import org.apache.logging.log4j.Logger;
 abstract class HyracksServerProcess {
     private static final Logger LOGGER = LogManager.getLogger();
 
+    protected final String processName;
     protected Process process;
+    protected Thread pipeThread;
     protected File configFile = null;
     protected File logFile = null;
     protected File appHome = null;
     protected File workingDir = null;
     protected List<String> args = new ArrayList<>();
 
+    protected HyracksServerProcess(String processName) {
+        this.processName = processName;
+    }
+
     public void start() throws IOException {
+
         String[] cmd = buildCommand();
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Starting command: " + Arrays.toString(cmd));
@@ -47,33 +57,44 @@ abstract class HyracksServerProcess {
 
         ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.redirectErrorStream(true);
+        pb.directory(workingDir);
         if (logFile != null) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Logging to: " + logFile.getCanonicalPath());
-            }
+            LOGGER.info("Logging to: " + logFile.getCanonicalPath());
             logFile.getParentFile().mkdirs();
             try (FileWriter writer = new FileWriter(logFile, true)) {
                 writer.write("---------------------\n");
             }
             pb.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile));
+            process = pb.start();
         } else {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Logfile not set, subprocess will output to stdout");
-            }
+            pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
+            process = pb.start();
+            pipeThread = new Thread(() -> {
+                try (BufferedReader reader =
+                        new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        System.out.println(processName + ": " + line);
+                    }
+                } catch (IOException e) {
+                    LOGGER.debug("exception reading process pipe", e);
+                }
+            });
+            pipeThread.start();
         }
-        pb.directory(workingDir);
-        process = pb.start();
     }
 
     public void stop() {
         process.destroy();
         try {
             boolean success = process.waitFor(30, TimeUnit.SECONDS);
-            if (LOGGER.isWarnEnabled()) {
-                LOGGER.warn("Killing unresponsive NC Process");
-            }
             if (!success) {
+                LOGGER.warn("Killing unresponsive NC Process");
                 process.destroyForcibly();
+            }
+            if (pipeThread != null) {
+                pipeThread.interrupt();
+                pipeThread.join();
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -106,7 +127,7 @@ abstract class HyracksServerProcess {
             cList.add(configFile.getAbsolutePath());
         }
         addCmdLineArgs(cList);
-        return cList.toArray(new String[cList.size()]);
+        return cList.toArray(new String[0]);
     }
 
     protected void addJvmArgs(List<String> cList) {

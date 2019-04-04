@@ -25,16 +25,12 @@ import org.apache.hyracks.control.cc.CCDriver;
 
 public class HyracksCCProcess extends HyracksServerProcess {
 
-    public HyracksCCProcess(File configFile, File logFile, File appHome, File workingDir) {
+    HyracksCCProcess(File configFile, File logFile, File appHome, File workingDir) {
+        super(" cc");
         this.configFile = configFile;
         this.logFile = logFile;
         this.appHome = appHome;
         this.workingDir = workingDir;
-    }
-
-    public HyracksCCProcess(File configFile, File logFile, File appHome, File workingDir, File log4jPath) {
-        this(configFile, logFile, appHome, workingDir);
-        args.add("-Dlog4j.configurationFile=file://" + log4jPath.getAbsolutePath());
     }
 
     @Override
