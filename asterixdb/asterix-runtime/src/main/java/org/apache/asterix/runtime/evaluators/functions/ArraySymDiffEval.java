@@ -25,6 +25,7 @@ import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.asterix.om.util.container.IObjectPool;
@@ -50,16 +51,17 @@ public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
     private final IBinaryComparator comp;
     private final IntArrayList intHashes;
 
-    public ArraySymDiffEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLocation,
+    ArraySymDiffEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLocation,
             IAType[] argTypes) throws HyracksDataException {
-        super(args, ctx, true, sourceLocation, argTypes);
+        super(args, ctx, sourceLocation, argTypes);
         arrayListAllocator = new ListObjectPool<>(new ArrayListFactory<>());
         valueCounterAllocator = new ListObjectPool<>(new ValueCounterFactory());
         hashes = new Int2ObjectOpenHashMap<>();
-        comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
-                .createBinaryComparator();
+        // for functions that accept multiple lists arguments, they will be casted to open, hence item is ANY
+        comp = BinaryComparatorFactoryProvider.INSTANCE
+                .getBinaryComparatorFactory(BuiltinType.ANY, BuiltinType.ANY, true).createBinaryComparator();
         intHashes = new IntArrayList(50, 10);
-        binaryHashFunction = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(null)
+        binaryHashFunction = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(BuiltinType.ANY)
                 .createBinaryHashFunction();
     }
 
@@ -68,7 +70,7 @@ public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
         private int listIndex;
         private int counter;
 
-        protected ValueCounter() {
+        ValueCounter() {
         }
 
         protected void reset(IPointable value, int listIndex, int counter) {

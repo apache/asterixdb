@@ -20,6 +20,7 @@
 package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -29,15 +30,21 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public abstract class AbstractScalarDistinctAggregateDescriptor extends AbstractScalarAggregateDescriptor {
 
     private static final long serialVersionUID = 1L;
+    private IAType aggFieldType;
 
     public AbstractScalarDistinctAggregateDescriptor(IFunctionDescriptorFactory aggFuncDescFactory) {
         super(aggFuncDescFactory);
     }
 
     @Override
+    public void setImmutableStates(Object... states) {
+        aggFieldType = (IAType) states[0];
+    }
+
+    @Override
     protected IScalarEvaluator createScalarAggregateEvaluator(IAggregateEvaluator aggEval,
             ScanCollectionDescriptor.ScanCollectionUnnestingFunctionFactory scanCollectionFactory,
             IHyracksTaskContext ctx) throws HyracksDataException {
-        return new GenericScalarDistinctAggregateFunction(aggEval, scanCollectionFactory, ctx, sourceLoc);
+        return new GenericScalarDistinctAggregateFunction(aggEval, scanCollectionFactory, ctx, sourceLoc, aggFieldType);
     }
 }

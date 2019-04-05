@@ -23,14 +23,13 @@ import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -63,17 +62,8 @@ public class ArrayInsertDescriptor extends AbstractScalarFunctionDynamicDescript
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ArrayInsertDescriptor();
-        }
-
-        @Override
-        public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_ARGUMENTS_TYPE;
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY =
+            DescriptorFactoryUtil.createFactory(ArrayInsertDescriptor::new, FunctionTypeInferers.SET_ARGUMENTS_TYPE);
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -102,8 +92,8 @@ public class ArrayInsertDescriptor extends AbstractScalarFunctionDynamicDescript
         private final TaggedValuePointable positionArg;
         private final IScalarEvaluator positionArgEval;
 
-        public ArrayInsertEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
-            super(args, ctx, 0, 2, args.length - 2, argTypes, false, sourceLoc, true, true);
+        ArrayInsertEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+            super(args, ctx, 0, 2, args.length - 2, argTypes, true, true);
             positionArg = new TaggedValuePointable();
             positionArgEval = args[1].createScalarEvaluator(ctx);
         }
@@ -111,6 +101,7 @@ public class ArrayInsertDescriptor extends AbstractScalarFunctionDynamicDescript
         @Override
         protected int getPosition(IFrameTupleReference tuple, IPointable l, ATypeTag listTag)
                 throws HyracksDataException {
+            // TODO(ali): could be optimized to evaluate only once if we know the argument is a constant
             positionArgEval.evaluate(tuple, positionArg);
             if (positionArg.getTag() == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
                 return RETURN_MISSING;

@@ -22,19 +22,18 @@ import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
 
 import java.io.IOException;
 
-import org.apache.asterix.builders.AbvsBuilderFactory;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
+import org.apache.asterix.om.util.container.ObjectFactories;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -54,20 +53,19 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
     private final IPointable[] listsArgs;
     private final IScalarEvaluator[] listsEval;
     private final SourceLocation sourceLocation;
-    private final boolean isComparingElements;
-    private final PointableAllocator pointableAllocator;
-    private final IObjectPool<IMutableValueStorage, ATypeTag> storageAllocator;
+    private final IObjectPool<IPointable, Void> pointablePool;
+    private final IObjectPool<IMutableValueStorage, Void> storageAllocator;
     private final IAType[] argTypes;
     private final CastTypeEvaluator caster;
     private OrderedListBuilder orderedListBuilder;
     private UnorderedListBuilder unorderedListBuilder;
 
-    public AbstractArrayProcessArraysEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx,
-            boolean isComparingElements, SourceLocation sourceLoc, IAType[] argTypes) throws HyracksDataException {
+    AbstractArrayProcessArraysEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLoc,
+            IAType[] argTypes) throws HyracksDataException {
         orderedListBuilder = null;
         unorderedListBuilder = null;
-        pointableAllocator = new PointableAllocator();
-        storageAllocator = new ListObjectPool<>(new AbvsBuilderFactory());
+        pointablePool = new ListObjectPool<>(ObjectFactories.VOID_FACTORY);
+        storageAllocator = new ListObjectPool<>(ObjectFactories.STORAGE_FACTORY);
         finalResult = new ArrayBackedValueStorage();
         listAccessor = new ListAccessor();
         caster = new CastTypeEvaluator();
@@ -79,7 +77,6 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
             listsEval[i] = args[i].createScalarEvaluator(ctx);
         }
         sourceLocation = sourceLoc;
-        this.isComparingElements = isComparingElements;
         this.argTypes = argTypes;
     }
 
@@ -141,7 +138,7 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
         } finally {
             release();
             storageAllocator.reset();
-            pointableAllocator.reset();
+            pointablePool.reset();
             caster.deallocatePointables();
         }
     }
@@ -149,7 +146,7 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
     private void processLists(IPointable[] listsArgs, IAsterixListBuilder listBuilder) throws IOException {
         boolean itemInStorage;
         boolean isUsingItem;
-        IPointable item = pointableAllocator.allocateEmpty();
+        IPointable item = pointablePool.allocate(null);
         ArrayBackedValueStorage storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
         storage.reset();
 
@@ -159,13 +156,9 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
             // process the items of the current list
             for (int j = 0; j < listAccessor.size(); j++) {
                 itemInStorage = listAccessor.getOrWriteItem(j, item, storage);
-                if (ATYPETAGDESERIALIZER.deserialize(item.getByteArray()[item.getStartOffset()]).isDerivedType()
-                        && isComparingElements) {
-                    throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLocation);
-                }
                 isUsingItem = processItem(item, listIndex, listBuilder);
                 if (isUsingItem) {
-                    item = pointableAllocator.allocateEmpty();
+                    item = pointablePool.allocate(null);
                     if (itemInStorage) {
                         storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
                         storage.reset();

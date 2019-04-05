@@ -26,6 +26,8 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.aggregates.utils.PointableHashSet;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -37,7 +39,6 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
@@ -54,8 +55,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
  * It returns (or throws an error at runtime) in order:
  * 1. missing, if any argument is missing.
  * 2. null, if the list arg is null or it's not a list.
- * 3. an error if any list item is a list/object type (i.e. derived type) since deep equality is not yet supported.
- * 4. otherwise, a new list.
+ * 3. otherwise, a new list.
  *
  * </pre>
  */
@@ -94,7 +94,7 @@ public class ArrayDistinctDescriptor extends AbstractScalarFunctionDynamicDescri
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayDistinctFunction(args, ctx, sourceLoc);
+                return new ArrayDistinctFunction(args, ctx);
             }
         };
     }
@@ -104,10 +104,11 @@ public class ArrayDistinctDescriptor extends AbstractScalarFunctionDynamicDescri
         private IPointable item;
         private ArrayBackedValueStorage storage;
 
-        public ArrayDistinctFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLoc)
-                throws HyracksDataException {
+        ArrayDistinctFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             super(args, ctx, inputListType);
-            itemSet = new PointableHashSet(arrayListAllocator, sourceLoc);
+            IAType itemType = inputListType.getTypeTag().isListType()
+                    ? ((AbstractCollectionType) inputListType).getItemType() : BuiltinType.ANY;
+            itemSet = new PointableHashSet(arrayListAllocator, itemType);
         }
 
         @Override

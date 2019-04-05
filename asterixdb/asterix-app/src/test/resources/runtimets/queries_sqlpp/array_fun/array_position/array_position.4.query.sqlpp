@@ -19,9 +19,25 @@
 
 /*
 * Description  : Testing an array function that needs to compare elements
-* Expected Res : Error due to comparing non-primitive values, which is [2,3]
+* Expected Res : Success
 */
 
 use TinySocial;
 
-select array_position([5,1,9], [2,3]);
+{
+  "t1": (select array_position([1, [2,3], 5], [2,3])),
+  "t2": (select array_position([1, [2,3.0], 5], [2,3])),
+  "t3": (select array_position([1, [2,3.8], 5], [2,3.8])),
+  "t4": (select array_position([ [7,4,3], [1], [9,2], [4,0,2,2] ], [9,2])),
+  "t5": (select array_position([ [7,4,3], [1], [9,2], [4,0,2,2] ], [2,9])),
+  "t6": (select array_position([ [7,4,3], [1], [9,2], [4,0,2,2] ], [9,3])),
+  "t7": (select array_position([ ["green","black"], "yellow", ["blue", "orange"] ], ["blue","orange"])),
+  "t8": (select array_position([ ["green","black"], ["yellow"], ["blue", "orange"] ], ["blue","orange"])),
+  "t9": (select array_position([ ["green","black"], "yellow", ["blue", "orange"] ], ["Blue","orange"])),
+  "t10": (select array_position([9,2], [9,2])),
+  "t11": (from openDs select id, array_position(list_f, [1,2,1]) order by id),
+  "t12": (from openDs select id, array_position(list_f, ["red", "black"]) order by id),
+  "t13": (from openDs select id, array_position(list_f, {"state": "CA", "country": "US", "zip_code": 92863}) order by id),
+  "t14": (from closedDs select id, array_position(list_f, {"state": "CA", "country": "US", "zip_code": 92863}) order by id),
+  "t15": (from closedDs select id, array_position(list_f, {"state": "OR", "country": "US"}) order by id)
+};

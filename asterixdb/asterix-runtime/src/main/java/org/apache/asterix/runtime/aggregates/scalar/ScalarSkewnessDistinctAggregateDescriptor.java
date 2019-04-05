@@ -22,6 +22,8 @@ package org.apache.asterix.runtime.aggregates.scalar;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.std.SkewnessAggregateDescriptor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ScalarSkewnessDistinctAggregateDescriptor extends AbstractScalarDistinctAggregateDescriptor {
@@ -30,7 +32,8 @@ public class ScalarSkewnessDistinctAggregateDescriptor extends AbstractScalarDis
 
     public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SKEWNESS_DISTINCT;
 
-    public static final IFunctionDescriptorFactory FACTORY = ScalarSkewnessDistinctAggregateDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = DescriptorFactoryUtil
+            .createFactory(ScalarSkewnessDistinctAggregateDescriptor::new, FunctionTypeInferers.SET_ARGUMENT_TYPE);
 
     private ScalarSkewnessDistinctAggregateDescriptor() {
         super(SkewnessAggregateDescriptor.FACTORY);

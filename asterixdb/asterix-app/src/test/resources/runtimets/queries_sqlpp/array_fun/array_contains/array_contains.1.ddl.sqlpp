@@ -22,6 +22,12 @@ create  dataverse TinySocial;
 
 use TinySocial;
 
+create type addressType as closed {state: string, country: string, zip_code: int?};
+create type openType as {id: int};
+create type closedType as closed {id: int, list_f: [addressType]};
+
+create dataset openDs(openType) primary key id;
+create dataset closedDs(closedType) primary key id;
 
 create type TinySocial.TwitterUserType as
 {

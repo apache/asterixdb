@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.asterix.builders.AbvsBuilderFactory;
 import org.apache.asterix.builders.ArrayListFactory;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.aggregates.utils.PointableHashSet;
@@ -49,12 +50,12 @@ public class GenericScalarDistinctAggregateFunction extends GenericScalarAggrega
     private final PointableHashSet itemSet;
 
     public GenericScalarDistinctAggregateFunction(IAggregateEvaluator aggFunc,
-            IUnnestingEvaluatorFactory scanCollectionFactory, IHyracksTaskContext context, SourceLocation sourceLoc)
-            throws HyracksDataException {
+            IUnnestingEvaluatorFactory scanCollectionFactory, IHyracksTaskContext context, SourceLocation sourceLoc,
+            IAType itemType) throws HyracksDataException {
         super(aggFunc, scanCollectionFactory, context, sourceLoc);
         storageAllocator = new ListObjectPool<>(new AbvsBuilderFactory());
         arrayListAllocator = new ListObjectPool<>(new ArrayListFactory<>());
-        itemSet = new PointableHashSet(arrayListAllocator, sourceLoc) {
+        itemSet = new PointableHashSet(arrayListAllocator, itemType) {
             @Override
             protected IPointable makeStoredItem(IPointable item) throws HyracksDataException {
                 ArrayBackedValueStorage abvs = (ArrayBackedValueStorage) storageAllocator.allocate(null);

@@ -19,9 +19,15 @@
 
 /*
 * Description  : Testing an array function that needs to compare elements
-* Expected Res : Error due to comparing non-primitive values
+* Expected Res : Success
 */
 
 use TinySocial;
 
-select array_replace([3,2,3], [3], 9);
+{
+  "t1": (array_replace([ [5,1], [6,2], [9,7], [6,2], [10,11]], [6,2], [0,0])),
+  "t2": (array_replace([ {"id": 1, "age": 34}, {"id": 2, "age": 29}, {"id": 3, "age": 90}, {"id": 4, "age": 10}], {"id": 2, "age": 29}, {"id": 8, "age": 200})),
+  "t3": (from openDs select array_replace(list_f, [9999,3], "replace done") order by id),
+  "t4": (from openDs select array_replace(list_f, {"state": "OH", "country": "US"}, "replace done") order by id),
+  "t5": (from closedDs select array_replace(list_f, {"state": "OH", "country": "US"}, "replace done") order by id)
+};

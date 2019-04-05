@@ -25,21 +25,19 @@ import java.io.IOException;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -70,27 +68,18 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * - any argument is null (except for val2).
  * - input list is not a list.
  * - num_times is not numeric or it's a floating-point number with decimals, e.g, 3.2 (3.0 is OK).
- * 3. an error if val1 is a list/object type (i.e. derived type) since deep equality is not yet supported.
- * 4. otherwise, a new list.
+ * 3. otherwise, a new list.
  *
  * </pre>
  */
 public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType inputListType;
+    private IAType targetValueType;
     private IAType newValueType;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ArrayReplaceDescriptor();
-        }
-
-        @Override
-        public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_ARGUMENTS_TYPE;
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY =
+            DescriptorFactoryUtil.createFactory(ArrayReplaceDescriptor::new, FunctionTypeInferers.SET_ARGUMENTS_TYPE);
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -100,6 +89,7 @@ public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescrip
     @Override
     public void setImmutableStates(Object... states) {
         inputListType = (IAType) states[0];
+        targetValueType = (IAType) states[1];
         newValueType = (IAType) states[2];
     }
 
@@ -135,7 +125,7 @@ public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescrip
         private IAsterixListBuilder orderedListBuilder;
         private IAsterixListBuilder unorderedListBuilder;
 
-        public ArrayReplaceEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+        ArrayReplaceEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             storage = new ArrayBackedValueStorage();
             listEval = args[0].createScalarEvaluator(ctx);
             targetValEval = args[1].createScalarEvaluator(ctx);
@@ -154,8 +144,9 @@ public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescrip
             caster = new CastTypeEvaluator();
             orderedListBuilder = null;
             unorderedListBuilder = null;
-            comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
-                    .createBinaryComparator();
+            // the input list will be opened, therefore, the type of left (item type) is ANY
+            comp = BinaryComparatorFactoryProvider.INSTANCE
+                    .getBinaryComparatorFactory(BuiltinType.ANY, targetValueType, true).createBinaryComparator();
         }
 
         @Override
@@ -192,16 +183,10 @@ public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescrip
                 PointableHelper.setNull(result);
                 return;
             }
-
-            if (targetTag.isDerivedType()) {
-                throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLoc);
-            }
-
             try {
                 IAType defaultOpenType = DefaultOpenFieldType.getDefaultOpenFieldType(listType);
                 caster.resetAndAllocate(defaultOpenType, inputListType, listEval);
                 caster.cast(tempList, list);
-
                 defaultOpenType = DefaultOpenFieldType.getDefaultOpenFieldType(newValTag);
                 if (defaultOpenType != null) {
                     caster.resetAndAllocate(defaultOpenType, newValueType, newValEval);
@@ -209,7 +194,6 @@ public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescrip
                 } else {
                     newVal.set(tempVal);
                 }
-
                 int max = (int) maxDouble;
                 // create list
                 IAsterixListBuilder listBuilder;
@@ -224,10 +208,8 @@ public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescrip
                     }
                     listBuilder = unorderedListBuilder;
                 }
-
                 listBuilder.reset((AbstractCollectionType) DefaultOpenFieldType.getDefaultOpenFieldType(listType));
                 listAccessor.reset(list.getByteArray(), list.getStartOffset());
-
                 int counter = 0;
                 byte[] targetBytes = target.getByteArray();
                 int offset = target.getStartOffset();

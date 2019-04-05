@@ -22,6 +22,8 @@ package org.apache.asterix.runtime.aggregates.scalar;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.std.SqlSumAggregateDescriptor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ScalarSqlSumDistinctAggregateDescriptor extends AbstractScalarDistinctAggregateDescriptor {
@@ -30,7 +32,8 @@ public class ScalarSqlSumDistinctAggregateDescriptor extends AbstractScalarDisti
 
     public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_SUM_DISTINCT;
 
-    public static final IFunctionDescriptorFactory FACTORY = ScalarSqlSumDistinctAggregateDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = DescriptorFactoryUtil
+            .createFactory(ScalarSqlSumDistinctAggregateDescriptor::new, FunctionTypeInferers.SET_ARGUMENT_TYPE);
 
     private ScalarSqlSumDistinctAggregateDescriptor() {
         super(SqlSumAggregateDescriptor.FACTORY);

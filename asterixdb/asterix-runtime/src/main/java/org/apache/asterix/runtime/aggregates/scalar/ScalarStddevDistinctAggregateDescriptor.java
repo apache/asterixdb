@@ -22,6 +22,8 @@ package org.apache.asterix.runtime.aggregates.scalar;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.std.StddevAggregateDescriptor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ScalarStddevDistinctAggregateDescriptor extends AbstractScalarDistinctAggregateDescriptor {
@@ -30,7 +32,8 @@ public class ScalarStddevDistinctAggregateDescriptor extends AbstractScalarDisti
 
     public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_STDDEV_SAMP_DISTINCT;
 
-    public static final IFunctionDescriptorFactory FACTORY = ScalarStddevDistinctAggregateDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = DescriptorFactoryUtil
+            .createFactory(ScalarStddevDistinctAggregateDescriptor::new, FunctionTypeInferers.SET_ARGUMENT_TYPE);
 
     private ScalarStddevDistinctAggregateDescriptor() {
         super(StddevAggregateDescriptor.FACTORY);

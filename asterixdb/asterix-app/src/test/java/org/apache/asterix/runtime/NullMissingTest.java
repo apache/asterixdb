@@ -31,8 +31,11 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionCollection;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -50,14 +53,14 @@ public class NullMissingTest {
         List<IFunctionDescriptorFactory> functions =
                 FunctionCollection.createDefaultFunctionCollection().getFunctionDescriptorFactories();
         int testedFunctions = 0;
-        Set<FunctionIdentifier> excluded = new HashSet<>();
-        buildExcluded(excluded);
+        Set<FunctionIdentifier> functionsRequiringTypes = new HashSet<>();
+        buildFunctionsRequiringTypes(functionsRequiringTypes);
         for (IFunctionDescriptorFactory func : functions) {
             String className = func.getClass().getName();
             // We test all generated functions except
             // record and cast functions, which requires type settings (we test them in runtime tests).
             if (className.contains("Gen") && !className.contains("record") && !className.contains("Cast")) {
-                testFunction(func, excluded, className);
+                testFunction(func, className, functionsRequiringTypes);
                 ++testedFunctions;
             }
         }
@@ -66,21 +69,25 @@ public class NullMissingTest {
                 testedFunctions >= 217);
     }
 
-    private void testFunction(IFunctionDescriptorFactory funcFactory, Set<FunctionIdentifier> excluded,
-            String className) throws Exception {
+    private void testFunction(IFunctionDescriptorFactory funcFactory, String className,
+            Set<FunctionIdentifier> functionsRequiringTypes) throws Exception {
         IFunctionDescriptor functionDescriptor = funcFactory.createFunctionDescriptor();
-        if (!(functionDescriptor instanceof AbstractScalarFunctionDynamicDescriptor)
-                || excluded.contains(functionDescriptor.getIdentifier())) {
+        if (!(functionDescriptor instanceof AbstractScalarFunctionDynamicDescriptor)) {
             System.out.println("Excluding " + className);
             return;
         }
         System.out.println("Testing " + className);
         AbstractScalarFunctionDynamicDescriptor funcDesc = (AbstractScalarFunctionDynamicDescriptor) functionDescriptor;
         int inputArity = funcDesc.getIdentifier().getArity();
-        Iterator<IScalarEvaluatorFactory[]> argEvalFactoryIterator = getArgCombinations(inputArity);
+        boolean t = functionsRequiringTypes.contains(funcDesc.getIdentifier()); // whether to build args types or not
+        Iterator<Pair<IScalarEvaluatorFactory[], IAType[]>> argEvalFactoryIterator = getArgCombinations(inputArity, t);
         int index = 0;
         while (argEvalFactoryIterator.hasNext()) {
-            IScalarEvaluatorFactory evalFactory = funcDesc.createEvaluatorFactory(argEvalFactoryIterator.next());
+            Pair<IScalarEvaluatorFactory[], IAType[]> next = argEvalFactoryIterator.next();
+            if (next.second != null) {
+                funcDesc.setImmutableStates((Object[]) next.second);
+            }
+            IScalarEvaluatorFactory evalFactory = funcDesc.createEvaluatorFactory(next.first);
             IHyracksTaskContext ctx = mock(IHyracksTaskContext.class);
             IScalarEvaluator evaluator = evalFactory.createScalarEvaluator(ctx);
             IPointable resultPointable = new VoidPointable();
@@ -96,10 +103,10 @@ public class NullMissingTest {
         }
     }
 
-    private Iterator<IScalarEvaluatorFactory[]> getArgCombinations(int inputArity) {
+    private Iterator<Pair<IScalarEvaluatorFactory[], IAType[]>> getArgCombinations(int inputArity, boolean buildTypes) {
         int argSize = inputArity >= 0 ? inputArity : 3;
         final int numCombinations = 1 << argSize;
-        return new Iterator<IScalarEvaluatorFactory[]>() {
+        return new Iterator<Pair<IScalarEvaluatorFactory[], IAType[]>>() {
             private int index = 0;
 
             @Override
@@ -108,33 +115,40 @@ public class NullMissingTest {
             }
 
             @Override
-            public IScalarEvaluatorFactory[] next() {
+            public Pair<IScalarEvaluatorFactory[], IAType[]> next() {
                 IScalarEvaluatorFactory[] scalarEvaluatorFactories = new IScalarEvaluatorFactory[argSize];
+                IAType[] argsTypes = buildTypes ? new IAType[argSize] : null;
                 for (int j = 0; j < argSize; ++j) {
-                    byte serializedTypeTag = (index & (1 << j)) != 0 ? ATypeTag.SERIALIZED_MISSING_TYPE_TAG
-                            : ATypeTag.SERIALIZED_NULL_TYPE_TAG;
-                    scalarEvaluatorFactories[j] = new ConstantEvalFactory(new byte[] { serializedTypeTag });
+                    IAType type = (index & (1 << j)) != 0 ? BuiltinType.AMISSING : BuiltinType.ANULL;
+                    scalarEvaluatorFactories[j] = new ConstantEvalFactory(new byte[] { type.getTypeTag().serialize() });
+                    if (buildTypes) {
+                        argsTypes[j] = type;
+                    }
                 }
                 ++index;
-                return scalarEvaluatorFactories;
+                return new Pair<>(scalarEvaluatorFactories, argsTypes);
             }
 
         };
 
     }
 
-    // adds functions that require setImmutables be called in order to set the args types
-    private void buildExcluded(Set<FunctionIdentifier> excluded) {
-        excluded.add(BuiltinFunctions.EQ);
-        excluded.add(BuiltinFunctions.LT);
-        excluded.add(BuiltinFunctions.GT);
-        excluded.add(BuiltinFunctions.GE);
-        excluded.add(BuiltinFunctions.LE);
-        excluded.add(BuiltinFunctions.NEQ);
-        excluded.add(BuiltinFunctions.MISSING_IF);
-        excluded.add(BuiltinFunctions.NAN_IF);
-        excluded.add(BuiltinFunctions.NEGINF_IF);
-        excluded.add(BuiltinFunctions.NULL_IF);
-        excluded.add(BuiltinFunctions.POSINF_IF);
+    // those are the functions that need IATypes of their args and use them in the function constructor
+    private void buildFunctionsRequiringTypes(Set<FunctionIdentifier> functionsRequiringTypes) {
+        functionsRequiringTypes.add(BuiltinFunctions.ARRAY_POSITION);
+        functionsRequiringTypes.add(BuiltinFunctions.ARRAY_CONTAINS);
+        functionsRequiringTypes.add(BuiltinFunctions.ARRAY_SORT);
+        functionsRequiringTypes.add(BuiltinFunctions.ARRAY_DISTINCT);
+        functionsRequiringTypes.add(BuiltinFunctions.EQ);
+        functionsRequiringTypes.add(BuiltinFunctions.LT);
+        functionsRequiringTypes.add(BuiltinFunctions.GT);
+        functionsRequiringTypes.add(BuiltinFunctions.GE);
+        functionsRequiringTypes.add(BuiltinFunctions.LE);
+        functionsRequiringTypes.add(BuiltinFunctions.NEQ);
+        functionsRequiringTypes.add(BuiltinFunctions.MISSING_IF);
+        functionsRequiringTypes.add(BuiltinFunctions.NAN_IF);
+        functionsRequiringTypes.add(BuiltinFunctions.NEGINF_IF);
+        functionsRequiringTypes.add(BuiltinFunctions.NULL_IF);
+        functionsRequiringTypes.add(BuiltinFunctions.POSINF_IF);
     }
 }

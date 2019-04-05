@@ -140,6 +140,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     @Override
     public Void visitNestedTupleSourceOperator(NestedTupleSourceOperator op, ILogicalOperator arg)
             throws AlgebricksException {
+        if (op.getOperatorTag() != arg.getOperatorTag()) {
+            return null;
+        }
         ILogicalOperator inputToCreator1 = op.getSourceOperator();
         NestedTupleSourceOperator nts = (NestedTupleSourceOperator) arg;
         ILogicalOperator inputToCreator2 = nts.getSourceOperator();

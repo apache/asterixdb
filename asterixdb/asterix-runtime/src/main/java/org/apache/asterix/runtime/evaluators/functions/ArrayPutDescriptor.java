@@ -21,18 +21,15 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.IOException;
 
 import org.apache.asterix.builders.IAsterixListBuilder;
-import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.functions.IFunctionTypeInferer;
-import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -43,7 +40,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * <pre>
@@ -56,8 +52,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * It returns (or throws an error at runtime) in order:
  * 1. missing, if any argument is missing.
  * 2. null, if any argument is null.
- * 3. an error if any value arg is of a list/object type (i.e. derived type) since deep equality is not yet supported.
- * 4. otherwise, a new list.
+ * 3. otherwise, a new list.
  *
  * </pre>
  */
@@ -65,17 +60,8 @@ public class ArrayPutDescriptor extends AbstractScalarFunctionDynamicDescriptor 
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ArrayPutDescriptor();
-        }
-
-        @Override
-        public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_ARGUMENTS_TYPE;
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY =
+            DescriptorFactoryUtil.createFactory(ArrayPutDescriptor::new, FunctionTypeInferers.SET_ARGUMENTS_TYPE);
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -106,26 +92,14 @@ public class ArrayPutDescriptor extends AbstractScalarFunctionDynamicDescriptor 
         private final IBinaryComparator comp;
         private final boolean[] add;
 
-        public ArrayPutEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
-            super(args, ctx, 0, 1, args.length - 1, argTypes, true, sourceLoc, true, false);
-            comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
-                    .createBinaryComparator();
+        ArrayPutEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+            super(args, ctx, 0, 1, args.length - 1, argTypes, true, false);
+            // input list will be opened since makeOpen=true. all values will be opened, too. hence ANY for comp.
+            comp = BinaryComparatorFactoryProvider.INSTANCE
+                    .getBinaryComparatorFactory(BuiltinType.ANY, BuiltinType.ANY, true).createBinaryComparator();
             storage = new ArrayBackedValueStorage();
             item = new VoidPointable();
             add = new boolean[args.length - 1];
-        }
-
-        @Override
-        protected int getPosition(IFrameTupleReference tuple, IPointable l, ATypeTag listTag)
-                throws HyracksDataException {
-            // l = list
-            if (listTag == ATypeTag.ARRAY) {
-                return AOrderedListSerializerDeserializer.getNumberOfItems(l.getByteArray(), l.getStartOffset());
-            } else if (listTag == ATypeTag.MULTISET) {
-                return AUnorderedListSerializerDeserializer.getNumberOfItems(l.getByteArray(), l.getStartOffset());
-            } else {
-                return RETURN_NULL;
-            }
         }
 
         @Override

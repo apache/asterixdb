@@ -22,6 +22,8 @@ package org.apache.asterix.runtime.aggregates.scalar;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.std.SqlMaxAggregateDescriptor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ScalarSqlMaxDistinctAggregateDescriptor extends AbstractScalarDistinctAggregateDescriptor {
@@ -30,7 +32,8 @@ public class ScalarSqlMaxDistinctAggregateDescriptor extends AbstractScalarDisti
 
     public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_MAX_DISTINCT;
 
-    public static final IFunctionDescriptorFactory FACTORY = ScalarSqlMaxDistinctAggregateDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = DescriptorFactoryUtil
+            .createFactory(ScalarSqlMaxDistinctAggregateDescriptor::new, FunctionTypeInferers.SET_ARGUMENT_TYPE);
 
     public ScalarSqlMaxDistinctAggregateDescriptor() {
         super(SqlMaxAggregateDescriptor.FACTORY);

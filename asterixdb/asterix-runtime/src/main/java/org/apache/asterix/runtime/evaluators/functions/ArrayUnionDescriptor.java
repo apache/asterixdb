@@ -29,6 +29,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
@@ -60,8 +61,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  * 1. missing, if any argument is missing.
  * 2. an error if the input lists are not of the same type (one is an ordered list while the other is unordered).
  * 3. null, if any input list is null or is not a list.
- * 4. an error if any list item is a list/object type (i.e. derived type) since deep equality is not yet supported.
- * 5. otherwise, a new list.
+ * 4. otherwise, a new list.
  *
  * </pre>
  */
@@ -110,14 +110,15 @@ public class ArrayUnionDescriptor extends AbstractScalarFunctionDynamicDescripto
         private final Int2ObjectMap<List<IPointable>> hashes;
         private final IBinaryComparator comp;
 
-        public ArrayUnionEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
-            super(args, ctx, true, sourceLoc, argTypes);
+        ArrayUnionEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+            super(args, ctx, sourceLoc, argTypes);
             pointableListAllocator = new ListObjectPool<>(new ArrayListFactory<>());
             hashes = new Int2ObjectOpenHashMap<>();
-            comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
-                    .createBinaryComparator();
-            binaryHashFunction = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(null)
-                    .createBinaryHashFunction();
+            // for functions that accept multiple lists arguments, they will be casted to open, hence item is ANY
+            comp = BinaryComparatorFactoryProvider.INSTANCE
+                    .getBinaryComparatorFactory(BuiltinType.ANY, BuiltinType.ANY, true).createBinaryComparator();
+            binaryHashFunction = BinaryHashFunctionFactoryProvider.INSTANCE
+                    .getBinaryHashFunctionFactory(BuiltinType.ANY).createBinaryHashFunction();
         }
 
         @Override

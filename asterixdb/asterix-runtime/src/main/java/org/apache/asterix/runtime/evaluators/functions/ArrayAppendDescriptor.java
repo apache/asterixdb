@@ -18,24 +18,18 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.functions.IFunctionTypeInferer;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * <pre>
@@ -55,17 +49,8 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ArrayAppendDescriptor();
-        }
-
-        @Override
-        public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_ARGUMENTS_TYPE;
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY =
+            DescriptorFactoryUtil.createFactory(ArrayAppendDescriptor::new, FunctionTypeInferers.SET_ARGUMENTS_TYPE);
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -92,21 +77,8 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
 
     public class ArrayAppendEval extends AbstractArrayAddRemoveEval {
 
-        public ArrayAppendEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
-            super(args, ctx, 0, 1, args.length - 1, argTypes, false, sourceLoc, true, true);
-        }
-
-        @Override
-        protected int getPosition(IFrameTupleReference tuple, IPointable l, ATypeTag listTag)
-                throws HyracksDataException {
-            // l = list
-            if (listTag == ATypeTag.ARRAY) {
-                return AOrderedListSerializerDeserializer.getNumberOfItems(l.getByteArray(), l.getStartOffset());
-            } else if (listTag == ATypeTag.MULTISET) {
-                return AUnorderedListSerializerDeserializer.getNumberOfItems(l.getByteArray(), l.getStartOffset());
-            } else {
-                return RETURN_NULL;
-            }
+        ArrayAppendEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+            super(args, ctx, 0, 1, args.length - 1, argTypes, true, true);
         }
     }
 }

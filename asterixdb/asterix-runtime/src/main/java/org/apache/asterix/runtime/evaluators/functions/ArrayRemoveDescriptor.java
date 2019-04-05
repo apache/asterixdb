@@ -23,14 +23,15 @@ import java.io.IOException;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -53,8 +54,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * It returns (or throws an error at runtime) in order:
  * 1. missing, if any argument is missing.
  * 2. null, if any argument is null.
- * 3. an error if any value arg is of a list/object type (i.e. derived type) since deep equality is not yet supported.
- * 4. otherwise, a new list that has the same type as the input list.
+ * 3. otherwise, a new list that has the same type as the input list.
  *
  * </pre>
  */
@@ -62,17 +62,8 @@ public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescript
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ArrayRemoveDescriptor();
-        }
-
-        @Override
-        public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_ARGUMENTS_TYPE;
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY =
+            DescriptorFactoryUtil.createFactory(ArrayRemoveDescriptor::new, FunctionTypeInferers.SET_ARGUMENTS_TYPE);
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -87,7 +78,7 @@ public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayRemoveEval(args, ctx);
+                return new ArrayRemoveEval(args, ctx, argTypes);
             }
         };
     }
@@ -97,22 +88,21 @@ public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescript
         argTypes = (IAType[]) states;
     }
 
-    public class ArrayRemoveEval extends AbstractArrayAddRemoveEval {
+    public static class ArrayRemoveEval extends AbstractArrayAddRemoveEval {
         private final ArrayBackedValueStorage storage;
         private final IPointable item;
-        private final IBinaryComparator comp;
+        private final IBinaryComparator[] comp;
 
-        public ArrayRemoveEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
-            super(args, ctx, 0, 1, args.length - 1, argTypes, true, sourceLoc, false, false);
+        ArrayRemoveEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, IAType[] argTypes)
+                throws HyracksDataException {
+            super(args, ctx, 0, 1, args.length - 1, argTypes, false, false);
             storage = new ArrayBackedValueStorage();
             item = new VoidPointable();
-            comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
-                    .createBinaryComparator();
+            comp = createValuesComparators(argTypes);
         }
 
         @Override
-        protected int getPosition(IFrameTupleReference tuple, IPointable listArg, ATypeTag listTag)
-                throws HyracksDataException {
+        protected int getPosition(IFrameTupleReference tuple, IPointable listArg, ATypeTag listTag) {
             return 0;
         }
 
@@ -125,7 +115,7 @@ public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescript
                 listAccessor.getOrWriteItem(i, item, storage);
                 addItem = true;
                 for (int j = 0; j < removed.length; j++) {
-                    if (comp.compare(item.getByteArray(), item.getStartOffset(), item.getLength(),
+                    if (comp[j].compare(item.getByteArray(), item.getStartOffset(), item.getLength(),
                             removed[j].getByteArray(), removed[j].getStartOffset(), removed[j].getLength()) == 0) {
                         addItem = false;
                         break;
@@ -135,6 +125,19 @@ public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescript
                     listBuilder.addItem(item);
                 }
             }
+        }
+
+        private static IBinaryComparator[] createValuesComparators(IAType[] argTypes) {
+            // one comparator for each value since the values will not be opened (they won't be added to a list).
+            // for the list item, it's either the item type if input list is determined to be a list or ANY if not.
+            IAType itemType = argTypes[0].getTypeTag().isListType()
+                    ? ((AbstractCollectionType) argTypes[0]).getItemType() : BuiltinType.ANY;
+            IBinaryComparator[] comparators = new IBinaryComparator[argTypes.length - 1];
+            for (int i = 1; i < argTypes.length; i++) {
+                comparators[i - 1] = BinaryComparatorFactoryProvider.INSTANCE
+                        .getBinaryComparatorFactory(itemType, argTypes[i], true).createBinaryComparator();
+            }
+            return comparators;
         }
     }
 }

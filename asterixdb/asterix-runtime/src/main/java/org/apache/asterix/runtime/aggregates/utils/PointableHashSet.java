@@ -21,18 +21,15 @@ package org.apache.asterix.runtime.aggregates.utils;
 
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -44,8 +41,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  */
 public class PointableHashSet {
 
-    private final SourceLocation sourceLoc;
-
     private final IObjectPool<List<IPointable>, ATypeTag> listAllocator;
 
     private final IBinaryComparator comparator;
@@ -54,12 +49,11 @@ public class PointableHashSet {
 
     private final Int2ObjectMap<List<IPointable>> hashes;
 
-    public PointableHashSet(IObjectPool<List<IPointable>, ATypeTag> listAllocator, SourceLocation sourceLoc) {
+    public PointableHashSet(IObjectPool<List<IPointable>, ATypeTag> listAllocator, IAType itemType) {
         this.listAllocator = listAllocator;
-        this.sourceLoc = sourceLoc;
-        comparator = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(null, null, true)
+        comparator = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(itemType, itemType, true)
                 .createBinaryComparator();
-        hashFunction = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(null)
+        hashFunction = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(itemType)
                 .createBinaryHashFunction();
         hashes = new Int2ObjectOpenHashMap<>();
     }
@@ -73,11 +67,6 @@ public class PointableHashSet {
      * Returns {@code true} if the set did not already contain this item, {@code false} otherwise.
      */
     public boolean add(IPointable item) throws HyracksDataException {
-        if (EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(item.getByteArray()[item.getStartOffset()])
-                .isDerivedType()) {
-            throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLoc);
-        }
-
         // look up if it already exists
         int hash = hashFunction.hash(item.getByteArray(), item.getStartOffset(), item.getLength());
         List<IPointable> sameHashes = hashes.get(hash);

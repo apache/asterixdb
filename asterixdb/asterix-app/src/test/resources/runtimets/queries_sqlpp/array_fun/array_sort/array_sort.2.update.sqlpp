@@ -25,3 +25,15 @@ insert into d1([
 {"id":1, "compType":{"sth":33}},
 {"id":2, "compType":{"sth":44}, "followers":["John Green", "Emily Jones", "Abby"]}
 ]);
+
+insert into openDs([
+{"id": 1, "list_f": [ [1,2,1], [9999,3] , [5,1], [4,2], [5,1], [1,2] ]},
+{"id": 2, "list_f": [ ["white","blue","magenta"], ["red", "black"] , ["blue", "orange"] ]},
+{"id": 3, "list_f": [ {"state": "OH", "country": "US"} , {"state": "CA", "country": "US", "zip_code": 92863} , {"state": "CA", "country": "US", "zip_code": 12863}]},
+{"id": 4, "list_f": null},
+{"id": 5}
+]);
+
+insert into closedDs([
+{"id": 1, "list_f": [ {"state": "OH", "country": "US"} , {"state": "CA", "country": "US", "zip_code": 92863} , {"state": "CA", "country": "US", "zip_code": 12863}]}
+]);

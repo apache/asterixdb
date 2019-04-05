@@ -47,9 +47,8 @@ import org.apache.hyracks.data.std.api.IPointable;
  * It returns (or throws an error at runtime) in order:
  * 1. missing, if any argument is missing.
  * 2. null, if any argument is null.
- * 3. an error if the value is of a list/object type (i.e. derived type) since deep equality is not yet supported.
- * 4. null, if the input list is not a list.
- * 5. otherwise, returns the position of the value in the list or -1 if not found.
+ * 3. null, if the input list is not a list.
+ * 4. otherwise, returns the position of the value in the list or -1 if not found.
  *
  * </pre>
  */
@@ -95,11 +94,12 @@ public class ArrayPositionDescriptor extends AbstractScalarFunctionDynamicDescri
     public class ArrayPositionEval extends AbstractArraySearchEval {
         private final ISerializerDeserializer intSerde;
 
-        public ArrayPositionEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
-            super(args, ctx, sourceLoc, argTypes);
+        ArrayPositionEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+            super(args, ctx, argTypes);
             intSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
         }
 
+        @SuppressWarnings("unchecked") // unchecked call
         @Override
         public void processResult(AMutableInt32 intValue, IPointable result) throws HyracksDataException {
             storage.reset();

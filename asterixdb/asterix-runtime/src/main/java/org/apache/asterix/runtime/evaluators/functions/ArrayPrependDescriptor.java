@@ -19,13 +19,12 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -53,17 +52,8 @@ public class ArrayPrependDescriptor extends AbstractScalarFunctionDynamicDescrip
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ArrayPrependDescriptor();
-        }
-
-        @Override
-        public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_ARGUMENTS_TYPE;
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY =
+            DescriptorFactoryUtil.createFactory(ArrayPrependDescriptor::new, FunctionTypeInferers.SET_ARGUMENTS_TYPE);
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -90,13 +80,12 @@ public class ArrayPrependDescriptor extends AbstractScalarFunctionDynamicDescrip
 
     public class ArrayPrependEval extends AbstractArrayAddRemoveEval {
 
-        public ArrayPrependEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
-            super(args, ctx, args.length - 1, 0, args.length - 1, argTypes, false, sourceLoc, true, true);
+        ArrayPrependEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+            super(args, ctx, args.length - 1, 0, args.length - 1, argTypes, true, true);
         }
 
         @Override
-        protected int getPosition(IFrameTupleReference tuple, IPointable listArg, ATypeTag listTag)
-                throws HyracksDataException {
+        protected int getPosition(IFrameTupleReference tuple, IPointable listArg, ATypeTag listTag) {
             return 0;
         }
     }

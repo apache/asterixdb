@@ -25,8 +25,8 @@ import java.io.IOException;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
@@ -36,16 +36,14 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
-    protected static final int RETURN_MISSING = -1;
-    protected static final int RETURN_NULL = -2;
-
+    static final int RETURN_MISSING = -1;
+    static final int RETURN_NULL = -2;
     private final IAType[] argTypes;
     private final ArrayBackedValueStorage storage;
     private final IPointable listArg;
@@ -54,25 +52,21 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
     private final IPointable[] valuesArgs;
     private final IScalarEvaluator listArgEval;
     private final IScalarEvaluator[] valuesEval;
-    private final SourceLocation sourceLocation;
     private final CastTypeEvaluator caster;
     private final ListAccessor listAccessor;
     private final int listOffset;
     private final int valuesOffset;
-    private final boolean comparesValues;
     private final boolean makeOpen;
     private final boolean acceptNullValues;
     private IAsterixListBuilder orderedListBuilder;
     private IAsterixListBuilder unorderedListBuilder;
 
-    public AbstractArrayAddRemoveEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, int listOffset,
-            int valuesOffset, int numValues, IAType[] argTypes, boolean comparesValues, SourceLocation sourceLocation,
-            boolean makeOpen, boolean acceptNullValues) throws HyracksDataException {
+    AbstractArrayAddRemoveEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, int listOffset,
+            int valuesOffset, int numValues, IAType[] argTypes, boolean makeOpen, boolean acceptNullValues)
+            throws HyracksDataException {
         this.listOffset = listOffset;
         this.valuesOffset = valuesOffset;
         this.argTypes = argTypes;
-        this.comparesValues = comparesValues;
-        this.sourceLocation = sourceLocation;
         this.makeOpen = makeOpen;
         this.acceptNullValues = acceptNullValues;
         orderedListBuilder = null;
@@ -93,13 +87,22 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
     }
 
     /**
+     * Returns the position at which to add the items to the list. The default is to add at the end of the list.
      * @param listType the type of the list, ordered or unordered.
-     * @param listArg the list into which to insert the items at the calculated returned position
+     * @param list the list into which to insert the items at the calculated returned position
      * @param tuple the tuple that contains the arguments including position argument
      * @return -1 if position value is missing, -2 if null, otherwise should return the adjusted position value, >= 0
      */
-    protected abstract int getPosition(IFrameTupleReference tuple, IPointable listArg, ATypeTag listType)
-            throws HyracksDataException;
+    protected int getPosition(IFrameTupleReference tuple, IPointable list, ATypeTag listType)
+            throws HyracksDataException {
+        if (listType == ATypeTag.ARRAY) {
+            return AOrderedListSerializerDeserializer.getNumberOfItems(list.getByteArray(), list.getStartOffset());
+        } else if (listType == ATypeTag.MULTISET) {
+            return AUnorderedListSerializerDeserializer.getNumberOfItems(list.getByteArray(), list.getStartOffset());
+        } else {
+            return RETURN_NULL;
+        }
+    }
 
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -109,7 +112,6 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
 
         // evaluate the position argument if provided by some functions
         int adjustedPosition = getPosition(tuple, tempList, listArgTag);
-
         if (listArgTag == ATypeTag.MISSING || adjustedPosition == RETURN_MISSING) {
             PointableHelper.setMissing(result);
             return;
@@ -123,12 +125,12 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
         // evaluate values to be added/removed
         ATypeTag valueTag;
         IAType defaultOpenType;
-        boolean encounteredNonPrimitive = false;
         try {
+            // TODO(ali): could be optimized to not evaluate the values again when they are constants
             for (int i = 0; i < valuesEval.length; i++) {
                 // cast val to open if needed. don't cast if function will return null anyway, e.g. list arg not list
                 defaultOpenType = DefaultOpenFieldType.getDefaultOpenFieldType(argTypes[i + valuesOffset].getTypeTag());
-                if (defaultOpenType != null && !returnNull) {
+                if (defaultOpenType != null && !returnNull && makeOpen) {
                     caster.resetAndAllocate(defaultOpenType, argTypes[i + valuesOffset], valuesEval[i]);
                     caster.evaluate(tuple, valuesArgs[i]);
                 } else {
@@ -136,10 +138,6 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
                 }
                 valueTag =
                         ATYPETAGDESERIALIZER.deserialize(valuesArgs[i].getByteArray()[valuesArgs[i].getStartOffset()]);
-                // for now, we don't support deep equality of object/lists. Throw an error if value is of these types
-                if (comparesValues && valueTag.isDerivedType()) {
-                    encounteredNonPrimitive = true;
-                }
                 if (valueTag == ATypeTag.MISSING) {
                     PointableHelper.setMissing(result);
                     return;
@@ -153,10 +151,6 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
                 PointableHelper.setNull(result);
                 return;
             }
-
-            if (encounteredNonPrimitive) {
-                throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLocation);
-            }
             // all arguments are valid
             AbstractCollectionType listType;
             IAsterixListBuilder listBuilder;
@@ -168,6 +162,7 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
                 listBuilder = orderedListBuilder;
                 if (makeOpen || argTypes[listOffset].getTypeTag() != ATypeTag.ARRAY) {
                     listType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
+                    // TODO(ali): maybe casting isn't needed if compile-time type=ANY if guaranteed input list is open
                     caster.resetAndAllocate(listType, argTypes[listOffset], listArgEval);
                     caster.cast(tempList, listArg);
                 } else {

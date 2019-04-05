@@ -89,8 +89,9 @@ public class ArrayConcatDescriptor extends AbstractScalarFunctionDynamicDescript
     }
 
     public class ArrayConcatEval extends AbstractArrayProcessArraysEval {
-        public ArrayConcatEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
-            super(args, ctx, false, sourceLoc, argTypes);
+
+        ArrayConcatEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+            super(args, ctx, sourceLoc, argTypes);
         }
 
         @Override
