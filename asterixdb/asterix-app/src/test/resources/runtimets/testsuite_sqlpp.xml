@@ -5745,6 +5745,11 @@
         <output-dir compare="Text">completed_requests</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="dump_index">
+        <output-dir compare="Text">dump_index</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index">
     <test-group name="index/validations">

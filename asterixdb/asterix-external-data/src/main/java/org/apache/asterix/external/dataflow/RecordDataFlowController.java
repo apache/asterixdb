@@ -24,6 +24,7 @@ import org.apache.asterix.external.api.IRecordReader;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public class RecordDataFlowController<T> extends AbstractDataFlowController {
@@ -54,9 +55,10 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController {
                 tupleForwarder.addTuple(tb);
             }
             tupleForwarder.complete();
-            recordReader.close();
         } catch (Exception e) {
             throw HyracksDataException.create(e);
+        } finally {
+            CleanupUtils.close(recordReader, null);
         }
     }
 

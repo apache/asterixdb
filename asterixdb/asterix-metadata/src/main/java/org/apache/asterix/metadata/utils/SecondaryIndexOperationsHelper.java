@@ -503,4 +503,16 @@ public abstract class SecondaryIndexOperationsHelper {
     public void setExternalFiles(List<ExternalFile> externalFiles) {
         this.externalFiles = externalFiles;
     }
+
+    public RecordDescriptor getSecondaryRecDesc() {
+        return secondaryRecDesc;
+    }
+
+    public IBinaryComparatorFactory[] getSecondaryComparatorFactories() {
+        return secondaryComparatorFactories;
+    }
+
+    public IFileSplitProvider getSecondaryFileSplitProvider() {
+        return secondaryFileSplitProvider;
+    }
 }
