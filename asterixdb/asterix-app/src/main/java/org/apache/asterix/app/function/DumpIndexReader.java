@@ -95,14 +95,13 @@ public class DumpIndexReader extends FunctionReader {
 
     private void buildJsonRecord(ITupleReference tuple) throws HyracksDataException {
         recordBuilder.setLength(0);
-        recordBuilder.append("{");
+        recordBuilder.append("{\"values\":[");
         for (int j = 0; j < tuple.getFieldCount(); ++j) {
-            recordBuilder.append("\"field-").append(j + 1).append("\":");
             bbis.setByteBuffer(ByteBuffer.wrap(tuple.getFieldData(j)), tuple.getFieldStart(j));
             recordBuilder.append(secondaryRecDesc.getFields()[j].deserialize(dis));
             recordBuilder.append(",");
         }
         recordBuilder.deleteCharAt(recordBuilder.length() - 1);
-        recordBuilder.append("}");
+        recordBuilder.append("]}");
     }
 }
