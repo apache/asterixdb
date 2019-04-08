@@ -39,7 +39,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  */
 public class CcQueryCancellationServlet extends AbstractServlet {
 
-    public static final String REQUEST_UUID_PARAM_NAME = "uuid";
+    public static final String REQUEST_UUID_PARAM_NAME = "request_id";
     private static final Logger LOGGER = LogManager.getLogger();
     private final ICcApplicationContext appCtx;
 
