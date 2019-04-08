@@ -127,7 +127,7 @@ if ps -ef | grep 'java.*org\.apache\.hyracks\.control\.[cn]c\.\([CN]CDriver\|ser
     echo "aborting"
     echo
     echo "Re-run with -f to ignore, or run stop-sample-cluster.sh -f to forcibly terminate all running ${PRODUCT} processes:"
-    cat /tmp/pids |  sed 's/^ *[0-9]* \([0-9]*\).*org\.apache\.hyracks\.control\.[cn]c[^ ]*\.\([^ ]*\) .*/\1 - \2/'
+    cat /tmp/$$_pids |  sed 's/^ *[0-9]* \([0-9]*\).*org\.apache\.hyracks\.control\.[cn]c[^ ]*\.\([^ ]*\) .*/\1 - \2/'
     rm /tmp/$$_pids
     exit 1
   fi

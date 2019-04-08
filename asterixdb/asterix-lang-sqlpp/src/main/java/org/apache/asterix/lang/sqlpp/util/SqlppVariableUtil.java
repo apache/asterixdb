@@ -34,8 +34,10 @@ import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
+import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
@@ -188,6 +190,15 @@ public class SqlppVariableUtil {
                 LetClause letClause = (LetClause) clause;
                 bindingVars.add(letClause.getVarExpr());
             }
+        }
+        return bindingVars;
+    }
+
+    public static List<VariableExpr> getBindingVariables(QuantifiedExpression qe) {
+        List<QuantifiedPair> quantifiedList = qe.getQuantifiedList();
+        List<VariableExpr> bindingVars = new ArrayList<>(quantifiedList.size());
+        for (QuantifiedPair qp : quantifiedList) {
+            bindingVars.add(qp.getVarExpr());
         }
         return bindingVars;
     }

@@ -19,6 +19,7 @@
 package org.apache.asterix.test.storage;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -127,19 +128,9 @@ public class PersistentLocalResourceRepositoryTest {
         String invalidComponentRange = invalidComponentId + AbstractLSMIndexFileManager.DELIMITER + invalidComponentId;
         FileReference indexDirRef = ncAppCtx.getIoManager().resolve(indexPath);
         String indexDir = indexDirRef.getFile().getAbsolutePath();
-        // create the invalid component files
-        Path btreePath = Paths.get(indexDir, invalidComponentRange + AbstractLSMIndexFileManager.DELIMITER
-                + AbstractLSMIndexFileManager.BTREE_SUFFIX);
-        Path filterPath = Paths.get(indexDir, invalidComponentRange + AbstractLSMIndexFileManager.DELIMITER
-                + AbstractLSMIndexFileManager.BLOOM_FILTER_SUFFIX);
-        Files.createFile(btreePath);
-        Files.createFile(filterPath);
-
-        // clean up the index partition
-        localResourceRepository.cleanup(lr.getPartition());
-        // ensure that the invalid component was deleted
-        Assert.assertFalse(btreePath.toFile().exists());
-        Assert.assertFalse(filterPath.toFile().exists());
+        ensureInvalidComponentDeleted(indexDir, invalidComponentRange, localResourceRepository, lr);
+        String invalidMergeComponentRange = "0" + AbstractLSMIndexFileManager.DELIMITER + invalidComponentId;
+        ensureInvalidComponentDeleted(indexDir, invalidMergeComponentRange, localResourceRepository, lr);
 
         // ensure that valid components still exist
         // find index valid component timestamp from checkpoint
@@ -178,5 +169,18 @@ public class PersistentLocalResourceRepositoryTest {
         integrationUtil.init(false, TEST_CONFIG_FILE_NAME);
         Assert.assertFalse(indexMetadataFile.exists());
         Assert.assertFalse(indexMetadataMaskFile.exists());
+    }
+
+    private void ensureInvalidComponentDeleted(String indexDir, String componentSeq,
+            PersistentLocalResourceRepository localResourceRepository, DatasetLocalResource lr) throws IOException {
+        Path btreePath = Paths.get(indexDir,
+                componentSeq + AbstractLSMIndexFileManager.DELIMITER + AbstractLSMIndexFileManager.BTREE_SUFFIX);
+        Path filterPath = Paths.get(indexDir,
+                componentSeq + AbstractLSMIndexFileManager.DELIMITER + AbstractLSMIndexFileManager.BLOOM_FILTER_SUFFIX);
+        Files.createFile(btreePath);
+        Files.createFile(filterPath);
+        localResourceRepository.cleanup(lr.getPartition());
+        Assert.assertFalse(btreePath.toFile().exists());
+        Assert.assertFalse(filterPath.toFile().exists());
     }
 }

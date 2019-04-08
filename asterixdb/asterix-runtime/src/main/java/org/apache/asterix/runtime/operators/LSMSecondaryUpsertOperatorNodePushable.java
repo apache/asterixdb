@@ -59,6 +59,7 @@ import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDel
  */
 public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
+    private static final int NULL_MISSING_FIELD_INDEX = 0;
     private final PermutingFrameTupleReference prevValueTuple = new PermutingFrameTupleReference();
     private final int upsertIndicatorFieldIndex;
     private final IBinaryBooleanInspector upsertIndicatorInspector;
@@ -104,9 +105,9 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
                 tuple.reset(accessor, i);
                 prevValueTuple.reset(accessor, i);
 
-                boolean isNewValueMissing = isMissing(tuple, 0);
-                boolean isOldValueMissing = isMissing(prevValueTuple, 0);
-                if (isNewValueMissing && isOldValueMissing) {
+                boolean isNewValueNullOrMissing = isNullOrMissing(tuple);
+                boolean isOldValueNullOrMissing = isNullOrMissing(prevValueTuple);
+                if (isNewValueNullOrMissing && isOldValueNullOrMissing) {
                     // No op
                     continue;
                 }
@@ -117,12 +118,12 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
                     // which are always the same
                     continue;
                 }
-                if (!isOldValueMissing) {
+                if (!isOldValueNullOrMissing) {
                     // We need to delete previous
                     abstractModCallback.setOp(Operation.DELETE);
                     lsmAccessor.forceDelete(prevValueTuple);
                 }
-                if (isUpsert && !isNewValueMissing) {
+                if (isUpsert && !isNewValueNullOrMissing) {
                     // we need to insert the new value
                     abstractModCallback.setOp(Operation.INSERT);
                     lsmAccessor.forceInsert(tuple);
@@ -137,7 +138,8 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
         FrameUtils.flushFrame(writeBuffer.getBuffer(), writer);
     }
 
-    private boolean isMissing(PermutingFrameTupleReference tuple, int fieldIdx) {
-        return TypeTagUtil.isType(tuple, fieldIdx, ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+    private static boolean isNullOrMissing(PermutingFrameTupleReference tuple) {
+        return TypeTagUtil.isType(tuple, NULL_MISSING_FIELD_INDEX, ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                || TypeTagUtil.isType(tuple, NULL_MISSING_FIELD_INDEX, ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
     }
 }

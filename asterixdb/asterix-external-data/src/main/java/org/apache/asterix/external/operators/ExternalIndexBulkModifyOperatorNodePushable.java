@@ -30,6 +30,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexBulkLoadOperatorNodePushable;
@@ -45,9 +46,10 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
 
     public ExternalIndexBulkModifyOperatorNodePushable(IIndexDataflowHelperFactory indexHelperFactory,
             IHyracksTaskContext ctx, int partition, int[] fieldPermutation, float fillFactor, boolean verifyInput,
-            long numElementsHint, RecordDescriptor inputRecDesc, int[] deletedFiles) throws HyracksDataException {
+            long numElementsHint, RecordDescriptor inputRecDesc, int[] deletedFiles,
+            ITupleFilterFactory tupleFilterFactory) throws HyracksDataException {
         super(indexHelperFactory, ctx, partition, fieldPermutation, fillFactor, verifyInput, numElementsHint, false,
-                inputRecDesc);
+                inputRecDesc, tupleFilterFactory);
         this.deletedFiles = deletedFiles;
     }
 

@@ -372,10 +372,14 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
 
     @Override
     public Void visit(QuantifiedExpression qe, Collection<VariableExpr> freeVars) throws CompilationException {
+        Collection<VariableExpr> qeBindingVars = SqlppVariableUtil.getBindingVariables(qe);
+        Collection<VariableExpr> qeFreeVars = new HashSet<>();
         for (QuantifiedPair pair : qe.getQuantifiedList()) {
-            pair.getExpr().accept(this, freeVars);
+            pair.getExpr().accept(this, qeFreeVars);
         }
-        qe.getSatisfiesExpr().accept(this, freeVars);
+        qe.getSatisfiesExpr().accept(this, qeFreeVars);
+        qeFreeVars.removeAll(qeBindingVars);
+        freeVars.addAll(qeFreeVars);
         return null;
     }
 

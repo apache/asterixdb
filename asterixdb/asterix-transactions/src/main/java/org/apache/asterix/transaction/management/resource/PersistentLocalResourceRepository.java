@@ -497,10 +497,12 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
         final long validComponentSequence = getIndexCheckpointManager(index).getValidComponentSequence();
         for (File componentFile : indexComponentFiles) {
-            // delete any file with start sequence > valid component sequence
+            // delete any file with start or end sequence > valid component sequence
             final long fileStart = IndexComponentFileReference.of(componentFile.getName()).getSequenceStart();
-            if (fileStart > validComponentSequence) {
-                LOGGER.info(() -> "Deleting invalid component file: " + componentFile.getAbsolutePath());
+            final long fileEnd = IndexComponentFileReference.of(componentFile.getName()).getSequenceEnd();
+            if (fileStart > validComponentSequence || fileEnd > validComponentSequence) {
+                LOGGER.warn(() -> "Deleting invalid component file " + componentFile.getAbsolutePath()
+                        + " based on valid sequence " + validComponentSequence);
                 Files.delete(componentFile.toPath());
             }
         }

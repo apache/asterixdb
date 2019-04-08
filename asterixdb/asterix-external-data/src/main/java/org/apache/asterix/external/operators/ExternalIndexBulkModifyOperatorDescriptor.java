@@ -23,6 +23,7 @@ import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 
@@ -30,12 +31,15 @@ public class ExternalIndexBulkModifyOperatorDescriptor extends TreeIndexBulkLoad
 
     private static final long serialVersionUID = 1L;
     private final int[] deletedFiles;
+    private final ITupleFilterFactory tupleFilterFactory;
 
     public ExternalIndexBulkModifyOperatorDescriptor(IOperatorDescriptorRegistry spec,
             IIndexDataflowHelperFactory dataflowHelperFactory, int[] deletedFiles, int[] fieldPermutation,
-            float fillFactor, boolean verifyInput, long numElementsHint) {
-        super(spec, null, fieldPermutation, fillFactor, verifyInput, numElementsHint, false, dataflowHelperFactory);
+            float fillFactor, boolean verifyInput, long numElementsHint, ITupleFilterFactory tupleFilterFactory) {
+        super(spec, null, fieldPermutation, fillFactor, verifyInput, numElementsHint, false, dataflowHelperFactory,
+                tupleFilterFactory);
         this.deletedFiles = deletedFiles;
+        this.tupleFilterFactory = tupleFilterFactory;
     }
 
     @Override
@@ -43,7 +47,7 @@ public class ExternalIndexBulkModifyOperatorDescriptor extends TreeIndexBulkLoad
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new ExternalIndexBulkModifyOperatorNodePushable(indexHelperFactory, ctx, partition, fieldPermutation,
                 fillFactor, verifyInput, numElementsHint,
-                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), deletedFiles);
+                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), deletedFiles, tupleFilterFactory);
     }
 
 }

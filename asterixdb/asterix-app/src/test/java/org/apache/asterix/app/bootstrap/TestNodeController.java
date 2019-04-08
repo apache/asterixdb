@@ -220,7 +220,7 @@ public class TestNodeController {
             LSMIndexBulkLoadOperatorNodePushable op =
                     new LSMIndexBulkLoadOperatorNodePushable(secondaryIndexHelperFactory, primaryIndexHelperFactory,
                             ctx, 0, fieldPermutation, 1.0F, false, numElementsHint, true, secondaryIndexInfo.rDesc,
-                            BulkLoadUsage.CREATE_INDEX, dataset.getDatasetId());
+                            BulkLoadUsage.CREATE_INDEX, dataset.getDatasetId(), null);
             op.setOutputFrameWriter(0, new SinkRuntimeFactory().createPushRuntime(ctx)[0], null);
             return Pair.of(secondaryIndexInfo, op);
         } catch (Throwable th) {
