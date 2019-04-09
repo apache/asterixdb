@@ -85,23 +85,18 @@ public final class FunctionTypeInferers {
         public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
                 CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
-            IAType[] argsTypes = new IAType[fce.getArguments().size()];
-            int i = 0;
-            for (Mutable<ILogicalExpression> arg : fce.getArguments()) {
-                argsTypes[i] = TypeComputeUtils.getActualType((IAType) context.getType(arg.getValue()));
-                i++;
-            }
-            fd.setImmutableStates((Object[]) argsTypes);
+            fd.setImmutableStates((Object[]) getArgumentsTypes(fce, context));
         }
     };
 
     public static final IFunctionTypeInferer SET_SORTING_PARAMETERS = new IFunctionTypeInferer() {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment ctx,
                 CompilerProperties compilerProps) throws AlgebricksException {
-            AbstractFunctionCallExpression funCallExpr = (AbstractFunctionCallExpression) expr;
-            Object[] sortingParameters = funCallExpr.getOpaqueParameters();
-            fd.setImmutableStates(sortingParameters[0], sortingParameters[1]);
+            // sets the type of the input range map produced by the local sampling expression and types of sort fields
+            AbstractFunctionCallExpression funExp = (AbstractFunctionCallExpression) expr;
+            Object[] sortingParameters = funExp.getOpaqueParameters();
+            fd.setImmutableStates(sortingParameters[0], sortingParameters[1], getArgumentsTypes(funExp, ctx));
         }
     };
 
@@ -330,5 +325,16 @@ public final class FunctionTypeInferers {
             }
             fd.setImmutableStates((Object[]) argRecordTypes);
         }
+    }
+
+    private static IAType[] getArgumentsTypes(AbstractFunctionCallExpression funExp, IVariableTypeEnvironment ctx)
+            throws AlgebricksException {
+        IAType[] argsTypes = new IAType[funExp.getArguments().size()];
+        int i = 0;
+        for (Mutable<ILogicalExpression> arg : funExp.getArguments()) {
+            argsTypes[i] = TypeComputeUtils.getActualType((IAType) ctx.getType(arg.getValue()));
+            i++;
+        }
+        return argsTypes;
     }
 }

@@ -37,7 +37,7 @@ public class IntSerDeUtils {
      *            value to write to {@code bytes[offset]}
      */
     public static void putInt(byte[] bytes, int offset, int value) {
-
+        // TODO: there is another implementation in IntegerPointable
         bytes[offset++] = (byte) (value >> 24);
         bytes[offset++] = (byte) (value >> 16);
         bytes[offset++] = (byte) (value >> 8);

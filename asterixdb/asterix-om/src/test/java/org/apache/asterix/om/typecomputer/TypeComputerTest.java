@@ -48,6 +48,7 @@ import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 
 // Tests if all type computers can handle input type ANY properly.
+// TODO: this test should be fixed/updated/modified/enhanced
 public class TypeComputerTest {
 
     @Test

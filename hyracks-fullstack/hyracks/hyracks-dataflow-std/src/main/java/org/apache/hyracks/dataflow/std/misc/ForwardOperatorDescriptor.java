@@ -33,6 +33,7 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDeserializer;
@@ -46,6 +47,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
+// TODO(ali): forward operator should probably be moved to asterix layer
 public class ForwardOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
     private static final int FORWARD_DATA_ACTIVITY_ID = 0;
@@ -173,8 +175,10 @@ public class ForwardOperatorDescriptor extends AbstractOperatorDescriptor {
             byte[] rangeMap = frameTupleReference.getFieldData(0);
             int offset = frameTupleReference.getFieldStart(0);
             int length = frameTupleReference.getFieldLength(0);
-
-            ByteArrayInputStream rangeMapIn = new ByteArrayInputStream(rangeMap, offset, length);
+            ByteArrayPointable pointable = new ByteArrayPointable();
+            pointable.set(rangeMap, offset + 1, length - 1);
+            ByteArrayInputStream rangeMapIn = new ByteArrayInputStream(pointable.getByteArray(),
+                    pointable.getContentStartOffset(), pointable.getContentLength());
             DataInputStream dataInputStream = new DataInputStream(rangeMapIn);
             numFields = IntegerSerializerDeserializer.read(dataInputStream);
             splitValues = ByteArraySerializerDeserializer.read(dataInputStream);

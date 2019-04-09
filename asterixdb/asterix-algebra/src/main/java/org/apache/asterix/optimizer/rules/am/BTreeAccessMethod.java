@@ -742,7 +742,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                 unnestMapOp.setSourceLocation(dataSourceOp.getSourceLocation());
                 indexSearchOp = unnestMapOp;
             }
-
+            // TODO: shouldn't indexSearchOp execution mode be set to that of the input? the default is UNPARTITIONED
             indexSearchOp.getInputs().add(new MutableObject<>(inputOp));
 
             // Adds equivalence classes --- one equivalent class between a primary key

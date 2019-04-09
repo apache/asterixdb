@@ -18,7 +18,11 @@
  */
 package org.apache.asterix.om.functions;
 
-import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.*;
+import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG;
+import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.INJECT_ORDER_ARGS;
+import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.MATERIALIZE_PARTITION;
+import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.NO_FRAME_CLAUSE;
+import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.NO_ORDER_CLAUSE;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -84,7 +88,6 @@ import org.apache.asterix.om.typecomputer.impl.IfMissingTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.IfNanOrInfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.IfNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.ListOfSamplesTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.LocalAvgTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.LocalSingleVarStatisticsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.MinMaxAggTypeComputer;
@@ -507,7 +510,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier LOCAL_SAMPLING =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sampling", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier RANGE_MAP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-range-map", 1);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-range-map", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier STDDEV_POP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-stddev_pop", 1);
     public static final FunctionIdentifier GLOBAL_STDDEV_POP =
@@ -548,6 +551,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-kurtosis", 1);
     public static final FunctionIdentifier LOCAL_KURTOSIS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-kurtosis", 1);
+    public static final FunctionIdentifier NULL_WRITER =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-null-writer", 1);
 
     public static final FunctionIdentifier SCALAR_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "avg", 1);
     public static final FunctionIdentifier SCALAR_COUNT =
@@ -1759,7 +1764,7 @@ public class BuiltinFunctions {
         addPrivateFunction(LOCAL_STDDEV_SAMP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(LOCAL_SAMPLING, ListOfSamplesTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_SAMPLING, ABinaryTypeComputer.INSTANCE, true);
         addPrivateFunction(RANGE_MAP, ABinaryTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
@@ -1776,6 +1781,7 @@ public class BuiltinFunctions {
         addPrivateFunction(LOCAL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(NULL_WRITER, PropagateTypeComputer.INSTANCE_NULLABLE, true);
 
         // SUM
         addFunction(SUM, NumericSumAggTypeComputer.INSTANCE, true);
@@ -2578,6 +2584,11 @@ public class BuiltinFunctions {
         addIntermediateAgg(LOCAL_SAMPLING, RANGE_MAP);
         addIntermediateAgg(RANGE_MAP, RANGE_MAP);
         addGlobalAgg(RANGE_MAP, RANGE_MAP);
+
+        addAgg(NULL_WRITER);
+        addLocalAgg(NULL_WRITER, NULL_WRITER);
+        addIntermediateAgg(NULL_WRITER, NULL_WRITER);
+        addGlobalAgg(NULL_WRITER, NULL_WRITER);
 
         // MIN
 

@@ -363,8 +363,8 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
         physicalRewritesAllLevels.add(new AddEquivalenceClassForRecordConstructorRule());
         physicalRewritesAllLevels.add(new CheckFullParallelSortRule());
-        physicalRewritesAllLevels
-                .add(new EnforceStructuralPropertiesRule(BuiltinFunctions.RANGE_MAP, BuiltinFunctions.LOCAL_SAMPLING));
+        physicalRewritesAllLevels.add(new EnforceStructuralPropertiesRule(BuiltinFunctions.RANGE_MAP,
+                BuiltinFunctions.LOCAL_SAMPLING, BuiltinFunctions.NULL_WRITER));
         physicalRewritesAllLevels.add(new RemoveSortInFeedIngestionRule());
         physicalRewritesAllLevels.add(new RemoveUnnecessarySortMergeExchange());
         physicalRewritesAllLevels.add(new PushProjectDownRule());

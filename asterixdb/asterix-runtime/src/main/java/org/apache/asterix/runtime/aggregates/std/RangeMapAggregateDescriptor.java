@@ -26,13 +26,17 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.ABinary;
+import org.apache.asterix.om.base.AMutableBinary;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
@@ -41,8 +45,12 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -74,9 +82,10 @@ import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDese
  */
 public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    private boolean[] ascendingFlags;
-    private int numOfPartitions;
+    private boolean[] ascFlags;
+    private int numPartitions;
     private int numOrderFields;
+    private IAType[] argsTypes;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
@@ -100,13 +109,14 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
      * determine how many split points to pick out of the samples. It also needs to know the ascending/descending of
      * each sort field so that it can sort the samples accordingly first and then pick the (number of partitions - 1)
      * split points out of the sorted samples.
-     * @param states states[0]: number of partitions, states[1]: ascending flags
+     * @param states states[0]: number of partitions, states[1]: ascending flags, states[2]: inputs types
      */
     @Override
     public void setImmutableStates(Object... states) {
-        numOfPartitions = (int) states[0];
-        ascendingFlags = (boolean[]) states[1];
-        numOrderFields = ascendingFlags.length;
+        numPartitions = (int) states[0];
+        ascFlags = (boolean[]) states[1];
+        numOrderFields = ascFlags.length;
+        argsTypes = (IAType[]) states[2];
     }
 
     @Override
@@ -117,40 +127,34 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new RangeMapFunction(args, ctx, ascendingFlags, numOfPartitions, numOrderFields);
+                return new RangeMapFunction(args, ctx, ascFlags, numPartitions, numOrderFields, sourceLoc, argsTypes);
             }
         };
     }
 
-    private class RangeMapFunction implements IAggregateEvaluator {
+    private static class RangeMapFunction extends AbstractAggregateFunction {
+        @SuppressWarnings("unchecked")
+        private ISerializerDeserializer<ABinary> binarySerde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABINARY);
+        private final AMutableBinary binary = new AMutableBinary(null, 0, 0);
+        private final List<List<byte[]>> finalSamples = new ArrayList<>();
+        private final ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
+        private final IPointable input = new VoidPointable();
+        private final ByteArrayPointable rangeMapPointable = new ByteArrayPointable();
         private final IScalarEvaluator localSamplesEval;
-        private final IPointable localSamples;
-        private final List<List<byte[]>> finalSamples;
         private final Comparator<List<byte[]>> comparator;
         private final int numOfPartitions;
         private final int numOrderByFields;
-        private final ListAccessor listOfSamples;
-        private final ListAccessor oneSample;
-        private final IPointable oneSamplePointable;
-        private final ArrayBackedValueStorage oneSampleStorage;
-        private final IPointable field;
-        private final ArrayBackedValueStorage storage;
 
         @SuppressWarnings("unchecked")
         private RangeMapFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean[] ascending,
-                int numOfPartitions, int numOrderByFields) throws HyracksDataException {
-            localSamples = new VoidPointable();
-            localSamplesEval = args[0].createScalarEvaluator(context);
-            finalSamples = new ArrayList<>();
-            comparator = createComparator(ascending);
+                int numOfPartitions, int numOrderByFields, SourceLocation sourceLocation, IAType[] argsTypes)
+                throws HyracksDataException {
+            super(sourceLocation);
+            this.localSamplesEval = args[0].createScalarEvaluator(context);
+            this.comparator = createComparator(ascending, argsTypes);
             this.numOfPartitions = numOfPartitions;
             this.numOrderByFields = numOrderByFields;
-            listOfSamples = new ListAccessor();
-            oneSample = new ListAccessor();
-            oneSamplePointable = new VoidPointable();
-            oneSampleStorage = new ArrayBackedValueStorage();
-            field = new VoidPointable();
-            storage = new ArrayBackedValueStorage();
         }
 
         @Override
@@ -161,41 +165,29 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
         /**
          * Receives the local samples and appends them to the final list of samples.
          * @param tuple the partition's samples
-         * @throws HyracksDataException
+         * @throws HyracksDataException IO Exception
          */
         @Override
         public void step(IFrameTupleReference tuple) throws HyracksDataException {
             // check if empty stream (system_null), i.e. partition is empty, so no samples
-            localSamplesEval.evaluate(tuple, localSamples);
-            byte tag = localSamples.getByteArray()[localSamples.getStartOffset()];
-            if (tag == ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG) {
+            localSamplesEval.evaluate(tuple, input);
+            if (input.getByteArray()[input.getStartOffset()] == ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG) {
                 return;
             }
-            // deserialize the samples received from the local partition
-            listOfSamples.reset(localSamples.getByteArray(), localSamples.getStartOffset());
-            int numberOfSamples = listOfSamples.size();
-
-            // "sample" & "addedSample" are lists to support multi-column instead of one value, i.e. <3,"dept">
-            List<byte[]> addedSample;
-            int numberOfFields;
-            // add the samples to the final samples
-            try {
-                for (int i = 0; i < numberOfSamples; i++) {
-                    oneSampleStorage.reset();
-                    listOfSamples.getOrWriteItem(i, oneSamplePointable, oneSampleStorage);
-                    oneSample.reset(oneSamplePointable.getByteArray(), oneSamplePointable.getStartOffset());
-                    numberOfFields = oneSample.size();
-                    addedSample = new ArrayList<>(numberOfFields);
-                    for (int j = 0; j < numberOfFields; j++) {
-                        storage.reset();
-                        oneSample.getOrWriteItem(j, field, storage);
-                        addedSample.add(Arrays.copyOfRange(field.getByteArray(), field.getStartOffset(),
-                                field.getStartOffset() + field.getLength()));
-                    }
-                    finalSamples.add(addedSample);
+            rangeMapPointable.set(input.getByteArray(), input.getStartOffset() + 1, input.getLength() - 1);
+            byte[] rangeMapBytes = rangeMapPointable.getByteArray();
+            int pointer = rangeMapPointable.getContentStartOffset();
+            int numSamples = IntegerPointable.getInteger(rangeMapBytes, pointer);
+            pointer += Integer.BYTES; // eat the 4 bytes of the integer (number of samples)
+            for (int i = 0; i < numSamples; i++) {
+                List<byte[]> oneSample = new ArrayList<>(numOrderByFields);
+                for (int j = 0; j < numOrderByFields; j++) {
+                    int valueLength = IntegerPointable.getInteger(rangeMapBytes, pointer);
+                    pointer += Integer.BYTES; // eat the 4 bytes of the integer and move to the value
+                    oneSample.add(Arrays.copyOfRange(rangeMapBytes, pointer, pointer + valueLength));
+                    pointer += valueLength; // eat the length of the value and move to the next pair length:value
                 }
-            } catch (IOException e) {
-                throw HyracksDataException.create(e);
+                finalSamples.add(oneSample);
             }
         }
 
@@ -203,7 +195,7 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
          * Produces the range map out of the collected samples from each partition. The final list of samples is sorted
          * first. Then, we select the split points by dividing the samples evenly.
          * @param result contains the serialized range map.
-         * @throws HyracksDataException
+         * @throws HyracksDataException IO Exception
          */
         @Override
         public void finish(IPointable result) throws HyracksDataException {
@@ -247,8 +239,7 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             }
-
-            serializeRangemap(numOrderByFields, storage.getByteArray(), endOffsets, result);
+            serializeRangeMap(numOrderByFields, storage.getByteArray(), endOffsets, result);
         }
 
         @Override
@@ -258,18 +249,17 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
 
         /**
          * Creates the comparator that sorts all the collected samples before picking split points.
-         * @param ascending ascending or descending flag for each sort column.
+         * @param asc ascending or descending flag for each sort column.
+         * @param types types of inputs to range map function produced by the local step and holding sort fields types
          * @return the described comparator
          */
-        private Comparator<List<byte[]>> createComparator(boolean[] ascending) {
-            // create the generic comparator for each sort field
-            IBinaryComparator[] fieldsComparators = new IBinaryComparator[ascending.length];
-            for (int i = 0; i < ascending.length; i++) {
-                // TODO(ali): this is temporary
+        private static Comparator<List<byte[]>> createComparator(boolean[] asc, IAType[] types) {
+            // create the generic comparator for each sort field, sort fields types start at index 1
+            IBinaryComparator[] fieldsComparators = new IBinaryComparator[asc.length];
+            for (int i = 0, fieldIdx = 1; fieldIdx < types.length; i++, fieldIdx++) {
                 fieldsComparators[i] = BinaryComparatorFactoryProvider.INSTANCE
-                        .getBinaryComparatorFactory(null, null, ascending[i]).createBinaryComparator();
+                        .getBinaryComparatorFactory(types[fieldIdx], types[fieldIdx], asc[i]).createBinaryComparator();
             }
-
             return (splitPoint1, splitPoint2) -> {
                 try {
                     // two split points must have the same num of fields
@@ -299,16 +289,18 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
          * @param splitValues the serialized split values stored one after the other
          * @param endOffsets the end offsets of each split value
          * @param result where the range map object is serialized
-         * @throws HyracksDataException
+         * @throws HyracksDataException IO Exception
          */
-        private void serializeRangemap(int numberFields, byte[] splitValues, int[] endOffsets, IPointable result)
+        private void serializeRangeMap(int numberFields, byte[] splitValues, int[] endOffsets, IPointable result)
                 throws HyracksDataException {
             ArrayBackedValueStorage serRangeMap = new ArrayBackedValueStorage();
             IntegerSerializerDeserializer.write(numberFields, serRangeMap.getDataOutput());
             ByteArraySerializerDeserializer.write(splitValues, serRangeMap.getDataOutput());
             IntArraySerializerDeserializer.write(endOffsets, serRangeMap.getDataOutput());
-
-            result.set(serRangeMap.getByteArray(), serRangeMap.getStartOffset(), serRangeMap.getLength());
+            binary.setValue(serRangeMap.getByteArray(), serRangeMap.getStartOffset(), serRangeMap.getLength());
+            storage.reset();
+            binarySerde.serialize(binary, storage.getDataOutput());
+            result.set(storage);
         }
     }
 }

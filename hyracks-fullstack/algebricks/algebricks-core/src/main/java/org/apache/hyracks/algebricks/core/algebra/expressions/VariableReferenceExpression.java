@@ -27,6 +27,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class VariableReferenceExpression extends AbstractLogicalExpression {
     private int tupleRef;
@@ -42,6 +43,11 @@ public class VariableReferenceExpression extends AbstractLogicalExpression {
 
     public VariableReferenceExpression(LogicalVariable variable) {
         this(0, variable);
+    }
+
+    public VariableReferenceExpression(LogicalVariable variable, SourceLocation sourceLoc) {
+        this(variable);
+        this.sourceLoc = sourceLoc;
     }
 
     public LogicalVariable getVariableReference() {

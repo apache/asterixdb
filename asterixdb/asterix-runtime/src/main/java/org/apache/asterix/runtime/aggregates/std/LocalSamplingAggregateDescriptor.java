@@ -20,16 +20,16 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import java.io.IOException;
 
-import org.apache.asterix.builders.IAsterixListBuilder;
-import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.config.CompilerProperties;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.ABinary;
+import org.apache.asterix.om.base.AMutableBinary;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
-import org.apache.asterix.om.typecomputer.impl.ListOfSamplesTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -38,11 +38,15 @@ import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class LocalSamplingAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
@@ -78,80 +82,76 @@ public class LocalSamplingAggregateDescriptor extends AbstractAggregateFunctionD
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new LocalSamplingAggregateFunction(args, ctx, numSamples);
+                return new LocalSamplingAggregateFunction(args, ctx, numSamples, sourceLoc);
             }
         };
     }
 
-    private class LocalSamplingAggregateFunction implements IAggregateEvaluator {
+    private static class LocalSamplingAggregateFunction extends AbstractAggregateFunction {
+        @SuppressWarnings("unchecked")
+        private ISerializerDeserializer<ABinary> binarySerde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABINARY);
+        private final AMutableBinary binary = new AMutableBinary(null, 0, 0);
+        private final ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
+        private final ArrayBackedValueStorage rangeMapBits = new ArrayBackedValueStorage();
+        private final IPointable inputFieldValue = new VoidPointable();
         private final int numSamplesRequired;
-        private final ArrayBackedValueStorage storage;
-        private final IAsterixListBuilder listOfSamplesBuilder;
-        private final IAsterixListBuilder oneSampleBuilder;
         private final IScalarEvaluator[] sampledFieldsEval;
-        private final IPointable inputFieldValue;
-        private int numSamplesTaken;
+        private int numSamples;
 
         /**
          * @param args the fields that constitute a sample, e.g., $$1, $$2
          * @param context Hyracks task
+         * @param numSamples number of samples to take
+         * @param srcLoc source location
          * @throws HyracksDataException
          */
         private LocalSamplingAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
-                int numSamplesRequired) throws HyracksDataException {
-            storage = new ArrayBackedValueStorage();
-            inputFieldValue = new VoidPointable();
+                int numSamples, SourceLocation srcLoc) throws HyracksDataException {
+            super(srcLoc);
             sampledFieldsEval = new IScalarEvaluator[args.length];
             for (int i = 0; i < args.length; i++) {
                 sampledFieldsEval[i] = args[i].createScalarEvaluator(context);
             }
-            oneSampleBuilder = new OrderedListBuilder();
-            listOfSamplesBuilder = new OrderedListBuilder();
-            listOfSamplesBuilder.reset(ListOfSamplesTypeComputer.TYPE);
-            this.numSamplesRequired = numSamplesRequired > 0 ? numSamplesRequired
-                    : (int) CompilerProperties.Option.COMPILER_SORT_SAMPLES.defaultValue();
+            this.numSamplesRequired =
+                    numSamples > 0 ? numSamples : (int) CompilerProperties.Option.COMPILER_SORT_SAMPLES.defaultValue();
         }
 
         @Override
         public void init() throws HyracksDataException {
-            numSamplesTaken = 0;
-            listOfSamplesBuilder.reset(ListOfSamplesTypeComputer.TYPE);
+            numSamples = 0;
+            rangeMapBits.reset();
+            // write a dummy integer at the beginning to be filled later with the actual number of samples taken
+            IntegerSerializerDeserializer.write(0, rangeMapBits.getDataOutput());
         }
 
         /**
          * Receives data stream one tuple at a time from a data source and records samples.
          * @param tuple one sample
-         * @throws HyracksDataException
+         * @throws HyracksDataException IO exception
          */
         @Override
         public void step(IFrameTupleReference tuple) throws HyracksDataException {
-            if (numSamplesTaken >= numSamplesRequired) {
+            if (numSamples >= numSamplesRequired) {
                 return;
             }
-            // start over for a new sample
-            oneSampleBuilder.reset((AbstractCollectionType) ListOfSamplesTypeComputer.TYPE.getItemType());
-
-            for (IScalarEvaluator fieldEval : sampledFieldsEval) {
-                // add fields to make up one sample
-                fieldEval.evaluate(tuple, inputFieldValue);
-                oneSampleBuilder.addItem(inputFieldValue);
+            for (int i = 0; i < sampledFieldsEval.length; i++) {
+                sampledFieldsEval[i].evaluate(tuple, inputFieldValue);
+                IntegerSerializerDeserializer.write(inputFieldValue.getLength(), rangeMapBits.getDataOutput());
+                rangeMapBits.append(inputFieldValue);
             }
-            // prepare the sample to add it to the list of samples
-            storage.reset();
-            oneSampleBuilder.write(storage.getDataOutput(), true);
-            listOfSamplesBuilder.addItem(storage);
-            numSamplesTaken++;
+            numSamples++;
         }
 
         /**
          * Sends the list of samples to the global range-map generator.
-         * @param result list of samples
-         * @throws HyracksDataException
+         * @param result will store the list of samples
+         * @throws HyracksDataException IO exception
          */
         @Override
         public void finish(IPointable result) throws HyracksDataException {
             storage.reset();
-            if (numSamplesTaken == 0) {
+            if (numSamples == 0) {
                 // empty partition? then send system null as an indication of empty partition.
                 try {
                     storage.getDataOutput().writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
@@ -160,7 +160,9 @@ public class LocalSamplingAggregateDescriptor extends AbstractAggregateFunctionD
                     throw HyracksDataException.create(e);
                 }
             } else {
-                listOfSamplesBuilder.write(storage.getDataOutput(), true);
+                IntegerPointable.setInteger(rangeMapBits.getByteArray(), rangeMapBits.getStartOffset(), numSamples);
+                binary.setValue(rangeMapBits.getByteArray(), rangeMapBits.getStartOffset(), rangeMapBits.getLength());
+                binarySerde.serialize(binary, storage.getDataOutput());
                 result.set(storage);
             }
         }
