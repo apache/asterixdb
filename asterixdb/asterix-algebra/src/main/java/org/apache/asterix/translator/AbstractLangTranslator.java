@@ -18,15 +18,20 @@
  */
 package org.apache.asterix.translator;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -68,19 +73,23 @@ public abstract class AbstractLangTranslator {
                 }
                 Thread.currentThread().interrupt();
             }
-            if (!clusterStateManager.getState().equals(ClusterState.ACTIVE)) {
-                throw new AsterixException("Cluster is in " + ClusterState.UNUSABLE + " state."
-                        + "\n One or more Node Controllers have left or haven't joined yet.\n");
-            } else {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("Cluster is now " + ClusterState.ACTIVE);
+            synchronized (clusterStateManager) {
+                if (!clusterStateManager.getState().equals(ClusterState.ACTIVE)) {
+                    ClusterPartition[] configuredPartitions = clusterStateManager.getClusterPartitons();
+                    Set<String> inactiveNodes = new HashSet<>();
+                    for (ClusterPartition cp : configuredPartitions) {
+                        if (!cp.isActive()) {
+                            inactiveNodes.add(cp.getNodeId());
+                        }
+                    }
+                    throw AsterixException.create(ErrorCode.CLUSTER_STATE_UNUSABLE,
+                            Arrays.toString(inactiveNodes.toArray()));
+                } else {
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info("Cluster is now " + ClusterState.ACTIVE);
+                    }
                 }
             }
-        }
-
-        if (clusterStateManager.getState().equals(ClusterState.UNUSABLE)) {
-            throw new AsterixException("Cluster is in " + ClusterState.UNUSABLE + " state."
-                    + "\n One or more Node Controllers have left.\n");
         }
 
         if (!globalRecoveryManager.isRecoveryCompleted()) {

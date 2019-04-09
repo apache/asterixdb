@@ -33,13 +33,6 @@ public class ErrorCode {
     private static final String RESOURCE_PATH = "asx_errormsg/en.properties";
     public static final String ASTERIX = "ASX";
 
-    // Extension errors
-    public static final int EXTENSION_ID_CONFLICT = 4001;
-    public static final int EXTENSION_COMPONENT_CONFLICT = 4002;
-    public static final int UNSUPPORTED_MESSAGE_TYPE = 4003;
-    public static final int INVALID_CONFIGURATION = 4004;
-    public static final int UNSUPPORTED_REPLICATION_STRATEGY = 4005;
-
     // Runtime errors
     public static final int CASTING_FIELD = 1;
     public static final int TYPE_MISMATCH_FUNCTION = 2;
@@ -301,6 +294,16 @@ public class ErrorCode {
 
     // Lifecycle management errors
     public static final int DUPLICATE_PARTITION_ID = 4000;
+
+    // Extension errors
+    public static final int EXTENSION_ID_CONFLICT = 4001;
+    public static final int EXTENSION_COMPONENT_CONFLICT = 4002;
+    public static final int UNSUPPORTED_MESSAGE_TYPE = 4003;
+    public static final int INVALID_CONFIGURATION = 4004;
+    public static final int UNSUPPORTED_REPLICATION_STRATEGY = 4005;
+
+    // Lifecycle management errors pt.2
+    public static final int CLUSTER_STATE_UNUSABLE = 4006;
 
     private ErrorCode() {
     }
