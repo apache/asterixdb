@@ -34,6 +34,6 @@ declare function calculate(events) {
     limit 5
 )
 };
-with  result as calculate(Events)
+with  result as calculate((from Events e select value e))
 select element result
 ;

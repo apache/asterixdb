@@ -39,6 +39,7 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
@@ -56,75 +57,47 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
+import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
 
 /**
  * This class checks whether a reference to an undefined identifier (the second parameter of the visit method)
  * that is directly enclosed in the first parameter of the visit method should only be resolved to a dataset.
  */
-public class CheckDatasetOnlyResolutionVisitor extends AbstractSqlppQueryExpressionVisitor<Boolean, ILangExpression> {
+public final class CheckDatasetOnlyResolutionVisitor
+        extends AbstractSqlppQueryExpressionVisitor<Boolean, VariableExpr> {
 
-    @Override
-    public Boolean visit(Query q, ILangExpression expr) throws CompilationException {
-        return false;
+    public static final CheckDatasetOnlyResolutionVisitor INSTANCE = new CheckDatasetOnlyResolutionVisitor();
+
+    private CheckDatasetOnlyResolutionVisitor() {
     }
 
     @Override
-    public Boolean visit(FunctionDecl fd, ILangExpression expr) throws CompilationException {
-        return false;
+    public Boolean visit(FromTerm fromTerm, VariableExpr arg) throws CompilationException {
+        return contains(fromTerm.getLeftExpression(), arg);
     }
 
     @Override
-    public Boolean visit(LiteralExpr l, ILangExpression expr) throws CompilationException {
-        return false;
+    public Boolean visit(JoinClause joinClause, VariableExpr arg) throws CompilationException {
+        return contains(joinClause.getRightExpression(), arg);
     }
 
     @Override
-    public Boolean visit(VariableExpr v, ILangExpression expr) throws CompilationException {
-        return false;
+    public Boolean visit(NestClause nestClause, VariableExpr arg) throws CompilationException {
+        return contains(nestClause.getRightExpression(), arg);
     }
 
     @Override
-    public Boolean visit(ListConstructor lc, ILangExpression expr) throws CompilationException {
-        return false;
+    public Boolean visit(UnnestClause unnestClause, VariableExpr arg) throws CompilationException {
+        return contains(unnestClause.getRightExpression(), arg);
     }
 
     @Override
-    public Boolean visit(RecordConstructor rc, ILangExpression expr) throws CompilationException {
-        return false;
-    }
-
-    @Override
-    public Boolean visit(OperatorExpr ifbo, ILangExpression expr) throws CompilationException {
-        return false;
-    }
-
-    @Override
-    public Boolean visit(FieldAccessor fa, ILangExpression expr) throws CompilationException {
-        return false;
-    }
-
-    @Override
-    public Boolean visit(IndexAccessor ia, ILangExpression expr) throws CompilationException {
-        return false;
-    }
-
-    @Override
-    public Boolean visit(ListSliceExpression expression, ILangExpression expr) throws CompilationException {
-        return false;
-    }
-
-    @Override
-    public Boolean visit(IfExpr ifexpr, ILangExpression expr) throws CompilationException {
-        return false;
-    }
-
-    @Override
-    public Boolean visit(QuantifiedExpression qe, ILangExpression expr) throws CompilationException {
+    public Boolean visit(QuantifiedExpression qe, VariableExpr arg) throws CompilationException {
         for (QuantifiedPair qp : qe.getQuantifiedList()) {
             // If the target reference of undefined variable is a binding expression in a quantified pair,
             // then we only resolve it to dataset.
-            if (expr == qp.getExpr()) {
+            if (contains(qp.getExpr(), arg)) {
                 return true;
             }
         }
@@ -132,112 +105,156 @@ public class CheckDatasetOnlyResolutionVisitor extends AbstractSqlppQueryExpress
     }
 
     @Override
-    public Boolean visit(UnaryExpr u, ILangExpression expr) throws CompilationException {
+    public Boolean visit(Query q, VariableExpr arg) throws CompilationException {
+        return contains(q, arg);
+    }
+
+    @Override
+    public Boolean visit(InsertStatement insert, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(CallExpr pf, ILangExpression expr) throws CompilationException {
+    public Boolean visit(FunctionDecl fd, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(LetClause lc, ILangExpression expr) throws CompilationException {
+    public Boolean visit(LiteralExpr l, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(WhereClause wc, ILangExpression expr) throws CompilationException {
+    public Boolean visit(VariableExpr v, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(OrderbyClause oc, ILangExpression expr) throws CompilationException {
+    public Boolean visit(ListConstructor lc, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(GroupbyClause gc, ILangExpression expr) throws CompilationException {
+    public Boolean visit(RecordConstructor rc, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(LimitClause lc, ILangExpression expr) throws CompilationException {
+    public Boolean visit(OperatorExpr ifbo, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(FromClause fromClause, ILangExpression expr) throws CompilationException {
+    public Boolean visit(FieldAccessor fa, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(FromTerm fromTerm, ILangExpression expr) throws CompilationException {
-        return expr == fromTerm.getLeftExpression();
-    }
-
-    @Override
-    public Boolean visit(JoinClause joinClause, ILangExpression expr) throws CompilationException {
-        return expr == joinClause.getRightExpression();
-    }
-
-    @Override
-    public Boolean visit(NestClause nestClause, ILangExpression expr) throws CompilationException {
-        return expr == nestClause.getRightExpression();
-    }
-
-    @Override
-    public Boolean visit(Projection projection, ILangExpression expr) throws CompilationException {
+    public Boolean visit(IndexAccessor ia, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectBlock selectBlock, ILangExpression expr) throws CompilationException {
+    public Boolean visit(ListSliceExpression expression, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectClause selectClause, ILangExpression expr) throws CompilationException {
+    public Boolean visit(IfExpr ifexpr, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectElement selectElement, ILangExpression expr) throws CompilationException {
+    public Boolean visit(UnaryExpr u, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectRegular selectRegular, ILangExpression expr) throws CompilationException {
+    public Boolean visit(CallExpr pf, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectSetOperation selectSetOperation, ILangExpression expr) throws CompilationException {
+    public Boolean visit(LetClause lc, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectExpression selectStatement, ILangExpression expr) throws CompilationException {
+    public Boolean visit(WhereClause wc, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(UnnestClause unnestClause, ILangExpression expr) throws CompilationException {
-        return expr == unnestClause.getRightExpression();
-    }
-
-    @Override
-    public Boolean visit(HavingClause havingClause, ILangExpression expr) throws CompilationException {
+    public Boolean visit(OrderbyClause oc, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(CaseExpression caseExpr, ILangExpression arg) throws CompilationException {
+    public Boolean visit(GroupbyClause gc, VariableExpr arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(WindowExpression windowExpression, ILangExpression arg) throws CompilationException {
+    public Boolean visit(LimitClause lc, VariableExpr arg) throws CompilationException {
         return false;
+    }
+
+    @Override
+    public Boolean visit(FromClause fromClause, VariableExpr arg) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(Projection projection, VariableExpr arg) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(SelectBlock selectBlock, VariableExpr arg) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(SelectClause selectClause, VariableExpr arg) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(SelectElement selectElement, VariableExpr arg) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(SelectRegular selectRegular, VariableExpr arg) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(SelectSetOperation selectSetOperation, VariableExpr arg) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(SelectExpression selectStatement, VariableExpr arg) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(HavingClause havingClause, VariableExpr arg) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(CaseExpression caseExpr, VariableExpr arg) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(WindowExpression windowExpression, VariableExpr arg) throws CompilationException {
+        return false;
+    }
+
+    private boolean contains(ILangExpression expr, VariableExpr var) throws CompilationException {
+        return SqlppVariableUtil.getFreeVariables(expr).contains(var);
     }
 }

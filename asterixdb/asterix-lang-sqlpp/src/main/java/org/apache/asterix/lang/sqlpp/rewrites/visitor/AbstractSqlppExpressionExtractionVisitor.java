@@ -104,7 +104,6 @@ abstract class AbstractSqlppExpressionExtractionVisitor extends AbstractSqlppSim
             VariableExpr varExpr = new VariableExpr(var);
             varExpr.setSourceLocation(bindExpr.getSourceLocation());
             toLetWhereList.add(new LetClause(varExpr, bindExpr));
-            context.addExcludedForFieldAccessVar(var);
         }
         fromBindingList.clear();
     }

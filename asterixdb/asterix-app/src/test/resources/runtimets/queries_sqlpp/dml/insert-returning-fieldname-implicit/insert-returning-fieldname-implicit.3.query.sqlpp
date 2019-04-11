@@ -27,4 +27,4 @@ use test;
 
 insert into TweetMessageuuids (
      { "message-text":"hello"}
-) returning `message-text`;
+) returning TweetMessageuuids.`message-text`;

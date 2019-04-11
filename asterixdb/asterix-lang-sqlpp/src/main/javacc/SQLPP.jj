@@ -1088,8 +1088,9 @@ InsertStatement InsertStatement() throws ParseException:
     query = Query(false)
     ( <RETURNING> returnExpression = Expression())?
     {
-      if (returnExpression != null && var == null) {
-        var = ExpressionToVariableUtil.getGeneratedVariable(query.getBody(), true);
+      if (var == null && returnExpression != null) {
+        var = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(nameComponents.second.getValue()));
+        addSourceLocation(var, startToken);
       }
       query.setTopLevel(true);
       InsertStatement stmt = new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(),
@@ -1111,8 +1112,9 @@ UpsertStatement UpsertStatement() throws ParseException:
     query = Query(false)
     ( <RETURNING> returnExpression = Expression())?
     {
-      if (returnExpression != null && var == null) {
-        var = ExpressionToVariableUtil.getGeneratedVariable(query.getBody(), true);
+      if (var == null && returnExpression != null) {
+          var = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(nameComponents.second.getValue()));
+          addSourceLocation(var, startToken);
       }
       query.setTopLevel(true);
       UpsertStatement stmt = new UpsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(),
@@ -1124,23 +1126,20 @@ UpsertStatement UpsertStatement() throws ParseException:
 DeleteStatement DeleteStatement() throws ParseException:
 {
   Token startToken = null;
-  VariableExpr varExpr = null;
+  VariableExpr var = null;
   Expression condition = null;
   Pair<Identifier, Identifier> nameComponents;
 }
 {
   <DELETE> { startToken = token; }
-  <FROM> nameComponents  = QualifiedName()
-         ((<AS>)? varExpr = Variable())?
+  <FROM> nameComponents  = QualifiedName() ((<AS>)? var = Variable())?
   (<WHERE> condition = Expression())?
   {
-      if(varExpr == null){
-        varExpr = new VariableExpr();
-        VarIdentifier var = SqlppVariableUtil.toInternalVariableIdentifier(nameComponents.second.getValue());
-        varExpr.setVar(var);
-        addSourceLocation(varExpr, startToken);
+      if (var == null) {
+        var = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(nameComponents.second.getValue()));
+        addSourceLocation(var, startToken);
       }
-      DeleteStatement stmt = new DeleteStatement(varExpr, nameComponents.first, nameComponents.second,
+      DeleteStatement stmt = new DeleteStatement(var, nameComponents.first, nameComponents.second,
           condition, getVarCounter());
       return addSourceLocation(stmt, startToken);
   }

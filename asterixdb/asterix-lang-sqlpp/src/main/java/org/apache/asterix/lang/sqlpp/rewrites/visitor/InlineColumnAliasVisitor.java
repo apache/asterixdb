@@ -185,8 +185,6 @@ public class InlineColumnAliasVisitor extends AbstractSqlppExpressionScopingVisi
             VariableExpr letVarRefExpr = new VariableExpr(letVarId);
             letVarRefExpr.setSourceLocation(sourceLoc);
             columnAliasBinding.setExpression(letVarRefExpr);
-
-            context.addExcludedForFieldAccessVar(letVarId);
         }
     }
 

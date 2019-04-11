@@ -19,6 +19,8 @@
 package org.apache.asterix.lang.sqlpp.visitor.base;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -63,8 +65,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     protected final LangRewritingContext context;
 
     /**
-     * @param context,
-     *            manages ids of variables and guarantees uniqueness of variables.
+     * @param context, manages ids of variables and guarantees uniqueness of variables.
      */
     public AbstractSqlppExpressionScopingVisitor(LangRewritingContext context) {
         this(context, null);
@@ -101,13 +102,15 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
     @Override
     public Expression visit(FromTerm fromTerm, ILangExpression arg) throws CompilationException {
-        scopeChecker.createNewScope();
         // Visit the left expression of a from term.
         fromTerm.setLeftExpression(visit(fromTerm.getLeftExpression(), fromTerm));
 
+        scopeChecker.createNewScope();
+
         // Registers the data item variable.
         VariableExpr leftVar = fromTerm.getLeftVariable();
-        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), leftVar.getVar(), leftVar.getSourceLocation());
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), leftVar.getVar(), leftVar.getSourceLocation(),
+                SqlppVariableAnnotation.CONTEXT_VARIABLE);
 
         // Registers the positional variable
         if (fromTerm.hasPositionalVariable()) {
@@ -132,7 +135,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
         // Registers the data item variable.
         VariableExpr rightVar = joinClause.getRightVariable();
-        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar(), rightVar.getSourceLocation());
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar(), rightVar.getSourceLocation(),
+                SqlppVariableAnnotation.CONTEXT_VARIABLE);
 
         if (joinClause.hasPositionalVariable()) {
             // Registers the positional variable.
@@ -158,7 +162,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
         // Registers the data item variable.
         VariableExpr rightVar = nestClause.getRightVariable();
-        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar(), rightVar.getSourceLocation());
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar(), rightVar.getSourceLocation(),
+                SqlppVariableAnnotation.CONTEXT_VARIABLE);
 
         if (nestClause.hasPositionalVariable()) {
             // Registers the positional variable.
@@ -178,7 +183,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
         // register the data item variable
         VariableExpr rightVar = unnestClause.getRightVariable();
-        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar(), rightVar.getSourceLocation());
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar(), rightVar.getSourceLocation(),
+                SqlppVariableAnnotation.CONTEXT_VARIABLE);
 
         if (unnestClause.hasPositionalVariable()) {
             // register the positional variable
@@ -331,7 +337,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         for (QuantifiedPair pair : qe.getQuantifiedList()) {
             pair.setExpr(visit(pair.getExpr(), qe));
             VariableExpr varExpr = pair.getVarExpr();
-            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), varExpr.getVar(), varExpr.getSourceLocation());
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), varExpr.getVar(), varExpr.getSourceLocation(),
+                    SqlppVariableAnnotation.CONTEXT_VARIABLE);
         }
         qe.setSatisfiesExpr(visit(qe.getSatisfiesExpr(), qe));
         scopeChecker.removeCurrentScope();
@@ -365,7 +372,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // Registers the (inserted) data item variable.
         VariableExpr bindingVar = insertStatement.getVar();
         if (bindingVar != null) {
-            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), bindingVar.getVar(), bindingVar.getSourceLocation());
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), bindingVar.getVar(), bindingVar.getSourceLocation(),
+                    SqlppVariableAnnotation.CONTEXT_VARIABLE);
         }
 
         // Visits the expression for the returning expression.
@@ -393,13 +401,20 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     // Adds a new encountered alias identifier into a scope
-    private void addNewVarSymbolToScope(Scope scope, VarIdentifier var, SourceLocation sourceLoc)
-            throws CompilationException {
+    private void addNewVarSymbolToScope(Scope scope, VarIdentifier var, SourceLocation sourceLoc,
+            SqlppVariableAnnotation... varAnnotations) throws CompilationException {
         if (scope.findLocalSymbol(var.getValue()) != null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                     "Duplicate alias definitions: " + SqlppVariableUtil.toUserDefinedName(var.getValue()));
         }
-        scope.addNewVarSymbolToScope(var);
+        Set<SqlppVariableAnnotation> annotations;
+        if (varAnnotations == null || varAnnotations.length == 0) {
+            annotations = Collections.emptySet();
+        } else {
+            annotations = EnumSet.noneOf(SqlppVariableAnnotation.class);
+            Collections.addAll(annotations, varAnnotations);
+        }
+        scope.addNewVarSymbolToScope(var, annotations);
     }
 
     // Merges <code>scopeToBeMerged</code> into <code>hostScope</code>.
@@ -413,5 +428,17 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
             }
         }
         hostScope.merge(scopeToBeMerged);
+    }
+
+    public enum SqlppVariableAnnotation implements Scope.SymbolAnnotation {
+        /**
+         * Context variables are those that participate in the second stage of the name resolution process.
+         * A single name identifier is first attempted to be resolved as a variable reference. If that fails
+         * because there's no variable with such name then (second stage) it's resolved as a field access on a context
+         * variable (if there's only one context variable defined in the local scope).
+         *
+         * See {@link org.apache.asterix.lang.sqlpp.rewrites.visitor.VariableCheckAndRewriteVisitor}
+         */
+        CONTEXT_VARIABLE
     }
 }

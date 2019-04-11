@@ -18,12 +18,14 @@
  */
 package org.apache.asterix.lang.common.parser;
 
+import java.util.Set;
 import java.util.Stack;
 
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.context.RootScopeFactory;
 import org.apache.asterix.lang.common.context.Scope;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 
 public class ScopeChecker {
@@ -124,10 +126,12 @@ public class ScopeChecker {
      */
     public final Identifier lookupSymbol(String name) {
         if (name != null) {
-            return getCurrentScope().findSymbol(name);
-        } else {
-            return null;
+            Pair<Identifier, Set<? extends Scope.SymbolAnnotation>> symbol = getCurrentScope().findSymbol(name);
+            if (symbol != null) {
+                return symbol.first;
+            }
         }
+        return null;
     }
 
     /**

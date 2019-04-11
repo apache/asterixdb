@@ -30,6 +30,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.context.Scope;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -99,11 +100,17 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
     }
 
     void wrapAggregationArguments(WindowExpression winExpr, int limit) throws CompilationException {
-        Set<VariableExpr> liveVars = scopeChecker.getCurrentScope().getLiveVariables();
-
         VariableExpr winVar = winExpr.getWindowVar();
+
+        Map<VariableExpr, Set<? extends Scope.SymbolAnnotation>> liveAnnotatedVars =
+                scopeChecker.getCurrentScope().getLiveVariables();
+        Set<VariableExpr> liveVars = liveAnnotatedVars.keySet();
+        Set<VariableExpr> liveContextVars = Scope.findVariablesAnnotatedBy(liveVars,
+                SqlppVariableAnnotation.CONTEXT_VARIABLE, liveAnnotatedVars, winExpr.getSourceLocation());
+
         List<Pair<Expression, Identifier>> winFieldList = winExpr.getWindowFieldList();
-        Map<Expression, Identifier> fieldMap = SqlppVariableUtil.createFieldVariableMap(winFieldList);
+        Map<VariableExpr, Identifier> winVarFieldMap =
+                SqlppGroupByAggregationSugarVisitor.createGroupVarFieldMap(winFieldList);
 
         List<Expression> exprList = winExpr.getExprList();
         int n = exprList.size();
@@ -111,7 +118,7 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
         for (int i = 0; i < n; i++) {
             Expression expr = exprList.get(i);
             Expression newExpr = i < limit ? Sql92AggregateFunctionVisitor.wrapAggregationArgument(expr, winVar,
-                    fieldMap, liveVars, null, context) : expr;
+                    winVarFieldMap, liveContextVars, null, liveVars, context) : expr;
             newExprList.add(newExpr);
         }
         winExpr.setExprList(newExprList);

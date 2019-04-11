@@ -19,23 +19,28 @@
 package org.apache.asterix.lang.common.context;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.commons.collections4.iterators.ReverseListIterator;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public final class Scope {
     private final ScopeChecker scopeChecker;
     private final Scope parent;
-    private final LinkedHashMap<String, Identifier> symbols;
+    private final LinkedHashMap<String, Pair<Identifier, Set<? extends SymbolAnnotation>>> symbols;
     private final boolean maskParentScope;
     private FunctionSignatures functionSignatures;
 
@@ -60,15 +65,15 @@ public final class Scope {
      * @param name
      * @return the Identifier of this symbol; otherwise null;
      */
-    public Identifier findSymbol(String name) {
-        Identifier ident = symbols.get(name);
-        if (ident == null && !maskParentScope && parent != null) {
-            ident = parent.findSymbol(name);
+    public Pair<Identifier, Set<? extends SymbolAnnotation>> findSymbol(String name) {
+        Pair<Identifier, Set<? extends SymbolAnnotation>> symbol = symbols.get(name);
+        if (symbol == null && !maskParentScope && parent != null) {
+            symbol = parent.findSymbol(name);
         }
-        return ident;
+        return symbol;
     }
 
-    public Identifier findLocalSymbol(String name) {
+    public Pair<Identifier, Set<? extends SymbolAnnotation>> findLocalSymbol(String name) {
         return symbols.get(name);
     }
 
@@ -78,13 +83,24 @@ public final class Scope {
      * @param ident
      */
     public void addSymbolToScope(Identifier ident) {
-        symbols.put(ident.getValue(), ident);
+        addSymbolToScope(ident, null);
+    }
+
+    public void addSymbolToScope(Identifier ident, Set<? extends SymbolAnnotation> annotations) {
+        if (annotations == null) {
+            annotations = Collections.emptySet();
+        }
+        symbols.put(ident.getValue(), new Pair<>(ident, annotations));
     }
 
     public void addNewVarSymbolToScope(VarIdentifier ident) {
+        addNewVarSymbolToScope(ident, null);
+    }
+
+    public void addNewVarSymbolToScope(VarIdentifier ident, Set<? extends SymbolAnnotation> annotations) {
         scopeChecker.incVarCounter();
         ident.setId(scopeChecker.getVarCounter());
-        addSymbolToScope(ident);
+        addSymbolToScope(ident, annotations);
     }
 
     /**
@@ -140,12 +156,13 @@ public final class Scope {
      *
      * @return an iterator of visible symbols.
      */
-    public Iterator<Identifier> liveSymbols(Scope stopAtExclusive) {
-        final Iterator<Identifier> identifierIterator = new ReverseListIterator<>(new ArrayList<>(symbols.values()));
-        final Iterator<Identifier> parentIterator =
+    public Iterator<Pair<Identifier, Set<? extends SymbolAnnotation>>> liveSymbols(Scope stopAtExclusive) {
+        final Iterator<Pair<Identifier, Set<? extends SymbolAnnotation>>> identifierIterator =
+                new ReverseListIterator<>(new ArrayList<>(symbols.values()));
+        final Iterator<Pair<Identifier, Set<? extends SymbolAnnotation>>> parentIterator =
                 parent == null || parent == stopAtExclusive ? null : parent.liveSymbols(stopAtExclusive);
-        return new Iterator<Identifier>() {
-            private Identifier currentSymbol = null;
+        return new Iterator<Pair<Identifier, Set<? extends SymbolAnnotation>>>() {
+            private Pair<Identifier, Set<? extends SymbolAnnotation>> currentSymbol = null;
 
             @Override
             public boolean hasNext() {
@@ -154,8 +171,8 @@ public final class Scope {
                     currentSymbol = identifierIterator.next();
                 } else if (!maskParentScope && parentIterator != null && parentIterator.hasNext()) {
                     do {
-                        Identifier symbolFromParent = parentIterator.next();
-                        if (!symbols.containsKey(symbolFromParent.getValue())) {
+                        Pair<Identifier, Set<? extends SymbolAnnotation>> symbolFromParent = parentIterator.next();
+                        if (!symbols.containsKey(symbolFromParent.first.getValue())) {
                             currentSymbol = symbolFromParent;
                             break;
                         }
@@ -171,7 +188,7 @@ public final class Scope {
             }
 
             @Override
-            public Identifier next() {
+            public Pair<Identifier, Set<? extends SymbolAnnotation>> next() {
                 if (currentSymbol == null) {
                     throw new IllegalStateException(
                             "Please make sure that hasNext() returns true before calling next().");
@@ -183,28 +200,38 @@ public final class Scope {
         };
     }
 
-    public Set<VariableExpr> getLiveVariables() {
+    public Map<VariableExpr, Set<? extends SymbolAnnotation>> getLiveVariables() {
         return getLiveVariables(null);
     }
 
-    public Set<VariableExpr> getLiveVariables(Scope stopAtExclusive) {
-        return getLiveVariables(stopAtExclusive, null);
-    }
-
-    public Set<VariableExpr> getLiveVariables(Scope stopAtExclusive, Predicate<? super VarIdentifier> excludeFilter) {
-        LinkedHashSet<VariableExpr> vars = new LinkedHashSet<>();
-        Iterator<Identifier> identifierIterator = liveSymbols(stopAtExclusive);
-        while (identifierIterator.hasNext()) {
-            Identifier identifier = identifierIterator.next();
+    public Map<VariableExpr, Set<? extends SymbolAnnotation>> getLiveVariables(Scope stopAtExclusive) {
+        LinkedHashMap<VariableExpr, Set<? extends SymbolAnnotation>> vars = new LinkedHashMap<>();
+        Iterator<Pair<Identifier, Set<? extends SymbolAnnotation>>> symbolIterator = liveSymbols(stopAtExclusive);
+        while (symbolIterator.hasNext()) {
+            Pair<Identifier, Set<? extends SymbolAnnotation>> p = symbolIterator.next();
+            Identifier identifier = p.first;
             if (identifier instanceof VarIdentifier) {
                 VarIdentifier varId = (VarIdentifier) identifier;
-                if (excludeFilter != null && excludeFilter.test(varId)) {
-                    continue;
-                }
-                vars.add(new VariableExpr(varId));
+                vars.put(new VariableExpr(varId), p.second);
             }
         }
         return vars;
+    }
+
+    public static Set<VariableExpr> findVariablesAnnotatedBy(Set<VariableExpr> candidateVars,
+            SymbolAnnotation annotationTest, Map<VariableExpr, Set<? extends SymbolAnnotation>> annotationMap,
+            SourceLocation sourceLoc) throws CompilationException {
+        Set<VariableExpr> resultVars = new HashSet<>();
+        for (VariableExpr var : candidateVars) {
+            Set<? extends SymbolAnnotation> varAnnotations = annotationMap.get(var);
+            if (varAnnotations == null) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc);
+            }
+            if (varAnnotations.contains(annotationTest)) {
+                resultVars.add(var);
+            }
+        }
+        return resultVars;
     }
 
     // Returns local symbols within the current scope.
@@ -214,5 +241,8 @@ public final class Scope {
 
     public Scope getParentScope() {
         return parent;
+    }
+
+    public interface SymbolAnnotation {
     }
 }

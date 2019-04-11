@@ -102,9 +102,16 @@ Query:
 Let Variable [ Name=$result ]
   :=
   FunctionCall null.calculate@1[
-    FunctionCall asterix.dataset@1[
-      LiteralExpr [STRING] [Events]
-    ]
+    (
+      SELECT ELEMENT [
+      Variable [ Name=$e ]
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [Events]
+        ]
+        AS Variable [ Name=$e ]
+      ]
+    )
   ]
 SELECT ELEMENT [
 Variable [ Name=$result ]

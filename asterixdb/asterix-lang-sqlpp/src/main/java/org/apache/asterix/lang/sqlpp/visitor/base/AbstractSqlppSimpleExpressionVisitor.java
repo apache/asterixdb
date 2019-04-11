@@ -202,7 +202,7 @@ public class AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(OrderbyClause oc, ILangExpression arg) throws CompilationException {
-        oc.setOrderbyList(visit(oc.getOrderbyList(), arg));
+        oc.setOrderbyList(visit(oc.getOrderbyList(), oc));
         return null;
     }
 
@@ -272,8 +272,8 @@ public class AbstractSqlppSimpleExpressionVisitor
     @Override
     public Expression visit(RecordConstructor rc, ILangExpression arg) throws CompilationException {
         for (FieldBinding binding : rc.getFbList()) {
-            binding.setLeftExpr(visit(binding.getLeftExpr(), rc));
-            binding.setRightExpr(visit(binding.getRightExpr(), rc));
+            binding.setLeftExpr(visit(binding.getLeftExpr(), arg));
+            binding.setRightExpr(visit(binding.getRightExpr(), arg));
         }
         return rc;
     }
@@ -286,9 +286,9 @@ public class AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(IfExpr ifExpr, ILangExpression arg) throws CompilationException {
-        ifExpr.setCondExpr(visit(ifExpr.getCondExpr(), ifExpr));
-        ifExpr.setThenExpr(visit(ifExpr.getThenExpr(), ifExpr));
-        ifExpr.setElseExpr(visit(ifExpr.getElseExpr(), ifExpr));
+        ifExpr.setCondExpr(visit(ifExpr.getCondExpr(), arg));
+        ifExpr.setThenExpr(visit(ifExpr.getThenExpr(), arg));
+        ifExpr.setElseExpr(visit(ifExpr.getElseExpr(), arg));
         return ifExpr;
     }
 
@@ -314,7 +314,7 @@ public class AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(UnaryExpr u, ILangExpression arg) throws CompilationException {
-        u.setExpr(visit(u.getExpr(), u));
+        u.setExpr(visit(u.getExpr(), arg));
         return u;
     }
 
@@ -328,16 +328,16 @@ public class AbstractSqlppSimpleExpressionVisitor
     protected void visitWindowExpressionExcludingExprList(WindowExpression winExpr, ILangExpression arg)
             throws CompilationException {
         if (winExpr.hasPartitionList()) {
-            winExpr.setPartitionList(visit(winExpr.getPartitionList(), winExpr));
+            winExpr.setPartitionList(visit(winExpr.getPartitionList(), arg));
         }
         if (winExpr.hasOrderByList()) {
-            winExpr.setOrderbyList(visit(winExpr.getOrderbyList(), winExpr));
+            winExpr.setOrderbyList(visit(winExpr.getOrderbyList(), arg));
         }
         if (winExpr.hasFrameStartExpr()) {
-            winExpr.setFrameStartExpr(visit(winExpr.getFrameStartExpr(), winExpr));
+            winExpr.setFrameStartExpr(visit(winExpr.getFrameStartExpr(), arg));
         }
         if (winExpr.hasFrameEndExpr()) {
-            winExpr.setFrameEndExpr(visit(winExpr.getFrameEndExpr(), winExpr));
+            winExpr.setFrameEndExpr(visit(winExpr.getFrameEndExpr(), arg));
         }
         if (winExpr.hasWindowFieldList()) {
             for (Pair<Expression, Identifier> field : winExpr.getWindowFieldList()) {
@@ -348,13 +348,13 @@ public class AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(FieldAccessor fa, ILangExpression arg) throws CompilationException {
-        fa.setExpr(visit(fa.getExpr(), fa));
+        fa.setExpr(visit(fa.getExpr(), arg));
         return fa;
     }
 
     @Override
     public Expression visit(IndexAccessor ia, ILangExpression arg) throws CompilationException {
-        ia.setExpr(visit(ia.getExpr(), ia));
+        ia.setExpr(visit(ia.getExpr(), arg));
         if (ia.getIndexExpr() != null) {
             ia.setIndexExpr(visit(ia.getIndexExpr(), arg));
         }
@@ -363,7 +363,7 @@ public class AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(ListSliceExpression expression, ILangExpression arg) throws CompilationException {
-        expression.setExpr(visit(expression.getExpr(), expression));
+        expression.setExpr(visit(expression.getExpr(), arg));
         expression.setStartIndexExpression(visit(expression.getStartIndexExpression(), arg));
 
         // End index expression can be null (optional)

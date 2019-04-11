@@ -229,12 +229,14 @@ The rules for resolving the leftmost identifier are:
     1.  If the identifier matches a variable-name that is in scope, it resolves to the binding of that variable.
         (In the case of a correlated subquery, the in-scope variable might have been bound in an outer query block.)
 
-    2.  (The "Single Variable Rule"): Otherwise, if the FROM clause (or a LET clause if there is no FROM clause) in the current query block binds exactly one variable, the identifier is treated as a field access on the object bound to that variable.
+    2.  (The "Single Variable Rule"): Otherwise, if the FROM clause in the current query block binds exactly one variable, the identifier is treated as a field access on the object bound to that variable.
         For example, in the query `FROM customer SELECT address`, the identifier address is treated as a field in the object bound to the variable customer.
         At runtime, if the object bound to customer has no `address` field, the `address` expression will return `missing`.
-        If the FROM clause (and its LET subclause, if any) in the current query block binds multiple variables, name resolution fails with an "ambiguous name" error.
+        If the FROM clause in the current query block binds multiple variables, name resolution fails with an "ambiguous name" error.
+        If there's no FROM clause in the current query block, name resolution fails with an "undefined identifier" error.
         Note that the Single Variable Rule searches for bound variables only in the current query block, not in outer (containing) blocks.
         The purpose of this rule is to permit the compiler to resolve field-references unambiguously without relying on any schema information.
+        Also note that variables defined by LET clauses do not participate in the resolution process performed by this rule.
 
         Exception: In a query that has a GROUP BY clause, the Single Variable Rule does not apply in any clauses that occur after the GROUP BY because, in these clauses, the variables bound by the FROM clause are no longer in scope.
         In clauses after GROUP BY, only Rule 2.1 applies.
@@ -251,6 +253,15 @@ The rules for resolving the leftmost identifier are:
 
     In the result of this query, objects that have a foo field will be ordered by the value of this field; objects that have no foo field will appear at at the beginning of the query result (in ascending order) or at the end (in descending order.)
 
-4.  Once the leftmost identifier has been resolved, the following dots and identifiers in the name (if any) are treated as a path expression that navigates to a field nested inside that object.
+4.  _In a standalone expression_: If a query consists of a standalone expression then identifiers inside that
+    expression are resolved according to Rule 1.
+    For example, if the whole query is `ARRAY_COUNT(a.b)` then `a.b` will be treated as dataset `b` contained in
+    dataverse `a`.
+    Note that this rule only applies to identifiers which are located directly inside a standalone expression.
+    Identifiers inside SELECT statements in a standalone expresion are still resolved according to Rules 1-3.
+    For example, if the whole query is `ARRAY_SUM( (FROM employee AS e SELECT VALUE salary) )` then `salary` is resolved
+    as `e.salary` following the "Single Variable Rule" (Rule 2.2).
+
+5.  Once the leftmost identifier has been resolved, the following dots and identifiers in the name (if any) are treated as a path expression that navigates to a field nested inside that object.
     The name resolves to the field at the end of the path.
     If this field does not exist, the value `missing` is returned.

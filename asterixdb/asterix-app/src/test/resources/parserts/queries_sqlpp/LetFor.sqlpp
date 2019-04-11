@@ -17,7 +17,7 @@
  * under the License.
  */
 
-with  users as User
+with  users as (from User u select value u)
 select element {'name':user.name}
 from  users as user
 where some i in user.interests satisfies (i = 'movies')

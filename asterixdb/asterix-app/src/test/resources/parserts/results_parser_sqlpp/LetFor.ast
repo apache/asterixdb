@@ -1,9 +1,16 @@
 Query:
 Let Variable [ Name=$users ]
   :=
-  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [User]
-  ]
+  (
+    SELECT ELEMENT [
+    Variable [ Name=$u ]
+    ]
+    FROM [      FunctionCall asterix.dataset@1[
+        LiteralExpr [STRING] [User]
+      ]
+      AS Variable [ Name=$u ]
+    ]
+  )
 SELECT ELEMENT [
 RecordConstructor [
   (

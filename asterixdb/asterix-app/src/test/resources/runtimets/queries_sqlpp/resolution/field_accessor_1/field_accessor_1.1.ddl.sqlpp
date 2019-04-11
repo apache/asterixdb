@@ -16,19 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Test case Name  : insert-returning-fieldname
- * Description     : Check fields returned on insert
- * Expected Result : Success
- * Date            : Mar 2015
- */
 
 drop dataverse test if exists;
 create dataverse test;
 use test;
 
-create type sub as
-{ subscriptionId: uuid }
-;
+drop dataset samptable if exists;
+drop type samptabletype if exists;
 
-create dataset subscriptions(sub) primary key subscriptionId;
+create type samptabletype as {
+  id: tinyint
+};
+
+create dataset samptable(samptabletype) primary key id;

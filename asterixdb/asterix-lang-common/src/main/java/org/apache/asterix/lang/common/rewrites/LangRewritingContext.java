@@ -19,9 +19,7 @@
 package org.apache.asterix.lang.common.rewrites;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
@@ -30,7 +28,6 @@ public final class LangRewritingContext {
     private Counter varCounter;
     private int systemVarCounter = 1;
     private Map<Integer, VarIdentifier> oldVarIdToNewVarId = new HashMap<>();
-    private Set<VarIdentifier> excludedForFieldAccessVars = new HashSet<>();
 
     public LangRewritingContext(int varCounter) {
         this.varCounter = new Counter(varCounter);
@@ -70,13 +67,5 @@ public final class LangRewritingContext {
     private int increaseAndGetCtr() {
         varCounter.inc();
         return varCounter.get();
-    }
-
-    public void addExcludedForFieldAccessVar(VarIdentifier varId) {
-        excludedForFieldAccessVars.add(varId);
-    }
-
-    public boolean isExcludedForFieldAccessVar(VarIdentifier varId) {
-        return excludedForFieldAccessVars.contains(varId);
     }
 }

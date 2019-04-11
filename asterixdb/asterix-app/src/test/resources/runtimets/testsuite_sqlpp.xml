@@ -3746,24 +3746,23 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
-      <compilation-unit name="insert-returning-fieldname">
-        <output-dir compare="Text">insert-returning-fieldname</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="dml">
       <compilation-unit name="insert-returning-udf">
         <output-dir compare="Text">insert-returning-fieldname</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
-      <compilation-unit name="insert-returning-fieldname-qualified">
+      <compilation-unit name="insert-returning-fieldname">
         <output-dir compare="Text">insert-returning-fieldname</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="insert-returning-fieldname-implicit">
         <output-dir compare="Text">insert-returning-fieldname</output-dir>
-        <expected-error>Need an alias for the enclosed expression</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-returning-fieldname-implicit-2">
+        <output-dir compare="Text">insert-returning-fieldname</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -4092,6 +4091,21 @@
     <test-case FilePath="dml">
       <compilation-unit name="upsert-return-custom-result">
         <output-dir compare="Text">upsert-return-custom-result</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="upsert-returning-fieldname">
+        <output-dir compare="Text">insert-returning-fieldname</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="upsert-returning-fieldname-implicit">
+        <output-dir compare="Text">insert-returning-fieldname</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="upsert-returning-fieldname-implicit-2">
+        <output-dir compare="Text">insert-returning-fieldname</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -4640,7 +4654,7 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q05_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>ASX1091: Type mismatch: expected value of type object, but got the value of type array (in line 22, at column 8)</expected-error>
+        <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier u (in line 22, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
@@ -4775,7 +4789,7 @@
     <test-case FilePath="group-by">
       <compilation-unit name="sugar-02-2">
         <output-dir compare="Text">core-02</output-dir>
-        <expected-error>Cannot resolve ambiguous alias reference for identifier deptId</expected-error>
+        <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier deptId (in line 28, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
@@ -7140,8 +7154,8 @@
     <test-case FilePath="numeric">
       <compilation-unit name="scientific_error">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Cannot find dataset e in dataverse Default nor an alias with name e</expected-error>
-        <expected-error>Cannot find dataset e in dataverse Default nor an alias with name e</expected-error>
+        <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier e (in line 24, at column 10)</expected-error>
+        <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier e (in line 24, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
@@ -7611,6 +7625,23 @@
     <test-case FilePath="resolution">
       <compilation-unit name="function_dataverse">
         <output-dir compare="Text">function_dataverse</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="field_accessor_1">
+        <output-dir compare="Text">field_accessor_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="field_accessor_2_negative">
+        <output-dir compare="Text">field_accessor_1</output-dir>
+        <expected-error>ASX1074: Cannot resolve ambiguous alias reference for identifier c2 (in line 25, at column 7)</expected-error>
+        <expected-error>ASX1074: Cannot resolve ambiguous alias reference for identifier c2 (in line 25, at column 7)</expected-error>
+        <expected-error>ASX1074: Cannot resolve ambiguous alias reference for identifier c2 (in line 25, at column 7)</expected-error>
+        <expected-error>ASX1074: Cannot resolve ambiguous alias reference for identifier c10 (in line 25, at column 51)</expected-error>
+        <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier c20 (in line 26, at column 8)</expected-error>
+        <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier c1 (in line 25, at column 19)</expected-error>
+        <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier samptable (in line 25, at column 14)</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -10505,7 +10536,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf30">
         <output-dir compare="Text">udf30</output-dir>
-        <expected-error>Cannot find dataset y in dataverse Default nor an alias with name y</expected-error>
+        <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier y (in line 30, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">

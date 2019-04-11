@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -30,6 +31,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.context.Scope;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
@@ -58,7 +60,8 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     protected final MetadataProvider metadataProvider;
 
     /**
-     * @param context, manages ids of variables and guarantees uniqueness of variables.
+     * @param context,
+     *            manages ids of variables and guarantees uniqueness of variables.
      */
     public VariableCheckAndRewriteVisitor(LangRewritingContext context, MetadataProvider metadataProvider,
             Collection<VarIdentifier> externalVars) {
@@ -70,7 +73,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     public Expression visit(FieldAccessor fa, ILangExpression parent) throws CompilationException {
         Expression leadingExpr = fa.getExpr();
         if (leadingExpr.getKind() != Kind.VARIABLE_EXPRESSION) {
-            fa.setExpr(leadingExpr.accept(this, fa));
+            fa.setExpr(leadingExpr.accept(this, parent));
             return fa;
         } else {
             VariableExpr varExpr = (VariableExpr) leadingExpr;
@@ -78,7 +81,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             Expression resolvedExpr = resolve(varExpr,
                     /* Resolves within the dataverse that has the same name as the variable name. */
                     SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar().getValue()).getValue(), lastIdentifier,
-                    fa, parent);
+                    parent);
             if (resolvedExpr.getKind() == Kind.CALL_EXPRESSION) {
                 CallExpr callExpr = (CallExpr) resolvedExpr;
                 if (callExpr.getFunctionSignature().equals(FN_DATASET)) {
@@ -94,12 +97,12 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     @Override
     public Expression visit(VariableExpr varExpr, ILangExpression parent) throws CompilationException {
         return resolve(varExpr, metadataProvider.getDefaultDataverseName(),
-                SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar().getValue()).getValue(), varExpr, parent);
+                SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar().getValue()).getValue(), parent);
     }
 
     // Resolve a variable expression with dataverse name and dataset name.
-    private Expression resolve(VariableExpr varExpr, String dataverseName, String datasetName,
-            Expression originalExprWithUndefinedIdentifier, ILangExpression parent) throws CompilationException {
+    private Expression resolve(VariableExpr varExpr, String dataverseName, String datasetName, ILangExpression parent)
+            throws CompilationException {
 
         VarIdentifier varId = varExpr.getVar();
         String varName = varId.getValue();
@@ -117,23 +120,20 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                     SqlppVariableUtil.variableNameToDisplayedFieldName(varId.getValue()));
         }
 
-        boolean resolveToDatasetOnly = resolveToDatasetOnly(originalExprWithUndefinedIdentifier, parent);
-        if (resolveToDatasetOnly) {
+        boolean resolveToDataset = parent.accept(CheckDatasetOnlyResolutionVisitor.INSTANCE, varExpr);
+        if (resolveToDataset) {
+            // resolve the undefined identifier reference as a dataset access.
+            // for a From/Join/UNNEST/Quantifiers binding expression
             return resolveAsDataset(dataverseName, datasetName, sourceLoc);
-        }
-
-        Set<VariableExpr> localVars = scopeChecker.getCurrentScope().getLiveVariables(scopeChecker.getPrecedingScope(),
-                context::isExcludedForFieldAccessVar);
-        switch (localVars.size()) {
-            case 0:
-                return resolveAsDataset(dataverseName, datasetName, sourceLoc);
-            case 1:
-                return resolveAsFieldAccess(localVars.iterator().next(),
-                        SqlppVariableUtil.toUserDefinedVariableName(varName).getValue(), sourceLoc);
-            default:
-                // More than one possibilities.
-                throw new CompilationException(ErrorCode.AMBIGUOUS_IDENTIFIER, sourceLoc,
-                        SqlppVariableUtil.toUserDefinedVariableName(varName).getValue());
+        } else {
+            // resolve the undefined identifier reference as a field access on a context variable
+            Map<VariableExpr, Set<? extends Scope.SymbolAnnotation>> localVars =
+                    scopeChecker.getCurrentScope().getLiveVariables(scopeChecker.getPrecedingScope());
+            Set<VariableExpr> contextVars = Scope.findVariablesAnnotatedBy(localVars.keySet(),
+                    SqlppVariableAnnotation.CONTEXT_VARIABLE, localVars, sourceLoc);
+            VariableExpr contextVar = pickContextVar(contextVars, varExpr);
+            String fieldName = SqlppVariableUtil.toUserDefinedVariableName(varId.getValue()).getValue();
+            return resolveAsFieldAccess(contextVar, fieldName, sourceLoc);
         }
     }
 
@@ -149,7 +149,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             throws CompilationException {
         Dataset dataset = findDataset(dataverseName, datasetName, sourceLoc);
         if (dataset == null) {
-            throwUnresolvableError(dataverseName, datasetName, sourceLoc);
+            throw createUnresolvableError(dataverseName, datasetName, sourceLoc);
         }
         metadataProvider.addAccessedDataset(dataset);
         List<Expression> argList = new ArrayList<>(1);
@@ -169,23 +169,15 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         return callExpr;
     }
 
-    private void throwUnresolvableError(String dataverseName, String datasetName, SourceLocation sourceLoc)
-            throws CompilationException {
+    private CompilationException createUnresolvableError(String dataverseName, String datasetName,
+            SourceLocation sourceLoc) {
         String defaultDataverseName = metadataProvider.getDefaultDataverseName();
         if (dataverseName == null && defaultDataverseName == null) {
-            throw new CompilationException(ErrorCode.NAME_RESOLVE_UNKNOWN_DATASET, sourceLoc, datasetName);
+            return new CompilationException(ErrorCode.NAME_RESOLVE_UNKNOWN_DATASET, sourceLoc, datasetName);
         }
         //If no available dataset nor in-scope variable to resolve to, we throw an error.
-        throw new CompilationException(ErrorCode.NAME_RESOLVE_UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+        return new CompilationException(ErrorCode.NAME_RESOLVE_UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
                 dataverseName == null ? defaultDataverseName : dataverseName);
-    }
-
-    // For a From/Join/UNNEST/Quantifiers binding expression, we resolve the undefined identifier reference as
-    // a dataset access only.
-    private boolean resolveToDatasetOnly(Expression originalExpressionWithUndefinedIdentifier, ILangExpression parent)
-            throws CompilationException {
-        CheckDatasetOnlyResolutionVisitor visitor = new CheckDatasetOnlyResolutionVisitor();
-        return parent.accept(visitor, originalExpressionWithUndefinedIdentifier);
     }
 
     private Dataset findDataset(String dataverseName, String datasetName, SourceLocation sourceLoc)
@@ -245,5 +237,19 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             return winExpr;
         }
         return super.visit(winExpr, arg);
+    }
+
+    static VariableExpr pickContextVar(Collection<VariableExpr> contextVars, VariableExpr usedVar)
+            throws CompilationException {
+        switch (contextVars.size()) {
+            case 0:
+                throw new CompilationException(ErrorCode.UNDEFINED_IDENTIFIER, usedVar.getSourceLocation(),
+                        SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar().getValue()).getValue());
+            case 1:
+                return contextVars.iterator().next();
+            default:
+                throw new CompilationException(ErrorCode.AMBIGUOUS_IDENTIFIER, usedVar.getSourceLocation(),
+                        SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar().getValue()).getValue());
+        }
     }
 }

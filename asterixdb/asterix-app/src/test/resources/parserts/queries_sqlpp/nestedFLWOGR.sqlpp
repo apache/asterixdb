@@ -19,7 +19,7 @@
 
 select element {'name':user.name}
 from  (
-    with  data as User
+    with  data as (from User u select value u)
     select element data
 ) as user
 where some i in user.interests satisfies (i = 'movies')

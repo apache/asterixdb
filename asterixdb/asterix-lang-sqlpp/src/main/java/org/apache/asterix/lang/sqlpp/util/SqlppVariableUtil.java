@@ -20,10 +20,8 @@ package org.apache.asterix.lang.sqlpp.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -201,14 +199,6 @@ public class SqlppVariableUtil {
             bindingVars.add(qp.getVarExpr());
         }
         return bindingVars;
-    }
-
-    public static Map<Expression, Identifier> createFieldVariableMap(List<Pair<Expression, Identifier>> fieldList) {
-        Map<Expression, Identifier> fieldVars = new HashMap<>();
-        for (Pair<Expression, Identifier> p : fieldList) {
-            fieldVars.put(p.first, p.second);
-        }
-        return fieldVars;
     }
 
     public static void addToFieldVariableList(VariableExpr varExpr, List<Pair<Expression, Identifier>> outFieldList) {
