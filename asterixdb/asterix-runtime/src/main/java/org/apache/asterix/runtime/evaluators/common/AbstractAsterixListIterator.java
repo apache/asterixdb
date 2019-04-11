@@ -42,7 +42,7 @@ public abstract class AbstractAsterixListIterator implements ISequenceIterator {
 
     @Override
     public int compare(ISequenceIterator cmpIter) throws HyracksDataException {
-        return cmp.compare(data, pos, -1, cmpIter.getData(), cmpIter.getPos(), -1);
+        return cmp.compare(data, pos, itemLen, cmpIter.getData(), cmpIter.getPos(), itemLen);
     }
 
     @Override

@@ -46,7 +46,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.ShortBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
@@ -139,7 +139,7 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
         tokenTypeTraits[0] = NonTaggedFormatUtil.getTokenTypeTrait(secondaryKeyType);
         if (isPartitioned) {
             // The partitioning field is hardcoded to be a short *without* an Asterix type tag.
-            tokenComparatorFactories[1] = PointableBinaryComparatorFactory.of(ShortPointable.FACTORY);
+            tokenComparatorFactories[1] = ShortBinaryComparatorFactory.INSTANCE;
             tokenTypeTraits[1] = ShortPointable.TYPE_TRAITS;
         }
         // Set tokenizer factory.
@@ -171,7 +171,7 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
         if (isPartitioned) {
             tokenKeyPairFields[1] = ShortSerializerDeserializer.INSTANCE;
             tokenKeyPairTypeTraits[1] = tokenTypeTraits[1];
-            tokenKeyPairComparatorFactories[1] = PointableBinaryComparatorFactory.of(ShortPointable.FACTORY);
+            tokenKeyPairComparatorFactories[1] = ShortBinaryComparatorFactory.INSTANCE;
             pkOff = 2;
         }
         if (numPrimaryKeys > 0) {

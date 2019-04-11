@@ -47,9 +47,7 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.APointPartialBinar
 import org.apache.asterix.dataflow.data.nontagged.comparators.APolygonPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ARectanglePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ListItemBinaryComparatorFactory;
-import org.apache.asterix.dataflow.data.nontagged.comparators.LongBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.valueproviders.PrimitiveValueProviderFactory;
 import org.apache.asterix.formats.nontagged.AnyBinaryComparatorFactory;
 import org.apache.asterix.formats.nontagged.OrderedBinaryComparatorFactory;
@@ -70,8 +68,15 @@ import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOpera
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+import org.apache.hyracks.data.std.accessors.BooleanBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.ByteBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.FloatBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.LongBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.RawBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.ShortBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.data.std.primitive.BytePointable;
@@ -210,6 +215,11 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         REGISTERED_CLASSES.put("AnyBinaryComparatorFactory", AnyBinaryComparatorFactory.class);
         REGISTERED_CLASSES.put("OrderedBinaryComparatorFactory", OrderedBinaryComparatorFactory.class);
         REGISTERED_CLASSES.put("OrderedLinearizeComparatorFactory", OrderedLinearizeComparatorFactory.class);
+        REGISTERED_CLASSES.put("ByteBinaryComparatorFactory", ByteBinaryComparatorFactory.class);
+        REGISTERED_CLASSES.put("ShortBinaryComparatorFactory", ShortBinaryComparatorFactory.class);
+        REGISTERED_CLASSES.put("IntegerBinaryComparatorFactory", IntegerBinaryComparatorFactory.class);
+        REGISTERED_CLASSES.put("FloatBinaryComparatorFactory", FloatBinaryComparatorFactory.class);
+        REGISTERED_CLASSES.put("DoubleBinaryComparatorFactory", DoubleBinaryComparatorFactory.class);
 
         // IPointableFactory
         REGISTERED_CLASSES.put("AIntervalPointableFactory", AIntervalPointable.AIntervalPointableFactory.class);

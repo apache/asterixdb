@@ -115,4 +115,10 @@ public class DataUtils {
         return cmp.compare(first.getByteArray(), first.getStartOffset(), first.getLength(), second.getByteArray(),
                 second.getStartOffset(), second.getLength());
     }
+
+    public static void ensureLengths(int requiredLength, int length1, int length2) {
+        if (length1 != requiredLength || length2 != requiredLength) {
+            throw new IllegalStateException();
+        }
+    }
 }

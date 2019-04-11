@@ -73,8 +73,8 @@ import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
-import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -425,8 +425,7 @@ public class PushRuntimeTest {
         // the sort (by nation id)
         RecordDescriptor sortDesc = scannerDesc;
         InMemorySortOperatorDescriptor sort = new InMemorySortOperatorDescriptor(spec, new int[] { 3 },
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
-                sortDesc);
+                new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE }, sortDesc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sort,
                 new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
@@ -445,8 +444,7 @@ public class PushRuntimeTest {
         RecordDescriptor gbyDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
         PreclusteredGroupOperatorDescriptor gby = new PreclusteredGroupOperatorDescriptor(spec, new int[] { 3 },
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) }, npaaf,
-                gbyDesc);
+                new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE }, npaaf, gbyDesc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, gby,
                 new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
@@ -838,9 +836,9 @@ public class PushRuntimeTest {
 
         // the sort (by nation id)
         RecordDescriptor sortDesc = scannerDesc;
-        InMemorySortRuntimeFactory sort = new InMemorySortRuntimeFactory(new int[] { 3 },
-                (INormalizedKeyComputerFactory) null,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) }, null);
+        InMemorySortRuntimeFactory sort =
+                new InMemorySortRuntimeFactory(new int[] { 3 }, (INormalizedKeyComputerFactory) null,
+                        new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE }, null);
 
         // the group-by
         NestedTupleSourceRuntimeFactory nts = new NestedTupleSourceRuntimeFactory();
@@ -855,11 +853,9 @@ public class PushRuntimeTest {
                 new AlgebricksPipeline[] { pipeline }, new int[] { 3 }, new int[] {});
         RecordDescriptor gbyDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
-        MicroPreClusteredGroupRuntimeFactory gby =
-                new MicroPreClusteredGroupRuntimeFactory(new int[] { 3 },
-                        new IBinaryComparatorFactory[] {
-                                PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
-                        npaaf, sortDesc, gbyDesc, null);
+        MicroPreClusteredGroupRuntimeFactory gby = new MicroPreClusteredGroupRuntimeFactory(new int[] { 3 },
+                new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE }, npaaf, sortDesc, gbyDesc,
+                null);
 
         // the algebricks op.
         IScalarEvaluatorFactory cond =

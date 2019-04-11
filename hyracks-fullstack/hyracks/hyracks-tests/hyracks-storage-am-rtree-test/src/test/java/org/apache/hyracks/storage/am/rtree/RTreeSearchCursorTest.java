@@ -27,7 +27,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -71,10 +71,8 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
             IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
     public static final int KEY_FIELD_COUNT = 4;
     public static final IBinaryComparatorFactory[] CMP_FACTORIES =
-            { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
-                    PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
-                    PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
-                    PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
+            { IntegerBinaryComparatorFactory.INSTANCE, IntegerBinaryComparatorFactory.INSTANCE,
+                    IntegerBinaryComparatorFactory.INSTANCE, IntegerBinaryComparatorFactory.INSTANCE };
     public static final IPrimitiveValueProviderFactory[] VALUE_PROVIDER_FACTORY =
             RTreeUtils.createPrimitiveValueProviderFactories(CMP_FACTORIES.length, IntegerPointable.FACTORY);
     public static final RTreeTypeAwareTupleWriterFactory TUPLE_WRITER_FACTORY =

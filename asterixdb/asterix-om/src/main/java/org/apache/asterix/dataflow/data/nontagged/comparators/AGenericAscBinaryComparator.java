@@ -21,7 +21,7 @@ package org.apache.asterix.dataflow.data.nontagged.comparators;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-class AGenericAscBinaryComparator extends AbstractAGenericBinaryComparator {
+final class AGenericAscBinaryComparator extends AbstractAGenericBinaryComparator {
 
     AGenericAscBinaryComparator(IAType leftType, IAType rightType) {
         super(leftType, rightType);

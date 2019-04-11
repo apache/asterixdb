@@ -32,6 +32,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
@@ -178,10 +179,10 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         secondaryTypeTraits[2] = DoublePointable.TYPE_TRAITS;
         secondaryTypeTraits[3] = DoublePointable.TYPE_TRAITS;
         secondaryTypeTraits[4] = UTF8StringPointable.TYPE_TRAITS;
-        secondaryComparatorFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        secondaryComparatorFactories[1] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        secondaryComparatorFactories[2] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        secondaryComparatorFactories[3] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        secondaryComparatorFactories[0] = DoubleBinaryComparatorFactory.INSTANCE;
+        secondaryComparatorFactories[1] = DoubleBinaryComparatorFactory.INSTANCE;
+        secondaryComparatorFactories[2] = DoubleBinaryComparatorFactory.INSTANCE;
+        secondaryComparatorFactories[3] = DoubleBinaryComparatorFactory.INSTANCE;
 
         // This only used for LSMRTree
         int[] rtreeFields = null;
@@ -203,10 +204,10 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
             btreeComparatorFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
             btreeFields = new int[] { 4 };
         } else {
-            btreeComparatorFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-            btreeComparatorFactories[1] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-            btreeComparatorFactories[2] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-            btreeComparatorFactories[3] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            btreeComparatorFactories[0] = DoubleBinaryComparatorFactory.INSTANCE;
+            btreeComparatorFactories[1] = DoubleBinaryComparatorFactory.INSTANCE;
+            btreeComparatorFactories[2] = DoubleBinaryComparatorFactory.INSTANCE;
+            btreeComparatorFactories[3] = DoubleBinaryComparatorFactory.INSTANCE;
             btreeComparatorFactories[4] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
         }
 

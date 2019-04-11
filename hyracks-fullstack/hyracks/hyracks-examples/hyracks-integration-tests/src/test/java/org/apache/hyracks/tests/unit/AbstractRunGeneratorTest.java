@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.tests.unit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.DataInputStream;
 import java.util.ArrayList;
@@ -37,8 +37,8 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
-import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -59,9 +59,8 @@ public abstract class AbstractRunGeneratorTest {
     static RecordDescriptor RecordDesc = new RecordDescriptor(SerDers);
     static Random GRandom = new Random(0);
     static int[] SortFields = new int[] { 0, 1 };
-    static IBinaryComparatorFactory[] ComparatorFactories =
-            new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
-                    PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
+    static IBinaryComparatorFactory[] ComparatorFactories = new IBinaryComparatorFactory[] {
+            IntegerBinaryComparatorFactory.INSTANCE, PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
 
     static void assertMaxFrameSizesAreAllEqualsTo(List<GeneratedRunFileReader> maxSize, int pageSize) {
         for (int i = 0; i < maxSize.size(); i++) {

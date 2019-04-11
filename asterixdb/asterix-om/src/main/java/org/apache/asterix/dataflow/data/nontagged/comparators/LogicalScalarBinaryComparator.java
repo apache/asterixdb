@@ -44,36 +44,17 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 
-public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
+public final class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
 
     private static final EnumSet<ATypeTag> INEQUALITY_UNDEFINED_TYPES =
             EnumSet.of(DURATION, INTERVAL, LINE, POINT, POINT3D, POLYGON, CIRCLE, RECTANGLE);
-
     private final IBinaryComparator strBinaryComp =
             BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
-    private final IBinaryComparator circleBinaryComp =
-            ACirclePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator durationBinaryComp =
-            ADurationPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator intervalBinaryComp =
-            AIntervalAscPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator lineBinaryComparator =
-            ALinePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator pointBinaryComparator =
-            APointPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator point3DBinaryComparator =
-            APoint3DPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator polygonBinaryComparator =
-            APolygonPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator rectangleBinaryComparator =
-            ARectanglePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator uuidBinaryComparator =
-            AUUIDPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
     private final IBinaryComparator byteArrayComparator =
             new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY).createBinaryComparator();
-
     private final boolean isEquality;
 
     LogicalScalarBinaryComparator(boolean isEquality) {
@@ -112,7 +93,7 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
         int result;
         switch (leftTag) {
             case BOOLEAN:
-                result = Integer.compare(leftBytes[leftStart], rightBytes[rightStart]);
+                result = BooleanPointable.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
                 break;
             case STRING:
                 result = strBinaryComp.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
@@ -138,37 +119,43 @@ public class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
                         ADateTimeSerializerDeserializer.getChronon(rightBytes, rightStart));
                 break;
             case CIRCLE:
-                result = circleBinaryComp.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
+                result = ACirclePartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
+                        rightStart, rightLen);
                 break;
             case LINE:
-                result = lineBinaryComparator.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
+                result = ALinePartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
+                        rightStart, rightLen);
                 break;
             case POINT:
-                result = pointBinaryComparator.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
+                result = APointPartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
+                        rightStart, rightLen);
                 break;
             case POINT3D:
-                result = point3DBinaryComparator.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart,
-                        rightLen);
+                result = APoint3DPartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
+                        rightStart, rightLen);
                 break;
             case POLYGON:
-                result = polygonBinaryComparator.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart,
-                        rightLen);
+                result = APolygonPartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
+                        rightStart, rightLen);
                 break;
             case DURATION:
-                result = durationBinaryComp.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
+                result = ADurationPartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
+                        rightStart, rightLen);
                 break;
             case INTERVAL:
-                result = intervalBinaryComp.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
+                result = AIntervalAscPartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
+                        rightStart, rightLen);
                 break;
             case RECTANGLE:
-                result = rectangleBinaryComparator.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart,
-                        rightLen);
+                result = ARectanglePartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
+                        rightStart, rightLen);
                 break;
             case BINARY:
                 result = byteArrayComparator.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
                 break;
             case UUID:
-                result = uuidBinaryComparator.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
+                result = AUUIDPartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
+                        rightStart, rightLen);
                 break;
             default:
                 return Result.NULL;

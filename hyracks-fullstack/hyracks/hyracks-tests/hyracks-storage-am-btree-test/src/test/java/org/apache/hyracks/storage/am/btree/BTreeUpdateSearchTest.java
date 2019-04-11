@@ -25,7 +25,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -68,7 +68,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         // declare keys
         int keyFieldCount = 1;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 
         @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] recDescSers =

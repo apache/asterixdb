@@ -28,13 +28,15 @@ import org.apache.hyracks.data.std.api.IHashable;
 import org.apache.hyracks.data.std.api.INumeric;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
+import org.apache.hyracks.data.std.util.DataUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 public final class IntegerPointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
+    private static final int LENGTH = 4;
     public static final IntegerPointableFactory FACTORY = new IntegerPointableFactory();
-    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(4) {
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(LENGTH) {
         private static final long serialVersionUID = -7178318032449879790L;
 
         //TODO fix RTREE logic based on class comparision in LSMRTreeUtils#proposeBestLinearizer
@@ -88,20 +90,6 @@ public final class IntegerPointable extends AbstractPointable implements IHashab
         setInteger(bytes, start, value);
     }
 
-    public int preIncrement() {
-        int v = getInteger();
-        ++v;
-        setInteger(v);
-        return v;
-    }
-
-    public int postIncrement() {
-        int v = getInteger();
-        int ov = v++;
-        setInteger(v);
-        return ov;
-    }
-
     @Override
     public int compareTo(IPointable pointer) {
         return compareTo(pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
@@ -109,9 +97,12 @@ public final class IntegerPointable extends AbstractPointable implements IHashab
 
     @Override
     public int compareTo(byte[] bytes, int start, int length) {
-        int v = getInteger();
-        int ov = getInteger(bytes, start);
-        return Integer.compare(v, ov);
+        return compare(this.bytes, this.start, this.length, bytes, start, length);
+    }
+
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+        DataUtils.ensureLengths(LENGTH, l1, l2);
+        return Integer.compare(getInteger(b1, s1), getInteger(b2, s2));
     }
 
     @Override

@@ -26,12 +26,14 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+import org.apache.hyracks.data.std.accessors.BooleanBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.FloatBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.LongBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.RawBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
-import org.apache.hyracks.data.std.primitive.DoublePointable;
-import org.apache.hyracks.data.std.primitive.FloatPointable;
-import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringLowercasePointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
@@ -55,17 +57,14 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
             final boolean ignoreCase) {
         return new IBinaryComparator() {
             final IBinaryComparator ascBoolComp = BooleanBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-            final IBinaryComparator ascIntComp =
-                    new PointableBinaryComparatorFactory(IntegerPointable.FACTORY).createBinaryComparator();
+            final IBinaryComparator ascIntComp = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascLongComp = LongBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascStrComp =
                     new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY).createBinaryComparator();
             final IBinaryComparator ascLowerCaseStrComp =
                     new PointableBinaryComparatorFactory(UTF8StringLowercasePointable.FACTORY).createBinaryComparator();
-            final IBinaryComparator ascFloatComp =
-                    new PointableBinaryComparatorFactory(FloatPointable.FACTORY).createBinaryComparator();
-            final IBinaryComparator ascDoubleComp =
-                    new PointableBinaryComparatorFactory(DoublePointable.FACTORY).createBinaryComparator();
+            final IBinaryComparator ascFloatComp = FloatBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            final IBinaryComparator ascDoubleComp = DoubleBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascRectangleComp =
                     ARectanglePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascCircleComp =

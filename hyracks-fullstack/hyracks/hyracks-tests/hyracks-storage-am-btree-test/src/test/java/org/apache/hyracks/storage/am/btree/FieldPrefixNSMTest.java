@@ -31,7 +31,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -111,9 +111,9 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         // declare keys
         int keyFieldCount = 3;
         IBinaryComparator[] cmps = new IBinaryComparator[keyFieldCount];
-        cmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
-        cmps[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
-        cmps[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        cmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[1] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        cmps[2] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator cmp = new MultiComparator(cmps);
 
         // just for printing

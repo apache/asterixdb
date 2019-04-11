@@ -29,6 +29,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -135,7 +136,7 @@ public class InsertPipelineExample {
 
         // comparator factories for primary index
         IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[1];
-        primaryComparatorFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        primaryComparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 
         // the B-Tree expects its keyfields to be at the front of its input
         // tuple
@@ -163,7 +164,7 @@ public class InsertPipelineExample {
         // comparator factories for secondary index
         IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[2];
         secondaryComparatorFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
-        secondaryComparatorFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        secondaryComparatorFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
 
         // the B-Tree expects its keyfields to be at the front of its input
         // tuple

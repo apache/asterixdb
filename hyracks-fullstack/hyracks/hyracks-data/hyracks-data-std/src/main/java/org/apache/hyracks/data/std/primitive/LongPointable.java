@@ -28,13 +28,15 @@ import org.apache.hyracks.data.std.api.IHashable;
 import org.apache.hyracks.data.std.api.INumeric;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
+import org.apache.hyracks.data.std.util.DataUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 public final class LongPointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
+    private static final int LENGTH = 8;
     public static final LongPointableFactory FACTORY = new LongPointableFactory();
-    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(8);
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(LENGTH);
 
     public static class LongPointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
@@ -100,20 +102,6 @@ public final class LongPointable extends AbstractPointable implements IHashable,
         setLong(bytes, start, value);
     }
 
-    public long preIncrement() {
-        long v = getLong();
-        ++v;
-        setLong(v);
-        return v;
-    }
-
-    public long postIncrement() {
-        long v = getLong();
-        long ov = v++;
-        setLong(v);
-        return ov;
-    }
-
     @Override
     public int compareTo(IPointable pointer) {
         return compareTo(pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
@@ -121,9 +109,12 @@ public final class LongPointable extends AbstractPointable implements IHashable,
 
     @Override
     public int compareTo(byte[] bytes, int start, int length) {
-        long v = getLong();
-        long ov = getLong(bytes, start);
-        return Long.compare(v, ov);
+        return compare(this.bytes, this.start, this.length, bytes, start, length);
+    }
+
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+        DataUtils.ensureLengths(LENGTH, l1, l2);
+        return Long.compare(getLong(b1, s1), getLong(b2, s2));
     }
 
     @Override

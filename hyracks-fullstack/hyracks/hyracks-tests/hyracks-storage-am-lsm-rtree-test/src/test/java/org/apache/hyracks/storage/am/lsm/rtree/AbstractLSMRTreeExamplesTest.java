@@ -24,7 +24,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -68,10 +68,10 @@ public abstract class AbstractLSMRTreeExamplesTest extends AbstractRTreeExamples
         // Declare RTree keys.
         int rtreeKeyFieldCount = 4;
         IBinaryComparatorFactory[] rtreeCmpFactories = new IBinaryComparatorFactory[rtreeKeyFieldCount];
-        rtreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        rtreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        rtreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        rtreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        rtreeCmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+        rtreeCmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
+        rtreeCmpFactories[2] = IntegerBinaryComparatorFactory.INSTANCE;
+        rtreeCmpFactories[3] = IntegerBinaryComparatorFactory.INSTANCE;
 
         // Declare BTree keys, this will only be used for LSMRTree
         int btreeKeyFieldCount;
@@ -81,7 +81,7 @@ public abstract class AbstractLSMRTreeExamplesTest extends AbstractRTreeExamples
             //Parameters look different for LSM RTREE from LSM RTREE WITH ANTI MATTER TUPLES
             btreeKeyFieldCount = 1;
             btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
             btreeFields = new int[btreeKeyFieldCount];
             for (int i = 0; i < btreeKeyFieldCount; i++) {
                 btreeFields[i] = rtreeKeyFieldCount + i;
@@ -90,12 +90,12 @@ public abstract class AbstractLSMRTreeExamplesTest extends AbstractRTreeExamples
         } else {
             btreeKeyFieldCount = 6;
             btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-            btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-            btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-            btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-            btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-            btreeCmpFactories[5] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+            btreeCmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
+            btreeCmpFactories[2] = IntegerBinaryComparatorFactory.INSTANCE;
+            btreeCmpFactories[3] = IntegerBinaryComparatorFactory.INSTANCE;
+            btreeCmpFactories[4] = IntegerBinaryComparatorFactory.INSTANCE;
+            btreeCmpFactories[5] = IntegerBinaryComparatorFactory.INSTANCE;
         }
 
         // create value providers
@@ -104,8 +104,7 @@ public abstract class AbstractLSMRTreeExamplesTest extends AbstractRTreeExamples
 
         int[] rtreeFields = { 0, 1, 2, 3, 4 };
         ITypeTraits[] filterTypeTraits = { IntegerPointable.TYPE_TRAITS };
-        IBinaryComparatorFactory[] filterCmpFactories =
-                { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
+        IBinaryComparatorFactory[] filterCmpFactories = { IntegerBinaryComparatorFactory.INSTANCE };
         int[] filterFields = { 5 };
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,

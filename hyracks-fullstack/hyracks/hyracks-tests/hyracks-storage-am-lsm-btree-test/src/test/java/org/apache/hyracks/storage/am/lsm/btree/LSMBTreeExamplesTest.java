@@ -23,7 +23,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -98,15 +98,14 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
         // Declare keys.
         int keyFieldCount = 1;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 
         // This is only used for the LSM-BTree.
         int[] bloomFilterKeyFields = new int[keyFieldCount];
         bloomFilterKeyFields[0] = 0;
 
         ITypeTraits[] filterTypeTraits = { IntegerPointable.TYPE_TRAITS };
-        IBinaryComparatorFactory[] filterCmpFactories =
-                { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
+        IBinaryComparatorFactory[] filterCmpFactories = { IntegerBinaryComparatorFactory.INSTANCE };
         int[] filterFields = { 1 };
         int[] btreeFields = { 1 };
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, filterTypeTraits,

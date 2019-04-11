@@ -40,7 +40,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.ShortBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
@@ -209,7 +209,7 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         tokenComparatorFactories[0] = NonTaggedFormatUtil.getTokenBinaryComparatorFactory(secondaryKeyType);
         if (isPartitioned) {
             // The partitioning field is hardcoded to be a short *without* an Asterix type tag.
-            tokenComparatorFactories[1] = PointableBinaryComparatorFactory.of(ShortPointable.FACTORY);
+            tokenComparatorFactories[1] = ShortBinaryComparatorFactory.INSTANCE;
         }
         return tokenComparatorFactories;
     }

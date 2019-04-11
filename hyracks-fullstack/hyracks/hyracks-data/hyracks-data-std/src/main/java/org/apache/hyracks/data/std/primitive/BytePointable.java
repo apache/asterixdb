@@ -28,13 +28,15 @@ import org.apache.hyracks.data.std.api.IHashable;
 import org.apache.hyracks.data.std.api.INumeric;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
+import org.apache.hyracks.data.std.util.DataUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 public final class BytePointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
+    private static final int LENGTH = 1;
     public static final BytePointableFactory FACTORY = new BytePointableFactory();
-    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(1);
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(LENGTH);
 
     public static final class BytePointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
@@ -64,7 +66,7 @@ public final class BytePointable extends AbstractPointable implements IHashable,
         return bytes[start];
     }
 
-    public static void setByte(byte[] bytes, int start, byte value) {
+    private static void setByte(byte[] bytes, int start, byte value) {
         bytes[start] = value;
     }
 
@@ -76,20 +78,6 @@ public final class BytePointable extends AbstractPointable implements IHashable,
         setByte(bytes, start, value);
     }
 
-    public byte preIncrement() {
-        byte v = getByte();
-        ++v;
-        setByte(v);
-        return v;
-    }
-
-    public byte postIncrement() {
-        byte v = getByte();
-        byte ov = v++;
-        setByte(v);
-        return ov;
-    }
-
     @Override
     public int compareTo(IPointable pointer) {
         return compareTo(pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
@@ -97,9 +85,12 @@ public final class BytePointable extends AbstractPointable implements IHashable,
 
     @Override
     public int compareTo(byte[] bytes, int start, int length) {
-        byte b = getByte();
-        byte ob = getByte(bytes, start);
-        return Byte.compare(b, ob);
+        return compare(this.bytes, this.start, this.length, bytes, start, length);
+    }
+
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+        DataUtils.ensureLengths(LENGTH, l1, l2);
+        return Byte.compare(getByte(b1, s1), getByte(b2, s2));
     }
 
     @Override

@@ -25,7 +25,7 @@ import java.util.Collections;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
@@ -41,8 +41,7 @@ import org.apache.hyracks.storage.common.MultiComparator;
 public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteriorFrame {
 
     public static final int childPtrSize = 4;
-    private IBinaryComparator childPtrCmp =
-            PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+    private IBinaryComparator childPtrCmp = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
     private final int keyFieldCount;
 
     public RTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders,

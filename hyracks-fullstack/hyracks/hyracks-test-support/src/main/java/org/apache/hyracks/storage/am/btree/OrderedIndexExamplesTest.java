@@ -28,6 +28,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
@@ -84,7 +85,7 @@ public abstract class OrderedIndexExamplesTest {
         // Declare keys.
         int keyFieldCount = 1;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 
         // This is only used for the LSM-BTree.
         int[] bloomFilterKeyFields = new int[keyFieldCount];
@@ -248,8 +249,8 @@ public abstract class OrderedIndexExamplesTest {
         // declare keys
         int keyFieldCount = 2;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+        cmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
 
         // This is only used for the LSM-BTree.
         int[] bloomFilterKeyFields = new int[keyFieldCount];
@@ -627,8 +628,8 @@ public abstract class OrderedIndexExamplesTest {
         // declare keys
         int keyFieldCount = 2;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+        cmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
 
         // This is only used for the LSM-BTree.
         int[] bloomFilterKeyFields = new int[keyFieldCount];
@@ -699,7 +700,7 @@ public abstract class OrderedIndexExamplesTest {
         // declare keys
         int keyFieldCount = 1;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
 
         Random rnd = new Random();
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);

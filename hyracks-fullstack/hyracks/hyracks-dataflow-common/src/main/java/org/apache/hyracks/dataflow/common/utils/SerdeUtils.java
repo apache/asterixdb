@@ -23,7 +23,12 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.FloatBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.LongBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.ShortBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.FixedLengthTypeTrait;
@@ -106,21 +111,22 @@ public class SerdeUtils {
 
     public static IBinaryComparatorFactory serdeToComparatorFactory(ISerializerDeserializer serde) {
         if (serde instanceof ShortSerializerDeserializer) {
-            return PointableBinaryComparatorFactory.of(ShortPointable.FACTORY);
+            return ShortBinaryComparatorFactory.INSTANCE;
         }
         if (serde instanceof IntegerSerializerDeserializer) {
-            return PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            return IntegerBinaryComparatorFactory.INSTANCE;
         }
         if (serde instanceof Integer64SerializerDeserializer) {
-            return PointableBinaryComparatorFactory.of(LongPointable.FACTORY);
+            return LongBinaryComparatorFactory.INSTANCE;
         }
         if (serde instanceof FloatSerializerDeserializer) {
-            return PointableBinaryComparatorFactory.of(FloatPointable.FACTORY);
+            return FloatBinaryComparatorFactory.INSTANCE;
         }
         if (serde instanceof DoubleSerializerDeserializer) {
-            return PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            return DoubleBinaryComparatorFactory.INSTANCE;
         }
         if (serde instanceof BooleanSerializerDeserializer) {
+            // TODO(ali): how come?
             throw new UnsupportedOperationException("Binary comparator factory for Boolean not implemented.");
         }
         if (serde instanceof UTF8StringSerializerDeserializer) {

@@ -32,7 +32,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -69,8 +69,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
             new BTreeTypeAwareTupleWriterFactory(TYPE_TRAITS, false);
     public static final ITreeIndexMetadataFrameFactory META_FRAME_FACTORY = new LIFOMetaDataFrameFactory();
     public static final int KEY_FIELDS_COUNT = 1;
-    public static final IBinaryComparatorFactory[] CMP_FACTORIES =
-            { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
+    public static final IBinaryComparatorFactory[] CMP_FACTORIES = { IntegerBinaryComparatorFactory.INSTANCE };
     public static final ITreeIndexFrameFactory LEAF_FRAME_FACTORY = new BTreeNSMLeafFrameFactory(TUPLE_WRITER_FACTORY);
     public static final ITreeIndexFrameFactory INTERIOR_FRAME_FACTORY =
             new BTreeNSMInteriorFrameFactory(TUPLE_WRITER_FACTORY);
@@ -134,8 +133,8 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         // declare keys
         int keyFieldCount = 2;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+        cmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
 
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(TUPLE_WRITER_FACTORY);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(TUPLE_WRITER_FACTORY);
@@ -190,8 +189,8 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         // declare keys
         int keyFieldCount = 2;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+        cmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
 
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(TUPLE_WRITER_FACTORY);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(TUPLE_WRITER_FACTORY);
@@ -241,7 +240,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         ITupleReference highKey = TupleUtils.createIntegerTuple(false, hk);
 
         IBinaryComparator[] searchCmps = new IBinaryComparator[1];
-        searchCmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
+        searchCmps[0] = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(searchCmps);
 
         RangePredicate rangePred =

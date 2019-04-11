@@ -28,13 +28,15 @@ import org.apache.hyracks.data.std.api.IHashable;
 import org.apache.hyracks.data.std.api.INumeric;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
+import org.apache.hyracks.data.std.util.DataUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 public final class DoublePointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
+    private static final int LENGTH = 8;
     public static final DoublePointableFactory FACTORY = new DoublePointableFactory();
-    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(8) {
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(LENGTH) {
         private static final long serialVersionUID = 7348262203696059687L;
 
         //TODO fix RTREE logic based on class comparision in LSMRTreeUtils#proposeBestLinearizer
@@ -99,20 +101,6 @@ public final class DoublePointable extends AbstractPointable implements IHashabl
         setDouble(bytes, start, value);
     }
 
-    public double preIncrement() {
-        double v = getDouble();
-        ++v;
-        setDouble(v);
-        return v;
-    }
-
-    public double postIncrement() {
-        double v = getDouble();
-        double ov = v++;
-        setDouble(v);
-        return ov;
-    }
-
     @Override
     public int compareTo(IPointable pointer) {
         return compareTo(pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
@@ -120,9 +108,12 @@ public final class DoublePointable extends AbstractPointable implements IHashabl
 
     @Override
     public int compareTo(byte[] bytes, int start, int length) {
-        double v = getDouble();
-        double ov = getDouble(bytes, start);
-        return Double.compare(v, ov);
+        return compare(this.bytes, this.start, this.length, bytes, start, length);
+    }
+
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+        DataUtils.ensureLengths(LENGTH, l1, l2);
+        return Double.compare(getDouble(b1, s1), getDouble(b2, s2));
     }
 
     @Override

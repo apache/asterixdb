@@ -38,8 +38,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
-import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.std.intersect.IntersectOperatorDescriptor;
 import org.apache.hyracks.test.support.TestUtils;
@@ -72,9 +71,8 @@ public class IntersectOperatorDescriptorTest {
         inputRecordDescriptor = new RecordDescriptor[nInputs];
 
         normalizedKeyFactory = null;
-        comparatorFactory =
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
-                        PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
+        comparatorFactory = new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE,
+                IntegerBinaryComparatorFactory.INSTANCE };
 
         for (int i = 0; i < nInputs; i++) {
             compareFields[i] = new int[nProjectFields];

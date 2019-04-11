@@ -16,35 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.comparators;
+package org.apache.hyracks.data.std.accessors;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+import org.apache.hyracks.data.std.primitive.DoublePointable;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-// TODO(ali): move to Hyracks
-public class BooleanBinaryComparatorFactory implements IBinaryComparatorFactory {
+public final class DoubleBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
-    public static final BooleanBinaryComparatorFactory INSTANCE = new BooleanBinaryComparatorFactory();
+    public static final DoubleBinaryComparatorFactory INSTANCE = new DoubleBinaryComparatorFactory();
 
-    private BooleanBinaryComparatorFactory() {
+    private DoubleBinaryComparatorFactory() {
     }
 
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return BooleanBinaryComparatorFactory::compare;
-    }
-
-    @SuppressWarnings("squid:S1172") // unused parameter
-    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-        return Boolean.compare(ABooleanSerializerDeserializer.getBoolean(b1, s1),
-                ABooleanSerializerDeserializer.getBoolean(b2, s2));
+        return DoublePointable::compare;
     }
 
     @Override

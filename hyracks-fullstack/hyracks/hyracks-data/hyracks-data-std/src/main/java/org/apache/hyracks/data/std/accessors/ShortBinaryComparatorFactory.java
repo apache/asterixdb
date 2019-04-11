@@ -16,34 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.comparators;
+package org.apache.hyracks.data.std.accessors;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+import org.apache.hyracks.data.std.primitive.ShortPointable;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-// TODO(ali): move to Hyracks
-public class LongBinaryComparatorFactory implements IBinaryComparatorFactory {
+public final class ShortBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
-    public static final LongBinaryComparatorFactory INSTANCE = new LongBinaryComparatorFactory();
+    public static final ShortBinaryComparatorFactory INSTANCE = new ShortBinaryComparatorFactory();
 
-    private LongBinaryComparatorFactory() {
+    private ShortBinaryComparatorFactory() {
     }
 
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return LongBinaryComparatorFactory::compare;
-    }
-
-    @SuppressWarnings("squid:S1172") // unused parameter
-    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-        return Long.compare(AInt64SerializerDeserializer.getLong(b1, s1), AInt64SerializerDeserializer.getLong(b2, s2));
+        return ShortPointable::compare;
     }
 
     @Override

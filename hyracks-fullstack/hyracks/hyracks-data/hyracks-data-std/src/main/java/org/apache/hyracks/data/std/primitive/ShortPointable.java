@@ -28,12 +28,14 @@ import org.apache.hyracks.data.std.api.IHashable;
 import org.apache.hyracks.data.std.api.INumeric;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
+import org.apache.hyracks.data.std.util.DataUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 public final class ShortPointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
-    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(2);
+    private static final int LENGTH = 2;
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(LENGTH);
     public static final IPointableFactory FACTORY = new ShortPointableFactory();
 
     public static final class ShortPointableFactory implements IPointableFactory {
@@ -77,20 +79,6 @@ public final class ShortPointable extends AbstractPointable implements IHashable
         setShort(bytes, start, value);
     }
 
-    public short preIncrement() {
-        short v = getShort();
-        ++v;
-        setShort(v);
-        return v;
-    }
-
-    public short postIncrement() {
-        short v = getShort();
-        short ov = v++;
-        setShort(v);
-        return ov;
-    }
-
     @Override
     public int compareTo(IPointable pointer) {
         return compareTo(pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
@@ -98,9 +86,12 @@ public final class ShortPointable extends AbstractPointable implements IHashable
 
     @Override
     public int compareTo(byte[] bytes, int start, int length) {
-        short v = getShort();
-        short ov = getShort(bytes, start);
-        return Short.compare(v, ov);
+        return compare(this.bytes, this.start, this.length, bytes, start, length);
+    }
+
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+        DataUtils.ensureLengths(LENGTH, l1, l2);
+        return Short.compare(getShort(b1, s1), getShort(b2, s2));
     }
 
     @Override

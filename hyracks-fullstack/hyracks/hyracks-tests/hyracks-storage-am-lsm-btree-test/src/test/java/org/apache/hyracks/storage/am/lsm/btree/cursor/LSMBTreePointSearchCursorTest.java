@@ -27,7 +27,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -60,8 +60,7 @@ public class LSMBTreePointSearchCursorTest extends IIndexCursorTest {
     public static final ISerializerDeserializer[] FIELD_SERDES =
             { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
     public static final int KEY_FIELD_COUNT = 1;
-    public static final IBinaryComparatorFactory[] CMP_FACTORIES =
-            { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
+    public static final IBinaryComparatorFactory[] CMP_FACTORIES = { IntegerBinaryComparatorFactory.INSTANCE };
     public static final int[] BLOOM_FILTER_KEY_FIELDS = { 0 };
     public static final Random RND = new Random(50);
 

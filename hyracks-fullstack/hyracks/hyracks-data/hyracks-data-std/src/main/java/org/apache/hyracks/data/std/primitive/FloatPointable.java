@@ -28,12 +28,14 @@ import org.apache.hyracks.data.std.api.IHashable;
 import org.apache.hyracks.data.std.api.INumeric;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
+import org.apache.hyracks.data.std.util.DataUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 public final class FloatPointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
-    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(4);
+    private static final int LENGTH = 4;
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(LENGTH);
     public static final FloatPointableFactory FACTORY = new FloatPointableFactory();
 
     public static final class FloatPointableFactory implements IPointableFactory {
@@ -82,20 +84,6 @@ public final class FloatPointable extends AbstractPointable implements IHashable
         setFloat(bytes, start, value);
     }
 
-    public float preIncrement() {
-        float v = getFloat();
-        ++v;
-        setFloat(v);
-        return v;
-    }
-
-    public float postIncrement() {
-        float v = getFloat();
-        float ov = v++;
-        setFloat(v);
-        return ov;
-    }
-
     @Override
     public int compareTo(IPointable pointer) {
         return compareTo(pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
@@ -103,9 +91,12 @@ public final class FloatPointable extends AbstractPointable implements IHashable
 
     @Override
     public int compareTo(byte[] bytes, int start, int length) {
-        float v = getFloat();
-        float ov = getFloat(bytes, start);
-        return Float.compare(v, ov);
+        return compare(this.bytes, this.start, this.length, bytes, start, length);
+    }
+
+    public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+        DataUtils.ensureLengths(LENGTH, l1, l2);
+        return Float.compare(getFloat(b1, s1), getFloat(b2, s2));
     }
 
     @Override

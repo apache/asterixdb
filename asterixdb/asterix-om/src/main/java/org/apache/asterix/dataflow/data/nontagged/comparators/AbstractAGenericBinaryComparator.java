@@ -47,6 +47,7 @@ import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.RawBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -57,29 +58,10 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
  */
 abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
 
-    private final IBinaryComparator ascBoolComp = BooleanBinaryComparatorFactory.INSTANCE.createBinaryComparator();
     private final IBinaryComparator ascStrComp =
             new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY).createBinaryComparator();
     private final IBinaryComparator ascByteArrayComp =
             new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY).createBinaryComparator();
-    private final IBinaryComparator ascRectangleComp =
-            ARectanglePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator ascCircleComp =
-            ACirclePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator ascDurationComp =
-            ADurationPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator ascIntervalComp =
-            AIntervalAscPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator ascLineComp = ALinePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator ascPointComp =
-            APointPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator ascPoint3DComp =
-            APoint3DPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator ascPolygonComp =
-            APolygonPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator ascUUIDComp = AUUIDPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-    private final IBinaryComparator rawComp = RawBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-
     // the type fields can be null
     protected final IAType leftType;
     protected final IAType rightType;
@@ -109,7 +91,7 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
         ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b2[s2]);
         // tag being null could mean several things among of which is that the passed args are not tagged
         if (tag1 == null || tag2 == null) {
-            return rawComp.compare(b1, s1, l1, b2, s2, l2);
+            return RawBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
         }
         if (ATypeHierarchy.isCompatible(tag1, tag2) && ATypeHierarchy.getTypeDomain(tag1) == Domain.NUMERIC) {
             return ComparatorUtil.compareNumbers(tag1, b1, s1 + 1, tag2, b2, s2 + 1);
@@ -123,9 +105,9 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
             case STRING:
                 return ascStrComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case UUID:
-                return ascUUIDComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                return AUUIDPartialBinaryComparatorFactory.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case BOOLEAN:
-                return ascBoolComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                return BooleanPointable.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case TIME:
                 return Integer.compare(ATimeSerializerDeserializer.getChronon(b1, s1 + 1),
                         ATimeSerializerDeserializer.getChronon(b2, s2 + 1));
@@ -142,19 +124,19 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
                 return Long.compare(ADayTimeDurationSerializerDeserializer.getDayTime(b1, s1 + 1),
                         ADayTimeDurationSerializerDeserializer.getDayTime(b2, s2 + 1));
             case RECTANGLE:
-                return ascRectangleComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                return ARectanglePartialBinaryComparatorFactory.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case CIRCLE:
-                return ascCircleComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                return ACirclePartialBinaryComparatorFactory.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case POINT:
-                return ascPointComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                return APointPartialBinaryComparatorFactory.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case POINT3D:
-                return ascPoint3DComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                return APoint3DPartialBinaryComparatorFactory.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case LINE:
-                return ascLineComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                return ALinePartialBinaryComparatorFactory.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case POLYGON:
-                return ascPolygonComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                return APolygonPartialBinaryComparatorFactory.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case DURATION:
-                return ascDurationComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                return ADurationPartialBinaryComparatorFactory.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case INTERVAL:
                 return compareInterval(b1, s1, l1, b2, s2, l2);
             case BINARY:
@@ -164,18 +146,18 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
             case OBJECT:
                 return compareRecords(leftType, b1, s1, l1, rightType, b2, s2, l2);
             default:
-                return rawComp.compare(b1, s1, l1, b2, s2, l2);
+                return RawBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
         }
     }
 
-    protected int compareInterval(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
-        return ascIntervalComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+    protected int compareInterval(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+        return AIntervalAscPartialBinaryComparatorFactory.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
     }
 
     private int compareArrays(IAType leftType, byte[] b1, int s1, int l1, IAType rightType, byte[] b2, int s2, int l2)
             throws HyracksDataException {
         if (leftType == null || rightType == null) {
-            return rawComp.compare(b1, s1, l1, b2, s2, l2);
+            return RawBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
         }
         int leftNumItems = ListAccessorUtil.numberOfItems(b1, s1);
         int rightNumItems = ListAccessorUtil.numberOfItems(b2, s2);
@@ -216,7 +198,7 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
     private int compareRecords(IAType leftType, byte[] b1, int s1, int l1, IAType rightType, byte[] b2, int s2, int l2)
             throws HyracksDataException {
         if (leftType == null || rightType == null) {
-            return rawComp.compare(b1, s1, l1, b2, s2, l2);
+            return RawBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
         }
         ARecordType leftRecordType = (ARecordType) TypeComputeUtils.getActualTypeOrOpen(leftType, ATypeTag.OBJECT);
         ARecordType rightRecordType = (ARecordType) TypeComputeUtils.getActualTypeOrOpen(rightType, ATypeTag.OBJECT);

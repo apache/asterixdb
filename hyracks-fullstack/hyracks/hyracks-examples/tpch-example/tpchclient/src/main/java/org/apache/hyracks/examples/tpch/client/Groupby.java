@@ -33,8 +33,8 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.MurmurHash3BinaryHashFunctionFamily;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -149,9 +149,7 @@ public class Groupby {
 
         if (alg.equalsIgnoreCase("hash")) {// external hash graph
             grouper = new ExternalGroupOperatorDescriptor(spec, htSize, fileSize, keys, frameLimit,
-                    new IBinaryComparatorFactory[] {
-                            // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
-                            PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
+                    new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE },
                     new IntegerNormalizedKeyComputerFactory(),
                     new MultiFieldsAggregatorFactory(
                             new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(false) }),
@@ -164,9 +162,7 @@ public class Groupby {
         } else if (alg.equalsIgnoreCase("sort")) {
             grouper = new SortGroupByOperatorDescriptor(spec, frameLimit, keys, keys,
                     new IntegerNormalizedKeyComputerFactory(),
-                    new IBinaryComparatorFactory[] {
-                            // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
-                            PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
+                    new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE },
                     new MultiFieldsAggregatorFactory(
                             new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }),
                     new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
