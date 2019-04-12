@@ -32,9 +32,9 @@ exit /B 0
 if "%1" == "" goto postopts
 
 if "%1" == "-f" (
-  set force=1
+  rem ignored, this is always the case
 ) else if "%1" == "-force" (
-  set force=1
+  rem ignored, this is always the case
 ) else if "%1" == "-usage" (
   goto :usage
 ) else if "%1" == "-help" (
@@ -80,23 +80,12 @@ wmic process where ^
   "name='java.exe' and CommandLine like '%%org.codehaus.mojo.appassembler.booter.AppassemblerBooter%%' and (CommandLine like '%%app.name=\"%%[cn]c\"%%' or CommandLine like '%%app.name=\"%%ncservice\"%%')" ^
   GET processid > %tempfile% 2> nul
 
-set severity=ERROR
-if "%force%" == "1" set severity=WARNING
-
 for /F "skip=1" %%P in ('type %tempfile%') DO set found=1
 
 if "%found%" == "1" (
-  if "%force%" == "1" (
-    echo %severity%: ${PRODUCT} processes are already running; -f[orce] specified, ignoring
-    del %tempfile%
- ) else (
-    echo %severity%: ${PRODUCT} processes are already running; aborting"
-    echo.
-    echo Re-run with -f to ignore, or run stop-sample-cluster.bat -f to forcibly terminate all running ${PRODUCT} processes:
-    for /F "skip=1" %%P in ('type %tempfile%') DO @echo     - %%P
-    del %tempfile%
-    exit /B 1
-  )
+  echo WARNING: ${PRODUCT} processes are already running:
+  for /F "skip=1" %%P in ('type %tempfile%') DO @echo     - %%P
+  del %tempfile%
 )
 
 goto :post_timestamp

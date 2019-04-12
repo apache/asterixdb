@@ -146,7 +146,7 @@ if ps -ef | grep 'java.*org\.apache\.hyracks\.control\.[cn]c\.\([CN]CDriver\|ser
     done
   else
     echo "re-run with -f|-force to forcibly terminate all ${PRODUCT} processes:"
-    cat /tmp/pids |  sed 's/^ *[0-9]* \([0-9]*\).*org\.apache\.hyracks\.control\.[cn]c[^ ]*\.\([^ ]*\) .*/\1 - \2/'
+    cat /tmp/$$_pids |  sed 's/^ *[0-9]* \([0-9]*\).*org\.apache\.hyracks\.control\.[cn]c[^ ]*\.\([^ ]*\) .*/\1 - \2/'
   fi
 fi
 rm /tmp/$$_pids
