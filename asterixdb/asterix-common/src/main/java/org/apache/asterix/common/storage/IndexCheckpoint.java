@@ -27,14 +27,18 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class IndexCheckpoint {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final long INITIAL_CHECKPOINT_ID = 0;
+    // TODO(mblow): remove this marker & related logic once we no longer are able to read indexes prior to the fix
+    private static final long HAS_NULL_MISSING_VALUES_FIX = -1;
     private long id;
     private long validComponentSequence;
     private long lowWatermark;
@@ -48,6 +52,7 @@ public class IndexCheckpoint {
         firstCheckpoint.validComponentSequence = lastComponentSequence;
         firstCheckpoint.lastComponentId = validComponentId;
         firstCheckpoint.masterNodeFlushMap = new HashMap<>();
+        firstCheckpoint.masterNodeFlushMap.put(HAS_NULL_MISSING_VALUES_FIX, HAS_NULL_MISSING_VALUES_FIX);
         return firstCheckpoint;
     }
 
@@ -66,7 +71,7 @@ public class IndexCheckpoint {
         next.validComponentSequence = validComponentSequence;
         next.masterNodeFlushMap = latest.getMasterNodeFlushMap();
         // remove any lsn from the map that wont be used anymore
-        next.masterNodeFlushMap.values().removeIf(lsn -> lsn <= lowWatermark);
+        next.masterNodeFlushMap.values().removeIf(lsn -> lsn <= lowWatermark && lsn != HAS_NULL_MISSING_VALUES_FIX);
         return next;
     }
 
@@ -92,6 +97,10 @@ public class IndexCheckpoint {
 
     public long getId() {
         return id;
+    }
+
+    public boolean hasNullMissingValuesFix() {
+        return masterNodeFlushMap.containsKey(HAS_NULL_MISSING_VALUES_FIX);
     }
 
     public String asJson() throws HyracksDataException {

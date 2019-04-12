@@ -54,6 +54,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorNodePushable;
+import org.apache.asterix.test.base.TestMethodTracer;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -79,7 +80,9 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 import org.junit.runners.Parameterized;
 
 public class CheckpointInSecondaryIndexTest {
@@ -101,7 +104,7 @@ public class CheckpointInSecondaryIndexTest {
     private static final boolean[] UNIQUE_META_FIELDS = null;
     private static final int[] KEY_INDEXES = { 0 };
     private static final int[] KEY_INDICATORS = { Index.RECORD_INDICATOR };
-    private static final List<Integer> KEY_INDICATORS_LIST = Arrays.asList(new Integer[] { Index.RECORD_INDICATOR });
+    private static final List<Integer> KEY_INDICATORS_LIST = Collections.singletonList(Index.RECORD_INDICATOR);
     private static final int RECORDS_PER_COMPONENT = 500;
     private static final int DATASET_ID = 101;
     private static final String DATAVERSE_NAME = "TestDV";
@@ -113,9 +116,9 @@ public class CheckpointInSecondaryIndexTest {
     private static final IFieldValueGenerator[] SECONDARY_INDEX_VALUE_GENERATOR =
             { new AInt64ValueGenerator(), new AInt32ValueGenerator() };
     private static final List<List<String>> INDEX_FIELD_NAMES =
-            Arrays.asList(Arrays.asList(RECORD_TYPE.getFieldNames()[1]));
-    private static final List<Integer> INDEX_FIELD_INDICATORS = Arrays.asList(Index.RECORD_INDICATOR);
-    private static final List<IAType> INDEX_FIELD_TYPES = Arrays.asList(BuiltinType.AINT64);
+            Collections.singletonList(Collections.singletonList(RECORD_TYPE.getFieldNames()[1]));
+    private static final List<Integer> INDEX_FIELD_INDICATORS = Collections.singletonList(Index.RECORD_INDICATOR);
+    private static final List<IAType> INDEX_FIELD_TYPES = Collections.singletonList(BuiltinType.AINT64);
     private static final StorageComponentProvider storageManager = new StorageComponentProvider();
     private static TestNodeController nc;
     private static NCAppRuntimeContext ncAppCtx;
@@ -153,6 +156,9 @@ public class CheckpointInSecondaryIndexTest {
         nc.deInit();
         TestHelper.deleteExistingInstanceFiles();
     }
+
+    @Rule
+    public TestRule tracer = new TestMethodTracer();
 
     @Before
     public void createIndex() throws Exception {
@@ -206,50 +212,47 @@ public class CheckpointInSecondaryIndexTest {
 
     @Test
     public void testCheckpointUpdatedWhenSecondaryIsEmpty() throws Exception {
-        try {
-            // create secondary
-            createSecondaryIndex();
-            actor.add(new Request(Request.Action.INSERT_PATCH));
-            ensureDone(actor);
-            // search now and ensure partition 0 has all the records
-            StorageTestUtils.searchAndAssertCount(nc, 0, dataset, storageManager, RECORDS_PER_COMPONENT);
-            // and that secondary index is empty
-            Assert.assertTrue(secondaryLsmBtree.isCurrentMutableComponentEmpty());
-            // flush
-            actor.add(new Request(Request.Action.FLUSH_DATASET));
-            ensureDone(actor);
-            // ensure primary has a component
-            Assert.assertEquals(1, primaryLsmBtree.getDiskComponents().size());
+        // create secondary
+        createSecondaryIndex();
+        actor.add(new Request(Request.Action.INSERT_PATCH));
+        ensureDone(actor);
+        // search now and ensure partition 0 has all the records
+        StorageTestUtils.searchAndAssertCount(nc, 0, dataset, storageManager, RECORDS_PER_COMPONENT);
+        // and that secondary index is empty
+        Assert.assertTrue(secondaryLsmBtree.isCurrentMutableComponentEmpty());
+        // flush
+        actor.add(new Request(Request.Action.FLUSH_DATASET));
+        ensureDone(actor);
+        // ensure primary has a component
+        Assert.assertEquals(1, primaryLsmBtree.getDiskComponents().size());
 
-            // ensure secondary doesn't have a component
-            Assert.assertEquals(0, secondaryLsmBtree.getDiskComponents().size());
-            // ensure that current memory component index match
-            Assert.assertEquals(secondaryLsmBtree.getCurrentMemoryComponentIndex(),
-                    primaryLsmBtree.getCurrentMemoryComponentIndex());
-            // ensure both checkpoint files has the same component id as the last flushed component id
-            ILSMDiskComponent primaryDiskComponent = primaryLsmBtree.getDiskComponents().get(0);
-            LSMComponentId id = (LSMComponentId) primaryDiskComponent.getId();
-            long min = id.getMinId();
-            // primary ref
-            Field fileManagerField = AbstractLSMIndex.class.getDeclaredField("fileManager"); //get private declared object from class
-            fileManagerField.setAccessible(true); //Make it accessible so you can access it
-            ILSMIndexFileManager primaryFileManager = (ILSMIndexFileManager) fileManagerField.get(primaryLsmBtree);
-            final ResourceReference primaryRef = ResourceReference
-                    .of(primaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
-            IIndexCheckpointManager primaryCheckpointManager = getIndexCheckpointManagerProvider().get(primaryRef);
-            // secondary ref
-            ILSMIndexFileManager secondaryFileManager = (ILSMIndexFileManager) fileManagerField.get(secondaryLsmBtree);
-            final ResourceReference secondaryRef = ResourceReference.of(
-                    secondaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
-            IIndexCheckpointManager secondaryCheckpointManager = getIndexCheckpointManagerProvider().get(secondaryRef);
-            IndexCheckpoint latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
-            IndexCheckpoint latestSecondaryCheckpoint = secondaryCheckpointManager.getLatest();
-            Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
-            Assert.assertEquals(latestSecondaryCheckpoint.getLastComponentId(), min);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            throw e;
-        }
+        // ensure secondary doesn't have a component
+        Assert.assertEquals(0, secondaryLsmBtree.getDiskComponents().size());
+        // ensure that current memory component index match
+        Assert.assertEquals(secondaryLsmBtree.getCurrentMemoryComponentIndex(),
+                primaryLsmBtree.getCurrentMemoryComponentIndex());
+        // ensure both checkpoint files has the same component id as the last flushed component id
+        ILSMDiskComponent primaryDiskComponent = primaryLsmBtree.getDiskComponents().get(0);
+        LSMComponentId id = (LSMComponentId) primaryDiskComponent.getId();
+        long min = id.getMinId();
+        // primary ref
+        Field fileManagerField = AbstractLSMIndex.class.getDeclaredField("fileManager"); //get private declared object from class
+        fileManagerField.setAccessible(true); //Make it accessible so you can access it
+        ILSMIndexFileManager primaryFileManager = (ILSMIndexFileManager) fileManagerField.get(primaryLsmBtree);
+        final ResourceReference primaryRef = ResourceReference
+                .of(primaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
+        IIndexCheckpointManager primaryCheckpointManager = getIndexCheckpointManagerProvider().get(primaryRef);
+        // secondary ref
+        ILSMIndexFileManager secondaryFileManager = (ILSMIndexFileManager) fileManagerField.get(secondaryLsmBtree);
+        final ResourceReference secondaryRef = ResourceReference
+                .of(secondaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
+        IIndexCheckpointManager secondaryCheckpointManager = getIndexCheckpointManagerProvider().get(secondaryRef);
+        IndexCheckpoint latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
+        IndexCheckpoint latestSecondaryCheckpoint = secondaryCheckpointManager.getLatest();
+        Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
+        Assert.assertEquals(latestSecondaryCheckpoint.getLastComponentId(), min);
+        Assert.assertTrue(latestPrimaryCheckpoint.hasNullMissingValuesFix());
+        Assert.assertTrue(latestSecondaryCheckpoint.hasNullMissingValuesFix());
     }
 
     private void createSecondaryIndex()
@@ -266,204 +269,192 @@ public class CheckpointInSecondaryIndexTest {
 
     @Test
     public void testCheckpointWhenBulkloadingSecondaryAndPrimaryIsSingleComponent() throws Exception {
-        try {
-            // create secondary
-            actor.add(new Request(Request.Action.INSERT_PATCH));
-            ensureDone(actor);
-            // search now and ensure partition 0 has all the records
-            StorageTestUtils.searchAndAssertCount(nc, 0, dataset, storageManager, RECORDS_PER_COMPONENT);
-            // flush
-            actor.add(new Request(Request.Action.FLUSH_DATASET));
-            ensureDone(actor);
-            // ensure primary has a component
-            Assert.assertEquals(1, primaryLsmBtree.getDiskComponents().size());
-            // ensure both checkpoint files has the same component id as the last flushed component id
-            ILSMDiskComponent primaryDiskComponent = primaryLsmBtree.getDiskComponents().get(0);
-            LSMComponentId id = (LSMComponentId) primaryDiskComponent.getId();
-            long min = id.getMinId();
-            // primary ref
-            Field fileManagerField = AbstractLSMIndex.class.getDeclaredField("fileManager"); //get private declared object from class
-            fileManagerField.setAccessible(true); //Make it accessible so you can access it
-            ILSMIndexFileManager primaryFileManager = (ILSMIndexFileManager) fileManagerField.get(primaryLsmBtree);
-            final ResourceReference primaryRef = ResourceReference
-                    .of(primaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
-            IIndexCheckpointManager primaryCheckpointManager = getIndexCheckpointManagerProvider().get(primaryRef);
-            IndexCheckpoint latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
-            Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
-            createSecondaryIndex();
-            JobId jobId = nc.newJobId();
-            loadTaskCtx = nc.createTestContext(jobId, 0, false);
-            Pair<SecondaryIndexInfo, LSMIndexBulkLoadOperatorNodePushable> infoAndOp =
-                    nc.getBulkLoadSecondaryOperator(loadTaskCtx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
-                            KEY_INDEXES, KEY_INDICATORS_LIST, storageManager, secondaryIndex, RECORDS_PER_COMPONENT);
-            indexLoadOp = infoAndOp.getRight();
-            secondaryIndexInfo = infoAndOp.getLeft();
-            actor.add(new Request(Request.Action.LOAD_OPEN));
-            actor.add(new Request(Request.Action.INDEX_LOAD_PATCH));
-            actor.add(new Request(Request.Action.LOAD_CLOSE));
-            ensureDone(actor);
-            latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
-            Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
-            ILSMIndexFileManager secondaryFileManager = (ILSMIndexFileManager) fileManagerField.get(secondaryLsmBtree);
-            final ResourceReference secondaryRef = ResourceReference.of(
-                    secondaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
-            IIndexCheckpointManager secondaryCheckpointManager = getIndexCheckpointManagerProvider().get(secondaryRef);
-            IndexCheckpoint latestSecondaryCheckpoint = secondaryCheckpointManager.getLatest();
-            Assert.assertEquals(latestSecondaryCheckpoint.getLastComponentId(), min);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            throw e;
-        }
+        // create secondary
+        actor.add(new Request(Request.Action.INSERT_PATCH));
+        ensureDone(actor);
+        // search now and ensure partition 0 has all the records
+        StorageTestUtils.searchAndAssertCount(nc, 0, dataset, storageManager, RECORDS_PER_COMPONENT);
+        // flush
+        actor.add(new Request(Request.Action.FLUSH_DATASET));
+        ensureDone(actor);
+        // ensure primary has a component
+        Assert.assertEquals(1, primaryLsmBtree.getDiskComponents().size());
+        // ensure both checkpoint files has the same component id as the last flushed component id
+        ILSMDiskComponent primaryDiskComponent = primaryLsmBtree.getDiskComponents().get(0);
+        LSMComponentId id = (LSMComponentId) primaryDiskComponent.getId();
+        long min = id.getMinId();
+        // primary ref
+        Field fileManagerField = AbstractLSMIndex.class.getDeclaredField("fileManager"); //get private declared object from class
+        fileManagerField.setAccessible(true); //Make it accessible so you can access it
+        ILSMIndexFileManager primaryFileManager = (ILSMIndexFileManager) fileManagerField.get(primaryLsmBtree);
+        final ResourceReference primaryRef = ResourceReference
+                .of(primaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
+        IIndexCheckpointManager primaryCheckpointManager = getIndexCheckpointManagerProvider().get(primaryRef);
+        IndexCheckpoint latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
+        Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
+        createSecondaryIndex();
+        JobId jobId = nc.newJobId();
+        loadTaskCtx = nc.createTestContext(jobId, 0, false);
+        Pair<SecondaryIndexInfo, LSMIndexBulkLoadOperatorNodePushable> infoAndOp =
+                nc.getBulkLoadSecondaryOperator(loadTaskCtx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
+                        KEY_INDEXES, KEY_INDICATORS_LIST, storageManager, secondaryIndex, RECORDS_PER_COMPONENT);
+        indexLoadOp = infoAndOp.getRight();
+        secondaryIndexInfo = infoAndOp.getLeft();
+        actor.add(new Request(Request.Action.LOAD_OPEN));
+        actor.add(new Request(Request.Action.INDEX_LOAD_PATCH));
+        actor.add(new Request(Request.Action.LOAD_CLOSE));
+        ensureDone(actor);
+        latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
+        Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
+        ILSMIndexFileManager secondaryFileManager = (ILSMIndexFileManager) fileManagerField.get(secondaryLsmBtree);
+        final ResourceReference secondaryRef = ResourceReference
+                .of(secondaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
+        IIndexCheckpointManager secondaryCheckpointManager = getIndexCheckpointManagerProvider().get(secondaryRef);
+        IndexCheckpoint latestSecondaryCheckpoint = secondaryCheckpointManager.getLatest();
+        Assert.assertEquals(latestSecondaryCheckpoint.getLastComponentId(), min);
+        Assert.assertTrue(latestPrimaryCheckpoint.hasNullMissingValuesFix());
+        Assert.assertTrue(latestSecondaryCheckpoint.hasNullMissingValuesFix());
     }
 
     @Test
     public void testCheckpointWhenBulkloadingSecondaryAndPrimaryIsTwoComponents() throws Exception {
-        try {
-            // create secondary
-            actor.add(new Request(Request.Action.INSERT_PATCH));
-            ensureDone(actor);
-            // search now and ensure partition 0 has all the records
-            StorageTestUtils.searchAndAssertCount(nc, 0, dataset, storageManager, RECORDS_PER_COMPONENT);
-            // flush
-            actor.add(new Request(Request.Action.FLUSH_DATASET));
-            ensureDone(actor);
-            // ensure primary has a component
-            Assert.assertEquals(1, primaryLsmBtree.getDiskComponents().size());
-            // ensure both checkpoint files has the same component id as the last flushed component id
-            ILSMDiskComponent primaryDiskComponent = primaryLsmBtree.getDiskComponents().get(0);
-            LSMComponentId id = (LSMComponentId) primaryDiskComponent.getId();
-            long min = id.getMinId();
-            // primary ref
-            Field fileManagerField = AbstractLSMIndex.class.getDeclaredField("fileManager"); //get private declared object from class
-            fileManagerField.setAccessible(true); //Make it accessible so you can access it
-            ILSMIndexFileManager primaryFileManager = (ILSMIndexFileManager) fileManagerField.get(primaryLsmBtree);
-            final ResourceReference primaryRef = ResourceReference
-                    .of(primaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
-            IIndexCheckpointManager primaryCheckpointManager = getIndexCheckpointManagerProvider().get(primaryRef);
-            IndexCheckpoint latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
-            Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
-            actor.add(new Request(Request.Action.INSERT_PATCH));
-            ensureDone(actor);
-            actor.add(new Request(Request.Action.FLUSH_DATASET));
-            ensureDone(actor);
-            Assert.assertEquals(2, primaryLsmBtree.getDiskComponents().size());
-            // ensure both checkpoint files has the same component id as the last flushed component id
-            primaryDiskComponent = primaryLsmBtree.getDiskComponents().get(0);
-            id = (LSMComponentId) primaryDiskComponent.getId();
-            min = id.getMaxId();
-            createSecondaryIndex();
-            JobId jobId = nc.newJobId();
-            loadTaskCtx = nc.createTestContext(jobId, 0, false);
-            Pair<SecondaryIndexInfo, LSMIndexBulkLoadOperatorNodePushable> infoAndOp =
-                    nc.getBulkLoadSecondaryOperator(loadTaskCtx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
-                            KEY_INDEXES, KEY_INDICATORS_LIST, storageManager, secondaryIndex, RECORDS_PER_COMPONENT);
-            indexLoadOp = infoAndOp.getRight();
-            secondaryIndexInfo = infoAndOp.getLeft();
-            actor.add(new Request(Request.Action.LOAD_OPEN));
-            actor.add(new Request(Request.Action.INDEX_LOAD_PATCH));
-            actor.add(new Request(Request.Action.LOAD_CLOSE));
-            ensureDone(actor);
-            latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
-            Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
-            ILSMIndexFileManager secondaryFileManager = (ILSMIndexFileManager) fileManagerField.get(secondaryLsmBtree);
-            final ResourceReference secondaryRef = ResourceReference.of(
-                    secondaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
-            IIndexCheckpointManager secondaryCheckpointManager = getIndexCheckpointManagerProvider().get(secondaryRef);
-            IndexCheckpoint latestSecondaryCheckpoint = secondaryCheckpointManager.getLatest();
-            Assert.assertEquals(latestSecondaryCheckpoint.getLastComponentId(), min);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            throw e;
-        }
+        // create secondary
+        actor.add(new Request(Request.Action.INSERT_PATCH));
+        ensureDone(actor);
+        // search now and ensure partition 0 has all the records
+        StorageTestUtils.searchAndAssertCount(nc, 0, dataset, storageManager, RECORDS_PER_COMPONENT);
+        // flush
+        actor.add(new Request(Request.Action.FLUSH_DATASET));
+        ensureDone(actor);
+        // ensure primary has a component
+        Assert.assertEquals(1, primaryLsmBtree.getDiskComponents().size());
+        // ensure both checkpoint files has the same component id as the last flushed component id
+        ILSMDiskComponent primaryDiskComponent = primaryLsmBtree.getDiskComponents().get(0);
+        LSMComponentId id = (LSMComponentId) primaryDiskComponent.getId();
+        long min = id.getMinId();
+        // primary ref
+        Field fileManagerField = AbstractLSMIndex.class.getDeclaredField("fileManager"); //get private declared object from class
+        fileManagerField.setAccessible(true); //Make it accessible so you can access it
+        ILSMIndexFileManager primaryFileManager = (ILSMIndexFileManager) fileManagerField.get(primaryLsmBtree);
+        final ResourceReference primaryRef = ResourceReference
+                .of(primaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
+        IIndexCheckpointManager primaryCheckpointManager = getIndexCheckpointManagerProvider().get(primaryRef);
+        IndexCheckpoint latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
+        Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
+        actor.add(new Request(Request.Action.INSERT_PATCH));
+        ensureDone(actor);
+        actor.add(new Request(Request.Action.FLUSH_DATASET));
+        ensureDone(actor);
+        Assert.assertEquals(2, primaryLsmBtree.getDiskComponents().size());
+        // ensure both checkpoint files has the same component id as the last flushed component id
+        primaryDiskComponent = primaryLsmBtree.getDiskComponents().get(0);
+        id = (LSMComponentId) primaryDiskComponent.getId();
+        min = id.getMaxId();
+        createSecondaryIndex();
+        JobId jobId = nc.newJobId();
+        loadTaskCtx = nc.createTestContext(jobId, 0, false);
+        Pair<SecondaryIndexInfo, LSMIndexBulkLoadOperatorNodePushable> infoAndOp =
+                nc.getBulkLoadSecondaryOperator(loadTaskCtx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
+                        KEY_INDEXES, KEY_INDICATORS_LIST, storageManager, secondaryIndex, RECORDS_PER_COMPONENT);
+        indexLoadOp = infoAndOp.getRight();
+        secondaryIndexInfo = infoAndOp.getLeft();
+        actor.add(new Request(Request.Action.LOAD_OPEN));
+        actor.add(new Request(Request.Action.INDEX_LOAD_PATCH));
+        actor.add(new Request(Request.Action.LOAD_CLOSE));
+        ensureDone(actor);
+        latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
+        Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
+        ILSMIndexFileManager secondaryFileManager = (ILSMIndexFileManager) fileManagerField.get(secondaryLsmBtree);
+        final ResourceReference secondaryRef = ResourceReference
+                .of(secondaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
+        IIndexCheckpointManager secondaryCheckpointManager = getIndexCheckpointManagerProvider().get(secondaryRef);
+        IndexCheckpoint latestSecondaryCheckpoint = secondaryCheckpointManager.getLatest();
+        Assert.assertEquals(latestSecondaryCheckpoint.getLastComponentId(), min);
+        Assert.assertTrue(latestPrimaryCheckpoint.hasNullMissingValuesFix());
+        Assert.assertTrue(latestSecondaryCheckpoint.hasNullMissingValuesFix());
     }
 
     @Test
     public void testCheckpointWhenBulkloadedSecondaryIsEmptyAndPrimaryIsEmpty() throws Exception {
-        try {
-            // ensure primary has no component
-            Assert.assertEquals(0, primaryLsmBtree.getDiskComponents().size());
-            // primary ref
-            Field fileManagerField = AbstractLSMIndex.class.getDeclaredField("fileManager"); //get private declared object from class
-            fileManagerField.setAccessible(true); //Make it accessible so you can access it
-            ILSMIndexFileManager primaryFileManager = (ILSMIndexFileManager) fileManagerField.get(primaryLsmBtree);
-            final ResourceReference primaryRef = ResourceReference
-                    .of(primaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
-            IIndexCheckpointManager primaryCheckpointManager = getIndexCheckpointManagerProvider().get(primaryRef);
-            IndexCheckpoint latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
-            createSecondaryIndex();
-            JobId jobId = nc.newJobId();
-            loadTaskCtx = nc.createTestContext(jobId, 0, false);
-            Pair<SecondaryIndexInfo, LSMIndexBulkLoadOperatorNodePushable> infoAndOp =
-                    nc.getBulkLoadSecondaryOperator(loadTaskCtx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
-                            KEY_INDEXES, KEY_INDICATORS_LIST, storageManager, secondaryIndex, RECORDS_PER_COMPONENT);
-            indexLoadOp = infoAndOp.getRight();
-            secondaryIndexInfo = infoAndOp.getLeft();
-            actor.add(new Request(Request.Action.LOAD_OPEN));
-            actor.add(new Request(Request.Action.LOAD_CLOSE));
-            ensureDone(actor);
-            latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
-            ILSMIndexFileManager secondaryFileManager = (ILSMIndexFileManager) fileManagerField.get(secondaryLsmBtree);
-            final ResourceReference secondaryRef = ResourceReference.of(
-                    secondaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
-            IIndexCheckpointManager secondaryCheckpointManager = getIndexCheckpointManagerProvider().get(secondaryRef);
-            IndexCheckpoint latestSecondaryCheckpoint = secondaryCheckpointManager.getLatest();
-            Assert.assertEquals(latestSecondaryCheckpoint.getLastComponentId(),
-                    latestPrimaryCheckpoint.getLastComponentId());
-        } catch (Throwable e) {
-            e.printStackTrace();
-            throw e;
-        }
+        // ensure primary has no component
+        Assert.assertEquals(0, primaryLsmBtree.getDiskComponents().size());
+        // primary ref
+        Field fileManagerField = AbstractLSMIndex.class.getDeclaredField("fileManager"); //get private declared object from class
+        fileManagerField.setAccessible(true); //Make it accessible so you can access it
+        ILSMIndexFileManager primaryFileManager = (ILSMIndexFileManager) fileManagerField.get(primaryLsmBtree);
+        final ResourceReference primaryRef = ResourceReference
+                .of(primaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
+        IIndexCheckpointManager primaryCheckpointManager = getIndexCheckpointManagerProvider().get(primaryRef);
+        IndexCheckpoint latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
+        createSecondaryIndex();
+        JobId jobId = nc.newJobId();
+        loadTaskCtx = nc.createTestContext(jobId, 0, false);
+        Pair<SecondaryIndexInfo, LSMIndexBulkLoadOperatorNodePushable> infoAndOp =
+                nc.getBulkLoadSecondaryOperator(loadTaskCtx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
+                        KEY_INDEXES, KEY_INDICATORS_LIST, storageManager, secondaryIndex, RECORDS_PER_COMPONENT);
+        indexLoadOp = infoAndOp.getRight();
+        secondaryIndexInfo = infoAndOp.getLeft();
+        actor.add(new Request(Request.Action.LOAD_OPEN));
+        actor.add(new Request(Request.Action.LOAD_CLOSE));
+        ensureDone(actor);
+        latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
+        ILSMIndexFileManager secondaryFileManager = (ILSMIndexFileManager) fileManagerField.get(secondaryLsmBtree);
+        final ResourceReference secondaryRef = ResourceReference
+                .of(secondaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
+        IIndexCheckpointManager secondaryCheckpointManager = getIndexCheckpointManagerProvider().get(secondaryRef);
+        IndexCheckpoint latestSecondaryCheckpoint = secondaryCheckpointManager.getLatest();
+        Assert.assertEquals(latestSecondaryCheckpoint.getLastComponentId(),
+                latestPrimaryCheckpoint.getLastComponentId());
+        Assert.assertTrue(latestPrimaryCheckpoint.hasNullMissingValuesFix());
+        Assert.assertTrue(latestSecondaryCheckpoint.hasNullMissingValuesFix());
     }
 
     @Test
     public void testCheckpointWhenBulkloadedSecondaryIsEmptyAndPrimaryIsNotEmpty() throws Exception {
-        try {
-            // create secondary
-            actor.add(new Request(Request.Action.INSERT_PATCH));
-            ensureDone(actor);
-            // search now and ensure partition 0 has all the records
-            StorageTestUtils.searchAndAssertCount(nc, 0, dataset, storageManager, RECORDS_PER_COMPONENT);
-            // flush
-            actor.add(new Request(Request.Action.FLUSH_DATASET));
-            ensureDone(actor);
-            // ensure primary has a component
-            Assert.assertEquals(1, primaryLsmBtree.getDiskComponents().size());
-            // ensure both checkpoint files has the same component id as the last flushed component id
-            ILSMDiskComponent primaryDiskComponent = primaryLsmBtree.getDiskComponents().get(0);
-            LSMComponentId id = (LSMComponentId) primaryDiskComponent.getId();
-            long min = id.getMinId();
-            // primary ref
-            Field fileManagerField = AbstractLSMIndex.class.getDeclaredField("fileManager"); //get private declared object from class
-            fileManagerField.setAccessible(true); //Make it accessible so you can access it
-            ILSMIndexFileManager primaryFileManager = (ILSMIndexFileManager) fileManagerField.get(primaryLsmBtree);
-            final ResourceReference primaryRef = ResourceReference
-                    .of(primaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
-            IIndexCheckpointManager primaryCheckpointManager = getIndexCheckpointManagerProvider().get(primaryRef);
-            IndexCheckpoint latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
-            Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
-            createSecondaryIndex();
-            JobId jobId = nc.newJobId();
-            loadTaskCtx = nc.createTestContext(jobId, 0, false);
-            Pair<SecondaryIndexInfo, LSMIndexBulkLoadOperatorNodePushable> infoAndOp =
-                    nc.getBulkLoadSecondaryOperator(loadTaskCtx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
-                            KEY_INDEXES, KEY_INDICATORS_LIST, storageManager, secondaryIndex, RECORDS_PER_COMPONENT);
-            indexLoadOp = infoAndOp.getRight();
-            secondaryIndexInfo = infoAndOp.getLeft();
-            actor.add(new Request(Request.Action.LOAD_OPEN));
-            actor.add(new Request(Request.Action.LOAD_CLOSE));
-            ensureDone(actor);
-            latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
-            Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
-            ILSMIndexFileManager secondaryFileManager = (ILSMIndexFileManager) fileManagerField.get(secondaryLsmBtree);
-            final ResourceReference secondaryRef = ResourceReference.of(
-                    secondaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
-            IIndexCheckpointManager secondaryCheckpointManager = getIndexCheckpointManagerProvider().get(secondaryRef);
-            IndexCheckpoint latestSecondaryCheckpoint = secondaryCheckpointManager.getLatest();
-            Assert.assertEquals(latestSecondaryCheckpoint.getLastComponentId(), min);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            throw e;
-        }
+        // create secondary
+        actor.add(new Request(Request.Action.INSERT_PATCH));
+        ensureDone(actor);
+        // search now and ensure partition 0 has all the records
+        StorageTestUtils.searchAndAssertCount(nc, 0, dataset, storageManager, RECORDS_PER_COMPONENT);
+        // flush
+        actor.add(new Request(Request.Action.FLUSH_DATASET));
+        ensureDone(actor);
+        // ensure primary has a component
+        Assert.assertEquals(1, primaryLsmBtree.getDiskComponents().size());
+        // ensure both checkpoint files has the same component id as the last flushed component id
+        ILSMDiskComponent primaryDiskComponent = primaryLsmBtree.getDiskComponents().get(0);
+        LSMComponentId id = (LSMComponentId) primaryDiskComponent.getId();
+        long min = id.getMinId();
+        // primary ref
+        Field fileManagerField = AbstractLSMIndex.class.getDeclaredField("fileManager"); //get private declared object from class
+        fileManagerField.setAccessible(true); //Make it accessible so you can access it
+        ILSMIndexFileManager primaryFileManager = (ILSMIndexFileManager) fileManagerField.get(primaryLsmBtree);
+        final ResourceReference primaryRef = ResourceReference
+                .of(primaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
+        IIndexCheckpointManager primaryCheckpointManager = getIndexCheckpointManagerProvider().get(primaryRef);
+        IndexCheckpoint latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
+        Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
+        createSecondaryIndex();
+        JobId jobId = nc.newJobId();
+        loadTaskCtx = nc.createTestContext(jobId, 0, false);
+        Pair<SecondaryIndexInfo, LSMIndexBulkLoadOperatorNodePushable> infoAndOp =
+                nc.getBulkLoadSecondaryOperator(loadTaskCtx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
+                        KEY_INDEXES, KEY_INDICATORS_LIST, storageManager, secondaryIndex, RECORDS_PER_COMPONENT);
+        indexLoadOp = infoAndOp.getRight();
+        secondaryIndexInfo = infoAndOp.getLeft();
+        actor.add(new Request(Request.Action.LOAD_OPEN));
+        actor.add(new Request(Request.Action.LOAD_CLOSE));
+        ensureDone(actor);
+        latestPrimaryCheckpoint = primaryCheckpointManager.getLatest();
+        Assert.assertEquals(latestPrimaryCheckpoint.getLastComponentId(), min);
+        ILSMIndexFileManager secondaryFileManager = (ILSMIndexFileManager) fileManagerField.get(secondaryLsmBtree);
+        final ResourceReference secondaryRef = ResourceReference
+                .of(secondaryFileManager.getRelFlushFileReference().getInsertIndexFileReference().getAbsolutePath());
+        IIndexCheckpointManager secondaryCheckpointManager = getIndexCheckpointManagerProvider().get(secondaryRef);
+        IndexCheckpoint latestSecondaryCheckpoint = secondaryCheckpointManager.getLatest();
+        Assert.assertEquals(latestSecondaryCheckpoint.getLastComponentId(), min);
+        Assert.assertTrue(latestPrimaryCheckpoint.hasNullMissingValuesFix());
+        Assert.assertTrue(latestSecondaryCheckpoint.hasNullMissingValuesFix());
     }
 
     protected IIndexCheckpointManagerProvider getIndexCheckpointManagerProvider() {
@@ -566,9 +557,6 @@ public class CheckpointInSecondaryIndexTest {
                     default:
                         break;
                 }
-            } catch (Throwable th) {
-                th.printStackTrace();
-                throw th;
             } finally {
                 req.complete();
             }

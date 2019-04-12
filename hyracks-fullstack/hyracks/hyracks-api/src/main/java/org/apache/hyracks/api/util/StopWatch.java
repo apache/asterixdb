@@ -19,32 +19,27 @@
 
 package org.apache.hyracks.api.util;
 
+import java.util.concurrent.TimeUnit;
+
 public class StopWatch {
     private long startTime = 0;
-    private long stopTime = 0;
     private long elapsedTime = 0;
 
     public void start() {
         elapsedTime = 0;
-        startTime = System.currentTimeMillis();
+        startTime = System.nanoTime();
     }
 
     public void stop() {
-        stopTime = System.currentTimeMillis();
-        elapsedTime += stopTime - startTime;
+        elapsedTime += System.nanoTime() - startTime;
     }
 
     public void resume() {
-        startTime = System.currentTimeMillis();
+        startTime = System.nanoTime();
     }
 
-    //elaspsed time in milliseconds
-    public long getElapsedTime() {
-        return elapsedTime;
+    public long elapsed(TimeUnit unit) {
+        return unit.convert(elapsedTime, TimeUnit.NANOSECONDS);
     }
 
-    //elaspsed time in seconds
-    public long getElapsedTimeSecs() {
-        return elapsedTime / 1000;
-    }
 }

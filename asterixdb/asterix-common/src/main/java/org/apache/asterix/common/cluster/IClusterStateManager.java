@@ -139,6 +139,16 @@ public interface IClusterStateManager {
     Set<String> getParticipantNodes();
 
     /**
+     * @return the set of currently failed nodes
+     */
+    Set<String> getFailedNodes();
+
+    /**
+     * @return the set of cluster nodes
+     */
+    Set<String> getNodes();
+
+    /**
      * Returns the IO devices configured for a Node Controller
      *
      * @param nodeId

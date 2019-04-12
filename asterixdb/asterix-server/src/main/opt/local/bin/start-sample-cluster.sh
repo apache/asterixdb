@@ -20,14 +20,13 @@
 
 function usage() {
   echo
-  echo Usage: $(basename $0) [-f[orce]]
+  echo Usage: $(basename $0)
   echo
-  echo "  -f[orce]  : Forces a start attempt when ${PRODUCT} processes are found to be running"
 }
 
 while [ -n "$1" ]; do
   case $1 in
-    -f|-force) force=1;;
+    -f|-force);; # ignored, this is always the case
     -help|--help|-usage|--usage) usage; exit 0;;
     *) echo "ERROR: unknown argument '$1'"; usage; exit 1;;
   esac
@@ -115,22 +114,9 @@ mkdir -p "$LOGSDIR"
     && echo "ERROR: sample cluster address (localhost:${LISTEN_PORT}) already in use" && exit 1
 
 if ps -ef | grep 'java.*org\.apache\.hyracks\.control\.[cn]c\.\([CN]CDriver\|service\.NCService\)' > /tmp/$$_pids; then
-  if [ $force ]; then
-    severity=WARNING
-  else
-    severity=ERROR
-  fi
-  echo -n "${severity}: ${PRODUCT} processes are already running; "
-  if [ $force ]; then
-    echo "-f[orce] specified, ignoring"
-  else
-    echo "aborting"
-    echo
-    echo "Re-run with -f to ignore, or run stop-sample-cluster.sh -f to forcibly terminate all running ${PRODUCT} processes:"
-    cat /tmp/$$_pids |  sed 's/^ *[0-9]* \([0-9]*\).*org\.apache\.hyracks\.control\.[cn]c[^ ]*\.\([^ ]*\) .*/\1 - \2/'
-    rm /tmp/$$_pids
-    exit 1
-  fi
+  echo "WARNING: ${PRODUCT} processes are already running:"
+  cat /tmp/$$_pids |  sed 's/^ *[0-9]* \([0-9]*\).*org\.apache\.hyracks\.control\.[cn]c[^ ]*\.\([^ ]*\) .*/\1 - \2/'
+  rm /tmp/$$_pids
 fi
 
 rm /tmp/$$_pids
