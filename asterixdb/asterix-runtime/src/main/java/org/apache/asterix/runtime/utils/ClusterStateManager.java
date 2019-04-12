@@ -256,6 +256,13 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
+    public synchronized Set<String> getNodes() {
+        Set<String> nodes = new HashSet<>(participantNodes);
+        nodes.addAll(failedNodes);
+        return nodes;
+    }
+
+    @Override
     public synchronized Set<String> getParticipantNodes(boolean excludePendingRemoval) {
         final Set<String> participantNodesCopy = getParticipantNodes();
         if (excludePendingRemoval) {
