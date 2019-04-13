@@ -10115,6 +10115,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="window">
+      <compilation-unit name="win_null_missing">
+        <output-dir compare="Text">win_null_missing</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
       <compilation-unit name="win_opt_01">
         <output-dir compare="Text">win_opt_01</output-dir>
       </compilation-unit>

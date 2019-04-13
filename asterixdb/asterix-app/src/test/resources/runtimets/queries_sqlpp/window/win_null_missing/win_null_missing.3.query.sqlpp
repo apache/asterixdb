@@ -1,0 +1,52 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : RANGE when value is NULL/MISSING/complex
+ * Expected Res : SUCCESS
+ */
+
+from [
+  {                   "y": 1 },
+  {                   "y": 2 },
+  { "x": null,        "y": 3 },
+  { "x": null,        "y": 4 },
+  { "x": 1,           "y": 5 },
+  { "x": 1,           "y": 6 },
+  { "x": "a",         "y": 7 },
+  { "x": "a",         "y": 8 },
+  { "x": [ "b" ],     "y": 9 },
+  { "x": [ "b" ],     "y": 10 },
+  { "x": { "c": 1 },  "y": 11 },
+  { "x": { "c": 1 },  "y": 12 }
+] t
+select
+  count(y) over (order by x range between unbounded preceding and current row) w1,
+  count(y) over (order by x range between 0 preceding and current row) w2,
+  count(y) over (order by x range between current row and current row) w3,
+
+  count(y) over (order by x range between unbounded preceding and 0 following) w4,
+  count(y) over (order by x range between 0 preceding and 0 following) w5,
+  count(y) over (order by x range between current row and 0 following) w6,
+
+  count(y) over (order by x range between unbounded preceding and unbounded following) w7,
+  count(y) over (order by x range between 0 preceding and unbounded following) w8,
+  count(y) over (order by x range between current row and unbounded following) w9,
+
+  x, y
+order by x, y

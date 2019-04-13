@@ -1529,6 +1529,8 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier TREAT_AS_INTEGER =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "treat-as-integer", 1);
+    public static final FunctionIdentifier IS_NUMERIC_ADD_COMPATIBLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-numeric-add-compatibe", 1);
 
     public static final FunctionIdentifier EXTERNAL_LOOKUP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "external-lookup", FunctionIdentifier.VARARGS);
@@ -1730,6 +1732,7 @@ public class BuiltinFunctions {
         addFunction(TO_STRING, AStringTypeComputer.INSTANCE, true);
 
         addPrivateFunction(TREAT_AS_INTEGER, TreatAsTypeComputer.INSTANCE_INTEGER, true);
+        addPrivateFunction(IS_NUMERIC_ADD_COMPATIBLE, BooleanOnlyTypeComputer.INSTANCE, true);
 
         addFunction(IF_INF, IfNanOrInfTypeComputer.INSTANCE, true);
         addFunction(IF_MISSING, IfMissingTypeComputer.INSTANCE, true);

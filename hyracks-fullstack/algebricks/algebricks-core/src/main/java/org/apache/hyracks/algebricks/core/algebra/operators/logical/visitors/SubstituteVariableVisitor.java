@@ -517,7 +517,13 @@ public class SubstituteVariableVisitor
         for (Mutable<ILogicalExpression> expr : op.getFrameStartExpressions()) {
             expr.getValue().substituteVar(pair.first, pair.second);
         }
+        for (Mutable<ILogicalExpression> expr : op.getFrameStartValidationExpressions()) {
+            expr.getValue().substituteVar(pair.first, pair.second);
+        }
         for (Mutable<ILogicalExpression> expr : op.getFrameEndExpressions()) {
+            expr.getValue().substituteVar(pair.first, pair.second);
+        }
+        for (Mutable<ILogicalExpression> expr : op.getFrameEndValidationExpressions()) {
             expr.getValue().substituteVar(pair.first, pair.second);
         }
         for (Mutable<ILogicalExpression> expr : op.getFrameExcludeExpressions()) {

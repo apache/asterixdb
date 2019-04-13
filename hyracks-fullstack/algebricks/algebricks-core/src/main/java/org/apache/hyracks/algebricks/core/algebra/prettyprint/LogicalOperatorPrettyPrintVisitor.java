@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -497,10 +498,16 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         if (op.hasNestedPlans()) {
             buffer.append(" frame on ");
             pprintOrderList(op.getFrameValueExpressions(), indent);
-            buffer.append("start ");
+            buffer.append(" start ");
             List<Mutable<ILogicalExpression>> frameStartExpressions = op.getFrameStartExpressions();
             if (!frameStartExpressions.isEmpty()) {
                 pprintExprList(frameStartExpressions, indent);
+                List<Mutable<ILogicalExpression>> frameStartValidationExpressions =
+                        op.getFrameStartValidationExpressions();
+                if (!frameStartValidationExpressions.isEmpty()) {
+                    buffer.append(" if ");
+                    pprintExprList(frameStartValidationExpressions, indent);
+                }
             } else {
                 buffer.append("unbounded");
             }
@@ -508,6 +515,11 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
             List<Mutable<ILogicalExpression>> frameEndExpressions = op.getFrameEndExpressions();
             if (!frameEndExpressions.isEmpty()) {
                 pprintExprList(frameEndExpressions, indent);
+                List<Mutable<ILogicalExpression>> frameEndValidationExpressions = op.getFrameEndValidationExpressions();
+                if (!frameEndValidationExpressions.isEmpty()) {
+                    buffer.append(" if ");
+                    pprintExprList(frameEndValidationExpressions, indent);
+                }
             } else {
                 buffer.append("unbounded");
             }
@@ -594,11 +606,15 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         buffer.append("]");
     }
 
-    protected void pprintOrderList(List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderList,
+    private void pprintOrderList(List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderList,
             Integer indent) throws AlgebricksException {
-        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderList) {
+        for (Iterator<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> i = orderList.iterator(); i.hasNext();) {
+            Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p = i.next();
             String fst = getOrderString(p.first);
-            buffer.append("(" + fst + ", " + p.second.getValue().accept(exprVisitor, indent) + ") ");
+            buffer.append("(" + fst + ", " + p.second.getValue().accept(exprVisitor, indent) + ")");
+            if (i.hasNext()) {
+                buffer.append(' ');
+            }
         }
     }
 }

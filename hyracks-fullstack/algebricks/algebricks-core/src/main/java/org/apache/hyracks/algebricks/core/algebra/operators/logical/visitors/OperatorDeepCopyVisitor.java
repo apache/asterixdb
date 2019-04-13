@@ -418,8 +418,12 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
                 deepCopyOrderAndExpression(op.getFrameValueExpressions());
         List<Mutable<ILogicalExpression>> newFrameStartExprs = new ArrayList<>();
         deepCopyExpressionRefs(newFrameStartExprs, op.getFrameStartExpressions());
+        List<Mutable<ILogicalExpression>> newFrameStartValidationExprs = new ArrayList<>();
+        deepCopyExpressionRefs(newFrameStartValidationExprs, op.getFrameStartValidationExpressions());
         List<Mutable<ILogicalExpression>> newFrameEndExprs = new ArrayList<>();
         deepCopyExpressionRefs(newFrameEndExprs, op.getFrameEndExpressions());
+        List<Mutable<ILogicalExpression>> newFrameEndValidationExprs = new ArrayList<>();
+        deepCopyExpressionRefs(newFrameEndValidationExprs, op.getFrameEndValidationExpressions());
         List<Mutable<ILogicalExpression>> newFrameExclusionExprs = new ArrayList<>();
         deepCopyExpressionRefs(newFrameExclusionExprs, op.getFrameExcludeExpressions());
         ILogicalExpression newFrameOffset = deepCopyExpressionRef(op.getFrameOffset()).getValue();
@@ -429,8 +433,9 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         deepCopyExpressionRefs(newExpressions, op.getExpressions());
         List<ILogicalPlan> newNestedPlans = new ArrayList<>();
         WindowOperator newWinOp = new WindowOperator(newPartitionExprs, newOrderExprs, newFrameValueExprs,
-                newFrameStartExprs, newFrameEndExprs, newFrameExclusionExprs, op.getFrameExcludeNegationStartIdx(),
-                newFrameOffset, op.getFrameMaxObjects(), newVariables, newExpressions, newNestedPlans);
+                newFrameStartExprs, newFrameStartValidationExprs, newFrameEndExprs, newFrameEndValidationExprs,
+                newFrameExclusionExprs, op.getFrameExcludeNegationStartIdx(), newFrameOffset, op.getFrameMaxObjects(),
+                newVariables, newExpressions, newNestedPlans);
         for (ILogicalPlan nestedPlan : op.getNestedPlans()) {
             newNestedPlans.add(OperatorManipulationUtil.deepCopy(nestedPlan, newWinOp));
         }

@@ -118,21 +118,14 @@ public class StableSortPOperator extends AbstractStableSortPOperator {
 
     @Override
     public String toString() {
-        if (orderProp == null) {
-            if (topK != -1) {
-                // A topK value is introduced.
-                return getOperatorTag().toString() + " [topK: " + topK + "]";
-            } else {
-                return getOperatorTag().toString();
-            }
-        } else {
-            if (topK != -1) {
-                // A topK value is introduced.
-                return getOperatorTag().toString() + " [topK: " + topK + "]" + " " + orderProp;
-            } else {
-                return getOperatorTag().toString() + " " + orderProp;
-            }
+        StringBuilder out = new StringBuilder();
+        out.append(getOperatorTag());
+        if (topK != -1) {
+            out.append(" [topK: ").append(topK).append(']');
         }
+        if (orderProp != null) {
+            out.append(' ').append(orderProp);
+        }
+        return out.toString();
     }
-
 }

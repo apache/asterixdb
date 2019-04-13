@@ -47,7 +47,9 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
  * <li>{@link #frameValueExpressions} - value expressions for comparing against frame start / end boundaries and frame exclusion.
  *     Each must be a variable reference</li>
  * <li>{@link #frameStartExpressions} - frame start boundary</li>
+ * <li>{@link #frameStartValidationExpressions} - frame start boundary validators</li>
  * <li>{@link #frameEndExpressions} - frame end boundary</li>
+ * <li>{@link #frameEndValidationExpressions} - frame end boundary validators</li>
  * <li>{@link #frameExcludeExpressions} - define values to be excluded from the frame</li>
  * <li>{@link #frameOffset} - sets how many tuples to skip inside each frame</li>
  * <li>{@link #frameMaxObjects} - limits number of tuples to be returned for each frame</li>
@@ -67,7 +69,11 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
 
     private final List<Mutable<ILogicalExpression>> frameStartExpressions;
 
+    private final List<Mutable<ILogicalExpression>> frameStartValidationExpressions;
+
     private final List<Mutable<ILogicalExpression>> frameEndExpressions;
+
+    private final List<Mutable<ILogicalExpression>> frameEndValidationExpressions;
 
     private final List<Mutable<ILogicalExpression>> frameExcludeExpressions;
 
@@ -83,14 +89,16 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
 
     public WindowOperator(List<Mutable<ILogicalExpression>> partitionExpressions,
             List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions) {
-        this(partitionExpressions, orderExpressions, null, null, null, null, -1, null, -1);
+        this(partitionExpressions, orderExpressions, null, null, null, null, null, null, -1, null, -1);
     }
 
     public WindowOperator(List<Mutable<ILogicalExpression>> partitionExpressions,
             List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions,
             List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> frameValueExpressions,
             List<Mutable<ILogicalExpression>> frameStartExpressions,
+            List<Mutable<ILogicalExpression>> frameStartValidationExpressions,
             List<Mutable<ILogicalExpression>> frameEndExpressions,
+            List<Mutable<ILogicalExpression>> frameEndValidationExpressions,
             List<Mutable<ILogicalExpression>> frameExcludeExpressions, int frameExcludeNegationStartIdx,
             ILogicalExpression frameOffset, int frameMaxObjects) {
         this.partitionExpressions = new ArrayList<>();
@@ -109,9 +117,17 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
         if (frameStartExpressions != null) {
             this.frameStartExpressions.addAll(frameStartExpressions);
         }
+        this.frameStartValidationExpressions = new ArrayList<>();
+        if (frameStartValidationExpressions != null) {
+            this.frameStartValidationExpressions.addAll(frameStartValidationExpressions);
+        }
         this.frameEndExpressions = new ArrayList<>();
         if (frameEndExpressions != null) {
             this.frameEndExpressions.addAll(frameEndExpressions);
+        }
+        this.frameEndValidationExpressions = new ArrayList<>();
+        if (frameEndValidationExpressions != null) {
+            this.frameEndValidationExpressions.addAll(frameEndValidationExpressions);
         }
         this.frameExcludeExpressions = new ArrayList<>();
         if (frameExcludeExpressions != null) {
@@ -128,11 +144,14 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
             List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions,
             List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> frameValueExpressions,
             List<Mutable<ILogicalExpression>> frameStartExpressions,
+            List<Mutable<ILogicalExpression>> frameStartValidationExpressions,
             List<Mutable<ILogicalExpression>> frameEndExpressions,
+            List<Mutable<ILogicalExpression>> frameEndValidationExpressions,
             List<Mutable<ILogicalExpression>> frameExcludeExpressions, int frameExcludeNegationStartIdx,
             ILogicalExpression frameOffset, int frameMaxObjects, List<LogicalVariable> variables,
             List<Mutable<ILogicalExpression>> expressions, List<ILogicalPlan> nestedPlans) {
-        this(partitionExpressions, orderExpressions, frameValueExpressions, frameStartExpressions, frameEndExpressions,
+        this(partitionExpressions, orderExpressions, frameValueExpressions, frameStartExpressions,
+                frameStartValidationExpressions, frameEndExpressions, frameEndValidationExpressions,
                 frameExcludeExpressions, frameExcludeNegationStartIdx, frameOffset, frameMaxObjects);
         if (variables != null) {
             this.variables.addAll(variables);
@@ -166,8 +185,16 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
         return frameStartExpressions;
     }
 
+    public List<Mutable<ILogicalExpression>> getFrameStartValidationExpressions() {
+        return frameStartValidationExpressions;
+    }
+
     public List<Mutable<ILogicalExpression>> getFrameEndExpressions() {
         return frameEndExpressions;
+    }
+
+    public List<Mutable<ILogicalExpression>> getFrameEndValidationExpressions() {
+        return frameEndValidationExpressions;
     }
 
     public List<Mutable<ILogicalExpression>> getFrameExcludeExpressions() {
@@ -245,7 +272,13 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
         for (Mutable<ILogicalExpression> expr : frameStartExpressions) {
             mod |= visitor.transform(expr);
         }
+        for (Mutable<ILogicalExpression> expr : frameStartValidationExpressions) {
+            mod |= visitor.transform(expr);
+        }
         for (Mutable<ILogicalExpression> expr : frameEndExpressions) {
+            mod |= visitor.transform(expr);
+        }
+        for (Mutable<ILogicalExpression> expr : frameEndValidationExpressions) {
             mod |= visitor.transform(expr);
         }
         for (Mutable<ILogicalExpression> excludeExpr : frameExcludeExpressions) {
@@ -307,7 +340,13 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
         for (Mutable<ILogicalExpression> expr : frameStartExpressions) {
             expr.getValue().getUsedVariables(vars);
         }
+        for (Mutable<ILogicalExpression> expr : frameStartValidationExpressions) {
+            expr.getValue().getUsedVariables(vars);
+        }
         for (Mutable<ILogicalExpression> expr : frameEndExpressions) {
+            expr.getValue().getUsedVariables(vars);
+        }
+        for (Mutable<ILogicalExpression> expr : frameEndValidationExpressions) {
             expr.getValue().getUsedVariables(vars);
         }
         for (Mutable<ILogicalExpression> excludeExpr : frameExcludeExpressions) {

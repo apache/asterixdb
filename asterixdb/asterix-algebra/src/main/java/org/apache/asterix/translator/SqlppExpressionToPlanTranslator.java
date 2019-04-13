@@ -96,6 +96,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -1073,7 +1074,9 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprListOut = Collections.emptyList();
         List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> frameValueExprRefs = null;
         List<Mutable<ILogicalExpression>> frameStartExprRefs = null;
+        List<Mutable<ILogicalExpression>> frameStartValidationExprRefs = null;
         List<Mutable<ILogicalExpression>> frameEndExprRefs = null;
+        List<Mutable<ILogicalExpression>> frameEndValidationExprRefs = null;
         List<Mutable<ILogicalExpression>> frameExcludeExprRefs = null;
         int frameExcludeNotStartIdx = -1;
 
@@ -1230,20 +1233,24 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 currentOpRef = new MutableObject<>(helperWinOp);
             }
 
-            Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> frameStartResult = translateWindowBoundary(
-                    winFrameStartKind, winFrameStartExpr, frameValueExprRefs, orderExprListOut, currentOpRef);
+            Triple<ILogicalOperator, List<Mutable<ILogicalExpression>>, List<Mutable<ILogicalExpression>>> frameStartResult =
+                    translateWindowBoundary(winFrameStartKind, winFrameStartExpr, frameValueExprRefs, orderExprListOut,
+                            currentOpRef);
             if (frameStartResult != null) {
-                frameStartExprRefs = frameStartResult.first;
-                if (frameStartResult.second != null) {
-                    currentOpRef = new MutableObject<>(frameStartResult.second);
+                frameStartExprRefs = frameStartResult.second;
+                frameStartValidationExprRefs = frameStartResult.third;
+                if (frameStartResult.first != null) {
+                    currentOpRef = new MutableObject<>(frameStartResult.first);
                 }
             }
-            Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> frameEndResult = translateWindowBoundary(
-                    winFrameEndKind, winFrameEndExpr, frameValueExprRefs, orderExprListOut, currentOpRef);
+            Triple<ILogicalOperator, List<Mutable<ILogicalExpression>>, List<Mutable<ILogicalExpression>>> frameEndResult =
+                    translateWindowBoundary(winFrameEndKind, winFrameEndExpr, frameValueExprRefs, orderExprListOut,
+                            currentOpRef);
             if (frameEndResult != null) {
-                frameEndExprRefs = frameEndResult.first;
-                if (frameEndResult.second != null) {
-                    currentOpRef = new MutableObject<>(frameEndResult.second);
+                frameEndExprRefs = frameEndResult.second;
+                frameEndValidationExprRefs = frameEndResult.third;
+                if (frameEndResult.first != null) {
+                    currentOpRef = new MutableObject<>(frameEndResult.first);
                 }
             }
         }
@@ -1257,8 +1264,8 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         }
 
         WindowOperator winOp = new WindowOperator(partExprListOut, orderExprListOut, frameValueExprRefs,
-                frameStartExprRefs, frameEndExprRefs, frameExcludeExprRefs, frameExcludeNotStartIdx, frameOffsetExpr,
-                winFrameMaxOjbects);
+                frameStartExprRefs, frameStartValidationExprRefs, frameEndExprRefs, frameEndValidationExprRefs,
+                frameExcludeExprRefs, frameExcludeNotStartIdx, frameOffsetExpr, winFrameMaxOjbects);
         winOp.setSourceLocation(sourceLoc);
 
         LogicalVariable runningAggResultVar = null, nestedAggResultVar = null;
@@ -1465,7 +1472,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         return true;
     }
 
-    private Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> translateWindowBoundary(
+    private Triple<ILogicalOperator, List<Mutable<ILogicalExpression>>, List<Mutable<ILogicalExpression>>> translateWindowBoundary(
             WindowExpression.FrameBoundaryKind boundaryKind, Expression boundaryExpr,
             List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> valueExprs,
             List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprList,
@@ -1481,15 +1488,17 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : valueExprs) {
                     resultExprs.add(new MutableObject<>(p.second.getValue().cloneExpression()));
                 }
-                return new Pair<>(resultExprs, null);
+                return new Triple<>(null, resultExprs, null);
             case BOUNDED_PRECEDING:
                 OperatorType opTypePreceding = valueExprs.get(0).first.getKind() == OrderOperator.IOrder.OrderKind.ASC
                         ? OperatorType.MINUS : OperatorType.PLUS;
-                return translateWindowBoundaryExpr(boundaryExpr, valueExprs, tupSource, opTypePreceding);
+                return translateWindowBoundaryExpr(boundaryExpr, valueExprs, tupSource, opTypePreceding,
+                        BuiltinFunctions.IS_NUMERIC_ADD_COMPATIBLE);
             case BOUNDED_FOLLOWING:
                 OperatorType opTypeFollowing = valueExprs.get(0).first.getKind() == OrderOperator.IOrder.OrderKind.ASC
                         ? OperatorType.PLUS : OperatorType.MINUS;
-                return translateWindowBoundaryExpr(boundaryExpr, valueExprs, tupSource, opTypeFollowing);
+                return translateWindowBoundaryExpr(boundaryExpr, valueExprs, tupSource, opTypeFollowing,
+                        BuiltinFunctions.IS_NUMERIC_ADD_COMPATIBLE);
             case UNBOUNDED_PRECEDING:
             case UNBOUNDED_FOLLOWING:
                 return null;
@@ -1499,14 +1508,19 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         }
     }
 
-    private Pair<List<Mutable<ILogicalExpression>>, ILogicalOperator> translateWindowBoundaryExpr(
+    private Triple<ILogicalOperator, List<Mutable<ILogicalExpression>>, List<Mutable<ILogicalExpression>>> translateWindowBoundaryExpr(
             Expression boundaryExpr, List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> valueExprs,
-            Mutable<ILogicalOperator> tupSource, OperatorType boundaryOperator) throws CompilationException {
-        SourceLocation sourceLoc = boundaryExpr.getSourceLocation();
+            Mutable<ILogicalOperator> tupSource, OperatorType boundaryOperator, FunctionIdentifier validationFunction)
+            throws CompilationException {
         if (valueExprs.size() != 1) {
-            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, valueExprs.size());
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, boundaryExpr.getSourceLocation(),
+                    valueExprs.size());
         }
         ILogicalExpression valueExpr = valueExprs.get(0).second.getValue();
+        SourceLocation sourceLoc = valueExpr.getSourceLocation();
+
+        AbstractFunctionCallExpression validationExpr = createFunctionCallExpression(validationFunction, sourceLoc);
+        validationExpr.getArguments().add(new MutableObject<>(valueExpr.cloneExpression()));
 
         AbstractFunctionCallExpression resultExpr =
                 createFunctionCallExpressionForBuiltinOperator(boundaryOperator, sourceLoc);
@@ -1522,7 +1536,8 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         VariableReferenceExpression resultVarRefExpr = new VariableReferenceExpression(resultVar);
         resultVarRefExpr.setSourceLocation(sourceLoc);
 
-        return new Pair<>(mkSingletonArrayList(new MutableObject<>(resultVarRefExpr)), assignOp);
+        return new Triple<>(assignOp, mkSingletonArrayList(new MutableObject<>(resultVarRefExpr)),
+                mkSingletonArrayList(new MutableObject<>(validationExpr)));
     }
 
     private Pair<List<Mutable<ILogicalExpression>>, Integer> translateWindowExclusion(

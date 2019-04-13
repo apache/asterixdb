@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.algebricks.runtime.operators.win;
 
+import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
+import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspector;
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
@@ -72,6 +74,14 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
 
     private PointableTupleReference frameStartPointables;
 
+    private final boolean frameStartValidationExists;
+
+    private final IScalarEvaluatorFactory[] frameStartValidationEvalFactories;
+
+    private IScalarEvaluator[] frameStartValidationEvals;
+
+    private PointableTupleReference frameStartValidationPointables;
+
     private final boolean frameStartIsMonotonic;
 
     private final boolean frameEndExists;
@@ -81,6 +91,14 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
     private IScalarEvaluator[] frameEndEvals;
 
     private PointableTupleReference frameEndPointables;
+
+    private final boolean frameEndValidationExists;
+
+    private final IScalarEvaluatorFactory[] frameEndValidationEvalFactories;
+
+    private IScalarEvaluator[] frameEndValidationEvals;
+
+    private PointableTupleReference frameEndValidationPointables;
 
     private final boolean frameExcludeExists;
 
@@ -106,15 +124,19 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
 
     private IPointable frameOffsetPointable;
 
-    private final IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory;
-
     private final int frameMaxObjects;
+
+    private final IBinaryBooleanInspectorFactory booleanAccessorFactory;
+
+    private IBinaryBooleanInspector booleanAccessor;
+
+    private final IBinaryIntegerInspectorFactory integerAccessorFactory;
+
+    private IBinaryIntegerInspector integerAccessor;
 
     private FrameTupleAccessor tAccess2;
 
     private FrameTupleReference tRef2;
-
-    private IBinaryIntegerInspector bii;
 
     private int chunkIdxFrameStartGlobal;
 
@@ -123,13 +145,15 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
     WindowNestedPlansPushRuntime(int[] partitionColumns, IBinaryComparatorFactory[] partitionComparatorFactories,
             IBinaryComparatorFactory[] orderComparatorFactories, IScalarEvaluatorFactory[] frameValueEvalFactories,
             IBinaryComparatorFactory[] frameValueComparatorFactories, IScalarEvaluatorFactory[] frameStartEvalFactories,
-            boolean frameStartIsMonotonic, IScalarEvaluatorFactory[] frameEndEvalFactories,
+            IScalarEvaluatorFactory[] frameStartValidationEvalFactories, boolean frameStartIsMonotonic,
+            IScalarEvaluatorFactory[] frameEndEvalFactories, IScalarEvaluatorFactory[] frameEndValidationEvalFactories,
             IScalarEvaluatorFactory[] frameExcludeEvalFactories, int frameExcludeNegationStartIdx,
             IBinaryComparatorFactory[] frameExcludeComparatorFactories, IScalarEvaluatorFactory frameOffsetEvalFactory,
-            IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory, int frameMaxObjects, int[] projectionColumns,
-            int[] runningAggOutColumns, IRunningAggregateEvaluatorFactory[] runningAggFactories,
-            int nestedAggOutSchemaSize, WindowAggregatorDescriptorFactory nestedAggFactory, IHyracksTaskContext ctx,
-            int memSizeInFrames, SourceLocation sourceLoc) {
+            int frameMaxObjects, IBinaryBooleanInspectorFactory booleanAccessorFactory,
+            IBinaryIntegerInspectorFactory integerAccessorFactory, int[] projectionColumns, int[] runningAggOutColumns,
+            IRunningAggregateEvaluatorFactory[] runningAggFactories, int nestedAggOutSchemaSize,
+            WindowAggregatorDescriptorFactory nestedAggFactory, IHyracksTaskContext ctx, int memSizeInFrames,
+            SourceLocation sourceLoc) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories, projectionColumns,
                 runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, ctx,
                 memSizeInFrames, sourceLoc);
@@ -137,9 +161,15 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
         this.frameValueExists = frameValueEvalFactories != null && frameValueEvalFactories.length > 0;
         this.frameStartEvalFactories = frameStartEvalFactories;
         this.frameStartExists = frameStartEvalFactories != null && frameStartEvalFactories.length > 0;
+        this.frameStartValidationEvalFactories = frameStartValidationEvalFactories;
+        this.frameStartValidationExists =
+                frameStartValidationEvalFactories != null && frameStartValidationEvalFactories.length > 0;
         this.frameStartIsMonotonic = frameStartExists && frameStartIsMonotonic;
         this.frameEndEvalFactories = frameEndEvalFactories;
         this.frameEndExists = frameEndEvalFactories != null && frameEndEvalFactories.length > 0;
+        this.frameEndValidationEvalFactories = frameEndValidationEvalFactories;
+        this.frameEndValidationExists =
+                frameEndValidationEvalFactories != null && frameEndValidationEvalFactories.length > 0;
         this.frameValueComparatorFactories = frameValueComparatorFactories;
         this.frameExcludeEvalFactories = frameExcludeEvalFactories;
         this.frameExcludeExists = frameExcludeEvalFactories != null && frameExcludeEvalFactories.length > 0;
@@ -147,8 +177,9 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
         this.frameExcludeNegationStartIdx = frameExcludeNegationStartIdx;
         this.frameOffsetExists = frameOffsetEvalFactory != null;
         this.frameOffsetEvalFactory = frameOffsetEvalFactory;
-        this.binaryIntegerInspectorFactory = binaryIntegerInspectorFactory;
         this.frameMaxObjects = frameMaxObjects;
+        this.booleanAccessorFactory = booleanAccessorFactory;
+        this.integerAccessorFactory = integerAccessorFactory;
     }
 
     @Override
@@ -163,9 +194,17 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
             frameStartEvals = createEvaluators(frameStartEvalFactories, ctx);
             frameStartPointables = createPointables(frameStartEvalFactories.length);
         }
+        if (frameStartValidationExists) {
+            frameStartValidationEvals = createEvaluators(frameStartValidationEvalFactories, ctx);
+            frameStartValidationPointables = createPointables(frameStartValidationEvalFactories.length);
+        }
         if (frameEndExists) {
             frameEndEvals = createEvaluators(frameEndEvalFactories, ctx);
             frameEndPointables = createPointables(frameEndEvalFactories.length);
+        }
+        if (frameEndValidationExists) {
+            frameEndValidationEvals = createEvaluators(frameEndValidationEvalFactories, ctx);
+            frameEndValidationPointables = createPointables(frameEndValidationEvalFactories.length);
         }
         if (frameExcludeExists) {
             frameExcludeEvals = createEvaluators(frameExcludeEvalFactories, ctx);
@@ -176,7 +215,10 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
         if (frameOffsetExists) {
             frameOffsetEval = frameOffsetEvalFactory.createScalarEvaluator(ctx);
             frameOffsetPointable = VoidPointable.FACTORY.createPointable();
-            bii = binaryIntegerInspectorFactory.createBinaryIntegerInspector(ctx);
+            integerAccessor = integerAccessorFactory.createBinaryIntegerInspector(ctx);
+        }
+        if (frameStartValidationExists || frameEndValidationExists) {
+            booleanAccessor = booleanAccessorFactory.createBinaryBooleanInspector(ctx);
         }
         tAccess2 = new FrameTupleAccessor(inputRecordDesc);
         tRef2 = new FrameTupleReference();
@@ -208,111 +250,129 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
             // running aggregates
             produceTuple(tupleBuilder, tAccess, tIdx, tRef);
 
-            // frame boundaries
-            if (frameStartExists) {
-                evaluate(frameStartEvals, tRef, frameStartPointables);
-            }
-            if (frameEndExists) {
-                evaluate(frameEndEvals, tRef, frameEndPointables);
-            }
-            if (frameExcludeExists) {
-                evaluate(frameExcludeEvals, tRef, frameExcludePointables);
-            }
-            int toSkip = 0;
-            if (frameOffsetExists) {
-                frameOffsetEval.evaluate(tRef, frameOffsetPointable);
-                toSkip = bii.getIntegerValue(frameOffsetPointable.getByteArray(), frameOffsetPointable.getStartOffset(),
-                        frameOffsetPointable.getLength());
-            }
-            int toWrite = frameMaxObjects;
-
+            // nested aggregates
             nestedAggInit();
 
-            boolean frameStartForward = frameStartIsMonotonic && chunkIdxFrameStartGlobal >= 0;
-            int chunkIdxInnerStart = frameStartForward ? chunkIdxFrameStartGlobal : 0;
-            int tBeginIdxInnerStart = frameStartForward ? tBeginIdxFrameStartGlobal : -1;
-
-            if (chunkIdxInnerStart < nChunks) {
-                if (frameStartForward && !isFirstTupleInPartition) {
-                    partitionReader.restorePosition(FRAME_POSITION_SLOT);
-                } else {
-                    partitionReader.rewind();
+            // frame boundaries
+            boolean frameStartValid = true;
+            if (frameStartExists) {
+                if (frameStartValidationExists) {
+                    evaluate(frameStartValidationEvals, tRef, frameStartValidationPointables);
+                    frameStartValid = allTrue(frameStartValidationPointables, booleanAccessor);
+                }
+                if (frameStartValid) {
+                    evaluate(frameStartEvals, tRef, frameStartPointables);
+                }
+            }
+            boolean frameEndValid = true;
+            if (frameEndExists) {
+                if (frameEndValidationExists) {
+                    evaluate(frameEndValidationEvals, tRef, frameEndValidationPointables);
+                    frameEndValid = allTrue(frameEndValidationPointables, booleanAccessor);
+                }
+                if (frameEndValid) {
+                    evaluate(frameEndEvals, tRef, frameEndPointables);
                 }
             }
 
-            int chunkIdxFrameStartLocal = -1, tBeginIdxFrameStartLocal = -1;
-
-            frame_loop: for (int chunkIdxInner = chunkIdxInnerStart; chunkIdxInner < nChunks; chunkIdxInner++) {
-                partitionReader.savePosition(TMP_POSITION_SLOT);
-                IFrame frameInner = partitionReader.nextFrame(false);
-                tAccess2.reset(frameInner.getBuffer());
-
-                int tBeginIdxInner;
-                if (tBeginIdxInnerStart < 0) {
-                    tBeginIdxInner = getTupleBeginIdx(chunkIdxInner);
-                } else {
-                    tBeginIdxInner = tBeginIdxInnerStart;
-                    tBeginIdxInnerStart = -1;
+            if (frameStartValid && frameEndValid) {
+                if (frameExcludeExists) {
+                    evaluate(frameExcludeEvals, tRef, frameExcludePointables);
                 }
-                int tEndIdxInner = getTupleEndIdx(chunkIdxInner);
+                int toSkip = 0;
+                if (frameOffsetExists) {
+                    frameOffsetEval.evaluate(tRef, frameOffsetPointable);
+                    toSkip = integerAccessor.getIntegerValue(frameOffsetPointable.getByteArray(),
+                            frameOffsetPointable.getStartOffset(), frameOffsetPointable.getLength());
+                }
+                int toWrite = frameMaxObjects;
 
-                for (int tIdxInner = tBeginIdxInner; tIdxInner <= tEndIdxInner; tIdxInner++) {
-                    tRef2.reset(tAccess2, tIdxInner);
+                boolean frameStartForward = frameStartIsMonotonic && chunkIdxFrameStartGlobal >= 0;
+                int chunkIdxInnerStart = frameStartForward ? chunkIdxFrameStartGlobal : 0;
+                int tBeginIdxInnerStart = frameStartForward ? tBeginIdxFrameStartGlobal : -1;
 
-                    if (frameStartExists || frameEndExists) {
-                        evaluate(frameValueEvals, tRef2, frameValuePointables);
-                        if (frameStartExists) {
-                            if (frameValueComparators.compare(frameValuePointables, frameStartPointables) < 0) {
-                                // skip if value < start
-                                continue;
+                if (chunkIdxInnerStart < nChunks) {
+                    if (frameStartForward && !isFirstTupleInPartition) {
+                        partitionReader.restorePosition(FRAME_POSITION_SLOT);
+                    } else {
+                        partitionReader.rewind();
+                    }
+                }
+
+                int chunkIdxFrameStartLocal = -1, tBeginIdxFrameStartLocal = -1;
+
+                frame_loop: for (int chunkIdxInner = chunkIdxInnerStart; chunkIdxInner < nChunks; chunkIdxInner++) {
+                    partitionReader.savePosition(TMP_POSITION_SLOT);
+                    IFrame frameInner = partitionReader.nextFrame(false);
+                    tAccess2.reset(frameInner.getBuffer());
+
+                    int tBeginIdxInner;
+                    if (tBeginIdxInnerStart < 0) {
+                        tBeginIdxInner = getTupleBeginIdx(chunkIdxInner);
+                    } else {
+                        tBeginIdxInner = tBeginIdxInnerStart;
+                        tBeginIdxInnerStart = -1;
+                    }
+                    int tEndIdxInner = getTupleEndIdx(chunkIdxInner);
+
+                    for (int tIdxInner = tBeginIdxInner; tIdxInner <= tEndIdxInner; tIdxInner++) {
+                        tRef2.reset(tAccess2, tIdxInner);
+
+                        if (frameStartExists || frameEndExists) {
+                            evaluate(frameValueEvals, tRef2, frameValuePointables);
+                            if (frameStartExists) {
+                                if (frameValueComparators.compare(frameValuePointables, frameStartPointables) < 0) {
+                                    // skip if value < start
+                                    continue;
+                                }
+                                // inside the frame
+                                if (chunkIdxFrameStartLocal < 0) {
+                                    // save position of the first tuple in this frame
+                                    // will continue from it in the next frame iteration
+                                    chunkIdxFrameStartLocal = chunkIdxInner;
+                                    tBeginIdxFrameStartLocal = tIdxInner;
+                                    partitionReader.copyPosition(TMP_POSITION_SLOT, FRAME_POSITION_SLOT);
+                                }
                             }
-                            // inside the frame
-                            if (chunkIdxFrameStartLocal < 0) {
-                                // save position of the first tuple in this frame
-                                // will continue from it in the next frame iteration
-                                chunkIdxFrameStartLocal = chunkIdxInner;
-                                tBeginIdxFrameStartLocal = tIdxInner;
-                                partitionReader.copyPosition(TMP_POSITION_SLOT, FRAME_POSITION_SLOT);
+                            if (frameEndExists
+                                    && frameValueComparators.compare(frameValuePointables, frameEndPointables) > 0) {
+                                // value > end => beyond the frame end
+                                // exit the frame loop
+                                break frame_loop;
                             }
                         }
-                        if (frameEndExists
-                                && frameValueComparators.compare(frameValuePointables, frameEndPointables) > 0) {
-                            // value > end => beyond the frame end
-                            // exit the frame loop
+                        if (frameExcludeExists && isExcluded()) {
+                            // skip if excluded
+                            continue;
+                        }
+
+                        if (toSkip > 0) {
+                            // skip if offset hasn't been reached
+                            toSkip--;
+                            continue;
+                        }
+
+                        if (toWrite != 0) {
+                            nestedAggAggregate(tAccess2, tIdxInner);
+                        }
+                        if (toWrite > 0) {
+                            toWrite--;
+                        }
+                        if (toWrite == 0) {
                             break frame_loop;
                         }
                     }
-                    if (frameExcludeExists && isExcluded()) {
-                        // skip if excluded
-                        continue;
-                    }
-
-                    if (toSkip > 0) {
-                        // skip if offset hasn't been reached
-                        toSkip--;
-                        continue;
-                    }
-
-                    if (toWrite != 0) {
-                        nestedAggAggregate(tAccess2, tIdxInner);
-                    }
-                    if (toWrite > 0) {
-                        toWrite--;
-                    }
-                    if (toWrite == 0) {
-                        break frame_loop;
-                    }
                 }
-            }
 
-            if (frameStartIsMonotonic) {
-                if (chunkIdxFrameStartLocal >= 0) {
-                    chunkIdxFrameStartGlobal = chunkIdxFrameStartLocal;
-                    tBeginIdxFrameStartGlobal = tBeginIdxFrameStartLocal;
-                } else {
-                    // frame start not found, set it beyond the last chunk
-                    chunkIdxFrameStartGlobal = nChunks;
-                    tBeginIdxFrameStartGlobal = 0;
+                if (frameStartIsMonotonic) {
+                    if (chunkIdxFrameStartLocal >= 0) {
+                        chunkIdxFrameStartGlobal = chunkIdxFrameStartLocal;
+                        tBeginIdxFrameStartGlobal = tBeginIdxFrameStartLocal;
+                    } else {
+                        // frame start not found, set it beyond the last chunk
+                        chunkIdxFrameStartGlobal = nChunks;
+                        tBeginIdxFrameStartGlobal = 0;
+                    }
                 }
             }
 

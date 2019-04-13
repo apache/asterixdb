@@ -258,7 +258,7 @@ The rules for resolving the leftmost identifier are:
     For example, if the whole query is `ARRAY_COUNT(a.b)` then `a.b` will be treated as dataset `b` contained in
     dataverse `a`.
     Note that this rule only applies to identifiers which are located directly inside a standalone expression.
-    Identifiers inside SELECT statements in a standalone expresion are still resolved according to Rules 1-3.
+    Identifiers inside SELECT statements in a standalone expression are still resolved according to Rules 1-3.
     For example, if the whole query is `ARRAY_SUM( (FROM employee AS e SELECT VALUE salary) )` then `salary` is resolved
     as `e.salary` following the "Single Variable Rule" (Rule 2.2).
 

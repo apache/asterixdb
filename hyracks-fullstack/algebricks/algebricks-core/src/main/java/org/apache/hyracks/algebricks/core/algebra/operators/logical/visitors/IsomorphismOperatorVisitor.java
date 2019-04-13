@@ -651,7 +651,11 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
     public static boolean compareWindowFrameSpec(WindowOperator winOp1, WindowOperator winOp2) {
         return compareIOrderAndExpressions(winOp1.getFrameValueExpressions(), winOp2.getFrameValueExpressions())
                 && compareExpressions(winOp1.getFrameStartExpressions(), winOp2.getFrameStartExpressions())
+                && compareExpressions(winOp1.getFrameStartValidationExpressions(),
+                        winOp2.getFrameStartValidationExpressions())
                 && compareExpressions(winOp1.getFrameEndExpressions(), winOp2.getFrameEndExpressions())
+                && compareExpressions(winOp1.getFrameEndValidationExpressions(),
+                        winOp2.getFrameEndValidationExpressions())
                 && compareExpressions(winOp1.getFrameExcludeExpressions(), winOp2.getFrameExcludeExpressions())
                 && winOp1.getFrameExcludeNegationStartIdx() == winOp2.getFrameExcludeNegationStartIdx()
                 && Objects.equals(winOp1.getFrameOffset().getValue(), winOp2.getFrameOffset().getValue())

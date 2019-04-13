@@ -122,7 +122,9 @@ public class ConsolidateWindowOperatorsRule implements IAlgebraicRewriteRule {
             setAll(winOpTo.getNestedPlans(), winOpFrom.getNestedPlans());
             setAll(winOpTo.getFrameValueExpressions(), winOpFrom.getFrameValueExpressions());
             setAll(winOpTo.getFrameStartExpressions(), winOpFrom.getFrameStartExpressions());
+            setAll(winOpTo.getFrameStartValidationExpressions(), winOpFrom.getFrameStartValidationExpressions());
             setAll(winOpTo.getFrameEndExpressions(), winOpFrom.getFrameEndExpressions());
+            setAll(winOpTo.getFrameEndValidationExpressions(), winOpFrom.getFrameEndValidationExpressions());
             setAll(winOpTo.getFrameExcludeExpressions(), winOpFrom.getFrameExcludeExpressions());
             winOpTo.setFrameExcludeNegationStartIdx(winOpFrom.getFrameExcludeNegationStartIdx());
             winOpTo.getFrameOffset().setValue(winOpFrom.getFrameOffset().getValue());

@@ -614,10 +614,20 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
                 stringBuilder.append(") frame start (");
                 printExprList(frameStartExpressions);
             }
+            List<Mutable<ILogicalExpression>> frameStartValidationExpressions = op.getFrameStartValidationExpressions();
+            if (!frameStartValidationExpressions.isEmpty()) {
+                stringBuilder.append(") if (");
+                printExprList(frameStartValidationExpressions);
+            }
             List<Mutable<ILogicalExpression>> frameEndExpressions = op.getFrameEndExpressions();
             if (!frameEndExpressions.isEmpty()) {
                 stringBuilder.append(") frame end (");
                 printExprList(frameEndExpressions);
+            }
+            List<Mutable<ILogicalExpression>> frameEndValidationExpressions = op.getFrameEndValidationExpressions();
+            if (!frameEndValidationExpressions.isEmpty()) {
+                stringBuilder.append(") if (");
+                printExprList(frameEndValidationExpressions);
             }
             List<Mutable<ILogicalExpression>> frameExcludeExpressions = op.getFrameExcludeExpressions();
             if (!frameExcludeExpressions.isEmpty()) {

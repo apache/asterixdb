@@ -339,6 +339,7 @@ import org.apache.asterix.runtime.evaluators.functions.IsBooleanDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsMissingDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsNumberDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.IsNumericAddCompatibleDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsObjectDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsStringDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsSystemNullDescriptor;
@@ -836,6 +837,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(CurrentDateDescriptor.FACTORY);
         fc.add(CurrentTimeDescriptor.FACTORY);
         fc.add(CurrentDateTimeDescriptor.FACTORY);
+
+        fc.add(IsNumericAddCompatibleDescriptor.FACTORY);
 
         // functions that need generated class for null-handling.
 

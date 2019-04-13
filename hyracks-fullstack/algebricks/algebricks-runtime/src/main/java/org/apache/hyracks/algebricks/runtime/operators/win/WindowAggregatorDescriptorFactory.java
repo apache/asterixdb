@@ -37,7 +37,6 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.dataflow.std.group.AbstractAccumulatingAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.AggregateState;
-import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor;
 
 /**
  * Aggregator factory for window operators
@@ -59,7 +58,7 @@ public final class WindowAggregatorDescriptorFactory extends AbstractAccumulatin
     }
 
     @Override
-    public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
+    public IWindowAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
             RecordDescriptor outRecordDescriptor, int[] keys, int[] partialKeys, long memoryBudget)
             throws HyracksDataException {
         NestedPlansAccumulatingAggregatorFactory.AggregatorOutput outputWriter =
@@ -87,7 +86,7 @@ public final class WindowAggregatorDescriptorFactory extends AbstractAccumulatin
             }
         }
 
-        return new IAggregatorDescriptor() {
+        return new IWindowAggregatorDescriptor() {
 
             @Override
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
@@ -110,13 +109,17 @@ public final class WindowAggregatorDescriptorFactory extends AbstractAccumulatin
             @Override
             public boolean outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor stateAccessor,
                     int tIndex, AggregateState state) throws HyracksDataException {
+                closePipelines();
+                memoryUsageCheck();
+                TupleUtils.addFields(outputWriter.getTupleBuilder(), tupleBuilder);
+                return true;
+            }
+
+            private void closePipelines() throws HyracksDataException {
                 for (int i = 0; i < pipelines.length; i++) {
                     outputWriter.setInputIdx(i);
                     pipelines[i].close();
                 }
-                memoryUsageCheck();
-                TupleUtils.addFields(outputWriter.getTupleBuilder(), tupleBuilder);
-                return true;
             }
 
             /**
@@ -141,6 +144,11 @@ public final class WindowAggregatorDescriptorFactory extends AbstractAccumulatin
                 TupleUtils.addFields(outputWriter.getTupleBuilder(), tupleBuilder);
                 outputWriter.getTupleBuilder().reset();
                 return true;
+            }
+
+            @Override
+            public void discardFinalResult() throws HyracksDataException {
+                closePipelines();
             }
 
             @Override

@@ -178,9 +178,17 @@ public class WindowPOperator extends AbstractPhysicalOperator {
         IScalarEvaluatorFactory[] frameStartExprEvals =
                 createEvaluatorFactories(frameStartExprList, inputSchemas, inputTypeEnv, exprRuntimeProvider, context);
 
+        List<Mutable<ILogicalExpression>> frameStartValidationExprList = winOp.getFrameStartValidationExpressions();
+        IScalarEvaluatorFactory[] frameStartValidationExprEvals = createEvaluatorFactories(frameStartValidationExprList,
+                inputSchemas, inputTypeEnv, exprRuntimeProvider, context);
+
         List<Mutable<ILogicalExpression>> frameEndExprList = winOp.getFrameEndExpressions();
         IScalarEvaluatorFactory[] frameEndExprEvals =
                 createEvaluatorFactories(frameEndExprList, inputSchemas, inputTypeEnv, exprRuntimeProvider, context);
+
+        List<Mutable<ILogicalExpression>> frameEndValidationExprList = winOp.getFrameEndValidationExpressions();
+        IScalarEvaluatorFactory[] frameEndValidationExprEvals = createEvaluatorFactories(frameEndValidationExprList,
+                inputSchemas, inputTypeEnv, exprRuntimeProvider, context);
 
         List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> frameValueExprList =
                 winOp.getFrameValueExpressions();
@@ -239,7 +247,8 @@ public class WindowPOperator extends AbstractPhysicalOperator {
                     runtime = new WindowNestedPlansRunningRuntimeFactory(partitionColumnsList,
                             partitionComparatorFactories, orderComparatorFactories,
                             frameValueExprEvalsAndComparators.first, frameValueExprEvalsAndComparators.second,
-                            frameEndExprEvals, frameMaxObjects, projectionColumnsExcludingSubplans,
+                            frameEndExprEvals, frameEndValidationExprEvals, frameMaxObjects,
+                            context.getBinaryBooleanInspectorFactory(), projectionColumnsExcludingSubplans,
                             runningAggOutColumns, runningAggFactories, aggregatorOutputSchemaSize, nestedAggFactory,
                             memSizeInFrames);
                 }
@@ -248,10 +257,11 @@ public class WindowPOperator extends AbstractPhysicalOperator {
             if (runtime == null) {
                 runtime = new WindowNestedPlansRuntimeFactory(partitionColumnsList, partitionComparatorFactories,
                         orderComparatorFactories, frameValueExprEvalsAndComparators.first,
-                        frameValueExprEvalsAndComparators.second, frameStartExprEvals, frameStartIsMonotonic,
-                        frameEndExprEvals, frameExcludeExprEvalsAndComparators.first,
-                        winOp.getFrameExcludeNegationStartIdx(), frameExcludeExprEvalsAndComparators.second,
-                        frameOffsetExprEval, context.getBinaryIntegerInspectorFactory(), frameMaxObjects,
+                        frameValueExprEvalsAndComparators.second, frameStartExprEvals, frameStartValidationExprEvals,
+                        frameStartIsMonotonic, frameEndExprEvals, frameEndValidationExprEvals,
+                        frameExcludeExprEvalsAndComparators.first, winOp.getFrameExcludeNegationStartIdx(),
+                        frameExcludeExprEvalsAndComparators.second, frameOffsetExprEval, frameMaxObjects,
+                        context.getBinaryBooleanInspectorFactory(), context.getBinaryIntegerInspectorFactory(),
                         projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories,
                         aggregatorOutputSchemaSize, nestedAggFactory, memSizeInFrames);
             }

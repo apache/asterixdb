@@ -21,6 +21,7 @@ package org.apache.hyracks.algebricks.runtime.operators.win;
 
 import java.util.Arrays;
 
+import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
@@ -42,30 +43,38 @@ public class WindowNestedPlansRunningRuntimeFactory extends AbstractWindowNested
 
     private final IScalarEvaluatorFactory[] frameEndEvalFactories;
 
+    private final IScalarEvaluatorFactory[] frameEndValidationEvalFactories;
+
     private final int frameMaxObjects;
+
+    private final IBinaryBooleanInspectorFactory booleanAccessorFactory;
 
     public WindowNestedPlansRunningRuntimeFactory(int[] partitionColumns,
             IBinaryComparatorFactory[] partitionComparatorFactories,
             IBinaryComparatorFactory[] orderComparatorFactories, IScalarEvaluatorFactory[] frameValueEvalFactories,
             IBinaryComparatorFactory[] frameValueComparatorFactories, IScalarEvaluatorFactory[] frameEndEvalFactories,
-            int frameMaxObjects, int[] projectionColumnsExcludingSubplans, int[] runningAggOutColumns,
-            IRunningAggregateEvaluatorFactory[] runningAggFactories, int nestedAggOutSchemaSize,
-            WindowAggregatorDescriptorFactory nestedAggFactory, int memSizeInFrames) {
+            IScalarEvaluatorFactory[] frameEndValidationEvalFactories, int frameMaxObjects,
+            IBinaryBooleanInspectorFactory booleanAccessorFactory, int[] projectionColumnsExcludingSubplans,
+            int[] runningAggOutColumns, IRunningAggregateEvaluatorFactory[] runningAggFactories,
+            int nestedAggOutSchemaSize, WindowAggregatorDescriptorFactory nestedAggFactory, int memSizeInFrames) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories,
                 projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize,
                 nestedAggFactory, memSizeInFrames);
         this.frameValueEvalFactories = frameValueEvalFactories;
         this.frameValueComparatorFactories = frameValueComparatorFactories;
         this.frameEndEvalFactories = frameEndEvalFactories;
+        this.frameEndValidationEvalFactories = frameEndValidationEvalFactories;
         this.frameMaxObjects = frameMaxObjects;
+        this.booleanAccessorFactory = booleanAccessorFactory;
     }
 
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(IHyracksTaskContext ctx) {
         return new WindowNestedPlansRunningPushRuntime(partitionColumns, partitionComparatorFactories,
                 orderComparatorFactories, frameValueEvalFactories, frameValueComparatorFactories, frameEndEvalFactories,
-                frameMaxObjects, projectionList, runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize,
-                nestedAggFactory, ctx, memSizeInFrames, sourceLoc);
+                frameEndValidationEvalFactories, frameMaxObjects, booleanAccessorFactory, projectionList,
+                runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, ctx,
+                memSizeInFrames, sourceLoc);
     }
 
     @Override
