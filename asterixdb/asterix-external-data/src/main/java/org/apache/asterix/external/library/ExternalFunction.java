@@ -28,9 +28,6 @@ import org.apache.asterix.external.api.IExternalFunction;
 import org.apache.asterix.external.api.IFunctionFactory;
 import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -45,11 +42,10 @@ public abstract class ExternalFunction implements IExternalFunction {
 
     protected final IExternalFunctionInfo finfo;
     protected final IFunctionFactory externalFunctionFactory;
-    protected final IExternalFunction externalFunction;
+    protected final IExternalFunction externalFunctionInstance;
     protected final IScalarEvaluatorFactory[] evaluatorFactories;
     protected final IPointable inputVal = new VoidPointable();
     protected final ArrayBackedValueStorage resultBuffer = new ArrayBackedValueStorage();
-    protected final ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
     protected final IScalarEvaluator[] argumentEvaluators;
     protected final JavaFunctionHelper functionHelper;
 
@@ -75,7 +71,7 @@ public abstract class ExternalFunction implements IExternalFunction {
         try {
             clazz = Class.forName(classname, true, libraryClassLoader);
             externalFunctionFactory = (IFunctionFactory) clazz.newInstance();
-            externalFunction = externalFunctionFactory.getExternalFunction();
+            externalFunctionInstance = externalFunctionFactory.getExternalFunction();
         } catch (Exception e) {
             throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNABLE_TO_LOAD_CLASS, e, classname);
         }
@@ -84,30 +80,18 @@ public abstract class ExternalFunction implements IExternalFunction {
     public void setArguments(IFrameTupleReference tuple) throws AlgebricksException, IOException {
         for (int i = 0; i < evaluatorFactories.length; i++) {
             argumentEvaluators[i].evaluate(tuple, inputVal);
-
-            // Type-cast the source array based on the input type that this function wants to receive.
-            ATypeTag targetTypeTag = finfo.getArgumentList().get(i).getTypeTag();
-            ATypeTag sourceTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                    .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
-            if (sourceTypeTag != targetTypeTag) {
-                castBuffer.reset();
-                ATypeHierarchy.convertNumericTypeByteArray(inputVal.getByteArray(), inputVal.getStartOffset(),
-                        inputVal.getLength(), targetTypeTag, castBuffer.getDataOutput(), true);
-                functionHelper.setArgument(i, castBuffer);
-            } else {
-                functionHelper.setArgument(i, inputVal);
-            }
+            functionHelper.setArgument(i, inputVal);
         }
     }
 
     @Override
     public void deinitialize() {
-        externalFunction.deinitialize();
+        externalFunctionInstance.deinitialize();
     }
 
     @Override
     public void initialize(IFunctionHelper functionHelper) throws Exception {
-        externalFunction.initialize(functionHelper);
+        externalFunctionInstance.initialize(functionHelper);
     }
 
 }

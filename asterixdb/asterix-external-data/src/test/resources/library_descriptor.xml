@@ -73,7 +73,15 @@
       <function_type>SCALAR</function_type>
       <argument_type>AINT32,AINT32</argument_type>
       <return_type>AINT32</return_type>
-      <definition>org.apache.asterix.external.library.SumFactory
+      <definition>org.apache.asterix.external.library.MySumFactory
+      </definition>
+    </libraryFunction>
+    <libraryFunction>
+      <name>my_array_sum</name>
+      <function_type>SCALAR</function_type>
+      <argument_type>[AINT32]</argument_type>
+      <return_type>AINT32</return_type>
+      <definition>org.apache.asterix.external.library.MyArraySumFactory
       </definition>
     </libraryFunction>
     <libraryFunction>

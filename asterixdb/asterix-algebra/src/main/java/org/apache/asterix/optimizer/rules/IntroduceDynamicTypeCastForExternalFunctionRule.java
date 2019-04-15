@@ -24,6 +24,7 @@ import org.apache.asterix.metadata.functions.ExternalScalarFunctionInfo;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
@@ -71,36 +72,37 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
         if (BuiltinFunctions.getBuiltinFunctionIdentifier(funcCallExpr.getFunctionIdentifier()) != null) {
             return changed;
         }
-        IAType inputRecordType;
-        ARecordType requiredRecordType;
-        for (int iter1 = 0; iter1 < funcCallExpr.getArguments().size(); iter1++) {
-            Mutable<ILogicalExpression> argExpr = funcCallExpr.getArguments().get(iter1);
-            inputRecordType = (IAType) op.computeOutputTypeEnvironment(context).getType(argExpr.getValue());
-            if (!(((ExternalScalarFunctionInfo) funcCallExpr.getFunctionInfo()).getArgumenTypes()
-                    .get(iter1) instanceof ARecordType)) {
-                continue;
+        IAType inputType;
+        IAType reqArgType;
+        boolean castFlag;
+        for (int i = 0; i < funcCallExpr.getArguments().size(); i++) {
+            Mutable<ILogicalExpression> argExpr = funcCallExpr.getArguments().get(i);
+            inputType = (IAType) op.computeOutputTypeEnvironment(context).getType(argExpr.getValue());
+            reqArgType = ((ExternalScalarFunctionInfo) funcCallExpr.getFunctionInfo()).getArgumentTypes().get(i);
+
+            if (reqArgType.getTypeTag() == ATypeTag.OBJECT) {
+                castFlag = !IntroduceDynamicTypeCastRule.compatible((ARecordType) reqArgType, inputType,
+                        argExpr.getValue().getSourceLocation());
+            } else {
+                castFlag = !reqArgType.equals(inputType);
             }
-            requiredRecordType = (ARecordType) ((ExternalScalarFunctionInfo) funcCallExpr.getFunctionInfo())
-                    .getArgumenTypes().get(iter1);
             /**
              * the input record type can be an union type
              * for the case when it comes from a subplan or left-outer join
              */
             boolean checkUnknown = false;
-            while (NonTaggedFormatUtil.isOptional(inputRecordType)) {
+            while (NonTaggedFormatUtil.isOptional(inputType)) {
                 /** while-loop for the case there is a nested multi-level union */
-                inputRecordType = ((AUnionType) inputRecordType).getActualType();
+                inputType = ((AUnionType) inputType).getActualType();
                 checkUnknown = true;
             }
-            boolean castFlag = !IntroduceDynamicTypeCastRule.compatible(requiredRecordType, inputRecordType,
-                    argExpr.getValue().getSourceLocation());
             if (castFlag || checkUnknown) {
                 AbstractFunctionCallExpression castFunc =
                         new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE));
                 castFunc.setSourceLocation(argExpr.getValue().getSourceLocation());
                 castFunc.getArguments().add(argExpr);
-                TypeCastUtils.setRequiredAndInputTypes(castFunc, requiredRecordType, inputRecordType);
-                funcCallExpr.getArguments().set(iter1, new MutableObject<>(castFunc));
+                TypeCastUtils.setRequiredAndInputTypes(castFunc, reqArgType, inputType);
+                funcCallExpr.getArguments().set(i, new MutableObject<>(castFunc));
                 changed = true;
             }
         }

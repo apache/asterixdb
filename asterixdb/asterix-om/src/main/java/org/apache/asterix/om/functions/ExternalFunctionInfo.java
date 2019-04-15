@@ -50,7 +50,7 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
         return rtc;
     }
 
-    public List<IAType> getArgumenTypes() {
+    public List<IAType> getArgumentTypes() {
         return argumentTypes;
     }
 

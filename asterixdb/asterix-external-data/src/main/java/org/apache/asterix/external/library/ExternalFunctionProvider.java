@@ -77,7 +77,7 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
     public void evaluate(IFunctionHelper argumentProvider) throws HyracksDataException {
         try {
             resultBuffer.reset();
-            ((IExternalScalarFunction) externalFunction).evaluate(argumentProvider);
+            ((IExternalScalarFunction) externalFunctionInstance).evaluate(argumentProvider);
             if (!argumentProvider.isValidResult()) {
                 throw new RuntimeDataException(ErrorCode.EXTERNAL_UDF_RESULT_TYPE_ERROR);
             }

@@ -29,27 +29,23 @@ import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.ABinaryTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.ADoubleTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.AFloatTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.AInt32TypeComputer;
-import org.apache.asterix.om.typecomputer.impl.AStringTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 public class ExternalFunctionCompilerUtil {
 
     private static Pattern orderedListPattern = Pattern.compile("\\[*\\]");
     private static Pattern unorderedListPattern = Pattern.compile("[{{*}}]");
+
+    private ExternalFunctionCompilerUtil() {
+        // do nothing
+    }
 
     public static IFunctionInfo getExternalFunctionInfo(MetadataTransactionContext txnCtx, Function function)
             throws AlgebricksException {
@@ -72,24 +68,27 @@ public class ExternalFunctionCompilerUtil {
             throws AlgebricksException {
         FunctionIdentifier fid =
                 new FunctionIdentifier(function.getDataverseName(), function.getName(), function.getArity());
-        IResultTypeComputer typeComputer = getResultTypeComputer(txnCtx, function);
-        List<IAType> arguments = new ArrayList<>();
-        IAType returnType;
-        List<String> argumentTypes = function.getArguments();
-        for (String argumentType : argumentTypes) {
-            arguments.add(getTypeInfo(argumentType, txnCtx, function));
+        List<IAType> argumentTypes = new ArrayList<>();
+        IAType returnType = getTypeInfo(function.getReturnType(), txnCtx, function);;
+        for (String argumentType : function.getArguments()) {
+            argumentTypes.add(getTypeInfo(argumentType, txnCtx, function));
         }
-
-        returnType = getTypeInfo(function.getReturnType(), txnCtx, function);
+        IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, argumentTypes);
 
         return new ExternalScalarFunctionInfo(fid.getNamespace(), fid.getName(), fid.getArity(), returnType,
-                function.getFunctionBody(), function.getLanguage(), arguments, typeComputer);
+                function.getFunctionBody(), function.getLanguage(), argumentTypes, typeComputer);
     }
 
     private static IAType getTypeInfo(String paramType, MetadataTransactionContext txnCtx, Function function)
             throws AlgebricksException {
-        if (paramType.equalsIgnoreCase(BuiltinType.AINT32.getDisplayName())) {
+        if (paramType.equalsIgnoreCase(BuiltinType.AINT8.getDisplayName())) {
+            return BuiltinType.AINT8;
+        } else if (paramType.equalsIgnoreCase(BuiltinType.AINT16.getDisplayName())) {
+            return BuiltinType.AINT16;
+        } else if (paramType.equalsIgnoreCase(BuiltinType.AINT32.getDisplayName())) {
             return BuiltinType.AINT32;
+        } else if (paramType.equalsIgnoreCase(BuiltinType.AINT64.getDisplayName())) {
+            return BuiltinType.AINT64;
         } else if (paramType.equalsIgnoreCase(BuiltinType.AFLOAT.getDisplayName())) {
             return BuiltinType.AFLOAT;
         } else if (paramType.equalsIgnoreCase(BuiltinType.ASTRING.getDisplayName())) {
@@ -142,59 +141,6 @@ public class ExternalFunctionCompilerUtil {
             }
         }
         return null;
-    }
-
-    private static IResultTypeComputer getResultTypeComputer(final MetadataTransactionContext txnCtx,
-            final Function function) throws AlgebricksException {
-
-        final IAType type = getTypeInfo(function.getReturnType(), txnCtx, function);
-        switch (type.getTypeTag()) {
-            case INTEGER:
-                return AInt32TypeComputer.INSTANCE;
-            case FLOAT:
-                return AFloatTypeComputer.INSTANCE;
-            case DOUBLE:
-                return ADoubleTypeComputer.INSTANCE;
-            case BINARY:
-                return ABinaryTypeComputer.INSTANCE;
-            case STRING:
-                return AStringTypeComputer.INSTANCE;
-            case ARRAY:
-                return new ExternalTypeComputer() {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-                            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-
-                        return new AOrderedListType(((AOrderedListType) type).getItemType(),
-                                ((AOrderedListType) type).getItemType().getTypeName());
-                    }
-
-                };
-            case MULTISET:
-                return new ExternalTypeComputer() {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-                            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-                        return new AUnorderedListType(((AUnorderedListType) type).getItemType(), type.getTypeName());
-                    }
-
-                };
-            default:
-                return new ExternalTypeComputer() {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-                            IMetadataProvider<?, ?> mp) throws AlgebricksException {
-                        return type;
-                    }
-                };
-        }
-
     }
 
     private static IFunctionInfo getUnnestFunctionInfo(MetadataTransactionContext txnCtx, Function function) {

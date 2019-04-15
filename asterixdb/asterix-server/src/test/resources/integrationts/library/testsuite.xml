@@ -28,6 +28,12 @@
     <test-case FilePath="library-functions">
       <compilation-unit name="mysum">
         <output-dir compare="Text">mysum</output-dir>
+        <expected-error>Type mismatch: function testlib#mysum expects its 1st input parameter to be of type integer</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="my_array_sum">
+        <output-dir compare="Text">my_array_sum</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="library-functions">

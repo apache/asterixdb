@@ -21,11 +21,11 @@ package org.apache.asterix.external.library;
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionFactory;
 
-public class SumFactory implements IFunctionFactory {
+public class MySumFactory implements IFunctionFactory {
 
     @Override
     public IExternalScalarFunction getExternalFunction() {
-        return new SumFunction();
+        return new MySumFunction();
     }
 
 }

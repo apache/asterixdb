@@ -22,7 +22,7 @@ import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.external.library.java.base.JInt;
 
-public class SumFunction implements IExternalScalarFunction {
+public class MySumFunction implements IExternalScalarFunction {
 
     private JInt result;
 

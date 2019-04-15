@@ -42,11 +42,9 @@ public class ExternalFunctionCompilerUtilTest {
         // when
         ExternalScalarFunctionInfo info =
                 (ExternalScalarFunctionInfo) ExternalFunctionCompilerUtil.getExternalFunctionInfo(txnCtx, function);
-        IAType type = info.getResultTypeComputer().computeType(null, null, null);
 
         // then
         IAType expectedType = new AUnorderedListType(BuiltinType.ASTRING, "AUnorderedList");
         Assert.assertEquals(expectedType, info.getReturnType());
-        Assert.assertEquals(expectedType, type);
     }
 }

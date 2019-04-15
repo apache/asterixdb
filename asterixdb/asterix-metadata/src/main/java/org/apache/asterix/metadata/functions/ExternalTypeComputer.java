@@ -18,10 +18,40 @@
  */
 package org.apache.asterix.metadata.functions;
 
-import java.io.Serializable;
+import java.util.List;
 
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.exceptions.TypeMismatchException;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public interface ExternalTypeComputer extends IResultTypeComputer, Serializable {
+public class ExternalTypeComputer extends AbstractResultTypeComputer {
 
+    private IAType resultType;
+    private List<IAType> argTypes;
+
+    @Override
+    protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
+        IAType reqArgType = argTypes.get(argIndex);
+        if (!type.equals(argTypes.get(argIndex))
+                && !ATypeHierarchy.isCompatible(type.getTypeTag(), reqArgType.getTypeTag())) {
+            throw new TypeMismatchException(sourceLoc, funcId, argIndex, type.getTypeTag(),
+                    argTypes.get(argIndex).getTypeTag());
+        }
+    }
+
+    public ExternalTypeComputer(IAType resultType, List<IAType> argTypes) {
+        this.resultType = resultType;
+        this.argTypes = argTypes;
+    }
+
+    @Override
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) {
+        return resultType;
+    }
 }
