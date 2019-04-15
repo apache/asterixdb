@@ -85,9 +85,9 @@ Let Variable [ Name=$expensives ]
     ]
     FROM [      (
         SELECT ELEMENT [
-        FunctionCall asterix.field-access-by-name@2[
+        FieldAccessor [
           Variable [ Name=$g ]
-          LiteralExpr [STRING] [l]
+          Field=l
         ]
         ]
         FROM [          Variable [ Name=$g ]
@@ -114,9 +114,9 @@ Let Variable [ Name=$cheaps ]
     ]
     FROM [      (
         SELECT ELEMENT [
-        FunctionCall asterix.field-access-by-name@2[
+        FieldAccessor [
           Variable [ Name=$g ]
-          LiteralExpr [STRING] [l]
+          Field=l
         ]
         ]
         FROM [          Variable [ Name=$g ]
@@ -166,9 +166,9 @@ Let Variable [ Name=$charges ]
     ]
     FROM [      (
         SELECT ELEMENT [
-        FunctionCall asterix.field-access-by-name@2[
+        FieldAccessor [
           Variable [ Name=$g ]
-          LiteralExpr [STRING] [l]
+          Field=l
         ]
         ]
         FROM [          Variable [ Name=$g ]
@@ -200,9 +200,9 @@ Let Variable [ Name=$disc_prices ]
     ]
     FROM [      (
         SELECT ELEMENT [
-        FunctionCall asterix.field-access-by-name@2[
+        FieldAccessor [
           Variable [ Name=$g ]
-          LiteralExpr [STRING] [l]
+          Field=l
         ]
         ]
         FROM [          Variable [ Name=$g ]

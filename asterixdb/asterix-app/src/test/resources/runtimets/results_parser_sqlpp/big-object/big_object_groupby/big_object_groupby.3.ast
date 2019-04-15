@@ -13,9 +13,9 @@ RecordConstructor [
     :
     (
       SELECT ELEMENT [
-      FunctionCall asterix.field-access-by-name@2[
+      FieldAccessor [
         Variable [ Name=$g ]
-        LiteralExpr [STRING] [i]
+        Field=i
       ]
       ]
       FROM [        Variable [ Name=$g ]

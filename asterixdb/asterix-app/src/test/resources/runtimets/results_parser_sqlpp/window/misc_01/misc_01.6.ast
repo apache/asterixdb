@@ -1,9 +1,9 @@
 DataverseUse test
 Query:
 SELECT [
-FunctionCall asterix.field-access-by-name@2[
+FieldAccessor [
   Variable [ Name=$t1 ]
-  LiteralExpr [STRING] [c1]
+  Field=c1
 ]
 c1
 WINDOW test.array_sum@1[
@@ -26,9 +26,9 @@ WINDOW test.array_sum@1[
 OVER (
   PARTITION BY
     OperatorExpr [
-      FunctionCall asterix.field-access-by-name@2[
+      FieldAccessor [
         Variable [ Name=$t1 ]
-        LiteralExpr [STRING] [c2]
+        Field=c2
       ]
       mod
       LiteralExpr [LONG] [2]
@@ -42,9 +42,9 @@ FROM [  FunctionCall asterix.dataset@1[
   AS Variable [ Name=$t1 ]
 ]
 Orderby
-  FunctionCall asterix.field-access-by-name@2[
+  FieldAccessor [
     Variable [ Name=$t1 ]
-    LiteralExpr [STRING] [c1]
+    Field=c1
   ]
   ASC
 

@@ -61,9 +61,9 @@ FROM [  FunctionCall asterix.dataset@1[
     Let Variable [ Name=$circle ]
       :=
       FunctionCall twitter.create-circle@2[
-        FunctionCall asterix.field-access-by-name@2[
+        FieldAccessor [
           Variable [ Name=$tweet ]
-          LiteralExpr [STRING] [location]
+          Field=location
         ]
         LiteralExpr [DOUBLE] [30.0]
       ]

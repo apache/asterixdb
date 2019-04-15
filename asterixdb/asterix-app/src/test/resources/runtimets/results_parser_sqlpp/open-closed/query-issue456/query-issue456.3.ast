@@ -6,9 +6,9 @@ OrderedListConstructor [
   FunctionCall asterix.count@1[
     (
       SELECT ELEMENT [
-      FunctionCall asterix.field-access-by-name@2[
+      FieldAccessor [
         Variable [ Name=$g ]
-        LiteralExpr [STRING] [x]
+        Field=x
       ]
       ]
       FROM [        Variable [ Name=$g ]

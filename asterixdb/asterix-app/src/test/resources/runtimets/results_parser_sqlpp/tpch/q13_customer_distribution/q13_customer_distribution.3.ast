@@ -36,9 +36,9 @@ FROM [  (
             ]
             FROM [              (
                 SELECT ELEMENT [
-                FunctionCall asterix.field-access-by-name@2[
+                FieldAccessor [
                   Variable [ Name=$g2 ]
-                  LiteralExpr [STRING] [co]
+                  Field=co
                 ]
                 ]
                 FROM [                  Variable [ Name=$g2 ]

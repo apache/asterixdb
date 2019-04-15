@@ -484,9 +484,9 @@ Let Variable [ Name=$numwait ]
   FunctionCall asterix.count@1[
     (
       SELECT ELEMENT [
-      FunctionCall asterix.field-access-by-name@2[
+      FieldAccessor [
         Variable [ Name=$g ]
-        LiteralExpr [STRING] [t4]
+        Field=t4
       ]
       ]
       FROM [        Variable [ Name=$g ]

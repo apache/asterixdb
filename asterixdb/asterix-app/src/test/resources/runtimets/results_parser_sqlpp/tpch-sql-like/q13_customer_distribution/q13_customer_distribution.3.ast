@@ -36,9 +36,9 @@ FROM [  (
             ]
             FROM [              (
                 SELECT ELEMENT [
-                FunctionCall asterix.field-access-by-name@2[
+                FieldAccessor [
                   Variable [ Name=$g2 ]
-                  LiteralExpr [STRING] [co]
+                  Field=co
                 ]
                 ]
                 FROM [                  Variable [ Name=$g2 ]
@@ -147,9 +147,9 @@ Let Variable [ Name=$custdist ]
   FunctionCall asterix.count@1[
     (
       SELECT ELEMENT [
-      FunctionCall asterix.field-access-by-name@2[
+      FieldAccessor [
         Variable [ Name=$g ]
-        LiteralExpr [STRING] [gco]
+        Field=gco
       ]
       ]
       FROM [        Variable [ Name=$g ]

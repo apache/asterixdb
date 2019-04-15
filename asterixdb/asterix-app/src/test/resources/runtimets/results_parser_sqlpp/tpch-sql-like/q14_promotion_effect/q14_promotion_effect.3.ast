@@ -39,9 +39,9 @@ OperatorExpr [
       ]
       FROM [        (
           SELECT ELEMENT [
-          FunctionCall asterix.field-access-by-name@2[
+          FieldAccessor [
             Variable [ Name=$g ]
-            LiteralExpr [STRING] [lp]
+            Field=lp
           ]
           ]
           FROM [            Variable [ Name=$g ]
@@ -74,9 +74,9 @@ OperatorExpr [
       ]
       FROM [        (
           SELECT ELEMENT [
-          FunctionCall asterix.field-access-by-name@2[
+          FieldAccessor [
             Variable [ Name=$g ]
-            LiteralExpr [STRING] [lp]
+            Field=lp
           ]
           ]
           FROM [            Variable [ Name=$g ]

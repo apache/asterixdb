@@ -35,9 +35,9 @@ FROM [  (
     Groupby
       Variable [ Name=$val ]
       :=
-      FunctionCall asterix.field-access-by-name@2[
+      FieldAccessor [
         Variable [ Name=$testdst ]
-        LiteralExpr [STRING] [val]
+        Field=val
       ]
       GROUP AS Variable [ Name=#2 ]
       (

@@ -341,9 +341,9 @@ Let Variable [ Name=$supplier_cnt ]
       ]
       FROM [        (
           SELECT ELEMENT [
-          FunctionCall asterix.field-access-by-name@2[
+          FieldAccessor [
             Variable [ Name=$g ]
-            LiteralExpr [STRING] [t2]
+            Field=t2
           ]
           ]
           FROM [            Variable [ Name=$g ]

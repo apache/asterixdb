@@ -144,7 +144,8 @@ class Sql92AggregateFunctionVisitor extends AbstractSqlppSimpleExpressionVisitor
                 }
                 FieldAccessor faInner = new FieldAccessor(fromBindingVar, groupVarField);
                 faInner.setSourceLocation(usedVar.getSourceLocation());
-                Expression faOuter = resolveAsFieldAccess(faInner, usedVar.getVar(), usedVar.getSourceLocation());
+                Expression faOuter = VariableCheckAndRewriteVisitor.resolveAsFieldAccess(faInner, usedVar.getVar(),
+                        usedVar.getSourceLocation());
                 varExprMap.put(usedVar, faOuter);
             }
         }
@@ -164,13 +165,5 @@ class Sql92AggregateFunctionVisitor extends AbstractSqlppSimpleExpressionVisitor
         SelectExpression selectExpr = new SelectExpression(null, selectSetOperation, null, null, true);
         selectExpr.setSourceLocation(sourceLoc);
         return selectExpr;
-    }
-
-    // TODO: move to VariableCheckAndRewriteVisitor
-    private static Expression resolveAsFieldAccess(Expression sourceExpr, VarIdentifier var, SourceLocation sourceLoc) {
-        VarIdentifier fieldName = SqlppVariableUtil.toUserDefinedVariableName(var.getValue());
-        FieldAccessor fa = new FieldAccessor(sourceExpr, fieldName);
-        fa.setSourceLocation(sourceLoc);
-        return fa;
     }
 }

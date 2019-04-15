@@ -132,8 +132,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             Set<VariableExpr> contextVars = Scope.findVariablesAnnotatedBy(localVars.keySet(),
                     SqlppVariableAnnotation.CONTEXT_VARIABLE, localVars, sourceLoc);
             VariableExpr contextVar = pickContextVar(contextVars, varExpr);
-            String fieldName = SqlppVariableUtil.toUserDefinedVariableName(varId.getValue()).getValue();
-            return resolveAsFieldAccess(contextVar, fieldName, sourceLoc);
+            return resolveAsFieldAccess(contextVar, varId, sourceLoc);
         }
     }
 
@@ -160,13 +159,11 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     }
 
     // Rewrites for an field access by name
-    private Expression resolveAsFieldAccess(VariableExpr var, String fieldName, SourceLocation sourceLoc) {
-        List<Expression> argList = new ArrayList<>(2);
-        argList.add(var);
-        argList.add(new LiteralExpr(new StringLiteral(fieldName)));
-        CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.FIELD_ACCESS_BY_NAME), argList);
-        callExpr.setSourceLocation(sourceLoc);
-        return callExpr;
+    static Expression resolveAsFieldAccess(Expression sourceExpr, VarIdentifier fieldVar, SourceLocation sourceLoc) {
+        VarIdentifier fieldName = SqlppVariableUtil.toUserDefinedVariableName(fieldVar.getValue());
+        FieldAccessor fa = new FieldAccessor(sourceExpr, fieldName);
+        fa.setSourceLocation(sourceLoc);
+        return fa;
     }
 
     private CompilationException createUnresolvableError(String dataverseName, String datasetName,
