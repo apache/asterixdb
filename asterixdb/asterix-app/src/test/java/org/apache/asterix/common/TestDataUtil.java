@@ -69,6 +69,10 @@ public class TestDataUtil {
         TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE DATASET " + dataset + "(KeyType) PRIMARY KEY id;", OUTPUT_FORMAT);
     }
 
+    public static void dropDataset(String dataset) throws Exception {
+        TEST_EXECUTOR.executeSqlppUpdateOrDdl("DROP DATASET " + dataset + ";", OUTPUT_FORMAT);
+    }
+
     /**
      * Creates a dataset with multiple fields
      * @param dataset The name of the dataset
