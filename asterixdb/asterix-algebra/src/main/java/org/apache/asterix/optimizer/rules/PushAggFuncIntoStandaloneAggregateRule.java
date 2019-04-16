@@ -19,11 +19,10 @@
 package org.apache.asterix.optimizer.rules;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -196,9 +195,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         }
 
         List<Mutable<ILogicalExpression>> srcAssignExprRefs = new LinkedList<Mutable<ILogicalExpression>>();
-        if (fingAggFuncExprRef(assignOp.getExpressions(), aggVar, srcAssignExprRefs) == false) {
-            return false;
-        }
+        findAggFuncExprRef(assignOp.getExpressions(), aggVar, srcAssignExprRefs);
         if (srcAssignExprRefs.isEmpty()) {
             return false;
         }
@@ -239,36 +236,21 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         return true;
     }
 
-    private boolean fingAggFuncExprRef(List<Mutable<ILogicalExpression>> exprRefs, LogicalVariable aggVar,
+    private void findAggFuncExprRef(List<Mutable<ILogicalExpression>> exprRefs, LogicalVariable aggVar,
             List<Mutable<ILogicalExpression>> srcAssignExprRefs) {
         for (Mutable<ILogicalExpression> exprRef : exprRefs) {
             ILogicalExpression expr = exprRef.getValue();
-
-            if ((expr.getExpressionTag() == LogicalExpressionTag.VARIABLE)
-                    && ((VariableReferenceExpression) expr).getVariableReference().equals(aggVar)) {
-                return false;
-            }
-
-            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                continue;
-            }
-            AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-            FunctionIdentifier funcIdent = BuiltinFunctions.getAggregateFunction(funcExpr.getFunctionIdentifier());
-            if (funcIdent == null) {
-                // Recursively look in func args.
-                if (fingAggFuncExprRef(funcExpr.getArguments(), aggVar, srcAssignExprRefs) == false) {
-                    return false;
-                }
-
-            } else {
-                // Check if this is the expr that uses aggVar.
-                Collection<LogicalVariable> usedVars = new HashSet<LogicalVariable>();
-                funcExpr.getUsedVariables(usedVars);
-                if (usedVars.contains(aggVar)) {
+            if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+                FunctionIdentifier funcIdent = BuiltinFunctions.getAggregateFunction(funcExpr.getFunctionIdentifier());
+                if (funcIdent != null
+                        && aggVar.equals(SqlppVariableUtil.getVariable(funcExpr.getArguments().get(0).getValue()))) {
                     srcAssignExprRefs.add(exprRef);
+                } else {
+                    // Recursively look in func args.
+                    findAggFuncExprRef(funcExpr.getArguments(), aggVar, srcAssignExprRefs);
                 }
             }
         }
-        return true;
     }
 }

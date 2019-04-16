@@ -42,6 +42,10 @@ import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 
 public class SqlppVariableUtil {
 
@@ -206,5 +210,10 @@ public class SqlppVariableUtil {
         VariableExpr newVarExpr = new VariableExpr(var);
         newVarExpr.setSourceLocation(varExpr.getSourceLocation());
         outFieldList.add(new Pair<>(newVarExpr, toUserDefinedVariableName(var)));
+    }
+
+    public static LogicalVariable getVariable(ILogicalExpression expr) {
+        return expr.getExpressionTag() == LogicalExpressionTag.VARIABLE
+                ? ((VariableReferenceExpression) expr).getVariableReference() : null;
     }
 }

@@ -1,0 +1,26 @@
+Query:
+SELECT [
+Variable [ Name=$x ]
+x
+WINDOW null.array_sum@1[
+  FunctionCall null.to-array@1[
+    FunctionCall asterix.sql-count@1[
+      Variable [ Name=$w ]
+    ]
+  ]
+]
+  AS Variable [ Name=$w ]
+OVER (
+)
+sum
+]
+FROM [  FunctionCall null.range@2[
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [4]
+  ]
+  AS Variable [ Name=$x ]
+]
+Orderby
+  Variable [ Name=$x ]
+  ASC
+
