@@ -29,6 +29,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.PointableTupleReference;
@@ -117,12 +118,13 @@ final class WindowNestedPlansRunningPushRuntime extends AbstractWindowNestedPlan
         super.init();
         frameValueEvals = createEvaluators(frameValueEvalFactories, ctx);
         frameValueComparators = MultiComparator.create(frameValueComparatorFactories);
-        frameValuePointables = createPointables(frameValueEvalFactories.length);
+        frameValuePointables = PointableTupleReference.create(frameValueEvalFactories.length, VoidPointable.FACTORY);
         frameEndEvals = createEvaluators(frameEndEvalFactories, ctx);
-        frameEndPointables = createPointables(frameEndEvalFactories.length);
+        frameEndPointables = PointableTupleReference.create(frameEndEvalFactories.length, VoidPointable.FACTORY);
         if (frameEndValidationExists) {
             frameEndValidationEvals = createEvaluators(frameEndValidationEvalFactories, ctx);
-            frameEndValidationPointables = createPointables(frameEndValidationEvalFactories.length);
+            frameEndValidationPointables =
+                    PointableTupleReference.create(frameEndValidationEvalFactories.length, VoidPointable.FACTORY);
             booleanAccessor = booleanAccessorFactory.createBinaryBooleanInspector(ctx);
             nestedAggForInvalidFrame = nestedAggCreate();
         }

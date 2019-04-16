@@ -34,6 +34,7 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppenderWrapper;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.std.group.AggregateState;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
@@ -182,6 +183,17 @@ public class PreclusteredGroupWriter implements IFrameWriter {
             int s2 = a2.getAbsoluteFieldStartOffset(t2Idx, fIdx);
             int l2 = a2.getFieldLength(t2Idx, fIdx);
             if (comparators[i].compare(a1.getBuffer().array(), s1, l1, a2.getBuffer().array(), s2, l2) != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean sameGroup(ITupleReference a1, ITupleReference a2, IBinaryComparator[] comparators)
+            throws HyracksDataException {
+        for (int i = 0; i < comparators.length; ++i) {
+            if (comparators[i].compare(a1.getFieldData(i), a1.getFieldStart(i), a1.getFieldLength(i),
+                    a2.getFieldData(i), a2.getFieldStart(i), a2.getFieldLength(i)) != 0) {
                 return false;
             }
         }

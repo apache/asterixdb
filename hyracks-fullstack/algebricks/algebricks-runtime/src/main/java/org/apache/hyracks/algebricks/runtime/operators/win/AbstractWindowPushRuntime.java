@@ -24,16 +24,17 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IWindowAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.operators.aggrun.AbstractRunningAggregatePushRuntime;
-import org.apache.hyracks.api.comm.IFrame;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.PointableTupleReference;
 import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupWriter;
+import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 
 public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregatePushRuntime<IWindowAggregateEvaluator> {
 
@@ -42,9 +43,9 @@ public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregate
     private final IBinaryComparatorFactory[] partitionComparatorFactories;
     private IBinaryComparator[] partitionComparators;
     private final IBinaryComparatorFactory[] orderComparatorFactories;
-    private IFrame copyFrame;
-    private FrameTupleAccessor copyFrameAccessor;
     private FrameTupleAccessor frameAccessor;
+    private FrameTupleReference partitionColumnsRef;
+    private PointableTupleReference partitionColumnsPrevCopy;
     private long frameId;
     private boolean inPartition;
 
@@ -60,7 +61,8 @@ public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregate
     }
 
     /**
-     * Number of frames reserved by this operator: {@link #frame}, {@link #copyFrame}
+     * Number of frames reserved by this operator: {@link #frame} + conservative estimate for
+     * {@link #partitionColumnsPrevCopy}
      */
     int getReservedFrameCount() {
         return 2;
@@ -78,9 +80,9 @@ public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregate
         super.init();
         partitionComparators = createBinaryComparators(partitionComparatorFactories);
         frameAccessor = new FrameTupleAccessor(inputRecordDesc);
-        copyFrame = new VSizeFrame(ctx);
-        copyFrameAccessor = new FrameTupleAccessor(inputRecordDesc);
-        copyFrameAccessor.reset(copyFrame.getBuffer());
+        partitionColumnsRef = new PermutingFrameTupleReference(partitionColumns);
+        partitionColumnsPrevCopy =
+                PointableTupleReference.create(partitionColumns.length, ArrayBackedValueStorage::new);
         IBinaryComparator[] orderComparators = createBinaryComparators(orderComparatorFactories);
         for (IWindowAggregateEvaluator runningAggEval : runningAggEvals) {
             runningAggEval.configure(orderComparators);
@@ -106,18 +108,19 @@ public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregate
         if (frameId == 0) {
             beginPartition();
         } else {
-            boolean samePartition = PreclusteredGroupWriter.sameGroup(copyFrameAccessor,
-                    copyFrameAccessor.getTupleCount() - 1, frameAccessor, 0, partitionColumns, partitionComparators);
+            partitionColumnsRef.reset(frameAccessor, 0);
+            boolean samePartition = PreclusteredGroupWriter.sameGroup(partitionColumnsPrevCopy, partitionColumnsRef,
+                    partitionComparators);
             if (!samePartition) {
                 endPartition();
                 beginPartition();
             }
         }
-        if (nTuple == 1) {
+        int tLastIndex = nTuple - 1;
+        if (tLastIndex == 0) {
             partitionChunk(frameId, buffer, 0, 0);
         } else {
             int tBeginIndex = 0;
-            int tLastIndex = nTuple - 1;
             for (int tIndex = 1; tIndex <= tLastIndex; tIndex++) {
                 boolean samePartition = PreclusteredGroupWriter.sameGroup(frameAccessor, tIndex - 1, frameAccessor,
                         tIndex, partitionColumns, partitionComparators);
@@ -131,9 +134,8 @@ public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregate
             partitionChunk(frameId, buffer, tBeginIndex, tLastIndex);
         }
 
-        copyFrame.resize(buffer.capacity());
-        FrameUtils.copyAndFlip(buffer, copyFrame.getBuffer());
-        copyFrameAccessor.reset(copyFrame.getBuffer());
+        partitionColumnsRef.reset(frameAccessor, tLastIndex);
+        partitionColumnsPrevCopy.set(partitionColumnsRef);
         frameId++;
     }
 
@@ -167,7 +169,7 @@ public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregate
         }
     }
 
-    protected static IBinaryComparator[] createBinaryComparators(IBinaryComparatorFactory[] factories) {
+    static IBinaryComparator[] createBinaryComparators(IBinaryComparatorFactory[] factories) {
         IBinaryComparator[] comparators = new IBinaryComparator[factories.length];
         for (int i = 0; i < factories.length; i++) {
             comparators[i] = factories[i].createBinaryComparator();

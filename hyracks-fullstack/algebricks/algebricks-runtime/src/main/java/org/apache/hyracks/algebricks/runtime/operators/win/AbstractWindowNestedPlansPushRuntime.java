@@ -28,11 +28,10 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.PointableTupleReference;
 
 /**
@@ -144,20 +143,11 @@ abstract class AbstractWindowNestedPlansPushRuntime extends WindowMaterializingP
         }
     }
 
-    static PointableTupleReference createPointables(int ln) {
-        IPointable[] pointables = new IPointable[ln];
-        for (int i = 0; i < ln; i++) {
-            pointables[i] = VoidPointable.FACTORY.createPointable();
-        }
-        return new PointableTupleReference(pointables);
-    }
-
-    static boolean allTrue(PointableTupleReference tupleRef, IBinaryBooleanInspector boolAccessor)
-            throws HyracksDataException {
-        for (int i = 0, ln = tupleRef.getFieldCount(); i < ln; i++) {
-            IPointable field = tupleRef.getField(i);
-            boolean b = boolAccessor.getBooleanValue(field.getByteArray(), field.getStartOffset(), field.getLength());
-            if (!b) {
+    static boolean allTrue(ITupleReference tupleRef, IBinaryBooleanInspector boolAccessor) throws HyracksDataException {
+        for (int i = 0, n = tupleRef.getFieldCount(); i < n; i++) {
+            boolean v = boolAccessor.getBooleanValue(tupleRef.getFieldData(i), tupleRef.getFieldStart(i),
+                    tupleRef.getFieldLength(i));
+            if (!v) {
                 return false;
             }
         }

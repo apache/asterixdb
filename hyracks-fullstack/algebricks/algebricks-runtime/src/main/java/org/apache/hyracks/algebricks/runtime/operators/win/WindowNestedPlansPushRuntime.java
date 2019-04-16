@@ -188,28 +188,33 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
         if (frameValueExists) {
             frameValueEvals = createEvaluators(frameValueEvalFactories, ctx);
             frameValueComparators = MultiComparator.create(frameValueComparatorFactories);
-            frameValuePointables = createPointables(frameValueEvalFactories.length);
+            frameValuePointables =
+                    PointableTupleReference.create(frameValueEvalFactories.length, VoidPointable.FACTORY);
         }
         if (frameStartExists) {
             frameStartEvals = createEvaluators(frameStartEvalFactories, ctx);
-            frameStartPointables = createPointables(frameStartEvalFactories.length);
+            frameStartPointables =
+                    PointableTupleReference.create(frameStartEvalFactories.length, VoidPointable.FACTORY);
         }
         if (frameStartValidationExists) {
             frameStartValidationEvals = createEvaluators(frameStartValidationEvalFactories, ctx);
-            frameStartValidationPointables = createPointables(frameStartValidationEvalFactories.length);
+            frameStartValidationPointables =
+                    PointableTupleReference.create(frameStartValidationEvalFactories.length, VoidPointable.FACTORY);
         }
         if (frameEndExists) {
             frameEndEvals = createEvaluators(frameEndEvalFactories, ctx);
-            frameEndPointables = createPointables(frameEndEvalFactories.length);
+            frameEndPointables = PointableTupleReference.create(frameEndEvalFactories.length, VoidPointable.FACTORY);
         }
         if (frameEndValidationExists) {
             frameEndValidationEvals = createEvaluators(frameEndValidationEvalFactories, ctx);
-            frameEndValidationPointables = createPointables(frameEndValidationEvalFactories.length);
+            frameEndValidationPointables =
+                    PointableTupleReference.create(frameEndValidationEvalFactories.length, VoidPointable.FACTORY);
         }
         if (frameExcludeExists) {
             frameExcludeEvals = createEvaluators(frameExcludeEvalFactories, ctx);
             frameExcludeComparators = createBinaryComparators(frameExcludeComparatorFactories);
-            frameExcludePointables = createPointables(frameExcludeEvalFactories.length);
+            frameExcludePointables =
+                    PointableTupleReference.create(frameExcludeEvalFactories.length, VoidPointable.FACTORY);
             frameExcludePointable2 = VoidPointable.FACTORY.createPointable();
         }
         if (frameOffsetExists) {

@@ -148,7 +148,7 @@ public class OperatorResourcesComputer {
     private long getWindowRequiredMemory(WindowOperator op) {
         WindowPOperator physOp = (WindowPOperator) op.getPhysicalOperator();
         // memory budget configuration only applies to window operators that materialize partitions (non-streaming)
-        // streaming window operators only need 2 frames: output + copy
+        // streaming window operators only need 2 frames: output + (conservative estimate) last frame partition columns
         long memorySize = physOp.isPartitionMaterialization() ? windowMemorySize : 2 * frameSize;
         return getOperatorRequiredMemory(op, memorySize);
     }

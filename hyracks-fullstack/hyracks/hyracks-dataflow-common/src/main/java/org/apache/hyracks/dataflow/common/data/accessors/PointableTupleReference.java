@@ -19,7 +19,10 @@
 
 package org.apache.hyracks.dataflow.common.data.accessors;
 
+import java.util.function.Supplier;
+
 import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.api.IPointableFactory;
 
 /**
  * A tuple reference implementation that holds fields in a {@link IPointable} array
@@ -54,5 +57,23 @@ public class PointableTupleReference implements ITupleReference {
 
     public IPointable getField(int fIdx) {
         return fields[fIdx];
+    }
+
+    public void set(ITupleReference tupleRef) {
+        for (int i = 0; i < fields.length; i++) {
+            fields[i].set(tupleRef.getFieldData(i), tupleRef.getFieldStart(i), tupleRef.getFieldLength(i));
+        }
+    }
+
+    public static PointableTupleReference create(int fieldCount, Supplier<IPointable> fieldFactory) {
+        IPointable[] fields = new IPointable[fieldCount];
+        for (int i = 0; i < fieldCount; i++) {
+            fields[i] = fieldFactory.get();
+        }
+        return new PointableTupleReference(fields);
+    }
+
+    public static PointableTupleReference create(int fieldCount, IPointableFactory fieldFactory) {
+        return create(fieldCount, fieldFactory::createPointable);
     }
 }
