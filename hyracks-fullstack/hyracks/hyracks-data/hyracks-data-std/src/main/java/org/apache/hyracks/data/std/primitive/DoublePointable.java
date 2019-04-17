@@ -34,9 +34,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public final class DoublePointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
-    private static final int LENGTH = 8;
+    private static final int SIZE = 8;
     public static final DoublePointableFactory FACTORY = new DoublePointableFactory();
-    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(LENGTH) {
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(SIZE) {
         private static final long serialVersionUID = 7348262203696059687L;
 
         //TODO fix RTREE logic based on class comparision in LSMRTreeUtils#proposeBestLinearizer
@@ -112,7 +112,7 @@ public final class DoublePointable extends AbstractPointable implements IHashabl
     }
 
     public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-        DataUtils.ensureLengths(LENGTH, l1, l2);
+        DataUtils.ensureLengths(SIZE, l1, l2);
         return Double.compare(getDouble(b1, s1), getDouble(b2, s2));
     }
 

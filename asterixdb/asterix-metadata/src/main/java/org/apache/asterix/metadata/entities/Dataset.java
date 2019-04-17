@@ -740,8 +740,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         // Set the serde/traits for primary keys
         for (int i = 0; i < numPrimaryKeys; i++) {
             IAType keyType =
-                    (indicators == null || indicators.get(i) == 0) ? itemType.getSubFieldType(partitioningKeys.get(i))
-                            : metaType.getSubFieldType(partitioningKeys.get(i));
+                    datasetType == DatasetType.EXTERNAL ? IndexingConstants.getFieldType(i)
+                            : (indicators == null || indicators.get(i) == 0)
+                                    ? itemType.getSubFieldType(partitioningKeys.get(i))
+                                    : metaType.getSubFieldType(partitioningKeys.get(i));
             primaryRecFields[i] = serdeProvider.getSerializerDeserializer(keyType);
             primaryTypeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
         }
@@ -778,8 +780,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             indicators = ((InternalDatasetDetails) getDatasetDetails()).getKeySourceIndicator();
         }
         for (int i = 0; i < numPrimaryKeys; i++) {
-            IAType keyType =
-                    (indicators == null || indicators.get(i) == 0) ? recordType.getSubFieldType(partitioningKeys.get(i))
+            IAType keyType = datasetType == DatasetType.EXTERNAL ? IndexingConstants.getFieldType(i)
+                    : (indicators == null || indicators.get(i) == 0)
+                            ? recordType.getSubFieldType(partitioningKeys.get(i))
                             : metaType.getSubFieldType(partitioningKeys.get(i));
             cmpFactories[i] = cmpFactoryProvider.getBinaryComparatorFactory(keyType, true);
         }
@@ -806,8 +809,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             indicators = ((InternalDatasetDetails) getDatasetDetails()).getKeySourceIndicator();
         }
         for (int i = 0; i < numPrimaryKeys; i++) {
-            IAType keyType =
-                    (indicators == null || indicators.get(i) == 0) ? recordType.getSubFieldType(partitioningKeys.get(i))
+            IAType keyType = datasetType == DatasetType.EXTERNAL ? IndexingConstants.getFieldType(i)
+                    : (indicators == null || indicators.get(i) == 0)
+                            ? recordType.getSubFieldType(partitioningKeys.get(i))
                             : metaType.getSubFieldType(partitioningKeys.get(i));
             hashFuncFactories[i] = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(keyType);
         }

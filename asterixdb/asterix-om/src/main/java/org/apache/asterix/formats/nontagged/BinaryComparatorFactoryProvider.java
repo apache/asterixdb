@@ -33,6 +33,7 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.APolygonPartialBin
 import org.apache.asterix.dataflow.data.nontagged.comparators.ARectanglePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinaryComparatorFactory;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -91,19 +92,23 @@ public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactory
     @Override
     public IBinaryComparatorFactory getBinaryComparatorFactory(Object leftType, Object rightType, boolean ascending,
             boolean ignoreCase) {
-        if (leftType == null || rightType == null) {
-            return createGenericBinaryComparatorFactory(null, null, ascending);
-        }
         IAType left = (IAType) leftType;
         IAType right = (IAType) rightType;
+        // TODO(ali): what if someone passed ignoreCase=true and type ANY (at runtime it could be a string)?
         if (left.getTypeTag() == ATypeTag.STRING && right.getTypeTag() == ATypeTag.STRING && ignoreCase) {
             return addOffset(UTF8STRING_LOWERCASE_POINTABLE_INSTANCE, ascending);
+        }
+        if (isShortWithoutTag(left, right)) {
+            return SHORT_POINTABLE_INSTANCE;
         }
         return createGenericBinaryComparatorFactory(left, right, ascending);
     }
 
     @Override
     public IBinaryComparatorFactory getBinaryComparatorFactory(Object leftType, Object rightType, boolean ascending) {
+        if (isShortWithoutTag((IAType) leftType, (IAType) rightType)) {
+            return SHORT_POINTABLE_INSTANCE;
+        }
         // During a comparison, since proper type promotion among several numeric types are required,
         // we will use AGenericAscBinaryComparatorFactory, instead of using a specific comparator
         return createGenericBinaryComparatorFactory((IAType) leftType, (IAType) rightType, ascending);
@@ -113,8 +118,9 @@ public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactory
         switch (type) {
             case ANY:
             case UNION:
+                // i think UNION shouldn't be allowed. the actual type could be closed array or record. ANY would fail.
                 // we could do smth better for nullable fields
-                return createGenericBinaryComparatorFactory(null, null, ascending);
+                return createGenericBinaryComparatorFactory(BuiltinType.ANY, BuiltinType.ANY, ascending);
             case NULL:
             case MISSING:
                 return new AnyBinaryComparatorFactory();
@@ -185,5 +191,18 @@ public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactory
         } else {
             return AIntervalDescPartialBinaryComparatorFactory.INSTANCE;
         }
+    }
+
+    private static boolean isShortWithoutTag(IAType left, IAType right) {
+        ATypeTag leftTag = left.getTypeTag();
+        ATypeTag rightTag = right.getTypeTag();
+        if (leftTag != ATypeTag.SHORTWITHOUTTYPEINFO && rightTag != ATypeTag.SHORTWITHOUTTYPEINFO) {
+            return false;
+        }
+        if (leftTag != rightTag) {
+            // this should not happen (i.e. comparing untagged (short without tag) vs some tagged)
+            throw new IllegalStateException();
+        }
+        return true;
     }
 }

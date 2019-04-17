@@ -33,9 +33,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public final class BooleanPointable extends AbstractPointable implements IHashable, IComparable {
 
-    private static final int LENGTH = 1;
+    private static final int SIZE = 1;
     public static final BooleanPointableFactory FACTORY = new BooleanPointableFactory();
-    public static final FixedLengthTypeTrait TYPE_TRAITS = new FixedLengthTypeTrait(LENGTH);
+    public static final FixedLengthTypeTrait TYPE_TRAITS = new FixedLengthTypeTrait(SIZE);
 
     public static class BooleanPointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
@@ -99,7 +99,7 @@ public final class BooleanPointable extends AbstractPointable implements IHashab
     }
 
     public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-        DataUtils.ensureLengths(LENGTH, l1, l2);
+        DataUtils.ensureLengths(SIZE, l1, l2);
         return Boolean.compare(getBoolean(b1, s1), getBoolean(b2, s2));
     }
 

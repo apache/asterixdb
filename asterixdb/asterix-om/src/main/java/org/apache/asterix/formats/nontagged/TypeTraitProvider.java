@@ -27,18 +27,17 @@ import org.apache.hyracks.data.std.primitive.VarLengthTypeTrait;
 public class TypeTraitProvider implements ITypeTraitProvider {
 
     // WARNING: the byte sizes depend on the serializer!
-    // currently assuming a serializer that adds a 1-byte type indicator before
-    // the data
-    private static final ITypeTraits ONEBYTETYPETRAIT = new FixedLengthTypeTrait(1 + 1);
-    private static final ITypeTraits TWOBYTETYPETRAIT = new FixedLengthTypeTrait(2 + 1);
-    private static final ITypeTraits FOURBYTETYPETRAIT = new FixedLengthTypeTrait(4 + 1);
-    private static final ITypeTraits EIGHTBYTETYPETRAIT = new FixedLengthTypeTrait(8 + 1);
-    private static final ITypeTraits SIXTEENBYTETYPETRAIT = new FixedLengthTypeTrait(16 + 1);
-    private static final ITypeTraits SEVENTEENBYTETYPETRAIT = new FixedLengthTypeTrait(17 + 1);
-    private static final ITypeTraits THIRTYTWOBYTETYPETRAIT = new FixedLengthTypeTrait(32 + 1);
-    private static final ITypeTraits TWENTYFOURBYTETYPETRAIT = new FixedLengthTypeTrait(24 + 1);
-
-    private static final ITypeTraits VARLENTYPETRAIT = VarLengthTypeTrait.INSTANCE;
+    // currently assuming a serializer that adds a 1-byte type indicator before the data
+    private static final ITypeTraits ONE_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(1 + 1);
+    private static final ITypeTraits TWO_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(2 + 1);
+    private static final ITypeTraits FOUR_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(4 + 1);
+    private static final ITypeTraits EIGHT_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(8 + 1);
+    private static final ITypeTraits TWELVE_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(12 + 1);
+    private static final ITypeTraits SIXTEEN_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(16 + 1);
+    private static final ITypeTraits SEVENTEEN_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(17 + 1);
+    private static final ITypeTraits THIRTY_TWO_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(32 + 1);
+    private static final ITypeTraits TWENTY_FOUR_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(24 + 1);
+    private static final ITypeTraits VAR_LEN_TYPE_TRAIT = VarLengthTypeTrait.INSTANCE;
 
     public static final TypeTraitProvider INSTANCE = new TypeTraitProvider();
 
@@ -51,31 +50,33 @@ public class TypeTraitProvider implements ITypeTraitProvider {
         switch (type.getTypeTag()) {
             case BOOLEAN:
             case TINYINT:
-                return ONEBYTETYPETRAIT;
+                return ONE_BYTE_TYPE_TRAIT;
             case SMALLINT:
-                return TWOBYTETYPETRAIT;
+                return TWO_BYTE_TYPE_TRAIT;
             case INTEGER:
             case FLOAT:
             case DATE:
             case TIME:
-                return FOURBYTETYPETRAIT;
+            case YEARMONTHDURATION:
+                return FOUR_BYTE_TYPE_TRAIT;
             case BIGINT:
             case DOUBLE:
             case DATETIME:
+            case DAYTIMEDURATION:
+                return EIGHT_BYTE_TYPE_TRAIT;
             case DURATION:
-                return EIGHTBYTETYPETRAIT;
+                return TWELVE_BYTE_TYPE_TRAIT;
             case POINT:
             case UUID:
-                return SIXTEENBYTETYPETRAIT;
+                return SIXTEEN_BYTE_TYPE_TRAIT;
             case INTERVAL:
-                return SEVENTEENBYTETYPETRAIT;
+                return SEVENTEEN_BYTE_TYPE_TRAIT;
             case POINT3D:
-                return TWENTYFOURBYTETYPETRAIT;
+                return TWENTY_FOUR_BYTE_TYPE_TRAIT;
             case LINE:
-                return THIRTYTWOBYTETYPETRAIT;
-            default: {
-                return VARLENTYPETRAIT;
-            }
+                return THIRTY_TWO_BYTE_TYPE_TRAIT;
+            default:
+                return VAR_LEN_TYPE_TRAIT;
         }
     }
 }

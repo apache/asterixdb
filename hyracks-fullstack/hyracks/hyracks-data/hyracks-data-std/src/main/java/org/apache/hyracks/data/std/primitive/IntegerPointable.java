@@ -34,9 +34,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public final class IntegerPointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
-    private static final int LENGTH = 4;
+    private static final int SIZE = 4;
     public static final IntegerPointableFactory FACTORY = new IntegerPointableFactory();
-    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(LENGTH) {
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(SIZE) {
         private static final long serialVersionUID = -7178318032449879790L;
 
         //TODO fix RTREE logic based on class comparision in LSMRTreeUtils#proposeBestLinearizer
@@ -101,7 +101,7 @@ public final class IntegerPointable extends AbstractPointable implements IHashab
     }
 
     public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-        DataUtils.ensureLengths(LENGTH, l1, l2);
+        DataUtils.ensureLengths(SIZE, l1, l2);
         return Integer.compare(getInteger(b1, s1), getInteger(b2, s2));
     }
 

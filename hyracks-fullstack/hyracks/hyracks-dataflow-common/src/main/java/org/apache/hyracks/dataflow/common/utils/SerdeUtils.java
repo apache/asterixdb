@@ -23,6 +23,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.data.std.accessors.BooleanBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.FloatBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
@@ -126,8 +127,7 @@ public class SerdeUtils {
             return DoubleBinaryComparatorFactory.INSTANCE;
         }
         if (serde instanceof BooleanSerializerDeserializer) {
-            // TODO(ali): how come?
-            throw new UnsupportedOperationException("Binary comparator factory for Boolean not implemented.");
+            return BooleanBinaryComparatorFactory.INSTANCE;
         }
         if (serde instanceof UTF8StringSerializerDeserializer) {
             return PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);

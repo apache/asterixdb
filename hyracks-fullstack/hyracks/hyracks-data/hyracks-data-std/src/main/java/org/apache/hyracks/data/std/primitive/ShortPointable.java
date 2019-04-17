@@ -34,8 +34,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public final class ShortPointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
-    private static final int LENGTH = 2;
-    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(LENGTH);
+    private static final int SIZE = 2;
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(SIZE);
     public static final IPointableFactory FACTORY = new ShortPointableFactory();
 
     public static final class ShortPointableFactory implements IPointableFactory {
@@ -90,7 +90,7 @@ public final class ShortPointable extends AbstractPointable implements IHashable
     }
 
     public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-        DataUtils.ensureLengths(LENGTH, l1, l2);
+        DataUtils.ensureLengths(SIZE, l1, l2);
         return Short.compare(getShort(b1, s1), getShort(b2, s2));
     }
 

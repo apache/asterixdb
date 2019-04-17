@@ -122,22 +122,19 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
                             valueBuffer.getLength(), seed);
                 case ARRAY:
                     try {
-                        return hashArray(type, bytes, offset, length);
+                        return hashArray(type, bytes, offset);
                     } catch (IOException e) {
                         throw HyracksDataException.create(e);
                     }
                 case OBJECT:
-                    return hashRecord(type, bytes, offset, length);
+                    return hashRecord(type, bytes, offset);
                 case DOUBLE:
                 default:
                     return MurmurHash3BinaryHash.hash(bytes, offset, length, seed);
             }
         }
 
-        private int hashArray(IAType type, byte[] bytes, int offset, int length) throws IOException {
-            if (type == null) {
-                return MurmurHash3BinaryHash.hash(bytes, offset, length, seed);
-            }
+        private int hashArray(IAType type, byte[] bytes, int offset) throws IOException {
             IAType arrayType = TypeComputeUtils.getActualTypeOrOpen(type, ATypeTag.ARRAY);
             IAType itemType = ((AbstractCollectionType) arrayType).getItemType();
             ATypeTag itemTag = itemType.getTypeTag();
@@ -158,10 +155,7 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
             return hash;
         }
 
-        private int hashRecord(IAType type, byte[] bytes, int offset, int length) throws HyracksDataException {
-            if (type == null) {
-                return MurmurHash3BinaryHash.hash(bytes, offset, length, seed);
-            }
+        private int hashRecord(IAType type, byte[] bytes, int offset) throws HyracksDataException {
             ARecordType recordType = (ARecordType) TypeComputeUtils.getActualTypeOrOpen(type, ATypeTag.OBJECT);
             SortedRecord record = recordPool.allocate(recordType);
             IPointable fieldValue = voidPointableAllocator.allocate(null);

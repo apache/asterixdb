@@ -62,7 +62,7 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
             new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY).createBinaryComparator();
     private final IBinaryComparator ascByteArrayComp =
             new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY).createBinaryComparator();
-    // the type fields can be null
+
     protected final IAType leftType;
     protected final IAType rightType;
     private final ListObjectPool<IMutableValueStorage, Void> storageAllocator = new ListObjectPool<>(STORAGE_FACTORY);
@@ -70,28 +70,27 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
     private final ListObjectPool<SortedRecord, ARecordType> recordPool = new ListObjectPool<>(RECORD_FACTORY);
 
     AbstractAGenericBinaryComparator(IAType leftType, IAType rightType) {
-        // factory should have already made sure to get the actual type
+        // factory should have already made sure to get the actual type (and no null types)
         this.leftType = leftType;
         this.rightType = rightType;
     }
 
     protected final int compare(IAType leftType, byte[] b1, int s1, int l1, IAType rightType, byte[] b2, int s2, int l2)
             throws HyracksDataException {
-        if (b1[s1] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
-            return b2[s2] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG ? 0 : -1;
-        } else if (b2[s2] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
-            return 1;
-        }
-        if (b1[s1] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-            return b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG ? 0 : -1;
-        } else if (b2[s2] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-            return 1;
-        }
         ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b1[s1]);
         ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b2[s2]);
-        // tag being null could mean several things among of which is that the passed args are not tagged
         if (tag1 == null || tag2 == null) {
-            return RawBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
+            throw new IllegalStateException("Could not recognize the type of data.");
+        }
+        if (tag1 == ATypeTag.MISSING) {
+            return tag2 == ATypeTag.MISSING ? 0 : -1;
+        } else if (tag2 == ATypeTag.MISSING) {
+            return 1;
+        }
+        if (tag1 == ATypeTag.NULL) {
+            return tag2 == ATypeTag.NULL ? 0 : -1;
+        } else if (tag2 == ATypeTag.NULL) {
+            return 1;
         }
         if (ATypeHierarchy.isCompatible(tag1, tag2) && ATypeHierarchy.getTypeDomain(tag1) == Domain.NUMERIC) {
             return ComparatorUtil.compareNumbers(tag1, b1, s1 + 1, tag2, b2, s2 + 1);
@@ -142,9 +141,9 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
             case BINARY:
                 return ascByteArrayComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case ARRAY:
-                return compareArrays(leftType, b1, s1, l1, rightType, b2, s2, l2);
+                return compareArrays(leftType, b1, s1, rightType, b2, s2);
             case OBJECT:
-                return compareRecords(leftType, b1, s1, l1, rightType, b2, s2, l2);
+                return compareRecords(leftType, b1, s1, rightType, b2, s2);
             default:
                 return RawBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
         }
@@ -154,11 +153,8 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
         return AIntervalAscPartialBinaryComparatorFactory.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
     }
 
-    private int compareArrays(IAType leftType, byte[] b1, int s1, int l1, IAType rightType, byte[] b2, int s2, int l2)
+    private int compareArrays(IAType leftType, byte[] b1, int s1, IAType rightType, byte[] b2, int s2)
             throws HyracksDataException {
-        if (leftType == null || rightType == null) {
-            return RawBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
-        }
         int leftNumItems = ListAccessorUtil.numberOfItems(b1, s1);
         int rightNumItems = ListAccessorUtil.numberOfItems(b2, s2);
         IAType leftArrayType = TypeComputeUtils.getActualTypeOrOpen(leftType, ATypeTag.ARRAY);
@@ -195,11 +191,8 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
         }
     }
 
-    private int compareRecords(IAType leftType, byte[] b1, int s1, int l1, IAType rightType, byte[] b2, int s2, int l2)
+    private int compareRecords(IAType leftType, byte[] b1, int s1, IAType rightType, byte[] b2, int s2)
             throws HyracksDataException {
-        if (leftType == null || rightType == null) {
-            return RawBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
-        }
         ARecordType leftRecordType = (ARecordType) TypeComputeUtils.getActualTypeOrOpen(leftType, ATypeTag.OBJECT);
         ARecordType rightRecordType = (ARecordType) TypeComputeUtils.getActualTypeOrOpen(rightType, ATypeTag.OBJECT);
         SortedRecord leftRecord = recordPool.allocate(leftRecordType);

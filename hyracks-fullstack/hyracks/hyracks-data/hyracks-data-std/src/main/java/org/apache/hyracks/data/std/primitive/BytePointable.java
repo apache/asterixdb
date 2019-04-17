@@ -34,9 +34,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public final class BytePointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
-    private static final int LENGTH = 1;
+    private static final int SIZE = 1;
     public static final BytePointableFactory FACTORY = new BytePointableFactory();
-    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(LENGTH);
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(SIZE);
 
     public static final class BytePointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
@@ -89,7 +89,7 @@ public final class BytePointable extends AbstractPointable implements IHashable,
     }
 
     public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-        DataUtils.ensureLengths(LENGTH, l1, l2);
+        DataUtils.ensureLengths(SIZE, l1, l2);
         return Byte.compare(getByte(b1, s1), getByte(b2, s2));
     }
 

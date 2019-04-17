@@ -34,8 +34,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public final class FloatPointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
-    private static final int LENGTH = 4;
-    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(LENGTH);
+    private static final int SIZE = 4;
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(SIZE);
     public static final FloatPointableFactory FACTORY = new FloatPointableFactory();
 
     public static final class FloatPointableFactory implements IPointableFactory {
@@ -95,7 +95,7 @@ public final class FloatPointable extends AbstractPointable implements IHashable
     }
 
     public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-        DataUtils.ensureLengths(LENGTH, l1, l2);
+        DataUtils.ensureLengths(SIZE, l1, l2);
         return Float.compare(getFloat(b1, s1), getFloat(b2, s2));
     }
 
