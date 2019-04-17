@@ -256,7 +256,7 @@ public class LSMIndexFileManagerTest {
             String iodevPath = System.getProperty("java.io.tmpdir") + sep + "test_iodev" + i;
             devices.add(new IODeviceHandle(new File(iodevPath), "wa"));
         }
-        return new IOManager(devices, new DefaultDeviceResolver());
+        return new IOManager(devices, new DefaultDeviceResolver(), 2, 10);
     }
 
     private FileReference simulateMerge(ILSMIndexFileManager fileManager, FileReference a, FileReference b)

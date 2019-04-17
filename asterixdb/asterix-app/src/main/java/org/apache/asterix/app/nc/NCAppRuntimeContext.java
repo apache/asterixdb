@@ -89,6 +89,7 @@ import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.network.INetworkSecurityManager;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.ipc.impl.HyracksConnection;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -185,6 +186,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     public void initialize(IRecoveryManagerFactory recoveryManagerFactory, IReceptionistFactory receptionistFactory,
             boolean initialRun) throws IOException {
         ioManager = getServiceContext().getIoManager();
+        int ioQueueLen = getServiceContext().getAppConfig().getInt(NCConfig.Option.IO_QUEUE_SIZE);
         threadExecutor =
                 MaintainedThreadNameExecutorService.newCachedThreadPool(getServiceContext().getThreadFactory());
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
@@ -239,11 +241,11 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             replicationChannel = new ReplicationChannel(this);
 
             bufferCache = new BufferCache(ioManager, prs, pcp, new FileMapManager(),
-                    storageProperties.getBufferCacheMaxOpenFiles(), getServiceContext().getThreadFactory(),
+                    storageProperties.getBufferCacheMaxOpenFiles(), ioQueueLen, getServiceContext().getThreadFactory(),
                     replicationManager);
         } else {
             bufferCache = new BufferCache(ioManager, prs, pcp, new FileMapManager(),
-                    storageProperties.getBufferCacheMaxOpenFiles(), getServiceContext().getThreadFactory());
+                    storageProperties.getBufferCacheMaxOpenFiles(), ioQueueLen, getServiceContext().getThreadFactory());
         }
 
         /*

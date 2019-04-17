@@ -214,8 +214,8 @@ public class NodeControllerService implements IControllerService {
         ncShutdownHook = new NCShutdownHook(this);
         Runtime.getRuntime().addShutdownHook(ncShutdownHook);
         Thread.currentThread().setUncaughtExceptionHandler(getLifeCycleComponentManager());
-        ioManager =
-                new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()), application.getFileDeviceResolver());
+        ioManager = new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()),
+                application.getFileDeviceResolver(), ncConfig.getIOParallelism(), ncConfig.getIOQueueSize());
         try {
             workQueue = new WorkQueue(id, Thread.NORM_PRIORITY); // Reserves MAX_PRIORITY of the heartbeat thread.
             jobletMap = new ConcurrentHashMap<>();

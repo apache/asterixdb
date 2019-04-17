@@ -76,7 +76,7 @@ public class TestUtils {
     private static IOManager createIoManager() throws HyracksException {
         List<IODeviceHandle> devices = new ArrayList<>();
         devices.add(new IODeviceHandle(new File(System.getProperty("java.io.tmpdir")), "."));
-        return new IOManager(devices, new DefaultDeviceResolver());
+        return new IOManager(devices, new DefaultDeviceResolver(), 2, 10);
     }
 
     public static void compareWithResult(File expectedFile, File actualFile) throws Exception {

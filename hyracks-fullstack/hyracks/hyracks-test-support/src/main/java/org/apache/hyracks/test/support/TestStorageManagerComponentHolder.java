@@ -107,7 +107,7 @@ public class TestStorageManagerComponentHolder {
             List<IODeviceHandle> devices = new ArrayList<>();
             devices.add(new IODeviceHandle(new File(System.getProperty("user.dir") + File.separator + "target"),
                     "iodev_test_wa"));
-            ioManager = new IOManager(devices, new DefaultDeviceResolver());
+            ioManager = new IOManager(devices, new DefaultDeviceResolver(), 2, 10);
         }
         return ioManager;
     }
@@ -152,7 +152,7 @@ public class TestStorageManagerComponentHolder {
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, pageSize, numPages);
         IFileMapProvider fileMapProvider = getFileMapProvider();
         bufferCache = new BufferCache(ioManager, prs, new DelayPageCleanerPolicy(1000),
-                (IFileMapManager) fileMapProvider, maxOpenFiles, threadFactory);
+                (IFileMapManager) fileMapProvider, maxOpenFiles, 10, threadFactory);
         return bufferCache;
     }
 }

@@ -56,7 +56,6 @@ public class IOManager implements IIOManager {
     /*
      * Constants
      */
-    public static final int IO_REQUEST_QUEUE_SIZE = 100; // TODO: Make configurable
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String WORKSPACE_FILE_SUFFIX = ".waf";
     private static final FilenameFilter WORKSPACE_FILES_FILTER = (dir, name) -> name.endsWith(WORKSPACE_FILE_SUFFIX);
@@ -74,7 +73,8 @@ public class IOManager implements IIOManager {
     private int workspaceIndex;
     private final IFileDeviceResolver deviceComputer;
 
-    public IOManager(List<IODeviceHandle> devices, IFileDeviceResolver deviceComputer) throws HyracksDataException {
+    public IOManager(List<IODeviceHandle> devices, IFileDeviceResolver deviceComputer, int ioParallelism, int queueSize)
+            throws HyracksDataException {
         this.ioDevices = Collections.unmodifiableList(devices);
         checkDeviceValidity(devices);
         workspaces = new ArrayList<>();
@@ -93,9 +93,9 @@ public class IOManager implements IIOManager {
         }
         workspaceIndex = 0;
         this.deviceComputer = deviceComputer;
-        submittedRequests = new ArrayBlockingQueue<>(IO_REQUEST_QUEUE_SIZE);
-        freeRequests = new ArrayBlockingQueue<>(IO_REQUEST_QUEUE_SIZE);
-        int numIoThreads = ioDevices.size() * 2;
+        submittedRequests = new ArrayBlockingQueue<>(queueSize);
+        freeRequests = new ArrayBlockingQueue<>(queueSize);
+        int numIoThreads = ioDevices.size() * ioParallelism;
         executor = Executors.newFixedThreadPool(numIoThreads);
         for (int i = 0; i < numIoThreads; i++) {
             executor.execute(new IoRequestHandler(i, submittedRequests));

@@ -88,7 +88,9 @@ public class NCConfig extends ControllerConfig {
         TRACE_CATEGORIES(STRING_ARRAY, new String[0]),
         KEY_STORE_PATH(STRING, (String) null),
         TRUST_STORE_PATH(STRING, (String) null),
-        KEY_STORE_PASSWORD(STRING, (String) null);
+        KEY_STORE_PASSWORD(STRING, (String) null),
+        IO_WORKERS_PER_PARTITION(POSITIVE_INTEGER, 2),
+        IO_QUEUE_SIZE(POSITIVE_INTEGER, 10);
 
         private final IOptionType parser;
         private final String defaultValueDescription;
@@ -217,8 +219,12 @@ public class NCConfig extends ControllerConfig {
                     return "A fully-qualified path to a trust store file that will be used for secured connections";
                 case KEY_STORE_PASSWORD:
                     return "The password to the provided key store";
+                case IO_WORKERS_PER_PARTITION:
+                    return "Number of threads per partition used to write and read from storage";
+                case IO_QUEUE_SIZE:
+                    return "Length of the queue used for requests to write and read";
                 default:
-                    throw new IllegalStateException("NYI: " + this);
+                    throw new IllegalStateException("Not yet implemented: " + this);
             }
         }
 
@@ -574,5 +580,13 @@ public class NCConfig extends ControllerConfig {
 
     public void setTrustStorePath(String keyStorePath) {
         configManager.set(nodeId, Option.TRUST_STORE_PATH, keyStorePath);
+    }
+
+    public int getIOParallelism() {
+        return appConfig.getInt(Option.IO_WORKERS_PER_PARTITION);
+    }
+
+    public int getIOQueueSize() {
+        return appConfig.getInt(Option.IO_QUEUE_SIZE);
     }
 }

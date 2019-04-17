@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.storage.common.buffercache;
 
-import static org.apache.hyracks.control.nc.io.IOManager.IO_REQUEST_QUEUE_SIZE;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -76,8 +74,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private final CleanerThread cleanerThread;
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
     private final AsyncFIFOPageQueueManager fifoWriter;
-    private final BlockingQueue<BufferCacheHeaderHelper> headerPageCache =
-            new ArrayBlockingQueue<>(IO_REQUEST_QUEUE_SIZE);
+    private final BlockingQueue<BufferCacheHeaderHelper> headerPageCache;
 
     private IIOReplicationManager ioReplicationManager;
     private final List<ICachedPageInternal> cachedPages = new ArrayList<>();
@@ -93,8 +90,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private ConcurrentHashMap<CachedPage, StackTraceElement[]> pinnedPageOwner;
 
     public BufferCache(IIOManager ioManager, IPageReplacementStrategy pageReplacementStrategy,
-            IPageCleanerPolicy pageCleanerPolicy, IFileMapManager fileMapManager, int maxOpenFiles,
+            IPageCleanerPolicy pageCleanerPolicy, IFileMapManager fileMapManager, int maxOpenFiles, int ioQueuelen,
             ThreadFactory threadFactory) {
+        this.headerPageCache = new ArrayBlockingQueue<>(ioQueuelen);
         this.ioManager = ioManager;
         this.pageSize = pageReplacementStrategy.getPageSize();
         this.maxOpenFiles = maxOpenFiles;
@@ -124,10 +122,11 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     //this constructor is used when replication is enabled to pass the IIOReplicationManager
     public BufferCache(IIOManager ioManager, IPageReplacementStrategy pageReplacementStrategy,
-            IPageCleanerPolicy pageCleanerPolicy, IFileMapManager fileMapManager, int maxOpenFiles,
+            IPageCleanerPolicy pageCleanerPolicy, IFileMapManager fileMapManager, int maxOpenFiles, int ioQueueLen,
             ThreadFactory threadFactory, IIOReplicationManager ioReplicationManager) {
 
-        this(ioManager, pageReplacementStrategy, pageCleanerPolicy, fileMapManager, maxOpenFiles, threadFactory);
+        this(ioManager, pageReplacementStrategy, pageCleanerPolicy, fileMapManager, maxOpenFiles, ioQueueLen,
+                threadFactory);
         this.ioReplicationManager = ioReplicationManager;
     }
 
