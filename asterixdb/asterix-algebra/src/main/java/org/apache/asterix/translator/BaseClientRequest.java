@@ -97,7 +97,7 @@ public abstract class BaseClientRequest implements IClientRequest {
         ObjectNode json = JSONUtil.createObject();
         json.put("uuid", requestReference.getUuid());
         json.put("requestTime", new ADateTime(requestReference.getTime()).toSimpleString());
-        json.put("elapsedTime", getElapsedTime());
+        json.put("elapsedTime", getElapsedTimeInSecs());
         json.put("node", requestReference.getNode());
         json.put("state", state.getLabel());
         json.put("userAgent", ((RequestReference) requestReference).getUserAgent());
@@ -106,11 +106,10 @@ public abstract class BaseClientRequest implements IClientRequest {
         return json;
     }
 
-    private String getElapsedTime() {
+    private double getElapsedTimeInSecs() {
         // this is just an estimation as the request might have been received on a node with a different system time
-        // TODO add dynamic time unit
         long runningTime = completionTime > 0 ? completionTime : System.currentTimeMillis();
-        return runningTime - requestReference.getTime() + "ms";
+        return (runningTime - requestReference.getTime()) / 1000d;
     }
 
     protected abstract void doCancel(ICcApplicationContext appCtx) throws HyracksDataException;
