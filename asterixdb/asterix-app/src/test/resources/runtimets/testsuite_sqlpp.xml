@@ -5723,6 +5723,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-2550">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX0037: Type mismatch: expected value of type array or multiset, but got the value of type object (in line 28, at column 2)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="unsupported_parameter">
         <output-dir compare="Text">none</output-dir>
         <expected-error>Query parameter compiler.joinmem is not supported</expected-error>

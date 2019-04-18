@@ -50,7 +50,7 @@ public class CollectionMemberResultType extends AbstractResultTypeComputer {
     protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
             throws AlgebricksException {
         ATypeTag actualTypeTag = type.getTypeTag();
-        if (type.getTypeTag() != ATypeTag.MULTISET && type.getTypeTag() != ATypeTag.ARRAY) {
+        if (!type.getTypeTag().isListType()) {
             throw new TypeMismatchException(sourceLoc, actualTypeTag, ATypeTag.MULTISET, ATypeTag.ARRAY);
         }
     }
@@ -58,7 +58,7 @@ public class CollectionMemberResultType extends AbstractResultTypeComputer {
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         IAType type = strippedInputTypes[0];
-        if (type.getTypeTag() == ATypeTag.ANY) {
+        if (!type.getTypeTag().isListType()) {
             return BuiltinType.ANY;
         }
         IAType itemType = ((AbstractCollectionType) type).getItemType();
