@@ -76,7 +76,7 @@ public class ConsolidateWindowOperatorsRule implements IAlgebraicRewriteRule {
             return false;
         }
         if (winOp1.hasNestedPlans() && winOp2.hasNestedPlans()
-                && !IsomorphismOperatorVisitor.compareWindowFrameSpec(winOp1, winOp2)) {
+                && !IsomorphismOperatorVisitor.compareWindowFrameSpecExcludingMaxObjects(winOp1, winOp2)) {
             return false;
         }
 
@@ -115,6 +115,17 @@ public class ConsolidateWindowOperatorsRule implements IAlgebraicRewriteRule {
                     aggFrom.getInputs().get(0).getValue())) {
                 return false;
             }
+            int winOpToMaxObjects = winOpTo.getFrameMaxObjects();
+            int winOpFromMaxObjects = winOpFrom.getFrameMaxObjects();
+            if (winOpToMaxObjects != winOpFromMaxObjects) {
+                if (subsumeFrameMaxObjects(winOpFromMaxObjects, winOpToMaxObjects, aggTo)) {
+                    winOpToMaxObjects = winOpFromMaxObjects;
+                } else if (!subsumeFrameMaxObjects(winOpToMaxObjects, winOpFromMaxObjects, aggFrom)) {
+                    return false;
+                }
+            }
+
+            winOpTo.setFrameMaxObjects(winOpToMaxObjects);
             aggTo.getVariables().addAll(aggFrom.getVariables());
             aggTo.getExpressions().addAll(aggFrom.getExpressions());
             context.computeAndSetTypeEnvironmentForOperator(aggTo);
@@ -153,5 +164,12 @@ public class ConsolidateWindowOperatorsRule implements IAlgebraicRewriteRule {
             throw new IllegalStateException(String.valueOf(to.size()));
         }
         to.addAll(from);
+    }
+
+    /**
+     * Returns {@code true} if {@code maxObjects1} subsumes {@code maxObjects2}
+     */
+    protected boolean subsumeFrameMaxObjects(int maxObjects1, int maxObjects2, AggregateOperator aggOp2) {
+        return false;
     }
 }

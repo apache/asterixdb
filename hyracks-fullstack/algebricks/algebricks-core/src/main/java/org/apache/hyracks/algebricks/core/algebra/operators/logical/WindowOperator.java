@@ -52,7 +52,7 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
  * <li>{@link #frameEndValidationExpressions} - frame end boundary validators</li>
  * <li>{@link #frameExcludeExpressions} - define values to be excluded from the frame</li>
  * <li>{@link #frameOffset} - sets how many tuples to skip inside each frame</li>
- * <li>{@link #frameMaxObjects} - limits number of tuples to be returned for each frame</li>
+ * <li>{@link #frameMaxObjects} - limits number of tuples to be returned for each frame ({@code -1} = unlimited)</li>
  * <li>{@link #variables} - output variables containing return values of these functions</li>
  * <li>{@link #expressions} - window function expressions (running aggregates)</li>
  * </ul>
@@ -60,6 +60,8 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
  * Window operator does not change cardinality of the input stream.
  */
 public class WindowOperator extends AbstractOperatorWithNestedPlans {
+
+    public static final int FRAME_MAX_OBJECTS_UNLIMITED = -1;
 
     private final List<Mutable<ILogicalExpression>> partitionExpressions;
 
@@ -218,7 +220,7 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
     }
 
     public void setFrameMaxObjects(int value) {
-        frameMaxObjects = Math.max(-1, value);
+        frameMaxObjects = value < 0 ? FRAME_MAX_OBJECTS_UNLIMITED : value;
     }
 
     public List<LogicalVariable> getVariables() {
@@ -252,8 +254,11 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
 
     /**
      * Allows performing expression transformation only on a subset of this operator's expressions
-     * @param visitor transforming visitor
-     * @param visitVarRefRequiringExprs whether to visit variable reference requiring expressions, or not
+     *
+     * @param visitor
+     *            transforming visitor
+     * @param visitVarRefRequiringExprs
+     *            whether to visit variable reference requiring expressions, or not
      */
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor,
             boolean visitVarRefRequiringExprs) throws AlgebricksException {
