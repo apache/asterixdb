@@ -21,9 +21,9 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
 import java.util.List;
 
+import org.apache.hyracks.dataflow.common.data.accessors.PermutingTupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;

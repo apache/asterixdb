@@ -32,9 +32,9 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.PermutingFrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.PointableTupleReference;
 import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupWriter;
-import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 
 public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregatePushRuntime<IWindowAggregateEvaluator> {
 
@@ -108,9 +108,8 @@ public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregate
         if (frameId == 0) {
             beginPartition();
         } else {
-            partitionColumnsRef.reset(frameAccessor, 0);
-            boolean samePartition = PreclusteredGroupWriter.sameGroup(partitionColumnsPrevCopy, partitionColumnsRef,
-                    partitionComparators);
+            boolean samePartition = PreclusteredGroupWriter.sameGroup(partitionColumnsPrevCopy, frameAccessor, 0,
+                    partitionColumns, partitionComparators);
             if (!samePartition) {
                 endPartition();
                 beginPartition();
@@ -122,8 +121,9 @@ public abstract class AbstractWindowPushRuntime extends AbstractRunningAggregate
         } else {
             int tBeginIndex = 0;
             for (int tIndex = 1; tIndex <= tLastIndex; tIndex++) {
-                boolean samePartition = PreclusteredGroupWriter.sameGroup(frameAccessor, tIndex - 1, frameAccessor,
-                        tIndex, partitionColumns, partitionComparators);
+                partitionColumnsRef.reset(frameAccessor, tIndex - 1);
+                boolean samePartition = PreclusteredGroupWriter.sameGroup(partitionColumnsRef, frameAccessor, tIndex,
+                        partitionColumns, partitionComparators);
                 if (!samePartition) {
                     partitionChunk(frameId, buffer, tBeginIndex, tIndex - 1);
                     endPartition();

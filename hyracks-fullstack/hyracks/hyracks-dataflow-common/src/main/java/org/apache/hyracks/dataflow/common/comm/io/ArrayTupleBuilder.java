@@ -28,6 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.GrowableArray;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
  * Array backed tuple builder.
@@ -107,6 +108,20 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
             throw HyracksDataException.create(e);
         }
         fEndOffsets[nextField++] = fieldData.getLength();
+    }
+
+    /**
+     * Add a field to the tuple from a field in another tuple
+     *
+     * @param accessor
+     *            - Tuple that contains the field to be copied into the tuple
+     *            builder.
+     * @param fIndex
+     *            - Field index of the field to be copied.
+     * @throws HyracksDataException
+     */
+    public void addField(ITupleReference accessor, int fIndex) throws HyracksDataException {
+        addField(accessor.getFieldData(fIndex), accessor.getFieldStart(fIndex), accessor.getFieldLength(fIndex));
     }
 
     /**

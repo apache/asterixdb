@@ -17,21 +17,20 @@
  * under the License.
  */
 
-package org.apache.hyracks.storage.am.common.tuples;
+package org.apache.hyracks.dataflow.common.data.accessors;
 
-import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+public class PermutingFrameTupleReference extends FrameTupleReference {
+    private int[] fieldPermutation;
 
-public class PermutingTupleReference implements ITupleReference {
-
-    private final int[] fieldPermutation;
-    private ITupleReference sourceTuple;
-
-    public PermutingTupleReference(int[] fieldPermutation) {
+    public PermutingFrameTupleReference(int[] fieldPermutation) {
         this.fieldPermutation = fieldPermutation;
     }
 
-    public void reset(ITupleReference sourceTuple) {
-        this.sourceTuple = sourceTuple;
+    public PermutingFrameTupleReference() {
+    }
+
+    public void setFieldPermutation(int[] fieldPermutation) {
+        this.fieldPermutation = fieldPermutation;
     }
 
     @Override
@@ -41,16 +40,17 @@ public class PermutingTupleReference implements ITupleReference {
 
     @Override
     public byte[] getFieldData(int fIdx) {
-        return sourceTuple.getFieldData(fieldPermutation[fIdx]);
+        return fta.getBuffer().array();
     }
 
     @Override
     public int getFieldStart(int fIdx) {
-        return sourceTuple.getFieldStart(fieldPermutation[fIdx]);
+        return fta.getTupleStartOffset(tIndex) + fta.getFieldSlotsLength()
+                + fta.getFieldStartOffset(tIndex, fieldPermutation[fIdx]);
     }
 
     @Override
     public int getFieldLength(int fIdx) {
-        return sourceTuple.getFieldLength(fieldPermutation[fIdx]);
+        return fta.getFieldLength(tIndex, fieldPermutation[fIdx]);
     }
 }

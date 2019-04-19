@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.common.tuples;
 
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.PermutingTupleReference;
 
 public class DualTupleReference implements ITupleReference {
 

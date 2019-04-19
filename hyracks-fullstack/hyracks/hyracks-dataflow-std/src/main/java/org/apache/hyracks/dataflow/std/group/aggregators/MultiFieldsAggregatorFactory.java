@@ -82,13 +82,16 @@ public class MultiFieldsAggregatorFactory extends AbstractAccumulatingAggregator
             public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor stateAccessor,
                     int tIndex, AggregateState state) throws HyracksDataException {
                 DataOutput dos = tupleBuilder.getDataOutput();
-
-                int tupleOffset = stateAccessor.getTupleStartOffset(tIndex);
                 for (int i = 0; i < aggregators.length; i++) {
-                    int fieldOffset = stateAccessor.getFieldStartOffset(tIndex, keys.length + i);
-                    aggregators[i].outputPartialResult(dos, stateAccessor.getBuffer().array(),
-                            fieldOffset + stateAccessor.getFieldSlotsLength() + tupleOffset,
-                            ((AggregateState[]) state.state)[i]);
+                    if (aggregators[i].needsBinaryState()) {
+                        int tupleOffset = stateAccessor.getTupleStartOffset(tIndex);
+                        int fieldOffset = stateAccessor.getFieldStartOffset(tIndex, keys.length + i);
+                        aggregators[i].outputPartialResult(dos, stateAccessor.getBuffer().array(),
+                                fieldOffset + stateAccessor.getFieldSlotsLength() + tupleOffset,
+                                ((AggregateState[]) state.state)[i]);
+                    } else {
+                        aggregators[i].outputPartialResult(dos, null, 0, ((AggregateState[]) state.state)[i]);
+                    }
                     tupleBuilder.addFieldEndOffset();
                 }
                 return true;
@@ -98,10 +101,9 @@ public class MultiFieldsAggregatorFactory extends AbstractAccumulatingAggregator
             public boolean outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor stateAccessor,
                     int tIndex, AggregateState state) throws HyracksDataException {
                 DataOutput dos = tupleBuilder.getDataOutput();
-
-                int tupleOffset = stateAccessor.getTupleStartOffset(tIndex);
                 for (int i = 0; i < aggregators.length; i++) {
                     if (aggregators[i].needsBinaryState()) {
+                        int tupleOffset = stateAccessor.getTupleStartOffset(tIndex);
                         int fieldOffset = stateAccessor.getFieldStartOffset(tIndex, keys.length + i);
                         aggregators[i].outputFinalResult(dos, stateAccessor.getBuffer().array(),
                                 tupleOffset + stateAccessor.getFieldSlotsLength() + fieldOffset,
@@ -118,7 +120,6 @@ public class MultiFieldsAggregatorFactory extends AbstractAccumulatingAggregator
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 DataOutput dos = tupleBuilder.getDataOutput();
-
                 for (int i = 0; i < aggregators.length; i++) {
                     aggregators[i].init(accessor, tIndex, dos, ((AggregateState[]) state.state)[i]);
                     if (aggregators[i].needsBinaryState()) {
@@ -146,23 +147,17 @@ public class MultiFieldsAggregatorFactory extends AbstractAccumulatingAggregator
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
-                if (stateAccessor != null) {
-                    int stateTupleOffset = stateAccessor.getTupleStartOffset(stateTupleIndex);
-                    int fieldIndex = 0;
-                    for (int i = 0; i < aggregators.length; i++) {
-                        if (aggregators[i].needsBinaryState()) {
-                            int stateFieldOffset =
-                                    stateAccessor.getFieldStartOffset(stateTupleIndex, keys.length + fieldIndex);
-                            aggregators[i].aggregate(accessor, tIndex, stateAccessor.getBuffer().array(),
-                                    stateTupleOffset + stateAccessor.getFieldSlotsLength() + stateFieldOffset,
-                                    ((AggregateState[]) state.state)[i]);
-                            fieldIndex++;
-                        } else {
-                            aggregators[i].aggregate(accessor, tIndex, null, 0, ((AggregateState[]) state.state)[i]);
-                        }
-                    }
-                } else {
-                    for (int i = 0; i < aggregators.length; i++) {
+                int fieldIndex = 0;
+                for (int i = 0; i < aggregators.length; i++) {
+                    if (aggregators[i].needsBinaryState()) {
+                        int stateTupleOffset = stateAccessor.getTupleStartOffset(stateTupleIndex);
+                        int stateFieldOffset =
+                                stateAccessor.getFieldStartOffset(stateTupleIndex, keys.length + fieldIndex);
+                        aggregators[i].aggregate(accessor, tIndex, stateAccessor.getBuffer().array(),
+                                stateTupleOffset + stateAccessor.getFieldSlotsLength() + stateFieldOffset,
+                                ((AggregateState[]) state.state)[i]);
+                        fieldIndex++;
+                    } else {
                         aggregators[i].aggregate(accessor, tIndex, null, 0, ((AggregateState[]) state.state)[i]);
                     }
                 }
