@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -55,6 +56,11 @@ public class WordTokensEvaluator implements IScalarEvaluator {
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
         stringEval.evaluate(tuple, argPtr);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr)) {
+            return;
+        }
+
         tokenizer.reset(argPtr.getByteArray(), argPtr.getStartOffset(), argPtr.getLength());
         try {
             listBuilder.reset(listType);

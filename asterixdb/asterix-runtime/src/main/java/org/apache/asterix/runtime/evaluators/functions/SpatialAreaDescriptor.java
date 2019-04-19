@@ -74,6 +74,10 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                         resultStorage.reset();
                         eval.evaluate(tuple, argPtr);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr)) {
+                            return;
+                        }
+
                         try {
                             byte[] bytes = argPtr.getByteArray();
                             int offset = argPtr.getStartOffset();

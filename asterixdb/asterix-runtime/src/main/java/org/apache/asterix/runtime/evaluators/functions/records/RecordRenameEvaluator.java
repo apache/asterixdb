@@ -82,20 +82,28 @@ class RecordRenameEvaluator implements IScalarEvaluator {
         resultStorage.reset();
         boolean returnNull = false;
         eval0.evaluate(tuple, inputRecordPointable);
+        eval1.evaluate(tuple, oldFieldNamePointable);
+        eval2.evaluate(tuple, newFieldNamePointable);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, inputRecordPointable, oldFieldNamePointable,
+                newFieldNamePointable)) {
+            return;
+        }
+
         byte[] data = inputRecordPointable.getByteArray();
         int offset = inputRecordPointable.getStartOffset();
         byte typeTag = data[offset];
         if (typeTag != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
             returnNull = true;
         }
-        eval1.evaluate(tuple, oldFieldNamePointable);
+
         data = oldFieldNamePointable.getByteArray();
         offset = oldFieldNamePointable.getStartOffset();
         typeTag = data[offset];
         if (typeTag != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
             returnNull = true;
         }
-        eval2.evaluate(tuple, newFieldNamePointable);
+
         data = newFieldNamePointable.getByteArray();
         offset = newFieldNamePointable.getStartOffset();
         typeTag = data[offset];

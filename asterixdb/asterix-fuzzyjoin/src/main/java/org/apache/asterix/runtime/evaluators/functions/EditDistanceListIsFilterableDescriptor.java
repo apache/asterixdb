@@ -108,6 +108,10 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
             listEval.evaluate(tuple, listPtr);
             edThreshEval.evaluate(tuple, edThreshPtr);
 
+            if (PointableHelper.checkAndSetMissingOrNull(result, listPtr, edThreshPtr)) {
+                return;
+            }
+
             // Check type and compute string length.
             byte[] bytes = listPtr.getByteArray();
             int offset = listPtr.getStartOffset();

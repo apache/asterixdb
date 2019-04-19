@@ -78,6 +78,11 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         evalList.evaluate(tuple, inputVal);
+
+                        if (PointableHelper.checkAndSetMissingOrNull(result, inputVal)) {
+                            return;
+                        }
+
                         byte[] serList = inputVal.getByteArray();
                         int offset = inputVal.getStartOffset();
 

@@ -83,6 +83,11 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                         try {
                             resultStorage.reset();
                             stringEval.evaluate(tuple, argPtr);
+
+                            if (PointableHelper.checkAndSetMissingOrNull(result, argPtr)) {
+                                return;
+                            }
+
                             byte[] serString = argPtr.getByteArray();
                             int offset = argPtr.getStartOffset();
 

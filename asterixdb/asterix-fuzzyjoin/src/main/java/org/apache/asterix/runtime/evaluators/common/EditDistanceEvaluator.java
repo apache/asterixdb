@@ -29,6 +29,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
@@ -79,9 +80,14 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
         firstStringEval.evaluate(tuple, argPtr1);
+        secondStringEval.evaluate(tuple, argPtr2);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr1, argPtr2)) {
+            return;
+        }
+
         firstTypeTag =
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
-        secondStringEval.evaluate(tuple, argPtr2);
         secondTypeTag =
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
 

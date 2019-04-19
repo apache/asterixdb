@@ -184,6 +184,10 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
 
                         resultStorage.reset();
 
+                        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr0, argPtr1)) {
+                            return;
+                        }
+
                         ATypeTag argTypeMax = null;
 
                         for (int i = 0; i < 2; i++) {

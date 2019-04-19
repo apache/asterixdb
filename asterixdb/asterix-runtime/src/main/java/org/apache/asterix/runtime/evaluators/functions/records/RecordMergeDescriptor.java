@@ -124,6 +124,10 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr0, argPtr1)) {
+                            return;
+                        }
+
                         vp0.set(argPtr0);
                         vp1.set(argPtr1);
 

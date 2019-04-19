@@ -77,6 +77,10 @@ public class TreatAsIntegerDescriptor extends AbstractScalarFunctionDynamicDescr
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         inputEval.evaluate(tuple, inputArg);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(result, inputArg)) {
+                            return;
+                        }
+
                         int intValue;
                         byte[] bytes = inputArg.getByteArray();
                         int startOffset = inputArg.getStartOffset();

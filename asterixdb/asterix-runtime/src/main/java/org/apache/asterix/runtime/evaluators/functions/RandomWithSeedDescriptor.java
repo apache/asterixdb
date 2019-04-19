@@ -62,6 +62,10 @@ public class RandomWithSeedDescriptor extends AbstractScalarFunctionDynamicDescr
                             throws HyracksDataException {
                         eval0.evaluate(tuple, arg0);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(resultPointable, arg0)) {
+                            return;
+                        }
+
                         byte[] bytes = arg0.getByteArray();
                         int offset = arg0.getStartOffset();
                         ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];

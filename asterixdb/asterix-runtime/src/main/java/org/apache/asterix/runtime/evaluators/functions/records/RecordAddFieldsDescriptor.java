@@ -144,6 +144,10 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr0, argPtr1)) {
+                            return;
+                        }
+
                         // Make sure we get a valid record
                         byte typeTag0 = argPtr0.getByteArray()[argPtr0.getStartOffset()];
                         if (typeTag0 != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {

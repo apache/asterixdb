@@ -69,6 +69,11 @@ class RecordUnwrapEvaluator implements IScalarEvaluator {
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
         eval0.evaluate(tuple, inputRecordPointable);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, inputRecordPointable)) {
+            return;
+        }
+
         final byte[] data = inputRecordPointable.getByteArray();
         final int offset = inputRecordPointable.getStartOffset();
         final byte typeTag = data[offset];

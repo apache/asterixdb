@@ -98,6 +98,10 @@ public class DeepEqualityDescriptor extends AbstractScalarFunctionDynamicDescrip
                             evalLeft.evaluate(tuple, pointableLeft);
                             evalRight.evaluate(tuple, pointableRight);
 
+                            if (PointableHelper.checkAndSetMissingOrNull(result, pointableLeft, pointableRight)) {
+                                return;
+                            }
+
                             // Using deep equality assessment to assess the equality of the two values
                             boolean isEqual = deepEqualAssessor.isEqual(pointableLeft, pointableRight);
                             ABoolean resultBit = isEqual ? ABoolean.TRUE : ABoolean.FALSE;

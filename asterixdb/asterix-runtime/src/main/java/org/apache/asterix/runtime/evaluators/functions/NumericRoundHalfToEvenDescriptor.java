@@ -98,6 +98,11 @@ public class NumericRoundHalfToEvenDescriptor extends AbstractScalarFunctionDyna
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval.evaluate(tuple, argPtr);
+
+                        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr)) {
+                            return;
+                        }
+
                         byte[] data = argPtr.getByteArray();
                         int offset = argPtr.getStartOffset();
 

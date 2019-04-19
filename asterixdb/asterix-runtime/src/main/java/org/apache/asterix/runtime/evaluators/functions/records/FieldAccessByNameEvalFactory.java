@@ -27,6 +27,7 @@ import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -80,6 +81,11 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
                     resultStorage.reset();
                     eval0.evaluate(tuple, inputArg0);
                     eval1.evaluate(tuple, inputArg1);
+
+                    if (PointableHelper.checkAndSetMissingOrNull(result, inputArg0, inputArg1)) {
+                        return;
+                    }
+
                     byte[] serRecord = inputArg0.getByteArray();
                     int serRecordOffset = inputArg0.getStartOffset();
                     int serRecordLen = inputArg0.getLength();

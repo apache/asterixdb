@@ -90,6 +90,11 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                         eval2.evaluate(tuple, inputArg2);
                         eval3.evaluate(tuple, inputArg3);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(result, inputArg0, inputArg1, inputArg2,
+                                inputArg3)) {
+                            return;
+                        }
+
                         byte[] bytes0 = inputArg0.getByteArray();
                         byte[] bytes1 = inputArg1.getByteArray();
                         byte[] bytes2 = inputArg2.getByteArray();

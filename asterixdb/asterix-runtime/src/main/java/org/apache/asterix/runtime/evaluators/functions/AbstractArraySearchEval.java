@@ -71,14 +71,20 @@ public abstract class AbstractArraySearchEval implements IScalarEvaluator {
 
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-        // 1st arg: list
+        // Evaluators
         listEval.evaluate(tuple, listArg);
+        searchedValueEval.evaluate(tuple, searchedValueArg);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, listArg, searchedValueArg)) {
+            return;
+        }
+
+        // 1st arg: list
         byte[] listBytes = listArg.getByteArray();
         int listOffset = listArg.getStartOffset();
 
         // TODO(ali): could be optimized to not evaluate again if the search value evaluator is a constant
         // 2nd arg: value to search for
-        searchedValueEval.evaluate(tuple, searchedValueArg);
         byte[] valueBytes = searchedValueArg.getByteArray();
         int valueOffset = searchedValueArg.getStartOffset();
         int valueLength = searchedValueArg.getLength();

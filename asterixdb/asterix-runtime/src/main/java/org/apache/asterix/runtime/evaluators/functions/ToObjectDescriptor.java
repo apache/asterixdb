@@ -68,6 +68,11 @@ public class ToObjectDescriptor extends AbstractScalarFunctionDynamicDescriptor 
                     public void evaluate(IFrameTupleReference tuple, IPointable resultPointable)
                             throws HyracksDataException {
                         eval0.evaluate(tuple, arg0);
+
+                        if (PointableHelper.checkAndSetMissingOrNull(resultPointable, arg0)) {
+                            return;
+                        }
+
                         byte[] data = arg0.getByteArray();
                         int offset = arg0.getStartOffset();
                         if (data[offset] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {

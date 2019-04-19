@@ -83,6 +83,11 @@ public class NumericATan2Descriptor extends AbstractScalarFunctionDynamicDescrip
                         resultStorage.reset();
                         evalLeft.evaluate(tuple, leftPtr);
                         evalRight.evaluate(tuple, rightPtr);
+
+                        if (PointableHelper.checkAndSetMissingOrNull(result, leftPtr, rightPtr)) {
+                            return;
+                        }
+
                         for (int i = 0; i < args.length; i++) {
                             IPointable argPtr = i == 0 ? leftPtr : rightPtr;
                             byte[] data = argPtr.getByteArray();

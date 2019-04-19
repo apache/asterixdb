@@ -30,6 +30,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -77,6 +78,11 @@ public class MillisecondsFromDayTimeDurationDescriptor extends AbstractScalarFun
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
+
+                        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr0)) {
+                            return;
+                        }
+
                         byte[] bytes = argPtr0.getByteArray();
                         int offset = argPtr0.getStartOffset();
                         if (bytes[offset] != ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG) {

@@ -39,12 +39,12 @@ public abstract class AbstractTypeCheckEvaluator implements IScalarEvaluator {
         MISSING
     }
 
-    private static final byte[] MISSING_BYTES = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
-    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-    private final DataOutput out = resultStorage.getDataOutput();
-    private final IPointable argPtr = new VoidPointable();
-    private final IScalarEvaluator eval;
-    private static final AObjectSerializerDeserializer aObjSerDer = AObjectSerializerDeserializer.INSTANCE;
+    protected static final byte[] MISSING_BYTES = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
+    protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    protected final DataOutput out = resultStorage.getDataOutput();
+    protected final IPointable argPtr = new VoidPointable();
+    protected final IScalarEvaluator eval;
+    protected static final AObjectSerializerDeserializer aObjSerDer = AObjectSerializerDeserializer.INSTANCE;
 
     public AbstractTypeCheckEvaluator(IScalarEvaluator argEval) {
         this.eval = argEval;

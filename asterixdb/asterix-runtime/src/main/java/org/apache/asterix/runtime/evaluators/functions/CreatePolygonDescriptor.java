@@ -76,6 +76,7 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<ANull> nullSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
+                    @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<AMissing> missingSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
 
@@ -84,6 +85,11 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                         try {
                             resultStorage.reset();
                             evalList.evaluate(tuple, inputArgList);
+
+                            if (PointableHelper.checkAndSetMissingOrNull(result, inputArgList)) {
+                                return;
+                            }
+
                             byte[] listBytes = inputArgList.getByteArray();
                             int offset = inputArgList.getStartOffset();
 

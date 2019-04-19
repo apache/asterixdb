@@ -131,6 +131,11 @@ public abstract class AbstractArraySliceEval extends AbstractScalarEval {
             endPositionEval.evaluate(tuple, endPositionPointable);
         }
 
+        if (PointableHelper.checkAndSetMissingOrNull(result, listPointable, startPositionPointable,
+                endPositionPointable)) {
+            return;
+        }
+
         // Positions
         int startPositionValue;
         int endPositionValue = 0;

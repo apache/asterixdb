@@ -28,6 +28,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -68,6 +69,11 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                             throws HyracksDataException {
                         resultStorage.reset();
                         evaluators[0].evaluate(tuple, pointables[0]);
+
+                        if (PointableHelper.checkAndSetMissingOrNull(resultPointable, pointables[0])) {
+                            return;
+                        }
+
                         ATypeTag tag = ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0]
                                 .getStartOffset()]];
                         checkTypeMachingThrowsIfNot(EXPECTED_TAGS, tag);

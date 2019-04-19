@@ -67,6 +67,11 @@ public class CastTypeEvaluator implements IScalarEvaluator {
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         argEvaluator.evaluate(tuple, argPointable);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, argPointable)) {
+            return;
+        }
+
         inputPointable.set(argPointable);
         cast(result);
     }

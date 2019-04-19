@@ -50,6 +50,11 @@ abstract class AbstractRecordPairsEvaluator implements IScalarEvaluator {
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         eval0.evaluate(tuple, inputPointable);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, inputPointable)) {
+            return;
+        }
+
         final ATypeTag inputTypeTag = PointableHelper.getTypeTag(inputPointable);
         if (!validateInputType(inputTypeTag)) {
             PointableHelper.setNull(result);

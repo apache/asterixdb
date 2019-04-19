@@ -82,6 +82,11 @@ public abstract class AbstractArrayProcessEval implements IScalarEvaluator {
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         // get the list argument and make sure it's a list
         listArgEval.evaluate(tuple, listArg);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, listArg)) {
+            return;
+        }
+
         byte listArgType = listArg.getByteArray()[listArg.getStartOffset()];
 
         // create the new list with the same type as the input list

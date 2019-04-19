@@ -83,17 +83,28 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         byte listArgType;
-        boolean returnNull = false;
+        boolean isReturnNull = false;
         AbstractCollectionType outList = null;
         ATypeTag listTag;
+
         try {
             for (int i = 0; i < listsEval.length; i++) {
                 listsEval[i].evaluate(tuple, tempList);
-                if (!returnNull) {
+
+                if (PointableHelper.checkAndSetMissingOrNull(result, tempList)) {
+                    if (result.getByteArray()[0] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                        return;
+                    }
+
+                    // null value, but check other arguments for missing first (higher priority)
+                    isReturnNull = true;
+                }
+
+                if (!isReturnNull) {
                     listArgType = tempList.getByteArray()[tempList.getStartOffset()];
                     listTag = ATYPETAGDESERIALIZER.deserialize(listArgType);
                     if (!listTag.isListType()) {
-                        returnNull = true;
+                        isReturnNull = true;
                     } else if (outList != null && outList.getTypeTag() != listTag) {
                         throw new RuntimeDataException(ErrorCode.DIFFERENT_LIST_TYPE_ARGS, sourceLocation);
                     } else {
@@ -107,7 +118,7 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
                 }
             }
 
-            if (returnNull) {
+            if (isReturnNull) {
                 PointableHelper.setNull(result);
                 return;
             }

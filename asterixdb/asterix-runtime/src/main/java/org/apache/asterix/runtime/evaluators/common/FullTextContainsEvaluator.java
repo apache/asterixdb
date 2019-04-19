@@ -30,6 +30,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.functions.FullTextContainsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -126,16 +127,42 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
 
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+        boolean isReturnNull = false;
         resultStorage.reset();
 
         evalLeft.evaluate(tuple, argLeft);
-        argLeft.getValue(outLeft);
         evalRight.evaluate(tuple, argRight);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, argLeft, argRight)) {
+            if (result.getByteArray()[0] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                return;
+            }
+
+            // null value, but check other arguments for missing first (higher priority)
+            isReturnNull = true;
+        }
+
+        argLeft.getValue(outLeft);
         argRight.getValue(outRight);
 
         for (int i = 0; i < optionArgsLength; i++) {
             evalOptions[i].evaluate(tuple, argOptions[i]);
+
+            if (PointableHelper.checkAndSetMissingOrNull(result, argOptions[i])) {
+                if (result.getByteArray()[0] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                    return;
+                }
+
+                // null value, but check other arguments for missing first (higher priority)
+                isReturnNull = true;
+            }
+
             argOptions[i].getValue(outOptions[i]);
+        }
+
+        if (isReturnNull) {
+            PointableHelper.setNull(result);
+            return;
         }
 
         ATypeTag typeTag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argLeft.getTag());

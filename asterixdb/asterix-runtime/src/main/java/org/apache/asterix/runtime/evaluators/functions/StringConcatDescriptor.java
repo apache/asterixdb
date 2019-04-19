@@ -73,6 +73,7 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
+                    @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AMissing> missingSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
                     private final byte[] tempLengthArray = new byte[5];
@@ -82,6 +83,11 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                         resultStorage.reset();
                         try {
                             evalList.evaluate(tuple, inputArgList);
+
+                            if (PointableHelper.checkAndSetMissingOrNull(result, inputArgList)) {
+                                return;
+                            }
+
                             byte[] listBytes = inputArgList.getByteArray();
                             int listOffset = inputArgList.getStartOffset();
 

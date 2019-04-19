@@ -75,6 +75,7 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
+                    @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AMissing> missingSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
                     private final byte[] tempLengthArray = new byte[5];
@@ -84,6 +85,10 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                         resultStorage.reset();
                         evalList.evaluate(tuple, inputArgList);
                         evalSep.evaluate(tuple, inputArgSep);
+
+                        if (PointableHelper.checkAndSetMissingOrNull(result, inputArgList, inputArgSep)) {
+                            return;
+                        }
 
                         byte[] listBytes = inputArgList.getByteArray();
                         int listOffset = inputArgList.getStartOffset();

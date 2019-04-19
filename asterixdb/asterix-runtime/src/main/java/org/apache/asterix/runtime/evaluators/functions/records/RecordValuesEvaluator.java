@@ -62,6 +62,11 @@ class RecordValuesEvaluator implements IScalarEvaluator {
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
         eval0.evaluate(tuple, inputRecordPointable);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, inputRecordPointable)) {
+            return;
+        }
+
         final ATypeTag inputTypeTag = PointableHelper.getTypeTag(inputRecordPointable);
         if (inputTypeTag != ATypeTag.OBJECT) {
             PointableHelper.setNull(result);

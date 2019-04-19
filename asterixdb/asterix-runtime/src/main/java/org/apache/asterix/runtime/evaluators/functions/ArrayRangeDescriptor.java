@@ -119,6 +119,14 @@ public class ArrayRangeDescriptor extends AbstractScalarFunctionDynamicDescripto
         public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
             startNumEval.evaluate(tuple, start);
             endNumEval.evaluate(tuple, end);
+            if (stepNumEval != null) {
+                stepNumEval.evaluate(tuple, step);
+            }
+
+            if (PointableHelper.checkAndSetMissingOrNull(result, start, end, step)) {
+                return;
+            }
+
             String n = getIdentifier().getName();
             ATypeTag startTag = ATYPETAGDESERIALIZER.deserialize(start.getTag());
             ATypeTag endTag = ATYPETAGDESERIALIZER.deserialize(end.getTag());

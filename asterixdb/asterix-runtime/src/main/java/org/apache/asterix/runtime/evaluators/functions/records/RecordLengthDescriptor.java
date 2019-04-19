@@ -93,6 +93,10 @@ public class RecordLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(resultPointable, argPtr)) {
+                            return;
+                        }
+
                         byte[] data = argPtr.getByteArray();
                         int offset = argPtr.getStartOffset();
 

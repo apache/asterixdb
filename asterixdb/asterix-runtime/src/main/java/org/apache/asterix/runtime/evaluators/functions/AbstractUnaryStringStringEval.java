@@ -64,6 +64,11 @@ abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
     public void evaluate(IFrameTupleReference tuple, IPointable resultPointable) throws HyracksDataException {
         resultStorage.reset();
         argEval.evaluate(tuple, argPtr);
+
+        if (PointableHelper.checkAndSetMissingOrNull(resultPointable, argPtr)) {
+            return;
+        }
+
         byte[] argBytes = argPtr.getByteArray();
         int offset = argPtr.getStartOffset();
         byte inputTypeTag = argBytes[offset];

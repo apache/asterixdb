@@ -28,6 +28,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -87,16 +88,22 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
                 try {
                     resultStorage.reset();
                     eval0.evaluate(tuple, inputArg0);
+                    eval1.evaluate(tuple, inputArg1);
+
+                    if (PointableHelper.checkAndSetMissingOrNull(result, inputArg0, inputArg1)) {
+                        return;
+                    }
+
                     byte[] serRecord = inputArg0.getByteArray();
                     int offset = inputArg0.getStartOffset();
+                    byte[] indexBytes = inputArg1.getByteArray();
+                    int indexOffset = inputArg1.getStartOffset();
 
                     if (serRecord[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         throw new TypeMismatchException(sourceLoc, serRecord[offset],
                                 ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     }
-                    eval1.evaluate(tuple, inputArg1);
-                    byte[] indexBytes = inputArg1.getByteArray();
-                    int indexOffset = inputArg1.getStartOffset();
+
                     if (indexBytes[indexOffset] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
                         throw new TypeMismatchException(sourceLoc, indexBytes[offset],
                                 ATypeTag.SERIALIZED_INT32_TYPE_TAG);

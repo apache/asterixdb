@@ -124,6 +124,11 @@ public class ArrayRepeatDescriptor extends AbstractScalarFunctionDynamicDescript
 
             // 2nd arg: number of repetitions
             repeatEval.evaluate(tuple, repeatArg);
+
+            if (PointableHelper.checkAndSetMissingOrNull(result, repeatedValueArg, repeatArg)) {
+                return;
+            }
+
             repeatArgValue.set(repeatArg);
             if (!ATypeHierarchy.isCompatible(ATypeTag.DOUBLE, ATypeTag.VALUE_TYPE_MAPPING[repeatArgValue.getTag()])) {
                 PointableHelper.setNull(result);

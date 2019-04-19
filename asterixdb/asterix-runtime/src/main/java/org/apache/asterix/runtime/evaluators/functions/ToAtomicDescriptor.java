@@ -90,6 +90,10 @@ public class ToAtomicDescriptor extends AbstractScalarFunctionDynamicDescriptor 
                             throws HyracksDataException {
                         eval0.evaluate(tuple, arg);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(resultPointable, arg)) {
+                            return;
+                        }
+
                         IValueReference itemPtr = arg;
                         IAType itemTypeInferred = argType;
 

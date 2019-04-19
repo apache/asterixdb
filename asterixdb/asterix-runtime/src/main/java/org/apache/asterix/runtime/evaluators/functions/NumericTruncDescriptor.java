@@ -130,6 +130,11 @@ public class NumericTruncDescriptor extends AbstractScalarFunctionDynamicDescrip
             resultStorage.reset();
             eval.evaluate(tuple, argValue);
             precision.evaluate(tuple, argPrecision);
+
+            if (PointableHelper.checkAndSetMissingOrNull(result, argValue, argPrecision)) {
+                return;
+            }
+
             byte[] data = argValue.getByteArray();
             int offset = argValue.getStartOffset();
 

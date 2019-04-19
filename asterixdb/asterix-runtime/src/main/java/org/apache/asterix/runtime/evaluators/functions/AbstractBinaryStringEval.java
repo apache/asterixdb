@@ -70,14 +70,17 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
     public void evaluate(IFrameTupleReference tuple, IPointable resultPointable) throws HyracksDataException {
         resultStorage.reset();
 
-        // Gets the first argument.
+        // Gets the arguments
         evalLeft.evaluate(tuple, argPtrLeft);
+        evalRight.evaluate(tuple, argPtrSecond);
+
+        if (PointableHelper.checkAndSetMissingOrNull(resultPointable, argPtrLeft, argPtrSecond)) {
+            return;
+        }
+
         byte[] bytes0 = argPtrLeft.getByteArray();
         int offset0 = argPtrLeft.getStartOffset();
         int len0 = argPtrLeft.getLength();
-
-        // Gets the second argument.
-        evalRight.evaluate(tuple, argPtrSecond);
         byte[] bytes1 = argPtrSecond.getByteArray();
         int offset1 = argPtrSecond.getStartOffset();
         int len1 = argPtrSecond.getLength();

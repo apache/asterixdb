@@ -45,6 +45,14 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class PointableHelper {
 
+    // represents the possible value states for a pointable
+    private enum PointableValueState {
+        EMPTY_POINTABLE,
+        MISSING,
+        NULL,
+        PRESENT
+    }
+
     private static final byte[] NULL_BYTES = new byte[] { ATypeTag.SERIALIZED_NULL_TYPE_TAG };
     private static final byte[] MISSING_BYTES = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
     private final UTF8StringWriter utf8Writer;
@@ -157,5 +165,121 @@ public class PointableHelper {
 
     public static void setMissing(IPointable pointable) {
         pointable.set(MISSING_BYTES, 0, MISSING_BYTES.length);
+    }
+
+    // checkAndSetMissingOrNull with 1 argument
+    public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1) {
+        return checkAndSetMissingOrNull(result, pointable1, null, null, null);
+    }
+
+    // checkAndSetMissingOrNull with 2 arguments
+    public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1, IPointable pointable2) {
+        return checkAndSetMissingOrNull(result, pointable1, pointable2, null, null);
+    }
+
+    // checkAndSetMissingOrNull with 3 arguments
+    public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1, IPointable pointable2,
+            IPointable pointable3) {
+        return checkAndSetMissingOrNull(result, pointable1, pointable2, pointable3, null);
+    }
+
+    /**
+     * This method takes multiple pointables, the first pointable being the pointable to write the result to, and
+     * checks their ATypeTag value. If a missing or null ATypeTag is encountered, the method will set the result
+     * pointable to missing or null accordingly, and will return {@code true}.
+     *
+     * As the missing encounter has a higher priority than the null, the method will keep checking if any missing has
+     * been encountered first, if not, it will do a null check at the end.
+     *
+     * @param result the result pointable that will hold the data
+     * @param pointable1 the first pointable to be checked
+     * @param pointable2 the second pointable to be checked
+     * @param pointable3 the third pointable to be checked
+     * @param pointable4 the fourth pointable to be checked
+     *
+     * @return {@code true} if the pointable value is missing or null, {@code false} otherwise.
+     */
+    public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1, IPointable pointable2,
+            IPointable pointable3, IPointable pointable4) {
+
+        // this flag will keep an eye on whether a null value is encountered or not
+        boolean isMeetNull = false;
+
+        switch (getPointableValueState(pointable1)) {
+            case MISSING:
+                setMissing(result);
+                return true;
+            case NULL:
+                isMeetNull = true;
+                break;
+        }
+
+        if (pointable2 != null) {
+            switch (getPointableValueState(pointable2)) {
+                case MISSING:
+                    setMissing(result);
+                    return true;
+                case NULL:
+                    isMeetNull = true;
+                    break;
+            }
+        }
+
+        if (pointable3 != null) {
+            switch (getPointableValueState(pointable3)) {
+                case MISSING:
+                    setMissing(result);
+                    return true;
+                case NULL:
+                    isMeetNull = true;
+                    break;
+            }
+        }
+
+        if (pointable4 != null) {
+            switch (getPointableValueState(pointable4)) {
+                case MISSING:
+                    setMissing(result);
+                    return true;
+                case NULL:
+                    isMeetNull = true;
+                    break;
+            }
+        }
+
+        // this is reached only if no missing is encountered in all the passed pointables
+        if (isMeetNull) {
+            setNull(result);
+            return true;
+        }
+
+        // no missing or null encountered
+        return false;
+    }
+
+    /**
+     * This method checks and returns the pointable value state.
+     *
+     * @param pointable the pointable to be checked
+     *
+     * @return the pointable value state for the passed pointable
+     */
+    private static PointableValueState getPointableValueState(IPointable pointable) {
+        if (pointable.getLength() == 0) {
+            return PointableValueState.EMPTY_POINTABLE;
+        }
+
+        byte[] bytes = pointable.getByteArray();
+        int offset = pointable.getStartOffset();
+
+        if (bytes[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+            return PointableValueState.MISSING;
+        }
+
+        if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+            return PointableValueState.NULL;
+        }
+
+        return PointableValueState.PRESENT;
     }
 }

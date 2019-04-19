@@ -87,6 +87,10 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                         evalLen.evaluate(tuple, lenPtr);
                         evalThreshold.evaluate(tuple, thresholdPtr);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(result, lenPtr, thresholdPtr)) {
+                            return;
+                        }
+
                         // length
                         int length = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 0, lenPtr.getByteArray(),
                                 lenPtr.getStartOffset());

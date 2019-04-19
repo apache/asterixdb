@@ -80,6 +80,10 @@ public class StringRepeatDescriptor extends AbstractScalarFunctionDynamicDescrip
                         evalString.evaluate(tuple, argString);
                         evalStart.evaluate(tuple, argNumber);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(result, argString, argNumber)) {
+                            return;
+                        }
+
                         // Gets the repeating times.
                         byte[] bytes = argNumber.getByteArray();
                         int offset = argNumber.getStartOffset();

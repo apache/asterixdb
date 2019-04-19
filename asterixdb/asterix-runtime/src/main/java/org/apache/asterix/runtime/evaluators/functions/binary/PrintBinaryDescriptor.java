@@ -26,6 +26,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -78,6 +79,10 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                         resultStorage.reset();
                         evaluators[0].evaluate(tuple, pointables[0]);
                         evaluators[1].evaluate(tuple, pointables[1]);
+
+                        if (PointableHelper.checkAndSetMissingOrNull(result, pointables[0], pointables[1])) {
+                            return;
+                        }
 
                         try {
                             ATypeTag arg0Tag = ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0]

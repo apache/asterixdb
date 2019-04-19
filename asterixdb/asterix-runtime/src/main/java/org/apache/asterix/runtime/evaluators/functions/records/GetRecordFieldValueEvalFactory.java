@@ -31,6 +31,7 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -86,12 +87,17 @@ public class GetRecordFieldValueEvalFactory implements IScalarEvaluatorFactory {
             public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 try {
                     resultStorage.reset();
+                    recordEval.evaluate(tuple, inputArg0);
                     fieldNameEval.evaluate(tuple, inputArg1);
+
+                    if (PointableHelper.checkAndSetMissingOrNull(result, inputArg0, inputArg1)) {
+                        return;
+                    }
+
                     byte[] serFldName = inputArg1.getByteArray();
                     int serFldNameOffset = inputArg1.getStartOffset();
                     int serFldNameLen = inputArg1.getLength();
 
-                    recordEval.evaluate(tuple, inputArg0);
                     byte[] serRecord = inputArg0.getByteArray();
                     int serRecordOffset = inputArg0.getStartOffset();
                     int serRecordLen = inputArg0.getLength();

@@ -27,6 +27,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -71,6 +72,11 @@ public abstract class AbstractBooleanConstructorEvaluator implements IScalarEval
         try {
             inputEval.evaluate(tuple, inputArg);
             resultStorage.reset();
+
+            if (PointableHelper.checkAndSetMissingOrNull(result, inputArg)) {
+                return;
+            }
+
             evaluateImpl(result);
         } catch (IOException e) {
             throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e, ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);

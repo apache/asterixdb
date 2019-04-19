@@ -82,6 +82,10 @@ public class Substring2Descriptor extends AbstractStringOffsetConfigurableDescri
                         evalString.evaluate(tuple, argString);
                         evalStart.evaluate(tuple, argStart);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(result, argString, argStart)) {
+                            return;
+                        }
+
                         byte[] bytes = argStart.getByteArray();
                         int offset = argStart.getStartOffset();
                         int start = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1, bytes, offset);

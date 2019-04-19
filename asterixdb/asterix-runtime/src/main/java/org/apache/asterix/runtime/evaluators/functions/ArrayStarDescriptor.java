@@ -208,6 +208,11 @@ public class ArrayStarDescriptor extends AbstractScalarFunctionDynamicDescriptor
         public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
             storage.reset();
             listEval.evaluate(tuple, tempList);
+
+            if (PointableHelper.checkAndSetMissingOrNull(result, tempList)) {
+                return;
+            }
+
             ATypeTag listTag = ATYPETAGDESERIALIZER.deserialize(tempList.getByteArray()[tempList.getStartOffset()]);
             if (listTag != ATypeTag.ARRAY) {
                 PointableHelper.setNull(result);

@@ -49,24 +49,24 @@ public class FuzzyJoinFunctionRegistrant implements IFunctionRegistrant {
         fc.add(SimilarityJaccardPrefixCheckDescriptor.FACTORY);
 
         // Spatial
-        fc.addGenerated(SpatialIntersectDescriptor.FACTORY);
+        fc.add(SpatialIntersectDescriptor.FACTORY);
 
         // fuzzyjoin function
-        fc.addGenerated(PrefixLenJaccardDescriptor.FACTORY);
-        fc.addGenerated(WordTokensDescriptor.FACTORY);
-        fc.addGenerated(HashedWordTokensDescriptor.FACTORY);
-        fc.addGenerated(CountHashedWordTokensDescriptor.FACTORY);
-        fc.addGenerated(GramTokensDescriptor.FACTORY);
-        fc.addGenerated(HashedGramTokensDescriptor.FACTORY);
-        fc.addGenerated(CountHashedGramTokensDescriptor.FACTORY);
-        fc.addGenerated(EditDistanceDescriptor.FACTORY);
-        fc.addGenerated(EditDistanceCheckDescriptor.FACTORY);
-        fc.addGenerated(EditDistanceStringIsFilterableDescriptor.FACTORY);
-        fc.addGenerated(EditDistanceListIsFilterableDescriptor.FACTORY);
-        fc.addGenerated(EditDistanceContainsDescriptor.FACTORY);
-        fc.addGenerated(SimilarityJaccardDescriptor.FACTORY);
-        fc.addGenerated(SimilarityJaccardCheckDescriptor.FACTORY);
-        fc.addGenerated(SimilarityJaccardSortedDescriptor.FACTORY);
-        fc.addGenerated(SimilarityJaccardSortedCheckDescriptor.FACTORY);
+        fc.add(PrefixLenJaccardDescriptor.FACTORY);
+        fc.add(WordTokensDescriptor.FACTORY);
+        fc.add(HashedWordTokensDescriptor.FACTORY);
+        fc.add(CountHashedWordTokensDescriptor.FACTORY);
+        fc.add(GramTokensDescriptor.FACTORY);
+        fc.add(HashedGramTokensDescriptor.FACTORY);
+        fc.add(CountHashedGramTokensDescriptor.FACTORY);
+        fc.add(EditDistanceDescriptor.FACTORY);
+        fc.add(EditDistanceCheckDescriptor.FACTORY);
+        fc.add(EditDistanceStringIsFilterableDescriptor.FACTORY);
+        fc.add(EditDistanceListIsFilterableDescriptor.FACTORY);
+        fc.add(EditDistanceContainsDescriptor.FACTORY);
+        fc.add(SimilarityJaccardDescriptor.FACTORY);
+        fc.add(SimilarityJaccardCheckDescriptor.FACTORY);
+        fc.add(SimilarityJaccardSortedDescriptor.FACTORY);
+        fc.add(SimilarityJaccardSortedCheckDescriptor.FACTORY);
     }
 }

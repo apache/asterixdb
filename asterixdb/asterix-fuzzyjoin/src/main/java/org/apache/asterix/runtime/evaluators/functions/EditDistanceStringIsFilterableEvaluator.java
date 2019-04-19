@@ -78,6 +78,10 @@ public class EditDistanceStringIsFilterableEvaluator implements IScalarEvaluator
         gramLenEval.evaluate(tuple, gramLenPtr);
         usePrePostEval.evaluate(tuple, usePrePostPtr);
 
+        if (PointableHelper.checkAndSetMissingOrNull(result, stringPtr, edThreshPtr, gramLenPtr, usePrePostPtr)) {
+            return;
+        }
+
         // Check type and compute string length.
         byte typeTag = stringPtr.getByteArray()[stringPtr.getStartOffset()];
         if (typeTag != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {

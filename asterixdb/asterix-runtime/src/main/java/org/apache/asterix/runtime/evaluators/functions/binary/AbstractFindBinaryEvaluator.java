@@ -24,6 +24,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -55,8 +56,24 @@ public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEv
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable resultPointable) throws HyracksDataException {
         resultStorage.reset();
+        boolean isReturnNull = false;
+
         for (int i = 0; i < pointables.length; ++i) {
             evaluators[i].evaluate(tuple, pointables[i]);
+
+            if (PointableHelper.checkAndSetMissingOrNull(resultPointable, pointables[i])) {
+                if (resultPointable.getByteArray()[0] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                    return;
+                }
+
+                // null value, but check other arguments for missing first (higher priority)
+                isReturnNull = true;
+            }
+        }
+
+        if (isReturnNull) {
+            PointableHelper.setNull(resultPointable);
+            return;
         }
 
         int fromOffset = getFromOffset(tuple);

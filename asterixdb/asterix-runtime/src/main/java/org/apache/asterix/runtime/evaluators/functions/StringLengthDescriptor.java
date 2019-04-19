@@ -75,6 +75,11 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                         try {
                             resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
+
+                            if (PointableHelper.checkAndSetMissingOrNull(resultPointable, inputArg)) {
+                                return;
+                            }
+
                             byte[] serString = inputArg.getByteArray();
                             int offset = inputArg.getStartOffset();
 

@@ -25,6 +25,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -66,6 +67,11 @@ public class GetRecordFieldsEvalFactory implements IScalarEvaluatorFactory {
             public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 resultStorage.reset();
                 eval0.evaluate(tuple, inputArg0);
+
+                if (PointableHelper.checkAndSetMissingOrNull(result, inputArg0)) {
+                    return;
+                }
+
                 byte[] data = inputArg0.getByteArray();
                 int offset = inputArg0.getStartOffset();
                 int len = inputArg0.getLength();

@@ -151,6 +151,10 @@ public class ArrayFlattenDescriptor extends AbstractScalarFunctionDynamicDescrip
             // 2nd arg: depthArg
             depthEval.evaluate(tuple, depthArg);
 
+            if (PointableHelper.checkAndSetMissingOrNull(result, pointable, depthArg)) {
+                return;
+            }
+
             ATypeTag listType = ATYPETAGDESERIALIZER.deserialize(pointable.getByteArray()[pointable.getStartOffset()]);
             if (!ATypeHierarchy.isCompatible(ATYPETAGDESERIALIZER.deserialize(depthArg.getTag()), ATypeTag.DOUBLE)
                     || !listType.isListType()) {

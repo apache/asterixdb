@@ -84,8 +84,11 @@ public class ToNumberDescriptor extends AbstractScalarFunctionDynamicDescriptor 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         inputEval.evaluate(tuple, inputArg);
-
                         resultStorage.reset();
+
+                        if (PointableHelper.checkAndSetMissingOrNull(result, inputArg)) {
+                            return;
+                        }
 
                         byte[] bytes = inputArg.getByteArray();
                         int startOffset = inputArg.getStartOffset();

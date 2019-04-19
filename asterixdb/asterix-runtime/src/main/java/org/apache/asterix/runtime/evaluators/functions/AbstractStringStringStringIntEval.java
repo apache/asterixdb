@@ -74,26 +74,28 @@ public abstract class AbstractStringStringStringIntEval implements IScalarEvalua
     @SuppressWarnings("unchecked")
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-        // Gets the first argument.
+        // Gets the arguments
         eval0.evaluate(tuple, argPtrFirst);
+        eval1.evaluate(tuple, argPtrSecond);
+        eval2.evaluate(tuple, argPtrThird);
+        eval3.evaluate(tuple, argPtrFourth);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, argPtrFirst, argPtrSecond, argPtrThird, argPtrFourth)) {
+            return;
+        }
+
         byte[] bytes0 = argPtrFirst.getByteArray();
         int start0 = argPtrFirst.getStartOffset();
         int len0 = argPtrFirst.getLength();
 
-        // Gets the second argument.
-        eval1.evaluate(tuple, argPtrSecond);
         byte[] bytes1 = argPtrSecond.getByteArray();
         int start1 = argPtrSecond.getStartOffset();
         int len1 = argPtrSecond.getLength();
 
-        // Gets the third argument.
-        eval2.evaluate(tuple, argPtrThird);
         byte[] bytes2 = argPtrThird.getByteArray();
         int start2 = argPtrThird.getStartOffset();
         int len2 = argPtrThird.getLength();
 
-        // Gets the fourth argument.
-        eval3.evaluate(tuple, argPtrFourth);
         byte[] bytes3 = argPtrFourth.getByteArray();
         int start3 = argPtrFourth.getStartOffset();
 

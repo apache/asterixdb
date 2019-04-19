@@ -100,6 +100,11 @@ public class ArrayIfNullDescriptor extends AbstractScalarFunctionDynamicDescript
         public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
             // get the list argument and make sure it's a list
             listArgEval.evaluate(tuple, listArg);
+
+            if (PointableHelper.checkAndSetMissingOrNull(result, listArg)) {
+                return;
+            }
+
             byte[] listBytes = listArg.getByteArray();
             int offset = listArg.getStartOffset();
             ATypeTag listType = ATYPETAGDESERIALIZER.deserialize(listBytes[offset]);

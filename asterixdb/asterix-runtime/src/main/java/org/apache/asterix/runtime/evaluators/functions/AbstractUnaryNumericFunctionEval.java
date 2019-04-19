@@ -107,6 +107,11 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
         argEval.evaluate(tuple, argPtr);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr)) {
+            return;
+        }
+
         byte[] data = argPtr.getByteArray();
         int offset = argPtr.getStartOffset();
 

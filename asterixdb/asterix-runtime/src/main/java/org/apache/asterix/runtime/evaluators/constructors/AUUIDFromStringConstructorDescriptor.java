@@ -30,6 +30,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -82,6 +83,11 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
                             eval.evaluate(tuple, inputArg);
+
+                            if (PointableHelper.checkAndSetMissingOrNull(result, inputArg)) {
+                                return;
+                            }
+
                             byte[] serString = inputArg.getByteArray();
                             int start = inputArg.getStartOffset();
                             int len = inputArg.getLength();

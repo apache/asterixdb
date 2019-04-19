@@ -90,6 +90,11 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
 
                     resultStorage.reset();
                     evalList.evaluate(tuple, inputArgList);
+
+                    if (PointableHelper.checkAndSetMissingOrNull(result, inputArgList)) {
+                        return;
+                    }
+
                     byte[] serList = inputArgList.getByteArray();
                     int offset = inputArgList.getStartOffset();
 

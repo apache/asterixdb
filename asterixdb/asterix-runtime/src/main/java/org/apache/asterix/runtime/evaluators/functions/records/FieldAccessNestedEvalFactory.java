@@ -38,6 +38,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -118,6 +119,11 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                 try {
                     resultStorage.reset();
                     eval0.evaluate(tuple, inputArg0);
+
+                    if (PointableHelper.checkAndSetMissingOrNull(result, inputArg0)) {
+                        return;
+                    }
+
                     byte[] serRecord = inputArg0.getByteArray();
                     int offset = inputArg0.getStartOffset();
                     int start = offset;

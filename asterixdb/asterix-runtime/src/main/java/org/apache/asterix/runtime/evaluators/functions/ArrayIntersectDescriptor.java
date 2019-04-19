@@ -210,7 +210,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
         @Override
         public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
             byte listArgType;
-            boolean returnNull = false;
+            boolean isReturnNull = false;
             AbstractCollectionType outList = null;
             ATypeTag listTag;
             int minListIndex = 0;
@@ -221,11 +221,21 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             try {
                 for (int i = 0; i < listsEval.length; i++) {
                     listsEval[i].evaluate(tuple, pointable);
-                    if (!returnNull) {
+
+                    if (PointableHelper.checkAndSetMissingOrNull(result, pointable)) {
+                        if (result.getByteArray()[0] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                            return;
+                        }
+
+                        // null value, but check other arguments for missing first (higher priority)
+                        isReturnNull = true;
+                    }
+
+                    if (!isReturnNull) {
                         listArgType = pointable.getByteArray()[pointable.getStartOffset()];
                         listTag = ATYPETAGDESERIALIZER.deserialize(listArgType);
                         if (!listTag.isListType()) {
-                            returnNull = true;
+                            isReturnNull = true;
                         } else if (outList != null && outList.getTypeTag() != listTag) {
                             throw new RuntimeDataException(ErrorCode.DIFFERENT_LIST_TYPE_ARGS, sourceLoc);
                         } else {
@@ -245,7 +255,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
                     }
                 }
 
-                if (returnNull) {
+                if (isReturnNull) {
                     PointableHelper.setNull(result);
                     return;
                 }

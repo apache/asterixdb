@@ -92,6 +92,10 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         evalList.evaluate(tuple, inputArgList);
                         evalIdx.evaluate(tuple, inputArgIdx);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(result, inputArgList, inputArgIdx)) {
+                            return;
+                        }
+
                         byte[] serList = inputArgList.getByteArray();
                         int offset = inputArgList.getStartOffset();
                         byte[] indexBytes = inputArgIdx.getByteArray();

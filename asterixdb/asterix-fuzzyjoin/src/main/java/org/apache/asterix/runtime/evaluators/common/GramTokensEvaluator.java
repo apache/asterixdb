@@ -27,6 +27,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -71,6 +72,10 @@ public class GramTokensEvaluator implements IScalarEvaluator {
         stringEval.evaluate(tuple, stringArg);
         gramLengthEval.evaluate(tuple, gramLengthArg);
         prePostEval.evaluate(tuple, prePostArg);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, stringArg, gramLengthArg, prePostArg)) {
+            return;
+        }
 
         int gramLength = ATypeHierarchy.getIntegerValue(BuiltinFunctions.GRAM_TOKENS.getName(), 1,
                 gramLengthArg.getByteArray(), gramLengthArg.getStartOffset());

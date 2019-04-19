@@ -33,6 +33,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDese
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -77,6 +78,11 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
                 eval0.evaluate(tuple, inputArg0);
                 eval1.evaluate(tuple, inputArg1);
                 eval2.evaluate(tuple, inputArg2);
+
+                if (PointableHelper.checkAndSetMissingOrNull(result, inputArg0, inputArg1, inputArg2)) {
+                    return;
+                }
+
                 byte[] data0 = inputArg0.getByteArray();
                 byte[] data1 = inputArg1.getByteArray();
                 byte[] data2 = inputArg2.getByteArray();

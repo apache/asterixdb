@@ -27,6 +27,7 @@ import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -67,6 +68,10 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
         firstOrdListEval.evaluate(tuple, argPtr1);
         secondOrdListEval.evaluate(tuple, argPtr2);
         jaccThreshEval.evaluate(tuple, jaccThreshPointable);
+
+        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr1, argPtr2, jaccThreshPointable)) {
+            return;
+        }
 
         firstTypeTag =
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);

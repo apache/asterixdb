@@ -91,6 +91,10 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
                             stringEval.evaluate(tuple, argString);
                             patternEval.evaluate(tuple, argPattern);
 
+                            if (PointableHelper.checkAndSetMissingOrNull(result, argString, argPattern)) {
+                                return;
+                            }
+
                             // Gets the bytes of the source string.
                             byte[] srcString = argString.getByteArray();
                             int srcOffset = argString.getStartOffset();

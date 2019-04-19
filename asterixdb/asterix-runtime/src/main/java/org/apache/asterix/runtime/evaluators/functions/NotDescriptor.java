@@ -79,6 +79,10 @@ public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         resultStorage.reset();
                         eval.evaluate(tuple, argPtr);
 
+                        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr)) {
+                            return;
+                        }
+
                         byte[] bytes = argPtr.getByteArray();
                         int offset = argPtr.getStartOffset();
                         if (bytes[offset] == ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG) {

@@ -88,6 +88,10 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
         eval2.evaluate(tuple, ptr2);
         eval3.evaluate(tuple, ptr3);
 
+        if (PointableHelper.checkAndSetMissingOrNull(result, ptr0, ptr1, ptr2, ptr3)) {
+            return;
+        }
+
         processArgument(0, ptr0, strPtr0);
         processArgument(1, ptr1, strPtr1);
         processArgument(2, ptr2, strPtr2);

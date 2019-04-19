@@ -98,6 +98,10 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
                 eval0.evaluate(tuple, inputArg0);
                 eval1.evaluate(tuple, inputArg1);
 
+                if (PointableHelper.checkAndSetMissingOrNull(result, inputArg0, inputArg1)) {
+                    return;
+                }
+
                 byte inputTypeTag0 = inputArg0.getByteArray()[inputArg0.getStartOffset()];
                 if (inputTypeTag0 != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                     throw new TypeMismatchException(sourceLoc, BuiltinFunctions.REMOVE_FIELDS, 0, inputTypeTag0,
