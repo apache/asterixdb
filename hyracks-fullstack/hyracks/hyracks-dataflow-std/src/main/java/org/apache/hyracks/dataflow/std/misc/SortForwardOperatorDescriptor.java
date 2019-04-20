@@ -24,7 +24,6 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
-import org.apache.hyracks.api.dataflow.IActivityGraphBuilder;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -42,50 +41,33 @@ import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDese
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
-import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import org.apache.hyracks.dataflow.std.base.AbstractForwardOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 // TODO(ali): forward operator should probably be moved to asterix layer
-public class ForwardOperatorDescriptor extends AbstractOperatorDescriptor {
+public class SortForwardOperatorDescriptor extends AbstractForwardOperatorDescriptor {
     private static final long serialVersionUID = 1L;
-    private static final int FORWARD_DATA_ACTIVITY_ID = 0;
-    private static final int RANGEMAP_READER_ACTIVITY_ID = 1;
-    private final String rangeMapKeyInContext;
 
     /**
      * @param spec used to create the operator id.
-     * @param rangeMapKeyInContext the unique key to store the range map in the shared map & transfer it to partitioner.
+     * @param sideDataKey the unique key to store the range map in the shared map & transfer it to partitioner.
      * @param outputRecordDescriptor the output schema of this operator.
      */
-    public ForwardOperatorDescriptor(IOperatorDescriptorRegistry spec, String rangeMapKeyInContext,
+    public SortForwardOperatorDescriptor(IOperatorDescriptorRegistry spec, String sideDataKey,
             RecordDescriptor outputRecordDescriptor) {
-        super(spec, 2, 1);
-        this.rangeMapKeyInContext = rangeMapKeyInContext;
-        outRecDescs[0] = outputRecordDescriptor;
+        super(spec, sideDataKey, outputRecordDescriptor);
     }
 
     @Override
-    public void contributeActivities(IActivityGraphBuilder builder) {
-        ForwardDataActivity forwardDataActivity =
-                new ForwardDataActivity(new ActivityId(odId, FORWARD_DATA_ACTIVITY_ID));
-        RangeMapReaderActivity rangeMapReaderActivity =
-                new RangeMapReaderActivity(new ActivityId(odId, RANGEMAP_READER_ACTIVITY_ID));
+    public AbstractActivityNode createForwardDataActivity() {
+        return new ForwardDataActivity(new ActivityId(odId, FORWARD_DATA_ACTIVITY_ID));
+    }
 
-        // range map reader activity, its input is coming through the operator's in-port = 1 & activity's in-port = 0
-        builder.addActivity(this, rangeMapReaderActivity);
-        builder.addSourceEdge(1, rangeMapReaderActivity, 0);
-
-        // forward data activity, its input is coming through the operator's in-port = 0 & activity's in-port = 0
-        builder.addActivity(this, forwardDataActivity);
-        builder.addSourceEdge(0, forwardDataActivity, 0);
-
-        // forward data activity will wait for the range map reader activity
-        builder.addBlockingEdge(rangeMapReaderActivity, forwardDataActivity);
-
-        // data leaves from the operator's out-port = 0 & forward data activity's out-port = 0
-        builder.addTargetEdge(0, forwardDataActivity, 0);
+    @Override
+    public AbstractActivityNode createSideDataActivity() {
+        return new RangeMapReaderActivity(new ActivityId(odId, SIDE_DATA_ACTIVITY_ID));
     }
 
     /**
@@ -221,9 +203,9 @@ public class ForwardOperatorDescriptor extends AbstractOperatorDescriptor {
         public void open() throws HyracksDataException {
             // retrieve the range map from the state object (previous activity should have already stored it)
             // then deposit it into the ctx so that MToN-partition can pick it up
-            Object stateObjKey = new TaskId(new ActivityId(odId, RANGEMAP_READER_ACTIVITY_ID), partition);
+            Object stateObjKey = new TaskId(new ActivityId(odId, SIDE_DATA_ACTIVITY_ID), partition);
             RangeMapState rangeMapState = (RangeMapState) ctx.getStateObject(stateObjKey);
-            TaskUtil.put(rangeMapKeyInContext, rangeMapState.rangeMap, ctx);
+            TaskUtil.put(sideDataKey, rangeMapState.rangeMap, ctx);
             writer.open();
         }
 

@@ -454,7 +454,7 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitForwardOperator(ForwardOperator op, Pair<LogicalVariable, LogicalVariable> arg)
             throws AlgebricksException {
-        op.getRangeMapExpression().getValue().substituteVar(arg.first, arg.second);
+        op.getSideDataExpression().getValue().substituteVar(arg.first, arg.second);
         substVarTypes(op, arg);
         return null;
     }

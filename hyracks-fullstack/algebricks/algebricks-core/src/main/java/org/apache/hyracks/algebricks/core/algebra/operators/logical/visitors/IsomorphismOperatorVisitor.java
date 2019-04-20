@@ -605,9 +605,9 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         ForwardOperator otherOp = (ForwardOperator) copyAndSubstituteVar(op, arg);
-        ILogicalExpression rangeMapExp = op.getRangeMapExpression().getValue();
-        ILogicalExpression otherRangeMapExp = otherOp.getRangeMapExpression().getValue();
-        return rangeMapExp.equals(otherRangeMapExp) && op.getRangeMapKey().equals(otherOp.getRangeMapKey());
+        ILogicalExpression rangeMapExp = op.getSideDataExpression().getValue();
+        ILogicalExpression otherRangeMapExp = otherOp.getSideDataExpression().getValue();
+        return rangeMapExp.equals(otherRangeMapExp) && op.getSideDataKey().equals(otherOp.getSideDataKey());
     }
 
     @Override

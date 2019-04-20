@@ -310,7 +310,7 @@ public class SweepIllegalNonfunctionalFunctions implements IAlgebraicRewriteRule
 
         @Override
         public Void visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
-            sweepExpression(op.getRangeMapExpression().getValue());
+            sweepExpression(op.getSideDataExpression().getValue());
             return null;
         }
 

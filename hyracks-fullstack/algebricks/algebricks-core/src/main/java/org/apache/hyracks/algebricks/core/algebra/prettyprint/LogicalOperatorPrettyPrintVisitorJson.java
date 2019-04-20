@@ -639,7 +639,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         addIndent(indent).append("\"operator\": \"forward\"");
         addIndent(0).append(",\n");
         addIndent(indent).append("\"expressions\": \""
-                + op.getRangeMapExpression().getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
+                + op.getSideDataExpression().getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
         return null;
     }
 

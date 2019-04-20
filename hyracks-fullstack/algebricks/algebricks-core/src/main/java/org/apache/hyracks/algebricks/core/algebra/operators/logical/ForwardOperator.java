@@ -33,30 +33,30 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRef
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 /**
- * Forward operator is used to forward data to different NCs based on a range map that is computed dynamically
- * by doing a pass over the data itself to infer the range map. The operator takes two inputs:
+ * Forward operator is used to forward data to different NCs based on the side data activity that is computed
+ * dynamically by doing a pass over the data itself to infer the range map. The operator takes two inputs:
  * 1. Tuples/data (at index 0). The data is forwarded to the range-based connector which routes it to the target NC.
- * 2. Range map (at index 1). The range map will be stored in Hyracks context, and the connector will pick it up.
- * Forward operator will receive the range map when it is broadcast by the operator generating the range map after which
- * the forward operator will start forwarding the data.
+ * 2. Side Activity (at index 1). The output will be stored in Hyracks context, and the connector will pick it up.
+ * Forward operator will receive the range map when it is broadcast by the operator generating the side activity output
+ * after which the forward operator will start forwarding the data.
  */
 public class ForwardOperator extends AbstractLogicalOperator {
 
-    private final String rangeMapKey;
-    private final Mutable<ILogicalExpression> rangeMapExpression;
+    private final String sideDataKey;
+    private final Mutable<ILogicalExpression> sideDataExpression;
 
-    public ForwardOperator(String rangeMapKey, Mutable<ILogicalExpression> rangeMapExpression) {
+    public ForwardOperator(String sideDataKey, Mutable<ILogicalExpression> sideDataExpression) {
         super();
-        this.rangeMapKey = rangeMapKey;
-        this.rangeMapExpression = rangeMapExpression;
+        this.sideDataKey = sideDataKey;
+        this.sideDataExpression = sideDataExpression;
     }
 
-    public String getRangeMapKey() {
-        return rangeMapKey;
+    public String getSideDataKey() {
+        return sideDataKey;
     }
 
-    public Mutable<ILogicalExpression> getRangeMapExpression() {
-        return rangeMapExpression;
+    public Mutable<ILogicalExpression> getSideDataExpression() {
+        return sideDataExpression;
     }
 
     @Override
@@ -72,7 +72,7 @@ public class ForwardOperator extends AbstractLogicalOperator {
 
     @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
-        return visitor.transform(rangeMapExpression);
+        return visitor.transform(sideDataExpression);
     }
 
     @Override

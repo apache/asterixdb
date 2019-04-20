@@ -467,7 +467,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     @Override
     public Void visitForwardOperator(ForwardOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent)
-                .append("forward: range-map = " + op.getRangeMapExpression().getValue().accept(exprVisitor, indent));
+                .append("forward: range-map = " + op.getSideDataExpression().getValue().accept(exprVisitor, indent));
         return null;
     }
 

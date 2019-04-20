@@ -39,17 +39,17 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.dataflow.std.misc.ForwardOperatorDescriptor;
+import org.apache.hyracks.dataflow.std.base.AbstractForwardOperatorDescriptor;
 
 /**
  * <pre>
- * {@see {@link ForwardOperator} and {@link ForwardOperatorDescriptor}}
- * idx0: Input data source --
- *                           |-- forward op.
- * idx1: RangeMap generator--
+ * {@see {@link ForwardOperator} and {@link AbstractForwardOperatorDescriptor}}
+ * idx0: Input data source    --
+ *                              |-- forward op.
+ * idx1: Side activity output --
  * </pre>
  */
-public class ForwardPOperator extends AbstractPhysicalOperator {
+public abstract class AbstractForwardPOperator extends AbstractPhysicalOperator {
 
     @Override
     public PhysicalOperatorTag getOperatorTag() {
@@ -57,8 +57,18 @@ public class ForwardPOperator extends AbstractPhysicalOperator {
     }
 
     /**
-     * Forward operator requires that the global aggregate operator broadcasts the range map. No required properties at
-     * the data source input.
+     * Get the correct Forward Operator Descriptor
+     * @param builder Hyracks job builder
+     * @param forwardOp Forward Operator
+     * @param  dataInputDescriptor Data input descriptor
+     * @return return the correct operator descriptor
+     */
+    public abstract AbstractForwardOperatorDescriptor getOperatorDescriptor(IHyracksJobBuilder builder,
+            ForwardOperator forwardOp, RecordDescriptor dataInputDescriptor);
+
+    /**
+     * Forward operator requires that the global aggregate operator broadcasts side activity output.
+     * No required properties at the data source input.
      * @param op {@see {@link ForwardOperator}}
      * @param requiredByParent parent's requirements, which are not enforced for now, as we only explore one plan
      * @param context the optimization context
@@ -67,7 +77,7 @@ public class ForwardPOperator extends AbstractPhysicalOperator {
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector requiredByParent, IOptimizationContext context) {
-        // broadcast the range map to the cluster node domain
+        // broadcast the side activity output to the cluster node domain
         INodeDomain targetDomain = context.getComputationNodeDomain();
         List<ILocalStructuralProperty> noProp = new ArrayList<>();
         StructuralPropertiesVector[] requiredAtInputs = new StructuralPropertiesVector[2];
@@ -108,13 +118,13 @@ public class ForwardPOperator extends AbstractPhysicalOperator {
         ForwardOperator forwardOp = (ForwardOperator) op;
         RecordDescriptor dataInputDescriptor = JobGenHelper.mkRecordDescriptor(
                 context.getTypeEnvironment(forwardOp.getInputs().get(0).getValue()), inputSchemas[0], context);
-        ForwardOperatorDescriptor forwardDescriptor =
-                new ForwardOperatorDescriptor(builder.getJobSpec(), forwardOp.getRangeMapKey(), dataInputDescriptor);
+        AbstractForwardOperatorDescriptor forwardDescriptor =
+                getOperatorDescriptor(builder, forwardOp, dataInputDescriptor);
         builder.contributeHyracksOperator(forwardOp, forwardDescriptor);
         ILogicalOperator dataSource = forwardOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(dataSource, 0, forwardOp, 0);
-        ILogicalOperator rangemapSource = forwardOp.getInputs().get(1).getValue();
-        builder.contributeGraphEdge(rangemapSource, 0, forwardOp, 1);
+        ILogicalOperator sideDataSource = forwardOp.getInputs().get(1).getValue();
+        builder.contributeGraphEdge(sideDataSource, 0, forwardOp, 1);
     }
 
     @Override

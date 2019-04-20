@@ -590,8 +590,8 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
 
     @Override
     public ILogicalOperator visitForwardOperator(ForwardOperator op, ILogicalOperator arg) throws AlgebricksException {
-        ForwardOperator opCopy = new ForwardOperator(op.getRangeMapKey(),
-                exprDeepCopyVisitor.deepCopyExpressionReference(op.getRangeMapExpression()));
+        ForwardOperator opCopy = new ForwardOperator(op.getSideDataKey(),
+                exprDeepCopyVisitor.deepCopyExpressionReference(op.getSideDataExpression()));
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

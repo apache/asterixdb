@@ -428,7 +428,7 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
-        op.getRangeMapExpression().getValue().getUsedVariables(usedVariables);
+        op.getSideDataExpression().getValue().getUsedVariables(usedVariables);
         return null;
     }
 

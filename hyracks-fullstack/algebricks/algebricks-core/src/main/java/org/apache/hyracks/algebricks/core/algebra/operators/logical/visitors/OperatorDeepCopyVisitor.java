@@ -345,7 +345,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
 
     @Override
     public ILogicalOperator visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
-        return new ForwardOperator(op.getRangeMapKey(), deepCopyExpressionRef(op.getRangeMapExpression()));
+        return new ForwardOperator(op.getSideDataKey(), deepCopyExpressionRef(op.getSideDataExpression()));
     }
 
     @Override

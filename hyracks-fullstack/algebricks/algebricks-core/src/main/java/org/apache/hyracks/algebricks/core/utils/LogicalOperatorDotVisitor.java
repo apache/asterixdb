@@ -590,7 +590,7 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
     @Override
     public String visitForwardOperator(ForwardOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
-        stringBuilder.append("forward(").append(op.getRangeMapExpression().getValue().toString()).append(")");
+        stringBuilder.append("forward(").append(op.getSideDataExpression().getValue().toString()).append(")");
         appendSchema(op, showDetails);
         appendAnnotations(op, showDetails);
         appendPhysicalOperatorInfo(op, showDetails);
