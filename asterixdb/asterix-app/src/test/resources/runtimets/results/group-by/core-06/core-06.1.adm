@@ -1,0 +1,4 @@
+{ "i_x": 1, "j_x": 3, "x_is_i_x": true, "cnt": 1 }
+{ "i_x": 1, "j_x": 4, "x_is_i_x": true, "cnt": 1 }
+{ "i_x": 2, "j_x": 3, "x_is_i_x": true, "cnt": 1 }
+{ "i_x": 2, "j_x": 4, "x_is_i_x": true, "cnt": 1 }

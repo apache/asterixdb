@@ -19,20 +19,35 @@
 
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.Projection;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
+import org.apache.asterix.lang.sqlpp.parser.ParseException;
+import org.apache.asterix.lang.sqlpp.util.ExpressionToVariableUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
-// Generates implicit column names for projections in a SELECT clause and group-by keys.
+/**
+ * <pre>
+ * 1. Generates implicit column names for projections in a SELECT clause,
+ * 2. Generates group by key variables if they were not specified in the query
+ * </pre>
+ */
 public class GenerateColumnNameVisitor extends AbstractSqlppExpressionScopingVisitor {
+
+    private final Set<VarIdentifier> gbyKeyVars = new HashSet<>();
 
     public GenerateColumnNameVisitor(LangRewritingContext context) {
         super(context);
@@ -55,14 +70,25 @@ public class GenerateColumnNameVisitor extends AbstractSqlppExpressionScopingVis
 
     @Override
     public Expression visit(GroupbyClause groupbyClause, ILangExpression arg) throws CompilationException {
+        gbyKeyVars.clear();
         for (GbyVariableExpressionPair gbyKeyPair : groupbyClause.getGbyPairList()) {
             if (gbyKeyPair.getVar() == null) {
-                VariableExpr varExpr = new VariableExpr(context.newVariable());
-                varExpr.setSourceLocation(gbyKeyPair.getExpr().getSourceLocation());
+                Expression gbyKeyExpr = gbyKeyPair.getExpr();
+                SourceLocation sourceLoc = gbyKeyExpr.getSourceLocation();
+                VariableExpr varExpr;
+                try {
+                    varExpr = ExpressionToVariableUtil.getGeneratedVariable(gbyKeyExpr, false);
+                } catch (ParseException e) {
+                    throw new CompilationException(ErrorCode.PARSE_ERROR, e, sourceLoc);
+                }
+                if (varExpr == null || gbyKeyVars.contains(varExpr.getVar())) {
+                    varExpr = new VariableExpr(context.newVariable());
+                }
+                varExpr.setSourceLocation(sourceLoc);
                 gbyKeyPair.setVar(varExpr);
             }
+            gbyKeyVars.add(gbyKeyPair.getVar().getVar());
         }
         return super.visit(groupbyClause, arg);
     }
-
 }

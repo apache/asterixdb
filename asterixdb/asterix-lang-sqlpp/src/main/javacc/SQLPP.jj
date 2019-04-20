@@ -3416,9 +3416,6 @@ GroupbyClause GroupbyClause()throws ParseException :
         var = Variable()
         )?
         {
-            if(var==null){
-                var = ExpressionToVariableUtil.getGeneratedVariable(expr, false);
-            }
             GbyVariableExpressionPair pair1 = new GbyVariableExpressionPair(var, expr);
             vePairList.add(pair1);
         }
@@ -3431,9 +3428,6 @@ GroupbyClause GroupbyClause()throws ParseException :
          var = Variable()
          )?
          {
-             if(var==null){
-                var = ExpressionToVariableUtil.getGeneratedVariable(expr, false);
-             }
              GbyVariableExpressionPair pair2 = new GbyVariableExpressionPair(var, expr);
              vePairList.add(pair2);
          }

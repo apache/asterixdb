@@ -4772,6 +4772,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
+      <compilation-unit name="core-06">
+        <output-dir compare="Text">core-06</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
       <compilation-unit name="sugar-01">
         <output-dir compare="Text">core-01</output-dir>
       </compilation-unit>
