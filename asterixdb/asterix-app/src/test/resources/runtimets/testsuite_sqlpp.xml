@@ -6849,6 +6849,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="div_mod_case_insensitive">
+        <output-dir compare="Text">div_mod_case_insensitive</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="floor0">
         <output-dir compare="Text">floor0</output-dir>
       </compilation-unit>

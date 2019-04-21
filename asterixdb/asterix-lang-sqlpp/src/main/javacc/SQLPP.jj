@@ -3606,6 +3606,7 @@ TOKEN [IGNORE_CASE]:
   | <DESC : "desc">
   | <DISCONNECT : "disconnect">
   | <DISTINCT : "distinct">
+  | <DIV : "div">
   | <DROP : "drop">
   | <ELEMENT : "element">
   | <EXPLAIN : "explain">
@@ -3647,6 +3648,7 @@ TOKEN [IGNORE_CASE]:
   | <LIKE : "like">
   | <LIMIT : "limit">
   | <LOAD : "load">
+  | <MOD : "mod">
   | <NODEGROUP : "nodegroup">
   | <NGRAM : "ngram">
   | <NOT : "not">
@@ -3700,9 +3702,7 @@ TOKEN :
     <CARET : "^">
   | <CONCAT : "||">
   | <DIVIDE : "/">
-  | <DIV : "div">
   | <MINUS : "-">
-  | <MOD : "mod">
   | <MUL : "*">
   | <PLUS : "+">
 
