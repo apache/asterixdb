@@ -140,6 +140,11 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         return !isPrimaryIndex();
     }
 
+    public boolean isPrimaryKeyIndex() {
+        // a primary key index has no key field names
+        return keyFieldNames.isEmpty();
+    }
+
     public static Pair<IAType, Boolean> getNonNullableType(IAType keyType) {
         boolean nullable = false;
         IAType actualKeyType = keyType;

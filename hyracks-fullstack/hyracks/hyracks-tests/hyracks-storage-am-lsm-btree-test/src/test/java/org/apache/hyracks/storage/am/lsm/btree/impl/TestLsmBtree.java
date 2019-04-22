@@ -86,13 +86,14 @@ public class TestLsmBtree extends LSMBTree {
             ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
             double bloomFilterFalsePositiveRate, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackFactory ioOperationCallbackFactory, boolean needKeyDupCheck, int[] btreeFields,
-            int[] filterFields, boolean durable, boolean updateAware, ITracer tracer) throws HyracksDataException {
+            ILSMIOOperationCallbackFactory ioOperationCallbackFactory, boolean needKeyDupCheck, boolean hasBloomFilter,
+            int[] btreeFields, int[] filterFields, boolean durable, boolean updateAware, ITracer tracer)
+            throws HyracksDataException {
         super(ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory,
                 diskBufferCache, fileManager, componentFactory, bulkLoadComponentFactory, filterHelper,
                 filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, fieldCount, cmpFactories, mergePolicy,
-                opTracker, ioScheduler, ioOperationCallbackFactory, needKeyDupCheck, btreeFields, filterFields, durable,
-                updateAware, tracer);
+                opTracker, ioScheduler, ioOperationCallbackFactory, needKeyDupCheck, hasBloomFilter, btreeFields,
+                filterFields, durable, updateAware, tracer);
 
         addModifyCallback(AllowTestOpCallback.INSTANCE);
         addSearchCallback(AllowTestOpCallback.INSTANCE);

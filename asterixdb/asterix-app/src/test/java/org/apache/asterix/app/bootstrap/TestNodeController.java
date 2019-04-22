@@ -60,6 +60,7 @@ import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorNodePushable;
+import org.apache.asterix.runtime.operators.LSMPrimaryInsertOperatorNodePushable;
 import org.apache.asterix.runtime.operators.LSMPrimaryUpsertOperatorNodePushable;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
@@ -187,15 +188,6 @@ public class TestNodeController {
         return new TxnId(jobId.getId());
     }
 
-    public Pair<LSMInsertDeleteOperatorNodePushable, IPushRuntime> getInsertPipeline(IHyracksTaskContext ctx,
-            Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType, int[] filterFields,
-            int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
-            StorageComponentProvider storageComponentProvider, Index secondaryIndex)
-            throws HyracksDataException, RemoteException, ACIDException, AlgebricksException {
-        return getInsertPipeline(ctx, dataset, primaryKeyTypes, recordType, metaType, filterFields, primaryKeyIndexes,
-                primaryKeyIndicators, storageComponentProvider, secondaryIndex, IndexOperation.INSERT);
-    }
-
     public Pair<SecondaryIndexInfo, LSMIndexBulkLoadOperatorNodePushable> getBulkLoadSecondaryOperator(
             IHyracksTaskContext ctx, Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType,
             ARecordType metaType, int[] filterFields, int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
@@ -228,10 +220,10 @@ public class TestNodeController {
         }
     }
 
-    public Pair<LSMInsertDeleteOperatorNodePushable, IPushRuntime> getInsertPipeline(IHyracksTaskContext ctx,
+    public Pair<LSMPrimaryInsertOperatorNodePushable, IPushRuntime> getInsertPipeline(IHyracksTaskContext ctx,
             Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType, int[] filterFields,
             int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
-            StorageComponentProvider storageComponentProvider, Index secondaryIndex, IndexOperation op)
+            StorageComponentProvider storageComponentProvider, Index secondaryIndex, Index primaryKeyIndex)
             throws AlgebricksException, HyracksDataException, RemoteException, ACIDException {
         CcApplicationContext appCtx =
                 (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
@@ -243,18 +235,28 @@ public class TestNodeController {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                     mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
-            IModificationOperationCallbackFactory modOpCallbackFactory = dataset.getModificationCallbackFactory(
-                    storageComponentProvider, primaryIndexInfo.index, op, primaryIndexInfo.primaryKeyIndexes);
+            IModificationOperationCallbackFactory modOpCallbackFactory =
+                    dataset.getModificationCallbackFactory(storageComponentProvider, primaryIndexInfo.index,
+                            IndexOperation.INSERT, primaryIndexInfo.primaryKeyIndexes);
+            ISearchOperationCallbackFactory searchOpCallbackFactory =
+                    dataset.getSearchCallbackFactory(storageComponentProvider, primaryIndexInfo.index,
+                            IndexOperation.INSERT, primaryIndexInfo.primaryKeyIndexes);
             IRecordDescriptorProvider recordDescProvider = primaryIndexInfo.getInsertRecordDescriptorProvider();
             RecordDescriptor recordDesc =
                     recordDescProvider.getInputRecordDescriptor(new ActivityId(new OperatorDescriptorId(0), 0), 0);
             IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                     storageComponentProvider.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
-            LSMInsertDeleteOperatorNodePushable insertOp =
-                    new LSMInsertDeleteOperatorNodePushable(ctx, ctx.getTaskAttemptId().getTaskId().getPartition(),
-                            primaryIndexInfo.primaryIndexInsertFieldsPermutations, recordDesc, op, true,
-                            indexHelperFactory, modOpCallbackFactory, null, null);
+            IIndexDataflowHelperFactory pkIndexHelperFactory = null;
+            if (primaryKeyIndex != null) {
+                SecondaryIndexInfo pkIndexInfo = new SecondaryIndexInfo(primaryIndexInfo, primaryKeyIndex);
+                pkIndexHelperFactory = new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(),
+                        pkIndexInfo.fileSplitProvider);
+            }
 
+            LSMPrimaryInsertOperatorNodePushable insertOp = new LSMPrimaryInsertOperatorNodePushable(ctx,
+                    ctx.getTaskAttemptId().getTaskId().getPartition(), indexHelperFactory, pkIndexHelperFactory,
+                    primaryIndexInfo.primaryIndexInsertFieldsPermutations, recordDesc, modOpCallbackFactory,
+                    searchOpCallbackFactory, primaryKeyIndexes.length, filterFields, null);
             // For now, this assumes a single secondary index. recordDesc is always <pk-record-meta>
             // for the index, we will have to create an assign operator that extract the sk
             // then the secondary LSMInsertDeleteOperatorNodePushable
@@ -299,10 +301,10 @@ public class TestNodeController {
                         dataset.getModificationCallbackFactory(storageComponentProvider, secondaryIndex,
                                 IndexOperation.INSERT, primaryKeyIndexes);
 
-                LSMInsertDeleteOperatorNodePushable secondaryInsertOp =
-                        new LSMInsertDeleteOperatorNodePushable(ctx, ctx.getTaskAttemptId().getTaskId().getPartition(),
-                                secondaryIndexInfo.insertFieldsPermutations, secondaryIndexInfo.rDesc, op, false,
-                                secondaryIndexHelperFactory, secondaryModCallbackFactory, null, null);
+                LSMInsertDeleteOperatorNodePushable secondaryInsertOp = new LSMInsertDeleteOperatorNodePushable(ctx,
+                        ctx.getTaskAttemptId().getTaskId().getPartition(), secondaryIndexInfo.insertFieldsPermutations,
+                        secondaryIndexInfo.rDesc, IndexOperation.INSERT, false, secondaryIndexHelperFactory,
+                        secondaryModCallbackFactory, null, null);
                 assignOp.setOutputFrameWriter(0, secondaryInsertOp, secondaryIndexInfo.rDesc);
 
                 IPushRuntime commitOp =
@@ -319,6 +321,103 @@ public class TestNodeController {
                 insertOp.setOutputFrameWriter(0, commitOp, primaryIndexInfo.rDesc);
                 commitOp.setInputRecordDescriptor(0, primaryIndexInfo.rDesc);
                 return Pair.of(insertOp, commitOp);
+            }
+        } finally {
+            mdProvider.getLocks().unlock();
+        }
+    }
+
+    public Pair<LSMInsertDeleteOperatorNodePushable, IPushRuntime> getDeletePipeline(IHyracksTaskContext ctx,
+            Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType, int[] filterFields,
+            int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
+            StorageComponentProvider storageComponentProvider, Index secondaryIndex)
+            throws AlgebricksException, HyracksDataException, RemoteException, ACIDException {
+        CcApplicationContext appCtx =
+                (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
+        MetadataProvider mdProvider = new MetadataProvider(appCtx, null);
+        try {
+            MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
+                    DatasetUtil.getMergePolicyFactory(dataset, mdTxnCtx);
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
+                    mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
+            IModificationOperationCallbackFactory modOpCallbackFactory =
+                    dataset.getModificationCallbackFactory(storageComponentProvider, primaryIndexInfo.index,
+                            IndexOperation.DELETE, primaryIndexInfo.primaryKeyIndexes);
+            IRecordDescriptorProvider recordDescProvider = primaryIndexInfo.getInsertRecordDescriptorProvider();
+            RecordDescriptor recordDesc =
+                    recordDescProvider.getInputRecordDescriptor(new ActivityId(new OperatorDescriptorId(0), 0), 0);
+            IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
+                    storageComponentProvider.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
+            LSMInsertDeleteOperatorNodePushable deleteOp =
+                    new LSMInsertDeleteOperatorNodePushable(ctx, ctx.getTaskAttemptId().getTaskId().getPartition(),
+                            primaryIndexInfo.primaryIndexInsertFieldsPermutations, recordDesc, IndexOperation.DELETE,
+                            true, indexHelperFactory, modOpCallbackFactory, null, null);
+            // For now, this assumes a single secondary index. recordDesc is always <pk-record-meta>
+            // for the index, we will have to create an assign operator that extract the sk
+            // then the secondary LSMInsertDeleteOperatorNodePushable
+            if (secondaryIndex != null) {
+                List<List<String>> skNames = secondaryIndex.getKeyFieldNames();
+                List<Integer> indicators = secondaryIndex.getKeyFieldSourceIndicators();
+                IScalarEvaluatorFactory[] secondaryFieldAccessEvalFactories =
+                        new IScalarEvaluatorFactory[skNames.size()];
+                for (int i = 0; i < skNames.size(); i++) {
+                    ARecordType sourceType = dataset.hasMetaPart()
+                            ? indicators.get(i).intValue() == Index.RECORD_INDICATOR ? recordType : metaType
+                            : recordType;
+                    int pos = skNames.get(i).size() > 1 ? -1 : sourceType.getFieldIndex(skNames.get(i).get(0));
+                    secondaryFieldAccessEvalFactories[i] =
+                            mdProvider.getDataFormat().getFieldAccessEvaluatorFactory(mdProvider.getFunctionManager(),
+                                    sourceType, secondaryIndex.getKeyFieldNames().get(i), pos, null);
+                }
+                // outColumns are computed inside the assign runtime
+                int[] outColumns = new int[skNames.size()];
+                // projection list include old and new (primary and secondary keys)
+                int[] projectionList = new int[skNames.size() + primaryIndexInfo.index.getKeyFieldNames().size()];
+                for (int i = 0; i < secondaryFieldAccessEvalFactories.length; i++) {
+                    outColumns[i] = primaryIndexInfo.rDesc.getFieldCount() + i;
+                }
+                int projCount = 0;
+                for (int i = 0; i < secondaryFieldAccessEvalFactories.length; i++) {
+                    projectionList[projCount++] = primaryIndexInfo.rDesc.getFieldCount() + i;
+                }
+                for (int i = 0; i < primaryIndexInfo.index.getKeyFieldNames().size(); i++) {
+                    projectionList[projCount++] = i;
+                }
+                IPushRuntime assignOp =
+                        new AssignRuntimeFactory(outColumns, secondaryFieldAccessEvalFactories, projectionList, true)
+                                .createPushRuntime(ctx)[0];
+                deleteOp.setOutputFrameWriter(0, assignOp, primaryIndexInfo.rDesc);
+                assignOp.setInputRecordDescriptor(0, primaryIndexInfo.rDesc);
+                SecondaryIndexInfo secondaryIndexInfo = new SecondaryIndexInfo(primaryIndexInfo, secondaryIndex);
+                IIndexDataflowHelperFactory secondaryIndexHelperFactory = new IndexDataflowHelperFactory(
+                        storageComponentProvider.getStorageManager(), secondaryIndexInfo.fileSplitProvider);
+
+                IModificationOperationCallbackFactory secondaryModCallbackFactory =
+                        dataset.getModificationCallbackFactory(storageComponentProvider, secondaryIndex,
+                                IndexOperation.INSERT, primaryKeyIndexes);
+
+                LSMInsertDeleteOperatorNodePushable secondaryInsertOp = new LSMInsertDeleteOperatorNodePushable(ctx,
+                        ctx.getTaskAttemptId().getTaskId().getPartition(), secondaryIndexInfo.insertFieldsPermutations,
+                        secondaryIndexInfo.rDesc, IndexOperation.DELETE, false, secondaryIndexHelperFactory,
+                        secondaryModCallbackFactory, null, null);
+                assignOp.setOutputFrameWriter(0, secondaryInsertOp, secondaryIndexInfo.rDesc);
+
+                IPushRuntime commitOp =
+                        dataset.getCommitRuntimeFactory(mdProvider, secondaryIndexInfo.primaryKeyIndexes, true)
+                                .createPushRuntime(ctx)[0];
+
+                secondaryInsertOp.setOutputFrameWriter(0, commitOp, secondaryIndexInfo.rDesc);
+                commitOp.setInputRecordDescriptor(0, secondaryIndexInfo.rDesc);
+                return Pair.of(deleteOp, commitOp);
+            } else {
+                IPushRuntime commitOp =
+                        dataset.getCommitRuntimeFactory(mdProvider, primaryIndexInfo.primaryKeyIndexes, true)
+                                .createPushRuntime(ctx)[0];
+                deleteOp.setOutputFrameWriter(0, commitOp, primaryIndexInfo.rDesc);
+                commitOp.setInputRecordDescriptor(0, primaryIndexInfo.rDesc);
+                return Pair.of(deleteOp, commitOp);
             }
         } finally {
             mdProvider.getLocks().unlock();

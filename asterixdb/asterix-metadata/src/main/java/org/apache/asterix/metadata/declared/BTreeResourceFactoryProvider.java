@@ -185,7 +185,8 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
     }
 
     private static int[] getBloomFilterFields(Dataset dataset, Index index) throws AlgebricksException {
-        if (index.isPrimaryIndex()) {
+        // both the Primary index and the Primary Key index have bloom filters
+        if (index.isPrimaryIndex() || index.isPrimaryKeyIndex()) {
             return dataset.getPrimaryBloomFilterFields();
         } else if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             if (index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {

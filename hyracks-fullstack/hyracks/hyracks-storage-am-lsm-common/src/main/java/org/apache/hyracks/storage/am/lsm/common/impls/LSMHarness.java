@@ -427,9 +427,13 @@ public class LSMHarness implements ILSMHarness {
             throws HyracksDataException {
         LSMOperationType opType = LSMOperationType.SEARCH;
         ctx.setSearchPredicate(pred);
+        // lock should be acquired before entering LSM components.
+        // Otherwise, if a writer activates a new memory component, its updates may be ignored by subsequent readers
+        // if the readers have entered components first. However, based on the order of acquiring locks,
+        // the updates made by the writer should be seen by these subsequent readers.
+        ctx.getSearchOperationCallback().before(pred.getLowKey());
         getAndEnterComponents(ctx, opType, false);
         try {
-            ctx.getSearchOperationCallback().before(pred.getLowKey());
             lsmIndex.search(ctx, cursor, pred);
         } catch (Exception e) {
             exitComponents(ctx, opType, null, true);

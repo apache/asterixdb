@@ -19,7 +19,6 @@
 
 package org.apache.asterix.transaction.management.opcallbacks;
 
-import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
@@ -29,6 +28,7 @@ import org.apache.asterix.transaction.management.service.transaction.Transaction
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFrameWriter;
 
 /**
  * Assumes LSM-BTrees as primary indexes.
@@ -36,14 +36,14 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  */
 public class PrimaryIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback {
 
-    private final LSMInsertDeleteOperatorNodePushable operatorNodePushable;
+    private final ILSMIndexFrameWriter operatorNodePushable;
 
     public PrimaryIndexModificationOperationCallback(DatasetId datasetId, int[] primaryKeyFields,
             ITransactionContext txnCtx, ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId,
             int resourcePartition, byte resourceType, Operation indexOp, IOperatorNodePushable operatorNodePushable) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager, txnSubsystem, resourceId, resourcePartition,
                 resourceType, indexOp);
-        this.operatorNodePushable = (LSMInsertDeleteOperatorNodePushable) operatorNodePushable;
+        this.operatorNodePushable = (ILSMIndexFrameWriter) operatorNodePushable;
     }
 
     @Override

@@ -25,11 +25,11 @@ import org.apache.asterix.app.bootstrap.TestNodeController.PrimaryIndexInfo;
 import org.apache.asterix.app.data.gen.RecordTupleGenerator;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
-import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.external.util.DataflowUtils;
+import org.apache.asterix.runtime.operators.LSMPrimaryInsertOperatorNodePushable;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -81,7 +81,7 @@ public class IoCallbackFailureTest {
         indexDataflowHelper.open();
         TestLsmBtree lsmBtree = (TestLsmBtree) indexDataflowHelper.getIndexInstance();
         indexDataflowHelper.close();
-        LSMInsertDeleteOperatorNodePushable insertOp = StorageTestUtils.getInsertPipeline(nc, ctx);
+        LSMPrimaryInsertOperatorNodePushable insertOp = StorageTestUtils.getInsertPipeline(nc, ctx);
         StorageTestUtils.allowAllOps(lsmBtree);
         ITestOpCallback<ILSMMemoryComponent> failCallback = new ITestOpCallback<ILSMMemoryComponent>() {
             @SuppressWarnings("deprecation")
@@ -114,7 +114,7 @@ public class IoCallbackFailureTest {
     }
 
     private static void insert(TestNodeController nc, TestLsmBtree lsmBtree, IHyracksTaskContext ctx,
-            LSMInsertDeleteOperatorNodePushable insertOp, int totalNumRecords, int recordsPerComponent)
+            LSMPrimaryInsertOperatorNodePushable insertOp, int totalNumRecords, int recordsPerComponent)
             throws Exception {
         NCAppRuntimeContext ncAppCtx = nc.getAppRuntimeContext();
         IDatasetLifecycleManager dsLifecycleMgr = ncAppCtx.getDatasetLifecycleManager();

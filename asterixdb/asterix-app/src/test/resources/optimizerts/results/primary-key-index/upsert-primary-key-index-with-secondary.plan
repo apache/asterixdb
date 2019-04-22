@@ -1,0 +1,16 @@
+-- COMMIT  |PARTITIONED|
+  -- STREAM_PROJECT  |PARTITIONED|
+    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+      -- INDEX_INSERT_DELETE  |PARTITIONED|
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          -- INDEX_INSERT_DELETE  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              -- STREAM_PROJECT  |PARTITIONED|
+                -- ASSIGN  |PARTITIONED|
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      -- INSERT_DELETE  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
+                          -- ASSIGN  |UNPARTITIONED|
+                            -- ASSIGN  |UNPARTITIONED|
+                              -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

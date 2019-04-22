@@ -30,12 +30,12 @@ import org.apache.asterix.app.bootstrap.TestNodeController.PrimaryIndexInfo;
 import org.apache.asterix.app.data.gen.RecordTupleGenerator;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
-import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.external.util.DataflowUtils;
+import org.apache.asterix.runtime.operators.LSMPrimaryInsertOperatorNodePushable;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.test.dataflow.StorageTestUtils.Flusher;
 import org.apache.asterix.test.dataflow.StorageTestUtils.Merger;
@@ -73,7 +73,7 @@ public class ComponentRollbackTest {
     private static IHyracksTaskContext ctx;
     private static IIndexDataflowHelper indexDataflowHelper;
     private static ITransactionContext txnCtx;
-    private static LSMInsertDeleteOperatorNodePushable insertOp;
+    private static LSMPrimaryInsertOperatorNodePushable insertOp;
     private static final int PARTITION = 0;
     private static String indexPath;
 

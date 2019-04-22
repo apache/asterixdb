@@ -16,23 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/* this should successfully drop STBench dataverse */
 
-drop  dataverse STBench if exists;
-create  dataverse STBench;
-
-use STBench;
-
-
-create type STBench.SimpleGeoPlaceType as
- closed {
-  coordinates : point,
-  id : bigint,
-  name : string,
-  tags : string,
-  categories : string,
-  phone : string
-};
-
-create  dataset SimpleGeoPlace(SimpleGeoPlaceType) primary key id;
-
-create  index btreeName  on SimpleGeoPlace (name) type btree;
+drop  dataverse STBench;

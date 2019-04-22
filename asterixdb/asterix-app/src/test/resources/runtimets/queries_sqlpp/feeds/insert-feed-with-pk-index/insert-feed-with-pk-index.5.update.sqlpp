@@ -16,23 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ * Description  : Create a feed with upsert option. Push record twice
+ * with minor changes. The updated record will not cause duplicate
+ * key exception and the data will be updated.
+ * Expected Res : Success
+ * Date         : 13th Aug 2016
+ */
 
-drop  dataverse STBench if exists;
-create  dataverse STBench;
-
-use STBench;
-
-
-create type STBench.SimpleGeoPlaceType as
- closed {
-  coordinates : point,
-  id : bigint,
-  name : string,
-  tags : string,
-  categories : string,
-  phone : string
-};
-
-create  dataset SimpleGeoPlace(SimpleGeoPlaceType) primary key id;
-
-create  index btreeName  on SimpleGeoPlace (name) type btree;
+use experiments;
+stop feed UserFeed;
+disconnect feed UserFeed from dataset TwitterUsers;

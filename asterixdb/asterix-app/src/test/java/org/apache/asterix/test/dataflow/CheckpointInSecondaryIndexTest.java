@@ -35,7 +35,6 @@ import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
@@ -54,6 +53,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorNodePushable;
+import org.apache.asterix.runtime.operators.LSMPrimaryInsertOperatorNodePushable;
 import org.apache.asterix.test.base.TestMethodTracer;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.commons.lang3.tuple.Pair;
@@ -132,7 +132,7 @@ public class CheckpointInSecondaryIndexTest {
     private static IHyracksTaskContext taskCtx;
     private static IIndexDataflowHelper primaryIndexDataflowHelper;
     private static IIndexDataflowHelper secondaryIndexDataflowHelper;
-    private static LSMInsertDeleteOperatorNodePushable insertOp;
+    private static LSMPrimaryInsertOperatorNodePushable insertOp;
     private static LSMIndexBulkLoadOperatorNodePushable indexLoadOp;
     private static IHyracksTaskContext loadTaskCtx;
     private static SecondaryIndexInfo secondaryIndexInfo;
@@ -190,7 +190,7 @@ public class CheckpointInSecondaryIndexTest {
         primaryIndexDataflowHelper.close();
         // This pipeline skips the secondary index
         insertOp = nc.getInsertPipeline(taskCtx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
-                KEY_INDICATORS_LIST, storageManager, null).getLeft();
+                KEY_INDICATORS_LIST, storageManager, null, null).getLeft();
         actor = new Actor("player");
         // allow all operations
         StorageTestUtils.allowAllOps(primaryLsmBtree);

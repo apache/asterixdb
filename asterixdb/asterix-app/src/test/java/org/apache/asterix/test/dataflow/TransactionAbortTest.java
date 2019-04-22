@@ -31,6 +31,7 @@ import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.external.util.DataflowUtils;
+import org.apache.asterix.runtime.operators.LSMPrimaryInsertOperatorNodePushable;
 import org.apache.asterix.test.base.TestMethodTracer;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -41,7 +42,6 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.btree.impl.ITestOpCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
 import org.junit.After;
@@ -61,7 +61,7 @@ public class TransactionAbortTest {
     private static IHyracksTaskContext ctx;
     private static IIndexDataflowHelper indexDataflowHelper;
     private static final int PARTITION = 0;
-    private static LSMInsertDeleteOperatorNodePushable insertOp;
+    private static LSMPrimaryInsertOperatorNodePushable insertOp;
     private static int NUM_INSERT_RECORDS = 1000;
     private static ITransactionContext txnCtx;
 
@@ -121,7 +121,7 @@ public class TransactionAbortTest {
         Assert.assertEquals(1, lsmBtree.getDiskComponents().size());
         StorageTestUtils.searchAndAssertCount(nc, PARTITION, NUM_INSERT_RECORDS);
 
-        abortOp = StorageTestUtils.getInsertPipeline(nc, abortCtx, null, IndexOperation.DELETE);
+        abortOp = StorageTestUtils.getDeletePipeline(nc, abortCtx, null);
         testAbort(lastTuple);
         StorageTestUtils.searchAndAssertCount(nc, PARTITION, NUM_INSERT_RECORDS);
     }
@@ -132,7 +132,7 @@ public class TransactionAbortTest {
         Assert.assertEquals(0, lsmBtree.getDiskComponents().size());
         StorageTestUtils.searchAndAssertCount(nc, PARTITION, NUM_INSERT_RECORDS);
 
-        abortOp = StorageTestUtils.getInsertPipeline(nc, abortCtx, null, IndexOperation.DELETE);
+        abortOp = StorageTestUtils.getDeletePipeline(nc, abortCtx, null);
         testAbort(lastTuple);
         StorageTestUtils.searchAndAssertCount(nc, PARTITION, NUM_INSERT_RECORDS);
     }
@@ -143,7 +143,7 @@ public class TransactionAbortTest {
         Assert.assertEquals(0, lsmBtree.getDiskComponents().size());
         StorageTestUtils.searchAndAssertCount(nc, PARTITION, NUM_INSERT_RECORDS);
 
-        abortOp = StorageTestUtils.getInsertPipeline(nc, abortCtx, null, IndexOperation.INSERT);
+        abortOp = StorageTestUtils.getDeletePipeline(nc, abortCtx, null);
         testAbort(tupleGenerator.next());
         StorageTestUtils.searchAndAssertCount(nc, PARTITION, NUM_INSERT_RECORDS);
     }

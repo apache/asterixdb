@@ -3664,6 +3664,13 @@
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="insert-duplicated-keys-with-pk-index">
+        <output-dir compare="Text">insert-duplicated-keys-with-pk-index</output-dir>
+        <expected-error>Inserting duplicate keys into the primary storage</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="insert_less_nc">
         <output-dir compare="Text">insert_less_nc</output-dir>
@@ -10786,6 +10793,11 @@
     </test-case>
     <test-case FilePath="feeds">
       <compilation-unit name="insert-feed">
+        <output-dir compare="Text">insert-feed</output-dir>
+      </compilation-unit>
+    </test-case>
+     <test-case FilePath="feeds">
+      <compilation-unit name="insert-feed-with-pk-index">
         <output-dir compare="Text">insert-feed</output-dir>
       </compilation-unit>
     </test-case>

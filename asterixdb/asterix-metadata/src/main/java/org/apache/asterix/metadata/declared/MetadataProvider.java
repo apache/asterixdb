@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
@@ -93,6 +94,7 @@ import org.apache.asterix.runtime.base.AsterixTupleFilterFactory;
 import org.apache.asterix.runtime.formats.FormatUtils;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage;
+import org.apache.asterix.runtime.operators.LSMPrimaryInsertOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMSecondaryUpsertOperatorDescriptor;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -1011,9 +1013,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             i++;
         }
         fieldPermutation[i++] = propagatedSchema.findVariable(payload);
+        int[] filterFields = new int[numFilterFields];
         if (numFilterFields > 0) {
             int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
             fieldPermutation[i++] = idx;
+            filterFields[0] = idx;
         }
         if (additionalNonFilteringFields != null) {
             for (LogicalVariable variable : additionalNonFilteringFields) {
@@ -1043,8 +1047,27 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     GlobalConfig.DEFAULT_TREE_FILL_FACTOR, true, numElementsHint, true, idfh, null, BulkLoadUsage.LOAD,
                     dataset.getDatasetId(), null);
         } else {
-            op = new LSMTreeInsertDeleteOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, indexOp, idfh, null,
-                    true, modificationCallbackFactory);
+            if (indexOp == IndexOperation.INSERT) {
+                ISearchOperationCallbackFactory searchCallbackFactory = dataset
+                        .getSearchCallbackFactory(storageComponentProvider, primaryIndex, indexOp, primaryKeyFields);
+
+                Optional<Index> primaryKeyIndex = MetadataManager.INSTANCE
+                        .getDatasetIndexes(mdTxnCtx, dataset.getDataverseName(), dataset.getDatasetName()).stream()
+                        .filter(index -> index.isPrimaryKeyIndex()).findFirst();
+                IIndexDataflowHelperFactory pkidfh = null;
+                if (primaryKeyIndex.isPresent()) {
+                    Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primaryKeySplitsAndConstraint =
+                            getSplitProviderAndConstraints(dataset, primaryKeyIndex.get().getIndexName());
+                    pkidfh = new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(),
+                            primaryKeySplitsAndConstraint.first);
+                }
+                op = new LSMPrimaryInsertOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, idfh, pkidfh,
+                        modificationCallbackFactory, searchCallbackFactory, numKeys, filterFields);
+
+            } else {
+                op = new LSMTreeInsertDeleteOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, indexOp, idfh,
+                        null, true, modificationCallbackFactory);
+            }
         }
         return new Pair<>(op, splitsAndConstraint.second);
     }

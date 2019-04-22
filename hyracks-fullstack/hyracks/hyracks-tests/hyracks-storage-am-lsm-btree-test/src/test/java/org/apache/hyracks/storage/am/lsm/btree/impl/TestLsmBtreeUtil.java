@@ -93,13 +93,15 @@ public class TestLsmBtreeUtil {
             filterManager = new LSMComponentFilterManager(filterFrameFactory);
         }
 
-        //Primary LSMBTree index has a BloomFilter.
+        boolean hasBloomFilter = bloomFilterKeyFields != null;
+        //Primary and Primary Key LSMBTree index has a BloomFilter.
         ILSMIndexFileManager fileNameManager =
-                new LSMBTreeFileManager(ioManager, file, diskBTreeFactory, needKeyDupCheck);
+                new LSMBTreeFileManager(ioManager, file, diskBTreeFactory, hasBloomFilter);
 
         ILSMDiskComponentFactory componentFactory;
         ILSMDiskComponentFactory bulkLoadComponentFactory;
-        if (needKeyDupCheck) {
+
+        if (hasBloomFilter) {
             BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, bloomFilterKeyFields);
             componentFactory =
                     new LSMBTreeWithBloomFilterDiskComponentFactory(diskBTreeFactory, bloomFilterFactory, filterHelper);
@@ -113,7 +115,7 @@ public class TestLsmBtreeUtil {
         return new TestLsmBtree(ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory,
                 deleteLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory, bulkLoadComponentFactory,
                 filterHelper, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, typeTraits.length,
-                cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, needKeyDupCheck, btreeFields,
-                filterFields, durable, updateAware, tracer);
+                cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, needKeyDupCheck, hasBloomFilter,
+                btreeFields, filterFields, durable, updateAware, tracer);
     }
 }

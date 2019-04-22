@@ -83,7 +83,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
     private final boolean needKeyDupCheck;
 
-    // Primary LSMBTree has a Bloomfilter, but Secondary one doesn't have.
+    // Primary and Primary Key LSMBTree has a Bloomfilter, but Secondary one doesn't have.
     private final boolean hasBloomFilter;
 
     public LSMBTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
@@ -94,8 +94,9 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
             double bloomFilterFalsePositiveRate, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean needKeyDupCheck, int[] btreeFields,
-            int[] filterFields, boolean durable, boolean updateAware, ITracer tracer) throws HyracksDataException {
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean needKeyDupCheck, boolean hasBloomFilter,
+            int[] btreeFields, int[] filterFields, boolean durable, boolean updateAware, ITracer tracer)
+            throws HyracksDataException {
         super(ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy,
                 opTracker, ioScheduler, ioOpCallbackFactory, componentFactory, bulkLoadComponentFactory,
                 filterFrameFactory, filterManager, filterFields, durable, filterHelper, btreeFields, tracer);
@@ -114,7 +115,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             ++i;
         }
         this.needKeyDupCheck = needKeyDupCheck;
-        this.hasBloomFilter = needKeyDupCheck;
+        this.hasBloomFilter = hasBloomFilter;
     }
 
     // Without memory components

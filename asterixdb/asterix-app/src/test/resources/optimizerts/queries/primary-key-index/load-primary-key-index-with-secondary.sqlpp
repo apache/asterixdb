@@ -16,23 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ * Description  : Load dataset with primary key index
+ * Expected Res : Success
+ * Date         : March 3rd 2018
+ */
 
-drop  dataverse STBench if exists;
-create  dataverse STBench;
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-use STBench;
-
-
-create type STBench.SimpleGeoPlaceType as
- closed {
-  coordinates : point,
-  id : bigint,
-  name : string,
-  tags : string,
-  categories : string,
-  phone : string
+create type MyRecord as closed {
+  id: int32,
+  point: point,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle,
+  circle: circle
 };
 
-create  dataset SimpleGeoPlace(SimpleGeoPlaceType) primary key id;
 
-create  index btreeName  on SimpleGeoPlace (name) type btree;
+create dataset MyData(MyRecord) primary key id;
+create primary index pkIndex on MyData;
+create index rtree_index_point on MyData(point) type rtree;
+create index kwds_index on MyData(kwds) type btree;
+
+load dataset MyData
+using localfs
+(("path"="asterix_nc1://data/spatial/spatialData.json"),("format"="adm"));

@@ -16,23 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ * Test case Name  : insert-primary-key-index.sqlpp
+ * Description     : This test is intended to test inserting into a dataset with primary key index.
+ * Expected Result : Success
+ * Date            : March 3 2018
+ */
 
-drop  dataverse STBench if exists;
-create  dataverse STBench;
+drop  dataverse test if exists;
+create  dataverse test;
 
-use STBench;
+use test;
 
-
-create type STBench.SimpleGeoPlaceType as
- closed {
-  coordinates : point,
-  id : bigint,
-  name : string,
-  tags : string,
-  categories : string,
-  phone : string
+create type test.myDataType as
+{
+  id : integer,
+  name: string
 };
 
-create  dataset SimpleGeoPlace(SimpleGeoPlaceType) primary key id;
+create dataset myData(myDataType) primary key id;
+create primary index pkIndex on myData;
+create index nameIndex on myData(name) type btree;
 
-create  index btreeName  on SimpleGeoPlace (name) type btree;
+insert into myData
+select element {'id':(x.id + 1)}
+from  myData as x
+;

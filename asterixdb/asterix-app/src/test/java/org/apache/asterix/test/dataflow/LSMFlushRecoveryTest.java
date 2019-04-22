@@ -35,7 +35,6 @@ import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.StorageProperties.Option;
 import org.apache.asterix.common.context.DatasetInfo;
-import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
@@ -45,6 +44,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.operators.LSMPrimaryInsertOperatorNodePushable;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -91,7 +91,7 @@ public class LSMFlushRecoveryTest {
     private static IIndexDataflowHelper[] primaryIndexDataflowHelpers;
     private static IIndexDataflowHelper[] secondaryIndexDataflowHelpers;
     private static ITransactionContext txnCtx;
-    private static LSMInsertDeleteOperatorNodePushable[] insertOps;
+    private static LSMPrimaryInsertOperatorNodePushable[] insertOps;
     private static RecordTupleGenerator tupleGenerator;
 
     private static final int NUM_PARTITIONS = 2;
@@ -231,7 +231,7 @@ public class LSMFlushRecoveryTest {
     }
 
     private void createInsertOps() throws HyracksDataException, RemoteException, ACIDException, AlgebricksException {
-        insertOps = new LSMInsertDeleteOperatorNodePushable[NUM_PARTITIONS];
+        insertOps = new LSMPrimaryInsertOperatorNodePushable[NUM_PARTITIONS];
         for (int i = 0; i < NUM_PARTITIONS; i++) {
             insertOps[i] = StorageTestUtils.getInsertPipeline(nc, testCtxs[i], secondaryIndexEntity);
         }

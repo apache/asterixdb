@@ -21,18 +21,13 @@ package org.apache.asterix.transaction.management.opcallbacks;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.AbstractOperationCallback;
 import org.apache.asterix.common.transactions.DatasetId;
-import org.apache.asterix.common.transactions.ILogManager;
-import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
-import org.apache.asterix.common.transactions.LogRecord;
-import org.apache.asterix.common.transactions.LogSource;
-import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDeleteOperatorNodePushable;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFrameWriter;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
 public class LockThenSearchOperationCallback extends AbstractOperationCallback implements ISearchOperationCallback {
@@ -40,23 +35,14 @@ public class LockThenSearchOperationCallback extends AbstractOperationCallback i
     /**
      * variables used for deadlock-free locking protocol
      */
-    private final LSMIndexInsertUpdateDeleteOperatorNodePushable operatorNodePushable;
-    private final ILogManager logManager;
-    private final ILogRecord logRecord;
+    private final ILSMIndexFrameWriter operatorNodePushable;
     private int pkHash;
 
     public LockThenSearchOperationCallback(DatasetId datasetId, long resourceId, int[] entityIdFields,
             ITransactionSubsystem txnSubsystem, ITransactionContext txnCtx,
             IOperatorNodePushable operatorNodePushable) {
         super(datasetId, resourceId, entityIdFields, txnCtx, txnSubsystem.getLockManager());
-        this.operatorNodePushable = (LSMIndexInsertUpdateDeleteOperatorNodePushable) operatorNodePushable;
-        this.logManager = txnSubsystem.getLogManager();
-        this.logRecord = new LogRecord();
-        logRecord.setTxnCtx(txnCtx);
-        logRecord.setLogSource(LogSource.LOCAL);
-        logRecord.setLogType(LogType.WAIT);
-        logRecord.setTxnId(txnCtx.getTxnId().getId());
-        logRecord.computeAndSetLogSize();
+        this.operatorNodePushable = (ILSMIndexFrameWriter) operatorNodePushable;
     }
 
     @Override
@@ -83,19 +69,19 @@ public class LockThenSearchOperationCallback extends AbstractOperationCallback i
             if (operatorNodePushable != null) {
 
                 /**********************************************************************************
-                 * In order to achieve deadlock-free locking protocol during any write (insert/delete/upsert) operations,
-                 * the following logic is implemented.
-                 * See https://cwiki.apache.org/confluence/display/ASTERIXDB/Deadlock-Free+Locking+Protocol for more details.
+                 * In order to achieve deadlock-free locking protocol during any write (insert/delete/upsert)
+                 * operations, the following logic is implemented.
+                 * See https://cwiki.apache.org/confluence/display/ASTERIXDB/Deadlock-Free+Locking+Protocol for
+                 * : more details.
                  * 1. for each entry in a frame
                  * 2. returnValue = tryLock() for an entry
                  * 3. if returnValue == false
                  * 3-1. flush all entries (which already acquired locks) to the next operator
-                 * : this will make all those entries reach commit operator so that corresponding commit logs will be created.
-                 * 3-2. create a WAIT log and wait until logFlusher thread will flush the WAIT log and gives notification
-                 * : this notification guarantees that all locks acquired by this transactor (or all locks acquired for the entries)
-                 * were released.
-                 * 3-3. acquire lock using lock() instead of tryLock() for the failed entry
-                 * : we know for sure this lock call will not cause deadlock since the transactor doesn't hold any other locks.
+                 * : this will make all those entries reach commit operator so that corresponding commit logs will
+                 * : be created.
+                 * 3-2. acquire lock using lock() instead of tryLock() for the failed entry
+                 * : we know for sure this lock call will not cause deadlock since the transactor doesn't hold any
+                 * : other locks.
                  * 4. create an update log and insert the entry
                  * From the above logic, step 2 and 3 are implemented in this before() method.
                  **********************/
@@ -105,9 +91,6 @@ public class LockThenSearchOperationCallback extends AbstractOperationCallback i
                 if (!tryLockSucceed) {
                     //flush entries which have been inserted already to release locks hold by them
                     operatorNodePushable.flushPartialFrame();
-
-                    //create WAIT log and wait until the WAIT log is flushed and notified by LogFlusher thread
-                    logWait();
 
                     //acquire lock
                     lockManager.lock(datasetId, pkHash, LockMode.X, txnCtx);
@@ -120,10 +103,6 @@ public class LockThenSearchOperationCallback extends AbstractOperationCallback i
         } catch (ACIDException e) {
             throw HyracksDataException.create(e);
         }
-    }
-
-    private void logWait() throws ACIDException {
-        logManager.log(logRecord);
     }
 
     public void release() throws ACIDException {

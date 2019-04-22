@@ -35,7 +35,6 @@ import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TransactionOptions;
@@ -48,6 +47,7 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningS
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.operators.LSMPrimaryInsertOperatorNodePushable;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -121,7 +121,7 @@ public class MultiPartitionLSMIndexTest {
     private static IHyracksTaskContext[] taskCtxs;
     private static IIndexDataflowHelper[] primaryIndexDataflowHelpers;
     private static IIndexDataflowHelper[] secondaryIndexDataflowHelpers;
-    private static LSMInsertDeleteOperatorNodePushable[] insertOps;
+    private static LSMPrimaryInsertOperatorNodePushable[] insertOps;
     private static Actor[] actors;
 
     @BeforeClass
@@ -158,7 +158,7 @@ public class MultiPartitionLSMIndexTest {
         secondaryIndexDataflowHelpers = new IIndexDataflowHelper[NUM_PARTITIONS];
         primaryLsmBtrees = new TestLsmBtree[NUM_PARTITIONS];
         secondaryLsmBtrees = new TestLsmBtree[NUM_PARTITIONS];
-        insertOps = new LSMInsertDeleteOperatorNodePushable[NUM_PARTITIONS];
+        insertOps = new LSMPrimaryInsertOperatorNodePushable[NUM_PARTITIONS];
         JobId jobId = nc.newJobId();
         txnCtx = nc.getTransactionManager().beginTransaction(nc.getTxnJobId(jobId),
                 new TransactionOptions(ITransactionManager.AtomicityLevel.ENTITY_LEVEL));
@@ -184,7 +184,7 @@ public class MultiPartitionLSMIndexTest {
             secondaryIndexDataflowHelpers[i].close();
             primaryIndexDataflowHelpers[i].close();
             insertOps[i] = nc.getInsertPipeline(taskCtxs[i], dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
-                    KEY_INDEXES, KEY_INDICATORS_LIST, storageManager, secondaryIndex).getLeft();
+                    KEY_INDEXES, KEY_INDICATORS_LIST, storageManager, secondaryIndex, null).getLeft();
             actors[i] = new Actor("player-" + i, i);
         }
         // allow all operations

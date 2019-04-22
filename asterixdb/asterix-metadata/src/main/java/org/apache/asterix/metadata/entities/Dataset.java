@@ -543,7 +543,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
              * Due to the read-committed isolation level,
              * we may acquire very short duration lock(i.e., instant lock) for readers.
              */
-            return (op == IndexOperation.UPSERT)
+            return (op == IndexOperation.UPSERT || op == IndexOperation.INSERT)
                     ? new LockThenSearchOperationCallbackFactory(getDatasetId(), primaryKeyFields,
                             storageComponentProvider.getTransactionSubsystemProvider(), ResourceType.LSM_BTREE)
                     : new PrimaryIndexInstantSearchOperationCallbackFactory(getDatasetId(), primaryKeyFields,
@@ -602,13 +602,13 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             IStorageComponentProvider componentProvider, Index index, IndexOperation op, int[] primaryKeyFields)
             throws AlgebricksException {
         if (index.isPrimaryIndex()) {
-            return op == IndexOperation.UPSERT ? new UpsertOperationCallbackFactory(getDatasetId(), primaryKeyFields,
-                    componentProvider.getTransactionSubsystemProvider(), Operation.get(op), index.resourceType())
-                    : op == IndexOperation.DELETE || op == IndexOperation.INSERT
-                            ? new PrimaryIndexModificationOperationCallbackFactory(getDatasetId(), primaryKeyFields,
-                                    componentProvider.getTransactionSubsystemProvider(), Operation.get(op),
-                                    index.resourceType())
-                            : NoOpOperationCallbackFactory.INSTANCE;
+            return op == IndexOperation.UPSERT || op == IndexOperation.INSERT
+                    ? new UpsertOperationCallbackFactory(getDatasetId(),
+                            primaryKeyFields, componentProvider.getTransactionSubsystemProvider(), Operation.get(op),
+                            index.resourceType())
+                    : op == IndexOperation.DELETE ? new PrimaryIndexModificationOperationCallbackFactory(getDatasetId(),
+                            primaryKeyFields, componentProvider.getTransactionSubsystemProvider(), Operation.get(op),
+                            index.resourceType()) : NoOpOperationCallbackFactory.INSTANCE;
         } else {
             return op == IndexOperation.DELETE || op == IndexOperation.INSERT || op == IndexOperation.UPSERT
                     ? new SecondaryIndexModificationOperationCallbackFactory(getDatasetId(), primaryKeyFields,
