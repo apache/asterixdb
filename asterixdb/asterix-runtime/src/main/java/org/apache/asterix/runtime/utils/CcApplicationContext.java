@@ -21,6 +21,8 @@ package org.apache.asterix.runtime.utils;
 import java.io.IOException;
 import java.util.function.Supplier;
 
+import org.apache.asterix.common.api.IConfigValidator;
+import org.apache.asterix.common.api.IConfigValidatorFactory;
 import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.INodeJobTracker;
@@ -95,13 +97,14 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final ICompressionManager compressionManager;
     private final IReceptionist receptionist;
     private final IRequestTracker requestTracker;
+    private final IConfigValidator configValidator;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
             ILibraryManager libraryManager, Supplier<IMetadataBootstrap> metadataBootstrapSupplier,
             IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator ftStrategy,
             IJobLifecycleListener activeLifeCycleListener, IStorageComponentProvider storageComponentProvider,
-            IMetadataLockManager mdLockManager, IReceptionistFactory receptionistFactory)
-            throws AlgebricksException, IOException {
+            IMetadataLockManager mdLockManager, IReceptionistFactory receptionistFactory,
+            IConfigValidatorFactory configValidatorFactory) throws AlgebricksException, IOException {
         this.ccServiceCtx = ccServiceCtx;
         this.hcc = hcc;
         this.libraryManager = libraryManager;
@@ -133,6 +136,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         compressionManager = new CompressionManager(storageProperties);
         receptionist = receptionistFactory.create();
         requestTracker = new RequestTracker(this);
+        configValidator = configValidatorFactory.create();
     }
 
     @Override
@@ -294,6 +298,11 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public IReceptionist getReceptionist() {
         return receptionist;
+    }
+
+    @Override
+    public IConfigValidator getConfigValidator() {
+        return configValidator;
     }
 
     @Override

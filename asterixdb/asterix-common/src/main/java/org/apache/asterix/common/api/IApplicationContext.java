@@ -78,4 +78,9 @@ public interface IApplicationContext {
     ICoordinationService getCoordinationService();
 
     IReceptionist getReceptionist();
+
+    /**
+     * @return the configuration validator
+     */
+    IConfigValidator getConfigValidator();
 }

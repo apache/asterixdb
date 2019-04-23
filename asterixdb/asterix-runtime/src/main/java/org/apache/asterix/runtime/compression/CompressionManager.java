@@ -94,7 +94,7 @@ public class CompressionManager implements ICompressionManager {
      * @return
      *         true if it is registered
      */
-    private boolean isRegisteredScheme(String schemeName) {
+    public static boolean isRegisteredScheme(String schemeName) {
         return schemeName != null && REGISTERED_SCHEMES.containsKey(schemeName.toLowerCase());
     }
 
