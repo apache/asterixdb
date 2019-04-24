@@ -463,7 +463,7 @@ import org.apache.asterix.runtime.evaluators.functions.records.RecordUnwrapDescr
 import org.apache.asterix.runtime.evaluators.functions.records.RecordValuesDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustDateTimeForTimeZoneDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustTimeForTimeZoneDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.temporal.CalendarDuartionFromDateDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.CalendarDurationFromDateDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.CalendarDurationFromDateTimeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.CurrentDateDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.CurrentDateTimeDescriptor;
@@ -1050,7 +1050,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(DatetimeFromUnixTimeInSecsDescriptor.FACTORY);
         fc.add(DatetimeFromDateAndTimeDescriptor.FACTORY);
         fc.add(CalendarDurationFromDateTimeDescriptor.FACTORY);
-        fc.add(CalendarDuartionFromDateDescriptor.FACTORY);
+        fc.add(CalendarDurationFromDateDescriptor.FACTORY);
         fc.add(AdjustDateTimeForTimeZoneDescriptor.FACTORY);
         fc.add(AdjustTimeForTimeZoneDescriptor.FACTORY);
         fc.add(IntervalBeforeDescriptor.FACTORY);

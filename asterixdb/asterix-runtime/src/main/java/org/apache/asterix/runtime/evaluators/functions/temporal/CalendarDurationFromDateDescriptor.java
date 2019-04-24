@@ -46,14 +46,14 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class CalendarDurationFromDateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = BuiltinFunctions.CALENDAR_DURATION_FROM_DATE;
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new CalendarDuartionFromDateDescriptor();
+            return new CalendarDurationFromDateDescriptor();
         }
     };
 
