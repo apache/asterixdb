@@ -154,14 +154,6 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return UTF8StringUtil.compareTo(this.bytes, this.start, bytes, start);
     }
 
-    // TODO(ali): could use the normalized key, too.
-    // takes advantage of cached utf8 length and meta length
-    public static int compare(UTF8StringPointable pointable1, UTF8StringPointable pointable2) {
-        return UTF8StringUtil.compareTo(pointable1.bytes, pointable1.start + pointable1.metaLength,
-                pointable1.utf8Length, pointable2.bytes, pointable2.start + pointable2.metaLength,
-                pointable2.utf8Length);
-    }
-
     @Override
     public int hash() {
         if (hashValue == 0) {
@@ -183,10 +175,6 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         }
     }
 
-    /****
-     * String functions
-     */
-
     public int ignoreCaseCompareTo(UTF8StringPointable other) {
         return UTF8StringUtil.lowerCaseCompareTo(this.getByteArray(), this.getStartOffset(), other.getByteArray(),
                 other.getStartOffset());
@@ -194,6 +182,18 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
 
     public int find(UTF8StringPointable pattern, boolean ignoreCase) {
         return find(this, pattern, ignoreCase);
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static int compare(byte[] bytes, int start, int length, byte[] thatBytes, int thatStart, int thatLength) {
+        return UTF8StringUtil.compareTo(bytes, start, thatBytes, thatStart);
+    }
+
+    // takes advantage of cached utf8 length and meta length
+    public static int compare(UTF8StringPointable pointable1, UTF8StringPointable pointable2) {
+        return UTF8StringUtil.compareTo(pointable1.bytes, pointable1.start + pointable1.metaLength,
+                pointable1.utf8Length, pointable2.bytes, pointable2.start + pointable2.metaLength,
+                pointable2.utf8Length);
     }
 
     /**

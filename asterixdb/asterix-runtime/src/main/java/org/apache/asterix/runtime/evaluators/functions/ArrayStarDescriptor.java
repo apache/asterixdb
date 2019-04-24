@@ -53,6 +53,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -129,7 +130,7 @@ public class ArrayStarDescriptor extends AbstractScalarFunctionDynamicDescriptor
     }
 
     public class UTF8StringComparator implements Comparator<IValueReference> {
-        private final IBinaryComparator comp = PointableHelper.createStringBinaryComparator();
+        private final IBinaryComparator comp = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
         @Override
         public int compare(IValueReference val1, IValueReference val2) {
@@ -170,7 +171,8 @@ public class ArrayStarDescriptor extends AbstractScalarFunctionDynamicDescriptor
     }
 
     public class ArrayStarEval implements IScalarEvaluator {
-        private final IBinaryComparator binaryStrComp = PointableHelper.createStringBinaryComparator();
+        private final IBinaryComparator binaryStrComp =
+                UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         private final UTF8StringComparator comp = new UTF8StringComparator();
         private final ArrayBackedValueStorage storage;
         private final IScalarEvaluator listEval;

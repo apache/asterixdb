@@ -28,7 +28,7 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
@@ -233,7 +233,7 @@ public abstract class AbstractRTreeExamplesTest {
             //Parameters look different for LSM RTREE from LSM RTREE WITH ANTI MATTER TUPLES
             btreeKeyFieldCount = 1;
             btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+            btreeCmpFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
             btreeFields = new int[btreeKeyFieldCount];
             for (int i = 0; i < btreeKeyFieldCount; i++) {
                 btreeFields[i] = rtreeKeyFieldCount + i;
@@ -246,7 +246,7 @@ public abstract class AbstractRTreeExamplesTest {
             btreeCmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
             btreeCmpFactories[2] = IntegerBinaryComparatorFactory.INSTANCE;
             btreeCmpFactories[3] = IntegerBinaryComparatorFactory.INSTANCE;
-            btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+            btreeCmpFactories[4] = UTF8StringBinaryComparatorFactory.INSTANCE;
         }
 
         // create value providers
@@ -374,7 +374,7 @@ public abstract class AbstractRTreeExamplesTest {
             //Parameters look different for LSM RTREE from LSM RTREE WITH ANTI MATTER TUPLES
             btreeKeyFieldCount = 1;
             btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+            btreeCmpFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
             btreeFields = new int[btreeKeyFieldCount];
             for (int i = 0; i < btreeKeyFieldCount; i++) {
                 btreeFields[i] = rtreeKeyFieldCount + i;
@@ -387,7 +387,7 @@ public abstract class AbstractRTreeExamplesTest {
             btreeCmpFactories[1] = IntegerBinaryComparatorFactory.INSTANCE;
             btreeCmpFactories[2] = IntegerBinaryComparatorFactory.INSTANCE;
             btreeCmpFactories[3] = IntegerBinaryComparatorFactory.INSTANCE;
-            btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+            btreeCmpFactories[4] = UTF8StringBinaryComparatorFactory.INSTANCE;
         }
 
         // create value providers

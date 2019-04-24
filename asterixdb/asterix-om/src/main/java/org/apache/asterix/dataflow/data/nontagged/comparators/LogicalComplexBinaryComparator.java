@@ -30,7 +30,6 @@ import java.util.List;
 
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.dataflow.data.common.ListAccessorUtil;
-import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
@@ -44,12 +43,12 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.om.utils.RecordUtil;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator {
 
@@ -61,7 +60,6 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
     private final IObjectPool<IPointable, Void> voidPointableAllocator;
     private final IObjectPool<BitSet, Void> bitSetAllocator;
     private final PointableAllocator pointableAllocator;
-    private final IBinaryComparator utf8Comp;
 
     LogicalComplexBinaryComparator(IAType leftType, IAType rightType, boolean isEquality) {
         this.leftType = leftType;
@@ -72,7 +70,6 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
         voidPointableAllocator = new ListObjectPool<>(VOID_FACTORY);
         bitSetAllocator = new ListObjectPool<>(BIT_SET_FACTORY);
         pointableAllocator = new PointableAllocator();
-        utf8Comp = BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
     }
 
     @Override
@@ -324,9 +321,8 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
         }
     }
 
-    private boolean equalNames(IValueReference fieldName1, IValueReference fieldName2) throws HyracksDataException {
-        // TODO(ali): refactor with PointableHelper and move it from runtime package
-        return utf8Comp.compare(fieldName1.getByteArray(), fieldName1.getStartOffset() + 1, fieldName1.getLength() - 1,
-                fieldName2.getByteArray(), fieldName2.getStartOffset() + 1, fieldName2.getLength() - 1) == 0;
+    private boolean equalNames(IValueReference fieldName1, IValueReference fieldName2) {
+        return UTF8StringUtil.compareTo(fieldName1.getByteArray(), fieldName1.getStartOffset() + 1,
+                fieldName2.getByteArray(), fieldName2.getStartOffset() + 1) == 0;
     }
 }

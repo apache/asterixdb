@@ -27,11 +27,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.string.UTF8StringWriter;
@@ -64,10 +62,6 @@ public class PointableHelper {
 
     public PointableHelper() {
         utf8Writer = new UTF8StringWriter();
-    }
-
-    public static IBinaryComparator createStringBinaryComparator() {
-        return PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
     }
 
     public static int compareStringBinValues(IValueReference a, IValueReference b, IBinaryComparator comparator)

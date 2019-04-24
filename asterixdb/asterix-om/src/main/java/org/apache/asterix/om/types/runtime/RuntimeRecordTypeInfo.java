@@ -28,8 +28,8 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.util.string.UTF8StringUtil;
@@ -55,8 +55,7 @@ public class RuntimeRecordTypeInfo {
     private ARecordType cachedRecType = null;
 
     public RuntimeRecordTypeInfo() {
-        fieldNameComparator =
-                new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY).createBinaryComparator();
+        fieldNameComparator = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         fieldNameHashFunction =
                 new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY).createBinaryHashFunction();
         writer = new UTF8StringWriter();

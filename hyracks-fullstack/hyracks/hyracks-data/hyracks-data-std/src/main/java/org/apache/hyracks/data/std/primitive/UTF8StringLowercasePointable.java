@@ -74,4 +74,8 @@ public final class UTF8StringLowercasePointable extends AbstractPointable implem
         return UTF8StringUtil.lowerCaseHash(bytes, start);
     }
 
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static int compare(byte[] bytes, int start, int length, byte[] thatBytes, int thatStart, int thatLength) {
+        return UTF8StringUtil.lowerCaseCompareTo(bytes, start, thatBytes, thatStart);
+    }
 }

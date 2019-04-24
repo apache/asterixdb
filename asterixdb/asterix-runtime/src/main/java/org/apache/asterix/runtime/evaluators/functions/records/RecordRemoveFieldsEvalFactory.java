@@ -45,6 +45,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -80,7 +81,8 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
         final IPointable inputArg1 = new VoidPointable();
         final IScalarEvaluator eval0 = inputRecordEvalFactory.createScalarEvaluator(ctx);
         final IScalarEvaluator eval1 = removeFieldPathsFactory.createScalarEvaluator(ctx);
-        final IBinaryComparator stringBinaryComparator = PointableHelper.createStringBinaryComparator();
+        final IBinaryComparator stringBinaryComparator =
+                UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
         return new IScalarEvaluator() {
             private final RuntimeRecordTypeInfo runtimeRecordTypeInfo = new RuntimeRecordTypeInfo();

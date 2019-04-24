@@ -33,6 +33,7 @@ import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -51,7 +52,8 @@ abstract class AbstractRecordAddPutEvaluator implements IScalarEvaluator {
     final IPointable inputRecordPointable = new VoidPointable();
     final UTF8StringPointable newFieldNamePointable = new UTF8StringPointable();
     final IPointable newFieldValuePointable = new VoidPointable();
-    final IBinaryComparator stringBinaryComparator = PointableHelper.createStringBinaryComparator();
+    final IBinaryComparator stringBinaryComparator =
+            UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
     final RecordBuilder outRecordBuilder = new RecordBuilder();
     final ARecordVisitablePointable inputOpenRecordPointable;
     boolean newFieldValueIsMissing = false;

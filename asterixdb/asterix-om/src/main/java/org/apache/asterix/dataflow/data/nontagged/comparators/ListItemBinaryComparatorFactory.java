@@ -27,15 +27,14 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.data.std.accessors.BooleanBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.ByteArrayBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.FloatBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.LongBinaryComparatorFactory;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.RawBinaryComparatorFactory;
-import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
-import org.apache.hyracks.data.std.primitive.UTF8StringLowercasePointable;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringLowercaseBinaryComparatorFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -59,10 +58,9 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
             final IBinaryComparator ascBoolComp = BooleanBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascIntComp = IntegerBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascLongComp = LongBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-            final IBinaryComparator ascStrComp =
-                    new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY).createBinaryComparator();
+            final IBinaryComparator ascStrComp = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascLowerCaseStrComp =
-                    new PointableBinaryComparatorFactory(UTF8StringLowercasePointable.FACTORY).createBinaryComparator();
+                    UTF8StringLowercaseBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascFloatComp = FloatBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascDoubleComp = DoubleBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascRectangleComp =
@@ -82,7 +80,7 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                     APolygonPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascUUIDComp = AUUIDPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascByteArrayComp =
-                    new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY).createBinaryComparator();
+                    ByteArrayBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator rawComp = RawBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
             @Override

@@ -33,8 +33,8 @@ import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
@@ -43,7 +43,6 @@ import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerD
 public class RecordBuilder implements IARecordBuilder {
     private final static int DEFAULT_NUM_OPEN_FIELDS = 10;
     private final UTF8StringSerializerDeserializer utf8SerDer = new UTF8StringSerializerDeserializer();
-
     private int openPartOffsetArraySize;
     private byte[] openPartOffsetArray;
     private int offsetPosition;
@@ -51,44 +50,34 @@ public class RecordBuilder implements IARecordBuilder {
     private boolean isOpen;
     private boolean containsOptionalField;
     private int numberOfSchemaFields;
-
     private int openPartOffset;
     private ARecordType recType;
-
     private final IBinaryHashFunction utf8HashFunction;
     private final IBinaryComparator utf8Comparator;
-
     private final ByteArrayAccessibleOutputStream closedPartOutputStream;
     private int[] closedPartOffsets;
     private int numberOfClosedFields;
     private byte[] nullBitMap;
     private int nullBitMapSize;
-
     private final ByteArrayAccessibleOutputStream openPartOutputStream;
     private long[] openPartOffsets;
     private int[] openFieldNameLengths;
-
     private int numberOfOpenFields;
     private final RuntimeRecordTypeInfo recTypeInfo;
 
     public RecordBuilder() {
         this.closedPartOutputStream = new ByteArrayAccessibleOutputStream();
         this.numberOfClosedFields = 0;
-
         this.openPartOutputStream = new ByteArrayAccessibleOutputStream();
         this.openPartOffsets = new long[DEFAULT_NUM_OPEN_FIELDS];
         this.openFieldNameLengths = new int[DEFAULT_NUM_OPEN_FIELDS];
         this.numberOfOpenFields = 0;
-
         this.utf8HashFunction =
                 new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY).createBinaryHashFunction();
-        this.utf8Comparator =
-                new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY).createBinaryComparator();
-
+        this.utf8Comparator = UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         this.openPartOffsetArray = null;
         this.openPartOffsetArraySize = 0;
         this.offsetPosition = 0;
-
         this.recTypeInfo = new RuntimeRecordTypeInfo();
     }
 

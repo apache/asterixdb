@@ -36,8 +36,8 @@ import org.apache.hyracks.api.io.UnmanagedFileSplit;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.UTF8StringBinaryHashFunctionFamily;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -154,7 +154,7 @@ public class WordCountMain {
         int[] keys = new int[] { 0 };
         if ("hash".equalsIgnoreCase(algo)) {
             gBy = new ExternalGroupOperatorDescriptor(spec, htSize, fileSize, keys, frameLimit,
-                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                    new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                     new UTF8StringNormalizedKeyComputerFactory(),
                     new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
                             new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(3, false),
@@ -172,7 +172,7 @@ public class WordCountMain {
             spec.connect(scanGroupConn, wordScanner, 0, gBy, 0);
         } else {
             IBinaryComparatorFactory[] cfs =
-                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
+                    new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE };
             IOperatorDescriptor sorter =
                     "memsort".equalsIgnoreCase(algo)
                             ? new InMemorySortOperatorDescriptor(spec, keys,
@@ -189,7 +189,7 @@ public class WordCountMain {
             spec.connect(scanSortConn, wordScanner, 0, sorter, 0);
 
             gBy = new PreclusteredGroupOperatorDescriptor(spec, keys,
-                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                    new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                     new MultiFieldsAggregatorFactory(
                             new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }),
                     groupResultDesc);

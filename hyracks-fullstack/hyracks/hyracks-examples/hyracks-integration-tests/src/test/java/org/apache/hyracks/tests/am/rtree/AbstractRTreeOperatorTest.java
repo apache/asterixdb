@@ -33,7 +33,7 @@ import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -171,7 +171,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         primaryTypeTraits[7] = UTF8StringPointable.TYPE_TRAITS;
         primaryTypeTraits[8] = UTF8StringPointable.TYPE_TRAITS;
         primaryTypeTraits[9] = UTF8StringPointable.TYPE_TRAITS;
-        primaryComparatorFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        primaryComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
 
         // field, type and key declarations for secondary indexes
         secondaryTypeTraits[0] = DoublePointable.TYPE_TRAITS;
@@ -193,22 +193,21 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
             rtreeFields = new int[] { 0, 1, 2, 3, 4 };
             filterFields = new int[] { 4 };
             filterTypes = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
-            filterCmpFactories =
-                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
+            filterCmpFactories = new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE };
         }
 
         int[] btreeFields = null;
         if (rTreeType == RTreeType.LSMRTREE) {
             btreeKeyFieldCount = 1;
             btreeComparatorFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-            btreeComparatorFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+            btreeComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
             btreeFields = new int[] { 4 };
         } else {
             btreeComparatorFactories[0] = DoubleBinaryComparatorFactory.INSTANCE;
             btreeComparatorFactories[1] = DoubleBinaryComparatorFactory.INSTANCE;
             btreeComparatorFactories[2] = DoubleBinaryComparatorFactory.INSTANCE;
             btreeComparatorFactories[3] = DoubleBinaryComparatorFactory.INSTANCE;
-            btreeComparatorFactories[4] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+            btreeComparatorFactories[4] = UTF8StringBinaryComparatorFactory.INSTANCE;
         }
 
         IPrimitiveValueProviderFactory[] secondaryValueProviderFactories = RTreeUtils
@@ -265,8 +264,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, 1000, new int[] { 0 },
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                ordersDesc);
+                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, ordersDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID);
 
         int[] fieldPermutation = { 0, 1, 2, 4, 5, 7, 9, 10, 11, 12 };

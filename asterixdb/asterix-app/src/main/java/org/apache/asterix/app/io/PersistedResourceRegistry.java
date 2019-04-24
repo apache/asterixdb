@@ -69,6 +69,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.data.std.accessors.BooleanBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.ByteArrayBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.ByteBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.FloatBinaryComparatorFactory;
@@ -77,6 +78,9 @@ import org.apache.hyracks.data.std.accessors.LongBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.RawBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.ShortBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringLowercaseBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringLowercaseTokenBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.data.std.primitive.BytePointable;
@@ -220,6 +224,12 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         REGISTERED_CLASSES.put("IntegerBinaryComparatorFactory", IntegerBinaryComparatorFactory.class);
         REGISTERED_CLASSES.put("FloatBinaryComparatorFactory", FloatBinaryComparatorFactory.class);
         REGISTERED_CLASSES.put("DoubleBinaryComparatorFactory", DoubleBinaryComparatorFactory.class);
+        REGISTERED_CLASSES.put("UTF8StringBinaryComparatorFactory", UTF8StringBinaryComparatorFactory.class);
+        REGISTERED_CLASSES.put("UTF8StringLowercaseBinaryComparatorFactory",
+                UTF8StringLowercaseBinaryComparatorFactory.class);
+        REGISTERED_CLASSES.put("UTF8StringLowercaseTokenBinaryComparatorFactory",
+                UTF8StringLowercaseTokenBinaryComparatorFactory.class);
+        REGISTERED_CLASSES.put("ByteArrayBinaryComparatorFactory", ByteArrayBinaryComparatorFactory.class);
 
         // IPointableFactory
         REGISTERED_CLASSES.put("AIntervalPointableFactory", AIntervalPointable.AIntervalPointableFactory.class);

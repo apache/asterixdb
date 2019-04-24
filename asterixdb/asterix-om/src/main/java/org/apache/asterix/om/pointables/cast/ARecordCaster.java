@@ -47,9 +47,8 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
@@ -61,39 +60,29 @@ class ARecordCaster {
 
     // pointable allocator
     private final PointableAllocator allocator = new PointableAllocator();
-
     private final List<IVisitablePointable> reqFieldNames = new ArrayList<>();
     private final List<IVisitablePointable> reqFieldTypeTags = new ArrayList<>();
     private ARecordType cachedReqType = null;
-
     private final ResettableByteArrayOutputStream bos = new ResettableByteArrayOutputStream();
     private final DataOutputStream dos = new DataOutputStream(bos);
-
     private final RecordBuilder recBuilder = new RecordBuilder();
     private final IVisitablePointable nullTypeTag = PointableAllocator.allocateUnrestableEmpty();
     private final IVisitablePointable missingTypeTag = PointableAllocator.allocateUnrestableEmpty();
-
     private final IBinaryComparator fieldNameComparator =
-            PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
-
+            UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
     private final ByteArrayAccessibleOutputStream outputBos = new ByteArrayAccessibleOutputStream();
     private final DataOutputStream outputDos = new DataOutputStream(outputBos);
-
     private final IVisitablePointable fieldTempReference = PointableAllocator.allocateUnrestableEmpty();
     private final Triple<IVisitablePointable, IAType, Boolean> nestedVisitorArg =
             new Triple<>(fieldTempReference, null, null);
-
     private int numInputFields = 0;
-
     // describe closed fields in the required type
     private int[] fieldPermutation;
     private boolean[] optionalFields;
-
     // describe fields (open or not) in the input records
     private boolean[] openFields;
     private int[] fieldNamesSortedIndex;
     private int[] reqFieldNamesSortedIndex;
-
     private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
     public ARecordCaster() throws HyracksDataException {

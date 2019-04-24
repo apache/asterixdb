@@ -62,11 +62,6 @@ public final class UTF8StringLowercaseTokenPointable extends AbstractPointable i
         }
     }
 
-    // Set the length of this pointable
-    public void setLength(int length) {
-        this.length = length;
-    }
-
     @Override
     public int compareTo(IPointable pointer) {
         return compareTo(pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
@@ -82,4 +77,7 @@ public final class UTF8StringLowercaseTokenPointable extends AbstractPointable i
         return UTF8StringUtil.lowerCaseHash(bytes, start, length);
     }
 
+    public static int compare(byte[] bytes, int start, int length, byte[] thatBytes, int thatStart, int thatLength) {
+        return UTF8StringUtil.lowerCaseCompareTo(bytes, start, length, thatBytes, thatStart, thatLength);
+    }
 }

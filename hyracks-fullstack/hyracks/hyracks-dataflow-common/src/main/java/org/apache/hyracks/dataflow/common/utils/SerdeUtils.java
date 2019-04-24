@@ -28,8 +28,8 @@ import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.FloatBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.LongBinaryComparatorFactory;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.ShortBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.FixedLengthTypeTrait;
@@ -130,7 +130,7 @@ public class SerdeUtils {
             return BooleanBinaryComparatorFactory.INSTANCE;
         }
         if (serde instanceof UTF8StringSerializerDeserializer) {
-            return PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+            return UTF8StringBinaryComparatorFactory.INSTANCE;
         }
         throw new UnsupportedOperationException("Binary comparator for + " + serde.toString() + " not implemented.");
     }

@@ -43,7 +43,6 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy.Domain;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.RawBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -57,11 +56,6 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
  * logical comparison.
  */
 abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
-
-    private final IBinaryComparator ascStrComp =
-            new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY).createBinaryComparator();
-    private final IBinaryComparator ascByteArrayComp =
-            new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY).createBinaryComparator();
 
     protected final IAType leftType;
     protected final IAType rightType;
@@ -102,7 +96,7 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
 
         switch (tag1) {
             case STRING:
-                return ascStrComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                return UTF8StringPointable.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case UUID:
                 return AUUIDPartialBinaryComparatorFactory.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case BOOLEAN:
@@ -139,7 +133,7 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
             case INTERVAL:
                 return compareInterval(b1, s1, l1, b2, s2, l2);
             case BINARY:
-                return ascByteArrayComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                return ByteArrayPointable.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
             case ARRAY:
                 return compareArrays(leftType, b1, s1, rightType, b2, s2);
             case OBJECT:

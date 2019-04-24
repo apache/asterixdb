@@ -36,6 +36,7 @@ import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -46,7 +47,8 @@ class RecordRemoveEvaluator implements IScalarEvaluator {
 
     private final IPointable inputRecordPointable = new VoidPointable();
     private final UTF8StringPointable fieldToRemovePointable = new UTF8StringPointable();
-    private final IBinaryComparator stringBinaryComparator = PointableHelper.createStringBinaryComparator();
+    private final IBinaryComparator stringBinaryComparator =
+            UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final DataOutput resultOutput = resultStorage.getDataOutput();
     private final RecordBuilder outRecordBuilder = new RecordBuilder();

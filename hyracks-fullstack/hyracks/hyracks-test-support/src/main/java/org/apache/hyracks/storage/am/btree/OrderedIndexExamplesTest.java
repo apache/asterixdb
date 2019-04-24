@@ -29,7 +29,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -173,7 +173,7 @@ public abstract class OrderedIndexExamplesTest {
         // Declare keys.
         int keyFieldCount = 1;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        cmpFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
 
         // This is only used for the LSM-BTree.
         int[] bloomFilterKeyFields = new int[keyFieldCount];
@@ -338,7 +338,7 @@ public abstract class OrderedIndexExamplesTest {
         // Declare keys.
         int keyFieldCount = 1;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        cmpFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
 
         // This is only used for the LSM-BTree.
         int[] bloomFilterKeyFields = new int[keyFieldCount];
@@ -426,7 +426,7 @@ public abstract class OrderedIndexExamplesTest {
         // Declare keys.
         int keyFieldCount = 1;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        cmpFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
 
         // This is only used for the LSM-BTree.
         int[] bloomFilterKeyFields = new int[keyFieldCount];
@@ -539,7 +539,7 @@ public abstract class OrderedIndexExamplesTest {
         // Declare keys.
         int keyFieldCount = 1;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        cmpFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
 
         // This is only used for the LSM-BTree.
         int[] bloomFilterKeyFields = new int[keyFieldCount];

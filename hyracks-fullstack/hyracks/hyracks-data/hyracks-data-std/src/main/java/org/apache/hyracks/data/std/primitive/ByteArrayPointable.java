@@ -80,24 +80,12 @@ public class ByteArrayPointable extends AbstractPointable implements IHashable, 
 
     @Override
     public int compareTo(IPointable pointer) {
-        return compareTo(pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
+        return compare(bytes, start, length, pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
     }
 
     @Override
     public int compareTo(byte[] thatBytes, int thatStart, int thatLength) {
-        int thisArrayLen = getContentLength(this.bytes, this.start);
-        int thatArrayLen = getContentLength(thatBytes, thatStart);
-
-        int thisArrayStart = this.getContentStartOffset();
-        int thatArrayStart = thatStart + getNumberBytesToStoreMeta(thatArrayLen);
-
-        for (int thisIndex = 0, thatIndex = 0; thisIndex < thisArrayLen
-                && thatIndex < thatArrayLen; ++thisIndex, ++thatIndex) {
-            if (this.bytes[thisArrayStart + thisIndex] != thatBytes[thatArrayStart + thatIndex]) {
-                return (0xff & this.bytes[thisArrayStart + thisIndex]) - (0xff & thatBytes[thatArrayStart + thatIndex]);
-            }
-        }
-        return thisArrayLen - thatArrayLen;
+        return compare(bytes, start, length, thatBytes, thatStart, thatLength);
     }
 
     public int getContentLength() {
@@ -131,7 +119,23 @@ public class ByteArrayPointable extends AbstractPointable implements IHashable, 
         return getStartOffset() + getMetaLength();
     }
 
-    ///////////////// helper functions ////////////////////////////////
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static int compare(byte[] bytes, int start, int length, byte[] thatBytes, int thatStart, int thatLength) {
+        int thisArrayLen = getContentLength(bytes, start);
+        int thatArrayLen = getContentLength(thatBytes, thatStart);
+
+        int thisArrayStart = start + getNumberBytesToStoreMeta(thisArrayLen);
+        int thatArrayStart = thatStart + getNumberBytesToStoreMeta(thatArrayLen);
+
+        for (int thisIndex = 0, thatIndex = 0; thisIndex < thisArrayLen
+                && thatIndex < thatArrayLen; ++thisIndex, ++thatIndex) {
+            if (bytes[thisArrayStart + thisIndex] != thatBytes[thatArrayStart + thatIndex]) {
+                return (0xff & bytes[thisArrayStart + thisIndex]) - (0xff & thatBytes[thatArrayStart + thatIndex]);
+            }
+        }
+        return thisArrayLen - thatArrayLen;
+    }
+
     public static byte[] copyContent(ByteArrayPointable bytePtr) {
         return Arrays.copyOfRange(bytePtr.getByteArray(), bytePtr.getContentStartOffset(),
                 bytePtr.getContentStartOffset() + bytePtr.getContentLength());

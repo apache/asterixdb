@@ -38,8 +38,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
@@ -60,7 +59,7 @@ public abstract class AbstractRunGeneratorTest {
     static Random GRandom = new Random(0);
     static int[] SortFields = new int[] { 0, 1 };
     static IBinaryComparatorFactory[] ComparatorFactories = new IBinaryComparatorFactory[] {
-            IntegerBinaryComparatorFactory.INSTANCE, PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
+            IntegerBinaryComparatorFactory.INSTANCE, UTF8StringBinaryComparatorFactory.INSTANCE };
 
     static void assertMaxFrameSizesAreAllEqualsTo(List<GeneratedRunFileReader> maxSize, int pageSize) {
         for (int i = 0; i < maxSize.size(); i++) {

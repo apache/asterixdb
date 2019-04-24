@@ -30,6 +30,10 @@ import org.apache.hyracks.data.std.api.IPointableFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+/**
+ * Avoid using this comparator factory. Use the pointable-specific comparator factory INSTANCE instead. This class is
+ * only kept for backward compatibility.
+ */
 public class PointableBinaryComparatorFactory implements IBinaryComparatorFactory {
     private static final long serialVersionUID = 1L;
 

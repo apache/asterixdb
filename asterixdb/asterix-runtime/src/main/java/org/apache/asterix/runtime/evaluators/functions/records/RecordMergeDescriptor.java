@@ -49,6 +49,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -109,7 +110,8 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                 final List<RecordBuilder> rbStack = new ArrayList<>();
 
                 final ArrayBackedValueStorage tabvs = new ArrayBackedValueStorage();
-                final IBinaryComparator stringBinaryComparator = PointableHelper.createStringBinaryComparator();
+                final IBinaryComparator stringBinaryComparator =
+                        UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
                 return new IScalarEvaluator() {
 

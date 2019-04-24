@@ -38,18 +38,17 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.BooleanBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.ByteArrayBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.ByteBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.FloatBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.LongBinaryComparatorFactory;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.RawBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.ShortBinaryComparatorFactory;
-import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
-import org.apache.hyracks.data.std.primitive.UTF8StringLowercasePointable;
-import org.apache.hyracks.data.std.primitive.UTF8StringLowercaseTokenPointable;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringLowercaseBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.UTF8StringLowercaseTokenBinaryComparatorFactory;
 
 public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactoryProvider, Serializable {
 
@@ -61,18 +60,17 @@ public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactory
     public static final IBinaryComparatorFactory LONG_POINTABLE_INSTANCE = LongBinaryComparatorFactory.INSTANCE;
     public static final IBinaryComparatorFactory FLOAT_POINTABLE_INSTANCE = FloatBinaryComparatorFactory.INSTANCE;
     public static final IBinaryComparatorFactory DOUBLE_POINTABLE_INSTANCE = DoubleBinaryComparatorFactory.INSTANCE;
-    public static final PointableBinaryComparatorFactory UTF8STRING_POINTABLE_INSTANCE =
-            new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY);
+    public static final IBinaryComparatorFactory UTF8STRING_POINTABLE_INSTANCE =
+            UTF8StringBinaryComparatorFactory.INSTANCE;
     // Equivalent to UTF8STRING_POINTABLE_INSTANCE but all characters are considered lower case to implement
     // case-insensitive comparisons.
-    public static final PointableBinaryComparatorFactory UTF8STRING_LOWERCASE_POINTABLE_INSTANCE =
-            new PointableBinaryComparatorFactory(UTF8StringLowercasePointable.FACTORY);
+    public static final IBinaryComparatorFactory UTF8STRING_LOWERCASE_POINTABLE_INSTANCE =
+            UTF8StringLowercaseBinaryComparatorFactory.INSTANCE;
     // Equivalent to UTF8STRING_LOWERCASE_POINTABLE_INSTANCE but the length information is kept separately,
     // rather than keeping them in the beginning of a string. It is especially useful for the string tokens
-    public static final PointableBinaryComparatorFactory UTF8STRING_LOWERCASE_TOKEN_POINTABLE_INSTANCE =
-            new PointableBinaryComparatorFactory(UTF8StringLowercaseTokenPointable.FACTORY);
-    public static final PointableBinaryComparatorFactory BINARY_POINTABLE_INSTANCE =
-            new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY);
+    public static final IBinaryComparatorFactory UTF8STRING_LOWERCASE_TOKEN_POINTABLE_INSTANCE =
+            UTF8StringLowercaseTokenBinaryComparatorFactory.INSTANCE;
+    public static final IBinaryComparatorFactory BINARY_POINTABLE_INSTANCE = ByteArrayBinaryComparatorFactory.INSTANCE;
 
     private BinaryComparatorFactoryProvider() {
     }

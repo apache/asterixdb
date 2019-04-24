@@ -36,25 +36,19 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeser
 import org.apache.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 public final class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
 
     private static final EnumSet<ATypeTag> INEQUALITY_UNDEFINED_TYPES =
             EnumSet.of(DURATION, INTERVAL, LINE, POINT, POINT3D, POLYGON, CIRCLE, RECTANGLE);
-    private final IBinaryComparator strBinaryComp =
-            BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
-    private final IBinaryComparator byteArrayComparator =
-            new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY).createBinaryComparator();
     private final boolean isEquality;
 
     LogicalScalarBinaryComparator(boolean isEquality) {
@@ -96,7 +90,7 @@ public final class LogicalScalarBinaryComparator implements ILogicalBinaryCompar
                 result = BooleanPointable.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
                 break;
             case STRING:
-                result = strBinaryComp.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
+                result = UTF8StringPointable.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
                 break;
             case YEARMONTHDURATION:
                 result = Integer.compare(AYearMonthDurationSerializerDeserializer.getYearMonth(leftBytes, leftStart),
@@ -151,7 +145,7 @@ public final class LogicalScalarBinaryComparator implements ILogicalBinaryCompar
                         rightStart, rightLen);
                 break;
             case BINARY:
-                result = byteArrayComparator.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
+                result = ByteArrayPointable.compare(leftBytes, leftStart, leftLen, rightBytes, rightStart, rightLen);
                 break;
             case UUID:
                 result = AUUIDPartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
