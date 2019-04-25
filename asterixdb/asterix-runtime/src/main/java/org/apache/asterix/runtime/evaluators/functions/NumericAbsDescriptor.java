@@ -23,6 +23,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -34,6 +35,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
+@MissingNullInOutFunction
 public class NumericAbsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {

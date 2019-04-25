@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -52,6 +53,7 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+@MissingNullInOutFunction
 public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private static final FunctionIdentifier FID = BuiltinFunctions.GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR;

@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions.binary;
 
 import java.io.IOException;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -41,6 +42,7 @@ import org.apache.hyracks.util.bytes.Base64Printer;
 import org.apache.hyracks.util.bytes.HexPrinter;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
+@MissingNullInOutFunction
 public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private static final UTF8StringPointable HEX_FORMAT = UTF8StringPointable.generateUTF8Pointable("hex");

@@ -19,6 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions.binary;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABinary;
 import org.apache.asterix.om.base.AMutableBinary;
@@ -42,6 +43,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.bytes.Base64Parser;
 import org.apache.hyracks.util.bytes.HexParser;
 
+@MissingNullInOutFunction
 public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private static final UTF8StringPointable HEX_FORMAT = UTF8StringPointable.generateUTF8Pointable("hex");

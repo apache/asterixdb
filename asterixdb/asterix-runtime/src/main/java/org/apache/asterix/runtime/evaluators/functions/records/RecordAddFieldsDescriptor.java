@@ -23,6 +23,7 @@ import java.io.DataOutput;
 import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -62,6 +63,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.BinaryEntry;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+@MissingNullInOutFunction
 public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {

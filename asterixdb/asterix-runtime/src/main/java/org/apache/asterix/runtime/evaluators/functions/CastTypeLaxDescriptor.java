@@ -19,6 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -45,6 +46,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * </li>
  * </ul>
  */
+
+@MissingNullInOutFunction
 public class CastTypeLaxDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {

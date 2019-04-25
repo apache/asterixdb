@@ -22,6 +22,7 @@ import static org.apache.asterix.om.types.ATypeTag.SERIALIZED_DATETIME_TYPE_TAG;
 
 import java.io.DataOutput;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
@@ -45,6 +46,7 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+@MissingNullInOutFunction
 public class UnixTimeFromDatetimeInSecsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;

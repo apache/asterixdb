@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
@@ -43,6 +44,7 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+@MissingNullInOutFunction
 public class MonthsFromYearMonthDurationDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = BuiltinFunctions.MONTHS_FROM_YEAR_MONTH_DURATION;

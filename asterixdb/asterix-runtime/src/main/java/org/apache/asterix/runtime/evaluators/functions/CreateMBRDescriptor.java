@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -26,6 +27,7 @@ import org.apache.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
+@MissingNullInOutFunction
 public class CreateMBRDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;

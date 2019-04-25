@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -64,6 +65,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * Records A and B can be combined yielding a nested record called "metadata"
  * That will have all three fields
  */
+
+@MissingNullInOutFunction
 public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {

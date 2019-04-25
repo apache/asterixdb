@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
@@ -53,6 +54,7 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+@MissingNullInOutFunction
 public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;

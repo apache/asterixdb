@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -44,6 +45,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+@MissingNullInOutFunction
 public class DeepEqualityDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {

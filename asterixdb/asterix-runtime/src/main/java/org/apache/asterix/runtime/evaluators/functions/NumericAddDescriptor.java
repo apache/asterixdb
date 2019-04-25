@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
@@ -30,6 +31,7 @@ import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+@MissingNullInOutFunction
 public class NumericAddDescriptor extends AbstractNumericArithmeticEval {
 
     private static final long serialVersionUID = 1L;

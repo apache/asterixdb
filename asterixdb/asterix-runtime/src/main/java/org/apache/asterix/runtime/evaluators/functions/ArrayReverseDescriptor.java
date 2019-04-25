@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.IOException;
 
 import org.apache.asterix.builders.IAsterixListBuilder;
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -53,6 +54,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
  *
  * </pre>
  */
+
+@MissingNullInOutFunction
 public class ArrayReverseDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType inputListType;

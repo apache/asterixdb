@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions.binary;
 
 import java.io.IOException;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
@@ -45,6 +46,7 @@ import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
+@MissingNullInOutFunction
 public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 

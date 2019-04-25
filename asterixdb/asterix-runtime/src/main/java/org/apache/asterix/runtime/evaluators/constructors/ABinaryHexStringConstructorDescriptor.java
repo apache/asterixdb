@@ -22,6 +22,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -45,6 +46,7 @@ import org.apache.hyracks.dataflow.common.data.parsers.ByteArrayHexParserFactory
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParser;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 
+@MissingNullInOutFunction
 public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {

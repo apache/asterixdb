@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -58,6 +59,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  *
  * </pre>
  */
+
+@MissingNullInOutFunction
 public class ArrayRepeatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 

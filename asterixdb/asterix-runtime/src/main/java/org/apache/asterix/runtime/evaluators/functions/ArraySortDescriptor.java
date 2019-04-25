@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 
 import org.apache.asterix.builders.IAsterixListBuilder;
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -59,6 +60,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
  *
  * </pre>
  */
+
+@MissingNullInOutFunction
 public class ArraySortDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType inputListType;

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions.temporal;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -25,6 +26,7 @@ import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+@MissingNullInOutFunction
 public class IntervalBeforeDescriptor extends AbstractIntervalLogicFuncDescriptor {
 
     private final static long serialVersionUID = 1L;

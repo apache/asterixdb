@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -37,6 +38,8 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  * array_slice(array, start) This function takes 2 arguments, {@code array} and {@code start} and returns
  * a subset of the array that starts at position {@code start} to position {@code length - 1}.
  */
+
+@MissingNullInOutFunction
 public class ArraySliceWithoutEndPositionDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType inputListType;

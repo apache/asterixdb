@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions.records;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -25,6 +26,7 @@ import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicD
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
+@MissingNullInOutFunction
 public class FieldAccessByNameDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;

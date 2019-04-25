@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -36,6 +37,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * This runtime function casts an input ADM instance of a certain type into the form
  * that confirms a required type.
  */
+
+@MissingNullInOutFunction
 public class CastTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -53,6 +54,8 @@ import org.apache.hyracks.data.std.api.IPointable;
  *
  * </pre>
  */
+
+@MissingNullInOutFunction
 public class ArrayContainsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;

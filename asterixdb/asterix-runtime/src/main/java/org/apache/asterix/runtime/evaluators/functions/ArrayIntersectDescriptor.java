@@ -28,6 +28,7 @@ import org.apache.asterix.builders.ArrayListFactory;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
@@ -85,6 +86,8 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  *
  * </pre>
  */
+
+@MissingNullInOutFunction
 public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;

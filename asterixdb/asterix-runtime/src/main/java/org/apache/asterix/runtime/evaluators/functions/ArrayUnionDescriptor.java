@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.asterix.builders.ArrayListFactory;
 import org.apache.asterix.builders.IAsterixListBuilder;
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -65,6 +66,8 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  *
  * </pre>
  */
+
+@MissingNullInOutFunction
 public class ArrayUnionDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;

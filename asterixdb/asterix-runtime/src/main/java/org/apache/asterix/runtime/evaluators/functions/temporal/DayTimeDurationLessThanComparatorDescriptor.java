@@ -19,9 +19,11 @@
 
 package org.apache.asterix.runtime.evaluators.functions.temporal;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 
+@MissingNullInOutFunction
 public class DayTimeDurationLessThanComparatorDescriptor extends DayTimeDurationComparatorDescriptor {
     private static final long serialVersionUID = 1L;
 

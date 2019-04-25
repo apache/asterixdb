@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -36,6 +37,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * that are filterable and those that are not. Those that are filterable are forwarded to the index.
  * The others are fed into a (non indexed) nested-loop join.
  */
+
+@MissingNullInOutFunction
 public class EditDistanceStringIsFilterableDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;

@@ -19,6 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.comparisons;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.Result;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -31,6 +32,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+@MissingNullInOutFunction
 public class LessThanOrEqualsDescriptor extends AbstractComparisonDescriptor {
     private static final long serialVersionUID = 1L;
 

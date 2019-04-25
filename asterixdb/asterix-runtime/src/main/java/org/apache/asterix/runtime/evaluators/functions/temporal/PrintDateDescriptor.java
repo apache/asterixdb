@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode;
@@ -44,6 +45,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
+@MissingNullInOutFunction
 public class PrintDateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
