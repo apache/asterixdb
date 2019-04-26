@@ -25,17 +25,9 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
 
-public class FrameSorterQuickSort extends AbstractFrameSorter {
+class FrameSorterQuickSort extends AbstractFrameSorter {
 
-    public FrameSorterQuickSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int maxSortFrames,
-            int[] sortFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
-            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor)
-            throws HyracksDataException {
-        this(ctx, bufferManager, maxSortFrames, sortFields, keyNormalizerFactories, comparatorFactories,
-                recordDescriptor, Integer.MAX_VALUE);
-    }
-
-    public FrameSorterQuickSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int maxSortFrames,
+    FrameSorterQuickSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int maxSortFrames,
             int[] sortFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor, int outputLimit)
             throws HyracksDataException {
@@ -48,7 +40,7 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
         sort(0, tupleCount);
     }
 
-    void sort(int offset, int length) throws HyracksDataException {
+    private void sort(int offset, int length) throws HyracksDataException {
         int m = offset + (length >> 1);
 
         int a = offset;
@@ -102,4 +94,9 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
         }
     }
 
+    private void swap(int pointers1[], int pos1, int pointers2[], int pos2) {
+        System.arraycopy(pointers1, pos1 * ptrSize, tmpPointer, 0, ptrSize);
+        System.arraycopy(pointers2, pos2 * ptrSize, pointers1, pos1 * ptrSize, ptrSize);
+        System.arraycopy(tmpPointer, 0, pointers2, pos2 * ptrSize, ptrSize);
+    }
 }

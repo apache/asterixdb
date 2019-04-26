@@ -45,7 +45,7 @@ public class HeapSortRunGenerator extends AbstractSortRunGenerator {
     protected final IBinaryComparatorFactory[] comparatorFactories;
     protected final RecordDescriptor recordDescriptor;
     protected ITupleSorter tupleSorter;
-    protected IFrameTupleAccessor inAccessor;
+    protected final IFrameTupleAccessor inAccessor;
 
     public HeapSortRunGenerator(IHyracksTaskContext ctx, int frameLimit, int topK, int[] sortFields,
             INormalizedKeyComputerFactory[] keyNormalizerFactories, IBinaryComparatorFactory[] comparatorFactories,
@@ -71,7 +71,7 @@ public class HeapSortRunGenerator extends AbstractSortRunGenerator {
     }
 
     @Override
-    public ISorter getSorter() throws HyracksDataException {
+    public ISorter getSorter() {
         return tupleSorter;
     }
 

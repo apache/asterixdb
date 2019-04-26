@@ -57,10 +57,33 @@ public class SortGroupbyTest extends AbstractExternalGroupbyTest {
                 }
                 INormalizedKeyComputer nmkComputer = normalizedKeyComputerFactory == null ? null
                         : normalizedKeyComputerFactory.createNormalizedKeyComputer();
-                AbstractExternalSortRunMerger merger = new ExternalSortGroupByRunMerger(ctx, sorter, runs, keyFields,
-                        inRecordDesc, outputRec, outputRec, numFrames, writer, keyFields, nmkComputer, comparators,
+                AbstractExternalSortRunMerger merger = new ExternalSortGroupByRunMerger(ctx, runs, keyFields,
+                        inRecordDesc, outputRec, outputRec, numFrames, keyFields, nmkComputer, comparators,
                         partialAggrInState, finalAggrInState, true);
-                merger.process();
+                IFrameWriter wrappingWriter = null;
+                try {
+                    if (runs.isEmpty()) {
+                        wrappingWriter = merger.prepareSkipMergingFinalResultWriter(writer);
+                        wrappingWriter.open();
+                        if (sorter.hasRemaining()) {
+                            sorter.flush(wrappingWriter);
+                        }
+                    } else {
+                        wrappingWriter = merger.prepareFinalMergeResultWriter(writer);
+                        wrappingWriter.open();
+                        merger.process(wrappingWriter);
+                    }
+                } catch (Throwable e) {
+                    if (wrappingWriter != null) {
+                        wrappingWriter.fail();
+                    }
+                    throw HyracksDataException.create(e);
+                } finally {
+                    sorter.close();
+                    if (wrappingWriter != null) {
+                        wrappingWriter.close();
+                    }
+                }
             }
         };
     }

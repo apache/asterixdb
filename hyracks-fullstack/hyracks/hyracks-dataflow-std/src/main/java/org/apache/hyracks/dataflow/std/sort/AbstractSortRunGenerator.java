@@ -28,13 +28,18 @@ import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 
 public abstract class AbstractSortRunGenerator implements IRunGenerator {
-    protected final List<GeneratedRunFileReader> generatedRunFileReaders;
+
+    private final List<GeneratedRunFileReader> generatedRunFileReaders;
 
     public AbstractSortRunGenerator() {
         generatedRunFileReaders = new LinkedList<>();
     }
 
-    abstract public ISorter getSorter() throws HyracksDataException;
+    /**
+     * Null could be returned. Caller should check if it not null.
+     * @return the sorter associated with the run generator or null if there is no sorter.
+     */
+    abstract public ISorter getSorter();
 
     @Override
     public void open() throws HyracksDataException {
@@ -43,9 +48,10 @@ public abstract class AbstractSortRunGenerator implements IRunGenerator {
 
     @Override
     public void close() throws HyracksDataException {
-        if (getSorter().hasRemaining()) {
+        ISorter sorter = getSorter();
+        if (sorter != null && sorter.hasRemaining()) {
             if (generatedRunFileReaders.size() <= 0) {
-                getSorter().sort();
+                sorter.sort();
             } else {
                 flushFramesToRun();
             }
@@ -56,13 +62,15 @@ public abstract class AbstractSortRunGenerator implements IRunGenerator {
 
     abstract protected IFrameWriter getFlushableFrameWriter(RunFileWriter writer) throws HyracksDataException;
 
-    protected void flushFramesToRun() throws HyracksDataException {
-        getSorter().sort();
+    // assumption is that there will always be a sorter (i.e. sorter is not null)
+    void flushFramesToRun() throws HyracksDataException {
+        ISorter sorter = getSorter();
+        sorter.sort();
         RunFileWriter runWriter = getRunFileWriter();
         IFrameWriter flushWriter = getFlushableFrameWriter(runWriter);
         flushWriter.open();
         try {
-            getSorter().flush(flushWriter);
+            sorter.flush(flushWriter);
         } catch (Exception e) {
             flushWriter.fail();
             throw e;
@@ -70,7 +78,7 @@ public abstract class AbstractSortRunGenerator implements IRunGenerator {
             flushWriter.close();
         }
         generatedRunFileReaders.add(runWriter.createDeleteOnCloseReader());
-        getSorter().reset();
+        sorter.reset();
     }
 
     @Override

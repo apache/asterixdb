@@ -43,8 +43,6 @@ import org.apache.logging.log4j.Logger;
 public abstract class AbstractExternalSortRunMerger {
 
     protected final IHyracksTaskContext ctx;
-    protected final IFrameWriter writer;
-
     private final List<GeneratedRunFileReader> runs;
     private final BitSet currentGenerationRunAvailable;
     private final IBinaryComparator[] comparators;
@@ -54,136 +52,93 @@ public abstract class AbstractExternalSortRunMerger {
     private final int topK;
     private List<GroupVSizeFrame> inFrames;
     private VSizeFrame outputFrame;
-    private ISorter sorter;
-
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public AbstractExternalSortRunMerger(IHyracksTaskContext ctx, ISorter sorter, List<GeneratedRunFileReader> runs,
+    public AbstractExternalSortRunMerger(IHyracksTaskContext ctx, List<GeneratedRunFileReader> runs,
             IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer, RecordDescriptor recordDesc,
-            int framesLimit, IFrameWriter writer) {
-        this(ctx, sorter, runs, comparators, nmkComputer, recordDesc, framesLimit, Integer.MAX_VALUE, writer);
+            int framesLimit) {
+        this(ctx, runs, comparators, nmkComputer, recordDesc, framesLimit, Integer.MAX_VALUE);
     }
 
-    public AbstractExternalSortRunMerger(IHyracksTaskContext ctx, ISorter sorter, List<GeneratedRunFileReader> runs,
+    AbstractExternalSortRunMerger(IHyracksTaskContext ctx, List<GeneratedRunFileReader> runs,
             IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer, RecordDescriptor recordDesc,
-            int framesLimit, int topK, IFrameWriter writer) {
+            int framesLimit, int topK) {
         this.ctx = ctx;
-        this.sorter = sorter;
         this.runs = new LinkedList<>(runs);
         this.currentGenerationRunAvailable = new BitSet(runs.size());
         this.comparators = comparators;
         this.nmkComputer = nmkComputer;
         this.recordDesc = recordDesc;
         this.framesLimit = framesLimit;
-        this.writer = writer;
         this.topK = topK;
     }
 
-    public void process() throws HyracksDataException {
-        IFrameWriter finalWriter = null;
+    public void process(IFrameWriter finalWriter) throws HyracksDataException {
         try {
-            if (runs.isEmpty()) {
-                finalWriter = prepareSkipMergingFinalResultWriter(writer);
-                finalWriter.open();
-                if (sorter != null) {
-                    try {
-                        if (sorter.hasRemaining()) {
-                            sorter.flush(finalWriter);
-                        }
-                    } finally {
-                        sorter.close();
-                    }
-                }
-            } else {
-                /** recycle sort buffer */
-                if (sorter != null) {
-                    sorter.close();
-                }
+            int maxMergeWidth = framesLimit - 1;
+            inFrames = new ArrayList<>(maxMergeWidth);
+            outputFrame = new VSizeFrame(ctx);
+            List<GeneratedRunFileReader> partialRuns = new ArrayList<>(maxMergeWidth);
+            int stop = runs.size();
+            currentGenerationRunAvailable.set(0, stop);
+            int numberOfPasses = 1;
+            while (true) {
+                int unUsed = selectPartialRuns(maxMergeWidth * ctx.getInitialFrameSize(), runs, partialRuns,
+                        currentGenerationRunAvailable, stop);
+                prepareFrames(unUsed, inFrames, partialRuns);
 
-                finalWriter = prepareFinalMergeResultWriter(writer);
-                finalWriter.open();
-
-                int maxMergeWidth = framesLimit - 1;
-
-                inFrames = new ArrayList<>(maxMergeWidth);
-                outputFrame = new VSizeFrame(ctx);
-                List<GeneratedRunFileReader> partialRuns = new ArrayList<>(maxMergeWidth);
-
-                int stop = runs.size();
-                currentGenerationRunAvailable.set(0, stop);
-                int numberOfPasses = 1;
-                while (true) {
-
-                    int unUsed = selectPartialRuns(maxMergeWidth * ctx.getInitialFrameSize(), runs, partialRuns,
-                            currentGenerationRunAvailable, stop);
-                    prepareFrames(unUsed, inFrames, partialRuns);
-
-                    if (!currentGenerationRunAvailable.isEmpty() || stop < runs.size()) {
-                        GeneratedRunFileReader reader;
-                        if (partialRuns.size() == 1) {
-                            if (!currentGenerationRunAvailable.isEmpty()) {
-                                throw new HyracksDataException(
-                                        "The record is too big to put into the merging frame, please"
-                                                + " allocate more sorting memory");
-                            } else {
-                                reader = partialRuns.get(0);
-                            }
-
+                if (!currentGenerationRunAvailable.isEmpty() || stop < runs.size()) {
+                    GeneratedRunFileReader reader;
+                    if (partialRuns.size() == 1) {
+                        if (!currentGenerationRunAvailable.isEmpty()) {
+                            throw new HyracksDataException("The record is too big to put into the merging frame, please"
+                                    + " allocate more sorting memory");
                         } else {
-                            RunFileWriter mergeFileWriter = prepareIntermediateMergeRunFile();
-                            IFrameWriter mergeResultWriter = prepareIntermediateMergeResultWriter(mergeFileWriter);
-
-                            try {
-                                mergeResultWriter.open();
-                                merge(mergeResultWriter, partialRuns);
-                            } catch (Throwable t) {
-                                mergeResultWriter.fail();
-                                throw t;
-                            } finally {
-                                mergeResultWriter.close();
-                            }
-                            reader = mergeFileWriter.createReader();
-                        }
-                        runs.add(reader);
-
-                        if (currentGenerationRunAvailable.isEmpty()) {
-                            numberOfPasses++;
-                            if (LOGGER.isDebugEnabled()) {
-                                LOGGER.debug("generated runs:" + stop);
-                            }
-                            runs.subList(0, stop).clear();
-                            currentGenerationRunAvailable.clear();
-                            currentGenerationRunAvailable.set(0, runs.size());
-                            stop = runs.size();
+                            reader = partialRuns.get(0);
                         }
                     } else {
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("final runs: {}", stop);
-                            LOGGER.debug("number of passes: " + numberOfPasses);
+                        RunFileWriter mergeFileWriter = prepareIntermediateMergeRunFile();
+                        IFrameWriter mergeResultWriter = prepareIntermediateMergeResultWriter(mergeFileWriter);
+
+                        try {
+                            mergeResultWriter.open();
+                            merge(mergeResultWriter, partialRuns);
+                        } catch (Throwable t) {
+                            mergeResultWriter.fail();
+                            throw t;
+                        } finally {
+                            mergeResultWriter.close();
                         }
-                        merge(finalWriter, partialRuns);
-                        break;
+                        reader = mergeFileWriter.createReader();
                     }
-                }
-            }
-        } catch (Exception e) {
-            if (finalWriter != null) {
-                finalWriter.fail();
-            }
-            throw HyracksDataException.create(e);
-        } finally {
-            try {
-                if (finalWriter != null) {
-                    finalWriter.close();
-                }
-            } finally {
-                for (RunFileReader reader : runs) {
-                    try {
-                        reader.close(); // close is idempotent.
-                    } catch (Exception e) {
-                        if (LOGGER.isWarnEnabled()) {
-                            LOGGER.log(Level.WARN, e.getMessage(), e);
+                    runs.add(reader);
+
+                    if (currentGenerationRunAvailable.isEmpty()) {
+                        numberOfPasses++;
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("generated runs:" + stop);
                         }
+                        runs.subList(0, stop).clear();
+                        currentGenerationRunAvailable.clear();
+                        currentGenerationRunAvailable.set(0, runs.size());
+                        stop = runs.size();
+                    }
+                } else {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("final runs: {}", stop);
+                        LOGGER.debug("number of passes: " + numberOfPasses);
+                    }
+                    merge(finalWriter, partialRuns);
+                    break;
+                }
+            }
+        } finally {
+            for (RunFileReader reader : runs) {
+                try {
+                    reader.close(); // close is idempotent.
+                } catch (Exception e) {
+                    if (LOGGER.isWarnEnabled()) {
+                        LOGGER.log(Level.WARN, e.getMessage(), e);
                     }
                 }
             }
@@ -237,18 +192,6 @@ public abstract class AbstractExternalSortRunMerger {
         }
     }
 
-    protected abstract IFrameWriter prepareSkipMergingFinalResultWriter(IFrameWriter nextWriter)
-            throws HyracksDataException;
-
-    protected abstract RunFileWriter prepareIntermediateMergeRunFile() throws HyracksDataException;
-
-    protected abstract IFrameWriter prepareIntermediateMergeResultWriter(RunFileWriter mergeFileWriter)
-            throws HyracksDataException;
-
-    protected abstract IFrameWriter prepareFinalMergeResultWriter(IFrameWriter nextWriter) throws HyracksDataException;
-
-    protected abstract int[] getSortFields();
-
     private void merge(IFrameWriter writer, List<GeneratedRunFileReader> partialRuns) throws HyracksDataException {
         RunMergingFrameReader merger = new RunMergingFrameReader(ctx, partialRuns, inFrames, getSortFields(),
                 comparators, nmkComputer, recordDesc, topK);
@@ -266,5 +209,17 @@ public abstract class AbstractExternalSortRunMerger {
             }
         }
     }
+
+    public abstract IFrameWriter prepareSkipMergingFinalResultWriter(IFrameWriter nextWriter)
+            throws HyracksDataException;
+
+    protected abstract RunFileWriter prepareIntermediateMergeRunFile() throws HyracksDataException;
+
+    protected abstract IFrameWriter prepareIntermediateMergeResultWriter(RunFileWriter mergeFileWriter)
+            throws HyracksDataException;
+
+    public abstract IFrameWriter prepareFinalMergeResultWriter(IFrameWriter nextWriter) throws HyracksDataException;
+
+    protected abstract int[] getSortFields();
 
 }

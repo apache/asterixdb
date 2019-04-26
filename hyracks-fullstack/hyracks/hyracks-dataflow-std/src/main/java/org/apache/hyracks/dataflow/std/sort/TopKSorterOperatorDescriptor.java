@@ -21,7 +21,6 @@ package org.apache.hyracks.dataflow.std.sort;
 
 import java.util.List;
 
-import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
@@ -47,7 +46,7 @@ public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescript
                 comparatorFactories, recordDescriptor);
     }
 
-    public TopKSorterOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int topK, int[] sortFields,
+    private TopKSorterOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int topK, int[] sortFields,
             INormalizedKeyComputerFactory[] keyNormalizerFactories, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) {
         super(spec, framesLimit, sortFields, keyNormalizerFactories, comparatorFactories, recordDescriptor);
@@ -75,12 +74,11 @@ public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescript
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected ExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
-                    IRecordDescriptorProvider recordDescProvider, IFrameWriter writer, ISorter sorter,
-                    List<GeneratedRunFileReader> runs, IBinaryComparator[] comparators,
-                    INormalizedKeyComputer nmkComputer, int necessaryFrames) {
-                return new ExternalSortRunMerger(ctx, sorter, runs, sortFields, comparators, nmkComputer,
-                        outRecDescs[0], necessaryFrames, topK, writer);
+            protected AbstractExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
+                    IRecordDescriptorProvider recordDescProvider, List<GeneratedRunFileReader> runs,
+                    IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer, int necessaryFrames) {
+                return new ExternalSortRunMerger(ctx, runs, sortFields, comparators, nmkComputer, outRecDescs[0],
+                        necessaryFrames, topK);
             }
         };
     }

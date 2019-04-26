@@ -32,7 +32,6 @@ import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupWriter;
 import org.apache.hyracks.dataflow.std.sort.AbstractExternalSortRunMerger;
-import org.apache.hyracks.dataflow.std.sort.ISorter;
 
 /**
  * Group-by aggregation is pushed into multi-pass merge of external sort.
@@ -44,28 +43,23 @@ public class ExternalSortGroupByRunMerger extends AbstractExternalSortRunMerger 
     private final RecordDescriptor inputRecordDesc;
     private final RecordDescriptor partialAggRecordDesc;
     private final RecordDescriptor outRecordDesc;
-
     private final int[] groupFields;
     private final IAggregatorDescriptorFactory mergeAggregatorFactory;
     private final IAggregatorDescriptorFactory partialAggregatorFactory;
     private final boolean localSide;
-
     private final int[] mergeSortFields;
     private final int[] mergeGroupFields;
     private final IBinaryComparator[] groupByComparators;
 
-    public ExternalSortGroupByRunMerger(IHyracksTaskContext ctx, ISorter frameSorter, List<GeneratedRunFileReader> runs,
-            int[] sortFields, RecordDescriptor inRecordDesc, RecordDescriptor partialAggRecordDesc,
-            RecordDescriptor outRecordDesc, int framesLimit, IFrameWriter writer, int[] groupFields,
-            INormalizedKeyComputer nmk, IBinaryComparator[] comparators,
+    public ExternalSortGroupByRunMerger(IHyracksTaskContext ctx, List<GeneratedRunFileReader> runs, int[] sortFields,
+            RecordDescriptor inRecordDesc, RecordDescriptor partialAggRecordDesc, RecordDescriptor outRecordDesc,
+            int framesLimit, int[] groupFields, INormalizedKeyComputer nmk, IBinaryComparator[] comparators,
             IAggregatorDescriptorFactory partialAggregatorFactory, IAggregatorDescriptorFactory aggregatorFactory,
             boolean localStage) {
-        super(ctx, frameSorter, runs, comparators, nmk, partialAggRecordDesc, framesLimit, writer);
-
+        super(ctx, runs, comparators, nmk, partialAggRecordDesc, framesLimit);
         this.inputRecordDesc = inRecordDesc;
         this.partialAggRecordDesc = partialAggRecordDesc;
         this.outRecordDesc = outRecordDesc;
-
         this.groupFields = groupFields;
         this.mergeAggregatorFactory = aggregatorFactory;
         this.partialAggregatorFactory = partialAggregatorFactory;
@@ -93,11 +87,10 @@ public class ExternalSortGroupByRunMerger extends AbstractExternalSortRunMerger 
     }
 
     @Override
-    protected IFrameWriter prepareSkipMergingFinalResultWriter(IFrameWriter nextWriter) throws HyracksDataException {
+    public IFrameWriter prepareSkipMergingFinalResultWriter(IFrameWriter nextWriter) throws HyracksDataException {
         IAggregatorDescriptorFactory aggregatorFactory = localSide ? partialAggregatorFactory : mergeAggregatorFactory;
-        boolean outputPartial = false;
         return new PreclusteredGroupWriter(ctx, groupFields, groupByComparators, aggregatorFactory, inputRecordDesc,
-                outRecordDesc, nextWriter, outputPartial);
+                outRecordDesc, nextWriter, false);
     }
 
     @Override
@@ -110,16 +103,14 @@ public class ExternalSortGroupByRunMerger extends AbstractExternalSortRunMerger 
     protected IFrameWriter prepareIntermediateMergeResultWriter(RunFileWriter mergeFileWriter)
             throws HyracksDataException {
         IAggregatorDescriptorFactory aggregatorFactory = localSide ? mergeAggregatorFactory : partialAggregatorFactory;
-        boolean outputPartial = true;
         return new PreclusteredGroupWriter(ctx, mergeGroupFields, groupByComparators, aggregatorFactory,
-                partialAggRecordDesc, partialAggRecordDesc, mergeFileWriter, outputPartial);
+                partialAggRecordDesc, partialAggRecordDesc, mergeFileWriter, true);
     }
 
     @Override
-    protected IFrameWriter prepareFinalMergeResultWriter(IFrameWriter nextWriter) throws HyracksDataException {
-        boolean outputPartial = false;
+    public IFrameWriter prepareFinalMergeResultWriter(IFrameWriter nextWriter) throws HyracksDataException {
         return new PreclusteredGroupWriter(ctx, mergeGroupFields, groupByComparators, mergeAggregatorFactory,
-                partialAggRecordDesc, outRecordDesc, nextWriter, outputPartial);
+                partialAggRecordDesc, outRecordDesc, nextWriter, false);
     }
 
     @Override

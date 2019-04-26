@@ -34,15 +34,15 @@ public class ExternalSortRunMerger extends AbstractExternalSortRunMerger {
 
     private final int[] sortFields;
 
-    public ExternalSortRunMerger(IHyracksTaskContext ctx, ISorter sorter, List<GeneratedRunFileReader> runs,
-            int[] sortFields, IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer,
-            RecordDescriptor recordDesc, int framesLimit, int topK, IFrameWriter writer) {
-        super(ctx, sorter, runs, comparators, nmkComputer, recordDesc, framesLimit, topK, writer);
+    public ExternalSortRunMerger(IHyracksTaskContext ctx, List<GeneratedRunFileReader> runs, int[] sortFields,
+            IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer, RecordDescriptor recordDesc,
+            int framesLimit, int topK) {
+        super(ctx, runs, comparators, nmkComputer, recordDesc, framesLimit, topK);
         this.sortFields = sortFields;
     }
 
     @Override
-    protected IFrameWriter prepareSkipMergingFinalResultWriter(IFrameWriter nextWriter) throws HyracksDataException {
+    public IFrameWriter prepareSkipMergingFinalResultWriter(IFrameWriter nextWriter) throws HyracksDataException {
         return nextWriter;
     }
 
@@ -59,7 +59,7 @@ public class ExternalSortRunMerger extends AbstractExternalSortRunMerger {
     }
 
     @Override
-    protected IFrameWriter prepareFinalMergeResultWriter(IFrameWriter nextWriter) throws HyracksDataException {
+    public IFrameWriter prepareFinalMergeResultWriter(IFrameWriter nextWriter) throws HyracksDataException {
         return nextWriter;
     }
 

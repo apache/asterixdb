@@ -49,7 +49,7 @@ public class HybridTopKSortRunGenerator extends HeapSortRunGenerator {
     }
 
     @Override
-    public ISorter getSorter() throws HyracksDataException {
+    public ISorter getSorter() {
         if (tupleSorter != null) {
             return tupleSorter;
         } else if (frameSorter != null) {

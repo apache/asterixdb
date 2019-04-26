@@ -79,14 +79,6 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
     private final BufferInfo info = new BufferInfo(null, -1, -1);
 
     public AbstractFrameSorter(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int maxSortFrames,
-            int[] sortFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
-            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor)
-            throws HyracksDataException {
-        this(ctx, bufferManager, maxSortFrames, sortFields, keyNormalizerFactories, comparatorFactories,
-                recordDescriptor, Integer.MAX_VALUE);
-    }
-
-    public AbstractFrameSorter(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int maxSortFrames,
             int[] sortFields, INormalizedKeyComputerFactory[] normalizedKeyComputerFactories,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor, int outputLimit)
             throws HyracksDataException {
@@ -286,23 +278,10 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
         return 0;
     }
 
-    protected void swap(int pointers1[], int pos1, int pointers2[], int pos2) {
-        System.arraycopy(pointers1, pos1 * ptrSize, tmpPointer, 0, ptrSize);
-        System.arraycopy(pointers2, pos2 * ptrSize, pointers1, pos1 * ptrSize, ptrSize);
-        System.arraycopy(tmpPointer, 0, pointers2, pos2 * ptrSize, ptrSize);
-    }
-
-    protected void copy(int src[], int srcPos, int dest[], int destPos) {
-        System.arraycopy(src, srcPos * ptrSize, dest, destPos * ptrSize, ptrSize);
-    }
-
-    protected void copy(int src[], int srcPos, int dest[], int destPos, int n) {
-        System.arraycopy(src, srcPos * ptrSize, dest, destPos * ptrSize, n * ptrSize);
-    }
-
     @Override
     public void close() {
         tupleCount = 0;
+        totalMemoryUsed = 0;
         bufferManager.close();
         tPointers = null;
     }

@@ -20,7 +20,6 @@ package org.apache.hyracks.dataflow.std.sort;
 
 import java.util.List;
 
-import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
@@ -91,12 +90,11 @@ public class ExternalSortOperatorDescriptor extends AbstractSorterOperatorDescri
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected ExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
-                    IRecordDescriptorProvider recordDescProvider, IFrameWriter writer, ISorter sorter,
-                    List<GeneratedRunFileReader> runs, IBinaryComparator[] comparators,
-                    INormalizedKeyComputer nmkComputer, int necessaryFrames) {
-                return new ExternalSortRunMerger(ctx, sorter, runs, sortFields, comparators, nmkComputer,
-                        outRecDescs[0], necessaryFrames, outputLimit, writer);
+            protected AbstractExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
+                    IRecordDescriptorProvider recordDescProvider, List<GeneratedRunFileReader> runs,
+                    IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer, int necessaryFrames) {
+                return new ExternalSortRunMerger(ctx, runs, sortFields, comparators, nmkComputer, outRecDescs[0],
+                        necessaryFrames, outputLimit);
             }
         };
     }
@@ -113,7 +111,7 @@ public class ExternalSortOperatorDescriptor extends AbstractSorterOperatorDescri
             RecordDescriptor recordDescriptor, Algorithm alg, EnumFreeSlotPolicy policy, int outputLimit) {
         super(spec, framesLimit, sortFields, keyNormalizerFactories, comparatorFactories, recordDescriptor);
         if (framesLimit <= 1) {
-            throw new IllegalStateException();// minimum of 2 fames (1 in,1 out)
+            throw new IllegalStateException();// minimum of 2 frames (1 in,1 out)
         }
         this.alg = alg;
         this.policy = policy;

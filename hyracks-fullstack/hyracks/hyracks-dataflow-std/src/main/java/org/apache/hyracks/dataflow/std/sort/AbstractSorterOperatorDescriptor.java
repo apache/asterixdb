@@ -49,12 +49,9 @@ import org.apache.logging.log4j.Logger;
 public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorDescriptor {
 
     private static final Logger LOGGER = LogManager.getLogger();
-
     private static final long serialVersionUID = 1L;
-
     protected static final int SORT_ACTIVITY_ID = 0;
     protected static final int MERGE_ACTIVITY_ID = 1;
-
     protected final int[] sortFields;
     protected final INormalizedKeyComputerFactory[] keyNormalizerFactories;
     protected final IBinaryComparatorFactory[] comparatorFactories;
@@ -90,10 +87,10 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
     }
 
     public static class SortTaskState extends AbstractStateObject {
-        public List<GeneratedRunFileReader> generatedRunFileReaders;
-        public ISorter sorter;
+        List<GeneratedRunFileReader> generatedRunFileReaders;
+        ISorter sorter;
 
-        public SortTaskState(JobId jobId, TaskId taskId) {
+        SortTaskState(JobId jobId, TaskId taskId) {
             super(jobId, taskId);
         }
     }
@@ -101,7 +98,7 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
     protected abstract class SortActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        public SortActivity(ActivityId id) {
+        protected SortActivity(ActivityId id) {
             super(id);
         }
 
@@ -111,7 +108,7 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
-            IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
+            return new AbstractUnaryInputSinkOperatorNodePushable() {
                 private AbstractSortRunGenerator runGen;
 
                 @Override
@@ -143,26 +140,24 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
                     runGen.fail();
                 }
             };
-            return op;
         }
     }
 
     protected abstract class MergeActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        public MergeActivity(ActivityId id) {
+        protected MergeActivity(ActivityId id) {
             super(id);
         }
 
         protected abstract AbstractExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
-                IRecordDescriptorProvider recordDescProvider, IFrameWriter writer, ISorter sorter,
-                List<GeneratedRunFileReader> runs, IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer,
-                int necessaryFrames);
+                IRecordDescriptorProvider recordDescProvider, List<GeneratedRunFileReader> runs,
+                IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer, int necessaryFrames);
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
-            IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
+            return new AbstractUnaryOutputSourceOperatorNodePushable() {
 
                 @Override
                 public void initialize() throws HyracksDataException {
@@ -176,13 +171,39 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
                     }
                     INormalizedKeyComputer nmkComputer = keyNormalizerFactories == null ? null
                             : keyNormalizerFactories[0].createNormalizedKeyComputer();
-                    AbstractExternalSortRunMerger merger = getSortRunMerger(ctx, recordDescProvider, writer, sorter,
-                            runs, comparators, nmkComputer, framesLimit);
-                    merger.process();
+                    AbstractExternalSortRunMerger merger =
+                            getSortRunMerger(ctx, recordDescProvider, runs, comparators, nmkComputer, framesLimit);
+                    IFrameWriter wrappingWriter = null;
+                    try {
+                        if (runs.isEmpty()) {
+                            wrappingWriter = merger.prepareSkipMergingFinalResultWriter(writer);
+                            wrappingWriter.open();
+                            if (sorter.hasRemaining()) {
+                                sorter.flush(wrappingWriter);
+                            }
+                        } else {
+                            // eagerly close the sorter here to release memory rather than in finally
+                            sorter.close();
+                            sorter = null;
+                            wrappingWriter = merger.prepareFinalMergeResultWriter(writer);
+                            wrappingWriter.open();
+                            merger.process(wrappingWriter);
+                        }
+                    } catch (Throwable e) {
+                        if (wrappingWriter != null) {
+                            wrappingWriter.fail();
+                        }
+                        throw HyracksDataException.create(e);
+                    } finally {
+                        if (sorter != null) {
+                            sorter.close();
+                        }
+                        if (wrappingWriter != null) {
+                            wrappingWriter.close();
+                        }
+                    }
                 }
             };
-            return op;
         }
     }
-
 }

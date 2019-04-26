@@ -116,4 +116,12 @@ public class FrameSorterMergeSort extends AbstractFrameSorter {
             copy(tPointers, pos2, tPointersTemp, targetPos, rest);
         }
     }
+
+    private void copy(int src[], int srcPos, int dest[], int destPos) {
+        System.arraycopy(src, srcPos * ptrSize, dest, destPos * ptrSize, ptrSize);
+    }
+
+    private void copy(int src[], int srcPos, int dest[], int destPos, int n) {
+        System.arraycopy(src, srcPos * ptrSize, dest, destPos * ptrSize, n * ptrSize);
+    }
 }

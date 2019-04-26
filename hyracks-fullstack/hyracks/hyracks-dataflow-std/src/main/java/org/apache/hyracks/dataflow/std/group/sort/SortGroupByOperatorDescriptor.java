@@ -20,7 +20,6 @@ package org.apache.hyracks.dataflow.std.group.sort;
 
 import java.util.List;
 
-import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
@@ -37,7 +36,6 @@ import org.apache.hyracks.dataflow.std.sort.AbstractExternalSortRunMerger;
 import org.apache.hyracks.dataflow.std.sort.AbstractSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.AbstractSorterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.Algorithm;
-import org.apache.hyracks.dataflow.std.sort.ISorter;
 
 /**
  * This Operator pushes group-by aggregation into the external sort.
@@ -158,13 +156,12 @@ public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescrip
 
             @Override
             protected AbstractExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
-                    IRecordDescriptorProvider recordDescProvider, IFrameWriter writer, ISorter sorter,
-                    List<GeneratedRunFileReader> runs, IBinaryComparator[] comparators,
-                    INormalizedKeyComputer nmkComputer, int necessaryFrames) {
-                return new ExternalSortGroupByRunMerger(ctx, sorter, runs, sortFields,
+                    IRecordDescriptorProvider recordDescProvider, List<GeneratedRunFileReader> runs,
+                    IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer, int necessaryFrames) {
+                return new ExternalSortGroupByRunMerger(ctx, runs, sortFields,
                         recordDescProvider.getInputRecordDescriptor(new ActivityId(odId, SORT_ACTIVITY_ID), 0),
-                        partialAggRecordDesc, outputRecordDesc, necessaryFrames, writer, groupFields, nmkComputer,
-                        comparators, partialAggregatorFactory, mergeAggregatorFactory, !finalStage);
+                        partialAggRecordDesc, outputRecordDesc, necessaryFrames, groupFields, nmkComputer, comparators,
+                        partialAggregatorFactory, mergeAggregatorFactory, !finalStage);
             }
         };
     }
