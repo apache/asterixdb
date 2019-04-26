@@ -60,12 +60,6 @@ public class PreclusteredGroupWriter implements IFrameWriter {
 
     public PreclusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields, IBinaryComparator[] comparators,
             IAggregatorDescriptorFactory aggregatorFactory, RecordDescriptor inRecordDesc,
-            RecordDescriptor outRecordDesc, IFrameWriter writer) throws HyracksDataException {
-        this(ctx, groupFields, comparators, aggregatorFactory, inRecordDesc, outRecordDesc, writer, false, false, -1);
-    }
-
-    public PreclusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields, IBinaryComparator[] comparators,
-            IAggregatorDescriptorFactory aggregatorFactory, RecordDescriptor inRecordDesc,
             RecordDescriptor outRecordDesc, IFrameWriter writer, boolean outputPartial) throws HyracksDataException {
         this(ctx, groupFields, comparators, aggregatorFactory, inRecordDesc, outRecordDesc, writer, outputPartial,
                 false, -1);

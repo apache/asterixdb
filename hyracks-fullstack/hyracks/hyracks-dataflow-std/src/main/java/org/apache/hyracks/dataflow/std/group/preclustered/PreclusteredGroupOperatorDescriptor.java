@@ -39,18 +39,6 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
 
     public PreclusteredGroupOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] groupFields,
             IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
-            RecordDescriptor recordDescriptor) {
-        this(spec, groupFields, comparatorFactories, aggregatorFactory, recordDescriptor, false, -1);
-    }
-
-    public PreclusteredGroupOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] groupFields,
-            IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
-            RecordDescriptor recordDescriptor, int framesLimit) {
-        this(spec, groupFields, comparatorFactories, aggregatorFactory, recordDescriptor, false, framesLimit);
-    }
-
-    public PreclusteredGroupOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] groupFields,
-            IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
             RecordDescriptor recordDescriptor, boolean groupAll, int framesLimit) {
         super(spec, 1, 1);
         this.groupFields = groupFields;

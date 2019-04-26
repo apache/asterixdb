@@ -39,10 +39,11 @@ public class MicroPreClusteredGroupRuntimeFactory extends AbstractOneInputOneOut
     private final IAggregatorDescriptorFactory aggregatorFactory;
     private final RecordDescriptor inRecordDesc;
     private final RecordDescriptor outRecordDesc;
+    private final int framesLimit;
 
     public MicroPreClusteredGroupRuntimeFactory(int[] groupFields, IBinaryComparatorFactory[] comparatorFactories,
             IAggregatorDescriptorFactory aggregatorFactory, RecordDescriptor inRecordDesc,
-            RecordDescriptor outRecordDesc, int[] projectionList) {
+            RecordDescriptor outRecordDesc, int[] projectionList, int framesLimit) {
         super(projectionList);
         // Obs: the projection list is currently ignored.
         if (projectionList != null) {
@@ -53,6 +54,7 @@ public class MicroPreClusteredGroupRuntimeFactory extends AbstractOneInputOneOut
         this.aggregatorFactory = aggregatorFactory;
         this.inRecordDesc = inRecordDesc;
         this.outRecordDesc = outRecordDesc;
+        this.framesLimit = framesLimit;
     }
 
     @Override
@@ -70,7 +72,7 @@ public class MicroPreClusteredGroupRuntimeFactory extends AbstractOneInputOneOut
             @Override
             public void open() throws HyracksDataException {
                 pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregatorFactory, inRecordDesc,
-                        outRecordDesc, writer);
+                        outRecordDesc, writer, false, false, framesLimit);
                 pgw.open();
             }
 

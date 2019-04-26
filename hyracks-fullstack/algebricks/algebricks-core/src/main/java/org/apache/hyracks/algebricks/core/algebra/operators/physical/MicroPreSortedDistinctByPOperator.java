@@ -73,7 +73,7 @@ public class MicroPreSortedDistinctByPOperator extends AbstractPreSortedDistinct
 
         /* make fd columns part of the key but the comparator only compares the distinct key columns */
         MicroPreClusteredGroupRuntimeFactory runtime = new MicroPreClusteredGroupRuntimeFactory(keysAndDecs,
-                comparatorFactories, aggregatorFactory, inputRecordDesc, recordDescriptor, null);
+                comparatorFactories, aggregatorFactory, inputRecordDesc, recordDescriptor, null, -1);
         runtime.setSourceLocation(op.getSourceLocation());
         builder.contributeMicroOperator(op, runtime, recordDescriptor);
         ILogicalOperator src = op.getInputs().get(0).getValue();

@@ -66,28 +66,13 @@ import org.apache.hyracks.dataflow.std.group.AbstractAggregatorDescriptorFactory
 import org.apache.hyracks.dataflow.std.group.HashSpillableTableFactory;
 import org.apache.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor;
 
-public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
+public class ExternalGroupByPOperator extends AbstractGroupByPOperator {
 
     private final long inputSize;
-    private final int frameLimit;
-    private List<LogicalVariable> columnSet = new ArrayList<LogicalVariable>();
 
-    public ExternalGroupByPOperator(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList, int frameLimit,
-            long fileSize) {
-        this.frameLimit = frameLimit;
+    public ExternalGroupByPOperator(List<LogicalVariable> columnList, int framesLimit, long fileSize) {
+        super(columnList, framesLimit);
         this.inputSize = fileSize;
-        computeColumnSet(gbyList);
-    }
-
-    public void computeColumnSet(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList) {
-        columnSet.clear();
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gbyList) {
-            ILogicalExpression expr = p.second.getValue();
-            if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                VariableReferenceExpression v = (VariableReferenceExpression) expr;
-                columnSet.add(v.getVariableReference());
-            }
-        }
     }
 
     @Override
@@ -96,17 +81,8 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
     }
 
     @Override
-    public String toString() {
-        return getOperatorTag().toString() + columnSet;
-    }
-
-    @Override
     public boolean isMicroOperator() {
         return false;
-    }
-
-    public List<LogicalVariable> getGbyColumns() {
-        return columnSet;
     }
 
     @Override
@@ -138,7 +114,7 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
         if (aop.getExecutionMode() == ExecutionMode.PARTITIONED) {
             StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
             pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(
-                    new ListSet<LogicalVariable>(columnSet), context.getComputationNodeDomain()), null);
+                    new ListSet<LogicalVariable>(columnList), context.getComputationNodeDomain()), null);
             return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
         } else {
             return emptyUnaryRequirements();
@@ -149,7 +125,7 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
-        List<LogicalVariable> gbyCols = getGbyColumns();
+        List<LogicalVariable> gbyCols = getGroupByColumns();
         int keys[] = JobGenHelper.variablesToFieldIndexes(gbyCols, inputSchemas[0]);
         GroupByOperator gby = (GroupByOperator) op;
         int numFds = gby.getDecorList().size();
@@ -262,14 +238,14 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
                 JobGenHelper.variablesToAscNormalizedKeyComputerFactory(gbyCols, aggOpInputEnv, context);
 
         // Calculates the hash table size (# of unique hash values) based on the budget and a tuple size.
-        int memoryBudgetInBytes = context.getFrameSize() * frameLimit;
+        int memoryBudgetInBytes = context.getFrameSize() * framesLimit;
         int groupByColumnsCount = gby.getGroupByList().size() + numFds;
         int hashTableSize = ExternalGroupOperatorDescriptor.calculateGroupByTableCardinality(memoryBudgetInBytes,
                 groupByColumnsCount, context.getFrameSize());
 
         ExternalGroupOperatorDescriptor gbyOpDesc = new ExternalGroupOperatorDescriptor(spec, hashTableSize, inputSize,
-                keyAndDecFields, frameLimit, comparatorFactories, normalizedKeyFactory, aggregatorFactory, mergeFactory,
-                recordDescriptor, recordDescriptor, new HashSpillableTableFactory(hashFunctionFactories));
+                keyAndDecFields, framesLimit, comparatorFactories, normalizedKeyFactory, aggregatorFactory,
+                mergeFactory, recordDescriptor, recordDescriptor, new HashSpillableTableFactory(hashFunctionFactories));
         gbyOpDesc.setSourceLocation(gby.getSourceLocation());
         contributeOpDesc(builder, gby, gbyOpDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
@@ -282,10 +258,4 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
         int[] outputDependencyLabels = new int[] { 1 };
         return new Pair<int[], int[]>(inputDependencyLabels, outputDependencyLabels);
     }
-
-    @Override
-    public boolean expensiveThanMaterialization() {
-        return true;
-    }
-
 }

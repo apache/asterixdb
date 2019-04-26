@@ -125,7 +125,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
                         new IntSumFieldAggregatorFactory(1, true), new IntSumFieldAggregatorFactory(3, true),
                         new FloatSumFieldAggregatorFactory(5, true) }),
-                outputRec);
+                outputRec, false, -1);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
@@ -214,7 +214,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                         new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
                                 new IntSumFieldAggregatorFactory(1, true), new CountFieldAggregatorFactory(true),
                                 new AvgFieldGroupAggregatorFactory(1, true) }),
-                        outputRec);
+                        outputRec, false, -1);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
@@ -303,7 +303,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 new MultiFieldsAggregatorFactory(
                         new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, true),
                                 new MinMaxStringFieldAggregatorFactory(15, true, false) }),
-                outputRec);
+                outputRec, false, -1);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
@@ -391,7 +391,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                         UTF8StringBinaryComparatorFactory.INSTANCE },
                 new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
                         new IntSumFieldAggregatorFactory(1, true), new IntSumFieldAggregatorFactory(3, true) }),
-                outputRec);
+                outputRec, false, -1);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
@@ -485,7 +485,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 new MultiFieldsAggregatorFactory(
                         new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, true),
                                 new CountFieldAggregatorFactory(true), new AvgFieldGroupAggregatorFactory(1, true) }),
-                outputRec);
+                outputRec, false, -1);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
@@ -583,7 +583,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 new MultiFieldsAggregatorFactory(
                         new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, true),
                                 new MinMaxStringFieldAggregatorFactory(15, true, false) }),
-                outputRec);
+                outputRec, false, -1);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 

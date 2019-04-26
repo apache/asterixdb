@@ -72,7 +72,7 @@ public class NestedTupleSourcePOperator extends AbstractPhysicalOperator {
         if (originalLocalProperties != null) {
             newLocalProperties = new ArrayList<>();
             for (ILocalStructuralProperty lsp : originalLocalProperties) {
-                ILocalStructuralProperty groupLocalLsp = lsp.regardToGroup(gby.getGbyVarList());
+                ILocalStructuralProperty groupLocalLsp = lsp.regardToGroup(gby.getGroupByVarList());
                 if (groupLocalLsp != null) {
                     // Adds the property that is satisfied in the context of a particular group.
                     newLocalProperties.add(groupLocalLsp);

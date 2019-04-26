@@ -39,8 +39,8 @@ import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
 public class MicroPreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOperator {
 
-    public MicroPreclusteredGroupByPOperator(List<LogicalVariable> columnList) {
-        super(columnList);
+    public MicroPreclusteredGroupByPOperator(List<LogicalVariable> columnList, int framesLimit) {
+        super(columnList, framesLimit);
     }
 
     @Override
@@ -73,11 +73,10 @@ public class MicroPreclusteredGroupByPOperator extends AbstractPreclusteredGroup
         RecordDescriptor inputRecordDesc = JobGenHelper.mkRecordDescriptor(
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
         MicroPreClusteredGroupRuntimeFactory runtime = new MicroPreClusteredGroupRuntimeFactory(keys,
-                comparatorFactories, aggregatorFactory, inputRecordDesc, recordDescriptor, null);
+                comparatorFactories, aggregatorFactory, inputRecordDesc, recordDescriptor, null, framesLimit);
         runtime.setSourceLocation(gby.getSourceLocation());
         builder.contributeMicroOperator(gby, runtime, recordDescriptor);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);
     }
-
 }

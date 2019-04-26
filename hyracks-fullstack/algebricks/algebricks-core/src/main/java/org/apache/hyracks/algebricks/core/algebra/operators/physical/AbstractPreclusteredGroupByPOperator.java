@@ -57,25 +57,10 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
 import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
-public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysicalOperator {
+public abstract class AbstractPreclusteredGroupByPOperator extends AbstractGroupByPOperator {
 
-    protected List<LogicalVariable> columnList;
-
-    public AbstractPreclusteredGroupByPOperator(List<LogicalVariable> columnList) {
-        this.columnList = columnList;
-    }
-
-    @Override
-    public String toString() {
-        return getOperatorTag().toString() + columnList;
-    }
-
-    public List<LogicalVariable> getGbyColumns() {
-        return columnList;
-    }
-
-    public void setGbyColumns(List<LogicalVariable> gByColumns) {
-        this.columnList = gByColumns;
+    protected AbstractPreclusteredGroupByPOperator(List<LogicalVariable> columnList, int framesLimit) {
+        super(columnList, framesLimit);
     }
 
     // Obs: We don't propagate properties corresponding to decors, since they
@@ -170,7 +155,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                     IPhysicalOperator pop2 = op2.getPhysicalOperator();
                     if (pop2 instanceof AbstractPreclusteredGroupByPOperator) {
                         List<LogicalVariable> gbyColumns =
-                                ((AbstractPreclusteredGroupByPOperator) pop2).getGbyColumns();
+                                ((AbstractPreclusteredGroupByPOperator) pop2).getGroupByColumns();
                         List<LogicalVariable> sndOrder = new ArrayList<>();
                         sndOrder.addAll(gbyColumns);
                         Set<LogicalVariable> freeVars = new HashSet<>();
@@ -230,7 +215,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                 }
                 List<FunctionalDependency> fdList = new ArrayList<>();
                 for (Pair<LogicalVariable, Mutable<ILogicalExpression>> decorPair : gby.getDecorList()) {
-                    List<LogicalVariable> hd = gby.getGbyVarList();
+                    List<LogicalVariable> hd = gby.getGroupByVarList();
                     List<LogicalVariable> tl = new ArrayList<>();
                     tl.add(((VariableReferenceExpression) decorPair.second.getValue()).getVariableReference());
                     fdList.add(new FunctionalDependency(hd, tl));
@@ -301,18 +286,13 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
         return null;
     }
 
-    @Override
-    public boolean expensiveThanMaterialization() {
-        return true;
-    }
-
     // Returns the local structure property that is propagated from an input local structure property
     // through a pre-clustered GROUP BY physical operator.
     private ILocalStructuralProperty getPropagatedProperty(ILocalStructuralProperty lsp, GroupByOperator gby) {
         PropertyType propertyType = lsp.getPropertyType();
         if (propertyType == PropertyType.LOCAL_GROUPING_PROPERTY) {
             // A new grouping property is generated.
-            return new LocalGroupingProperty(new ListSet<>(gby.getGbyVarList()));
+            return new LocalGroupingProperty(new ListSet<>(gby.getGroupByVarList()));
         } else {
             LocalOrderProperty lop = (LocalOrderProperty) lsp;
             List<OrderColumn> orderColumns = new ArrayList<>();

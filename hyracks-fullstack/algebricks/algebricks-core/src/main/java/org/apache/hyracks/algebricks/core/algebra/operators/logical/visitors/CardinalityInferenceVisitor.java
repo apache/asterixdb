@@ -114,7 +114,7 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
         }
         ILogicalOperator inputOp = op.getInputs().get(0).getValue();
         long inputCardinality = inputOp.accept(this, arg);
-        List<LogicalVariable> gbyVar = op.getGbyVarList();
+        List<LogicalVariable> gbyVar = op.getGroupByVarList();
         if (inputCardinality == ONE_GROUP && keyVariables.containsAll(gbyVar)) {
             keyVariables.clear();
             return ONE;

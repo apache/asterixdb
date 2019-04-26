@@ -192,7 +192,7 @@ public class WordCountMain {
                     new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                     new MultiFieldsAggregatorFactory(
                             new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }),
-                    groupResultDesc);
+                    groupResultDesc, false, -1);
             createPartitionConstraint(spec, gBy, outSplits);
             OneToOneConnectorDescriptor sortGroupConn = new OneToOneConnectorDescriptor(spec);
             spec.connect(sortGroupConn, sorter, 0, gBy, 0);

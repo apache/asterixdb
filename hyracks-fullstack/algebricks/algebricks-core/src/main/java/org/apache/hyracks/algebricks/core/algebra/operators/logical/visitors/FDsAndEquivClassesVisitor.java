@@ -388,7 +388,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         if (op1.getOperatorTag() == LogicalOperatorTag.GROUP) {
             GroupByOperator gby = (GroupByOperator) op1;
             LinkedList<LogicalVariable> tail = new LinkedList<LogicalVariable>();
-            for (LogicalVariable v : gby.getGbyVarList()) {
+            for (LogicalVariable v : gby.getGroupByVarList()) {
                 tail.add(v);
                 // all values for gby vars. are the same
             }

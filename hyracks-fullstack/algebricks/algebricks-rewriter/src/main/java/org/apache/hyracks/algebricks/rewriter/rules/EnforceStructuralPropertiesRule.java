@@ -59,12 +59,11 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.FDsAndEquivClassesVisitor;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractPreSortedDistinctByPOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractPreclusteredGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractStableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AggregatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.BroadcastExchangePOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.InMemoryStableSortPOperator;
@@ -387,18 +386,12 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
     private void optimizeUsingConstraintsAndEquivClasses(AbstractLogicalOperator op) {
         IPhysicalOperator pOp = op.getPhysicalOperator();
         switch (pOp.getOperatorTag()) {
-            case HASH_GROUP_BY:
-            case EXTERNAL_GROUP_BY: {
-                GroupByOperator gby = (GroupByOperator) op;
-                ExternalGroupByPOperator hgbyOp = (ExternalGroupByPOperator) pOp;
-                hgbyOp.computeColumnSet(gby.getGroupByList());
-                break;
-            }
+            case EXTERNAL_GROUP_BY:
             case PRE_CLUSTERED_GROUP_BY:
             case MICRO_PRE_CLUSTERED_GROUP_BY: {
                 GroupByOperator gby = (GroupByOperator) op;
-                AbstractPreclusteredGroupByPOperator preSortedGby = (AbstractPreclusteredGroupByPOperator) pOp;
-                preSortedGby.setGbyColumns(gby.getGbyVarList());
+                AbstractGroupByPOperator gbyPhysOp = (AbstractGroupByPOperator) pOp;
+                gbyPhysOp.setGroupByColumns(gby.getGroupByVarList());
                 break;
             }
             case PRE_SORTED_DISTINCT_BY:

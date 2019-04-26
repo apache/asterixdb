@@ -140,7 +140,7 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
         Map<String, Object> annotations = newGbyOp.getAnnotations();
         annotations.putAll(gbyOp.getAnnotations());
 
-        List<LogicalVariable> gbyVars = gbyOp.getGbyVarList();
+        List<LogicalVariable> gbyVars = gbyOp.getGroupByVarList();
 
         // Backup nested plans since tryToPushSubplan(...) may mutate them.
         List<ILogicalPlan> gbyNestedPlans = gbyOp.getNestedPlans();
@@ -306,7 +306,7 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
             return true;
         } else {
             GroupByOperator nestedGby = (GroupByOperator) op3;
-            List<LogicalVariable> gbyVars2 = nestedGby.getGbyVarList();
+            List<LogicalVariable> gbyVars2 = nestedGby.getGroupByVarList();
             Set<LogicalVariable> freeVars = new HashSet<>();
             // Removes non-free variables defined in the nested plan.
             OperatorPropertiesUtil.getFreeVariablesInSelfOrDesc(nestedGby, freeVars);

@@ -27,7 +27,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
@@ -38,18 +37,11 @@ import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
-import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 
-public abstract class AbstractPreSortedDistinctByPOperator extends AbstractPhysicalOperator {
+public abstract class AbstractPreSortedDistinctByPOperator extends AbstractDistinctByPOperator {
 
-    protected List<LogicalVariable> columnList;
-
-    public AbstractPreSortedDistinctByPOperator(List<LogicalVariable> columnList) {
-        this.columnList = columnList;
-    }
-
-    public void setDistinctByColumns(List<LogicalVariable> distinctByColumns) {
-        this.columnList = distinctByColumns;
+    protected AbstractPreSortedDistinctByPOperator(List<LogicalVariable> columnList) {
+        super(columnList);
     }
 
     @Override
@@ -78,31 +70,4 @@ public abstract class AbstractPreSortedDistinctByPOperator extends AbstractPhysi
         pv[0] = new StructuralPropertiesVector(pp, localProps);
         return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
     }
-
-    @Override
-    public boolean expensiveThanMaterialization() {
-        return true;
-    }
-
-    protected int[] getKeysAndDecs(IOperatorSchema inputSchema) {
-        int keys[] = JobGenHelper.variablesToFieldIndexes(columnList, inputSchema);
-        int sz = inputSchema.getSize();
-        int fdSz = sz - columnList.size();
-        int[] fdColumns = new int[fdSz];
-        int j = 0;
-        for (LogicalVariable v : inputSchema) {
-            if (!columnList.contains(v)) {
-                fdColumns[j++] = inputSchema.findVariable(v);
-            }
-        }
-        int[] keysAndDecs = new int[keys.length + fdColumns.length];
-        for (int i = 0; i < keys.length; i++) {
-            keysAndDecs[i] = keys[i];
-        }
-        for (int i = 0; i < fdColumns.length; i++) {
-            keysAndDecs[i + keys.length] = fdColumns[i];
-        }
-        return keysAndDecs;
-    }
-
 }

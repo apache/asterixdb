@@ -443,7 +443,7 @@ public class PushRuntimeTest {
         RecordDescriptor gbyDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
         PreclusteredGroupOperatorDescriptor gby = new PreclusteredGroupOperatorDescriptor(spec, new int[] { 3 },
-                new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE }, npaaf, gbyDesc);
+                new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE }, npaaf, gbyDesc, false, -1);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, gby,
                 new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
@@ -853,7 +853,7 @@ public class PushRuntimeTest {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
         MicroPreClusteredGroupRuntimeFactory gby = new MicroPreClusteredGroupRuntimeFactory(new int[] { 3 },
                 new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE }, npaaf, sortDesc, gbyDesc,
-                null);
+                null, -1);
 
         // the algebricks op.
         IScalarEvaluatorFactory cond =

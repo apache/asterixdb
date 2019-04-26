@@ -72,7 +72,7 @@ public class PreSortedDistinctByPOperator extends AbstractPreSortedDistinctByPOp
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
         /* make fd columns part of the key but the comparator only compares the distinct key columns */
         PreclusteredGroupOperatorDescriptor opDesc = new PreclusteredGroupOperatorDescriptor(spec, keysAndDecs,
-                comparatorFactories, aggregatorFactory, recordDescriptor);
+                comparatorFactories, aggregatorFactory, recordDescriptor, false, -1);
         opDesc.setSourceLocation(op.getSourceLocation());
 
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
