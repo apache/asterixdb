@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -194,12 +195,17 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
             } else {
                 return new int[] { index.getKeyFieldNames().size() };
             }
+        } else if (index.getIndexType() == IndexType.BTREE || index.getIndexType() == IndexType.RTREE) {
+            // secondary btrees and rtrees do not have bloom filters
+            return null;
+        } else {
+            // inverted indexes have bloom filters on deleted-key btrees
+            int numKeys = index.getKeyFieldNames().size();
+            int[] bloomFilterKeyFields = new int[numKeys];
+            for (int i = 0; i < numKeys; i++) {
+                bloomFilterKeyFields[i] = i;
+            }
+            return bloomFilterKeyFields;
         }
-        int numKeys = index.getKeyFieldNames().size();
-        int[] bloomFilterKeyFields = new int[numKeys];
-        for (int i = 0; i < numKeys; i++) {
-            bloomFilterKeyFields[i] = i;
-        }
-        return bloomFilterKeyFields;
     }
 }

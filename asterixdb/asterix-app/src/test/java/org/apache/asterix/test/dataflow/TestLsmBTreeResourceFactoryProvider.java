@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.external.indexing.FilesIndexDescription;
@@ -155,7 +156,8 @@ public class TestLsmBTreeResourceFactoryProvider implements IResourceFactoryProv
     }
 
     private static int[] getBloomFilterFields(Dataset dataset, Index index) throws AlgebricksException {
-        if (index.isPrimaryIndex()) {
+        // both the Primary index and the Primary Key index have bloom filters
+        if (index.isPrimaryIndex() || index.isPrimaryKeyIndex()) {
             return dataset.getPrimaryBloomFilterFields();
         } else if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             if (index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
@@ -163,12 +165,17 @@ public class TestLsmBTreeResourceFactoryProvider implements IResourceFactoryProv
             } else {
                 return new int[] { index.getKeyFieldNames().size() };
             }
+        } else if (index.getIndexType() == IndexType.BTREE || index.getIndexType() == IndexType.RTREE) {
+            // secondary btrees and rtrees do not have bloom filters
+            return null;
+        } else {
+            // inverted indexes have bloom filters on deleted-key btrees
+            int numKeys = index.getKeyFieldNames().size();
+            int[] bloomFilterKeyFields = new int[numKeys];
+            for (int i = 0; i < numKeys; i++) {
+                bloomFilterKeyFields[i] = i;
+            }
+            return bloomFilterKeyFields;
         }
-        int numKeys = index.getKeyFieldNames().size();
-        int[] bloomFilterKeyFields = new int[numKeys];
-        for (int i = 0; i < numKeys; i++) {
-            bloomFilterKeyFields[i] = i;
-        }
-        return bloomFilterKeyFields;
     }
 }
