@@ -29,9 +29,12 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
@@ -374,5 +377,29 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
     @Override
     public boolean requiresVariableReferenceExpressions() {
         return false;
+    }
+
+    public List<LogicalVariable> getPartitionVarList() {
+        List<LogicalVariable> varList = new ArrayList<>(partitionExpressions.size());
+        for (Mutable<ILogicalExpression> pe : partitionExpressions) {
+            ILogicalExpression partExpr = pe.getValue();
+            if (partExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                LogicalVariable var = ((VariableReferenceExpression) partExpr).getVariableReference();
+                varList.add(var);
+            }
+        }
+        return varList;
+    }
+
+    public List<OrderColumn> getOrderColumnList() {
+        List<OrderColumn> orderColumns = new ArrayList<>(orderExpressions.size());
+        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExpressions) {
+            ILogicalExpression orderExpr = p.second.getValue();
+            if (orderExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                LogicalVariable var = ((VariableReferenceExpression) orderExpr).getVariableReference();
+                orderColumns.add(new OrderColumn(var, p.first.getKind()));
+            }
+        }
+        return orderColumns;
     }
 }

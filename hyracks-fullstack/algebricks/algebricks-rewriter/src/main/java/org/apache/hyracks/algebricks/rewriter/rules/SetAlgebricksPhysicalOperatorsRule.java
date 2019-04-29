@@ -18,10 +18,10 @@
  */
 package org.apache.hyracks.algebricks.rewriter.rules;
 
-import static org.apache.hyracks.api.exceptions.ErrorCode.ORDER_EXPR_NOT_NORMALIZED;
-
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -42,17 +43,41 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ScriptOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AggregatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AssignPOperator;
@@ -88,10 +113,13 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.SubplanPOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.TokenizePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.UnionAllPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.UnnestPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.WindowPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.WriteResultPOperator;
+import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.rewriter.util.JoinUtils;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 
 public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule {
 
@@ -105,385 +133,476 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        // if (context.checkIfInDontApplySet(this, op)) {
-        // return false;
-        // }
         if (op.getPhysicalOperator() != null) {
             return false;
         }
-
-        computeDefaultPhysicalOp(op, true, context);
-        // context.addToDontApplySet(this, op);
+        computeDefaultPhysicalOp(op, true, createPhysicalOperatorFactoryVisitor(context));
         return true;
     }
 
-    private static void setPhysicalOperators(ILogicalPlan plan, boolean topLevelOp, IOptimizationContext context)
-            throws AlgebricksException {
-        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-            computeDefaultPhysicalOp((AbstractLogicalOperator) root.getValue(), topLevelOp, context);
-        }
-    }
-
     private static void computeDefaultPhysicalOp(AbstractLogicalOperator op, boolean topLevelOp,
-            IOptimizationContext context) throws AlgebricksException {
-        PhysicalOptimizationConfig physicalOptimizationConfig = context.getPhysicalOptimizationConfig();
+            ILogicalOperatorVisitor<IPhysicalOperator, Boolean> physOpFactory) throws AlgebricksException {
         if (op.getPhysicalOperator() == null) {
-            switch (op.getOperatorTag()) {
-                case AGGREGATE: {
-                    op.setPhysicalOperator(new AggregatePOperator());
-                    break;
-                }
-                case ASSIGN: {
-                    op.setPhysicalOperator(new AssignPOperator());
-                    break;
-                }
-                case DISTINCT: {
-                    DistinctOperator distinct = (DistinctOperator) op;
-                    if (topLevelOp) {
-                        distinct.setPhysicalOperator(new PreSortedDistinctByPOperator(distinct.getDistinctByVarList()));
-                    } else {
-                        distinct.setPhysicalOperator(
-                                new MicroPreSortedDistinctByPOperator(distinct.getDistinctByVarList()));
-                    }
-                    break;
-                }
-                case EMPTYTUPLESOURCE: {
-                    op.setPhysicalOperator(new EmptyTupleSourcePOperator());
-                    break;
-                }
-                case EXCHANGE: {
-                    if (op.getPhysicalOperator() == null) {
-                        throw new AlgebricksException("Implementation for EXCHANGE operator was not set.");
-                    }
-                    // implem. choice for exchange should be set by a parent op.
-                    break;
-                }
-                case GROUP: {
-                    GroupByOperator gby = (GroupByOperator) op;
-
-                    if (gby.getNestedPlans().size() == 1) {
-                        ILogicalPlan p0 = gby.getNestedPlans().get(0);
-                        if (p0.getRoots().size() == 1) {
-                            if ((gby.getAnnotations().get(OperatorAnnotations.USE_HASH_GROUP_BY) == Boolean.TRUE)
-                                    || (gby.getAnnotations()
-                                            .get(OperatorAnnotations.USE_EXTERNAL_GROUP_BY) == Boolean.TRUE)) {
-                                if (!topLevelOp) {
-                                    throw new NotImplementedException(
-                                            "External hash group-by for nested grouping is not implemented.");
-                                }
-
-                                boolean hasIntermediateAgg = generateMergeAggregationExpressions(gby, context);
-                                if (hasIntermediateAgg) {
-                                    ExternalGroupByPOperator externalGby =
-                                            new ExternalGroupByPOperator(gby.getGroupByVarList(),
-                                                    physicalOptimizationConfig.getMaxFramesForGroupBy(),
-                                                    (long) physicalOptimizationConfig.getMaxFramesForGroupBy()
-                                                            * physicalOptimizationConfig.getFrameSize());
-                                    op.setPhysicalOperator(externalGby);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (topLevelOp) {
-                        op.setPhysicalOperator(new PreclusteredGroupByPOperator(gby.getGroupByVarList(),
-                                gby.isGroupAll(), context.getPhysicalOptimizationConfig().getMaxFramesForGroupBy()));
-                    } else {
-                        op.setPhysicalOperator(new MicroPreclusteredGroupByPOperator(gby.getGroupByVarList(),
-                                context.getPhysicalOptimizationConfig().getMaxFramesForGroupBy()));
-                    }
-                    break;
-                }
-                case INNERJOIN: {
-                    JoinUtils.setJoinAlgorithmAndExchangeAlgo((InnerJoinOperator) op, topLevelOp, context);
-                    break;
-                }
-                case LEFTOUTERJOIN: {
-                    JoinUtils.setJoinAlgorithmAndExchangeAlgo((LeftOuterJoinOperator) op, topLevelOp, context);
-                    break;
-                }
-                case LIMIT: {
-                    op.setPhysicalOperator(new StreamLimitPOperator());
-                    break;
-                }
-                case NESTEDTUPLESOURCE: {
-                    op.setPhysicalOperator(new NestedTupleSourcePOperator());
-                    break;
-                }
-                case ORDER: {
-                    OrderOperator oo = (OrderOperator) op;
-                    for (Pair<IOrder, Mutable<ILogicalExpression>> p : oo.getOrderExpressions()) {
-                        ILogicalExpression e = p.second.getValue();
-                        if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                            throw AlgebricksException.create(ORDER_EXPR_NOT_NORMALIZED, e.getSourceLocation());
-                        }
-                    }
-                    if (topLevelOp) {
-                        op.setPhysicalOperator(new StableSortPOperator(
-                                physicalOptimizationConfig.getMaxFramesExternalSort(), oo.getTopK()));
-                    } else {
-                        op.setPhysicalOperator(new InMemoryStableSortPOperator());
-                    }
-                    break;
-                }
-                case PROJECT: {
-                    op.setPhysicalOperator(new StreamProjectPOperator());
-                    break;
-                }
-                case RUNNINGAGGREGATE: {
-                    op.setPhysicalOperator(new RunningAggregatePOperator());
-                    break;
-                }
-                case REPLICATE: {
-                    op.setPhysicalOperator(new ReplicatePOperator());
-                    break;
-                }
-                case SPLIT:
-                    op.setPhysicalOperator(new SplitPOperator());
-                    break;
-                case SCRIPT: {
-                    op.setPhysicalOperator(new StringStreamingScriptPOperator());
-                    break;
-                }
-                case SELECT: {
-                    op.setPhysicalOperator(new StreamSelectPOperator());
-                    break;
-                }
-                case SUBPLAN: {
-                    op.setPhysicalOperator(new SubplanPOperator());
-                    break;
-                }
-                case UNIONALL: {
-                    if (topLevelOp) {
-                        op.setPhysicalOperator(new UnionAllPOperator());
-                    } else {
-                        op.setPhysicalOperator(new MicroUnionAllPOperator());
-                    }
-                    break;
-                }
-                case INTERSECT: {
-                    if (topLevelOp) {
-                        op.setPhysicalOperator(new IntersectPOperator());
-                    } else {
-                        throw new IllegalStateException("Micro operator not implemented for: " + op.getOperatorTag());
-                    }
-                    break;
-                }
-                case UNNEST: {
-                    op.setPhysicalOperator(new UnnestPOperator());
-                    break;
-                }
-                case LEFT_OUTER_UNNEST:
-                    op.setPhysicalOperator(new LeftOuterUnnestPOperator());
-                    break;
-                case DATASOURCESCAN: {
-                    DataSourceScanOperator scan = (DataSourceScanOperator) op;
-                    IDataSource dataSource = scan.getDataSource();
-                    DataSourceScanPOperator dss = new DataSourceScanPOperator(dataSource);
-                    if (dataSource.isScanAccessPathALeaf()) {
-                        dss.disableJobGenBelowMe();
-                    }
-                    op.setPhysicalOperator(dss);
-                    break;
-                }
-                case WRITE: {
-                    op.setPhysicalOperator(new SinkWritePOperator());
-                    break;
-                }
-                case DISTRIBUTE_RESULT: {
-                    op.setPhysicalOperator(new DistributeResultPOperator());
-                    break;
-                }
-                case WRITE_RESULT: {
-                    WriteResultOperator opLoad = (WriteResultOperator) op;
-                    LogicalVariable payload;
-                    List<LogicalVariable> keys = new ArrayList<LogicalVariable>();
-                    List<LogicalVariable> additionalFilteringKeys = null;
-                    payload = getKeysAndLoad(opLoad.getPayloadExpression(), opLoad.getKeyExpressions(), keys);
-                    if (opLoad.getAdditionalFilteringExpressions() != null) {
-                        additionalFilteringKeys = new ArrayList<LogicalVariable>();
-                        getKeys(opLoad.getAdditionalFilteringExpressions(), additionalFilteringKeys);
-                    }
-                    op.setPhysicalOperator(
-                            new WriteResultPOperator(opLoad.getDataSource(), payload, keys, additionalFilteringKeys));
-                    break;
-                }
-                case INSERT_DELETE_UPSERT: {
-                    // Primary index
-                    InsertDeleteUpsertOperator opLoad = (InsertDeleteUpsertOperator) op;
-                    LogicalVariable payload;
-                    List<LogicalVariable> keys = new ArrayList<LogicalVariable>();
-                    List<LogicalVariable> additionalFilteringKeys = null;
-                    List<LogicalVariable> additionalNonFilterVariables = null;
-                    if (opLoad.getAdditionalNonFilteringExpressions() != null) {
-                        additionalNonFilterVariables = new ArrayList<LogicalVariable>();
-                        getKeys(opLoad.getAdditionalNonFilteringExpressions(), additionalNonFilterVariables);
-                    }
-                    payload = getKeysAndLoad(opLoad.getPayloadExpression(), opLoad.getPrimaryKeyExpressions(), keys);
-                    if (opLoad.getAdditionalFilteringExpressions() != null) {
-                        additionalFilteringKeys = new ArrayList<LogicalVariable>();
-                        getKeys(opLoad.getAdditionalFilteringExpressions(), additionalFilteringKeys);
-                    }
-                    if (opLoad.isBulkload()) {
-                        op.setPhysicalOperator(new BulkloadPOperator(payload, keys, additionalFilteringKeys,
-                                additionalNonFilterVariables, opLoad.getDataSource()));
-                    } else {
-                        op.setPhysicalOperator(new InsertDeleteUpsertPOperator(payload, keys, additionalFilteringKeys,
-                                opLoad.getDataSource(), opLoad.getOperation(), additionalNonFilterVariables));
-                    }
-                    break;
-                }
-                case INDEX_INSERT_DELETE_UPSERT: {
-                    // Secondary index
-                    IndexInsertDeleteUpsertOperator opInsDel = (IndexInsertDeleteUpsertOperator) op;
-                    List<LogicalVariable> primaryKeys = new ArrayList<LogicalVariable>();
-                    List<LogicalVariable> secondaryKeys = new ArrayList<LogicalVariable>();
-                    List<LogicalVariable> additionalFilteringKeys = null;
-                    getKeys(opInsDel.getPrimaryKeyExpressions(), primaryKeys);
-                    getKeys(opInsDel.getSecondaryKeyExpressions(), secondaryKeys);
-                    if (opInsDel.getAdditionalFilteringExpressions() != null) {
-                        additionalFilteringKeys = new ArrayList<LogicalVariable>();
-                        getKeys(opInsDel.getAdditionalFilteringExpressions(), additionalFilteringKeys);
-                    }
-                    if (opInsDel.isBulkload()) {
-                        op.setPhysicalOperator(
-                                new IndexBulkloadPOperator(primaryKeys, secondaryKeys, additionalFilteringKeys,
-                                        opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex()));
-                    } else {
-                        LogicalVariable upsertIndicatorVar = null;
-                        List<LogicalVariable> prevSecondaryKeys = null;
-                        LogicalVariable prevAdditionalFilteringKey = null;
-                        if (opInsDel.getOperation() == Kind.UPSERT) {
-                            upsertIndicatorVar = getKey(opInsDel.getUpsertIndicatorExpr().getValue());
-                            prevSecondaryKeys = new ArrayList<LogicalVariable>();
-                            getKeys(opInsDel.getPrevSecondaryKeyExprs(), prevSecondaryKeys);
-                            if (opInsDel.getPrevAdditionalFilteringExpression() != null) {
-                                prevAdditionalFilteringKey =
-                                        ((VariableReferenceExpression) (opInsDel.getPrevAdditionalFilteringExpression())
-                                                .getValue()).getVariableReference();
-                            }
-                        }
-                        op.setPhysicalOperator(new IndexInsertDeleteUpsertPOperator(primaryKeys, secondaryKeys,
-                                additionalFilteringKeys, opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex(),
-                                upsertIndicatorVar, prevSecondaryKeys, prevAdditionalFilteringKey,
-                                opInsDel.getNumberOfAdditionalNonFilteringFields()));
-                    }
-                    break;
-
-                }
-                case TOKENIZE: {
-                    TokenizeOperator opTokenize = (TokenizeOperator) op;
-                    List<LogicalVariable> primaryKeys = new ArrayList<LogicalVariable>();
-                    List<LogicalVariable> secondaryKeys = new ArrayList<LogicalVariable>();
-                    getKeys(opTokenize.getPrimaryKeyExpressions(), primaryKeys);
-                    getKeys(opTokenize.getSecondaryKeyExpressions(), secondaryKeys);
-                    // Tokenize Operator only operates with a bulk load on a data set with an index
-                    if (opTokenize.isBulkload()) {
-                        op.setPhysicalOperator(
-                                new TokenizePOperator(primaryKeys, secondaryKeys, opTokenize.getDataSourceIndex()));
-                    }
-                    break;
-                }
-                case SINK: {
-                    op.setPhysicalOperator(new SinkPOperator());
-                    break;
-                }
-                case FORWARD:
-                    op.setPhysicalOperator(new SortForwardPOperator());
-                    break;
+            IPhysicalOperator physOp = op.accept(physOpFactory, topLevelOp);
+            if (physOp == null) {
+                throw AlgebricksException.create(ErrorCode.PHYS_OPERATOR_NOT_SET, op.getSourceLocation(),
+                        op.getOperatorTag());
             }
+            op.setPhysicalOperator(physOp);
         }
         if (op.hasNestedPlans()) {
             AbstractOperatorWithNestedPlans nested = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan p : nested.getNestedPlans()) {
-                setPhysicalOperators(p, false, context);
+                for (Mutable<ILogicalOperator> root : p.getRoots()) {
+                    computeDefaultPhysicalOp((AbstractLogicalOperator) root.getValue(), false, physOpFactory);
+                }
             }
         }
         for (Mutable<ILogicalOperator> opRef : op.getInputs()) {
-            computeDefaultPhysicalOp((AbstractLogicalOperator) opRef.getValue(), topLevelOp, context);
+            computeDefaultPhysicalOp((AbstractLogicalOperator) opRef.getValue(), topLevelOp, physOpFactory);
         }
     }
 
-    private static void getKeys(List<Mutable<ILogicalExpression>> keyExpressions, List<LogicalVariable> keys) {
-        for (Mutable<ILogicalExpression> kExpr : keyExpressions) {
-            keys.add(getKey(kExpr.getValue()));
-        }
+    protected ILogicalOperatorVisitor<IPhysicalOperator, Boolean> createPhysicalOperatorFactoryVisitor(
+            IOptimizationContext context) {
+        return new AlgebricksPhysicalOperatorFactoryVisitor(context);
     }
 
-    private static LogicalVariable getKey(ILogicalExpression keyExpression) {
-        if (keyExpression.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-            throw new NotImplementedException();
-        }
-        return ((VariableReferenceExpression) keyExpression).getVariableReference();
-    }
+    protected static class AlgebricksPhysicalOperatorFactoryVisitor
+            implements ILogicalOperatorVisitor<IPhysicalOperator, Boolean> {
 
-    private static LogicalVariable getKeysAndLoad(Mutable<ILogicalExpression> payloadExpr,
-            List<Mutable<ILogicalExpression>> keyExpressions, List<LogicalVariable> keys) {
-        LogicalVariable payload;
-        if (payloadExpr.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-            throw new NotImplementedException();
-        }
-        payload = ((VariableReferenceExpression) payloadExpr.getValue()).getVariableReference();
+        protected final IOptimizationContext context;
 
-        for (Mutable<ILogicalExpression> kExpr : keyExpressions) {
-            ILogicalExpression e = kExpr.getValue();
-            if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+        protected final PhysicalOptimizationConfig physicalOptimizationConfig;
+
+        protected AlgebricksPhysicalOperatorFactoryVisitor(IOptimizationContext context) {
+            this.context = context;
+            this.physicalOptimizationConfig = context.getPhysicalOptimizationConfig();
+        }
+
+        @Override
+        public IPhysicalOperator visitAggregateOperator(AggregateOperator op, Boolean topLevelOp) {
+            return new AggregatePOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitAssignOperator(AssignOperator op, Boolean topLevelOp) {
+            return new AssignPOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitDistinctOperator(DistinctOperator distinct, Boolean topLevelOp) {
+            if (topLevelOp) {
+                return new PreSortedDistinctByPOperator(distinct.getDistinctByVarList());
+            } else {
+                return new MicroPreSortedDistinctByPOperator(distinct.getDistinctByVarList());
+            }
+        }
+
+        @Override
+        public IPhysicalOperator visitEmptyTupleSourceOperator(EmptyTupleSourceOperator op, Boolean topLevelOp) {
+            return new EmptyTupleSourcePOperator();
+        }
+
+        @Override
+        public final IPhysicalOperator visitGroupByOperator(GroupByOperator gby, Boolean topLevelOp)
+                throws AlgebricksException {
+
+            ensureAllVariables(gby.getGroupByList(), Pair::getSecond);
+
+            if (gby.getNestedPlans().size() == 1 && gby.getNestedPlans().get(0).getRoots().size() == 1) {
+                if (topLevelOp && ((gby.getAnnotations().get(OperatorAnnotations.USE_HASH_GROUP_BY) == Boolean.TRUE)
+                        || (gby.getAnnotations().get(OperatorAnnotations.USE_EXTERNAL_GROUP_BY) == Boolean.TRUE))) {
+                    ExternalGroupByPOperator extGby = createExternalGroupByPOperator(gby);
+                    if (extGby != null) {
+                        return extGby;
+                    }
+                }
+            }
+
+            if (topLevelOp) {
+                return new PreclusteredGroupByPOperator(gby.getGroupByVarList(), gby.isGroupAll(),
+                        context.getPhysicalOptimizationConfig().getMaxFramesForGroupBy());
+            } else {
+                return new MicroPreclusteredGroupByPOperator(gby.getGroupByVarList(),
+                        context.getPhysicalOptimizationConfig().getMaxFramesForGroupBy());
+            }
+        }
+
+        protected ExternalGroupByPOperator createExternalGroupByPOperator(GroupByOperator gby)
+                throws AlgebricksException {
+            boolean hasIntermediateAgg = generateMergeAggregationExpressions(gby);
+            if (!hasIntermediateAgg) {
+                return null;
+            }
+            return new ExternalGroupByPOperator(gby.getGroupByVarList(),
+                    physicalOptimizationConfig.getMaxFramesForGroupBy(),
+                    (long) physicalOptimizationConfig.getMaxFramesForGroupBy()
+                            * physicalOptimizationConfig.getFrameSize());
+        }
+
+        @Override
+        public IPhysicalOperator visitInnerJoinOperator(InnerJoinOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            JoinUtils.setJoinAlgorithmAndExchangeAlgo(op, topLevelOp, context);
+            return op.getPhysicalOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            JoinUtils.setJoinAlgorithmAndExchangeAlgo(op, topLevelOp, context);
+            return op.getPhysicalOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitLimitOperator(LimitOperator op, Boolean topLevelOp) {
+            return new StreamLimitPOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitNestedTupleSourceOperator(NestedTupleSourceOperator op, Boolean topLevelOp) {
+            return new NestedTupleSourcePOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitOrderOperator(OrderOperator oo, Boolean topLevelOp) throws AlgebricksException {
+            ensureAllVariables(oo.getOrderExpressions(), Pair::getSecond);
+            if (topLevelOp) {
+                return new StableSortPOperator(physicalOptimizationConfig.getMaxFramesExternalSort(), oo.getTopK());
+            } else {
+                return new InMemoryStableSortPOperator();
+            }
+        }
+
+        @Override
+        public IPhysicalOperator visitProjectOperator(ProjectOperator op, Boolean topLevelOp) {
+            return new StreamProjectPOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitRunningAggregateOperator(RunningAggregateOperator op, Boolean topLevelOp) {
+            return new RunningAggregatePOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitReplicateOperator(ReplicateOperator op, Boolean topLevelOp) {
+            return new ReplicatePOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitSplitOperator(SplitOperator op, Boolean topLevelOp) {
+            return new SplitPOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitScriptOperator(ScriptOperator op, Boolean topLevelOp) {
+            return new StringStreamingScriptPOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitSelectOperator(SelectOperator op, Boolean topLevelOp) {
+            return new StreamSelectPOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitSubplanOperator(SubplanOperator op, Boolean topLevelOp) {
+            return new SubplanPOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitUnionOperator(UnionAllOperator op, Boolean topLevelOp) {
+            if (topLevelOp) {
+                return new UnionAllPOperator();
+            } else {
+                return new MicroUnionAllPOperator();
+            }
+        }
+
+        @Override
+        public IPhysicalOperator visitIntersectOperator(IntersectOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            if (topLevelOp) {
+                return new IntersectPOperator();
+            } else {
+                throw AlgebricksException.create(ErrorCode.OPERATOR_NOT_IMPLEMENTED, op.getSourceLocation(),
+                        op.getOperatorTag().toString() + " (micro)");
+            }
+        }
+
+        @Override
+        public IPhysicalOperator visitUnnestOperator(UnnestOperator op, Boolean topLevelOp) {
+            return new UnnestPOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Boolean topLevelOp) {
+            return new LeftOuterUnnestPOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitDataScanOperator(DataSourceScanOperator scan, Boolean topLevelOp) {
+            IDataSource dataSource = scan.getDataSource();
+            DataSourceScanPOperator dss = new DataSourceScanPOperator(dataSource);
+            if (dataSource.isScanAccessPathALeaf()) {
+                dss.disableJobGenBelowMe();
+            }
+            return dss;
+        }
+
+        @Override
+        public IPhysicalOperator visitWriteOperator(WriteOperator op, Boolean topLevelOp) {
+            return new SinkWritePOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitDistributeResultOperator(DistributeResultOperator op, Boolean topLevelOp) {
+            return new DistributeResultPOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitWriteResultOperator(WriteResultOperator opLoad, Boolean topLevelOp) {
+            List<LogicalVariable> keys = new ArrayList<>();
+            List<LogicalVariable> additionalFilteringKeys = null;
+            LogicalVariable payload = getKeysAndLoad(opLoad.getPayloadExpression(), opLoad.getKeyExpressions(), keys);
+            if (opLoad.getAdditionalFilteringExpressions() != null) {
+                additionalFilteringKeys = new ArrayList<>();
+                getKeys(opLoad.getAdditionalFilteringExpressions(), additionalFilteringKeys);
+            }
+            return new WriteResultPOperator(opLoad.getDataSource(), payload, keys, additionalFilteringKeys);
+        }
+
+        @Override
+        public IPhysicalOperator visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator opLoad,
+                Boolean topLevelOp) {
+            // Primary index
+            List<LogicalVariable> keys = new ArrayList<>();
+            List<LogicalVariable> additionalFilteringKeys = null;
+            List<LogicalVariable> additionalNonFilterVariables = null;
+            if (opLoad.getAdditionalNonFilteringExpressions() != null) {
+                additionalNonFilterVariables = new ArrayList<>();
+                getKeys(opLoad.getAdditionalNonFilteringExpressions(), additionalNonFilterVariables);
+            }
+            LogicalVariable payload =
+                    getKeysAndLoad(opLoad.getPayloadExpression(), opLoad.getPrimaryKeyExpressions(), keys);
+            if (opLoad.getAdditionalFilteringExpressions() != null) {
+                additionalFilteringKeys = new ArrayList<>();
+                getKeys(opLoad.getAdditionalFilteringExpressions(), additionalFilteringKeys);
+            }
+            if (opLoad.isBulkload()) {
+                return new BulkloadPOperator(payload, keys, additionalFilteringKeys, additionalNonFilterVariables,
+                        opLoad.getDataSource());
+            } else {
+                return new InsertDeleteUpsertPOperator(payload, keys, additionalFilteringKeys, opLoad.getDataSource(),
+                        opLoad.getOperation(), additionalNonFilterVariables);
+            }
+        }
+
+        @Override
+        public IPhysicalOperator visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator opInsDel,
+                Boolean topLevelOp) {
+            // Secondary index
+            List<LogicalVariable> primaryKeys = new ArrayList<>();
+            List<LogicalVariable> secondaryKeys = new ArrayList<>();
+            List<LogicalVariable> additionalFilteringKeys = null;
+            getKeys(opInsDel.getPrimaryKeyExpressions(), primaryKeys);
+            getKeys(opInsDel.getSecondaryKeyExpressions(), secondaryKeys);
+            if (opInsDel.getAdditionalFilteringExpressions() != null) {
+                additionalFilteringKeys = new ArrayList<>();
+                getKeys(opInsDel.getAdditionalFilteringExpressions(), additionalFilteringKeys);
+            }
+            if (opInsDel.isBulkload()) {
+                return new IndexBulkloadPOperator(primaryKeys, secondaryKeys, additionalFilteringKeys,
+                        opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex());
+            } else {
+                LogicalVariable upsertIndicatorVar = null;
+                List<LogicalVariable> prevSecondaryKeys = null;
+                LogicalVariable prevAdditionalFilteringKey = null;
+                if (opInsDel.getOperation() == Kind.UPSERT) {
+                    upsertIndicatorVar = getKey(opInsDel.getUpsertIndicatorExpr().getValue());
+                    prevSecondaryKeys = new ArrayList<>();
+                    getKeys(opInsDel.getPrevSecondaryKeyExprs(), prevSecondaryKeys);
+                    if (opInsDel.getPrevAdditionalFilteringExpression() != null) {
+                        prevAdditionalFilteringKey =
+                                ((VariableReferenceExpression) (opInsDel.getPrevAdditionalFilteringExpression())
+                                        .getValue()).getVariableReference();
+                    }
+                }
+                return new IndexInsertDeleteUpsertPOperator(primaryKeys, secondaryKeys, additionalFilteringKeys,
+                        opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex(), upsertIndicatorVar,
+                        prevSecondaryKeys, prevAdditionalFilteringKey,
+                        opInsDel.getNumberOfAdditionalNonFilteringFields());
+            }
+        }
+
+        @Override
+        public IPhysicalOperator visitTokenizeOperator(TokenizeOperator opTokenize, Boolean topLevelOp)
+                throws AlgebricksException {
+            List<LogicalVariable> primaryKeys = new ArrayList<>();
+            List<LogicalVariable> secondaryKeys = new ArrayList<>();
+            getKeys(opTokenize.getPrimaryKeyExpressions(), primaryKeys);
+            getKeys(opTokenize.getSecondaryKeyExpressions(), secondaryKeys);
+            // Tokenize Operator only operates with a bulk load on a data set with an index
+            if (!opTokenize.isBulkload()) {
+                throw AlgebricksException.create(ErrorCode.OPERATOR_NOT_IMPLEMENTED, opTokenize.getSourceLocation(),
+                        opTokenize.getOperatorTag().toString() + " (no bulkload)");
+            }
+            return new TokenizePOperator(primaryKeys, secondaryKeys, opTokenize.getDataSourceIndex());
+        }
+
+        @Override
+        public IPhysicalOperator visitSinkOperator(SinkOperator op, Boolean topLevelOp) {
+            return new SinkPOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitForwardOperator(ForwardOperator op, Boolean topLevelOp) {
+            return new SortForwardPOperator();
+        }
+
+        @Override
+        public final IPhysicalOperator visitWindowOperator(WindowOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            ensureAllVariables(op.getPartitionExpressions(), v -> v);
+            ensureAllVariables(op.getOrderExpressions(), Pair::getSecond);
+            return createWindowPOperator(op);
+        }
+
+        protected WindowPOperator createWindowPOperator(WindowOperator op) throws AlgebricksException {
+            return new WindowPOperator(op.getPartitionVarList(), true, op.getOrderColumnList(), false, false, false,
+                    context.getPhysicalOptimizationConfig().getMaxFramesForWindow());
+        }
+
+        // Physical operators for these operators must have been set already by rules that introduced them
+
+        @Override
+        public IPhysicalOperator visitDelegateOperator(DelegateOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            throw AlgebricksException.create(ErrorCode.PHYS_OPERATOR_NOT_SET, op.getSourceLocation(),
+                    op.getOperatorTag());
+        }
+
+        @Override
+        public IPhysicalOperator visitExchangeOperator(ExchangeOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            throw AlgebricksException.create(ErrorCode.PHYS_OPERATOR_NOT_SET, op.getSourceLocation(),
+                    op.getOperatorTag());
+        }
+
+        @Override
+        public IPhysicalOperator visitMaterializeOperator(MaterializeOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            throw AlgebricksException.create(ErrorCode.PHYS_OPERATOR_NOT_SET, op.getSourceLocation(),
+                    op.getOperatorTag());
+        }
+
+        // Physical operators for these operators cannot be instantiated by Algebricks
+
+        @Override
+        public IPhysicalOperator visitUnnestMapOperator(UnnestMapOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            throw AlgebricksException.create(ErrorCode.OPERATOR_NOT_IMPLEMENTED, op.getSourceLocation(),
+                    op.getOperatorTag());
+        }
+
+        @Override
+        public IPhysicalOperator visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            throw AlgebricksException.create(ErrorCode.OPERATOR_NOT_IMPLEMENTED, op.getSourceLocation(),
+                    op.getOperatorTag());
+        }
+
+        // Helper methods
+
+        private static void getKeys(List<Mutable<ILogicalExpression>> keyExpressions, List<LogicalVariable> keys) {
+            for (Mutable<ILogicalExpression> kExpr : keyExpressions) {
+                keys.add(getKey(kExpr.getValue()));
+            }
+        }
+
+        private static LogicalVariable getKey(ILogicalExpression keyExpression) {
+            if (keyExpression.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 throw new NotImplementedException();
             }
-            keys.add(((VariableReferenceExpression) e).getVariableReference());
-        }
-        return payload;
-    }
-
-    private static boolean generateMergeAggregationExpressions(GroupByOperator gby, IOptimizationContext context)
-            throws AlgebricksException {
-        if (gby.getNestedPlans().size() != 1) {
-            //External/Sort group-by currently works only for one nested plan with one root containing
-            //an aggregate and a nested-tuple-source.
-            throw new AlgebricksException(
-                    "External group-by currently works only for one nested plan with one root containing"
-                            + "an aggregate and a nested-tuple-source.");
-        }
-        ILogicalPlan p0 = gby.getNestedPlans().get(0);
-        if (p0.getRoots().size() != 1) {
-            //External/Sort group-by currently works only for one nested plan with one root containing
-            //an aggregate and a nested-tuple-source.
-            throw new AlgebricksException(
-                    "External group-by currently works only for one nested plan with one root containing"
-                            + "an aggregate and a nested-tuple-source.");
-        }
-        IMergeAggregationExpressionFactory mergeAggregationExpressionFactory =
-                context.getMergeAggregationExpressionFactory();
-        Mutable<ILogicalOperator> r0 = p0.getRoots().get(0);
-        AbstractLogicalOperator r0Logical = (AbstractLogicalOperator) r0.getValue();
-        if (r0Logical.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
-            return false;
+            return ((VariableReferenceExpression) keyExpression).getVariableReference();
         }
 
-        // Check whether there are multiple aggregates in the sub plan.
-        ILogicalOperator r1Logical = r0Logical;
-        while (r1Logical.hasInputs()) {
-            r1Logical = r1Logical.getInputs().get(0).getValue();
-            if (r1Logical.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
+        private static LogicalVariable getKeysAndLoad(Mutable<ILogicalExpression> payloadExpr,
+                List<Mutable<ILogicalExpression>> keyExpressions, List<LogicalVariable> keys) {
+            LogicalVariable payload;
+            if (payloadExpr.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                throw new NotImplementedException();
+            }
+            payload = ((VariableReferenceExpression) payloadExpr.getValue()).getVariableReference();
+
+            for (Mutable<ILogicalExpression> kExpr : keyExpressions) {
+                ILogicalExpression e = kExpr.getValue();
+                if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                    throw new NotImplementedException();
+                }
+                keys.add(((VariableReferenceExpression) e).getVariableReference());
+            }
+            return payload;
+        }
+
+        private boolean generateMergeAggregationExpressions(GroupByOperator gby) throws AlgebricksException {
+            if (gby.getNestedPlans().size() != 1) {
+                //External/Sort group-by currently works only for one nested plan with one root containing
+                //an aggregate and a nested-tuple-source.
+                throw new AlgebricksException(
+                        "External group-by currently works only for one nested plan with one root containing"
+                                + "an aggregate and a nested-tuple-source.");
+            }
+            ILogicalPlan p0 = gby.getNestedPlans().get(0);
+            if (p0.getRoots().size() != 1) {
+                //External/Sort group-by currently works only for one nested plan with one root containing
+                //an aggregate and a nested-tuple-source.
+                throw new AlgebricksException(
+                        "External group-by currently works only for one nested plan with one root containing"
+                                + "an aggregate and a nested-tuple-source.");
+            }
+            IMergeAggregationExpressionFactory mergeAggregationExpressionFactory =
+                    context.getMergeAggregationExpressionFactory();
+            Mutable<ILogicalOperator> r0 = p0.getRoots().get(0);
+            AbstractLogicalOperator r0Logical = (AbstractLogicalOperator) r0.getValue();
+            if (r0Logical.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
                 return false;
             }
+
+            // Check whether there are multiple aggregates in the sub plan.
+            ILogicalOperator r1Logical = r0Logical;
+            while (r1Logical.hasInputs()) {
+                r1Logical = r1Logical.getInputs().get(0).getValue();
+                if (r1Logical.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
+                    return false;
+                }
+            }
+
+            AggregateOperator aggOp = (AggregateOperator) r0.getValue();
+            List<Mutable<ILogicalExpression>> aggFuncRefs = aggOp.getExpressions();
+            List<LogicalVariable> originalAggVars = aggOp.getVariables();
+            int n = aggOp.getExpressions().size();
+            List<Mutable<ILogicalExpression>> mergeExpressionRefs = new ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                ILogicalExpression mergeExpr = mergeAggregationExpressionFactory
+                        .createMergeAggregation(originalAggVars.get(i), aggFuncRefs.get(i).getValue(), context);
+                if (mergeExpr == null) {
+                    return false;
+                }
+                mergeExpressionRefs.add(new MutableObject<>(mergeExpr));
+            }
+            aggOp.setMergeExpressions(mergeExpressionRefs);
+            return true;
         }
 
-        AggregateOperator aggOp = (AggregateOperator) r0.getValue();
-        List<Mutable<ILogicalExpression>> aggFuncRefs = aggOp.getExpressions();
-        List<LogicalVariable> originalAggVars = aggOp.getVariables();
-        int n = aggOp.getExpressions().size();
-        List<Mutable<ILogicalExpression>> mergeExpressionRefs = new ArrayList<Mutable<ILogicalExpression>>();
-        for (int i = 0; i < n; i++) {
-            ILogicalExpression mergeExpr = mergeAggregationExpressionFactory
-                    .createMergeAggregation(originalAggVars.get(i), aggFuncRefs.get(i).getValue(), context);
-            if (mergeExpr == null) {
-                return false;
+        static <E> void ensureAllVariables(Collection<E> exprList, Function<E, Mutable<ILogicalExpression>> accessor)
+                throws AlgebricksException {
+            for (E item : exprList) {
+                ILogicalExpression e = accessor.apply(item).getValue();
+                if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                    throw AlgebricksException.create(ErrorCode.EXPR_NOT_NORMALIZED, e.getSourceLocation());
+                }
             }
-            mergeExpressionRefs.add(new MutableObject<ILogicalExpression>(mergeExpr));
         }
-        aggOp.setMergeExpressions(mergeExpressionRefs);
-        return true;
     }
 }
