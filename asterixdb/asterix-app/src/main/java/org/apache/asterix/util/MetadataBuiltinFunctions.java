@@ -27,6 +27,7 @@ import org.apache.asterix.app.function.FeedRewriter;
 import org.apache.asterix.app.function.JobSummariesRewriter;
 import org.apache.asterix.app.function.PingRewriter;
 import org.apache.asterix.app.function.StorageComponentsRewriter;
+import org.apache.asterix.app.function.TPCDSDataGeneratorRewriter;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.utils.RecordUtil;
 
@@ -58,6 +59,12 @@ public class MetadataBuiltinFunctions {
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
         BuiltinFunctions.addUnnestFun(PingRewriter.PING, true);
         BuiltinFunctions.addDatasourceFunction(PingRewriter.PING, PingRewriter.INSTANCE);
+        // TPC-DS data generation function
+        BuiltinFunctions.addPrivateFunction(TPCDSDataGeneratorRewriter.TPCDS_DATA_GENERATOR,
+                (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
+        BuiltinFunctions.addUnnestFun(TPCDSDataGeneratorRewriter.TPCDS_DATA_GENERATOR, true);
+        BuiltinFunctions.addDatasourceFunction(TPCDSDataGeneratorRewriter.TPCDS_DATA_GENERATOR,
+                TPCDSDataGeneratorRewriter.INSTANCE);
         // Active requests function
         BuiltinFunctions.addFunction(ActiveRequestsRewriter.ACTIVE_REQUESTS,
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);

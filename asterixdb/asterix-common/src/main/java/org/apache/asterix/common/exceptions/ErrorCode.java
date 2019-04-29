@@ -74,6 +74,7 @@ public class ErrorCode {
     public static final int INTEGER_VALUE_EXPECTED = 39;
     public static final int NO_STATEMENT_PROVIDED = 40;
     public static final int REQUEST_CANCELLED = 41;
+    public static final int TPCDS_INVALID_TABLE_NAME = 42;
 
     public static final int UNSUPPORTED_JRE = 100;
 

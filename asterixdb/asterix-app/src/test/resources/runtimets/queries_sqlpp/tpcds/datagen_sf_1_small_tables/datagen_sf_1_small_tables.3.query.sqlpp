@@ -1,0 +1,36 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+set `import-private-functions` `true`;
+
+select
+  (select value count(*) from tpcds_datagen("call_center", 1.0) as data)[0] as call_center,
+  (select value count(*) from tpcds_datagen("catalog_page", 1.0) as data)[0] as catalog_page,
+  (select value count(*) from tpcds_datagen("date_dim", 1.0) as data)[0] as date_dim,
+  (select value count(*) from tpcds_datagen("household_demographics", 1.0) as data)[0] as household_demographics,
+  (select value count(*) from tpcds_datagen("income_band", 1.0) as data)[0] as income_band,
+  (select value count(*) from tpcds_datagen("item", 1.0) as data)[0] as item,
+  (select value count(*) from tpcds_datagen("promotion", 1.0) as data)[0] as promotion,
+  (select value count(*) from tpcds_datagen("reason", 1.0) as data)[0] as reason,
+  (select value count(*) from tpcds_datagen("ship_mode", 1.0) as data)[0] as ship_mode,
+  (select value count(*) from tpcds_datagen("store", 1.0) as data)[0] as store,
+  (select value count(*) from tpcds_datagen("warehouse", 1.0) as data)[0] as warehouse,
+  (select value count(*) from tpcds_datagen("web_page", 1.0) as data)[0] as web_page,
+  (select value count(*) from tpcds_datagen("web_site", 1.0) as data)[0] as web_site
+;

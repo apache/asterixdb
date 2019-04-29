@@ -8848,6 +8848,18 @@
   </test-group>
   <test-group name="tpcds">
     <test-case FilePath="tpcds">
+      <compilation-unit name="datagen_sf_1_invalid_table">
+        <output-dir compare="Text">datagen_sf_1_invalid_table</output-dir>
+        <expected-error>Invalid value</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="datagen_sf_1_small_tables">
+        <output-dir compare="Text">datagen_sf_1_small_tables</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
       <compilation-unit name="query-ASTERIXDB-1580">
         <output-dir compare="Text">query-ASTERIXDB-1580</output-dir>
       </compilation-unit>
