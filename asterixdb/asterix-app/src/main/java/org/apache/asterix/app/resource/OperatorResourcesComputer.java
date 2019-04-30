@@ -25,7 +25,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.WindowPOperator;
 
 public class OperatorResourcesComputer {
 
@@ -146,10 +145,10 @@ public class OperatorResourcesComputer {
     }
 
     private long getWindowRequiredMemory(WindowOperator op) {
-        WindowPOperator physOp = (WindowPOperator) op.getPhysicalOperator();
         // memory budget configuration only applies to window operators that materialize partitions (non-streaming)
         // streaming window operators only need 2 frames: output + (conservative estimate) last frame partition columns
-        long memorySize = physOp.isPartitionMaterialization() ? windowMemorySize : 2 * frameSize;
+        long memorySize = op.getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.WINDOW_STREAM ? 2 * frameSize
+                : windowMemorySize;
         return getOperatorRequiredMemory(op, memorySize);
     }
 }

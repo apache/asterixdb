@@ -318,7 +318,7 @@ public class RequiredCapacityVisitor implements ILogicalOperatorVisitor<Void, Vo
         WindowPOperator physOp = (WindowPOperator) op.getPhysicalOperator();
         visitInternal(op, true);
         addOutputBuffer(op); // + previous frame
-        if (physOp.isPartitionMaterialization()) {
+        if (physOp.getOperatorTag() == PhysicalOperatorTag.WINDOW) {
             addOutputBuffer(op); // + run frame
         }
         return null;

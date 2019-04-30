@@ -27,13 +27,14 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 
 /**
- * Runtime factory for window operators that evaluates running aggregates without partition materialization.
+ * Runtime factory for window operators that evaluates running aggregates in a streaming fashion
+ * (without partition materialization).
  */
-public class WindowSimpleRuntimeFactory extends AbstractWindowRuntimeFactory {
+public class WindowStreamRuntimeFactory extends AbstractWindowRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 
-    public WindowSimpleRuntimeFactory(int[] partitionColumns, IBinaryComparatorFactory[] partitionComparatorFactories,
+    public WindowStreamRuntimeFactory(int[] partitionColumns, IBinaryComparatorFactory[] partitionComparatorFactories,
             IBinaryComparatorFactory[] orderComparatorFactories, int[] projectionColumnsExcludingSubplans,
             int[] runningAggOutColumns, IRunningAggregateEvaluatorFactory[] runningAggFactories) {
         super(partitionColumns, partitionComparatorFactories, orderComparatorFactories,
@@ -42,13 +43,13 @@ public class WindowSimpleRuntimeFactory extends AbstractWindowRuntimeFactory {
 
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(IHyracksTaskContext ctx) {
-        return new WindowSimplePushRuntime(partitionColumns, partitionComparatorFactories, orderComparatorFactories,
+        return new WindowStreamPushRuntime(partitionColumns, partitionComparatorFactories, orderComparatorFactories,
                 projectionList, runningAggOutColumns, runningAggFactories, ctx, sourceLoc);
     }
 
     @Override
     public String toString() {
-        return "window (" + Arrays.toString(partitionColumns) + ") " + Arrays.toString(runningAggOutColumns) + " := "
-                + Arrays.toString(runningAggFactories);
+        return "window-stream (" + Arrays.toString(partitionColumns) + ") " + Arrays.toString(runningAggOutColumns)
+                + " := " + Arrays.toString(runningAggFactories);
     }
 }

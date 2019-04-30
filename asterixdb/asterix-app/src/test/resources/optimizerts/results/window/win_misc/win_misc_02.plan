@@ -11,7 +11,7 @@
                           -- AGGREGATE  |LOCAL|
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                         }
-                  -- WINDOW  |PARTITIONED|
+                  -- WINDOW_STREAM  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       -- STABLE_SORT [$$34(ASC), $$48(ASC)]  |PARTITIONED|
                         -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|

@@ -56,8 +56,10 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractWindowPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.WindowPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.WindowStreamPOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import org.apache.hyracks.algebricks.rewriter.rules.SetAlgebricksPhysicalOperatorsRule;
@@ -241,19 +243,24 @@ public final class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysical
         }
 
         @Override
-        public WindowPOperator createWindowPOperator(WindowOperator winOp) throws AlgebricksException {
-            boolean partitionMaterialization = winOp.hasNestedPlans() || AnalysisUtil.hasFunctionWithProperty(winOp,
-                    BuiltinFunctions.WindowFunctionProperty.MATERIALIZE_PARTITION);
-            boolean frameStartIsMonotonic = AnalysisUtil
-                    .isWindowFrameBoundaryMonotonic(winOp.getFrameStartExpressions(), winOp.getFrameValueExpressions());
-            boolean frameEndIsMonotonic = AnalysisUtil.isWindowFrameBoundaryMonotonic(winOp.getFrameEndExpressions(),
-                    winOp.getFrameValueExpressions());
-            boolean nestedTrivialAggregates = winOp.hasNestedPlans()
-                    && winOp.getNestedPlans().stream().allMatch(AnalysisUtil::isTrivialAggregateSubplan);
-
-            return new WindowPOperator(winOp.getPartitionVarList(), partitionMaterialization,
-                    winOp.getOrderColumnList(), frameStartIsMonotonic, frameEndIsMonotonic, nestedTrivialAggregates,
-                    context.getPhysicalOptimizationConfig().getMaxFramesForWindow());
+        public AbstractWindowPOperator createWindowPOperator(WindowOperator winOp) throws AlgebricksException {
+            if (winOp.hasNestedPlans()) {
+                boolean frameStartIsMonotonic = AnalysisUtil.isWindowFrameBoundaryMonotonic(
+                        winOp.getFrameStartExpressions(), winOp.getFrameValueExpressions());
+                boolean frameEndIsMonotonic = AnalysisUtil.isWindowFrameBoundaryMonotonic(
+                        winOp.getFrameEndExpressions(), winOp.getFrameValueExpressions());
+                boolean nestedTrivialAggregates =
+                        winOp.getNestedPlans().stream().allMatch(AnalysisUtil::isTrivialAggregateSubplan);
+                return new WindowPOperator(winOp.getPartitionVarList(), winOp.getOrderColumnList(),
+                        frameStartIsMonotonic, frameEndIsMonotonic, nestedTrivialAggregates,
+                        context.getPhysicalOptimizationConfig().getMaxFramesForWindow());
+            } else if (AnalysisUtil.hasFunctionWithProperty(winOp,
+                    BuiltinFunctions.WindowFunctionProperty.MATERIALIZE_PARTITION)) {
+                return new WindowPOperator(winOp.getPartitionVarList(), winOp.getOrderColumnList(), false, false, false,
+                        context.getPhysicalOptimizationConfig().getMaxFramesForWindow());
+            } else {
+                return new WindowStreamPOperator(winOp.getPartitionVarList(), winOp.getOrderColumnList());
+            }
         }
     }
 }

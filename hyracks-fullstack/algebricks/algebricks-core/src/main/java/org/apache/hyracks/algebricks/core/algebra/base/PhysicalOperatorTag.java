@@ -78,5 +78,6 @@ public enum PhysicalOperatorTag {
     UPDATE,
     WRITE_RESULT,
     INTERSECT,
-    WINDOW
+    WINDOW,
+    WINDOW_STREAM
 }

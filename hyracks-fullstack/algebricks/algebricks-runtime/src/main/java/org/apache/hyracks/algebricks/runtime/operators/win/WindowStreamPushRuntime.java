@@ -30,9 +30,9 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 /**
  * Runtime for window operators that evaluates running aggregates without partition materialization.
  */
-class WindowSimplePushRuntime extends AbstractWindowPushRuntime {
+class WindowStreamPushRuntime extends AbstractWindowPushRuntime {
 
-    WindowSimplePushRuntime(int[] partitionColumns, IBinaryComparatorFactory[] partitionComparatorFactories,
+    WindowStreamPushRuntime(int[] partitionColumns, IBinaryComparatorFactory[] partitionComparatorFactories,
             IBinaryComparatorFactory[] orderComparatorFactories, int[] projectionColumns, int[] runningAggOutColumns,
             IRunningAggregateEvaluatorFactory[] runningAggFactories, IHyracksTaskContext ctx,
             SourceLocation sourceLoc) {

@@ -3,7 +3,7 @@
     -- STREAM_PROJECT  |LOCAL|
       -- ASSIGN  |LOCAL|
         -- WINDOW  |LOCAL|
-          -- WINDOW  |LOCAL|
+          -- WINDOW_STREAM  |LOCAL|
             -- ONE_TO_ONE_EXCHANGE  |LOCAL|
               -- STABLE_SORT [$$m(ASC), $$t(ASC)]  |LOCAL|
                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|

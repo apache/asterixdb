@@ -8,7 +8,7 @@
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
-            -- WINDOW  |LOCAL|
+            -- WINDOW_STREAM  |LOCAL|
               -- ONE_TO_ONE_EXCHANGE  |LOCAL|
                 -- STABLE_SORT [$$m(ASC), $$t(ASC)]  |LOCAL|
                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|

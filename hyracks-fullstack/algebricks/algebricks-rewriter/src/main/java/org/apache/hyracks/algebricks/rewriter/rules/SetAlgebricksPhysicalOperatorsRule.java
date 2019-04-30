@@ -79,6 +79,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractWindowPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AggregatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AssignPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.BulkloadPOperator;
@@ -468,8 +469,8 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
             return createWindowPOperator(op);
         }
 
-        protected WindowPOperator createWindowPOperator(WindowOperator op) throws AlgebricksException {
-            return new WindowPOperator(op.getPartitionVarList(), true, op.getOrderColumnList(), false, false, false,
+        protected AbstractWindowPOperator createWindowPOperator(WindowOperator op) throws AlgebricksException {
+            return new WindowPOperator(op.getPartitionVarList(), op.getOrderColumnList(), false, false, false,
                     context.getPhysicalOptimizationConfig().getMaxFramesForWindow());
         }
 
