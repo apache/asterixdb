@@ -23,6 +23,8 @@ import static org.apache.asterix.common.exceptions.ErrorCode.NO_STATEMENT_PROVID
 import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_BAD_CLUSTER_STATE;
 import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_NODE_UNREGISTERED;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUEST_TIMEOUT;
+import static org.apache.hyracks.api.exceptions.ErrorCode.HYRACKS;
+import static org.apache.hyracks.api.exceptions.ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -675,6 +677,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                     state.setStatus(ResultStatus.FATAL, HttpResponseStatus.SERVICE_UNAVAILABLE);
                     break;
                 case ASTERIX + NO_STATEMENT_PROVIDED:
+                case HYRACKS + JOB_REQUIREMENTS_EXCEED_CAPACITY:
                     state.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
                     break;
                 default:
