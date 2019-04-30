@@ -36,6 +36,7 @@ import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.sort.util.GroupVSizeFrame;
+import org.apache.hyracks.util.annotations.CriticalPath;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,10 +49,12 @@ public abstract class AbstractExternalSortRunMerger {
     private final IBinaryComparator[] comparators;
     private final INormalizedKeyComputer nmkComputer;
     private final RecordDescriptor recordDesc;
-    private final int framesLimit;
+    private final int maxMergeWidth;
     private final int topK;
+    private List<GeneratedRunFileReader> partialRuns;
     private List<GroupVSizeFrame> inFrames;
     private VSizeFrame outputFrame;
+    private boolean first;
     private static final Logger LOGGER = LogManager.getLogger();
 
     public AbstractExternalSortRunMerger(IHyracksTaskContext ctx, List<GeneratedRunFileReader> runs,
@@ -69,16 +72,15 @@ public abstract class AbstractExternalSortRunMerger {
         this.comparators = comparators;
         this.nmkComputer = nmkComputer;
         this.recordDesc = recordDesc;
-        this.framesLimit = framesLimit;
+        this.maxMergeWidth = framesLimit - 1;
         this.topK = topK;
+        this.first = true;
     }
 
+    @CriticalPath
     public void process(IFrameWriter finalWriter) throws HyracksDataException {
         try {
-            int maxMergeWidth = framesLimit - 1;
-            inFrames = new ArrayList<>(maxMergeWidth);
-            outputFrame = new VSizeFrame(ctx);
-            List<GeneratedRunFileReader> partialRuns = new ArrayList<>(maxMergeWidth);
+            createReusableObjects();
             int stop = runs.size();
             currentGenerationRunAvailable.set(0, stop);
             int numberOfPasses = 1;
@@ -207,6 +209,21 @@ public abstract class AbstractExternalSortRunMerger {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Output " + io + " frames");
             }
+        }
+    }
+
+    public void reset(List<GeneratedRunFileReader> newRuns) {
+        this.runs.clear();
+        this.runs.addAll(newRuns);
+        this.currentGenerationRunAvailable.clear();
+    }
+
+    private void createReusableObjects() throws HyracksDataException {
+        if (first) {
+            first = false;
+            inFrames = new ArrayList<>(maxMergeWidth);
+            outputFrame = new VSizeFrame(ctx);
+            partialRuns = new ArrayList<>(maxMergeWidth);
         }
     }
 

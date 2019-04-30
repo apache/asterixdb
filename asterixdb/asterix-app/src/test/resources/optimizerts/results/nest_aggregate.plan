@@ -8,13 +8,13 @@
                     {
                       -- AGGREGATE  |LOCAL|
                         -- STREAM_LIMIT  |LOCAL|
-                          -- IN_MEMORY_STABLE_SORT [$$39(ASC)]  |LOCAL|
+                          -- MICRO_STABLE_SORT [$$39(ASC)]  |LOCAL|
                             -- MICRO_PRE_CLUSTERED_GROUP_BY[$$51]  |LOCAL|
                                     {
                                       -- AGGREGATE  |LOCAL|
                                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                                     }
-                              -- IN_MEMORY_STABLE_SORT [$$51(ASC)]  |LOCAL|
+                              -- MICRO_STABLE_SORT [$$51(ASC)]  |LOCAL|
                                 -- STREAM_SELECT  |LOCAL|
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                     }

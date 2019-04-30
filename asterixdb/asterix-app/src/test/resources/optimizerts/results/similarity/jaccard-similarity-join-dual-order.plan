@@ -23,7 +23,7 @@
                                     -- PRE_CLUSTERED_GROUP_BY[$$126]  |PARTITIONED|
                                             {
                                               -- AGGREGATE  |LOCAL|
-                                                -- IN_MEMORY_STABLE_SORT [$$i(ASC)]  |LOCAL|
+                                                -- MICRO_STABLE_SORT [$$i(ASC)]  |LOCAL|
                                                   -- STREAM_SELECT  |LOCAL|
                                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                                             }
@@ -113,7 +113,7 @@
                                         -- PRE_CLUSTERED_GROUP_BY[$$129]  |PARTITIONED|
                                                 {
                                                   -- AGGREGATE  |LOCAL|
-                                                    -- IN_MEMORY_STABLE_SORT [$$i(ASC)]  |LOCAL|
+                                                    -- MICRO_STABLE_SORT [$$i(ASC)]  |LOCAL|
                                                       -- STREAM_SELECT  |LOCAL|
                                                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                 }

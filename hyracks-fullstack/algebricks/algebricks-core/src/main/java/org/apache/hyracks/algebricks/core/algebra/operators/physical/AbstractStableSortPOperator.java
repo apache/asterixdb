@@ -49,10 +49,12 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
 
 public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperator {
 
-    protected OrderColumn[] sortColumns;
-    protected ILocalStructuralProperty orderProp;
+    final int maxNumberOfFrames;
+    OrderColumn[] sortColumns;
+    ILocalStructuralProperty orderProp;
 
-    public AbstractStableSortPOperator() {
+    AbstractStableSortPOperator(int maxNumberOfFrames) {
+        this.maxNumberOfFrames = maxNumberOfFrames;
     }
 
     public OrderColumn[] getSortColumns() {

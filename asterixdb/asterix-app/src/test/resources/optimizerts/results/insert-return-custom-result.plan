@@ -5,7 +5,7 @@
               {
                 -- ASSIGN  |LOCAL|
                   -- ASSIGN  |LOCAL|
-                    -- IN_MEMORY_STABLE_SORT [$$16(ASC)]  |LOCAL|
+                    -- MICRO_STABLE_SORT [$$16(ASC)]  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
               }
         -- COMMIT  |PARTITIONED|

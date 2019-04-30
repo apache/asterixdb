@@ -10,7 +10,7 @@
                               -- AGGREGATE  |LOCAL|
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                             }
-                      -- IN_MEMORY_STABLE_SORT [$$200(ASC)]  |LOCAL|
+                      -- MICRO_STABLE_SORT [$$200(ASC)]  |LOCAL|
                         -- ASSIGN  |LOCAL|
                           -- UNNEST  |LOCAL|
                             -- SUBPLAN  |LOCAL|

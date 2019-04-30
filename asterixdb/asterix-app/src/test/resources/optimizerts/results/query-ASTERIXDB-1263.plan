@@ -15,7 +15,7 @@
                                 -- AGGREGATE  |LOCAL|
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                               }
-                        -- IN_MEMORY_STABLE_SORT [$$19(ASC)]  |LOCAL|
+                        -- MICRO_STABLE_SORT [$$19(ASC)]  |LOCAL|
                           -- ASSIGN  |LOCAL|
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }

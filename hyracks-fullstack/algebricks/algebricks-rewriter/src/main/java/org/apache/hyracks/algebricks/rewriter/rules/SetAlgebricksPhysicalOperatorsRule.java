@@ -86,7 +86,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.DataSourceS
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.DistributeResultPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.EmptyTupleSourcePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.InMemoryStableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.IndexBulkloadPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.IndexInsertDeleteUpsertPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.InsertDeleteUpsertPOperator;
@@ -94,6 +93,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.IntersectPO
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.LeftOuterUnnestPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.MicroPreSortedDistinctByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.MicroPreclusteredGroupByPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.MicroStableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.MicroUnionAllPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.NestedTupleSourcePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreSortedDistinctByPOperator;
@@ -271,7 +271,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
             if (topLevelOp) {
                 return new StableSortPOperator(physicalOptimizationConfig.getMaxFramesExternalSort(), oo.getTopK());
             } else {
-                return new InMemoryStableSortPOperator();
+                return new MicroStableSortPOperator(physicalOptimizationConfig.getMaxFramesExternalSort());
             }
         }
 

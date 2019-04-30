@@ -7,7 +7,7 @@
                   {
                     -- AGGREGATE  |LOCAL|
                       -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                        -- IN_MEMORY_STABLE_SORT [$$x(ASC)]  |LOCAL|
+                        -- MICRO_STABLE_SORT [$$x(ASC)]  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
                   {
@@ -18,13 +18,13 @@
                   {
                     -- AGGREGATE  |LOCAL|
                       -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                        -- IN_MEMORY_STABLE_SORT [$$z(ASC)]  |LOCAL|
+                        -- MICRO_STABLE_SORT [$$z(ASC)]  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
                   {
                     -- AGGREGATE  |LOCAL|
                       -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                        -- IN_MEMORY_STABLE_SORT [$$y(ASC)]  |LOCAL|
+                        -- MICRO_STABLE_SORT [$$y(ASC)]  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
             -- ONE_TO_ONE_EXCHANGE  |LOCAL|

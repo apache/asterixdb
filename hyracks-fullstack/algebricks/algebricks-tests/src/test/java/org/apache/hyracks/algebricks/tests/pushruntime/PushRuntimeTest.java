@@ -720,7 +720,7 @@ public class PushRuntimeTest {
         // the algebricks op.
         InMemorySortRuntimeFactory sort =
                 new InMemorySortRuntimeFactory(new int[] { 1 }, (INormalizedKeyComputerFactory) null,
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, null);
+                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, null, 50);
         RecordDescriptor sortDesc = scannerDesc;
 
         String fileName = "scanMicroSortWrite.out";
@@ -836,7 +836,7 @@ public class PushRuntimeTest {
         RecordDescriptor sortDesc = scannerDesc;
         InMemorySortRuntimeFactory sort =
                 new InMemorySortRuntimeFactory(new int[] { 3 }, (INormalizedKeyComputerFactory) null,
-                        new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE }, null);
+                        new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE }, null, 50);
 
         // the group-by
         NestedTupleSourceRuntimeFactory nts = new NestedTupleSourceRuntimeFactory();

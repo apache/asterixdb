@@ -1,0 +1,3 @@
+{ "group": "one", "sum_per_group": [ { "group_num": "SUM_1s", "sum": 10000 }, { "group_num": "SUM_2s", "sum": 20000 }, { "group_num": "SUM_3s", "sum": 30000 } ] }
+{ "group": "three", "sum_per_group": [ { "group_num": "SUM_1s", "sum": 10000 }, { "group_num": "SUM_2s", "sum": 20000 }, { "group_num": "SUM_3s", "sum": 30000 } ] }
+{ "group": "two", "sum_per_group": [ { "group_num": "SUM_1s", "sum": 10000 }, { "group_num": "SUM_2s", "sum": 20000 }, { "group_num": "SUM_3s", "sum": 30000 } ] }

@@ -89,7 +89,7 @@ public class PushNestedOrderByUnderPreSortedGroupByRule implements IAlgebraicRew
         }
         AbstractPhysicalOperator pOrder1 = (AbstractPhysicalOperator) op2.getPhysicalOperator();
         if (pOrder1.getOperatorTag() != PhysicalOperatorTag.STABLE_SORT
-                && pOrder1.getOperatorTag() != PhysicalOperatorTag.IN_MEMORY_STABLE_SORT) {
+                && pOrder1.getOperatorTag() != PhysicalOperatorTag.MICRO_STABLE_SORT) {
             return false;
         }
         // StableSortPOperator sort1 = (StableSortPOperator) pOrder1;

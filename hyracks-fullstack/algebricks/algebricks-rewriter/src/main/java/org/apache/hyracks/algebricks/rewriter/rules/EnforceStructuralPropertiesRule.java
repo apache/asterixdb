@@ -66,7 +66,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.AggregatePO
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.BroadcastExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionMergeExchangePOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.InMemoryStableSortPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.MicroStableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomPartitionExchangePOperator;
@@ -449,7 +449,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.ORDER
                 || (op.getPhysicalOperator().getOperatorTag() != PhysicalOperatorTag.STABLE_SORT
-                        && op.getPhysicalOperator().getOperatorTag() != PhysicalOperatorTag.IN_MEMORY_STABLE_SORT)
+                        && op.getPhysicalOperator().getOperatorTag() != PhysicalOperatorTag.MICRO_STABLE_SORT)
                 || delivered.getLocalProperties() == null) {
             return false;
         }
@@ -555,7 +555,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         oo.setSourceLocation(sourceLoc);
         oo.setExecutionMode(AbstractLogicalOperator.ExecutionMode.LOCAL);
         if (isMicroOp) {
-            oo.setPhysicalOperator(new InMemoryStableSortPOperator());
+            oo.setPhysicalOperator(new MicroStableSortPOperator(physicalOptimizationConfig.getMaxFramesExternalSort()));
         } else {
             oo.setPhysicalOperator(new StableSortPOperator(physicalOptimizationConfig.getMaxFramesExternalSort()));
         }
