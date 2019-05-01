@@ -22,6 +22,4 @@
 * Expected Res : Error, 2 or 3 args are required
 */
 
-use TinySocial;
-
 select array_range(2);

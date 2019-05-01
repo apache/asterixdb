@@ -18,10 +18,17 @@
  */
 
 /*
-* Description  : Testing different input list types
-* Expected Res : Error due to processing different list types
+* Description  : Testing deep equality
+* Expected Res : Success
 */
 
 use TinySocial;
 
-select array_symdiffn([3,5,1], [2,1], {{3, 1}});
+{
+  "t1": (array_symdiffn([5,[1,2]], [[1,2],8,5], [[1,3],5,[1,2]])),
+  "t2": (array_symdiffn([[5,5],[1,2]], [[1,2],[8,5]], [[1,3],[5,5],[1,2]])),
+  "t3": (array_symdiffn([{"id": 1, "age": 34}, {"id": 2, "age": 29}], [{"id": 3, "age": 90}, {"id": 2, "age": 29}], [{"id": 2, "age": 29}, {"id": 1, "age": 34}])),
+  "t4": (from openDs select array_symdiffn(list_f, [ [9999,3], [1,2] ], [[9999,3]]) order by id),
+  "t5": (from openDs select array_symdiffn(list_f, [ {"state": "OH", "country": "US"} , {"state": "IL", "country": "US", "zip_code": 92863}], [ {"state": "OH", "country": "US"}]) order by id),
+  "t6": (from closedDs select array_symdiffn(list_f, [ {"state": "OH", "country": "US"} , {"state": "IL", "country": "US", "zip_code": 92863}], [ {"state": "OH", "country": "US"}]) order by id)
+};

@@ -18,10 +18,8 @@
  */
 
 /*
-* Description  : Testing different input list types
-* Expected Res : Error due to processing different list types
+* Description  : Testing correct number of arguments required
+* Expected Res : Error, 2 or 3 args are required
 */
 
-use TinySocial;
-
-select array_concat([3,5,1], [2,1], {{3, 1}});
+select array_range(2,6,1,4,5);
