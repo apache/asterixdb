@@ -315,13 +315,15 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                 @Override
                 public void close() throws HyracksDataException {
-                    state.hybridHJ.closeBuild();
-                    if (isFailed) {
-                        state.hybridHJ.clearBuildTempFiles();
-                    } else {
-                        ctx.setStateObject(state);
-                        if (LOGGER.isTraceEnabled()) {
-                            LOGGER.trace("OptimizedHybridHashJoin closed its build phase");
+                    if (state.hybridHJ != null) {
+                        state.hybridHJ.closeBuild();
+                        if (isFailed) {
+                            state.hybridHJ.clearBuildTempFiles();
+                        } else {
+                            ctx.setStateObject(state);
+                            if (LOGGER.isTraceEnabled()) {
+                                LOGGER.trace("OptimizedHybridHashJoin closed its build phase");
+                            }
                         }
                     }
                 }
