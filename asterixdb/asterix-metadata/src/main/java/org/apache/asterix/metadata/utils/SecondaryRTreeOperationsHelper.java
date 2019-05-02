@@ -21,8 +21,8 @@ package org.apache.asterix.metadata.utils;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
@@ -227,7 +227,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
                     isPointMBR ? secondaryRecDescForPointMBR : secondaryRecDesc);
             // Create secondary RTree bulk load op.
             TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(spec, fieldPermutation,
-                    indexDataflowHelperFactory, GlobalConfig.DEFAULT_TREE_FILL_FACTOR);
+                    indexDataflowHelperFactory, StorageConstants.DEFAULT_TREE_FILL_FACTOR);
             SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
             sinkRuntimeFactory.setSourceLocation(sourceLoc);
             AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
@@ -282,11 +282,11 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
             if (externalFiles != null) {
                 // Transaction load
                 secondaryBulkLoadOp = createExternalIndexBulkModifyOp(spec, fieldPermutation,
-                        indexDataflowHelperFactory, GlobalConfig.DEFAULT_TREE_FILL_FACTOR);
+                        indexDataflowHelperFactory, StorageConstants.DEFAULT_TREE_FILL_FACTOR);
             } else {
                 // Initial load
                 secondaryBulkLoadOp = createExternalIndexBulkLoadOp(spec, fieldPermutation, indexDataflowHelperFactory,
-                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR);
+                        StorageConstants.DEFAULT_TREE_FILL_FACTOR);
             }
             SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
             sinkRuntimeFactory.setSourceLocation(sourceLoc);

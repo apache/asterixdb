@@ -34,7 +34,6 @@ import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -44,6 +43,7 @@ import org.apache.asterix.common.metadata.LockList;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.transactions.TxnId;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
@@ -650,7 +650,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         IIndexDataflowHelperFactory indexHelperFactory =
                 new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
         LSMIndexBulkLoadOperatorDescriptor btreeBulkLoad = new LSMIndexBulkLoadOperatorDescriptor(spec, null,
-                fieldPermutation, GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, true,
+                fieldPermutation, StorageConstants.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, true,
                 indexHelperFactory, null, BulkLoadUsage.LOAD, dataset.getDatasetId(), null);
         return new Pair<>(btreeBulkLoad, splitsAndConstraint.second);
     }
@@ -1044,8 +1044,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         if (bulkload) {
             long numElementsHint = getCardinalityPerPartitionHint(dataset);
             op = new LSMIndexBulkLoadOperatorDescriptor(spec, inputRecordDesc, fieldPermutation,
-                    GlobalConfig.DEFAULT_TREE_FILL_FACTOR, true, numElementsHint, true, idfh, null, BulkLoadUsage.LOAD,
-                    dataset.getDatasetId(), null);
+                    StorageConstants.DEFAULT_TREE_FILL_FACTOR, true, numElementsHint, true, idfh, null,
+                    BulkLoadUsage.LOAD, dataset.getDatasetId(), null);
         } else {
             if (indexOp == IndexOperation.INSERT) {
                 ISearchOperationCallbackFactory searchCallbackFactory = dataset
@@ -1188,7 +1188,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             if (bulkload) {
                 long numElementsHint = getCardinalityPerPartitionHint(dataset);
                 op = new LSMIndexBulkLoadOperatorDescriptor(spec, inputRecordDesc, fieldPermutation,
-                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false, idfh, null,
+                        StorageConstants.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false, idfh, null,
                         BulkLoadUsage.LOAD, dataset.getDatasetId(), filterFactory);
             } else if (indexOp == IndexOperation.UPSERT) {
                 int upsertIndicatorFieldIndex = propagatedSchema.findVariable(upsertIndicatorVar);
@@ -1288,8 +1288,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         if (bulkload) {
             long numElementsHint = getCardinalityPerPartitionHint(dataset);
             op = new LSMIndexBulkLoadOperatorDescriptor(spec, recordDesc, fieldPermutation,
-                    GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false, indexDataflowHelperFactory,
-                    null, BulkLoadUsage.LOAD, dataset.getDatasetId(), filterFactory);
+                    StorageConstants.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false,
+                    indexDataflowHelperFactory, null, BulkLoadUsage.LOAD, dataset.getDatasetId(), filterFactory);
         } else if (indexOp == IndexOperation.UPSERT) {
             int upsertIndicatorFieldIndex = propagatedSchema.findVariable(upsertIndicatorVar);
             op = new LSMSecondaryUpsertOperatorDescriptor(spec, recordDesc, fieldPermutation,
@@ -1399,7 +1399,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             if (bulkload) {
                 long numElementsHint = getCardinalityPerPartitionHint(dataset);
                 op = new LSMIndexBulkLoadOperatorDescriptor(spec, recordDesc, fieldPermutation,
-                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false, indexDataFlowFactory,
+                        StorageConstants.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false, indexDataFlowFactory,
                         null, BulkLoadUsage.LOAD, dataset.getDatasetId(), filterFactory);
             } else if (indexOp == IndexOperation.UPSERT) {
                 int upsertIndicatorFieldIndex = propagatedSchema.findVariable(upsertIndicatorVar);

@@ -22,7 +22,6 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -186,9 +185,6 @@ public abstract class AbstractAvgAggregateFunction extends AbstractAggregateFunc
         try {
             // Double check that count 0 is accounted
             if (aggType == ATypeTag.SYSTEM_NULL) {
-                if (GlobalConfig.DEBUG) {
-                    GlobalConfig.ASTERIX_LOGGER.trace("AVG aggregate ran over empty input.");
-                }
                 resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
                 result.set(resultStorage);
             } else if (aggType == ATypeTag.NULL) {

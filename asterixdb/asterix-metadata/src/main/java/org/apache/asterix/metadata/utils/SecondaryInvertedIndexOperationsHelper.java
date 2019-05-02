@@ -19,9 +19,9 @@
 package org.apache.asterix.metadata.utils;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -303,6 +303,6 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
         return createTreeIndexBulkLoadOp(spec, fieldPermutation, dataflowHelperFactory,
-                GlobalConfig.DEFAULT_TREE_FILL_FACTOR);
+                StorageConstants.DEFAULT_TREE_FILL_FACTOR);
     }
 }

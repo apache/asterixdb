@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import java.io.IOException;
 
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -225,10 +224,6 @@ public abstract class AbstractSumAggregateFunction extends AbstractAggregateFunc
         try {
             // aggType is SYSTEM_NULL
             if (aggType == ATypeTag.SYSTEM_NULL) {
-                if (GlobalConfig.DEBUG) {
-                    GlobalConfig.ASTERIX_LOGGER.trace("SUM aggregate ran over zero values.");
-                }
-
                 finishSystemNull(result);
             }
             // aggType is NULL
