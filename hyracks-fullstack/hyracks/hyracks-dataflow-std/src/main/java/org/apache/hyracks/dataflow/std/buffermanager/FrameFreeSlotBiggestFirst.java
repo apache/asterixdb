@@ -101,6 +101,12 @@ class FrameFreeSlotBiggestFirst implements IFrameFreeSlotPolicy {
 
     @Override
     public void reset() {
+        // TODO(ali): fix to not release resources
+        heap.reset();
+    }
+
+    @Override
+    public void close() {
         heap.reset();
     }
 }

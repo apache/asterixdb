@@ -38,15 +38,17 @@ class FrameFreeSlotLastFit implements IFrameFreeSlotPolicy {
         }
     }
 
+    private final int initialNumFrames;
     private FrameSpace[] frameSpaces;
     private int size;
 
-    public FrameFreeSlotLastFit(int initialFrameNumber) {
-        frameSpaces = new FrameSpace[initialFrameNumber];
+    FrameFreeSlotLastFit(int initialFrameNumber) {
+        initialNumFrames = initialFrameNumber;
+        frameSpaces = new FrameSpace[initialNumFrames];
         size = 0;
     }
 
-    public FrameFreeSlotLastFit() {
+    FrameFreeSlotLastFit() {
         this(INITIAL_CAPACITY);
     }
 
@@ -65,6 +67,9 @@ class FrameFreeSlotLastFit implements IFrameFreeSlotPolicy {
 
     @Override
     public void pushNewFrame(int frameID, int freeSpace) {
+        if (frameSpaces == null) {
+            frameSpaces = new FrameSpace[initialNumFrames];
+        }
         if (size >= frameSpaces.length) {
             frameSpaces = Arrays.copyOf(frameSpaces, size * 2);
         }
@@ -78,8 +83,11 @@ class FrameFreeSlotLastFit implements IFrameFreeSlotPolicy {
     @Override
     public void reset() {
         size = 0;
-        for (int i = frameSpaces.length - 1; i >= 0; i--) {
-            frameSpaces[i] = null;
-        }
+    }
+
+    @Override
+    public void close() {
+        size = 0;
+        frameSpaces = null;
     }
 }

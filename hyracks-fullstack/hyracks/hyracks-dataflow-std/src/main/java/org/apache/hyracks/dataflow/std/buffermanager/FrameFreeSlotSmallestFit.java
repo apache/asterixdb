@@ -27,7 +27,7 @@ class FrameFreeSlotSmallestFit implements IFrameFreeSlotPolicy {
 
     private TreeMap<Integer, LinkedList<Integer>> freeSpaceIndex;
 
-    public FrameFreeSlotSmallestFit() {
+    FrameFreeSlotSmallestFit() {
         freeSpaceIndex = new TreeMap<>();
     }
 
@@ -58,6 +58,12 @@ class FrameFreeSlotSmallestFit implements IFrameFreeSlotPolicy {
 
     @Override
     public void reset() {
+        // TODO(ali): fix to not release resources
+        freeSpaceIndex.clear();
+    }
+
+    @Override
+    public void close() {
         freeSpaceIndex.clear();
     }
 }

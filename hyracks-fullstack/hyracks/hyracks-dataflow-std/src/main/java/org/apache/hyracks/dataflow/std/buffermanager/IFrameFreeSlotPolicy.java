@@ -22,8 +22,8 @@ package org.apache.hyracks.dataflow.std.buffermanager;
 public interface IFrameFreeSlotPolicy {
 
     /**
-     * Find the best fit frame id which can hold the data, and then pop it out from the index.
-     * Return -1 is failed to find any.
+     * Finds the best fit frame id which can hold the data, and then pops it out from the index.
+     * Returns -1 if failed to find any.
      *
      * @param tobeInsertedSize the actual size of the data which should include
      *                         the meta data like the field offset and the tuple
@@ -33,16 +33,20 @@ public interface IFrameFreeSlotPolicy {
     int popBestFit(int tobeInsertedSize);
 
     /**
-     * Register the new free slot into the index
+     * Registers the new free slot into the index.
      *
-     * @param frameID
-     * @param freeSpace
+     * @param frameID frame id
+     * @param freeSpace how much free space exists in this frame
      */
     void pushNewFrame(int frameID, int freeSpace);
 
     /**
-     * Clear all the existing free slot information.
+     * Clears all the existing free slot information. This method should not release the allocated resources.
      */
     void reset();
 
+    /**
+     * Releases the allocated resources.
+     */
+    void close();
 }

@@ -23,19 +23,19 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * Manage the buffer space in the unit of frame.
+ * Manages the buffer space in the unit of frame.
  */
 public interface IFrameBufferManager {
 
     /**
-     * Reset the counters and flags to initial status. This method should not release the pre-allocated resources
+     * Resets the counters and flags to initial status. This method should not release the pre-allocated resources
      *
      * @throws org.apache.hyracks.api.exceptions.HyracksDataException
      */
     void reset() throws HyracksDataException;
 
     /**
-     * @param frameIndex
+     * @param frameIndex index of frame requested
      * @param bufferInfo the given object need to be reset
      * @return the filled bufferInfo to facilitate the chain access
      */
@@ -54,6 +54,9 @@ public interface IFrameBufferManager {
      */
     int insertFrame(ByteBuffer frame) throws HyracksDataException;
 
+    /**
+     * Releases the allocated resources.
+     */
     void close();
 
 }

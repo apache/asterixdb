@@ -158,7 +158,7 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
     @Override
     public void close() {
         pool.close();
-        policy.reset();
+        policy.close();
         frames.clear();
         numTuples = 0;
         if (LOG.isDebugEnabled()) {

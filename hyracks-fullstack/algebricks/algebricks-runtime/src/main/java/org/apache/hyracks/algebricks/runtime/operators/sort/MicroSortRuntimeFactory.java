@@ -39,7 +39,7 @@ import org.apache.hyracks.dataflow.std.sort.Algorithm;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortRunMerger;
 
-public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
+public class MicroSortRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
     private final int framesLimit;
@@ -47,14 +47,14 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
     private final INormalizedKeyComputerFactory[] keyNormalizerFactories;
     private final IBinaryComparatorFactory[] comparatorFactories;
 
-    public InMemorySortRuntimeFactory(int[] sortFields, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
+    public MicroSortRuntimeFactory(int[] sortFields, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
             IBinaryComparatorFactory[] comparatorFactories, int[] projectionList, int framesLimit) {
         this(sortFields, firstKeyNormalizerFactory != null
                 ? new INormalizedKeyComputerFactory[] { firstKeyNormalizerFactory } : null, comparatorFactories,
                 projectionList, framesLimit);
     }
 
-    public InMemorySortRuntimeFactory(int[] sortFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
+    public MicroSortRuntimeFactory(int[] sortFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
             IBinaryComparatorFactory[] comparatorFactories, int[] projectionList, int framesLimit) {
         super(projectionList);
         // Obs: the projection list is currently ignored.
