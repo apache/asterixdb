@@ -7429,7 +7429,7 @@
     <test-case FilePath="open-closed">
       <compilation-unit name="query-issue410">
         <output-dir compare="Text">query-issue410</output-dir>
-        <expected-error>Field type double can't be promoted to type string</expected-error>
+        <expected-error>Field type double cannot be promoted to type string</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

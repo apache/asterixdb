@@ -1466,7 +1466,7 @@
     <test-case FilePath="open-closed"><!-- Throws two exceptions. need to be checked. proposal: (fixed expected results) -->
       <compilation-unit name="query-issue410">
         <output-dir compare="Text">query-issue410</output-dir>
-        <expected-error>Field type double can't be promoted to type string</expected-error>
+        <expected-error>Field type double cannot be promoted to type string</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed"><!-- Exception is never thrown. Commenting it -->

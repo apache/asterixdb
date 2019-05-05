@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
@@ -222,8 +223,7 @@ class ARecordCaster {
                         fieldPermutation[reqFnPos] = fnPos;
                         openFields[fnPos] = false;
                     } else {
-                        throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.CASTING_FIELD,
-                                "Field type %1$s can't be promoted to type %2$s", inputTypeTag, requiredTypeTag);
+                        throw new RuntimeDataException(ErrorCode.CASTING_FIELD, inputTypeTag, requiredTypeTag);
                     }
                 }
                 fnStart++;
