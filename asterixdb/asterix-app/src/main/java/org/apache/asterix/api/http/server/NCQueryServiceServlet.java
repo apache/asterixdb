@@ -39,6 +39,7 @@ import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.MessageFuture;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.ResultProperties;
@@ -63,9 +64,9 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 public class NCQueryServiceServlet extends QueryServiceServlet {
 
     public NCQueryServiceServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx,
-            ILangExtension.Language queryLanguage,
+            ILangExtension.Language queryLanguage, ILangCompilationProvider compilationProvider,
             Function<IServletRequest, Map<String, String>> optionalParamProvider) {
-        super(ctx, paths, appCtx, queryLanguage, null, null, null, optionalParamProvider);
+        super(ctx, paths, appCtx, queryLanguage, compilationProvider, null, null, optionalParamProvider);
     }
 
     @Override

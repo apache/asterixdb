@@ -104,11 +104,13 @@ public class CcApplicationContext implements ICcApplicationContext {
             IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator ftStrategy,
             IJobLifecycleListener activeLifeCycleListener, IStorageComponentProvider storageComponentProvider,
             IMetadataLockManager mdLockManager, IReceptionistFactory receptionistFactory,
-            IConfigValidatorFactory configValidatorFactory) throws AlgebricksException, IOException {
+            IConfigValidatorFactory configValidatorFactory, Object extensionManager)
+            throws AlgebricksException, IOException {
         this.ccServiceCtx = ccServiceCtx;
         this.hcc = hcc;
         this.libraryManager = libraryManager;
         this.activeLifeCycleListener = activeLifeCycleListener;
+        this.extensionManager = extensionManager;
         // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
         // QQQ strip this out eventually
         PropertiesAccessor propertiesAccessor = PropertiesAccessor.getInstance(ccServiceCtx.getAppConfig());
@@ -218,11 +220,6 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public Object getExtensionManager() {
         return extensionManager;
-    }
-
-    @Override
-    public void setExtensionManager(Object extensionManager) {
-        this.extensionManager = extensionManager;
     }
 
     @Override

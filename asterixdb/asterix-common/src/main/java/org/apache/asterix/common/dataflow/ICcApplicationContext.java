@@ -87,13 +87,6 @@ public interface ICcApplicationContext extends IApplicationContext {
     IStorageComponentProvider getStorageComponentProvider();
 
     /**
-     * Returns the extension manager
-     *
-     * @return the extension manager instance
-     */
-    Object getExtensionManager();
-
-    /**
      * @return the metadata lock manager
      */
     IMetadataLockManager getMetadataLockManager();
@@ -107,13 +100,6 @@ public interface ICcApplicationContext extends IApplicationContext {
      * @return the cluster state manager
      */
     IClusterStateManager getClusterStateManager();
-
-    /**
-     * Set the extension manager
-     *
-     * @param extensionManager
-     */
-    void setExtensionManager(Object extensionManager);
 
     /**
      * @return the extension properties

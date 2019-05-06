@@ -21,9 +21,7 @@ package org.apache.asterix.app.nc;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -42,21 +40,18 @@ import org.apache.asterix.common.api.IReceptionist;
 import org.apache.asterix.common.api.IReceptionistFactory;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.ActiveProperties;
-import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.BuildProperties;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.config.NodeProperties;
-import org.apache.asterix.common.config.PropertiesAccessor;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.context.DatasetMemoryManager;
 import org.apache.asterix.common.context.IStorageComponentProvider;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
@@ -157,10 +152,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private ICacheManager cacheManager;
     private IConfigValidator configValidator;
 
-    public NCAppRuntimeContext(INCServiceContext ncServiceContext, List<AsterixExtension> extensions,
-            IPropertiesFactory propertiesFactory) throws AsterixException, InstantiationException,
-            IllegalAccessException, ClassNotFoundException, IOException {
-        List<AsterixExtension> allExtensions = new ArrayList<>();
+    public NCAppRuntimeContext(INCServiceContext ncServiceContext, NCExtensionManager extensionManager,
+            IPropertiesFactory propertiesFactory) {
         this.ncServiceContext = ncServiceContext;
         compilerProperties = propertiesFactory.newCompilerProperties();
         externalProperties = propertiesFactory.newExternalProperties();
@@ -173,12 +166,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         messagingProperties = propertiesFactory.newMessagingProperties();
         nodeProperties = propertiesFactory.newNodeProperties();
         libraryManager = new ExternalLibraryManager();
-        if (extensions != null) {
-            allExtensions.addAll(extensions);
-        }
-        PropertiesAccessor propertiesAccessor = PropertiesAccessor.getInstance(ncServiceContext.getAppConfig());
-        allExtensions.addAll(propertiesAccessor.getExtensions());
-        ncExtensionManager = new NCExtensionManager(allExtensions);
+        ncExtensionManager = extensionManager;
         componentProvider = new StorageComponentProvider();
         resourceIdFactory = new GlobalResourceIdFactoryProvider(ncServiceContext).createResourceIdFactory();
         persistedResourceRegistry = ncServiceContext.getPersistedResourceRegistry();
@@ -484,7 +472,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                 .setMetadataNode(metadataNodeStub);
     }
 
-    public NCExtensionManager getNcExtensionManager() {
+    @Override
+    public NCExtensionManager getExtensionManager() {
         return ncExtensionManager;
     }
 

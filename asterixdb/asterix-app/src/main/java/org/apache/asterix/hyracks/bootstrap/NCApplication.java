@@ -19,8 +19,8 @@
 package org.apache.asterix.hyracks.bootstrap;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -30,6 +30,7 @@ import org.apache.asterix.api.http.server.StorageApiServlet;
 import org.apache.asterix.app.config.ConfigValidator;
 import org.apache.asterix.app.io.PersistedResourceRegistry;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
+import org.apache.asterix.app.nc.NCExtensionManager;
 import org.apache.asterix.app.nc.RecoveryManager;
 import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
 import org.apache.asterix.common.api.AsterixThreadFactory;
@@ -38,6 +39,7 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IPropertiesFactory;
 import org.apache.asterix.common.api.IReceptionistFactory;
 import org.apache.asterix.common.config.AsterixExtension;
+import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.MessagingProperties;
@@ -84,6 +86,7 @@ public class NCApplication extends BaseNCApplication {
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected INCServiceContext ncServiceCtx;
+    protected NCExtensionManager ncExtensionManager;
     private INcApplicationContext runtimeContext;
     private String nodeId;
     private boolean stopInitiated;
@@ -124,7 +127,9 @@ public class NCApplication extends BaseNCApplication {
                     (controllerService).getConfiguration().getClusterPublicAddress());
         }
         MetadataBuiltinFunctions.init();
-        runtimeContext = new NCAppRuntimeContext(ncServiceCtx, getExtensions(), getPropertiesFactory());
+
+        ncExtensionManager = new NCExtensionManager(new ArrayList<>(getExtensions()));
+        runtimeContext = new NCAppRuntimeContext(ncServiceCtx, ncExtensionManager, getPropertiesFactory());
         MetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(this.ncServiceCtx.getNodeId())) {
             if (LOGGER.isInfoEnabled()) {
@@ -187,8 +192,8 @@ public class NCApplication extends BaseNCApplication {
         webManager.add(apiServer);
     }
 
-    protected List<AsterixExtension> getExtensions() {
-        return Collections.emptyList();
+    protected List<AsterixExtension> getExtensions() throws Exception {
+        return new ExtensionProperties(PropertiesAccessor.getInstance(ncServiceCtx.getAppConfig())).getExtensions();
     }
 
     protected IPropertiesFactory getPropertiesFactory() throws IOException, AsterixException {

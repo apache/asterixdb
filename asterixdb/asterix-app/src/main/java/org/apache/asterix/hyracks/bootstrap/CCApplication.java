@@ -151,13 +151,10 @@ public class CCApplication extends BaseCCApplication {
         ExternalLibraryUtils.setUpExternaLibraries(libraryManager, false);
         componentProvider = new StorageComponentProvider();
 
-        List<AsterixExtension> extensions = new ArrayList<>();
-        extensions.addAll(getExtensions());
-        ccExtensionManager = new CCExtensionManager(extensions);
+        ccExtensionManager = new CCExtensionManager(new ArrayList<>(getExtensions()));
         IGlobalRecoveryManager globalRecoveryManager = createGlobalRecoveryManager();
         appCtx = createApplicationContext(libraryManager, globalRecoveryManager, lifecycleCoordinator,
-                () -> new Receptionist("CC"), ConfigValidator::new);
-        appCtx.setExtensionManager(ccExtensionManager);
+                () -> new Receptionist("CC"), ConfigValidator::new, ccExtensionManager);
         final CCConfig ccConfig = controllerService.getCCConfig();
         if (System.getProperty("java.rmi.server.hostname") == null) {
             System.setProperty("java.rmi.server.hostname", ccConfig.getClusterPublicAddress());
@@ -184,11 +181,11 @@ public class CCApplication extends BaseCCApplication {
 
     protected ICcApplicationContext createApplicationContext(ILibraryManager libraryManager,
             IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator lifecycleCoordinator,
-            IReceptionistFactory receptionistFactory, IConfigValidatorFactory configValidatorFactory)
-            throws AlgebricksException, IOException {
+            IReceptionistFactory receptionistFactory, IConfigValidatorFactory configValidatorFactory,
+            CCExtensionManager ccExtensionManager) throws AlgebricksException, IOException {
         return new CcApplicationContext(ccServiceCtx, getHcc(), libraryManager, () -> MetadataManager.INSTANCE,
                 globalRecoveryManager, lifecycleCoordinator, new ActiveNotificationHandler(), componentProvider,
-                new MetadataLockManager(), receptionistFactory, configValidatorFactory);
+                new MetadataLockManager(), receptionistFactory, configValidatorFactory, ccExtensionManager);
     }
 
     protected IGlobalRecoveryManager createGlobalRecoveryManager() throws Exception {

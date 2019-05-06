@@ -83,4 +83,11 @@ public interface IApplicationContext {
      * @return the configuration validator
      */
     IConfigValidator getConfigValidator();
+
+    /**
+     * Returns the extension manager
+     *
+     * @return the extension manager instance
+     */
+    Object getExtensionManager();
 }
