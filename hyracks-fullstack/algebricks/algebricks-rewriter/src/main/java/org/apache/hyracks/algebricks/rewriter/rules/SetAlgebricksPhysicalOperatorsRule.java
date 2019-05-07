@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -174,11 +175,11 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
 
         protected final IOptimizationContext context;
 
-        protected final PhysicalOptimizationConfig physicalOptimizationConfig;
+        protected final PhysicalOptimizationConfig physConfig;
 
         protected AlgebricksPhysicalOperatorFactoryVisitor(IOptimizationContext context) {
             this.context = context;
-            this.physicalOptimizationConfig = context.getPhysicalOptimizationConfig();
+            this.physConfig = context.getPhysicalOptimizationConfig();
         }
 
         @Override
@@ -222,11 +223,9 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
             }
 
             if (topLevelOp) {
-                return new PreclusteredGroupByPOperator(gby.getGroupByVarList(), gby.isGroupAll(),
-                        context.getPhysicalOptimizationConfig().getMaxFramesForGroupBy());
+                return new PreclusteredGroupByPOperator(gby.getGroupByVarList(), gby.isGroupAll());
             } else {
-                return new MicroPreclusteredGroupByPOperator(gby.getGroupByVarList(),
-                        context.getPhysicalOptimizationConfig().getMaxFramesForGroupBy());
+                return new MicroPreclusteredGroupByPOperator(gby.getGroupByVarList());
             }
         }
 
@@ -236,22 +235,27 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
             if (!hasIntermediateAgg) {
                 return null;
             }
-            return new ExternalGroupByPOperator(gby.getGroupByVarList(),
-                    physicalOptimizationConfig.getMaxFramesForGroupBy(),
-                    (long) physicalOptimizationConfig.getMaxFramesForGroupBy()
-                            * physicalOptimizationConfig.getFrameSize());
+            return new ExternalGroupByPOperator(gby.getGroupByVarList());
         }
 
         @Override
         public IPhysicalOperator visitInnerJoinOperator(InnerJoinOperator op, Boolean topLevelOp)
                 throws AlgebricksException {
-            JoinUtils.setJoinAlgorithmAndExchangeAlgo(op, topLevelOp, context);
-            return op.getPhysicalOperator();
+            return visitAbstractBinaryJoinOperator(op, topLevelOp);
         }
 
         @Override
         public IPhysicalOperator visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Boolean topLevelOp)
                 throws AlgebricksException {
+            return visitAbstractBinaryJoinOperator(op, topLevelOp);
+        }
+
+        protected IPhysicalOperator visitAbstractBinaryJoinOperator(AbstractBinaryJoinOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            if (!topLevelOp) {
+                throw AlgebricksException.create(ErrorCode.OPERATOR_NOT_IMPLEMENTED, op.getSourceLocation(),
+                        op.getOperatorTag().toString() + " (micro)");
+            }
             JoinUtils.setJoinAlgorithmAndExchangeAlgo(op, topLevelOp, context);
             return op.getPhysicalOperator();
         }
@@ -270,9 +274,9 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
         public IPhysicalOperator visitOrderOperator(OrderOperator oo, Boolean topLevelOp) throws AlgebricksException {
             ensureAllVariables(oo.getOrderExpressions(), Pair::getSecond);
             if (topLevelOp) {
-                return new StableSortPOperator(physicalOptimizationConfig.getMaxFramesExternalSort(), oo.getTopK());
+                return new StableSortPOperator(oo.getTopK());
             } else {
-                return new MicroStableSortPOperator(physicalOptimizationConfig.getMaxFramesExternalSort());
+                return new MicroStableSortPOperator();
             }
         }
 
@@ -470,8 +474,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
         }
 
         protected AbstractWindowPOperator createWindowPOperator(WindowOperator op) throws AlgebricksException {
-            return new WindowPOperator(op.getPartitionVarList(), op.getOrderColumnList(), false, false, false,
-                    context.getPhysicalOptimizationConfig().getMaxFramesForWindow());
+            return new WindowPOperator(op.getPartitionVarList(), op.getOrderColumnList(), false, false, false);
         }
 
         // Physical operators for these operators must have been set already by rules that introduced them

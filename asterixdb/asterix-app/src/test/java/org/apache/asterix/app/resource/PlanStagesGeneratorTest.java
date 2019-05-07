@@ -41,6 +41,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
@@ -51,10 +52,20 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractGroupByPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractStableSortPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AssignPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.DataSourceScanPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.DistributeResultPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.EmptyTupleSourcePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionExchangePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.NestedLoopJoinPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreclusteredGroupByPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.StableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.api.job.resource.IClusterCapacity;
 import org.junit.Assert;
@@ -64,9 +75,7 @@ public class PlanStagesGeneratorTest {
 
     private static final Set<LogicalOperatorTag> BLOCKING_OPERATORS =
             new HashSet<>(Arrays.asList(INNERJOIN, LEFTOUTERJOIN, ORDER));
-    private static final long MEMORY_BUDGET = 33554432L;
     private static final int FRAME_SIZE = 32768;
-    private static final int FRAME_LIMIT = (int) (MEMORY_BUDGET / FRAME_SIZE);
     private static final int PARALLELISM = 10;
     private static final long MAX_BUFFER_PER_CONNECTION = 1L;
 
@@ -74,9 +83,11 @@ public class PlanStagesGeneratorTest {
     public void noBlockingPlan() throws AlgebricksException {
         EmptyTupleSourceOperator ets = new EmptyTupleSourceOperator();
         ets.setExecutionMode(UNPARTITIONED);
+        ets.setPhysicalOperator(new EmptyTupleSourcePOperator());
 
         AssignOperator assignOperator = new AssignOperator(Collections.emptyList(), null);
         assignOperator.setExecutionMode(UNPARTITIONED);
+        assignOperator.setPhysicalOperator(new AssignPOperator());
         assignOperator.getInputs().add(new MutableObject<>(ets));
 
         ExchangeOperator exchange = new ExchangeOperator();
@@ -86,8 +97,9 @@ public class PlanStagesGeneratorTest {
 
         DistributeResultOperator resultOperator = new DistributeResultOperator(null, null);
         resultOperator.setExecutionMode(UNPARTITIONED);
+        resultOperator.setPhysicalOperator(new DistributeResultPOperator());
         resultOperator.getInputs().add(new MutableObject<>(exchange));
-        ALogicalPlanImpl plan = new ALogicalPlanImpl(Collections.singletonList(new MutableObject(resultOperator)));
+        ALogicalPlanImpl plan = new ALogicalPlanImpl(Collections.singletonList(new MutableObject<>(resultOperator)));
 
         List<PlanStage> stages = ResourceUtils.getStages(plan);
         // ensure a single stage plan
@@ -103,9 +115,11 @@ public class PlanStagesGeneratorTest {
     public void testNonBlockingGroupByOrderBy() throws AlgebricksException {
         EmptyTupleSourceOperator ets = new EmptyTupleSourceOperator();
         ets.setExecutionMode(PARTITIONED);
+        ets.setPhysicalOperator(new EmptyTupleSourcePOperator());
 
         DataSourceScanOperator scanOperator = new DataSourceScanOperator(Collections.emptyList(), null);
         scanOperator.setExecutionMode(PARTITIONED);
+        scanOperator.setPhysicalOperator(new DataSourceScanPOperator(null));
         scanOperator.getInputs().add(new MutableObject<>(ets));
 
         ExchangeOperator exchange = new ExchangeOperator();
@@ -115,18 +129,19 @@ public class PlanStagesGeneratorTest {
 
         GroupByOperator groupByOperator = new GroupByOperator();
         groupByOperator.setExecutionMode(PARTITIONED);
-        groupByOperator
-                .setPhysicalOperator(new PreclusteredGroupByPOperator(Collections.emptyList(), true, FRAME_LIMIT));
+        groupByOperator.setPhysicalOperator(new PreclusteredGroupByPOperator(Collections.emptyList(), true));
         groupByOperator.getInputs().add(new MutableObject<>(exchange));
 
         OrderOperator orderOperator = new OrderOperator();
         orderOperator.setExecutionMode(PARTITIONED);
+        orderOperator.setPhysicalOperator(new StableSortPOperator());
         orderOperator.getInputs().add(new MutableObject<>(groupByOperator));
 
         DistributeResultOperator resultOperator = new DistributeResultOperator(null, null);
         resultOperator.setExecutionMode(PARTITIONED);
+        resultOperator.setPhysicalOperator(new DistributeResultPOperator());
         resultOperator.getInputs().add(new MutableObject<>(orderOperator));
-        ALogicalPlanImpl plan = new ALogicalPlanImpl(Collections.singletonList(new MutableObject(resultOperator)));
+        ALogicalPlanImpl plan = new ALogicalPlanImpl(Collections.singletonList(new MutableObject<>(resultOperator)));
 
         final List<PlanStage> stages = ResourceUtils.getStages(plan);
         validateStages(stages, ets, exchange, groupByOperator, orderOperator, resultOperator);
@@ -136,8 +151,10 @@ public class PlanStagesGeneratorTest {
 
         // dominating stage should have orderBy, orderBy's input (groupby), groupby's input (exchange),
         // exchange's input (scanOperator), and scanOperator's input (ets)
-        long orderOperatorRequiredMemory = FRAME_LIMIT * FRAME_SIZE * PARALLELISM;
-        long groupByOperatorRequiredMemory = FRAME_LIMIT * FRAME_SIZE * PARALLELISM;
+        long orderOperatorRequiredMemory =
+                AbstractStableSortPOperator.MIN_FRAME_LIMIT_FOR_SORT * FRAME_SIZE * PARALLELISM;
+        long groupByOperatorRequiredMemory =
+                AbstractGroupByPOperator.MIN_FRAME_LIMIT_FOR_GROUP_BY * FRAME_SIZE * PARALLELISM;
         long exchangeRequiredMemory = PARALLELISM * FRAME_SIZE;
         long scanOperatorRequiredMemory = PARALLELISM * FRAME_SIZE;
         long etsRequiredMemory = FRAME_SIZE * PARALLELISM;
@@ -151,20 +168,26 @@ public class PlanStagesGeneratorTest {
     public void testJoinGroupby() throws AlgebricksException {
         EmptyTupleSourceOperator ets1 = new EmptyTupleSourceOperator();
         ets1.setExecutionMode(PARTITIONED);
+        ets1.setPhysicalOperator(new EmptyTupleSourcePOperator());
 
         DataSourceScanOperator scanOperator1 = new DataSourceScanOperator(Collections.emptyList(), null);
         scanOperator1.setExecutionMode(PARTITIONED);
+        scanOperator1.setPhysicalOperator(new DataSourceScanPOperator(null));
         scanOperator1.getInputs().add(new MutableObject<>(ets1));
 
         EmptyTupleSourceOperator ets2 = new EmptyTupleSourceOperator();
-        ets1.setExecutionMode(PARTITIONED);
+        ets2.setExecutionMode(PARTITIONED);
+        ets2.setPhysicalOperator(new EmptyTupleSourcePOperator());
 
         DataSourceScanOperator scanOperator2 = new DataSourceScanOperator(Collections.emptyList(), null);
         scanOperator2.setExecutionMode(PARTITIONED);
+        scanOperator2.setPhysicalOperator(new DataSourceScanPOperator(null));
         scanOperator2.getInputs().add(new MutableObject<>(ets2));
 
         InnerJoinOperator firstJoin = new InnerJoinOperator(new MutableObject<>(ConstantExpression.TRUE));
         firstJoin.setExecutionMode(PARTITIONED);
+        firstJoin.setPhysicalOperator(new NestedLoopJoinPOperator(firstJoin.getJoinKind(),
+                AbstractJoinPOperator.JoinPartitioningType.BROADCAST));
         firstJoin.getInputs().add(new MutableObject<>(scanOperator1));
         firstJoin.getInputs().add(new MutableObject<>(scanOperator2));
 
@@ -174,11 +197,11 @@ public class PlanStagesGeneratorTest {
         exchangeOperator1.getInputs().add(new MutableObject<>(firstJoin));
 
         EmptyTupleSourceOperator ets3 = new EmptyTupleSourceOperator();
-        ets1.setExecutionMode(PARTITIONED);
+        ets3.setExecutionMode(PARTITIONED);
+        ets3.setPhysicalOperator(new EmptyTupleSourcePOperator());
 
         GroupByOperator groupByOperator = new GroupByOperator();
-        groupByOperator
-                .setPhysicalOperator(new ExternalGroupByPOperator(Collections.emptyList(), FRAME_LIMIT, FRAME_LIMIT));
+        groupByOperator.setPhysicalOperator(new ExternalGroupByPOperator(Collections.emptyList()));
         groupByOperator.setExecutionMode(LOCAL);
         groupByOperator.getInputs().add(new MutableObject<>(ets3));
 
@@ -189,13 +212,16 @@ public class PlanStagesGeneratorTest {
 
         LeftOuterJoinOperator secondJoin = new LeftOuterJoinOperator(new MutableObject<>(ConstantExpression.TRUE));
         secondJoin.setExecutionMode(PARTITIONED);
+        secondJoin.setPhysicalOperator(new NestedLoopJoinPOperator(secondJoin.getJoinKind(),
+                AbstractJoinPOperator.JoinPartitioningType.BROADCAST));
         secondJoin.getInputs().add(new MutableObject<>(exchangeOperator1));
         secondJoin.getInputs().add(new MutableObject<>(exchangeOperator2));
 
         DistributeResultOperator resultOperator = new DistributeResultOperator(null, null);
         resultOperator.setExecutionMode(PARTITIONED);
+        resultOperator.setPhysicalOperator(new DistributeResultPOperator());
         resultOperator.getInputs().add(new MutableObject<>(secondJoin));
-        ALogicalPlanImpl plan = new ALogicalPlanImpl(Collections.singletonList(new MutableObject(resultOperator)));
+        ALogicalPlanImpl plan = new ALogicalPlanImpl(Collections.singletonList(new MutableObject<>(resultOperator)));
 
         List<PlanStage> stages = ResourceUtils.getStages(plan);
         final int expectedStages = 4;
@@ -207,9 +233,9 @@ public class PlanStagesGeneratorTest {
         // resultOperator, its input (secondJoin), secondJoin's first input (exchangeOperator1), exchangeOperator1's
         // input (firstJoin), firstJoin's first input (scanOperator1), and scanOperator1's input (ets1)
         long resultOperatorRequiredMemory = FRAME_SIZE * PARALLELISM;
-        long secondJoinRequiredMemory = FRAME_LIMIT * FRAME_SIZE * PARALLELISM;
+        long secondJoinRequiredMemory = AbstractJoinPOperator.MIN_FRAME_LIMIT_FOR_JOIN * FRAME_SIZE * PARALLELISM;
         long exchangeOperator1RequiredMemory = 2 * MAX_BUFFER_PER_CONNECTION * PARALLELISM * PARALLELISM * FRAME_SIZE;
-        long firstJoinRequiredMemory = FRAME_LIMIT * FRAME_SIZE * PARALLELISM;
+        long firstJoinRequiredMemory = AbstractJoinPOperator.MIN_FRAME_LIMIT_FOR_JOIN * FRAME_SIZE * PARALLELISM;
         long scanOperator1RequiredMemory = FRAME_SIZE * PARALLELISM;
         long ets1RequiredMemory = FRAME_SIZE * PARALLELISM;
 
@@ -222,34 +248,40 @@ public class PlanStagesGeneratorTest {
     public void testReplicateSortJoin() throws AlgebricksException {
         EmptyTupleSourceOperator ets = new EmptyTupleSourceOperator();
         ets.setExecutionMode(PARTITIONED);
+        ets.setPhysicalOperator(new EmptyTupleSourcePOperator());
 
         DataSourceScanOperator scanOperator = new DataSourceScanOperator(Collections.emptyList(), null);
         scanOperator.setExecutionMode(PARTITIONED);
+        scanOperator.setPhysicalOperator(new DataSourceScanPOperator(null));
         scanOperator.getInputs().add(new MutableObject<>(ets));
 
         ReplicateOperator replicateOperator = new ReplicateOperator(2);
         replicateOperator.setExecutionMode(PARTITIONED);
+        replicateOperator.setPhysicalOperator(new ReplicatePOperator());
         replicateOperator.getInputs().add(new MutableObject<>(scanOperator));
 
         OrderOperator order1 = new OrderOperator();
         order1.setExecutionMode(PARTITIONED);
-        order1.setPhysicalOperator(new OneToOneExchangePOperator());
+        order1.setPhysicalOperator(new StableSortPOperator());
         order1.getInputs().add(new MutableObject<>(replicateOperator));
 
         OrderOperator order2 = new OrderOperator();
         order2.setExecutionMode(PARTITIONED);
-        order2.setPhysicalOperator(new OneToOneExchangePOperator());
+        order2.setPhysicalOperator(new StableSortPOperator());
         order2.getInputs().add(new MutableObject<>(replicateOperator));
 
         LeftOuterJoinOperator secondJoin = new LeftOuterJoinOperator(new MutableObject<>(ConstantExpression.TRUE));
         secondJoin.setExecutionMode(PARTITIONED);
+        secondJoin.setPhysicalOperator(new NestedLoopJoinPOperator(secondJoin.getJoinKind(),
+                AbstractJoinPOperator.JoinPartitioningType.BROADCAST));
         secondJoin.getInputs().add(new MutableObject<>(order1));
         secondJoin.getInputs().add(new MutableObject<>(order2));
 
         DistributeResultOperator resultOperator = new DistributeResultOperator(null, null);
         resultOperator.setExecutionMode(PARTITIONED);
+        resultOperator.setPhysicalOperator(new DistributeResultPOperator());
         resultOperator.getInputs().add(new MutableObject<>(secondJoin));
-        ALogicalPlanImpl plan = new ALogicalPlanImpl(Collections.singletonList(new MutableObject(resultOperator)));
+        ALogicalPlanImpl plan = new ALogicalPlanImpl(Collections.singletonList(new MutableObject<>(resultOperator)));
 
         List<PlanStage> stages = ResourceUtils.getStages(plan);
         final int expectedStages = 3;
@@ -257,14 +289,14 @@ public class PlanStagesGeneratorTest {
         validateStages(stages);
 
         // dominating stage should have the following operators:
-        // secondJoin, secondJoin's second input (order2), order2's input (replicate),
+        // order1, order2, order1 and order2's input (replicate),
         // replicate's input (scanOperator), scanOperator's input (ets)
-        long secondJoinRequiredMemory = FRAME_LIMIT * FRAME_SIZE * PARALLELISM;
-        long order2RequiredMemory = FRAME_LIMIT * FRAME_SIZE * PARALLELISM;
+        long order1RequiredMemory = AbstractStableSortPOperator.MIN_FRAME_LIMIT_FOR_SORT * FRAME_SIZE * PARALLELISM;
+        long order2RequiredMemory = AbstractStableSortPOperator.MIN_FRAME_LIMIT_FOR_SORT * FRAME_SIZE * PARALLELISM;
         long replicateOperatorRequiredMemory = FRAME_SIZE * PARALLELISM;
         long scanOperator1RequiredMemory = FRAME_SIZE * PARALLELISM;
         long etsRequiredMemory = FRAME_SIZE * PARALLELISM;
-        long expectedMemory = secondJoinRequiredMemory + order2RequiredMemory + replicateOperatorRequiredMemory
+        long expectedMemory = order1RequiredMemory + order2RequiredMemory + replicateOperatorRequiredMemory
                 + scanOperator1RequiredMemory + etsRequiredMemory;
         assertRequiredMemory(stages, expectedMemory);
     }
@@ -300,8 +332,13 @@ public class PlanStagesGeneratorTest {
     }
 
     private void assertRequiredMemory(List<PlanStage> stages, long expectedMemory) {
-        final IClusterCapacity clusterCapacity = ResourceUtils.getStageBasedRequiredCapacity(stages, PARALLELISM,
-                FRAME_LIMIT, FRAME_LIMIT, FRAME_LIMIT, FRAME_LIMIT, FRAME_LIMIT, FRAME_SIZE);
+        for (PlanStage stage : stages) {
+            for (ILogicalOperator op : stage.getOperators()) {
+                ((AbstractLogicalOperator) op).getPhysicalOperator().createLocalMemoryRequirements(op);
+            }
+        }
+        final IClusterCapacity clusterCapacity =
+                ResourceUtils.getStageBasedRequiredCapacity(stages, PARALLELISM, FRAME_SIZE);
         Assert.assertEquals(clusterCapacity.getAggregatedMemoryByteSize(), expectedMemory);
     }
 }

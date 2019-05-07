@@ -41,6 +41,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderedPartitionedProperty;
@@ -49,12 +50,13 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
 
 public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperator {
 
-    final int maxNumberOfFrames;
+    // variable memory, min 3 frames
+    public static final int MIN_FRAME_LIMIT_FOR_SORT = 3;
+
     OrderColumn[] sortColumns;
     ILocalStructuralProperty orderProp;
 
-    AbstractStableSortPOperator(int maxNumberOfFrames) {
-        this.maxNumberOfFrames = maxNumberOfFrames;
+    AbstractStableSortPOperator() {
     }
 
     public OrderColumn[] getSortColumns() {
@@ -162,5 +164,10 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
                 && sortOp.getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.STABLE_SORT
                 && clusterDomain.cardinality() != null && clusterDomain.cardinality() > 1
                 && ctx.getPhysicalOptimizationConfig().getSortParallel();
+    }
+
+    @Override
+    public void createLocalMemoryRequirements(ILogicalOperator op) {
+        localMemoryRequirements = LocalMemoryRequirements.variableMemoryBudget(MIN_FRAME_LIMIT_FOR_SORT);
     }
 }

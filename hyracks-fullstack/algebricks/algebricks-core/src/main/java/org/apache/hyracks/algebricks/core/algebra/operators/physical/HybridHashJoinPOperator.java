@@ -60,8 +60,6 @@ import org.apache.logging.log4j.Logger;
 
 public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
 
-    // The maximum number of in-memory frames that this hash join can use.
-    private final int memSizeInFrames;
     private final int maxInputBuildSizeInFrames;
     private final double fudgeFactor;
 
@@ -69,17 +67,15 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
 
     public HybridHashJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
             List<LogicalVariable> sideLeftOfEqualities, List<LogicalVariable> sideRightOfEqualities,
-            int memSizeInFrames, int maxInputSizeInFrames, int aveRecordsPerFrame, double fudgeFactor) {
+            int maxInputSizeInFrames, int aveRecordsPerFrame, double fudgeFactor) {
         super(kind, partitioningType, sideLeftOfEqualities, sideRightOfEqualities);
-        this.memSizeInFrames = memSizeInFrames;
         this.maxInputBuildSizeInFrames = maxInputSizeInFrames;
         this.fudgeFactor = fudgeFactor;
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("HybridHashJoinPOperator constructed with: JoinKind=" + kind + ", JoinPartitioningType="
                     + partitioningType + ", List<LogicalVariable>=" + sideLeftOfEqualities + ", List<LogicalVariable>="
-                    + sideRightOfEqualities + ", int memSizeInFrames=" + memSizeInFrames
-                    + ", int maxInputSize0InFrames=" + maxInputSizeInFrames + ", int aveRecordsPerFrame="
-                    + aveRecordsPerFrame + ", double fudgeFactor=" + fudgeFactor + ".");
+                    + sideRightOfEqualities + ", int maxInputSize0InFrames=" + maxInputSizeInFrames
+                    + ", int aveRecordsPerFrame=" + aveRecordsPerFrame + ", double fudgeFactor=" + fudgeFactor + ".");
         }
     }
 
@@ -95,10 +91,6 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
 
     public double getFudgeFactor() {
         return fudgeFactor;
-    }
-
-    public int getMemSizeInFrames() {
-        return memSizeInFrames;
     }
 
     @Override
@@ -156,11 +148,12 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
             IBinaryHashFunctionFamily[] rightHashFunFamilies, IBinaryComparatorFactory[] leftCompFactories,
             IBinaryComparatorFactory[] rightCompFactories, IPredicateEvaluatorFactory predEvaluatorFactory,
             RecordDescriptor recDescriptor, IOperatorDescriptorRegistry spec) {
+        int memSizeInFrames = localMemoryRequirements.getMemoryBudgetInFrames();
         switch (kind) {
             case INNER:
-                return new OptimizedHybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(),
-                        maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, leftHashFunFamilies,
-                        rightHashFunFamilies, leftCompFactories, rightCompFactories, recDescriptor,
+                return new OptimizedHybridHashJoinOperatorDescriptor(spec, memSizeInFrames, maxInputBuildSizeInFrames,
+                        getFudgeFactor(), keysLeft, keysRight, leftHashFunFamilies, rightHashFunFamilies,
+                        leftCompFactories, rightCompFactories, recDescriptor,
                         new JoinMultiComparatorFactory(leftCompFactories, keysLeft, keysRight),
                         new JoinMultiComparatorFactory(rightCompFactories, keysRight, keysLeft), predEvaluatorFactory);
             case LEFT_OUTER:
@@ -168,9 +161,9 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                 for (int j = 0; j < nonMatchWriterFactories.length; j++) {
                     nonMatchWriterFactories[j] = context.getMissingWriterFactory();
                 }
-                return new OptimizedHybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(),
-                        maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, leftHashFunFamilies,
-                        rightHashFunFamilies, leftCompFactories, rightCompFactories, recDescriptor,
+                return new OptimizedHybridHashJoinOperatorDescriptor(spec, memSizeInFrames, maxInputBuildSizeInFrames,
+                        getFudgeFactor(), keysLeft, keysRight, leftHashFunFamilies, rightHashFunFamilies,
+                        leftCompFactories, rightCompFactories, recDescriptor,
                         new JoinMultiComparatorFactory(leftCompFactories, keysLeft, keysRight),
                         new JoinMultiComparatorFactory(rightCompFactories, keysRight, keysLeft), predEvaluatorFactory,
                         true, nonMatchWriterFactories);

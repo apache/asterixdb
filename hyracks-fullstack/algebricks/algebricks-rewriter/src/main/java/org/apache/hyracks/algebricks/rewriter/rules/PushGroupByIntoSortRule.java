@@ -104,7 +104,6 @@ public class PushGroupByIntoSortRule implements IAlgebraicRewriteRule {
                         //replace preclustered gby with sort gby
                         if (!groupByOperator.isGroupAll()) {
                             op.setPhysicalOperator(new SortGroupByPOperator(groupByOperator.getGroupByVarList(),
-                                    context.getPhysicalOptimizationConfig().getMaxFramesForGroupBy(),
                                     sortPhysicalOperator.getSortColumns()));
                         }
                         // remove the stable sort operator

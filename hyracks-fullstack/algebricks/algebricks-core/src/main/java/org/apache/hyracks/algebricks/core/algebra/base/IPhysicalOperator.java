@@ -22,6 +22,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 
@@ -51,6 +52,10 @@ public interface IPhysicalOperator {
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context)
             throws AlgebricksException;
 
+    public LocalMemoryRequirements getLocalMemoryRequirements();
+
+    public void createLocalMemoryRequirements(ILogicalOperator op);
+
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException;
@@ -72,10 +77,10 @@ public interface IPhysicalOperator {
     public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op);
 
     /*
-     * This is needed to have a kind of cost based decision on whether to merge the shared subplans and materialize the result.
-     * If the subgraph whose result we would like to materialize has an operator that is computationally expensive, we assume
-     * it is cheaper to materialize the result of this subgraph and read from the file rather than recomputing it.
+     * This is needed to have a kind of cost based decision on whether to merge the shared subplans and materialize
+     * the result. If the subgraph whose result we would like to materialize has an operator that is computationally
+     * expensive, we assume it is cheaper to materialize the result of this subgraph and read from the file rather
+     * than recomputing it.
      */
     public boolean expensiveThanMaterialization();
-
 }

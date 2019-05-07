@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.algebra.operators.physical;
 
-import java.util.Map;
-
-import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.DataSourceId;
@@ -50,6 +47,7 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -68,6 +66,11 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeniz
  * inverted-index search.
  */
 public class InvertedIndexPOperator extends IndexSearchPOperator {
+
+    // variable memory, min 5 frames
+    // 1 for query + 2 for intermediate results + 1 for final result + 1 for reading an inverted list
+    public static final int MIN_FRAME_LIMIT_FOR_TEXT_SEARCH = OptimizationConfUtil.MIN_FRAME_LIMIT_FOR_TEXT_SEARCH;
+
     private final boolean isPartitioned;
 
     public InvertedIndexPOperator(IDataSourceIndex<String, DataSourceId> idx, INodeDomain domain,
@@ -83,6 +86,11 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         } else {
             return PhysicalOperatorTag.SINGLE_PARTITION_INVERTED_INDEX_SEARCH;
         }
+    }
+
+    @Override
+    public void createLocalMemoryRequirements(ILogicalOperator op) {
+        localMemoryRequirements = LocalMemoryRequirements.variableMemoryBudget(MIN_FRAME_LIMIT_FOR_TEXT_SEARCH);
     }
 
     @Override
@@ -114,9 +122,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             retainNull = true;
         }
         // In-memory budget (frame limit) for inverted-index search operations
-        CompilerProperties compilerProp = metadataProvider.getApplicationContext().getCompilerProperties();
-        Map<String, Object> queryConfig = metadataProvider.getConfig();
-        int frameLimit = OptimizationConfUtil.getTextSearchNumFrames(compilerProp, queryConfig, op.getSourceLocation());
+        int frameLimit = localMemoryRequirements.getMemoryBudgetInFrames();
 
         // Build runtime.
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> invIndexSearch =

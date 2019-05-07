@@ -35,7 +35,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 
 /**
  * If an ORDER operator is followed by LIMIT, then we can push LIMIT into ORDER operator.
@@ -89,7 +88,6 @@ public class PushLimitIntoOrderByRule implements IAlgebraicRewriteRule {
      */
     private boolean pushLimitIntoOrder(Mutable<ILogicalOperator> opRef, Mutable<ILogicalOperator> opRef2,
             IOptimizationContext context) throws AlgebricksException {
-        PhysicalOptimizationConfig physicalOptimizationConfig = context.getPhysicalOptimizationConfig();
         LimitOperator limitOp = (LimitOperator) opRef.getValue();
         OrderOperator orderOp = (OrderOperator) opRef2.getValue();
 
@@ -106,8 +104,7 @@ public class PushLimitIntoOrderByRule implements IAlgebraicRewriteRule {
         // Create the new ORDER operator, set the topK value, and replace the current one.
         OrderOperator newOrderOp = new OrderOperator(orderOp.getOrderExpressions(), topK);
         newOrderOp.setSourceLocation(orderOp.getSourceLocation());
-        newOrderOp.setPhysicalOperator(
-                new StableSortPOperator(physicalOptimizationConfig.getMaxFramesExternalSort(), newOrderOp.getTopK()));
+        newOrderOp.setPhysicalOperator(new StableSortPOperator(newOrderOp.getTopK()));
         newOrderOp.getInputs().addAll(orderOp.getInputs());
         newOrderOp.setExecutionMode(orderOp.getExecutionMode());
         newOrderOp.recomputeSchema();

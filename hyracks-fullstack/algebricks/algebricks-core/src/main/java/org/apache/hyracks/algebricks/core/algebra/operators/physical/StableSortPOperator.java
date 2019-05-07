@@ -49,12 +49,11 @@ public class StableSortPOperator extends AbstractStableSortPOperator {
 
     private final int topK;
 
-    public StableSortPOperator(int maxNumberOfFrames) {
-        this(maxNumberOfFrames, -1);
+    public StableSortPOperator() {
+        this(-1);
     }
 
-    public StableSortPOperator(int maxNumberOfFrames, int topK) {
-        super(maxNumberOfFrames);
+    public StableSortPOperator(int topK) {
         this.topK = topK;
     }
 
@@ -98,6 +97,7 @@ public class StableSortPOperator extends AbstractStableSortPOperator {
             i++;
         }
 
+        int maxNumberOfFrames = localMemoryRequirements.getMemoryBudgetInFrames();
         AbstractSorterOperatorDescriptor sortOpDesc;
         // topK == -1 means that a topK value is not provided.
         if (topK == -1) {

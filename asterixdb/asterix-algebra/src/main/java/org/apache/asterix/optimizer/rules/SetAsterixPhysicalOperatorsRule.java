@@ -130,11 +130,7 @@ public final class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysical
             }
 
             generateMergeAggregationExpressions(gby);
-
-            return new ExternalGroupByPOperator(gby.getGroupByVarList(),
-                    physicalOptimizationConfig.getMaxFramesForGroupBy(),
-                    (long) physicalOptimizationConfig.getMaxFramesForGroupBy()
-                            * physicalOptimizationConfig.getFrameSize());
+            return new ExternalGroupByPOperator(gby.getGroupByVarList());
         }
 
         private void generateMergeAggregationExpressions(GroupByOperator gby) throws AlgebricksException {
@@ -252,12 +248,11 @@ public final class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysical
                 boolean nestedTrivialAggregates =
                         winOp.getNestedPlans().stream().allMatch(AnalysisUtil::isTrivialAggregateSubplan);
                 return new WindowPOperator(winOp.getPartitionVarList(), winOp.getOrderColumnList(),
-                        frameStartIsMonotonic, frameEndIsMonotonic, nestedTrivialAggregates,
-                        context.getPhysicalOptimizationConfig().getMaxFramesForWindow());
+                        frameStartIsMonotonic, frameEndIsMonotonic, nestedTrivialAggregates);
             } else if (AnalysisUtil.hasFunctionWithProperty(winOp,
                     BuiltinFunctions.WindowFunctionProperty.MATERIALIZE_PARTITION)) {
-                return new WindowPOperator(winOp.getPartitionVarList(), winOp.getOrderColumnList(), false, false, false,
-                        context.getPhysicalOptimizationConfig().getMaxFramesForWindow());
+                return new WindowPOperator(winOp.getPartitionVarList(), winOp.getOrderColumnList(), false, false,
+                        false);
             } else {
                 return new WindowStreamPOperator(winOp.getPartitionVarList(), winOp.getOrderColumnList());
             }

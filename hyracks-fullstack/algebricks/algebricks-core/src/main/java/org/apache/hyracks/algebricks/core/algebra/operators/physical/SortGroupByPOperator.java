@@ -69,8 +69,8 @@ public class SortGroupByPOperator extends AbstractGroupByPOperator {
 
     private final OrderColumn[] orderColumns;
 
-    public SortGroupByPOperator(List<LogicalVariable> columnList, int framesLimit, OrderColumn[] orderColumns) {
-        super(columnList, framesLimit);
+    public SortGroupByPOperator(List<LogicalVariable> columnList, OrderColumn[] orderColumns) {
+        super(columnList);
         this.orderColumns = orderColumns;
     }
 
@@ -249,6 +249,7 @@ public class SortGroupByPOperator extends AbstractGroupByPOperator {
         normalizedKeyFactory =
                 orderColumns[0].getOrder() == OrderKind.ASC ? nkcfProvider.getNormalizedKeyComputerFactory(type, true)
                         : nkcfProvider.getNormalizedKeyComputerFactory(type, false);
+        int framesLimit = localMemoryRequirements.getMemoryBudgetInFrames();
         SortGroupByOperatorDescriptor gbyOpDesc = new SortGroupByOperatorDescriptor(spec, framesLimit, keys,
                 keyAndDecFields, normalizedKeyFactory, compFactories, aggregatorFactory, mergeFactory,
                 partialAggRecordDescriptor, recordDescriptor, false);

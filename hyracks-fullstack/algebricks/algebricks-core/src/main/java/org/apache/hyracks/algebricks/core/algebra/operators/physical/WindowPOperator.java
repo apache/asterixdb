@@ -21,9 +21,11 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.List;
 
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
@@ -38,28 +40,32 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 
 public final class WindowPOperator extends AbstractWindowPOperator {
 
+    // variable memory, min 5 frames:
+    // 1 (output) + 1 (input copy conservative) + 1 (partition writer) + 2 (seekable partition reader)
+    public static final int MIN_FRAME_LIMIT_FOR_WINDOW = 5;
+
     private final boolean frameStartIsMonotonic;
 
     private final boolean frameEndIsMonotonic;
 
     private final boolean nestedTrivialAggregates;
 
-    // The maximum number of in-memory frames that this operator can use.
-    private final int memSizeInFrames;
-
     public WindowPOperator(List<LogicalVariable> partitionColumns, List<OrderColumn> orderColumns,
-            boolean frameStartIsMonotonic, boolean frameEndIsMonotonic, boolean nestedTrivialAggregates,
-            int memSizeInFrames) {
+            boolean frameStartIsMonotonic, boolean frameEndIsMonotonic, boolean nestedTrivialAggregates) {
         super(partitionColumns, orderColumns);
         this.frameStartIsMonotonic = frameStartIsMonotonic;
         this.frameEndIsMonotonic = frameEndIsMonotonic;
         this.nestedTrivialAggregates = nestedTrivialAggregates;
-        this.memSizeInFrames = memSizeInFrames;
     }
 
     @Override
     public PhysicalOperatorTag getOperatorTag() {
         return PhysicalOperatorTag.WINDOW;
+    }
+
+    @Override
+    public void createLocalMemoryRequirements(ILogicalOperator op) {
+        localMemoryRequirements = LocalMemoryRequirements.variableMemoryBudget(MIN_FRAME_LIMIT_FOR_WINDOW);
     }
 
     @Override
@@ -73,6 +79,8 @@ public final class WindowPOperator extends AbstractWindowPOperator {
             int[] projectionColumnsExcludingSubplans, int[] runningAggOutColumns,
             IRunningAggregateEvaluatorFactory[] runningAggFactories, int nestedAggOutSchemaSize,
             WindowAggregatorDescriptorFactory nestedAggFactory, JobGenContext context) {
+
+        int memSizeInFrames = localMemoryRequirements.getMemoryBudgetInFrames();
 
         // special cases
         if (!winOp.hasNestedPlans()) {

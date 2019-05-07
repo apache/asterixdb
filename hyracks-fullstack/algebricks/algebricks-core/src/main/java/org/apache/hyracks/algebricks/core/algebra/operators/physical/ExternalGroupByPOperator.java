@@ -68,11 +68,8 @@ import org.apache.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescr
 
 public class ExternalGroupByPOperator extends AbstractGroupByPOperator {
 
-    private final long inputSize;
-
-    public ExternalGroupByPOperator(List<LogicalVariable> columnList, int framesLimit, long fileSize) {
-        super(columnList, framesLimit);
-        this.inputSize = fileSize;
+    public ExternalGroupByPOperator(List<LogicalVariable> columnList) {
+        super(columnList);
     }
 
     @Override
@@ -238,11 +235,14 @@ public class ExternalGroupByPOperator extends AbstractGroupByPOperator {
                 JobGenHelper.variablesToAscNormalizedKeyComputerFactory(gbyCols, aggOpInputEnv, context);
 
         // Calculates the hash table size (# of unique hash values) based on the budget and a tuple size.
-        int memoryBudgetInBytes = context.getFrameSize() * framesLimit;
+        int frameSize = context.getFrameSize();
+        long memoryBudgetInBytes = localMemoryRequirements.getMemoryBudgetInBytes(frameSize);
         int groupByColumnsCount = gby.getGroupByList().size() + numFds;
         int hashTableSize = ExternalGroupOperatorDescriptor.calculateGroupByTableCardinality(memoryBudgetInBytes,
-                groupByColumnsCount, context.getFrameSize());
+                groupByColumnsCount, frameSize);
 
+        int framesLimit = localMemoryRequirements.getMemoryBudgetInFrames();
+        long inputSize = framesLimit * (long) frameSize;
         ExternalGroupOperatorDescriptor gbyOpDesc = new ExternalGroupOperatorDescriptor(spec, hashTableSize, inputSize,
                 keyAndDecFields, framesLimit, comparatorFactories, normalizedKeyFactory, aggregatorFactory,
                 mergeFactory, recordDescriptor, recordDescriptor, new HashSpillableTableFactory(hashFunctionFactories));

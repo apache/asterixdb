@@ -55,14 +55,8 @@ public class ResourceUtils {
             AlgebricksAbsolutePartitionConstraint computationLocations,
             PhysicalOptimizationConfig physicalOptimizationConfig) throws AlgebricksException {
         final int frameSize = physicalOptimizationConfig.getFrameSize();
-        final int sortFrameLimit = physicalOptimizationConfig.getMaxFramesExternalSort();
-        final int groupFrameLimit = physicalOptimizationConfig.getMaxFramesForGroupBy();
-        final int joinFrameLimit = physicalOptimizationConfig.getMaxFramesForJoin();
-        final int windowFrameLimit = physicalOptimizationConfig.getMaxFramesForWindow();
-        final int textSearchFrameLimit = physicalOptimizationConfig.getMaxFramesForTextSearch();
         final List<PlanStage> planStages = getStages(plan);
-        return getStageBasedRequiredCapacity(planStages, computationLocations.getLocations().length, sortFrameLimit,
-                groupFrameLimit, joinFrameLimit, windowFrameLimit, textSearchFrameLimit, frameSize);
+        return getStageBasedRequiredCapacity(planStages, computationLocations.getLocations().length, frameSize);
     }
 
     public static List<PlanStage> getStages(ILogicalPlan plan) throws AlgebricksException {
@@ -74,15 +68,13 @@ public class ResourceUtils {
     }
 
     public static IClusterCapacity getStageBasedRequiredCapacity(List<PlanStage> stages, int computationLocations,
-            int sortFrameLimit, int groupFrameLimit, int joinFrameLimit, int windowFrameLimit, int textSearchFrameLimit,
             int frameSize) {
-        final OperatorResourcesComputer computer = new OperatorResourcesComputer(computationLocations, sortFrameLimit,
-                groupFrameLimit, joinFrameLimit, windowFrameLimit, textSearchFrameLimit, frameSize);
+        final OperatorResourcesComputer computer = new OperatorResourcesComputer(computationLocations, frameSize);
         final IClusterCapacity clusterCapacity = new ClusterCapacity();
-        final Long maxRequiredMemory = stages.stream().mapToLong(stage -> stage.getRequiredMemory(computer)).max()
+        final long maxRequiredMemory = stages.stream().mapToLong(stage -> stage.getRequiredMemory(computer)).max()
                 .orElseThrow(IllegalStateException::new);
         clusterCapacity.setAggregatedMemoryByteSize(maxRequiredMemory);
-        final Integer maxRequireCores = stages.stream().mapToInt(stage -> stage.getRequiredCores(computer)).max()
+        final int maxRequireCores = stages.stream().mapToInt(stage -> stage.getRequiredCores(computer)).max()
                 .orElseThrow(IllegalStateException::new);
         clusterCapacity.setAggregatedCores(maxRequireCores);
         return clusterCapacity;

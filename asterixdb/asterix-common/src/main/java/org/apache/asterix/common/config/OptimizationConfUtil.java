@@ -23,6 +23,10 @@ import java.util.Map;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractGroupByPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractStableSortPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.WindowPOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -30,13 +34,11 @@ import org.apache.hyracks.control.common.config.OptionTypes;
 
 public class OptimizationConfUtil {
 
-    private static final int MIN_FRAME_LIMIT_FOR_SORT = 3;
-    private static final int MIN_FRAME_LIMIT_FOR_GROUP_BY = 4;
-    private static final int MIN_FRAME_LIMIT_FOR_JOIN = 5;
-    // 1 (output) + 1 (input copy) + 1 (partition writer) + 2 (seekable partition reader)
-    private static final int MIN_FRAME_LIMIT_FOR_WINDOW = 5;
-    // one for query, two for intermediate results, one for final result, and one for reading an inverted list
-    private static final int MIN_FRAME_LIMIT_FOR_TEXT_SEARCH = 5;
+    private static final int MIN_FRAME_LIMIT_FOR_SORT = AbstractStableSortPOperator.MIN_FRAME_LIMIT_FOR_SORT;
+    private static final int MIN_FRAME_LIMIT_FOR_GROUP_BY = AbstractGroupByPOperator.MIN_FRAME_LIMIT_FOR_GROUP_BY;
+    private static final int MIN_FRAME_LIMIT_FOR_JOIN = AbstractJoinPOperator.MIN_FRAME_LIMIT_FOR_JOIN;
+    private static final int MIN_FRAME_LIMIT_FOR_WINDOW = WindowPOperator.MIN_FRAME_LIMIT_FOR_WINDOW;
+    public static final int MIN_FRAME_LIMIT_FOR_TEXT_SEARCH = 5; // see InvertedIndexPOperator
 
     private OptimizationConfUtil() {
     }

@@ -20,11 +20,11 @@ package org.apache.asterix.app.resource;
 
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
 
 public class OperatorResourcesComputer {
 
@@ -32,21 +32,10 @@ public class OperatorResourcesComputer {
     private static final long MAX_BUFFER_PER_CONNECTION = 1L;
 
     private final int numComputationPartitions;
-    private final long groupByMemorySize;
-    private final long joinMemorySize;
-    private final long sortMemorySize;
-    private final long windowMemorySize;
-    private final long textSearchMemorySize;
     private final long frameSize;
 
-    public OperatorResourcesComputer(int numComputationPartitions, int sortFrameLimit, int groupFrameLimit,
-            int joinFrameLimit, int windowFrameLimit, int textSearchFrameLimit, long frameSize) {
+    public OperatorResourcesComputer(int numComputationPartitions, long frameSize) {
         this.numComputationPartitions = numComputationPartitions;
-        this.groupByMemorySize = groupFrameLimit * frameSize;
-        this.joinMemorySize = joinFrameLimit * frameSize;
-        this.sortMemorySize = sortFrameLimit * frameSize;
-        this.windowMemorySize = windowFrameLimit * frameSize;
-        this.textSearchMemorySize = textSearchFrameLimit * frameSize;
         this.frameSize = frameSize;
     }
 
@@ -59,79 +48,25 @@ public class OperatorResourcesComputer {
     }
 
     public long getOperatorRequiredMemory(ILogicalOperator operator) {
-        switch (operator.getOperatorTag()) {
-            case AGGREGATE:
-            case ASSIGN:
-            case DATASOURCESCAN:
-            case DISTINCT:
-            case DISTRIBUTE_RESULT:
-            case EMPTYTUPLESOURCE:
-            case DELEGATE_OPERATOR:
-            case EXTERNAL_LOOKUP:
-            case LIMIT:
-            case MATERIALIZE:
-            case NESTEDTUPLESOURCE:
-            case PROJECT:
-            case REPLICATE:
-            case RUNNINGAGGREGATE:
-            case SCRIPT:
-            case SELECT:
-            case SINK:
-            case SPLIT:
-            case SUBPLAN:
-            case TOKENIZE:
-            case UNIONALL:
-            case UNNEST:
-            case LEFT_OUTER_UNNEST:
-            case UPDATE:
-            case WRITE:
-            case WRITE_RESULT:
-            case INDEX_INSERT_DELETE_UPSERT:
-            case INSERT_DELETE_UPSERT:
-            case INTERSECT:
-            case FORWARD:
-                return getOperatorRequiredMemory(operator, frameSize);
-            case LEFT_OUTER_UNNEST_MAP:
-            case UNNEST_MAP:
-                // Since an inverted-index search requires certain amount of memory, needs to calculate
-                // the memory size differently if the given index-search is an inverted-index search.
-                long unnestMapMemorySize = frameSize;
-                if (isInvertedIndexSearch((AbstractUnnestMapOperator) operator)) {
-                    unnestMapMemorySize += textSearchMemorySize;
-                }
-                return getOperatorRequiredMemory(operator, unnestMapMemorySize);
-            case EXCHANGE:
-                return getExchangeRequiredMemory((ExchangeOperator) operator);
-            case GROUP:
-                return getOperatorRequiredMemory(operator, groupByMemorySize);
-            case ORDER:
-                return getOperatorRequiredMemory(operator, sortMemorySize);
-            case INNERJOIN:
-            case LEFTOUTERJOIN:
-                return getOperatorRequiredMemory(operator, joinMemorySize);
-            case WINDOW:
-                return getWindowRequiredMemory((WindowOperator) operator);
-            default:
-                throw new IllegalStateException("Unrecognized operator: " + operator.getOperatorTag());
+        if (operator.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
+            return getExchangeRequiredMemory((ExchangeOperator) operator);
+        } else {
+            IPhysicalOperator physOp = ((AbstractLogicalOperator) operator).getPhysicalOperator();
+            return getOperatorRequiredMemory(operator.getExecutionMode(), physOp.getLocalMemoryRequirements());
         }
     }
 
-    private long getOperatorRequiredMemory(ILogicalOperator op, long memorySize) {
-        if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED
-                || op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.LOCAL) {
+    private long getOperatorRequiredMemory(AbstractLogicalOperator.ExecutionMode opExecMode, long memorySize) {
+        if (opExecMode == AbstractLogicalOperator.ExecutionMode.PARTITIONED
+                || opExecMode == AbstractLogicalOperator.ExecutionMode.LOCAL) {
             return memorySize * numComputationPartitions;
         }
         return memorySize;
     }
 
-    private boolean isInvertedIndexSearch(AbstractUnnestMapOperator op) {
-        IPhysicalOperator physicalOperator = op.getPhysicalOperator();
-        final PhysicalOperatorTag physicalOperatorTag = physicalOperator.getOperatorTag();
-        if (physicalOperatorTag == PhysicalOperatorTag.LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH
-                || physicalOperatorTag == PhysicalOperatorTag.SINGLE_PARTITION_INVERTED_INDEX_SEARCH) {
-            return true;
-        }
-        return false;
+    private long getOperatorRequiredMemory(AbstractLogicalOperator.ExecutionMode opExecMode,
+            LocalMemoryRequirements memoryReqs) {
+        return getOperatorRequiredMemory(opExecMode, memoryReqs.getMemoryBudgetInBytes(frameSize));
     }
 
     private long getExchangeRequiredMemory(ExchangeOperator op) {
@@ -139,16 +74,8 @@ public class OperatorResourcesComputer {
         final PhysicalOperatorTag physicalOperatorTag = physicalOperator.getOperatorTag();
         if (physicalOperatorTag == PhysicalOperatorTag.ONE_TO_ONE_EXCHANGE
                 || physicalOperatorTag == PhysicalOperatorTag.SORT_MERGE_EXCHANGE) {
-            return getOperatorRequiredMemory(op, frameSize);
+            return getOperatorRequiredMemory(op.getExecutionMode(), frameSize);
         }
         return 2L * MAX_BUFFER_PER_CONNECTION * numComputationPartitions * numComputationPartitions * frameSize;
-    }
-
-    private long getWindowRequiredMemory(WindowOperator op) {
-        // memory budget configuration only applies to window operators that materialize partitions (non-streaming)
-        // streaming window operators only need 2 frames: output + (conservative estimate) last frame partition columns
-        long memorySize = op.getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.WINDOW_STREAM ? 2 * frameSize
-                : windowMemorySize;
-        return getOperatorRequiredMemory(op, memorySize);
     }
 }

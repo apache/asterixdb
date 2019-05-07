@@ -63,11 +63,8 @@ import org.apache.hyracks.dataflow.std.join.NestedLoopJoinOperatorDescriptor;
  */
 public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
 
-    private final int memSize;
-
-    public NestedLoopJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType, int memSize) {
+    public NestedLoopJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType) {
         super(kind, partitioningType);
-        this.memSize = memSize;
     }
 
     @Override
@@ -141,6 +138,7 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         IOperatorDescriptor opDesc;
 
+        int memSize = localMemoryRequirements.getMemoryBudgetInFrames();
         switch (kind) {
             case INNER:
                 opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, false,
@@ -187,7 +185,6 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
     }
 
     public static class TuplePairEvaluator implements ITuplePairComparator {
-        private final IHyracksTaskContext ctx;
         private IScalarEvaluator condEvaluator;
         private final IPointable p;
         private final CompositeFrameTupleReference compositeTupleRef;
@@ -197,7 +194,6 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
 
         public TuplePairEvaluator(IHyracksTaskContext ctx, IScalarEvaluatorFactory condFactory,
                 IBinaryBooleanInspector binaryBooleanInspector) throws HyracksDataException {
-            this.ctx = ctx;
             this.condEvaluator = condFactory.createScalarEvaluator(ctx);
             this.binaryBooleanInspector = binaryBooleanInspector;
             this.leftRef = new FrameTupleReference();

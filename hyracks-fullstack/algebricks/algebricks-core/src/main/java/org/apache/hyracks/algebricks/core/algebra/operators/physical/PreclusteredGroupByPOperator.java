@@ -44,8 +44,8 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
 
     private final boolean groupAll;
 
-    public PreclusteredGroupByPOperator(List<LogicalVariable> columnList, boolean groupAll, int framesLimit) {
-        super(columnList, framesLimit);
+    public PreclusteredGroupByPOperator(List<LogicalVariable> columnList, boolean groupAll) {
+        super(columnList);
         this.groupAll = groupAll;
     }
 
@@ -85,6 +85,7 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
         RecordDescriptor recordDescriptor =
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
 
+        int framesLimit = localMemoryRequirements.getMemoryBudgetInFrames();
         PreclusteredGroupOperatorDescriptor opDesc = new PreclusteredGroupOperatorDescriptor(spec, keys,
                 comparatorFactories, aggregatorFactory, recordDescriptor, groupAll, framesLimit);
         opDesc.setSourceLocation(gby.getSourceLocation());

@@ -21,17 +21,19 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.List;
 
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
 
 public abstract class AbstractGroupByPOperator extends AbstractPhysicalOperator {
 
+    // variable memory, min 4 frames
+    public static final int MIN_FRAME_LIMIT_FOR_GROUP_BY = 4;
+
     protected List<LogicalVariable> columnList;
 
-    protected final int framesLimit;
-
-    protected AbstractGroupByPOperator(List<LogicalVariable> columnList, int framesLimit) {
+    protected AbstractGroupByPOperator(List<LogicalVariable> columnList) {
         this.columnList = columnList;
-        this.framesLimit = framesLimit;
     }
 
     public List<LogicalVariable> getGroupByColumns() {
@@ -45,6 +47,11 @@ public abstract class AbstractGroupByPOperator extends AbstractPhysicalOperator 
     @Override
     public boolean expensiveThanMaterialization() {
         return true;
+    }
+
+    @Override
+    public void createLocalMemoryRequirements(ILogicalOperator op) {
+        localMemoryRequirements = LocalMemoryRequirements.variableMemoryBudget(MIN_FRAME_LIMIT_FOR_GROUP_BY);
     }
 
     @Override

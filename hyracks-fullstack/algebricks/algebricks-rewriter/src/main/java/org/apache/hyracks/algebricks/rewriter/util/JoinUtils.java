@@ -52,7 +52,7 @@ public class JoinUtils {
     }
 
     public static void setJoinAlgorithmAndExchangeAlgo(AbstractBinaryJoinOperator op, boolean topLevelOp,
-            IOptimizationContext context) throws AlgebricksException {
+            IOptimizationContext context) {
         if (!topLevelOp) {
             throw new IllegalStateException("Micro operator not implemented for: " + op.getOperatorTag());
         }
@@ -87,30 +87,28 @@ public class JoinUtils {
                 }
             }
         } else {
-            setNestedLoopJoinOp(op, context);
+            setNestedLoopJoinOp(op);
         }
     }
 
-    private static void setNestedLoopJoinOp(AbstractBinaryJoinOperator op, IOptimizationContext context) {
-        op.setPhysicalOperator(new NestedLoopJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
-                context.getPhysicalOptimizationConfig().getMaxFramesForJoin()));
+    private static void setNestedLoopJoinOp(AbstractBinaryJoinOperator op) {
+        op.setPhysicalOperator(new NestedLoopJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST));
     }
 
     private static void setHashJoinOp(AbstractBinaryJoinOperator op, JoinPartitioningType partitioningType,
-            List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IOptimizationContext context)
-            throws AlgebricksException {
+            List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IOptimizationContext context) {
         op.setPhysicalOperator(new HybridHashJoinPOperator(op.getJoinKind(), partitioningType, sideLeft, sideRight,
-                context.getPhysicalOptimizationConfig().getMaxFramesForJoin(),
                 context.getPhysicalOptimizationConfig().getMaxFramesForJoinLeftInput(),
                 context.getPhysicalOptimizationConfig().getMaxRecordsPerFrame(),
                 context.getPhysicalOptimizationConfig().getFudgeFactor()));
-        if (partitioningType == JoinPartitioningType.BROADCAST) {
-            hybridToInMemHashJoin(op, context);
-        }
     }
 
-    private static void hybridToInMemHashJoin(AbstractBinaryJoinOperator op, IOptimizationContext context)
+    public static boolean hybridToInMemHashJoin(AbstractBinaryJoinOperator op, IOptimizationContext context)
             throws AlgebricksException {
+        HybridHashJoinPOperator hhj = (HybridHashJoinPOperator) op.getPhysicalOperator();
+        if (hhj.getPartitioningType() != JoinPartitioningType.BROADCAST) {
+            return false;
+        }
         ILogicalOperator opBuild = op.getInputs().get(1).getValue();
         LogicalPropertiesVisitor.computeLogicalPropertiesDFS(opBuild, context);
         ILogicalPropertiesVector v = context.getLogicalPropertiesVector(opBuild);
@@ -121,19 +119,19 @@ public class JoinUtils {
         }
         if (v != null) {
             int size2 = v.getMaxOutputFrames();
-            HybridHashJoinPOperator hhj = (HybridHashJoinPOperator) op.getPhysicalOperator();
-            if (size2 > 0 && size2 * hhj.getFudgeFactor() <= hhj.getMemSizeInFrames()) {
+            int hhjMemSizeInFrames = hhj.getLocalMemoryRequirements().getMemoryBudgetInFrames();
+            if (size2 > 0 && size2 * hhj.getFudgeFactor() <= hhjMemSizeInFrames) {
                 if (loggerTraceEnabled) {
                     AlgebricksConfig.ALGEBRICKS_LOGGER
                             .trace("// HybridHashJoin inner branch " + opBuild.getOperatorTag() + " fits in memory\n");
                 }
                 // maintains the local properties on the probe side
-                op.setPhysicalOperator(
-                        new InMemoryHashJoinPOperator(hhj.getKind(), hhj.getPartitioningType(), hhj.getKeysLeftBranch(),
-                                hhj.getKeysRightBranch(), v.getNumberOfTuples() * 2, hhj.getMemSizeInFrames()));
+                op.setPhysicalOperator(new InMemoryHashJoinPOperator(hhj.getKind(), hhj.getPartitioningType(),
+                        hhj.getKeysLeftBranch(), hhj.getKeysRightBranch(), v.getNumberOfTuples() * 2));
+                return true;
             }
         }
-
+        return false;
     }
 
     private static boolean isHashJoinCondition(ILogicalExpression e, Collection<LogicalVariable> inLeftAll,

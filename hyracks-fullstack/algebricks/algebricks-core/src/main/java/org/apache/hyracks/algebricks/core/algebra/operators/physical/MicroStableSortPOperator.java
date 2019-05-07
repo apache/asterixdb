@@ -39,8 +39,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class MicroStableSortPOperator extends AbstractStableSortPOperator {
 
-    public MicroStableSortPOperator(int maxNumberOfFrames) {
-        super(maxNumberOfFrames);
+    public MicroStableSortPOperator() {
     }
 
     @Override
@@ -80,6 +79,7 @@ public class MicroStableSortPOperator extends AbstractStableSortPOperator {
             i++;
         }
 
+        int maxNumberOfFrames = localMemoryRequirements.getMemoryBudgetInFrames();
         IPushRuntimeFactory runtime = new MicroSortRuntimeFactory(sortFields, nkcf, comps, null, maxNumberOfFrames);
         builder.contributeMicroOperator(op, runtime, recDescriptor);
         ILogicalOperator src = op.getInputs().get(0).getValue();

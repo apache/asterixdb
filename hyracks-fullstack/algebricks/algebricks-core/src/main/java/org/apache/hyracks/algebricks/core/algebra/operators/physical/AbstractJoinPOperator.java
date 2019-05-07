@@ -21,8 +21,12 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
 
 public abstract class AbstractJoinPOperator extends AbstractPhysicalOperator {
+
+    // variable memory, min 5 frames
+    public static final int MIN_FRAME_LIMIT_FOR_JOIN = 5;
 
     public enum JoinPartitioningType {
         PAIRWISE,
@@ -55,5 +59,10 @@ public abstract class AbstractJoinPOperator extends AbstractPhysicalOperator {
     @Override
     public boolean expensiveThanMaterialization() {
         return true;
+    }
+
+    @Override
+    public void createLocalMemoryRequirements(ILogicalOperator op) {
+        localMemoryRequirements = LocalMemoryRequirements.variableMemoryBudget(MIN_FRAME_LIMIT_FOR_JOIN);
     }
 }

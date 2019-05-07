@@ -59,8 +59,8 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
 public abstract class AbstractPreclusteredGroupByPOperator extends AbstractGroupByPOperator {
 
-    protected AbstractPreclusteredGroupByPOperator(List<LogicalVariable> columnList, int framesLimit) {
-        super(columnList, framesLimit);
+    protected AbstractPreclusteredGroupByPOperator(List<LogicalVariable> columnList) {
+        super(columnList);
     }
 
     // Obs: We don't propagate properties corresponding to decors, since they

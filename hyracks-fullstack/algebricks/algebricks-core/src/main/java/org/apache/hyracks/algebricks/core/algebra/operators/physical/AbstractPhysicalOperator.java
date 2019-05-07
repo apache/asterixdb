@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
@@ -50,6 +51,7 @@ import org.apache.hyracks.api.job.JobSpecification;
 public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
 
     protected IPhysicalPropertiesVector deliveredProperties;
+    protected LocalMemoryRequirements localMemoryRequirements;
     private boolean disableJobGenBelow = false;
     private Object hostQueryContext;
 
@@ -85,6 +87,16 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
             req[i] = StructuralPropertiesVector.EMPTY_PROPERTIES_VECTOR;
         }
         return new PhysicalRequirements(req, IPartitioningRequirementsCoordinator.NO_COORDINATION);
+    }
+
+    @Override
+    public LocalMemoryRequirements getLocalMemoryRequirements() {
+        return localMemoryRequirements;
+    }
+
+    @Override
+    public void createLocalMemoryRequirements(ILogicalOperator op) {
+        localMemoryRequirements = LocalMemoryRequirements.fixedMemoryBudget(1);
     }
 
     @Override
@@ -141,14 +153,13 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
         List<List<AlgebricksPipeline>> subplans = new ArrayList<>(npOp.getNestedPlans().size());
         PlanCompiler pc = new PlanCompiler(context);
         for (ILogicalPlan p : npOp.getNestedPlans()) {
-            subplans.add(buildPipelineWithProjection(p, outerPlanSchema, npOp, opSchema, pc));
+            subplans.add(buildPipelineWithProjection(p, outerPlanSchema, opSchema, pc));
         }
         return subplans;
     }
 
     private List<AlgebricksPipeline> buildPipelineWithProjection(ILogicalPlan p, IOperatorSchema outerPlanSchema,
-            AbstractOperatorWithNestedPlans npOp, IOperatorSchema opSchema, PlanCompiler pc)
-            throws AlgebricksException {
+            IOperatorSchema opSchema, PlanCompiler pc) throws AlgebricksException {
         if (p.getRoots().size() > 1) {
             throw new NotImplementedException("Nested plans with several roots are not supported.");
         }

@@ -21,9 +21,11 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.List;
 
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
@@ -35,6 +37,9 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 
 public final class WindowStreamPOperator extends AbstractWindowPOperator {
 
+    // fixed memory, 2 frames: 1 (output) + 1 (input copy conservative)
+    public static final int MEM_SIZE_IN_FRAMES_FOR_WINDOW_STREAM = 2;
+
     public WindowStreamPOperator(List<LogicalVariable> partitionColumns, List<OrderColumn> orderColumns) {
         super(partitionColumns, orderColumns);
     }
@@ -42,6 +47,11 @@ public final class WindowStreamPOperator extends AbstractWindowPOperator {
     @Override
     public PhysicalOperatorTag getOperatorTag() {
         return PhysicalOperatorTag.WINDOW_STREAM;
+    }
+
+    @Override
+    public void createLocalMemoryRequirements(ILogicalOperator op) {
+        localMemoryRequirements = LocalMemoryRequirements.fixedMemoryBudget(MEM_SIZE_IN_FRAMES_FOR_WINDOW_STREAM);
     }
 
     @Override
