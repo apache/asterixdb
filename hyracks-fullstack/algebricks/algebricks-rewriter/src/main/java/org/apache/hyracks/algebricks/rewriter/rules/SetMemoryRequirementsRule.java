@@ -97,11 +97,11 @@ public class SetMemoryRequirementsRule implements IAlgebraicRewriteRule {
         if (physOp.getLocalMemoryRequirements() != null) {
             return false;
         }
-        computeLocalMemoryRequirements(op, context, createMemoryRequirementsConfigurator(context));
+        computeLocalMemoryRequirements(op, createMemoryRequirementsConfigurator(context));
         return true;
     }
 
-    private void computeLocalMemoryRequirements(AbstractLogicalOperator op, IOptimizationContext context,
+    private void computeLocalMemoryRequirements(AbstractLogicalOperator op,
             ILogicalOperatorVisitor<Void, Void> memoryRequirementsVisitor) throws AlgebricksException {
         IPhysicalOperator physOp = op.getPhysicalOperator();
         if (physOp.getLocalMemoryRequirements() == null) {
@@ -109,20 +109,21 @@ public class SetMemoryRequirementsRule implements IAlgebraicRewriteRule {
             if (physOp.getLocalMemoryRequirements() == null) {
                 throw new IllegalStateException(physOp.getOperatorTag().toString());
             }
-            op.accept(memoryRequirementsVisitor, null);
+            if (memoryRequirementsVisitor != null) {
+                op.accept(memoryRequirementsVisitor, null);
+            }
         }
         if (op.hasNestedPlans()) {
             AbstractOperatorWithNestedPlans nested = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan p : nested.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> root : p.getRoots()) {
-                    computeLocalMemoryRequirements((AbstractLogicalOperator) root.getValue(), context,
-                            createMemoryRequirementsConfigurator(context));
+                    computeLocalMemoryRequirements((AbstractLogicalOperator) root.getValue(),
+                            memoryRequirementsVisitor);
                 }
             }
         }
         for (Mutable<ILogicalOperator> opRef : op.getInputs()) {
-            computeLocalMemoryRequirements((AbstractLogicalOperator) opRef.getValue(), context,
-                    createMemoryRequirementsConfigurator(context));
+            computeLocalMemoryRequirements((AbstractLogicalOperator) opRef.getValue(), memoryRequirementsVisitor);
         }
     }
 

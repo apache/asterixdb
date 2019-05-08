@@ -27,6 +27,9 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.util.StorageUtil;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class ClusterCapacity implements IClusterCapacity {
     private static final long serialVersionUID = 3487998182013966747L;
 
@@ -122,5 +125,14 @@ public class ClusterCapacity implements IClusterCapacity {
     public String toString() {
         return "(memory: " + StorageUtil.toHumanReadableSize(aggregatedMemoryByteSize) + " bytes, CPU cores: "
                 + aggregatedCores + ")";
+    }
+
+    @Override
+    public ObjectNode toJSON() {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode jcc = om.createObjectNode();
+        jcc.put("memory", aggregatedMemoryByteSize);
+        jcc.put("cores", aggregatedCores);
+        return jcc;
     }
 }

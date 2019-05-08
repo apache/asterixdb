@@ -406,6 +406,10 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         });
         jjob.set("connectors", jcArray);
 
+        if (requiredClusterCapacity != null) {
+            jjob.set("required-capacity", requiredClusterCapacity.toJSON());
+        }
+
         return jjob;
     }
 

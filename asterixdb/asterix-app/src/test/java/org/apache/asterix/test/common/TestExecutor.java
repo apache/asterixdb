@@ -158,6 +158,7 @@ public class TestExecutor {
     public static final String DELIVERY_IMMEDIATE = "immediate";
     public static final String DIAGNOSE = "diagnose";
     private static final String METRICS_QUERY_TYPE = "metrics";
+    private static final String PLANS_QUERY_TYPE = "plans";
 
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
     private static Map<String, InetSocketAddress> ncEndPoints;
@@ -940,6 +941,7 @@ public class TestExecutor {
             case "parse":
             case "deferred":
             case "metrics":
+            case "plans":
                 // isDmlRecoveryTest: insert Crash and Recovery
                 if (isDmlRecoveryTest) {
                     executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
@@ -1272,6 +1274,9 @@ public class TestExecutor {
             switch (reqType) {
                 case METRICS_QUERY_TYPE:
                     resultStream = ResultExtractor.extractMetrics(resultStream, responseCharset);
+                    break;
+                case PLANS_QUERY_TYPE:
+                    resultStream = ResultExtractor.extractPlans(resultStream, responseCharset);
                     break;
                 default:
                     resultStream = ResultExtractor.extract(resultStream, responseCharset);

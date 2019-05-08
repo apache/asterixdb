@@ -19,7 +19,9 @@
 
 package org.apache.asterix.metadata.declared;
 
-public class DataSourceId {
+import java.util.Objects;
+
+public final class DataSourceId {
 
     private String dataverseName;
     private String datasourceName;
@@ -40,5 +42,20 @@ public class DataSourceId {
 
     public String getDatasourceName() {
         return datasourceName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        DataSourceId that = (DataSourceId) o;
+        return Objects.equals(dataverseName, that.dataverseName) && Objects.equals(datasourceName, that.datasourceName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(dataverseName, datasourceName);
     }
 }

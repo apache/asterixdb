@@ -23,6 +23,8 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.exceptions.HyracksException;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 /**
  * This interface provides read-only methods for the capacity of a cluster.
  */
@@ -61,4 +63,8 @@ public interface IReadOnlyClusterCapacity extends Serializable {
      */
     int getCores(String nodeId) throws HyracksException;
 
+    /**
+     * Translates this cluster capacity to JSON.
+     */
+    ObjectNode toJSON();
 }
