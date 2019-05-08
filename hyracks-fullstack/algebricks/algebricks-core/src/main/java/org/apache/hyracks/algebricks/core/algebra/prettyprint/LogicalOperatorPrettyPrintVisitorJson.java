@@ -171,6 +171,10 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     @Override
     public Void visitAggregateOperator(AggregateOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent).append("\"operator\": \"aggregate\"");
+        if (!op.getExpressions().isEmpty()) {
+            addIndent(0).append(",\n");
+            pprintExprList(op.getExpressions(), indent);
+        }
         variablePrintHelper(op.getVariables(), indent);
         return null;
     }
