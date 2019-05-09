@@ -333,8 +333,10 @@ public class HttpServer {
         } catch (Exception e) {
             LOGGER.log(Level.ERROR, "Error while shutting down http server executor", e);
         }
-        channel.close();
-        channel.closeFuture().sync();
+        if (channel != null) {
+            channel.close();
+            channel.closeFuture().sync();
+        }
     }
 
     public IServlet getServlet(FullHttpRequest request) {
