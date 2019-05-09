@@ -162,6 +162,7 @@ public class TestExecutor {
 
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
     private static Map<String, InetSocketAddress> ncEndPoints;
+    private static List<InetSocketAddress> ncEndPointsList = new ArrayList<>();
     private static Map<String, InetSocketAddress> replicationAddress;
 
     private final List<Charset> allCharsets;
@@ -202,6 +203,7 @@ public class TestExecutor {
 
     public void setNcEndPoints(Map<String, InetSocketAddress> ncEndPoints) {
         this.ncEndPoints = ncEndPoints;
+        ncEndPointsList.addAll(ncEndPoints.values());
     }
 
     public void setNcReplicationAddress(Map<String, InetSocketAddress> replicationAddress) {
@@ -1799,7 +1801,10 @@ public class TestExecutor {
 
     protected URI createEndpointURI(String path, String query) throws URISyntaxException {
         InetSocketAddress endpoint;
-        if (isCcEndPointPath(path)) {
+        if (!ncEndPointsList.isEmpty() && path.equals(Servlets.QUERY_SERVICE)) {
+            int endpointIdx = Math.abs(endpointSelector++ % ncEndPointsList.size());
+            endpoint = ncEndPointsList.get(endpointIdx);
+        } else if (isCcEndPointPath(path)) {
             int endpointIdx = Math.abs(endpointSelector++ % endpoints.size());
             endpoint = endpoints.get(endpointIdx);
         } else {

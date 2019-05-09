@@ -18,13 +18,22 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
+import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.common.utils.Servlets.QUERY_RESULT;
+import static org.apache.asterix.common.utils.Servlets.QUERY_SERVICE;
+import static org.apache.asterix.common.utils.Servlets.QUERY_STATUS;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.algebra.base.ILangExtension;
+import org.apache.asterix.api.http.server.NCQueryServiceServlet;
 import org.apache.asterix.api.http.server.NetDiagnosticsApiServlet;
+import org.apache.asterix.api.http.server.QueryResultApiServlet;
+import org.apache.asterix.api.http.server.QueryStatusApiServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.api.http.server.StorageApiServlet;
 import org.apache.asterix.app.config.ConfigValidator;
@@ -57,6 +66,7 @@ import org.apache.asterix.common.utils.PrintUtil;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.messaging.MessagingChannelInterfaceFactory;
 import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
@@ -186,9 +196,16 @@ public class NCApplication extends BaseNCApplication {
         HttpServer apiServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
                 externalProperties.getNcApiPort(), config);
         apiServer.setAttribute(ServletConstants.SERVICE_CONTEXT_ATTR, ncServiceCtx);
+        apiServer.setAttribute(HYRACKS_CONNECTION_ATTR, getApplicationContext().getHcc());
         apiServer.addServlet(new StorageApiServlet(apiServer.ctx(), getApplicationContext(), Servlets.STORAGE));
         apiServer.addServlet(
                 new NetDiagnosticsApiServlet(apiServer.ctx(), getApplicationContext(), Servlets.NET_DIAGNOSTICS));
+        final ILangCompilationProvider sqlppCompilationProvider =
+                ncExtensionManager.getCompilationProvider(ILangExtension.Language.SQLPP);
+        apiServer.addServlet(new NCQueryServiceServlet(apiServer.ctx(), new String[] { QUERY_SERVICE },
+                getApplicationContext(), sqlppCompilationProvider.getLanguage(), sqlppCompilationProvider, null));
+        apiServer.addServlet(new QueryStatusApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_STATUS));
+        apiServer.addServlet(new QueryResultApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_RESULT));
         webManager.add(apiServer);
     }
 
