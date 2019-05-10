@@ -24,7 +24,6 @@ import java.util.Arrays;
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
@@ -133,7 +132,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new int[] { 0 },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc, 128,
+                new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0), custOrderJoinDesc, 128,
                 null, 128);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
@@ -181,8 +180,6 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new OptimizedHybridHashJoinOperatorDescriptor(spec, 32, 20, 1.2, new int[] { 1 }, new int[] { 0 },
                         new IBinaryHashFunctionFamily[] { MurmurHash3BinaryHashFunctionFamily.INSTANCE },
                         new IBinaryHashFunctionFamily[] { MurmurHash3BinaryHashFunctionFamily.INSTANCE },
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                         custOrderJoinDesc, new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0),
                         new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 0, 1), null, false, null);
 
@@ -237,7 +234,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new int[] { 1 },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, null, custOrderJoinDesc,
+                new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 0, 1), null, custOrderJoinDesc,
                 true, nonMatchWriterFactories, 128, 128);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
@@ -290,8 +287,6 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new OptimizedHybridHashJoinOperatorDescriptor(spec, 32, 20, 1.2, new int[] { 0 }, new int[] { 1 },
                         new IBinaryHashFunctionFamily[] { MurmurHash3BinaryHashFunctionFamily.INSTANCE },
                         new IBinaryHashFunctionFamily[] { MurmurHash3BinaryHashFunctionFamily.INSTANCE },
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                         custOrderJoinDesc, new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 0, 1),
                         new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0), null, true,
                         nonMatchWriterFactories);
@@ -347,7 +342,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new int[] { 0 },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc, 128,
+                new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0), custOrderJoinDesc, 128,
                 null, 128);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID, NC2_ID);
 
@@ -405,8 +400,6 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new OptimizedHybridHashJoinOperatorDescriptor(spec, 5, 20, 1.2, new int[] { 1 }, new int[] { 0 },
                         new IBinaryHashFunctionFamily[] { MurmurHash3BinaryHashFunctionFamily.INSTANCE },
                         new IBinaryHashFunctionFamily[] { MurmurHash3BinaryHashFunctionFamily.INSTANCE },
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                         custOrderJoinDesc, new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0),
                         new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 0, 1), null, false, null);
 
@@ -466,7 +459,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new int[] { 0 },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc, 128,
+                new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0), custOrderJoinDesc, 128,
                 null, 128);
         PartitionConstraintHelper.addPartitionCountConstraint(spec, join, 2);
 
@@ -530,7 +523,7 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new int[] { 0 },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE }, custOrderJoinDesc, 128,
+                new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0), custOrderJoinDesc, 128,
                 null, 128);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID, NC2_ID);
 
@@ -587,8 +580,6 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new OptimizedHybridHashJoinOperatorDescriptor(spec, 15, 243, 1.2, new int[] { 0 }, new int[] { 1 },
                         new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
                         new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                         custOrderJoinDesc, new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 0, 1),
                         new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0), null);
 
@@ -637,8 +628,6 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new OptimizedHybridHashJoinOperatorDescriptor(spec, 15, 122, 1.2, new int[] { 0 }, new int[] { 1 },
                         new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
                         new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                         custOrderJoinDesc, new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 0, 1),
                         new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0), null);
 
@@ -688,8 +677,6 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new OptimizedHybridHashJoinOperatorDescriptor(spec, 6, 122, 1.2, new int[] { 0 }, new int[] { 1 },
                         new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
                         new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                         custOrderJoinDesc, new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 0, 1),
                         new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0), null);
 

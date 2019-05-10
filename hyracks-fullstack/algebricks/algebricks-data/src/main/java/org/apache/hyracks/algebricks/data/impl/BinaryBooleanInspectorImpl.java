@@ -22,23 +22,24 @@ import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
-public class BinaryBooleanInspectorImpl implements IBinaryBooleanInspector {
-    private static final BinaryBooleanInspectorImpl INSTANCE = new BinaryBooleanInspectorImpl();
+public class BinaryBooleanInspectorImpl {
+
     public static final IBinaryBooleanInspectorFactory FACTORY = new IBinaryBooleanInspectorFactory() {
+
         private static final long serialVersionUID = 1L;
 
         @Override
         public IBinaryBooleanInspector createBinaryBooleanInspector(IHyracksTaskContext ctx) {
             // A stateless class. no need to create an instance per call
-            return INSTANCE;
+            return BinaryBooleanInspectorImpl::getBooleanValue;
         }
     };
 
     private BinaryBooleanInspectorImpl() {
     }
 
-    @Override
-    public boolean getBooleanValue(byte[] bytes, int offset, int length) {
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static boolean getBooleanValue(byte[] bytes, int offset, int length) {
         return bytes[offset] == 1;
     }
 }

@@ -23,3 +23,5 @@
 { "v1": { "id": 19, "name": "Mart" } }
 { "v1": { "id": 20, "name": "Mai", "dept_ids": [ 1, 5, 9 ] }, "v2": { "id": 20, "name": "Mai", "dept_ids": [ 1, 5, 9 ] } }
 { "v1": { "id": 21, "name": "Ken", "dept_ids": [ 3, 5, 8 ] }, "v2": { "id": 21, "name": "Ken", "dept_ids": [ 3, 5, 8 ] } }
+{ "v1": { "id": 38, "name": "Kim", "dept_ids": [ 33, null, 3, 16 ] } }
+{ "v1": { "id": 45, "name": "Kim", "dept_ids": [ 33, null, 3, 16 ] } }

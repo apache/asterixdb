@@ -20,4 +20,4 @@
 use test;
 
 load dataset closedDs using localfs (("path"="asterix_nc1://data/complex/arrays1.adm"),("format"="adm"));
-load dataset openDs using localfs (("path"="asterix_nc1://data/complex/arrays1.adm"),("format"="adm"));
+load dataset openDs using localfs (("path"="asterix_nc1://data/complex/arrays1nulls.adm"),("format"="adm"));

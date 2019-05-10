@@ -30,7 +30,9 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
@@ -39,20 +41,15 @@ import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalProperties
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalGroupingProperty;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
-import org.apache.hyracks.api.comm.IFrameTupleAccessor;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.TuplePairEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
-import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.join.OptimizedHybridHashJoinOperatorDescriptor;
 import org.apache.logging.log4j.LogManager;
@@ -110,17 +107,6 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                 JobGenHelper.variablesToBinaryHashFunctionFamilies(keysLeftBranch, env, context);
         IBinaryHashFunctionFamily[] rightHashFunFamilies =
                 JobGenHelper.variablesToBinaryHashFunctionFamilies(keysRightBranch, env, context);
-        IBinaryComparatorFactory[] leftCompFactories = new IBinaryComparatorFactory[keysLeft.length];
-        IBinaryComparatorFactory[] rightCompFactories = new IBinaryComparatorFactory[keysRight.length];
-        IBinaryComparatorFactoryProvider bcfp = context.getBinaryComparatorFactoryProvider();
-        Object leftType;
-        Object rightType;
-        for (int i = 0; i < keysLeftBranch.size(); i++) {
-            leftType = env.getVarType(keysLeftBranch.get(i));
-            rightType = env.getVarType(keysRightBranch.get(i));
-            leftCompFactories[i] = bcfp.getBinaryComparatorFactory(leftType, rightType, true);
-            rightCompFactories[i] = bcfp.getBinaryComparatorFactory(rightType, leftType, true);
-        }
 
         IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider =
                 context.getPredicateEvaluatorFactoryProvider();
@@ -129,11 +115,22 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
 
         RecordDescriptor recDescriptor =
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
+        IOperatorSchema[] conditionInputSchemas = new IOperatorSchema[1];
+        conditionInputSchemas[0] = propagatedSchema;
+        IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
+        AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) op;
+        IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(
+                joinOp.getCondition().getValue(), context.getTypeEnvironment(op), conditionInputSchemas, context);
+        ITuplePairComparatorFactory comparatorFactory =
+                new TuplePairEvaluatorFactory(cond, false, context.getBinaryBooleanInspectorFactory());
+        ITuplePairComparatorFactory reverseComparatorFactory =
+                new TuplePairEvaluatorFactory(cond, true, context.getBinaryBooleanInspectorFactory());
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         IOperatorDescriptor opDesc;
 
         opDesc = generateOptimizedHashJoinRuntime(context, inputSchemas, keysLeft, keysRight, leftHashFunFamilies,
-                rightHashFunFamilies, leftCompFactories, rightCompFactories, predEvaluatorFactory, recDescriptor, spec);
+                rightHashFunFamilies, comparatorFactory, reverseComparatorFactory, predEvaluatorFactory, recDescriptor,
+                spec);
         opDesc.setSourceLocation(op.getSourceLocation());
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
@@ -145,28 +142,24 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
 
     private IOperatorDescriptor generateOptimizedHashJoinRuntime(JobGenContext context, IOperatorSchema[] inputSchemas,
             int[] keysLeft, int[] keysRight, IBinaryHashFunctionFamily[] leftHashFunFamilies,
-            IBinaryHashFunctionFamily[] rightHashFunFamilies, IBinaryComparatorFactory[] leftCompFactories,
-            IBinaryComparatorFactory[] rightCompFactories, IPredicateEvaluatorFactory predEvaluatorFactory,
+            IBinaryHashFunctionFamily[] rightHashFunFamilies, ITuplePairComparatorFactory comparatorFactory,
+            ITuplePairComparatorFactory reverseComparatorFactory, IPredicateEvaluatorFactory predEvaluatorFactory,
             RecordDescriptor recDescriptor, IOperatorDescriptorRegistry spec) {
         int memSizeInFrames = localMemoryRequirements.getMemoryBudgetInFrames();
         switch (kind) {
             case INNER:
                 return new OptimizedHybridHashJoinOperatorDescriptor(spec, memSizeInFrames, maxInputBuildSizeInFrames,
-                        getFudgeFactor(), keysLeft, keysRight, leftHashFunFamilies, rightHashFunFamilies,
-                        leftCompFactories, rightCompFactories, recDescriptor,
-                        new JoinMultiComparatorFactory(leftCompFactories, keysLeft, keysRight),
-                        new JoinMultiComparatorFactory(rightCompFactories, keysRight, keysLeft), predEvaluatorFactory);
+                        getFudgeFactor(), keysLeft, keysRight, leftHashFunFamilies, rightHashFunFamilies, recDescriptor,
+                        comparatorFactory, reverseComparatorFactory, predEvaluatorFactory);
             case LEFT_OUTER:
                 IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
                 for (int j = 0; j < nonMatchWriterFactories.length; j++) {
                     nonMatchWriterFactories[j] = context.getMissingWriterFactory();
                 }
                 return new OptimizedHybridHashJoinOperatorDescriptor(spec, memSizeInFrames, maxInputBuildSizeInFrames,
-                        getFudgeFactor(), keysLeft, keysRight, leftHashFunFamilies, rightHashFunFamilies,
-                        leftCompFactories, rightCompFactories, recDescriptor,
-                        new JoinMultiComparatorFactory(leftCompFactories, keysLeft, keysRight),
-                        new JoinMultiComparatorFactory(rightCompFactories, keysRight, keysLeft), predEvaluatorFactory,
-                        true, nonMatchWriterFactories);
+                        getFudgeFactor(), keysLeft, keysRight, leftHashFunFamilies, rightHashFunFamilies, recDescriptor,
+                        comparatorFactory, reverseComparatorFactory, predEvaluatorFactory, true,
+                        nonMatchWriterFactories);
             default:
                 throw new NotImplementedException();
         }
@@ -203,75 +196,5 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
             }
         }
         return deliveredLocalProperties;
-    }
-
-}
-
-/**
- * {@code ITuplePairComparatorFactory} implementation for optimized hybrid hash join.
- */
-class JoinMultiComparatorFactory implements ITuplePairComparatorFactory {
-    private static final long serialVersionUID = 1L;
-
-    private final IBinaryComparatorFactory[] binaryComparatorFactories;
-    private final int[] keysLeft;
-    private final int[] keysRight;
-
-    JoinMultiComparatorFactory(IBinaryComparatorFactory[] binaryComparatorFactory, int[] keysLeft, int[] keysRight) {
-        this.binaryComparatorFactories = binaryComparatorFactory;
-        this.keysLeft = keysLeft;
-        this.keysRight = keysRight;
-    }
-
-    @Override
-    public ITuplePairComparator createTuplePairComparator(IHyracksTaskContext ctx) {
-        IBinaryComparator[] binaryComparators = new IBinaryComparator[binaryComparatorFactories.length];
-        for (int i = 0; i < binaryComparators.length; i++) {
-            binaryComparators[i] = binaryComparatorFactories[i].createBinaryComparator();
-        }
-        return new JoinMultiComparator(binaryComparators, keysLeft, keysRight);
-    }
-}
-
-/**
- * {@code ITuplePairComparator} implementation for optimized hybrid hash join.
- * The comparator applies multiple binary comparators, one for each key pairs
- */
-class JoinMultiComparator implements ITuplePairComparator {
-    private final IBinaryComparator[] binaryComparators;
-    private final int[] keysLeft;
-    private final int[] keysRight;
-
-    JoinMultiComparator(IBinaryComparator[] bComparator, int[] keysLeft, int[] keysRight) {
-        this.binaryComparators = bComparator;
-        this.keysLeft = keysLeft;
-        this.keysRight = keysRight;
-    }
-
-    @Override
-    public int compare(IFrameTupleAccessor accessor0, int tIndex0, IFrameTupleAccessor accessor1, int tIndex1)
-            throws HyracksDataException {
-        int tStart0 = accessor0.getTupleStartOffset(tIndex0);
-        int fStartOffset0 = accessor0.getFieldSlotsLength() + tStart0;
-
-        int tStart1 = accessor1.getTupleStartOffset(tIndex1);
-        int fStartOffset1 = accessor1.getFieldSlotsLength() + tStart1;
-
-        for (int i = 0; i < binaryComparators.length; i++) {
-            int fStart0 = accessor0.getFieldStartOffset(tIndex0, keysLeft[i]);
-            int fEnd0 = accessor0.getFieldEndOffset(tIndex0, keysLeft[i]);
-            int fLen0 = fEnd0 - fStart0;
-
-            int fStart1 = accessor1.getFieldStartOffset(tIndex1, keysRight[i]);
-            int fEnd1 = accessor1.getFieldEndOffset(tIndex1, keysRight[i]);
-            int fLen1 = fEnd1 - fStart1;
-
-            int c = binaryComparators[i].compare(accessor0.getBuffer().array(), fStart0 + fStartOffset0, fLen0,
-                    accessor1.getBuffer().array(), fStart1 + fStartOffset1, fLen1);
-            if (c != 0) {
-                return c;
-            }
-        }
-        return 0;
     }
 }

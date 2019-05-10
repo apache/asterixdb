@@ -39,23 +39,13 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
-import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.comm.IFrameTupleAccessor;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.algebricks.runtime.evaluators.TuplePairEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
-import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.dataflow.std.join.NestedLoopJoinOperatorDescriptor;
 
 /**
@@ -134,7 +124,7 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
         IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(join.getCondition().getValue(),
                 context.getTypeEnvironment(op), conditionInputSchemas, context);
         ITuplePairComparatorFactory comparatorFactory =
-                new TuplePairEvaluatorFactory(cond, context.getBinaryBooleanInspectorFactory());
+                new TuplePairEvaluatorFactory(cond, false, context.getBinaryBooleanInspectorFactory());
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         IOperatorDescriptor opDesc;
 
@@ -163,120 +153,5 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
         builder.contributeGraphEdge(src1, 0, op, 0);
         ILogicalOperator src2 = op.getInputs().get(1).getValue();
         builder.contributeGraphEdge(src2, 0, op, 1);
-    }
-
-    public static class TuplePairEvaluatorFactory implements ITuplePairComparatorFactory {
-
-        private static final long serialVersionUID = 1L;
-        private final IScalarEvaluatorFactory cond;
-        private final IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory;
-
-        public TuplePairEvaluatorFactory(IScalarEvaluatorFactory cond,
-                IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory) {
-            this.cond = cond;
-            this.binaryBooleanInspectorFactory = binaryBooleanInspectorFactory;
-        }
-
-        @Override
-        public synchronized ITuplePairComparator createTuplePairComparator(IHyracksTaskContext ctx)
-                throws HyracksDataException {
-            return new TuplePairEvaluator(ctx, cond, binaryBooleanInspectorFactory.createBinaryBooleanInspector(ctx));
-        }
-    }
-
-    public static class TuplePairEvaluator implements ITuplePairComparator {
-        private IScalarEvaluator condEvaluator;
-        private final IPointable p;
-        private final CompositeFrameTupleReference compositeTupleRef;
-        private final FrameTupleReference leftRef;
-        private final FrameTupleReference rightRef;
-        private final IBinaryBooleanInspector binaryBooleanInspector;
-
-        public TuplePairEvaluator(IHyracksTaskContext ctx, IScalarEvaluatorFactory condFactory,
-                IBinaryBooleanInspector binaryBooleanInspector) throws HyracksDataException {
-            this.condEvaluator = condFactory.createScalarEvaluator(ctx);
-            this.binaryBooleanInspector = binaryBooleanInspector;
-            this.leftRef = new FrameTupleReference();
-            this.p = VoidPointable.FACTORY.createPointable();
-            this.rightRef = new FrameTupleReference();
-            this.compositeTupleRef = new CompositeFrameTupleReference(leftRef, rightRef);
-        }
-
-        @Override
-        public int compare(IFrameTupleAccessor outerAccessor, int outerIndex, IFrameTupleAccessor innerAccessor,
-                int innerIndex) throws HyracksDataException {
-            compositeTupleRef.reset(outerAccessor, outerIndex, innerAccessor, innerIndex);
-            condEvaluator.evaluate(compositeTupleRef, p);
-            boolean result =
-                    binaryBooleanInspector.getBooleanValue(p.getByteArray(), p.getStartOffset(), p.getLength());
-            if (result) {
-                return 0;
-            } else {
-                return 1;
-            }
-        }
-    }
-
-    public static class CompositeFrameTupleReference implements IFrameTupleReference {
-
-        private final FrameTupleReference refLeft;
-        private final FrameTupleReference refRight;
-
-        public CompositeFrameTupleReference(FrameTupleReference refLeft, FrameTupleReference refRight) {
-            this.refLeft = refLeft;
-            this.refRight = refRight;
-        }
-
-        public void reset(IFrameTupleAccessor outerAccessor, int outerIndex, IFrameTupleAccessor innerAccessor,
-                int innerIndex) {
-            refLeft.reset(outerAccessor, outerIndex);
-            refRight.reset(innerAccessor, innerIndex);
-        }
-
-        @Override
-        public int getFieldCount() {
-            return refLeft.getFieldCount() + refRight.getFieldCount();
-        }
-
-        @Override
-        public byte[] getFieldData(int fIdx) {
-            int leftFieldCount = refLeft.getFieldCount();
-            if (fIdx < leftFieldCount) {
-                return refLeft.getFieldData(fIdx);
-            } else {
-                return refRight.getFieldData(fIdx - leftFieldCount);
-            }
-        }
-
-        @Override
-        public int getFieldStart(int fIdx) {
-            int leftFieldCount = refLeft.getFieldCount();
-            if (fIdx < leftFieldCount) {
-                return refLeft.getFieldStart(fIdx);
-            } else {
-                return refRight.getFieldStart(fIdx - leftFieldCount);
-            }
-        }
-
-        @Override
-        public int getFieldLength(int fIdx) {
-            int leftFieldCount = refLeft.getFieldCount();
-            if (fIdx < leftFieldCount) {
-                return refLeft.getFieldLength(fIdx);
-            } else {
-                return refRight.getFieldLength(fIdx - leftFieldCount);
-            }
-        }
-
-        @Override
-        public IFrameTupleAccessor getFrameTupleAccessor() {
-            throw new NotImplementedException();
-        }
-
-        @Override
-        public int getTupleIndex() {
-            throw new NotImplementedException();
-        }
-
     }
 }

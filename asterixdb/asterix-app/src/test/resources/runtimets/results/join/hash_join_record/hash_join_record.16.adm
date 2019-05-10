@@ -16,8 +16,7 @@
 { "id1": 13, "id2": 4, "add1": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 }, "add2": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 } }
 { "id1": 13, "id2": 13, "add1": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 }, "add2": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 } }
 { "id1": 13, "id2": 36, "add1": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 }, "add2": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 } }
-{ "id1": 14, "id2": 14, "add1": { "state": "MO", "country": "USA", "apt": null, "street": "10th" }, "add2": { "state": "MO", "country": "USA", "apt": null, "street": "10th" } }
-{ "id1": 14, "id2": 37, "add1": { "state": "MO", "country": "USA", "apt": null, "street": "10th" }, "add2": { "state": "MO", "country": "USA", "apt": null, "street": "10th" } }
+{ "id1": 14, "add1": { "state": "MO", "country": "USA", "apt": null, "street": "10th" } }
 { "id1": 15, "add1": null }
 { "id1": 16 }
 { "id1": 17 }
@@ -42,13 +41,12 @@
 { "id1": 31, "id2": 31, "add1": { "state": "BC", "country": "Canada" }, "add2": { "state": "BC", "country": "Canada" } }
 { "id1": 32, "add1": { "state": "ON", "country": "Canada" } }
 { "id1": 33, "add1": { "state": "CO", "country": "USA", "apt": null, "street": null } }
-{ "id1": 34, "id2": 34, "add1": { "state": "OR", "country": "USA", "apt": 7, "street": null, "zipcode": 97402 }, "add2": { "state": "OR", "country": "USA", "apt": 7, "street": null, "zipcode": 97402 } }
+{ "id1": 34, "add1": { "state": "OR", "country": "USA", "apt": 7, "street": null, "zipcode": 97402 } }
 { "id1": 35, "id2": 35, "add1": { "state": "AL", "country": "USA", "apt": 8, "street": "18th", "zipcode": 33212 }, "add2": { "state": "AL", "country": "USA", "apt": 8, "street": "18th", "zipcode": 33212 } }
 { "id1": 36, "id2": 4, "add1": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 }, "add2": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 } }
 { "id1": 36, "id2": 13, "add1": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 }, "add2": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 } }
 { "id1": 36, "id2": 36, "add1": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 }, "add2": { "state": "IN", "country": "USA", "street": "19th", "zipcode": 88232 } }
-{ "id1": 37, "id2": 14, "add1": { "state": "MO", "country": "USA", "apt": null, "street": "10th" }, "add2": { "state": "MO", "country": "USA", "apt": null, "street": "10th" } }
-{ "id1": 37, "id2": 37, "add1": { "state": "MO", "country": "USA", "apt": null, "street": "10th" }, "add2": { "state": "MO", "country": "USA", "apt": null, "street": "10th" } }
+{ "id1": 37, "add1": { "state": "MO", "country": "USA", "apt": null, "street": "10th" } }
 { "id1": 38, "id2": 28, "add1": { "state": "AL", "country": "USA" }, "add2": { "state": "AL", "country": "USA" } }
 { "id1": 38, "id2": 38, "add1": { "state": "AL", "country": "USA" }, "add2": { "state": "AL", "country": "USA" } }
 { "id1": 38, "id2": 41, "add1": { "state": "AL", "country": "USA" }, "add2": { "state": "AL", "country": "USA" } }

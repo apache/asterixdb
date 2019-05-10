@@ -29,6 +29,7 @@ import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
+import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -40,7 +41,6 @@ import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.TupleInFrameListAccessor;
 import org.apache.hyracks.dataflow.std.structures.ISerializableTable;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
-import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -52,7 +52,7 @@ public class InMemoryHashJoin {
     private IFrameTupleAccessor accessorProbe;
     private final ITuplePartitionComputer tpcProbe;
     private final FrameTupleAppender appender;
-    private final FrameTuplePairComparator tpComparator;
+    private final ITuplePairComparator tpComparator;
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder missingTupleBuild;
     private final ISerializableTable table;
@@ -68,7 +68,7 @@ public class InMemoryHashJoin {
 
     public InMemoryHashJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorProbe, ITuplePartitionComputer tpcProbe,
             FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild, ITuplePartitionComputer tpcBuild,
-            FrameTuplePairComparator comparator, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
+            ITuplePairComparator comparator, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
             ISerializableTable table, IPredicateEvaluator predEval, ISimpleFrameBufferManager bufferManager)
             throws HyracksDataException {
         this(ctx, accessorProbe, tpcProbe, accessorBuild, rDBuild, tpcBuild, comparator, isLeftOuter,
@@ -77,7 +77,7 @@ public class InMemoryHashJoin {
 
     public InMemoryHashJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorProbe, ITuplePartitionComputer tpcProbe,
             FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild, ITuplePartitionComputer tpcBuild,
-            FrameTuplePairComparator comparator, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
+            ITuplePairComparator comparator, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
             ISerializableTable table, IPredicateEvaluator predEval, boolean reverse,
             ISimpleFrameBufferManager bufferManager) throws HyracksDataException {
         this.table = table;

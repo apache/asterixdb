@@ -27,15 +27,16 @@ import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class BinaryBooleanInspector implements IBinaryBooleanInspector {
-    private static final BinaryBooleanInspector INSTANCE = new BinaryBooleanInspector();
+public class BinaryBooleanInspector {
+
     public static final IBinaryBooleanInspectorFactory FACTORY = new IBinaryBooleanInspectorFactory() {
+
         private static final long serialVersionUID = 1L;
 
         @Override
         public IBinaryBooleanInspector createBinaryBooleanInspector(IHyracksTaskContext ctx) {
             // Stateless class. No need to construct an object per call
-            return INSTANCE;
+            return BinaryBooleanInspector::getBooleanValue;
         }
     };
 
@@ -44,14 +45,14 @@ public class BinaryBooleanInspector implements IBinaryBooleanInspector {
     private BinaryBooleanInspector() {
     }
 
-    @Override
-    public boolean getBooleanValue(byte[] bytes, int offset, int length) throws HyracksDataException {
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static boolean getBooleanValue(byte[] bytes, int offset, int length) throws HyracksDataException {
         byte serializedTypeTag = bytes[offset];
         if (serializedTypeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG
                 || serializedTypeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
             return false;
         }
-        /** check if the runtime type is boolean */
+        // check if the runtime type is boolean
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serializedTypeTag);
         if (typeTag != ATypeTag.BOOLEAN) {
             throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH_FUNCTION, NAME, 0, ATypeTag.BOOLEAN, typeTag);
@@ -59,5 +60,4 @@ public class BinaryBooleanInspector implements IBinaryBooleanInspector {
 
         return bytes[offset + 1] == 1;
     }
-
 }

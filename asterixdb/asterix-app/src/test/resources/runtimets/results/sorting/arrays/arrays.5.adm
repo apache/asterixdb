@@ -1,6 +1,8 @@
 { "id": 2, "name": "Isac", "dept_ids": [ 99, 12, 14, 15, 77 ] }
 { "id": 3, "name": "Emory", "dept_ids": [ 33, 11, 3, 16 ] }
 { "id": 8, "name": "Nicole", "dept_ids": [ 33, 11, 3, 16 ] }
+{ "id": 38, "name": "Kim", "dept_ids": [ 33, null, 3, 16 ] }
+{ "id": 45, "name": "Kim", "dept_ids": [ 33, null, 3, 16 ] }
 { "id": 7, "name": "Suzanna", "dept_ids": [ 9, 5, 2 ] }
 { "id": 16, "name": "Wail", "dept_ids": [ 9, 5, 2 ] }
 { "id": 18, "name": "Kayle", "dept_ids": [ 8, 2, 1, 7, 9 ] }

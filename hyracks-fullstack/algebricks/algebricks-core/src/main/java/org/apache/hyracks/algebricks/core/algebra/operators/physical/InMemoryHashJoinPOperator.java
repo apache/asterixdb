@@ -28,7 +28,9 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
@@ -36,13 +38,14 @@ import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralPro
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.TuplePairEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.join.InMemoryHashJoinOperatorDescriptor;
@@ -88,15 +91,6 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
                 JobGenHelper.variablesToBinaryHashFunctionFactories(keysLeftBranch, env, context);
         IBinaryHashFunctionFactory[] rightHashFunFactories =
                 JobGenHelper.variablesToBinaryHashFunctionFactories(keysRightBranch, env, context);
-        IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keysLeft.length];
-        IBinaryComparatorFactoryProvider bcfp = context.getBinaryComparatorFactoryProvider();
-        Object leftType;
-        Object rightType;
-        for (int i = 0; i < keysLeftBranch.size(); i++) {
-            leftType = env.getVarType(keysLeftBranch.get(i));
-            rightType = env.getVarType(keysRightBranch.get(i));
-            comparatorFactories[i] = bcfp.getBinaryComparatorFactory(leftType, rightType, true);
-        }
 
         IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider =
                 context.getPredicateEvaluatorFactoryProvider();
@@ -105,6 +99,14 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
 
         RecordDescriptor recDescriptor =
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
+        IOperatorSchema[] conditionInputSchemas = new IOperatorSchema[1];
+        conditionInputSchemas[0] = propagatedSchema;
+        IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
+        AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) op;
+        IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(
+                joinOp.getCondition().getValue(), context.getTypeEnvironment(op), conditionInputSchemas, context);
+        ITuplePairComparatorFactory comparatorFactory =
+                new TuplePairEvaluatorFactory(cond, false, context.getBinaryBooleanInspectorFactory());
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         IOperatorDescriptor opDesc;
 
@@ -113,7 +115,7 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
         switch (kind) {
             case INNER:
                 opDesc = new InMemoryHashJoinOperatorDescriptor(spec, keysLeft, keysRight, leftHashFunFactories,
-                        rightHashFunFactories, comparatorFactories, recDescriptor, tableSize, predEvaluatorFactory,
+                        rightHashFunFactories, comparatorFactory, recDescriptor, tableSize, predEvaluatorFactory,
                         memSizeInFrames);
                 break;
             case LEFT_OUTER:
@@ -122,7 +124,7 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
                     nonMatchWriterFactories[j] = context.getMissingWriterFactory();
                 }
                 opDesc = new InMemoryHashJoinOperatorDescriptor(spec, keysLeft, keysRight, leftHashFunFactories,
-                        rightHashFunFactories, comparatorFactories, predEvaluatorFactory, recDescriptor, true,
+                        rightHashFunFactories, comparatorFactory, predEvaluatorFactory, recDescriptor, true,
                         nonMatchWriterFactories, tableSize, memSizeInFrames);
                 break;
             default:

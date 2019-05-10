@@ -184,7 +184,7 @@ public class Join {
                             PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
                     new IBinaryHashFunctionFactory[] {
                             PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
-                    new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
+                    new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 0, 1),
                     Common.custOrderJoinDesc, tableSize, null, memSize * frameSize);
 
         } else if ("hybrid".equalsIgnoreCase(algo)) {
@@ -192,8 +192,6 @@ public class Join {
                     new int[] { 0 }, new int[] { 1 },
                     new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
                     new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
-                    new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                    new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                     Common.custOrderJoinDesc,
                     new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 0, 1),
                     new JoinComparatorFactory(UTF8StringBinaryComparatorFactory.INSTANCE, 1, 0), null);

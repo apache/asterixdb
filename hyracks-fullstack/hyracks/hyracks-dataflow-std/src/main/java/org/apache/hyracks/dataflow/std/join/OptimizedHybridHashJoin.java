@@ -25,10 +25,10 @@ import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
+import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -47,7 +47,6 @@ import org.apache.hyracks.dataflow.std.buffermanager.VPartitionTupleBufferManage
 import org.apache.hyracks.dataflow.std.structures.ISerializableTable;
 import org.apache.hyracks.dataflow.std.structures.SerializableHashTable;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
-import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
 
 /**
  * This class mainly applies one level of HHJ on a pair of
@@ -58,7 +57,7 @@ public class OptimizedHybridHashJoin {
     // Used for special probe BigObject which can not be held into the Join memory
     private FrameTupleAppender bigProbeFrameAppender;
 
-    enum SIDE {
+    public enum SIDE {
         BUILD,
         PROBE
     }
@@ -68,11 +67,7 @@ public class OptimizedHybridHashJoin {
     private final String buildRelName;
     private final String probeRelName;
 
-    private final int[] buildKeys;
-    private final int[] probeKeys;
-
-    private final IBinaryComparator[] comparators;
-
+    private final ITuplePairComparator comparator;
     private final ITuplePartitionComputer buildHpc;
     private final ITuplePartitionComputer probeHpc;
 
@@ -110,19 +105,16 @@ public class OptimizedHybridHashJoin {
     private int[] probePSizeInTups;
 
     public OptimizedHybridHashJoin(IHyracksTaskContext ctx, int memSizeInFrames, int numOfPartitions,
-            String probeRelName, String buildRelName, int[] probeKeys, int[] buildKeys, IBinaryComparator[] comparators,
-            RecordDescriptor probeRd, RecordDescriptor buildRd, ITuplePartitionComputer probeHpc,
-            ITuplePartitionComputer buildHpc, IPredicateEvaluator predEval, boolean isLeftOuter,
-            IMissingWriterFactory[] nullWriterFactories1) {
+            String probeRelName, String buildRelName, ITuplePairComparator comparator, RecordDescriptor probeRd,
+            RecordDescriptor buildRd, ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc,
+            IPredicateEvaluator predEval, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1) {
         this.ctx = ctx;
         this.memSizeInFrames = memSizeInFrames;
         this.buildRd = buildRd;
         this.probeRd = probeRd;
         this.buildHpc = buildHpc;
         this.probeHpc = probeHpc;
-        this.buildKeys = buildKeys;
-        this.probeKeys = probeKeys;
-        this.comparators = comparators;
+        this.comparator = comparator;
         this.buildRelName = buildRelName;
         this.probeRelName = probeRelName;
 
@@ -450,10 +442,9 @@ public class OptimizedHybridHashJoin {
 
     private void createInMemoryJoiner(int inMemTupCount) throws HyracksDataException {
         ISerializableTable table = new SerializableHashTable(inMemTupCount, ctx, bufferManagerForHashTable);
-        this.inMemJoiner =
-                new InMemoryHashJoin(ctx, new FrameTupleAccessor(probeRd), probeHpc, new FrameTupleAccessor(buildRd),
-                        buildRd, buildHpc, new FrameTuplePairComparator(probeKeys, buildKeys, comparators), isLeftOuter,
-                        nonMatchWriters, table, predEvaluator, isReversed, bufferManagerForHashTable);
+        this.inMemJoiner = new InMemoryHashJoin(ctx, new FrameTupleAccessor(probeRd), probeHpc,
+                new FrameTupleAccessor(buildRd), buildRd, buildHpc, comparator, isLeftOuter, nonMatchWriters, table,
+                predEvaluator, isReversed, bufferManagerForHashTable);
     }
 
     private void loadDataInMemJoin() throws HyracksDataException {
@@ -611,72 +602,5 @@ public class OptimizedHybridHashJoin {
 
     public void setIsReversed(boolean b) {
         this.isReversed = b;
-    }
-
-    /**
-     * Prints out the detailed information for partitions: in-memory and spilled partitions.
-     * This method exists for a debug purpose.
-     */
-    public String printPartitionInfo(SIDE whichSide) {
-        StringBuilder buf = new StringBuilder();
-        buf.append(">>> " + this + " " + Thread.currentThread().getId() + " printInfo():" + "\n");
-        if (whichSide == SIDE.BUILD) {
-            buf.append("BUILD side" + "\n");
-        } else {
-            buf.append("PROBE side" + "\n");
-        }
-        buf.append("# of partitions:\t" + numOfPartitions + "\t#spilled:\t" + spilledStatus.cardinality()
-                + "\t#in-memory:\t" + (numOfPartitions - spilledStatus.cardinality()) + "\n");
-        buf.append("(A) Spilled partitions" + "\n");
-        int spilledTupleCount = 0;
-        int spilledPartByteSize = 0;
-        for (int pid = spilledStatus.nextSetBit(0); pid >= 0 && pid < numOfPartitions; pid =
-                spilledStatus.nextSetBit(pid + 1)) {
-            if (whichSide == SIDE.BUILD) {
-                spilledTupleCount += buildPSizeInTups[pid];
-                spilledPartByteSize += buildRFWriters[pid].getFileSize();
-                buf.append("part:\t" + pid + "\t#tuple:\t" + buildPSizeInTups[pid] + "\tsize(MB):\t"
-                        + ((double) buildRFWriters[pid].getFileSize() / 1048576) + "\n");
-            } else {
-                spilledTupleCount += probePSizeInTups[pid];
-                spilledPartByteSize += probeRFWriters[pid].getFileSize();
-            }
-        }
-        if (spilledStatus.cardinality() > 0) {
-            buf.append("# of spilled tuples:\t" + spilledTupleCount + "\tsize(MB):\t"
-                    + ((double) spilledPartByteSize / 1048576) + "avg #tuples per spilled part:\t"
-                    + (spilledTupleCount / spilledStatus.cardinality()) + "\tavg size per part(MB):\t"
-                    + ((double) spilledPartByteSize / 1048576 / spilledStatus.cardinality()) + "\n");
-        }
-        buf.append("(B) In-memory partitions" + "\n");
-        int inMemoryTupleCount = 0;
-        int inMemoryPartByteSize = 0;
-        for (int pid = spilledStatus.nextClearBit(0); pid >= 0 && pid < numOfPartitions; pid =
-                spilledStatus.nextClearBit(pid + 1)) {
-            if (whichSide == SIDE.BUILD) {
-                inMemoryTupleCount += buildPSizeInTups[pid];
-                inMemoryPartByteSize += bufferManager.getPhysicalSize(pid);
-            } else {
-                inMemoryTupleCount += probePSizeInTups[pid];
-                inMemoryPartByteSize += bufferManager.getPhysicalSize(pid);
-            }
-        }
-        if (spilledStatus.cardinality() > 0) {
-            buf.append("# of in-memory tuples:\t" + inMemoryTupleCount + "\tsize(MB):\t"
-                    + ((double) inMemoryPartByteSize / 1048576) + "avg #tuples per spilled part:\t"
-                    + (inMemoryTupleCount / spilledStatus.cardinality()) + "\tavg size per part(MB):\t"
-                    + ((double) inMemoryPartByteSize / 1048576 / (numOfPartitions - spilledStatus.cardinality()))
-                    + "\n");
-        }
-        if (inMemoryTupleCount + spilledTupleCount > 0) {
-            buf.append("# of all tuples:\t" + (inMemoryTupleCount + spilledTupleCount) + "\tsize(MB):\t"
-                    + ((double) (inMemoryPartByteSize + spilledPartByteSize) / 1048576) + " ratio of spilled tuples:\t"
-                    + (spilledTupleCount / (inMemoryTupleCount + spilledTupleCount)) + "\n");
-        } else {
-            buf.append("# of all tuples:\t" + (inMemoryTupleCount + spilledTupleCount) + "\tsize(MB):\t"
-                    + ((double) (inMemoryPartByteSize + spilledPartByteSize) / 1048576) + " ratio of spilled tuples:\t"
-                    + "N/A" + "\n");
-        }
-        return buf.toString();
     }
 }

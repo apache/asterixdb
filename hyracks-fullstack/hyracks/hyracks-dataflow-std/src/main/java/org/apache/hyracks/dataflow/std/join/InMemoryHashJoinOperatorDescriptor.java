@@ -28,14 +28,14 @@ import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IActivityGraphBuilder;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.TaskId;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
+import org.apache.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -55,7 +55,6 @@ import org.apache.hyracks.dataflow.std.buffermanager.IDeallocatableFramePool;
 import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 import org.apache.hyracks.dataflow.std.structures.ISerializableTable;
 import org.apache.hyracks.dataflow.std.structures.SerializableHashTable;
-import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
 
 public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -63,7 +62,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
     private final int[] keys1;
     private final IBinaryHashFunctionFactory[] hashFunctionFactories0;
     private final IBinaryHashFunctionFactory[] hashFunctionFactories1;
-    private final IBinaryComparatorFactory[] comparatorFactories;
+    private final ITuplePairComparatorFactory comparatorFactory;
     private final IPredicateEvaluatorFactory predEvaluatorFactory;
     private final boolean isLeftOuter;
     private final IMissingWriterFactory[] nonMatchWriterFactories;
@@ -73,14 +72,14 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
     public InMemoryHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys0, int[] keys1,
             IBinaryHashFunctionFactory[] hashFunctionFactories0, IBinaryHashFunctionFactory[] hashFunctionFactories1,
-            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor, int tableSize,
+            ITuplePairComparatorFactory comparatorFactory, RecordDescriptor recordDescriptor, int tableSize,
             IPredicateEvaluatorFactory predEvalFactory, int memSizeInFrames) {
         super(spec, 2, 1);
         this.keys0 = keys0;
         this.keys1 = keys1;
         this.hashFunctionFactories0 = hashFunctionFactories0;
         this.hashFunctionFactories1 = hashFunctionFactories1;
-        this.comparatorFactories = comparatorFactories;
+        this.comparatorFactory = comparatorFactory;
         this.predEvaluatorFactory = predEvalFactory;
         outRecDescs[0] = recordDescriptor;
         this.isLeftOuter = false;
@@ -91,7 +90,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
     public InMemoryHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys0, int[] keys1,
             IBinaryHashFunctionFactory[] hashFunctionFactories0, IBinaryHashFunctionFactory[] hashFunctionFactories1,
-            IBinaryComparatorFactory[] comparatorFactories, IPredicateEvaluatorFactory predEvalFactory,
+            ITuplePairComparatorFactory comparatorFactory, IPredicateEvaluatorFactory predEvalFactory,
             RecordDescriptor recordDescriptor, boolean isLeftOuter, IMissingWriterFactory[] missingWriterFactories1,
             int tableSize, int memSizeInFrames) {
         super(spec, 2, 1);
@@ -99,7 +98,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         this.keys1 = keys1;
         this.hashFunctionFactories0 = hashFunctionFactories0;
         this.hashFunctionFactories1 = hashFunctionFactories1;
-        this.comparatorFactories = comparatorFactories;
+        this.comparatorFactory = comparatorFactory;
         this.predEvaluatorFactory = predEvalFactory;
         outRecDescs[0] = recordDescriptor;
         this.isLeftOuter = isLeftOuter;
@@ -159,13 +158,11 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
-                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
+                throws HyracksDataException {
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(hpaId, 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
-            final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
-            for (int i = 0; i < comparatorFactories.length; ++i) {
-                comparators[i] = comparatorFactories[i].createBinaryComparator();
-            }
+            final ITuplePairComparator comparator = comparatorFactory.createTuplePairComparator(ctx);
             final IMissingWriter[] nullWriters1 =
                     isLeftOuter ? new IMissingWriter[nonMatchWriterFactories.length] : null;
             if (isLeftOuter) {
@@ -192,10 +189,9 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                     state = new HashBuildTaskState(ctx.getJobletContext().getJobId(),
                             new TaskId(getActivityId(), partition));
                     ISerializableTable table = new SerializableHashTable(tableSize, ctx, bufferManager);
-                    state.joiner =
-                            new InMemoryHashJoin(ctx, new FrameTupleAccessor(rd0), hpc0, new FrameTupleAccessor(rd1),
-                                    rd1, hpc1, new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter,
-                                    nullWriters1, table, predEvaluator, bufferManager);
+                    state.joiner = new InMemoryHashJoin(ctx, new FrameTupleAccessor(rd0), hpc0,
+                            new FrameTupleAccessor(rd1), rd1, hpc1, comparator, isLeftOuter, nullWriters1, table,
+                            predEvaluator, bufferManager);
                 }
 
                 @Override

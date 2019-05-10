@@ -20,7 +20,7 @@
 use test;
 
 load dataset closedDs1 using localfs (("path"="asterix_nc1://data/complex/arrays1.adm"),("format"="adm"));
-load dataset openDs1 using localfs (("path"="asterix_nc1://data/complex/arrays1.adm"),("format"="adm"));
+load dataset openDs1 using localfs (("path"="asterix_nc1://data/complex/arrays1nulls.adm"),("format"="adm"));
 
 load dataset closedDs2 using localfs (("path"="asterix_nc1://data/complex/arrays2.adm"),("format"="adm"));
-load dataset openDs2 using localfs (("path"="asterix_nc1://data/complex/arrays2.adm"),("format"="adm"));
+load dataset openDs2 using localfs (("path"="asterix_nc1://data/complex/arrays2nulls.adm"),("format"="adm"));

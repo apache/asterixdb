@@ -44,6 +44,7 @@ import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.accessors.RawBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -219,7 +220,9 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
         if (!isEquality) {
             return Result.INCOMPARABLE;
         }
-        return Result.NULL;
+        return ILogicalBinaryComparator
+                .asResult(RawBinaryComparatorFactory.compare(left.getByteArray(), left.getStartOffset(),
+                        left.getLength(), right.getByteArray(), right.getStartOffset(), right.getLength()));
     }
 
     private Result compareRecords(IAType leftType, IPointable left, IAType rightType, IPointable right)
