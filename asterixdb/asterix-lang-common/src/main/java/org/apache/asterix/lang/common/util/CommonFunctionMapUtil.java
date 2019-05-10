@@ -22,7 +22,6 @@ package org.apache.asterix.lang.common.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 
@@ -113,6 +112,8 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("record-remove-fields", "object-remove-fields");
 
         // Array/Mutliset functions
+        addFunctionMapping("array_agg", "arrayagg");
+        addFunctionMapping("array_agg-distinct", "arrayagg-distinct");
         addFunctionMapping("array_length", "len");
 
         // Aggregate functions
@@ -132,10 +133,9 @@ public class CommonFunctionMapUtil {
      * @param fs,
      *            the signature of an user typed function.
      * @return the corresponding system internal function signature if it exists, otherwise
-     *         the input function synature.
+     *         the input function signature.
      */
-    public static FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs)
-            throws CompilationException {
+    public static FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs) {
         String name = fs.getName();
         String lowerCaseName = name.toLowerCase();
         String mappedName = getFunctionMapping(lowerCaseName);

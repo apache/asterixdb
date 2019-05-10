@@ -21,24 +21,30 @@ package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.runtime.aggregates.std.SqlKurtosisAggregateDescriptor;
+import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
-public class ScalarSqlKurtosisDistinctAggregateDescriptor extends AbstractScalarDistinctAggregateDescriptor {
+public final class ScalarArrayAggDistinctAggregateDescriptor extends AbstractScalarDistinctAggregateDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_KURTOSIS_DISTINCT;
-
     public static final IFunctionDescriptorFactory FACTORY =
-            createDescriptorFactory(ScalarSqlKurtosisDistinctAggregateDescriptor::new);
+            createDescriptorFactory(ScalarArrayAggDistinctAggregateDescriptor::new);
 
-    private ScalarSqlKurtosisDistinctAggregateDescriptor() {
-        super(SqlKurtosisAggregateDescriptor.FACTORY);
+    private ScalarArrayAggDistinctAggregateDescriptor() {
+        super(ListifyAggregateDescriptor.FACTORY);
+    }
+
+    @Override
+    public void setImmutableStates(Object... states) {
+        super.setImmutableStates(states);
+        // listify() needs an ordered list type for its output
+        aggFuncDesc.setImmutableStates(new AOrderedListType(itemType, null));
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return BuiltinFunctions.SCALAR_ARRAYAGG_DISTINCT;
     }
 }

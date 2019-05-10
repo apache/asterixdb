@@ -19,9 +19,14 @@
 
 package org.apache.asterix.runtime.aggregates.scalar;
 
+import java.util.function.Supplier;
+
+import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -30,7 +35,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public abstract class AbstractScalarDistinctAggregateDescriptor extends AbstractScalarAggregateDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private IAType aggFieldType;
+    protected IAType itemType;
 
     public AbstractScalarDistinctAggregateDescriptor(IFunctionDescriptorFactory aggFuncDescFactory) {
         super(aggFuncDescFactory);
@@ -38,13 +43,17 @@ public abstract class AbstractScalarDistinctAggregateDescriptor extends Abstract
 
     @Override
     public void setImmutableStates(Object... states) {
-        aggFieldType = (IAType) states[0];
+        itemType = getItemType((IAType) states[0]);
     }
 
     @Override
     protected IScalarEvaluator createScalarAggregateEvaluator(IAggregateEvaluator aggEval,
             ScanCollectionDescriptor.ScanCollectionUnnestingFunctionFactory scanCollectionFactory,
             IHyracksTaskContext ctx) throws HyracksDataException {
-        return new GenericScalarDistinctAggregateFunction(aggEval, scanCollectionFactory, ctx, sourceLoc, aggFieldType);
+        return new GenericScalarDistinctAggregateFunction(aggEval, scanCollectionFactory, ctx, sourceLoc, itemType);
+    }
+
+    public static IFunctionDescriptorFactory createDescriptorFactory(Supplier<IFunctionDescriptor> descriptorSupplier) {
+        return DescriptorFactoryUtil.createFactory(descriptorSupplier, FunctionTypeInferers.SET_ARGUMENT_TYPE);
     }
 }

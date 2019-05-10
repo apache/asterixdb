@@ -2626,6 +2626,17 @@
   </test-group>
   <test-group name="aggregate-sql-sugar">
     <test-case FilePath="aggregate-sql-sugar">
+      <compilation-unit name="array_agg">
+        <output-dir compare="Text">array_agg</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql-sugar">
+      <compilation-unit name="array_agg_negative">
+        <output-dir compare="Text">array_agg</output-dir>
+        <expected-error>ASX1079: Compilation error: array_agg is a SQL-92 aggregate function. The SQL++ core aggregate function strict_arrayagg could potentially express the intent.</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql-sugar">
       <compilation-unit name="distinct_mixed">
         <output-dir compare="Text">distinct_mixed</output-dir>
       </compilation-unit>

@@ -33,6 +33,8 @@ import org.apache.asterix.runtime.aggregates.collections.LastElementAggregateDes
 import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.collections.LocalFirstElementAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.collections.NullWriterAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarArrayAggAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarArrayAggDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarAvgDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarCountAggregateDescriptor;
@@ -663,6 +665,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(SerializableGlobalSkewnessAggregateDescriptor.FACTORY);
 
         // scalar aggregates
+        fc.add(ScalarArrayAggAggregateDescriptor.FACTORY);
+        fc.add(ScalarArrayAggDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarCountAggregateDescriptor.FACTORY);
         fc.add(ScalarCountDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarAvgAggregateDescriptor.FACTORY);

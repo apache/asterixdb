@@ -25,6 +25,7 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.RecordUtil;
@@ -235,6 +236,18 @@ public class TypeComputeUtils {
             }
         }
         return null;
+    }
+
+    public static IAType extractListItemType(IAType t) {
+        IAType primeType = getActualType(t);
+        ATypeTag primeTypeTag = primeType.getTypeTag();
+        if (primeTypeTag.isListType()) {
+            return ((AbstractCollectionType) primeType).getItemType();
+        } else if (primeTypeTag == ATypeTag.ANY) {
+            return primeType;
+        } else {
+            return null;
+        }
     }
 
     // this is for complex types. it will return null when asking for a default type for a primitive tag

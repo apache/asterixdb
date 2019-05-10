@@ -21,24 +21,34 @@ package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.runtime.aggregates.std.SqlKurtosisAggregateDescriptor;
+import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
-public class ScalarSqlKurtosisDistinctAggregateDescriptor extends AbstractScalarDistinctAggregateDescriptor {
+public final class ScalarArrayAggAggregateDescriptor extends AbstractScalarAggregateDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_KURTOSIS_DISTINCT;
+    public static final IFunctionDescriptorFactory FACTORY = DescriptorFactoryUtil
+            .createFactory(ScalarArrayAggAggregateDescriptor::new, FunctionTypeInferers.SET_ARGUMENT_TYPE);
 
-    public static final IFunctionDescriptorFactory FACTORY =
-            createDescriptorFactory(ScalarSqlKurtosisDistinctAggregateDescriptor::new);
+    private ScalarArrayAggAggregateDescriptor() {
+        super(ListifyAggregateDescriptor.FACTORY);
+    }
 
-    private ScalarSqlKurtosisDistinctAggregateDescriptor() {
-        super(SqlKurtosisAggregateDescriptor.FACTORY);
+    @Override
+    public void setImmutableStates(Object... states) {
+        super.setImmutableStates(states);
+        // listify() needs an ordered list type for its output
+        IAType itemType = getItemType((IAType) states[0]);
+        aggFuncDesc.setImmutableStates(new AOrderedListType(itemType, null));
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return BuiltinFunctions.SCALAR_ARRAYAGG;
     }
 }

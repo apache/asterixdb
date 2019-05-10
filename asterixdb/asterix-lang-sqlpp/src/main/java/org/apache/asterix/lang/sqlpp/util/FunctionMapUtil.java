@@ -21,7 +21,9 @@ package org.apache.asterix.lang.sqlpp.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -46,10 +48,20 @@ public class FunctionMapUtil {
     private final static String CORE_SQL_AGGREGATE_PREFIX = "array_";
     private final static String INTERNAL_SQL_AGGREGATE_PREFIX = "sql-";
 
+    /**
+     * SQL-92 aggregate functions for which {@link #CORE_AGGREGATE_PREFIX} should be used instead of
+     * {@link #CORE_SQL_AGGREGATE_PREFIX} when mapping to a core SQL++ function.
+     * (i.e. SQL-92 aggregate functions that preserve NULLs)
+     */
+    private final static Set<String> CORE_AGGREGATE_PREFIX_FUNCTIONS = new HashSet<>();
+
     // Maps from a variable-arg SQL function names to an internal list-arg function name.
     private static final Map<String, String> LIST_INPUT_FUNCTION_MAP = new HashMap<>();
 
     static {
+        CORE_AGGREGATE_PREFIX_FUNCTIONS.add(BuiltinFunctions.SCALAR_ARRAYAGG.getName());
+        CORE_AGGREGATE_PREFIX_FUNCTIONS.add(BuiltinFunctions.SCALAR_ARRAYAGG_DISTINCT.getName());
+
         LIST_INPUT_FUNCTION_MAP.put(CONCAT, BuiltinFunctions.STRING_CONCAT.getName());
         LIST_INPUT_FUNCTION_MAP.put("greatest", CORE_SQL_AGGREGATE_PREFIX + "max");
         LIST_INPUT_FUNCTION_MAP.put("least", CORE_SQL_AGGREGATE_PREFIX + "min");
@@ -86,7 +98,9 @@ public class FunctionMapUtil {
             return fs;
         }
         String name = applySql92AggregateNameMapping(fs.getName().toLowerCase());
-        return new FunctionSignature(FunctionConstants.ASTERIX_NS, CORE_SQL_AGGREGATE_PREFIX + name, fs.getArity());
+        String prefix =
+                CORE_AGGREGATE_PREFIX_FUNCTIONS.contains(name) ? CORE_AGGREGATE_PREFIX : CORE_SQL_AGGREGATE_PREFIX;
+        return new FunctionSignature(FunctionConstants.ASTERIX_NS, prefix + name, fs.getArity());
     }
 
     /**
@@ -122,25 +136,25 @@ public class FunctionMapUtil {
      */
     public static FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs, boolean checkSql92Aggregate,
             SourceLocation sourceLoc) throws CompilationException {
-        String internalName = getInternalCoreAggregateFunctionName(fs);
+        FunctionSignature ns = CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(fs);
+        String internalName = getInternalCoreAggregateFunctionName(ns);
         if (internalName != null) {
-            FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, internalName, fs.getArity());
+            FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, internalName, ns.getArity());
             IFunctionInfo finfo = FunctionUtil.getFunctionInfo(fi);
             if (finfo != null && BuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null) {
-                return new FunctionSignature(FunctionConstants.ASTERIX_NS, internalName, fs.getArity());
+                return new FunctionSignature(FunctionConstants.ASTERIX_NS, internalName, ns.getArity());
             }
         } else if (checkSql92Aggregate) {
-            if (isSql92AggregateFunction(fs)) {
+            if (isSql92AggregateFunction(ns)) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                         fs.getName() + " is a SQL-92 aggregate function. The SQL++ core aggregate function "
-                                + CORE_SQL_AGGREGATE_PREFIX + fs.getName().toLowerCase()
+                                + sql92ToCoreAggregateFunction(ns).getName()
                                 + " could potentially express the intent.");
-            } else if (getInternalWindowFunction(fs) != null) {
+            } else if (getInternalWindowFunction(ns) != null) {
                 throw new CompilationException(ErrorCode.COMPILATION_UNEXPECTED_WINDOW_EXPRESSION, sourceLoc);
             }
         }
-        String mappedName = CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(fs).getName();
-        return new FunctionSignature(fs.getNamespace(), mappedName, fs.getArity());
+        return new FunctionSignature(ns.getNamespace(), ns.getName(), ns.getArity());
     }
 
     /**

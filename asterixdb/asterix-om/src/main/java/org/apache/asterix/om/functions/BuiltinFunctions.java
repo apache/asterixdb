@@ -115,6 +115,7 @@ import org.apache.asterix.om.typecomputer.impl.PropagateTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordAddFieldsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordRemoveFieldsTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ScalarArrayAggTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ScalarVersionOfAggregateResultType;
 import org.apache.asterix.om.typecomputer.impl.SleepTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.StringBooleanTypeComputer;
@@ -187,7 +188,6 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-item", 2);
     public static final FunctionIdentifier ANY_COLLECTION_MEMBER =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "any-collection-member", 1);
-    public static final FunctionIdentifier LISTIFY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "listify", 1);
     public static final FunctionIdentifier LEN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "len", 1);
     public static final FunctionIdentifier CONCAT_NON_NULL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "concat-non-null", FunctionIdentifier.VARARGS);
@@ -472,6 +472,7 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "make-field-name-handle", 1);
 
     // aggregate functions
+    public static final FunctionIdentifier LISTIFY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "listify", 1);
     public static final FunctionIdentifier AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-avg", 1);
     public static final FunctionIdentifier COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-count", 1);
     public static final FunctionIdentifier SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sum", 1);
@@ -554,6 +555,8 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier NULL_WRITER =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-null-writer", 1);
 
+    public static final FunctionIdentifier SCALAR_ARRAYAGG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "arrayagg", 1);
     public static final FunctionIdentifier SCALAR_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "avg", 1);
     public static final FunctionIdentifier SCALAR_COUNT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "count", 1);
@@ -676,6 +679,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "intermediate-kurtosis-serial", 1);
 
     // distinct aggregate functions
+    public static final FunctionIdentifier LISTIFY_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "listify-distinct", 1);
+    public static final FunctionIdentifier SCALAR_ARRAYAGG_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "arrayagg-distinct", 1);
     public static final FunctionIdentifier COUNT_DISTINCT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-count-distinct", 1);
     public static final FunctionIdentifier SCALAR_COUNT_DISTINCT =
@@ -1628,7 +1635,6 @@ public class BuiltinFunctions {
         addFunction(INT64_CONSTRUCTOR, AInt64TypeComputer.INSTANCE, true);
         addFunction(LEN, AInt64TypeComputer.INSTANCE, true);
         addFunction(LINE_CONSTRUCTOR, ALineTypeComputer.INSTANCE, true);
-        addPrivateFunction(LISTIFY, OrderedListConstructorTypeComputer.INSTANCE, true);
         addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, null, true);
         addPrivateFunction(MAKE_FIELD_NAME_HANDLE, null, true);
 
@@ -1749,6 +1755,8 @@ public class BuiltinFunctions {
         addFunction(NEGINF_IF, DoubleIfTypeComputer.INSTANCE, true);
 
         // Aggregate Functions
+        addPrivateFunction(LISTIFY, OrderedListConstructorTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_ARRAYAGG, ScalarArrayAggTypeComputer.INSTANCE, true);
         addFunction(MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addFunction(MIN, MinMaxAggTypeComputer.INSTANCE, true);
@@ -1961,6 +1969,8 @@ public class BuiltinFunctions {
         addPrivateFunction(SERIAL_INTERMEDIATE_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
 
         // Distinct aggregate functions
+        addFunction(LISTIFY_DISTINCT, OrderedListConstructorTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_ARRAYAGG_DISTINCT, ScalarArrayAggTypeComputer.INSTANCE, true);
 
         addFunction(COUNT_DISTINCT, AInt64TypeComputer.INSTANCE, true);
         addFunction(SCALAR_COUNT_DISTINCT, AInt64TypeComputer.INSTANCE, true);
@@ -2631,13 +2641,19 @@ public class BuiltinFunctions {
         addIntermediateAgg(SERIAL_GLOBAL_SUM, SERIAL_INTERMEDIATE_SUM);
         addGlobalAgg(SERIAL_SUM, SERIAL_GLOBAL_SUM);
 
-        // SUM Distinct
+        // SUM DISTINCT
         addDistinctAgg(SUM_DISTINCT, SUM);
         addScalarAgg(SUM_DISTINCT, SCALAR_SUM_DISTINCT);
 
-        // LISTIFY
+        // LISTIFY/ARRAY_AGG
 
         addAgg(LISTIFY);
+        addScalarAgg(LISTIFY, SCALAR_ARRAYAGG);
+
+        // LISTIFY/ARRAY_AGG DISTINCT
+
+        addDistinctAgg(LISTIFY_DISTINCT, LISTIFY);
+        addScalarAgg(LISTIFY_DISTINCT, SCALAR_ARRAYAGG_DISTINCT);
 
         // SQL Aggregate Functions
 

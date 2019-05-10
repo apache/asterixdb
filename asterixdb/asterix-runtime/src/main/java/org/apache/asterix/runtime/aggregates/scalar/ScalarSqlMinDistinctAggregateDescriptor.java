@@ -22,8 +22,6 @@ package org.apache.asterix.runtime.aggregates.scalar;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.std.SqlMinAggregateDescriptor;
-import org.apache.asterix.runtime.functions.FunctionTypeInferers;
-import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ScalarSqlMinDistinctAggregateDescriptor extends AbstractScalarDistinctAggregateDescriptor {
@@ -32,8 +30,8 @@ public class ScalarSqlMinDistinctAggregateDescriptor extends AbstractScalarDisti
 
     public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_MIN_DISTINCT;
 
-    public static final IFunctionDescriptorFactory FACTORY = DescriptorFactoryUtil
-            .createFactory(ScalarSqlMinDistinctAggregateDescriptor::new, FunctionTypeInferers.SET_ARGUMENT_TYPE);
+    public static final IFunctionDescriptorFactory FACTORY =
+            createDescriptorFactory(ScalarSqlMinDistinctAggregateDescriptor::new);
 
     private ScalarSqlMinDistinctAggregateDescriptor() {
         super(SqlMinAggregateDescriptor.FACTORY);

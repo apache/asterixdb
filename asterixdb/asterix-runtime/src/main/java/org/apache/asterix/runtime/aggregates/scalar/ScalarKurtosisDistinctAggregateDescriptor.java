@@ -22,8 +22,6 @@ package org.apache.asterix.runtime.aggregates.scalar;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.std.KurtosisAggregateDescriptor;
-import org.apache.asterix.runtime.functions.FunctionTypeInferers;
-import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ScalarKurtosisDistinctAggregateDescriptor extends AbstractScalarDistinctAggregateDescriptor {
@@ -32,8 +30,8 @@ public class ScalarKurtosisDistinctAggregateDescriptor extends AbstractScalarDis
 
     public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_KURTOSIS_DISTINCT;
 
-    public static final IFunctionDescriptorFactory FACTORY = DescriptorFactoryUtil
-            .createFactory(ScalarKurtosisDistinctAggregateDescriptor::new, FunctionTypeInferers.SET_ARGUMENT_TYPE);
+    public static final IFunctionDescriptorFactory FACTORY =
+            createDescriptorFactory(ScalarKurtosisDistinctAggregateDescriptor::new);
 
     private ScalarKurtosisDistinctAggregateDescriptor() {
         super(KurtosisAggregateDescriptor.FACTORY);
