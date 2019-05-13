@@ -21,6 +21,7 @@ package org.apache.asterix.common.cluster;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -107,6 +108,14 @@ public interface IClusterStateManager {
      * @return true if the desired state was reached before timeout occurred
      */
     boolean waitForState(ClusterState waitForState, long timeout, TimeUnit unit)
+            throws HyracksDataException, InterruptedException;
+
+    /**
+     * Blocks until the cluster state matches supplied predicate, or timeout is exhausted.
+     *
+     * @return the cluster state matching the predicate if it was satisfied before timeout occurred, otherwise null
+     */
+    ClusterState waitForState(Predicate<ClusterState> condition, long timeout, TimeUnit unit)
             throws HyracksDataException, InterruptedException;
 
     /**
@@ -250,4 +259,10 @@ public interface IClusterStateManager {
      * @return The metadata cluster partitions
      */
     ClusterPartition getMetadataPartition();
+
+    /**
+     * Indicate whether one or more datasets must be rebalanced before the cluster becomes ACTIVE
+     * @param rebalanceRequired
+     */
+    void setRebalanceRequired(boolean rebalanceRequired) throws HyracksDataException;
 }

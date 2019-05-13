@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
@@ -75,6 +76,7 @@ public class ClusterStateManager implements IClusterStateManager {
     private INcLifecycleCoordinator lifecycleCoordinator;
     private ICcApplicationContext appCtx;
     private ClusterPartition metadataPartition;
+    private boolean rebalanceRequired;
 
     @Override
     public void setCcAppCtx(ICcApplicationContext appCtx) {
@@ -186,45 +188,55 @@ public class ClusterStateManager implements IClusterStateManager {
             return;
         }
         // the metadata bootstrap & global recovery must be complete before the cluster can be active
-        if (metadataNodeActive) {
-            if (state != ClusterState.ACTIVE && state != ClusterState.RECOVERING) {
-                setState(ClusterState.PENDING);
-            }
-            appCtx.getMetadataBootstrap().init();
-
-            if (appCtx.getGlobalRecoveryManager().isRecoveryCompleted()) {
-                setState(ClusterState.ACTIVE);
-            } else {
-                // start global recovery
-                setState(ClusterState.RECOVERING);
-                appCtx.getGlobalRecoveryManager().startGlobalRecovery(appCtx);
-            }
-        } else {
+        if (!metadataNodeActive) {
+            setState(ClusterState.PENDING);
+            return;
+        }
+        if (state != ClusterState.ACTIVE && state != ClusterState.RECOVERING) {
             setState(ClusterState.PENDING);
         }
+        appCtx.getMetadataBootstrap().init();
+
+        if (!appCtx.getGlobalRecoveryManager().isRecoveryCompleted()) {
+            // start global recovery
+            setState(ClusterState.RECOVERING);
+            appCtx.getGlobalRecoveryManager().startGlobalRecovery(appCtx);
+            return;
+        }
+        if (rebalanceRequired) {
+            setState(ClusterState.REBALANCE_REQUIRED);
+            return;
+        }
+        // finally- life is good, set the state to ACTIVE
+        setState(ClusterState.ACTIVE);
     }
 
     @Override
-    public synchronized void waitForState(ClusterState waitForState) throws HyracksDataException, InterruptedException {
+    public synchronized void waitForState(ClusterState waitForState) throws InterruptedException {
         while (state != waitForState) {
             wait();
         }
     }
 
     @Override
-    public synchronized boolean waitForState(ClusterState waitForState, long timeout, TimeUnit unit)
-            throws HyracksDataException, InterruptedException {
+    public boolean waitForState(ClusterState waitForState, long timeout, TimeUnit unit) throws InterruptedException {
+        return waitForState(waitForState::equals, timeout, unit) != null;
+    }
+
+    @Override
+    public synchronized ClusterState waitForState(Predicate<ClusterState> predicate, long timeout, TimeUnit unit)
+            throws InterruptedException {
         final long startMillis = System.currentTimeMillis();
         final long endMillis = startMillis + unit.toMillis(timeout);
-        while (state != waitForState) {
+        while (!predicate.test(state)) {
             long millisToSleep = endMillis - System.currentTimeMillis();
             if (millisToSleep > 0) {
                 wait(millisToSleep);
             } else {
-                return false;
+                return null;
             }
         }
-        return true;
+        return state;
     }
 
     @Override
@@ -456,6 +468,12 @@ public class ClusterStateManager implements IClusterStateManager {
     @Override
     public synchronized ClusterPartition getMetadataPartition() {
         return metadataPartition;
+    }
+
+    @Override
+    public synchronized void setRebalanceRequired(boolean rebalanceRequired) throws HyracksDataException {
+        this.rebalanceRequired = rebalanceRequired;
+        refreshState();
     }
 
     private void updateClusterCounters(String nodeId, NcLocalCounters localCounters) {

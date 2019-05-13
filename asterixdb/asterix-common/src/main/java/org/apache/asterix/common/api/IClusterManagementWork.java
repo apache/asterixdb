@@ -30,8 +30,8 @@ public interface IClusterManagementWork {
         PENDING, // the metadata node has not yet joined & initialized
         RECOVERING, // global recovery has not yet completed
         ACTIVE, // cluster is ACTIVE and ready for requests
-        REBALANCING, // replication is processing failbacks
-        SHUTTING_DOWN // a shutdown request has been received, and is underway
+        SHUTTING_DOWN, // a shutdown request has been received, and is underway
+        REBALANCE_REQUIRED // one or more datasets require rebalance before the cluster is usable
     }
 
     WorkType getClusterManagementWorkType();
