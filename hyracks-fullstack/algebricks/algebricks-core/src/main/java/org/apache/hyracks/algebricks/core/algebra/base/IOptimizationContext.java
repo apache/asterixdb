@@ -25,7 +25,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSiz
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableEvalSizeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
-import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AbstractLogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
@@ -81,7 +81,7 @@ public interface IOptimizationContext extends ITypingContext, IVariableContext {
 
     public void updatePrimaryKeys(Map<LogicalVariable, LogicalVariable> mappedVars);
 
-    public LogicalOperatorPrettyPrintVisitor getPrettyPrintVisitor();
+    public AbstractLogicalOperatorPrettyPrintVisitor getPrettyPrintVisitor();
 
     public INodeDomain getComputationNodeDomain();
 }

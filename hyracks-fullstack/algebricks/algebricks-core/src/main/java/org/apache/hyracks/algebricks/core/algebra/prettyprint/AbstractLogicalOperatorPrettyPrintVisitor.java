@@ -46,7 +46,7 @@ public abstract class AbstractLogicalOperatorPrettyPrintVisitor implements ILogi
 
     public AbstractLogicalOperatorPrettyPrintVisitor(AlgebricksAppendable buffer,
             ILogicalExpressionVisitor<String, Integer> exprVisitor) {
-        reset(buffer);
+        this.buffer = buffer;
         this.exprVisitor = exprVisitor;
     }
 

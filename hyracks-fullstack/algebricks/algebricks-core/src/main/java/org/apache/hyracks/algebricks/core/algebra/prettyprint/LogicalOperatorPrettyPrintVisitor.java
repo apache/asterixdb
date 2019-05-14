@@ -485,7 +485,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitWindowOperator(WindowOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("window ").append(str(op.getVariables())).append(" <- ");
+        addIndent(indent).append("window-aggregate ").append(str(op.getVariables())).append(" <- ");
         pprintExprList(op.getExpressions(), indent);
         if (!op.getPartitionExpressions().isEmpty()) {
             buffer.append(" partition ");

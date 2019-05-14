@@ -1,0 +1,48 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=$x ]
+]
+FROM [  FunctionCall null.range@2[
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [10]
+  ]
+  AS Variable [ Name=$x ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FunctionCall null.to-bigint@1[
+        FunctionCall null.to-double@1[
+          Variable [ Name=$x ]
+        ]
+      ]
+      >
+      LiteralExpr [LONG] [1]
+    ]
+    and
+    OperatorExpr [
+      WINDOW null.sum@1[
+        Variable [ Name=$x ]
+      ]
+      OVER (
+      )
+      =
+      LiteralExpr [LONG] [55]
+    ]
+    and
+    OperatorExpr [
+      Variable [ Name=$x ]
+      <
+      LiteralExpr [LONG] [4]
+    ]
+    and
+    OperatorExpr [
+      WINDOW null.count@1[
+        Variable [ Name=$x ]
+      ]
+      OVER (
+      )
+      =
+      LiteralExpr [LONG] [10]
+    ]
+  ]

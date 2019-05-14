@@ -29,8 +29,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AbstractLogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
-import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.util.LogRedactionUtil;
@@ -85,7 +85,7 @@ public class HeuristicOptimizer {
 
     private void logPlanAt(String name, Level lvl) throws AlgebricksException {
         if (AlgebricksConfig.ALGEBRICKS_LOGGER.isEnabled(lvl)) {
-            final LogicalOperatorPrettyPrintVisitor pvisitor = context.getPrettyPrintVisitor();
+            final AbstractLogicalOperatorPrettyPrintVisitor pvisitor = context.getPrettyPrintVisitor();
             pvisitor.reset(new AlgebricksAppendable());
             PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
             AlgebricksConfig.ALGEBRICKS_LOGGER.log(lvl,
