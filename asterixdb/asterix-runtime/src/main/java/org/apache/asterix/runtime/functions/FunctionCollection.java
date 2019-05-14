@@ -19,12 +19,10 @@
 
 package org.apache.asterix.runtime.functions;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
-import org.apache.asterix.common.utils.CodeGenHelper;
 import org.apache.asterix.om.functions.IFunctionCollection;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionRegistrant;
@@ -533,18 +531,11 @@ import org.apache.asterix.runtime.unnestingfunctions.std.SubsetCollectionDescrip
 public final class FunctionCollection implements IFunctionCollection {
     private static final long serialVersionUID = -8308873930697425307L;
 
-    private static final String FACTORY = "FACTORY";
-
     private final ArrayList<IFunctionDescriptorFactory> descriptorFactories = new ArrayList<>();
 
     @Override
     public void add(IFunctionDescriptorFactory descriptorFactory) {
         descriptorFactories.add(descriptorFactory);
-    }
-
-    @Override
-    public void addGenerated(IFunctionDescriptorFactory descriptorFactory) {
-        add(getGeneratedFunctionDescriptorFactory(descriptorFactory.createFunctionDescriptor().getClass()));
     }
 
     public static FunctionCollection createDefaultFunctionCollection() {
@@ -1127,25 +1118,5 @@ public final class FunctionCollection implements IFunctionCollection {
 
     public List<IFunctionDescriptorFactory> getFunctionDescriptorFactories() {
         return descriptorFactories;
-    }
-
-    /**
-     * Gets the generated function descriptor factory from an <code>IFunctionDescriptor</code>
-     * implementation class.
-     *
-     * @param cl,
-     *            the class of an <code>IFunctionDescriptor</code> implementation.
-     * @return the IFunctionDescriptorFactory instance defined in the class.
-     */
-    private static IFunctionDescriptorFactory getGeneratedFunctionDescriptorFactory(Class<?> cl) {
-        try {
-            String className =
-                    CodeGenHelper.getGeneratedClassName(cl.getName(), CodeGenHelper.DEFAULT_SUFFIX_FOR_GENERATED_CLASS);
-            Class<?> generatedCl = cl.getClassLoader().loadClass(className);
-            Field factory = generatedCl.getDeclaredField(FACTORY);
-            return (IFunctionDescriptorFactory) factory.get(null);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
     }
 }

@@ -41,23 +41,6 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.asterix</groupId>
-        <artifactId>asterix-evaluator-generator-maven-plugin</artifactId>
-        <version>${project.version}</version>
-        <configuration>
-          <evaluatorPackagePrefix>org.apache.asterix.runtime.evaluators</evaluatorPackagePrefix>
-        </configuration>
-        <executions>
-          <execution>
-            <id>generate-evaluator</id>
-            <phase>process-classes</phase>
-            <goals>
-              <goal>generate-evaluator</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <executions>

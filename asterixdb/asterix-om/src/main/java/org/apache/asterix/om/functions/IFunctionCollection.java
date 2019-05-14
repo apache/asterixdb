@@ -20,8 +20,7 @@ package org.apache.asterix.om.functions;
 
 import java.io.Serializable;
 
+@FunctionalInterface
 public interface IFunctionCollection extends Serializable {
     void add(IFunctionDescriptorFactory descriptorFactory);
-
-    void addGenerated(IFunctionDescriptorFactory descriptorFactory);
 }
