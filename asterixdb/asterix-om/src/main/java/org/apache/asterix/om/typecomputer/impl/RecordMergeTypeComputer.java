@@ -42,10 +42,15 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class RecordMergeTypeComputer implements IResultTypeComputer {
-    public static final RecordMergeTypeComputer INSTANCE = new RecordMergeTypeComputer();
 
-    private RecordMergeTypeComputer() {
+    public static final RecordMergeTypeComputer INSTANCE = new RecordMergeTypeComputer(false);
+    public static final RecordMergeTypeComputer INSTANCE_IGNORE_DUPLICATES = new RecordMergeTypeComputer(true);
+
+    private RecordMergeTypeComputer(boolean isIgnoreDuplicates) {
+        this.isIgnoreDuplicates = isIgnoreDuplicates;
     }
+
+    private final boolean isIgnoreDuplicates;
 
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
@@ -85,22 +90,38 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
 
         List<String> additionalFieldNames = new ArrayList<>();
         List<IAType> additionalFieldTypes = new ArrayList<>();
-        String fieldNames[] = recType1.getFieldNames();
-        IAType fieldTypes[] = recType1.getFieldTypes();
+        String[] fieldNames = recType1.getFieldNames();
+        IAType[] fieldTypes = recType1.getFieldTypes();
         for (int i = 0; i < fieldNames.length; ++i) {
+
+            // For each field on the right record, we check if a field with matching name exists on the left record
             int pos = Collections.binarySearch(resultFieldNames, fieldNames[i]);
             if (pos >= 0) {
+
+                // If we're here, it means we found 2 fields with a matching field name
                 IAType resultFieldType = resultFieldTypes.get(pos);
+
+                // This is for fields with matching names, but different type tags.
                 if (resultFieldType.getTypeTag() != fieldTypes[i].getTypeTag()) {
-                    throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, f.getSourceLocation(),
-                            fieldNames[i]);
+
+                    // If the ignore duplicates flag is set, we ignore the duplicate fields on the right record
+                    if (isIgnoreDuplicates) {
+                        continue;
+                    }
+                    // If the ignore duplicates flag is not set, we throw a duplicate field exception
+                    else {
+                        throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME,
+                                f.getSourceLocation(), fieldNames[i]);
+                    }
                 }
-                // Assuming fieldTypes[i].getTypeTag() = resultFieldType.getTypeTag()
+
+                // This is for fields with matching names, matching types, type ARecord, do nested merge
                 if (fieldTypes[i].getTypeTag() == ATypeTag.OBJECT) {
                     resultFieldTypes.set(pos,
                             mergedNestedType(fieldNames[i], fieldTypes[i], resultFieldType, f.getSourceLocation()));
                 }
             } else {
+                // If no field was found with a matching name, we simply add the field to be merged
                 additionalFieldNames.add(fieldNames[i]);
                 additionalFieldTypes.add(fieldTypes[i]);
             }

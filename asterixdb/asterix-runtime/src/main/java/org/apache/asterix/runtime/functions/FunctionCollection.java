@@ -452,6 +452,7 @@ import org.apache.asterix.runtime.evaluators.functions.records.RecordConcatDescr
 import org.apache.asterix.runtime.evaluators.functions.records.RecordConcatStrictDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordLengthDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordMergeDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.RecordMergeIgnoreDuplicatesDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordNamesDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordPairsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordPutDescriptor;
@@ -1002,6 +1003,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(GetRecordFieldValueDescriptor.FACTORY);
         fc.add(DeepEqualityDescriptor.FACTORY);
         fc.add(RecordMergeDescriptor.FACTORY);
+        fc.add(RecordMergeIgnoreDuplicatesDescriptor.FACTORY);
         fc.add(RecordAddFieldsDescriptor.FACTORY);
         fc.add(RecordRemoveFieldsDescriptor.FACTORY);
         fc.add(RecordLengthDescriptor.FACTORY);

@@ -233,7 +233,7 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         recordMergeFnArgs.add(new MutableObject<>(rec0));
         recordMergeFnArgs.add(new MutableObject<>(rec1));
         AbstractFunctionCallExpression recordMergeFn = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.RECORD_MERGE), recordMergeFnArgs);
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.RECORD_MERGE_IGNORE_DUPLICATES), recordMergeFnArgs);
         recordMergeFn.setSourceLocation(sourceLoc);
         return recordMergeFn;
     }

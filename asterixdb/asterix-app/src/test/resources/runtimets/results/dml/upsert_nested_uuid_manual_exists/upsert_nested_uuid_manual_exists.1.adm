@@ -1,0 +1,3 @@
+{ "nested": { "id": uuid("673a5fa3-60e5-c55e-2ebb-09344f3e1188") }, "comment": "manual uuid - updated" }
+{ "nested": { "id": uuid("673a5fa3-2ee5-c55e-2cbd-1da05cfddae6") }, "comment": "manual uuid" }
+{ "nested": { "id": uuid("5585eec5-133a-72b6-296b-44a5e303050c") }, "comment": "manual uuid - updated", "extra": "extra" }

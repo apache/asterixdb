@@ -34,22 +34,31 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * record merge evaluator is used to combine two records with no matching fieldnames
- * If both records have the same fieldname for a non-record field anywhere in the schema, the merge will fail
- * This function is performed on a recursive level, meaning that nested records can be combined
- * for instance if both records have a nested field called "metadata"
- * where metadata from A is {"comments":"this rocks"} and metadata from B is {"index":7, "priority":5}
- * Records A and B can be combined yielding a nested record called "metadata"
- * That will have all three fields
+ * The record merge ignore duplicates differs from the normal record merging in the following scenarios:
+ * - When 2 fields have matching names, but different values, left record field will be taken.
+ * - When 2 fields have matching names, but different types, left record field will be taken.
+ *
+ * Examples:
+ * - Matching field name, type and value
+ * - normal merge: {id: 1}, {id: 1} -> {id: 1}
+ * - ignore merge: {id: 1}, {id: 1} -> {id: 1}
+ *
+ * - Matching field name, type, different value
+ * - normal merge: {id: 1}, {id: 2} -> duplicate field exception (mismatched value)
+ * - ignore merge: {id: 1}, {id: 2} -> {id: 1} (mismatched values are ignored, left record field is taken)
+ *
+ * - Matching field name, different type
+ * - normal merge: {id: 1}, {id: "1"} -> duplicate field exception (mismatched type)
+ * - ignore merge: {id: 1}, {id: "1"} -> {id: 1} (mismatched types are ignored, left record field is taken)
  */
 
 @MissingNullInOutFunction
-public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class RecordMergeIgnoreDuplicatesDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new RecordMergeDescriptor();
+            return new RecordMergeIgnoreDuplicatesDescriptor();
         }
 
         @Override
@@ -75,13 +84,13 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new RecordMergeEvaluator(ctx, args, argTypes, sourceLoc, getIdentifier(), false);
+                return new RecordMergeEvaluator(ctx, args, argTypes, sourceLoc, getIdentifier(), true);
             }
         };
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.RECORD_MERGE;
+        return BuiltinFunctions.RECORD_MERGE_IGNORE_DUPLICATES;
     }
 }

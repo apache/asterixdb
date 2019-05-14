@@ -254,6 +254,8 @@ public class BuiltinFunctions {
     // objects
     public static final FunctionIdentifier RECORD_MERGE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-merge", 2);
+    public static final FunctionIdentifier RECORD_MERGE_IGNORE_DUPLICATES =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-merge-ignore-duplicates", 2);
     public static final FunctionIdentifier RECORD_CONCAT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-concat", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier RECORD_CONCAT_STRICT =
@@ -2191,6 +2193,7 @@ public class BuiltinFunctions {
 
         // objects
         addFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);
+        addPrivateFunction(RECORD_MERGE_IGNORE_DUPLICATES, RecordMergeTypeComputer.INSTANCE_IGNORE_DUPLICATES, true);
         addFunction(RECORD_CONCAT, OpenARecordTypeComputer.INSTANCE, true);
         addPrivateFunction(RECORD_CONCAT_STRICT, OpenARecordTypeComputer.INSTANCE, true);
         addFunction(ADD_FIELDS, RecordAddFieldsTypeComputer.INSTANCE, true);
