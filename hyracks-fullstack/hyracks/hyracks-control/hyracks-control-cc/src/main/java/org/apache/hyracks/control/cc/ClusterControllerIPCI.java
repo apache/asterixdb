@@ -19,6 +19,7 @@
 package org.apache.hyracks.control.cc;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.control.cc.work.ApplicationMessageWork;
@@ -73,9 +74,7 @@ class ClusterControllerIPCI implements IIPCI {
                 ccs.getWorkQueue().schedule(new UnregisterNodeWork(ccs.getNodeManager(), unf.getNodeId()));
                 break;
             case NODE_HEARTBEAT:
-                CCNCFunctions.NodeHeartbeatFunction nhf = (CCNCFunctions.NodeHeartbeatFunction) fn;
-                ccs.getExecutor().execute(
-                        new NodeHeartbeatWork(ccs, nhf.getNodeId(), nhf.getHeartbeatData(), nhf.getNcAddress()));
+                processNodeHeartbeat(ccs, fn);
                 break;
             case NOTIFY_JOBLET_CLEANUP:
                 CCNCFunctions.NotifyJobletCleanupFunction njcf = (CCNCFunctions.NotifyJobletCleanupFunction) fn;
@@ -168,6 +167,14 @@ class ClusterControllerIPCI implements IIPCI {
                 break;
             default:
                 LOGGER.warn("Unknown function: " + fn.getFunctionId());
+        }
+    }
+
+    private static void processNodeHeartbeat(ClusterControllerService ccs, CCNCFunctions.Function fn) {
+        final ExecutorService executor = ccs.getExecutor();
+        if (executor != null) {
+            CCNCFunctions.NodeHeartbeatFunction nhf = (CCNCFunctions.NodeHeartbeatFunction) fn;
+            executor.execute(new NodeHeartbeatWork(ccs, nhf.getNodeId(), nhf.getHeartbeatData(), nhf.getNcAddress()));
         }
     }
 }
