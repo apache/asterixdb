@@ -47,15 +47,15 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class ARecordSerializerDeserializer implements ISerializerDeserializer<ARecord> {
+
     private static final long serialVersionUID = 1L;
-
+    // TODO(ali): move PointableHelper to a lower package where this can see and reuse code from PointableHelper
+    private static final byte[] NULL_BYTES = new byte[] { ATypeTag.SERIALIZED_NULL_TYPE_TAG };
+    private static final byte[] MISSING_BYTES = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
     public static final ARecordSerializerDeserializer SCHEMALESS_INSTANCE = new ARecordSerializerDeserializer();
-
     private static final IAObject[] NO_FIELDS = new IAObject[0];
-
     private final ARecordType recordType;
     private final int numberOfSchemaFields;
-
     @SuppressWarnings("rawtypes")
     private final ISerializerDeserializer[] serializers;
     @SuppressWarnings("rawtypes")
@@ -156,6 +156,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         }
         IAObject[] schemaFields = new IAObject[numberOfSchemaFields];
         for (int fieldId = 0; fieldId < numberOfSchemaFields; fieldId++) {
+            // TODO: null/missing formula is duplicated across the codebase. should be in a central place.
             if (hasOptionalFields && ((nullBitMap[fieldId / 4] & (1 << (7 - 2 * (fieldId % 4)))) == 0)) {
                 schemaFields[fieldId] = ANull.NULL;
             } else if (hasOptionalFields && ((nullBitMap[fieldId / 4] & (1 << (7 - 2 * (fieldId % 4) - 1))) == 0)) {
@@ -180,10 +181,19 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         recordBuilder.reset(recordType);
         recordBuilder.init();
         if (recordType != null) {
-            int fieldIndex = 0;
-            for (; fieldIndex < recordType.getFieldNames().length; ++fieldIndex) {
+            IAType[] fieldTypes = recordType.getFieldTypes();
+            for (int fieldIndex = 0; fieldIndex < recordType.getFieldNames().length; ++fieldIndex) {
                 fieldValue.reset();
-                serializers[fieldIndex].serialize(instance.getValueByPos(fieldIndex), fieldValue.getDataOutput());
+                IAObject value = instance.getValueByPos(fieldIndex);
+                ATypeTag valueTag = value.getType().getTypeTag();
+                boolean fieldIsOptional = NonTaggedFormatUtil.isOptional(fieldTypes[fieldIndex]);
+                if (fieldIsOptional && valueTag == ATypeTag.NULL) {
+                    fieldValue.set(NULL_BYTES, 0, NULL_BYTES.length);
+                } else if (fieldIsOptional && valueTag == ATypeTag.MISSING) {
+                    fieldValue.set(MISSING_BYTES, 0, MISSING_BYTES.length);
+                } else {
+                    serializers[fieldIndex].serialize(value, fieldValue.getDataOutput());
+                }
                 recordBuilder.addField(fieldIndex, fieldValue);
             }
             recordBuilder.write(out, writeTypeTag);
@@ -193,7 +203,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static void serializeSchemalessRecord(ARecord record, DataOutput dataOutput, boolean writeTypeTag)
+    private static void serializeSchemalessRecord(ARecord record, DataOutput dataOutput, boolean writeTypeTag)
             throws HyracksDataException {
         ISerializerDeserializer<AString> stringSerde =
                 SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
@@ -262,7 +272,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         return new ARecordType(null, fieldNames, fieldTypes, true);
     }
 
-    public static final int getRecordLength(byte[] serRecord, int offset) {
+    public static int getRecordLength(byte[] serRecord, int offset) {
         return AInt32SerializerDeserializer.getInt(serRecord, offset);
     }
 
