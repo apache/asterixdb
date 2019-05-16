@@ -1,0 +1,10 @@
+This example sets up a very basic Hyracks cluster to be used for counting words in a file with the textclient example.
+To run, simply execute:
+
+        bin/hyrackscc -config-file conf/text.conf
+
+to start the cluster controller. Once this process is running, execute:
+
+        bin/hyracksnc -config-file conf/text.conf
+
+and you will have a Hyracks cluster running locally for the textclient to use.

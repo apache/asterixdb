@@ -1,0 +1,10 @@
+This package holds a very simple Hyracks client program that counts the words in a supplied text file. A prerequisite
+is a running Hyracks cluster from the textserver example.
+
+In the bin directory of the unzipped textclient package, run
+
+        textclient -host localhost \
+         -infile-splits textserver-nc1:data/file1.txt \
+         -outfile-splits textserver-nc1:data/file1.txt.out \
+         -algo -hash
+

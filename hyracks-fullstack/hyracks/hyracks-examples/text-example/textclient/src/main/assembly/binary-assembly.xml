@@ -49,5 +49,12 @@
         <include>NOTICE*</include>
       </includes>
     </fileSet>
+    <fileSet>
+      <directory>src/main/conf</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>README</include>
+      </includes>
+    </fileSet>
   </fileSets>
 </assembly>

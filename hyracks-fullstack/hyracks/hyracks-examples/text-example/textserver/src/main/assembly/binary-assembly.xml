@@ -53,5 +53,17 @@
         <include>NOTICE*</include>
       </includes>
     </fileSet>
+    <fileSet>
+      <directory>src/main/conf</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>text.conf</include>
+        <include>README</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>data/</directory>
+      <outputDirectory>data/</outputDirectory>
+    </fileSet>
   </fileSets>
 </assembly>
