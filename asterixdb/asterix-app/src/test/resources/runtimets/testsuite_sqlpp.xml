@@ -5625,6 +5625,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="field_access-ASTERIXDB-2289">
+        <output-dir compare="Text">field_access-ASTERIXDB-2289</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="comp-ASTERIXDB-2415">
         <output-dir compare="Text">query-ASTERIXDB-1671</output-dir>
       </compilation-unit>

@@ -84,6 +84,9 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
         }
+        if (!OperatorPropertiesUtil.isMovable(op)) {
+            return false;
+        }
         AssignOperator access = (AssignOperator) op;
         ILogicalExpression expr = getFirstExpr(access);
         String finalAnnot;
@@ -196,17 +199,17 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             pushDownFieldAccessRec(opRef2, context, finalAnnot);
             return true;
         }
-        List<LogicalVariable> usedInAccess = new LinkedList<>();
+        HashSet<LogicalVariable> usedInAccess = new HashSet<>();
         VariableUtilities.getUsedVariables(assignOp, usedInAccess);
 
-        List<LogicalVariable> produced2 = new LinkedList<>();
+        HashSet<LogicalVariable> produced2 = new HashSet<>();
         if (inputOp.getOperatorTag() == LogicalOperatorTag.GROUP) {
             VariableUtilities.getLiveVariables(inputOp, produced2);
         } else {
             VariableUtilities.getProducedVariables(inputOp, produced2);
         }
         boolean pushItDown = false;
-        List<LogicalVariable> inter = new ArrayList<>(usedInAccess);
+        HashSet<LogicalVariable> inter = new HashSet<>(usedInAccess);
         if (inter.isEmpty()) { // ground value
             return false;
         }
@@ -234,8 +237,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                     LogicalVariable oldVar = assignOp.getVariables().get(0);
                     VariableReferenceExpression v2Ref = new VariableReferenceExpression(v2);
                     v2Ref.setSourceLocation(g.getSourceLocation());
-                    g.getDecorList().add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(oldVar,
-                            new MutableObject<ILogicalExpression>(v2Ref)));
+                    g.getDecorList().add(new Pair<>(oldVar, new MutableObject<>(v2Ref)));
                     changed = true;
                     assignOp.getVariables().set(0, v2);
                     VariableUtilities.substituteVariables(assignOp, m.first, m.second, context);
@@ -281,8 +283,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                     }
                 }
             }
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, assignOp.getSourceLocation(),
-                    "Field access " + assignOp.getExpressions().get(0).getValue() + " doesn't correspond to any input");
+            return false;
         } else {
             // check if the accessed field is one of the partitioning key fields. If yes, we can equate the 2 variables
             if (inputOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {

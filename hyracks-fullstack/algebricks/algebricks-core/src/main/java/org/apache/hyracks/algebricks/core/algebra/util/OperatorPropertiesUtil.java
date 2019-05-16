@@ -311,7 +311,7 @@ public class OperatorPropertiesUtil {
                 // Can't move nonPures!
                 AssignOperator assign = (AssignOperator) op;
                 for (Mutable<ILogicalExpression> expr : assign.getExpressions()) {
-                    if (containsNonpureCall(expr.getValue())) {
+                    if (!expr.getValue().isFunctional()) {
                         return false;
                     }
                 }
@@ -321,22 +321,6 @@ public class OperatorPropertiesUtil {
                 return false;
         }
         return true;
-    }
-
-    private static boolean containsNonpureCall(ILogicalExpression expr) {
-        if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            AbstractFunctionCallExpression fExpr = (AbstractFunctionCallExpression) expr;
-            if (!fExpr.getFunctionInfo().isFunctional()) {
-                return true;
-            }
-            for (Mutable<ILogicalExpression> subExpr : fExpr.getArguments()) {
-                if (containsNonpureCall(subExpr.getValue())) {
-                    return true;
-                }
-            }
-
-        }
-        return false;
     }
 
     /**
