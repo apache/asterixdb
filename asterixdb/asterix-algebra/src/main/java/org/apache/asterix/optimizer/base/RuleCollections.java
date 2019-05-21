@@ -30,6 +30,7 @@ import org.apache.asterix.optimizer.rules.AsterixConsolidateWindowOperatorsRule;
 import org.apache.asterix.optimizer.rules.AsterixExtractFunctionsFromJoinConditionRule;
 import org.apache.asterix.optimizer.rules.AsterixInlineVariablesRule;
 import org.apache.asterix.optimizer.rules.AsterixIntroduceGroupByCombinerRule;
+import org.apache.asterix.optimizer.rules.AsterixPushAssignBelowUnionAllRule;
 import org.apache.asterix.optimizer.rules.ByNameToByIndexFieldAccessRule;
 import org.apache.asterix.optimizer.rules.CancelUnnestWithNestedListifyRule;
 import org.apache.asterix.optimizer.rules.CheckFilterExpressionTypeRule;
@@ -117,7 +118,6 @@ import org.apache.hyracks.algebricks.rewriter.rules.IntroduceAggregateCombinerRu
 import org.apache.hyracks.algebricks.rewriter.rules.IntroduceProjectsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
-import org.apache.hyracks.algebricks.rewriter.rules.PushAssignBelowUnionAllRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PushGroupByIntoSortRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PushMapOperatorDownThroughProductRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PushNestedOrderByUnderPreSortedGroupByRule;
@@ -330,7 +330,7 @@ public final class RuleCollections {
     public static final List<IAlgebraicRewriteRule> buildPlanCleanupRuleCollection() {
         List<IAlgebraicRewriteRule> planCleanupRules = new LinkedList<>();
         planCleanupRules.add(new SwitchInnerJoinBranchRule());
-        planCleanupRules.add(new PushAssignBelowUnionAllRule());
+        planCleanupRules.add(new AsterixPushAssignBelowUnionAllRule());
         planCleanupRules.add(new ExtractCommonExpressionsRule());
         planCleanupRules.add(new RemoveRedundantVariablesRule());
         planCleanupRules.add(new PushProjectDownRule());

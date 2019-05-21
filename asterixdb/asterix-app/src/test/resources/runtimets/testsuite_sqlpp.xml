@@ -5640,6 +5640,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="field_access_union-ASTERIXDB-2288">
+        <output-dir compare="Text">field_access_union-ASTERIXDB-2288</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="constant_folding">
         <output-dir compare="Text">constant_folding</output-dir>
       </compilation-unit>

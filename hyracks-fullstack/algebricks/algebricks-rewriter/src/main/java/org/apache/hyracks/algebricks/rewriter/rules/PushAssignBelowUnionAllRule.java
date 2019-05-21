@@ -79,7 +79,7 @@ public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
         }
 
         boolean modified = false;
-        for (int i = 0; i < op.getInputs().size(); i++) {
+        inputs_loop: for (int i = 0; i < op.getInputs().size(); i++) {
             AbstractLogicalOperator childOp = (AbstractLogicalOperator) op.getInputs().get(i).getValue();
             if (childOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
                 continue;
@@ -87,7 +87,7 @@ public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
             AssignOperator assignOp = (AssignOperator) childOp;
             for (Mutable<ILogicalExpression> expr : assignOp.getExpressions()) {
                 if (!expr.getValue().isFunctional()) {
-                    return false;
+                    continue inputs_loop;
                 }
             }
 
@@ -96,26 +96,23 @@ public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
                 continue;
             }
             UnionAllOperator unionOp = (UnionAllOperator) childOfChildOp;
-
-            Set<LogicalVariable> assignUsedVars = new HashSet<LogicalVariable>();
+            Set<LogicalVariable> assignUsedVars = new HashSet<>();
             VariableUtilities.getUsedVariables(assignOp, assignUsedVars);
-
             List<LogicalVariable> assignVars = assignOp.getVariables();
-
             AssignOperator[] newAssignOps = new AssignOperator[2];
             for (int j = 0; j < unionOp.getInputs().size(); j++) {
                 newAssignOps[j] = createAssignBelowUnionAllBranch(unionOp, j, assignOp, assignUsedVars, context);
+                if (newAssignOps[j] == null) {
+                    continue inputs_loop;
+                }
             }
             // Add original assign variables to the union variable mappings.
             for (int j = 0; j < assignVars.size(); j++) {
                 LogicalVariable first = newAssignOps[0].getVariables().get(j);
                 LogicalVariable second = newAssignOps[1].getVariables().get(j);
-                Triple<LogicalVariable, LogicalVariable, LogicalVariable> varMapping =
-                        new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(first, second, assignVars.get(j));
-                unionOp.getVariableMappings().add(varMapping);
+                unionOp.getVariableMappings().add(new Triple<>(first, second, assignVars.get(j)));
             }
             context.computeAndSetTypeEnvironmentForOperator(unionOp);
-
             // Remove original assign operator.
             op.getInputs().set(i, assignOp.getInputs().get(0));
             context.computeAndSetTypeEnvironmentForOperator(op);
@@ -128,9 +125,11 @@ public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
     private AssignOperator createAssignBelowUnionAllBranch(UnionAllOperator unionOp, int inputIndex,
             AssignOperator originalAssignOp, Set<LogicalVariable> assignUsedVars, IOptimizationContext context)
             throws AlgebricksException {
-        AssignOperator newAssignOp = cloneAssignOperator(originalAssignOp, context);
-        newAssignOp.getInputs()
-                .add(new MutableObject<ILogicalOperator>(unionOp.getInputs().get(inputIndex).getValue()));
+        AssignOperator newAssignOp = cloneAssignOperator(originalAssignOp, context, unionOp, inputIndex);
+        if (newAssignOp == null) {
+            return null;
+        }
+        newAssignOp.getInputs().add(new MutableObject<>(unionOp.getInputs().get(inputIndex).getValue()));
         unionOp.getInputs().get(inputIndex).setValue(newAssignOp);
         int numVarMappings = unionOp.getVariableMappings().size();
         for (int i = 0; i < numVarMappings; i++) {
@@ -151,20 +150,31 @@ public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
 
     /**
      * Clones the given assign operator changing the returned variables to be new ones.
-     * Also, leaves the inputs of the clone clear.
+     * Also, leaves the inputs of the clone clear. It returns null if the assign operator cannot be pushed.
      */
-    private AssignOperator cloneAssignOperator(AssignOperator assignOp, IOptimizationContext context) {
-        List<LogicalVariable> vars = new ArrayList<LogicalVariable>();
-        List<Mutable<ILogicalExpression>> exprs = new ArrayList<Mutable<ILogicalExpression>>();
+    private AssignOperator cloneAssignOperator(AssignOperator assignOp, IOptimizationContext context,
+            UnionAllOperator unionOp, int inputIndex) throws AlgebricksException {
+        List<LogicalVariable> vars = new ArrayList<>();
+        List<Mutable<ILogicalExpression>> exprs = new ArrayList<>();
         int numVars = assignOp.getVariables().size();
         for (int i = 0; i < numVars; i++) {
             vars.add(context.newVar());
-            exprs.add(new MutableObject<ILogicalExpression>(
-                    assignOp.getExpressions().get(i).getValue().cloneExpression()));
+            ILogicalExpression clonedExpression = assignOp.getExpressions().get(i).getValue().cloneExpression();
+            if (!modifyExpression(clonedExpression, unionOp, context, inputIndex)) {
+                return null; // bail if the expression couldn't be modified according to the branch it is moved to
+            }
+            exprs.add(new MutableObject<>(clonedExpression));
         }
         AssignOperator assignCloneOp = new AssignOperator(vars, exprs);
         assignCloneOp.setSourceLocation(assignOp.getSourceLocation());
         assignCloneOp.setExecutionMode(assignOp.getExecutionMode());
         return assignCloneOp;
+    }
+
+    // modifies the cloned expression according to the branch it'll be moved to. returns true if successful.
+    protected boolean modifyExpression(ILogicalExpression expression, UnionAllOperator unionOp,
+            IOptimizationContext ctx, int inputIndex) throws AlgebricksException {
+        // default implementation does not check specific expressions
+        return true;
     }
 }
