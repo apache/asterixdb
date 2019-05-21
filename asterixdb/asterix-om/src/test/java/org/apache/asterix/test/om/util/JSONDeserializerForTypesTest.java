@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.asterix.om.util;
+package org.apache.asterix.test.om.util;
 
 import java.util.ArrayList;
 import java.util.List;
