@@ -75,32 +75,31 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * </pre>
  */
 
-public abstract class AbstractArraySliceEval extends AbstractScalarEval {
+class ArraySliceEvaluator extends AbstractScalarEval {
+
     // List type
     private final IAType inputListType;
 
     // Storage
-    private final ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
+    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
 
-    // Evaluators
+    // Evaluators and pointables
     private final IScalarEvaluator listEval;
     private final IScalarEvaluator startPositionEval;
-    private final IScalarEvaluator endPositionEval;
-
-    // Pointables
+    private IScalarEvaluator endPositionEval;
     private final IPointable listPointable = new VoidPointable();
     private final IPointable startPositionPointable = new VoidPointable();
-    private final IPointable endPositionPointable = new VoidPointable();
+    private IPointable endPositionPointable;
 
     // Accessors
     private final ListAccessor listAccessor = new ListAccessor();
 
     // List Builders
-    private IAsterixListBuilder orderedListBuilder = new OrderedListBuilder();
-    private IAsterixListBuilder unorderedListBuilder = new UnorderedListBuilder();
+    private final IAsterixListBuilder orderedListBuilder = new OrderedListBuilder();
+    private final IAsterixListBuilder unorderedListBuilder = new UnorderedListBuilder();
 
     // Constructor
-    public AbstractArraySliceEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLoc,
+    ArraySliceEvaluator(IScalarEvaluatorFactory[] argEvalFactories, IHyracksTaskContext ctx, SourceLocation sourceLoc,
             FunctionIdentifier functionIdentifier, IAType inputListType) throws HyracksDataException {
         // Source location
         super(sourceLoc, functionIdentifier);
@@ -109,20 +108,18 @@ public abstract class AbstractArraySliceEval extends AbstractScalarEval {
         this.inputListType = inputListType;
 
         // Evaluators
-        listEval = args[0].createScalarEvaluator(ctx);
-        startPositionEval = args[1].createScalarEvaluator(ctx);
+        listEval = argEvalFactories[0].createScalarEvaluator(ctx);
+        startPositionEval = argEvalFactories[1].createScalarEvaluator(ctx);
 
         // Check for optional parameter
-        endPositionEval = getEndPositionEval(args, ctx);
+        if (argEvalFactories.length > 2) {
+            endPositionEval = argEvalFactories[2].createScalarEvaluator(ctx);
+            endPositionPointable = new VoidPointable();
+        }
     }
-
-    protected abstract IScalarEvaluator getEndPositionEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
-            throws HyracksDataException;
 
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-        // Reset storage
-        storage.reset();
 
         // Evaluate
         listEval.evaluate(tuple, listPointable);
@@ -231,18 +228,18 @@ public abstract class AbstractArraySliceEval extends AbstractScalarEval {
         try {
             // Create the subset list based on the positions
             for (int i = startPositionValue; i < endPositionValue; i++) {
-                storage.reset();
-                listAccessor.writeItem(i, storage.getDataOutput());
-                listBuilder.addItem(storage);
+                resultStorage.reset();
+                listAccessor.writeItem(i, resultStorage.getDataOutput());
+                listBuilder.addItem(resultStorage);
             }
         } catch (IOException ex) {
             throw HyracksDataException.create(ex);
         }
 
         // Final result
-        storage.reset();
-        listBuilder.write(storage.getDataOutput(), true);
-        result.set(storage);
+        resultStorage.reset();
+        listBuilder.write(resultStorage.getDataOutput(), true);
+        result.set(resultStorage);
     }
 
     // Get the value

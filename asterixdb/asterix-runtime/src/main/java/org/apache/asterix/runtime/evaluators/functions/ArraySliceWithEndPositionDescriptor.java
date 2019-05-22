@@ -32,7 +32,6 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * array_slice(array, start, end) This function takes 3 arguments, {@code array}, {@code start} and {@code end} and
@@ -75,24 +74,8 @@ public class ArraySliceWithEndPositionDescriptor extends AbstractScalarFunctionD
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArraySliceEval(args, ctx, sourceLoc);
+                return new ArraySliceEvaluator(args, ctx, sourceLoc, getIdentifier(), inputListType);
             }
         };
-    }
-
-    public class ArraySliceEval extends AbstractArraySliceEval {
-
-        // Constructor
-        public ArraySliceEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLoc)
-                throws HyracksDataException {
-            super(args, ctx, sourceLoc, ArraySliceWithEndPositionDescriptor.this.getIdentifier(), inputListType);
-        }
-
-        // Return end position evaluator
-        @Override
-        protected IScalarEvaluator getEndPositionEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
-                throws HyracksDataException {
-            return args[2].createScalarEvaluator(ctx);
-        }
     }
 }
