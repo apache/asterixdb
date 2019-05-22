@@ -21,6 +21,7 @@ package org.apache.hyracks.api.application;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.control.IGatekeeper;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
+import org.apache.hyracks.api.result.IJobResultCallback;
 
 public interface ICCApplication extends IApplication {
 
@@ -30,4 +31,10 @@ public interface ICCApplication extends IApplication {
 
     IGatekeeper getGatekeeper();
 
+    /**
+     * Gets the job result callback
+     *
+     * @return the job result callback
+     */
+    IJobResultCallback getJobResultCallback();
 }

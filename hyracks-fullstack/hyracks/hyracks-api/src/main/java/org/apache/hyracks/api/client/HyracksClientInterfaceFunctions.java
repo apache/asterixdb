@@ -46,6 +46,7 @@ public class HyracksClientInterfaceFunctions {
         GET_RESULT_DIRECTORY_ADDRESS,
         GET_RESULT_STATUS,
         GET_RESULT_LOCATIONS,
+        GET_RESULT_METADATA,
         WAIT_FOR_COMPLETION,
         GET_NODE_CONTROLLERS_INFO,
         CLI_DEPLOY_BINARY,
@@ -315,6 +316,32 @@ public class HyracksClientInterfaceFunctions {
 
         public ResultDirectoryRecord[] getKnownRecords() {
             return knownRecords;
+        }
+    }
+
+    public static class GetResultMetadataFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+
+        private final ResultSetId rsId;
+
+        public GetResultMetadataFunction(JobId jobId, ResultSetId rsId) {
+            this.jobId = jobId;
+            this.rsId = rsId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.GET_RESULT_METADATA;
+        }
+
+        public JobId getJobId() {
+            return jobId;
+        }
+
+        public ResultSetId getResultSetId() {
+            return rsId;
         }
     }
 

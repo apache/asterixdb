@@ -24,6 +24,7 @@ import java.net.InetSocketAddress;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.api.result.IResultDirectory;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.ResultDirectoryRecord;
 import org.apache.hyracks.api.result.ResultJobRecord.Status;
 import org.apache.hyracks.api.result.ResultSetId;
@@ -57,5 +58,10 @@ public class ResultDirectory implements IResultDirectory {
     public ResultDirectoryRecord[] getResultLocations(JobId jobId, ResultSetId rsId,
             ResultDirectoryRecord[] knownRecords) throws Exception {
         return remoteResultDirectory.getResultLocations(jobId, rsId, knownRecords);
+    }
+
+    @Override
+    public IResultMetadata getResultMetadata(JobId jobId, ResultSetId rsId) throws Exception {
+        return remoteResultDirectory.getResultMetadata(jobId, rsId);
     }
 }

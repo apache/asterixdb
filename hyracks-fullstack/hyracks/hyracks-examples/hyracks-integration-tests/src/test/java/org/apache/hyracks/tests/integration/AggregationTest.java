@@ -98,7 +98,7 @@ public class AggregationTest extends AbstractIntegrationTest {
             throws IOException {
 
         ResultSetId rsId = new ResultSetId(1);
-        AbstractSingleActivityOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
+        AbstractSingleActivityOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, null, false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider(), 1);
         spec.addResultSetId(rsId);
 

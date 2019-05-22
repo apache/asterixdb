@@ -25,16 +25,18 @@ import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.IJobResultCallback;
 import org.apache.hyracks.api.result.IResultManager;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.ResultDirectoryRecord;
 import org.apache.hyracks.api.result.ResultJobRecord.Status;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.control.common.work.IResultCallback;
 
 public interface IResultDirectoryService extends IJobLifecycleListener, IResultManager {
-    public void init(ExecutorService executor);
+    public void init(ExecutorService executor, IJobResultCallback callback);
 
-    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
+    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, IResultMetadata metadata,
             boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress)
             throws HyracksDataException;
 
@@ -44,6 +46,8 @@ public interface IResultDirectoryService extends IJobLifecycleListener, IResultM
     public void reportJobFailure(JobId jobId, List<Exception> exceptions);
 
     public Status getResultStatus(JobId jobId, ResultSetId rsId) throws HyracksDataException;
+
+    public IResultMetadata getResultMetadata(JobId jobId, ResultSetId rsId) throws HyracksDataException;
 
     public void getResultPartitionLocations(JobId jobId, ResultSetId rsId, ResultDirectoryRecord[] knownLocations,
             IResultCallback<ResultDirectoryRecord[]> callback) throws HyracksDataException;

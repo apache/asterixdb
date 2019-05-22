@@ -23,7 +23,6 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
@@ -195,16 +194,10 @@ import org.apache.hyracks.api.io.UnmanagedFileSplit;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.cc.job.IJobManager;
-import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.controllers.CCConfig;
-import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
-import org.apache.hyracks.control.common.job.profiling.om.JobletProfile;
-import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -2512,7 +2505,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             case IMMEDIATE:
                 createAndRunJob(hcc, jobFlags, null, compiler, locker, resultDelivery, id -> {
                     final ResultReader resultReader = new ResultReader(resultSet, id, resultSetId);
-                    updateJobStats(id, stats);
+                    updateJobStats(id, stats, metadataProvider.getResultSetId());
                     // stop buffering and allow for streaming result delivery
                     sessionOutput.release();
                     ResultUtil.printResults(appCtx, resultReader, sessionOutput, stats,
@@ -2521,7 +2514,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 break;
             case DEFERRED:
                 createAndRunJob(hcc, jobFlags, null, compiler, locker, resultDelivery, id -> {
-                    updateJobStats(id, stats);
+                    updateJobStats(id, stats, metadataProvider.getResultSetId());
                     ResultUtil.printResultHandle(sessionOutput, new ResultHandle(id, resultSetId));
                     if (outMetadata != null) {
                         outMetadata.getResultSets()
@@ -2534,23 +2527,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    private void updateJobStats(JobId jobId, Stats stats) {
-        final IJobManager jobManager =
-                ((ClusterControllerService) appCtx.getServiceContext().getControllerService()).getJobManager();
-        final JobRun run = jobManager.get(jobId);
-        if (run == null || run.getStatus() != JobStatus.TERMINATED) {
-            return;
-        }
-        final JobProfile jobProfile = run.getJobProfile();
-        final Collection<JobletProfile> jobletProfiles = jobProfile.getJobletProfiles().values();
-        long processedObjects = 0;
-        for (JobletProfile jp : jobletProfiles) {
-            final Collection<TaskProfile> jobletTasksProfile = jp.getTaskProfiles().values();
-            for (TaskProfile tp : jobletTasksProfile) {
-                processedObjects += tp.getStatsCollector().getAggregatedStats().getTupleCounter().get();
-            }
-        }
-        stats.setProcessedObjects(processedObjects);
+    private void updateJobStats(JobId jobId, Stats stats, ResultSetId rsId) throws HyracksDataException {
+        final ClusterControllerService controllerService =
+                (ClusterControllerService) appCtx.getServiceContext().getControllerService();
+        org.apache.asterix.api.common.ResultMetadata resultMetadata =
+                (org.apache.asterix.api.common.ResultMetadata) controllerService.getResultDirectoryService()
+                        .getResultMetadata(jobId, rsId);
+        stats.setProcessedObjects(resultMetadata.getProcessedObjects());
     }
 
     private void asyncCreateAndRunJob(IHyracksClientConnection hcc, IStatementCompiler compiler, IMetadataLocker locker,

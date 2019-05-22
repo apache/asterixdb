@@ -277,7 +277,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
             throws AlgebricksException {
         ArrayList<Mutable<ILogicalExpression>> newExpressions = new ArrayList<>();
         deepCopyExpressionRefs(newExpressions, op.getExpressions());
-        return new DistributeResultOperator(newExpressions, op.getDataSink());
+        return new DistributeResultOperator(newExpressions, op.getDataSink(), op.getResultMetadata());
     }
 
     @Override

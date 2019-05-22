@@ -34,6 +34,7 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.IResultDirectory;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.IResultSetReader;
 import org.apache.hyracks.api.result.ResultDirectoryRecord;
 import org.apache.hyracks.api.result.ResultJobRecord.Status;
@@ -120,6 +121,20 @@ public class ResultSetReader implements IResultSetReader {
         }
         frame.getBuffer().flip();
         return readSize;
+    }
+
+    @Override
+    public IResultMetadata getResultMetadata() {
+        try {
+            return resultDirectory.getResultMetadata(jobId, resultSetId);
+        } catch (HyracksDataException e) {
+            if (e.getErrorCode() != ErrorCode.NO_RESULT_SET) {
+                LOGGER.log(Level.WARN, "Exception retrieving result set for job " + jobId, e);
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.WARN, "Exception retrieving result set for job " + jobId, e);
+        }
+        return null;
     }
 
     private SocketAddress getSocketAddress(ResultDirectoryRecord record) throws HyracksDataException {

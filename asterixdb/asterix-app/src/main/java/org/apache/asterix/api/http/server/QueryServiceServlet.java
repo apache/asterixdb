@@ -322,7 +322,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
     }
 
-    private static void printMetrics(PrintWriter pw, long elapsedTime, long executionTime, long resultCount,
+    public static void printMetrics(PrintWriter pw, long elapsedTime, long executionTime, long resultCount,
             long resultSize, long processedObjects, long errorCount, long warnCount, Charset resultCharset) {
         boolean hasErrors = errorCount != 0;
         boolean hasWarnings = warnCount != 0;

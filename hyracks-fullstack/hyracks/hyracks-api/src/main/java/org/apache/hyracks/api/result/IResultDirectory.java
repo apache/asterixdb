@@ -48,4 +48,13 @@ public interface IResultDirectory {
      */
     ResultDirectoryRecord[] getResultLocations(JobId jobId, ResultSetId rsId, ResultDirectoryRecord[] knownRecords)
             throws Exception;
+
+    /**
+     * Gets the result metadata
+     * @param jobId
+     * @param rsId
+     * @return
+     * @throws Exception
+     */
+    IResultMetadata getResultMetadata(JobId jobId, ResultSetId rsId) throws Exception;
 }

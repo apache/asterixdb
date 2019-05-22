@@ -24,11 +24,11 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 
 public interface IResultPartitionManager extends IResultManager {
-    IFrameWriter createResultPartitionWriter(IHyracksTaskContext ctx, ResultSetId rsId, boolean orderedResult,
+    IFrameWriter createResultPartitionWriter(IHyracksTaskContext ctx, ResultSetId rsId, IResultMetadata metadata,
             boolean asyncMode, int partition, int nPartitions, long maxReads) throws HyracksException;
 
     void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, int partition, int nPartitions,
-            boolean orderedResult, boolean emptyResult) throws HyracksException;
+            IResultMetadata metadata, boolean emptyResult) throws HyracksException;
 
     void reportPartitionWriteCompletion(JobId jobId, ResultSetId resultSetId, int partition) throws HyracksException;
 

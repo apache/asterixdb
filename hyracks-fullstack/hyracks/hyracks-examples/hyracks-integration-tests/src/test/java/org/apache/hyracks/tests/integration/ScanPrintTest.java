@@ -67,7 +67,7 @@ public class ScanPrintTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID, NC1_ID);
 
         ResultSetId rsId = new ResultSetId(1);
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, null, false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider(), 1);
         spec.addResultSetId(rsId);
 
@@ -104,7 +104,7 @@ public class ScanPrintTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC2_ID);
 
         ResultSetId rsId = new ResultSetId(1);
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, null, false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider(), 1);
         spec.addResultSetId(rsId);
 
@@ -143,7 +143,7 @@ public class ScanPrintTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC2_ID);
 
         ResultSetId rsId = new ResultSetId(1);
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, null, false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider(), 1);
         spec.addResultSetId(rsId);
 

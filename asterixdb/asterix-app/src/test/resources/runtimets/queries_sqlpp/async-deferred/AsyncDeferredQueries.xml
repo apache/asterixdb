@@ -56,4 +56,9 @@
             <source-location>false</source-location>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="async-deferred">
+        <compilation-unit name="async-json">
+            <output-dir compare="Clean-JSON">async-json</output-dir>
+        </compilation-unit>
+    </test-case>
 </test-group>

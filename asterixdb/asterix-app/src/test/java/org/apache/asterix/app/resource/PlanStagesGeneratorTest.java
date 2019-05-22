@@ -95,7 +95,7 @@ public class PlanStagesGeneratorTest {
         exchange.setPhysicalOperator(new OneToOneExchangePOperator());
         exchange.getInputs().add(new MutableObject<>(assignOperator));
 
-        DistributeResultOperator resultOperator = new DistributeResultOperator(null, null);
+        DistributeResultOperator resultOperator = new DistributeResultOperator(null, null, null);
         resultOperator.setExecutionMode(UNPARTITIONED);
         resultOperator.setPhysicalOperator(new DistributeResultPOperator());
         resultOperator.getInputs().add(new MutableObject<>(exchange));
@@ -137,7 +137,7 @@ public class PlanStagesGeneratorTest {
         orderOperator.setPhysicalOperator(new StableSortPOperator());
         orderOperator.getInputs().add(new MutableObject<>(groupByOperator));
 
-        DistributeResultOperator resultOperator = new DistributeResultOperator(null, null);
+        DistributeResultOperator resultOperator = new DistributeResultOperator(null, null, null);
         resultOperator.setExecutionMode(PARTITIONED);
         resultOperator.setPhysicalOperator(new DistributeResultPOperator());
         resultOperator.getInputs().add(new MutableObject<>(orderOperator));
@@ -217,7 +217,7 @@ public class PlanStagesGeneratorTest {
         secondJoin.getInputs().add(new MutableObject<>(exchangeOperator1));
         secondJoin.getInputs().add(new MutableObject<>(exchangeOperator2));
 
-        DistributeResultOperator resultOperator = new DistributeResultOperator(null, null);
+        DistributeResultOperator resultOperator = new DistributeResultOperator(null, null, null);
         resultOperator.setExecutionMode(PARTITIONED);
         resultOperator.setPhysicalOperator(new DistributeResultPOperator());
         resultOperator.getInputs().add(new MutableObject<>(secondJoin));
@@ -277,7 +277,7 @@ public class PlanStagesGeneratorTest {
         secondJoin.getInputs().add(new MutableObject<>(order1));
         secondJoin.getInputs().add(new MutableObject<>(order2));
 
-        DistributeResultOperator resultOperator = new DistributeResultOperator(null, null);
+        DistributeResultOperator resultOperator = new DistributeResultOperator(null, null, null);
         resultOperator.setExecutionMode(PARTITIONED);
         resultOperator.setPhysicalOperator(new DistributeResultPOperator());
         resultOperator.getInputs().add(new MutableObject<>(secondJoin));

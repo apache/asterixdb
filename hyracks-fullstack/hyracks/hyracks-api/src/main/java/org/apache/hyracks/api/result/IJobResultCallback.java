@@ -18,19 +18,15 @@
  */
 package org.apache.hyracks.api.result;
 
-import org.apache.hyracks.api.comm.IFrame;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.result.ResultJobRecord.Status;
+import org.apache.hyracks.api.job.JobId;
 
-public interface IResultSetReader {
-    Status getResultStatus();
-
-    int read(IFrame frame) throws HyracksDataException;
+public interface IJobResultCallback {
 
     /**
-     * Gets the result metadata
+     * Notifies this callback that writing the result of job {@code jobId} has been completed successfully.
      *
-     * @return the result metadata
+     * @param jobId
+     * @param resultJobRecord
      */
-    IResultMetadata getResultMetadata();
+    void completed(JobId jobId, ResultJobRecord resultJobRecord);
 }

@@ -53,6 +53,7 @@ import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.app.config.ConfigValidator;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.app.replication.NcLifecycleCoordinator;
+import org.apache.asterix.app.result.JobResultCallback;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
 import org.apache.asterix.common.api.INodeJobTracker;
@@ -91,6 +92,7 @@ import org.apache.hyracks.api.control.IGatekeeper;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
+import org.apache.hyracks.api.result.IJobResultCallback;
 import org.apache.hyracks.control.cc.BaseCCApplication;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
@@ -355,5 +357,10 @@ public class CCApplication extends BaseCCApplication {
     @Override
     public IGatekeeper getGatekeeper() {
         return getConfigManager().getAppConfig().getNCNames()::contains;
+    }
+
+    @Override
+    public IJobResultCallback getJobResultCallback() {
+        return new JobResultCallback(appCtx);
     }
 }

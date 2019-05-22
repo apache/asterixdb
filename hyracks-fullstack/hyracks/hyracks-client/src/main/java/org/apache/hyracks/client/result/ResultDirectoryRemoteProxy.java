@@ -21,6 +21,7 @@ package org.apache.hyracks.client.result;
 import org.apache.hyracks.api.client.HyracksClientInterfaceFunctions;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.IResultDirectory;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.ResultDirectoryRecord;
 import org.apache.hyracks.api.result.ResultJobRecord.Status;
 import org.apache.hyracks.api.result.ResultSetId;
@@ -51,5 +52,12 @@ public class ResultDirectoryRemoteProxy implements IResultDirectory {
         HyracksClientInterfaceFunctions.GetResultLocationsFunction gdrlf =
                 new HyracksClientInterfaceFunctions.GetResultLocationsFunction(jobId, rsId, knownRecords);
         return (ResultDirectoryRecord[]) rpci.call(ipcHandle, gdrlf);
+    }
+
+    @Override
+    public IResultMetadata getResultMetadata(JobId jobId, ResultSetId rsId) throws Exception {
+        HyracksClientInterfaceFunctions.GetResultMetadataFunction grmf =
+                new HyracksClientInterfaceFunctions.GetResultMetadataFunction(jobId, rsId);
+        return (IResultMetadata) rpci.call(ipcHandle, grmf);
     }
 }

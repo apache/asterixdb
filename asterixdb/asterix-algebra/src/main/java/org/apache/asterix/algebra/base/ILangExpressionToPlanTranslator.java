@@ -22,6 +22,7 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.api.result.IResultMetadata;
 
 /**
  * The interface is in charge of translating language expressions into logical query plans.
@@ -37,11 +38,13 @@ public interface ILangExpressionToPlanTranslator {
      *            the output dataset name (only for insert/delete).
      * @param stmt,
      *            the compiled dml statement (only for insert/delete).
+     * @param resultMetadata,
+     *            some result metadata that can be retrieved with the result
      * @return a logical query plan for the query.
      * @throws AlgebricksException
      */
-    public ILogicalPlan translate(Query query, String outputDatasetName, ICompiledDmlStatement stmt)
-            throws AlgebricksException;
+    public ILogicalPlan translate(Query query, String outputDatasetName, ICompiledDmlStatement stmt,
+            IResultMetadata resultMetadata) throws AlgebricksException;
 
     /**
      * Translates a load statement.

@@ -21,6 +21,7 @@ package org.apache.asterix.api.http.server;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.asterix.api.common.ResultMetadata;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
@@ -49,18 +50,16 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
 
     @Override
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
+        long elapsedStart = System.nanoTime();
         HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, request);
-
         final String strHandle = localPath(request);
         final ResultHandle handle = ResultHandle.parse(strHandle);
         if (handle == null) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
         }
-
         IResultSet resultSet = getResultSet();
         ResultReader resultReader = new ResultReader(resultSet, handle.getJobId(), handle.getResultSetId());
-
         try {
             ResultJobRecord.Status status = resultReader.getStatus();
 
@@ -86,15 +85,20 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             if (httpStatus != HttpResponseStatus.OK) {
                 return;
             }
-
-            // QQQ The output format is determined by the initial
-            // query and cannot be modified here, so calling back to
-            // initResponse() is really an error. We need to find a
-            // way to send the same OutputFormat value here as was
-            // originally determined there. Need to save this value on
-            // some object that we can obtain here.
-            SessionOutput sessionOutput = initResponse(request, response);
-            ResultUtil.printResults(appCtx, resultReader, sessionOutput, new Stats(), null);
+            ResultMetadata metadata = (ResultMetadata) resultReader.getMetadata();
+            SessionOutput sessionOutput = initResponse(request, response, metadata.getFormat());
+            if (metadata.getFormat() == SessionConfig.OutputFormat.CLEAN_JSON
+                    || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_JSON) {
+                final Stats stats = new Stats();
+                sessionOutput.out().print("{\n");
+                ResultUtil.printResults(appCtx, resultReader, sessionOutput, stats, null);
+                QueryServiceServlet.printMetrics(sessionOutput.out(), System.nanoTime() - elapsedStart,
+                        metadata.getJobDuration(), stats.getCount(), stats.getSize(), metadata.getProcessedObjects(), 0,
+                        0, HttpUtil.getPreferredCharset(request));
+                sessionOutput.out().print("}\n");
+            } else {
+                ResultUtil.printResults(appCtx, resultReader, sessionOutput, new Stats(), null);
+            }
         } catch (HyracksDataException e) {
             final int errorCode = e.getErrorCode();
             if (ErrorCode.NO_RESULT_SET == errorCode) {
@@ -119,36 +123,14 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
      * SessionConfig with the appropriate output writer and output-format
      * based on the Accept: header and other servlet parameters.
      */
-    static SessionOutput initResponse(IServletRequest request, IServletResponse response) throws IOException {
-        // CLEAN_JSON output is the default; most generally useful for a
-        // programmatic HTTP API
-        SessionConfig.OutputFormat format = SessionConfig.OutputFormat.CLEAN_JSON;
-        // First check the "output" servlet parameter.
-        String output = request.getParameter("output");
-        String accept = request.getHeader("Accept", "");
-        if (output != null) {
-            if ("CSV".equals(output)) {
-                format = SessionConfig.OutputFormat.CSV;
-            } else if ("ADM".equals(output)) {
-                format = SessionConfig.OutputFormat.ADM;
-            }
-        } else {
-            // Second check the Accept: HTTP header.
-            if (accept.contains("application/x-adm")) {
-                format = SessionConfig.OutputFormat.ADM;
-            } else if (accept.contains("text/csv")) {
-                format = SessionConfig.OutputFormat.CSV;
-            }
+    static SessionOutput initResponse(IServletRequest request, IServletResponse response,
+            SessionConfig.OutputFormat format) throws IOException {
+        String accept = request.getHeader("Accept");
+        if (accept == null) {
+            accept = "";
         }
         SessionConfig.PlanFormat planFormat = SessionConfig.PlanFormat.get(request.getParameter("plan-format"),
                 "plan format", SessionConfig.PlanFormat.STRING, LOGGER);
-
-        // If it's JSON, check for the "lossless" flag
-
-        if (format == SessionConfig.OutputFormat.CLEAN_JSON
-                && ("true".equals(request.getParameter("lossless")) || accept.contains("lossless=true"))) {
-            format = SessionConfig.OutputFormat.LOSSLESS_JSON;
-        }
 
         SessionOutput.ResultAppender appendHandle = (app, handle) -> app.append("{ \"").append("handle")
                 .append("\":" + " \"").append(handle).append("\" }");
@@ -168,6 +150,8 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         }
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, wrapperArray);
         // Now that format is set, output the content-type
+        SessionOutput.ResultDecorator resultPrefix = null;
+        SessionOutput.ResultDecorator resultPostfix = null;
         switch (format) {
             case ADM:
                 HttpUtil.setContentType(response, "application/x-adm", request);
@@ -176,6 +160,8 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
                 // No need to reflect "clean-ness" in output type; fall through
             case LOSSLESS_JSON:
                 HttpUtil.setContentType(response, "application/json", request);
+                resultPrefix = ResultUtil.createPreResultDecorator();
+                resultPostfix = ResultUtil.createPostResultDecorator();
                 break;
             case CSV:
                 // Check for header parameter or in Accept:.
@@ -189,7 +175,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             default:
                 throw new IOException("Unknown format " + format);
         }
-        return new SessionOutput(sessionConfig, response.writer(), null, null, appendHandle, null);
+        return new SessionOutput(sessionConfig, response.writer(), resultPrefix, resultPostfix, appendHandle, null);
     }
 
 }

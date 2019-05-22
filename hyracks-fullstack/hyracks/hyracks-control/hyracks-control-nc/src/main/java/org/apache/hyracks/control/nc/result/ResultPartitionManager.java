@@ -28,6 +28,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.control.common.result.AbstractResultManager;
@@ -70,12 +71,12 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
     }
 
     @Override
-    public IFrameWriter createResultPartitionWriter(IHyracksTaskContext ctx, ResultSetId rsId, boolean orderedResult,
+    public IFrameWriter createResultPartitionWriter(IHyracksTaskContext ctx, ResultSetId rsId, IResultMetadata metadata,
             boolean asyncMode, int partition, int nPartitions, long maxReads) {
         ResultPartitionWriter dpw;
         JobId jobId = ctx.getJobletContext().getJobId();
         synchronized (this) {
-            dpw = new ResultPartitionWriter(ctx, this, jobId, rsId, asyncMode, orderedResult, partition, nPartitions,
+            dpw = new ResultPartitionWriter(ctx, this, jobId, rsId, asyncMode, metadata, partition, nPartitions,
                     resultMemoryManager, fileFactory, maxReads);
             ResultSetMap rsIdMap = partitionResultStateMap.computeIfAbsent(jobId, k -> new ResultSetMap());
             ResultState[] resultStates = rsIdMap.createOrGetResultStates(rsId, nPartitions);
@@ -87,10 +88,10 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
 
     @Override
     public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, int partition, int nPartitions,
-            boolean orderedResult, boolean emptyResult) throws HyracksException {
+            IResultMetadata metadata, boolean emptyResult) throws HyracksException {
         try {
             // Be sure to send the *public* network address to the CC
-            ncs.getClusterController(jobId.getCcId()).registerResultPartitionLocation(jobId, rsId, orderedResult,
+            ncs.getClusterController(jobId.getCcId()).registerResultPartitionLocation(jobId, rsId, metadata,
                     emptyResult, partition, nPartitions, ncs.getResultNetworkManager().getPublicNetworkAddress());
         } catch (Exception e) {
             throw HyracksException.create(e);

@@ -26,6 +26,7 @@ import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.control.common.base.IClusterController;
 import org.apache.hyracks.control.common.controllers.NodeRegistration;
@@ -132,10 +133,10 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     }
 
     @Override
-    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
+    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, IResultMetadata metadata,
             boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress) throws Exception {
-        RegisterResultPartitionLocationFunction fn = new RegisterResultPartitionLocationFunction(jobId, rsId,
-                orderedResult, emptyResult, partition, nPartitions, networkAddress);
+        RegisterResultPartitionLocationFunction fn = new RegisterResultPartitionLocationFunction(jobId, rsId, metadata,
+                emptyResult, partition, nPartitions, networkAddress);
         ipcHandle.send(-1, fn, null);
     }
 

@@ -212,8 +212,9 @@ public class APIFramework {
         metadataProvider.setTxnId(txnId);
         ILangExpressionToPlanTranslator t =
                 translatorFactory.createExpressionToPlanTranslator(metadataProvider, varCounter, externalVars);
-
-        ILogicalPlan plan = isLoad ? t.translateLoad(statement) : t.translate(query, outputDatasetName, statement);
+        ResultMetadata resultMetadata = new ResultMetadata(output.config().fmt());
+        ILogicalPlan plan =
+                isLoad ? t.translateLoad(statement) : t.translate(query, outputDatasetName, statement, resultMetadata);
 
         if ((isQuery || isLoad) && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
                 && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {

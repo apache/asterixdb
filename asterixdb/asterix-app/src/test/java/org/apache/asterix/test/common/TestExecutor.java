@@ -145,6 +145,7 @@ public class TestExecutor {
     private static final Pattern MAX_RESULT_READS_PATTERN =
             Pattern.compile("maxresultreads=(\\d+)(\\D|$)", Pattern.MULTILINE);
     private static final Pattern HTTP_REQUEST_TYPE = Pattern.compile("requesttype=(.*)", Pattern.MULTILINE);
+    private static final Pattern EXTRACT_RESULT_TYPE = Pattern.compile("extractresult=(.*)", Pattern.MULTILINE);
     private static final String NC_ENDPOINT_PREFIX = "nc:";
     public static final int TRUNCATE_THRESHOLD = 16384;
     public static final Set<String> NON_CANCELLABLE =
@@ -1224,11 +1225,15 @@ public class TestExecutor {
         final List<Parameter> params = extractParameters(statement);
         final Optional<String> body = extractBody(statement);
         final Predicate<Integer> statusCodePredicate = extractStatusCodePredicate(statement);
+        final boolean extracResult = isExtracResult(statement);
         InputStream resultStream;
         if ("http".equals(extension)) {
             resultStream = executeHttp(reqType, variablesReplaced, fmt, params, statusCodePredicate, body);
         } else if ("uri".equals(extension)) {
             resultStream = executeURI(reqType, URI.create(variablesReplaced), fmt, params, statusCodePredicate, body);
+            if (extracResult) {
+                resultStream = ResultExtractor.extract(resultStream, UTF_8);
+            }
         } else {
             throw new IllegalArgumentException("Unexpected format for method " + reqType + ": " + extension);
         }
@@ -1572,6 +1577,11 @@ public class TestExecutor {
     private static String extractHttpRequestType(String statement) {
         Matcher m = HTTP_REQUEST_TYPE.matcher(statement);
         return m.find() ? m.group(1) : null;
+    }
+
+    private static boolean isExtracResult(String statement) {
+        Matcher m = EXTRACT_RESULT_TYPE.matcher(statement);
+        return m.find() ? Boolean.valueOf(m.group(1)) : false;
     }
 
     private static boolean isJsonEncoded(String httpRequestType) throws Exception {

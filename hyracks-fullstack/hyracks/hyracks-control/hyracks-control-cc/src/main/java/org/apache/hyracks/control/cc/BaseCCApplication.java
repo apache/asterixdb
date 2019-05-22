@@ -27,6 +27,7 @@ import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.api.control.IGatekeeper;
 import org.apache.hyracks.api.job.resource.DefaultJobCapacityController;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
+import org.apache.hyracks.api.result.IJobResultCallback;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
@@ -96,5 +97,12 @@ public class BaseCCApplication implements ICCApplication {
     @Override
     public IGatekeeper getGatekeeper() {
         return node -> true;
+    }
+
+    @Override
+    public IJobResultCallback getJobResultCallback() {
+        return (jobId, resultJobRecord) -> {
+            // no op
+        };
     }
 }

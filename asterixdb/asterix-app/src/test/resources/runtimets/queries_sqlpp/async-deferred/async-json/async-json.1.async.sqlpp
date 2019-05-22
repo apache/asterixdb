@@ -16,21 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.result;
 
-import org.apache.hyracks.api.comm.IFrame;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.result.ResultJobRecord.Status;
+-- handlevariable=status
 
-public interface IResultSetReader {
-    Status getResultStatus();
-
-    int read(IFrame frame) throws HyracksDataException;
-
-    /**
-     * Gets the result metadata
-     *
-     * @return the result metadata
-     */
-    IResultMetadata getResultMetadata();
-}
+select i, i * i as i2 from range(1, 5) i;

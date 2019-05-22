@@ -22,15 +22,15 @@ import java.util.Arrays;
 
 public class ResultSetMetaData {
     private final ResultDirectoryRecord[] records;
-    private final boolean ordered;
+    private final IResultMetadata metadata;
 
-    ResultSetMetaData(int len, boolean ordered) {
+    ResultSetMetaData(int len, IResultMetadata metadata) {
         this.records = new ResultDirectoryRecord[len];
-        this.ordered = ordered;
+        this.metadata = metadata;
     }
 
-    public boolean getOrderedResult() {
-        return ordered;
+    public IResultMetadata getMetadata() {
+        return metadata;
     }
 
     public ResultDirectoryRecord[] getRecords() {
@@ -40,7 +40,7 @@ public class ResultSetMetaData {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("{ordered: ").append(ordered).append(", records: ").append(Arrays.toString(records));
+        sb.append("{metadata: ").append(metadata).append(", records: ").append(Arrays.toString(records));
         return sb.toString();
     }
 }

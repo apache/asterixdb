@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.job.JobRun;
@@ -43,7 +44,7 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
 
     private final ResultSetId rsId;
 
-    private final boolean orderedResult;
+    private final IResultMetadata metadata;
 
     private final boolean emptyResult;
 
@@ -54,11 +55,12 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
     private final NetworkAddress networkAddress;
 
     public RegisterResultPartitionLocationWork(ClusterControllerService ccs, JobId jobId, ResultSetId rsId,
-            boolean orderedResult, boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress) {
+            IResultMetadata metadata, boolean emptyResult, int partition, int nPartitions,
+            NetworkAddress networkAddress) {
         this.ccs = ccs;
         this.jobId = jobId;
         this.rsId = rsId;
-        this.orderedResult = orderedResult;
+        this.metadata = metadata;
         this.emptyResult = emptyResult;
         this.partition = partition;
         this.nPartitions = nPartitions;
@@ -68,7 +70,7 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
     @Override
     public void run() {
         try {
-            ccs.getResultDirectoryService().registerResultPartitionLocation(jobId, rsId, orderedResult, emptyResult,
+            ccs.getResultDirectoryService().registerResultPartitionLocation(jobId, rsId, metadata, emptyResult,
                     partition, nPartitions, networkAddress);
         } catch (HyracksDataException e) {
             LOGGER.log(Level.WARN, "Failed to register partition location", e);
@@ -85,7 +87,7 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
     @Override
     public String toString() {
         return getName() + ": JobId@" + jobId + " ResultSetId@" + rsId + " Partition@" + partition + " NPartitions@"
-                + nPartitions + " ResultPartitionLocation@" + networkAddress + " OrderedResult@" + orderedResult
-                + " EmptyResult@" + emptyResult;
+                + nPartitions + " ResultPartitionLocation@" + networkAddress + " metadata@" + metadata + " EmptyResult@"
+                + emptyResult;
     }
 }

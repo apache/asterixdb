@@ -34,6 +34,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.dataflow.common.comm.io.FrameOutputStream;
@@ -46,18 +47,18 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
     private final ResultSetId rsId;
 
-    private final boolean ordered;
+    private final IResultMetadata metadata;
 
     private final boolean asyncMode;
 
     private final IResultSerializerFactory resultSerializerFactory;
     private final long maxReads;
 
-    public ResultWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, ResultSetId rsId, boolean ordered,
+    public ResultWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, ResultSetId rsId, IResultMetadata metadata,
             boolean asyncMode, IResultSerializerFactory resultSerializerFactory, long maxReads) throws IOException {
         super(spec, 1, 0);
         this.rsId = rsId;
-        this.ordered = ordered;
+        this.metadata = metadata;
         this.asyncMode = asyncMode;
         this.resultSerializerFactory = resultSerializerFactory;
         this.maxReads = maxReads;
@@ -88,7 +89,7 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
             @Override
             public void open() throws HyracksDataException {
                 try {
-                    resultPartitionWriter = resultPartitionManager.createResultPartitionWriter(ctx, rsId, ordered,
+                    resultPartitionWriter = resultPartitionManager.createResultPartitionWriter(ctx, rsId, metadata,
                             asyncMode, partition, nPartitions, maxReads);
                     resultPartitionWriter.open();
                     resultSerializer.init();
@@ -140,7 +141,7 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
                 StringBuilder sb = new StringBuilder();
                 sb.append("{ ");
                 sb.append("\"rsId\": \"").append(rsId).append("\", ");
-                sb.append("\"ordered\": ").append(ordered).append(", ");
+                sb.append("\"metadata\": ").append(metadata).append(", ");
                 sb.append("\"asyncMode\": ").append(asyncMode).append(", ");
                 sb.append("\"maxReads\": ").append(maxReads).append(" }");
                 return sb.toString();

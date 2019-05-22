@@ -18,19 +18,7 @@
  */
 package org.apache.hyracks.api.result;
 
-import org.apache.hyracks.api.comm.IFrame;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.result.ResultJobRecord.Status;
+import java.io.Serializable;
 
-public interface IResultSetReader {
-    Status getResultStatus();
-
-    int read(IFrame frame) throws HyracksDataException;
-
-    /**
-     * Gets the result metadata
-     *
-     * @return the result metadata
-     */
-    IResultMetadata getResultMetadata();
+public interface IResultMetadata extends Serializable {
 }

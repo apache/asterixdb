@@ -22,6 +22,7 @@ import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.api.result.IResultSetReader;
 import org.apache.hyracks.api.result.ResultJobRecord.Status;
@@ -51,5 +52,9 @@ public class ResultReader {
 
     public IFrameTupleAccessor getFrameTupleAccessor() {
         return frameTupleAccessor;
+    }
+
+    public IResultMetadata getMetadata() {
+        return reader.getResultMetadata();
     }
 }

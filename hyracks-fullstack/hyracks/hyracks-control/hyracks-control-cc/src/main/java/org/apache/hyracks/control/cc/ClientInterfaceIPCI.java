@@ -35,6 +35,7 @@ import org.apache.hyracks.control.cc.work.GetJobStatusWork;
 import org.apache.hyracks.control.cc.work.GetNodeControllersInfoWork;
 import org.apache.hyracks.control.cc.work.GetNodeDetailsJSONWork;
 import org.apache.hyracks.control.cc.work.GetResultDirectoryAddressWork;
+import org.apache.hyracks.control.cc.work.GetResultMetadataWork;
 import org.apache.hyracks.control.cc.work.GetResultPartitionLocationsWork;
 import org.apache.hyracks.control.cc.work.GetResultStatusWork;
 import org.apache.hyracks.control.cc.work.GetThreadDumpWork;
@@ -136,6 +137,12 @@ class ClientInterfaceIPCI implements IIPCI {
                         (HyracksClientInterfaceFunctions.GetResultLocationsFunction) fn;
                 ccs.getWorkQueue().schedule(new GetResultPartitionLocationsWork(ccs, gdrlf.getJobId(),
                         gdrlf.getResultSetId(), gdrlf.getKnownRecords(), new IPCResponder<>(handle, mid)));
+                break;
+            case GET_RESULT_METADATA:
+                HyracksClientInterfaceFunctions.GetResultMetadataFunction grmf =
+                        (HyracksClientInterfaceFunctions.GetResultMetadataFunction) fn;
+                ccs.getWorkQueue().schedule(new GetResultMetadataWork(ccs, grmf.getJobId(), grmf.getResultSetId(),
+                        new IPCResponder<>(handle, mid)));
                 break;
             case WAIT_FOR_COMPLETION:
                 HyracksClientInterfaceFunctions.WaitForCompletionFunction wfcf =

@@ -56,6 +56,7 @@ import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.partitions.PartitionId;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.control.common.controllers.NodeParameters;
 import org.apache.hyracks.control.common.controllers.NodeRegistration;
@@ -590,7 +591,7 @@ public class CCNCFunctions {
 
         private final ResultSetId rsId;
 
-        private final boolean orderedResult;
+        private final IResultMetadata metadata;
 
         private final boolean emptyResult;
 
@@ -600,11 +601,11 @@ public class CCNCFunctions {
 
         private NetworkAddress networkAddress;
 
-        public RegisterResultPartitionLocationFunction(JobId jobId, ResultSetId rsId, boolean orderedResult,
+        public RegisterResultPartitionLocationFunction(JobId jobId, ResultSetId rsId, IResultMetadata metadata,
                 boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress) {
             this.jobId = jobId;
             this.rsId = rsId;
-            this.orderedResult = orderedResult;
+            this.metadata = metadata;
             this.emptyResult = emptyResult;
             this.partition = partition;
             this.nPartitions = nPartitions;
@@ -624,8 +625,8 @@ public class CCNCFunctions {
             return rsId;
         }
 
-        public boolean getOrderedResult() {
-            return orderedResult;
+        public IResultMetadata getMetadata() {
+            return metadata;
         }
 
         public boolean getEmptyResult() {

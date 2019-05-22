@@ -230,7 +230,7 @@ public class ClusterControllerService implements IControllerService {
         jobLog.open();
         startApplication();
 
-        resultDirectoryService.init(executor);
+        resultDirectoryService.init(executor, application.getJobResultCallback());
         workQueue.start();
         connectNCs();
         LOGGER.log(Level.INFO, "Started ClusterControllerService");

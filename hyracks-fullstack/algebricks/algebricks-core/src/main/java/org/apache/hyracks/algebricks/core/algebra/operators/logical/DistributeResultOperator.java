@@ -32,14 +32,18 @@ import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagation
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
+import org.apache.hyracks.api.result.IResultMetadata;
 
 public class DistributeResultOperator extends AbstractLogicalOperator {
     private List<Mutable<ILogicalExpression>> expressions;
     private IDataSink dataSink;
+    private IResultMetadata resultMetadata;
 
-    public DistributeResultOperator(List<Mutable<ILogicalExpression>> expressions, IDataSink dataSink) {
+    public DistributeResultOperator(List<Mutable<ILogicalExpression>> expressions, IDataSink dataSink,
+            IResultMetadata resultMetadata) {
         this.expressions = expressions;
         this.dataSink = dataSink;
+        this.resultMetadata = resultMetadata;
     }
 
     public List<Mutable<ILogicalExpression>> getExpressions() {
@@ -93,4 +97,7 @@ public class DistributeResultOperator extends AbstractLogicalOperator {
         return createPropagatingAllInputsTypeEnvironment(ctx);
     }
 
+    public IResultMetadata getResultMetadata() {
+        return resultMetadata;
+    }
 }

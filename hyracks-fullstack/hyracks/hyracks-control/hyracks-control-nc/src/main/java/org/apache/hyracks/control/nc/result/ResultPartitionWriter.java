@@ -27,6 +27,7 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.partitions.ResultSetPartitionId;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.logging.log4j.LogManager;
@@ -41,7 +42,7 @@ public class ResultPartitionWriter implements IFrameWriter {
 
     private final ResultSetId resultSetId;
 
-    private final boolean orderedResult;
+    private final IResultMetadata metadata;
 
     private final int partition;
 
@@ -58,12 +59,12 @@ public class ResultPartitionWriter implements IFrameWriter {
     private boolean failed = false;
 
     public ResultPartitionWriter(IHyracksTaskContext ctx, IResultPartitionManager manager, JobId jobId,
-            ResultSetId rsId, boolean asyncMode, boolean orderedResult, int partition, int nPartitions,
+            ResultSetId rsId, boolean asyncMode, IResultMetadata metadata, int partition, int nPartitions,
             ResultMemoryManager resultMemoryManager, IWorkspaceFileFactory fileFactory, long maxReads) {
         this.manager = manager;
         this.jobId = jobId;
         this.resultSetId = rsId;
-        this.orderedResult = orderedResult;
+        this.metadata = metadata;
         this.partition = partition;
         this.nPartitions = nPartitions;
         this.resultMemoryManager = resultMemoryManager;
@@ -127,8 +128,7 @@ public class ResultPartitionWriter implements IFrameWriter {
     void registerResultPartitionLocation(boolean empty) throws HyracksDataException {
         try {
             if (!partitionRegistered) {
-                manager.registerResultPartitionLocation(jobId, resultSetId, partition, nPartitions, orderedResult,
-                        empty);
+                manager.registerResultPartitionLocation(jobId, resultSetId, partition, nPartitions, metadata, empty);
                 partitionRegistered = true;
             }
         } catch (HyracksException e) {

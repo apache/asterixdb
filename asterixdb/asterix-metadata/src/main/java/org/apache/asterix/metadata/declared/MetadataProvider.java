@@ -131,6 +131,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
@@ -597,8 +598,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getResultHandleRuntime(IDataSink sink,
-            int[] printColumns, IPrinterFactory[] printerFactories, RecordDescriptor inputDesc, boolean ordered,
-            JobSpecification spec) throws AlgebricksException {
+            int[] printColumns, IPrinterFactory[] printerFactories, RecordDescriptor inputDesc,
+            IResultMetadata metadata, JobSpecification spec) throws AlgebricksException {
         ResultSetDataSink rsds = (ResultSetDataSink) sink;
         ResultSetSinkId rssId = rsds.getId();
         ResultSetId rsId = rssId.getResultSetId();
@@ -606,7 +607,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         try {
             IResultSerializerFactory resultSerializedAppenderFactory = resultSerializerFactoryProvider
                     .getAqlResultSerializerFactoryProvider(printColumns, printerFactories, getWriterFactory());
-            resultWriter = new ResultWriterOperatorDescriptor(spec, rsId, ordered, getResultAsyncMode(),
+            resultWriter = new ResultWriterOperatorDescriptor(spec, rsId, metadata, getResultAsyncMode(),
                     resultSerializedAppenderFactory, getMaxResultReads());
         } catch (IOException e) {
             throw new AlgebricksException(e);

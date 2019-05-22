@@ -29,6 +29,7 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ResultJobRecord implements IResultStateRecord {
+
     public enum State {
         IDLE,
         RUNNING,
@@ -78,8 +79,11 @@ public class ResultJobRecord implements IResultStateRecord {
     private static final long serialVersionUID = 1L;
 
     private final long timestamp;
-
+    private long jobStartTime;
+    private long jobEndTime;
     private Status status;
+
+    private ResultSetMetaData resultSetMetaData;
 
     private Map<ResultSetId, ResultSetMetaData> resultSetMetadataMap = new HashMap<>();
 
@@ -96,7 +100,16 @@ public class ResultJobRecord implements IResultStateRecord {
     }
 
     public void start() {
+        jobStartTime = System.nanoTime();
         updateState(State.RUNNING);
+    }
+
+    public void finish() {
+        jobEndTime = System.nanoTime();
+    }
+
+    public long getJobDuration() {
+        return jobEndTime - jobStartTime;
     }
 
     public void success() {
@@ -130,12 +143,14 @@ public class ResultJobRecord implements IResultStateRecord {
         return sb.toString();
     }
 
-    public void setResultSetMetaData(ResultSetId rsId, boolean orderedResult, int nPartitions)
+    public synchronized void setResultSetMetaData(ResultSetId rsId, IResultMetadata metadata, int nPartitions)
             throws HyracksDataException {
         ResultSetMetaData rsMd = resultSetMetadataMap.get(rsId);
         if (rsMd == null) {
-            resultSetMetadataMap.put(rsId, new ResultSetMetaData(nPartitions, orderedResult));
-        } else if (rsMd.getOrderedResult() != orderedResult || rsMd.getRecords().length != nPartitions) {
+            final ResultSetMetaData resultSetMetaData = new ResultSetMetaData(nPartitions, metadata);
+            resultSetMetadataMap.put(rsId, resultSetMetaData);
+            this.resultSetMetaData = resultSetMetaData;
+        } else if (rsMd.getRecords().length != nPartitions) {
             throw HyracksDataException.create(ErrorCode.INCONSISTENT_RESULT_METADATA, rsId.toString());
         }
         //TODO(tillw) throwing a HyracksDataException here hangs the execution tests
@@ -173,5 +188,9 @@ public class ResultJobRecord implements IResultStateRecord {
         if (successCount == records.length) {
             success();
         }
+    }
+
+    public synchronized ResultSetMetaData getResultSetMetaData() {
+        return resultSetMetaData;
     }
 }

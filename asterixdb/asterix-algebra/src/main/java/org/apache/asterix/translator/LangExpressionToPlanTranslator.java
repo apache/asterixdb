@@ -156,6 +156,7 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.ManagedFileSplit;
+import org.apache.hyracks.api.result.IResultMetadata;
 
 /**
  * Each visit returns a pair of an operator and a variable. The variable
@@ -299,13 +300,13 @@ class LangExpressionToPlanTranslator
     }
 
     @Override
-    public ILogicalPlan translate(Query expr, String outputDatasetName, ICompiledDmlStatement stmt)
-            throws AlgebricksException {
-        return translate(expr, outputDatasetName, stmt, null);
+    public ILogicalPlan translate(Query expr, String outputDatasetName, ICompiledDmlStatement stmt,
+            IResultMetadata resultMetadata) throws AlgebricksException {
+        return translate(expr, outputDatasetName, stmt, null, resultMetadata);
     }
 
     public ILogicalPlan translate(Query expr, String outputDatasetName, ICompiledDmlStatement stmt,
-            ILogicalOperator baseOp) throws AlgebricksException {
+            ILogicalOperator baseOp, IResultMetadata resultMetadata) throws AlgebricksException {
         MutableObject<ILogicalOperator> base = new MutableObject<>(new EmptyTupleSourceOperator());
         if (baseOp != null) {
             base = new MutableObject<>(baseOp);
@@ -332,7 +333,7 @@ class LangExpressionToPlanTranslator
             writeExprList.add(new MutableObject<>(resVarRef));
             ResultSetSinkId rssId = new ResultSetSinkId(metadataProvider.getResultSetId());
             ResultSetDataSink sink = new ResultSetDataSink(rssId, null);
-            DistributeResultOperator newTop = new DistributeResultOperator(writeExprList, sink);
+            DistributeResultOperator newTop = new DistributeResultOperator(writeExprList, sink, resultMetadata);
             newTop.setSourceLocation(sourceLoc);
             newTop.getInputs().add(new MutableObject<>(topOp));
             topOp = newTop;
@@ -421,12 +422,12 @@ class LangExpressionToPlanTranslator
             switch (stmt.getKind()) {
                 case INSERT:
                     leafOperator = translateInsert(targetDatasource, varRef, varRefsForLoading,
-                            additionalFilteringExpressions, assign, stmt);
+                            additionalFilteringExpressions, assign, stmt, resultMetadata);
                     break;
                 case UPSERT:
                     leafOperator = translateUpsert(targetDatasource, varRef, varRefsForLoading,
                             additionalFilteringExpressions, assign, additionalFilteringField, unnestVar, topOp, exprs,
-                            resVar, additionalFilteringAssign, stmt);
+                            resVar, additionalFilteringAssign, stmt, resultMetadata);
                     break;
                 case DELETE:
                     leafOperator = translateDelete(targetDatasource, varRef, varRefsForLoading,
@@ -470,7 +471,7 @@ class LangExpressionToPlanTranslator
             List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator assign,
             List<String> additionalFilteringField, LogicalVariable unnestVar, ILogicalOperator topOp,
             List<Mutable<ILogicalExpression>> exprs, LogicalVariable resVar, AssignOperator additionalFilteringAssign,
-            ICompiledDmlStatement stmt) throws AlgebricksException {
+            ICompiledDmlStatement stmt, IResultMetadata resultMetadata) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (!targetDatasource.getDataset().allow(topOp, DatasetUtil.OP_UPSERT)) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
@@ -577,13 +578,13 @@ class LangExpressionToPlanTranslator
         rootOperator = delegateOperator;
 
         // Compiles the return expression.
-        return processReturningExpression(rootOperator, upsertOp, compiledUpsert);
+        return processReturningExpression(rootOperator, upsertOp, compiledUpsert, resultMetadata);
     }
 
     private ILogicalOperator translateInsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
             List<Mutable<ILogicalExpression>> varRefsForLoading,
             List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator assign,
-            ICompiledDmlStatement stmt) throws AlgebricksException {
+            ICompiledDmlStatement stmt, IResultMetadata resultMetadata) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (targetDatasource.getDataset().hasMetaPart()) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
@@ -605,13 +606,14 @@ class LangExpressionToPlanTranslator
         rootOperator.setSourceLocation(sourceLoc);
 
         // Compiles the return expression.
-        return processReturningExpression(rootOperator, insertOp, compiledInsert);
+        return processReturningExpression(rootOperator, insertOp, compiledInsert, resultMetadata);
     }
 
     // Stitches the translated operators for the returning expression into the query
     // plan.
     private ILogicalOperator processReturningExpression(ILogicalOperator inputOperator,
-            InsertDeleteUpsertOperator insertOp, CompiledInsertStatement compiledInsert) throws AlgebricksException {
+            InsertDeleteUpsertOperator insertOp, CompiledInsertStatement compiledInsert, IResultMetadata resultMetadata)
+            throws AlgebricksException {
         Expression returnExpression = compiledInsert.getReturnExpression();
         if (returnExpression == null) {
             return inputOperator;
@@ -644,7 +646,7 @@ class LangExpressionToPlanTranslator
         expressions.add(new MutableObject<>(new VariableReferenceExpression(resultVar)));
         ResultSetSinkId rssId = new ResultSetSinkId(metadataProvider.getResultSetId());
         ResultSetDataSink sink = new ResultSetDataSink(rssId, null);
-        DistributeResultOperator distResultOperator = new DistributeResultOperator(expressions, sink);
+        DistributeResultOperator distResultOperator = new DistributeResultOperator(expressions, sink, resultMetadata);
         distResultOperator.getInputs().add(new MutableObject<>(createResultAssignOperator));
 
         distResultOperator.setSourceLocation(sourceLoc);
