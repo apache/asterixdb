@@ -440,6 +440,19 @@ import org.apache.asterix.runtime.evaluators.functions.binary.ParseBinaryDescrip
 import org.apache.asterix.runtime.evaluators.functions.binary.PrintBinaryDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.binary.SubBinaryFromDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.binary.SubBinaryFromToDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.BitAndDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.BitClearDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.BitCountDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.BitNotDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.BitOrDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.BitSetDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.BitShiftWithRotateFlagDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.BitShiftWithoutRotateFlagDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.BitTestWithAllFlagDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.BitTestWithoutAllFlagDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.BitXorDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.IsBitSetWithAllFlagDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.bitwise.IsBitSetWithoutAllFlagDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessByIndexDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessByNameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessNestedDescriptor;
@@ -909,6 +922,21 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(SubBinaryFromToDescriptor.FACTORY);
         fc.add(FindBinaryDescriptor.FACTORY);
         fc.add(FindBinaryFromDescriptor.FACTORY);
+
+        // Bitwise functions
+        fc.add(BitAndDescriptor.FACTORY);
+        fc.add(BitOrDescriptor.FACTORY);
+        fc.add(BitXorDescriptor.FACTORY);
+        fc.add(BitNotDescriptor.FACTORY);
+        fc.add(BitCountDescriptor.FACTORY);
+        fc.add(BitSetDescriptor.FACTORY);
+        fc.add(BitClearDescriptor.FACTORY);
+        fc.add(BitShiftWithoutRotateFlagDescriptor.FACTORY);
+        fc.add(BitShiftWithRotateFlagDescriptor.FACTORY);
+        fc.add(BitTestWithoutAllFlagDescriptor.FACTORY);
+        fc.add(BitTestWithAllFlagDescriptor.FACTORY);
+        fc.add(IsBitSetWithoutAllFlagDescriptor.FACTORY);
+        fc.add(IsBitSetWithAllFlagDescriptor.FACTORY);
 
         // String functions
         fc.add(StringLikeDescriptor.FACTORY);

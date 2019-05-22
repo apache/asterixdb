@@ -22,9 +22,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Collection;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
@@ -275,5 +278,53 @@ public class PointableHelper {
         }
 
         return PointableValueState.PRESENT;
+    }
+
+    /**
+     * Check if the provided bytes are of valid long type. In case floats and doubles are accepted, the accepted
+     * values will be 1.0 and 2.0, but not 2.5. (only zero decimals)
+     *
+     * @param bytes data bytes
+     * @param startOffset start offset
+     * @param acceptFloatAndDouble flag to accept float and double values or not
+     *
+     * @return true if provided value is a valid long, false otherwise
+     */
+    public static boolean isValidLongValue(byte[] bytes, int startOffset, boolean acceptFloatAndDouble) {
+
+        // Type tag
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[startOffset]);
+
+        // If floats and doubles aren't allowed, we only check if it can be int64
+        if (!acceptFloatAndDouble) {
+            return ATypeHierarchy.canPromote(typeTag, ATypeTag.BIGINT);
+        }
+
+        // We accept floats and doubles, do all the checks
+        if (!ATypeHierarchy.canPromote(typeTag, ATypeTag.DOUBLE)) {
+            return false;
+        }
+
+        // Float check (1.0, 2.0 are fine, but 1.5 is not)
+        if (typeTag == ATypeTag.FLOAT) {
+            float value = AFloatSerializerDeserializer.getFloat(bytes, startOffset + 1);
+
+            // Max and min checks, has a decimal value that is not 0
+            if (value > Long.MAX_VALUE || value < Long.MIN_VALUE || value > Math.floor(value) || Float.isNaN(value)) {
+                return false;
+            }
+        }
+
+        // Double check (1.0, 2.0 are fine, but 1.5 is not)
+        if (typeTag == ATypeTag.DOUBLE) {
+            double value = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1);
+
+            // Max and min checks, has a decimal value that is not 0
+            if (value > Long.MAX_VALUE || value < Long.MIN_VALUE || value > Math.floor(value) || Double.isNaN(value)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

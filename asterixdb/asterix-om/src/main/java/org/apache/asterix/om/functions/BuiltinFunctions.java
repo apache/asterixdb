@@ -67,6 +67,8 @@ import org.apache.asterix.om.typecomputer.impl.AnyTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ArrayIfNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ArrayRangeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ArrayRepeatTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.BitMultipleValuesTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.BitValuePositionFlagTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOnlyTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOrMissingTypeComputer;
@@ -380,6 +382,32 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "find-binary", 2);
     public static final FunctionIdentifier FIND_BINARY_FROM =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "find-binary", 3);
+
+    // bitwise functions
+    public static final FunctionIdentifier BIT_AND =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "bitand", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier BIT_OR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "bitor", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier BIT_XOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "bitxor", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier BIT_NOT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "bitnot", 1);
+    public static final FunctionIdentifier BIT_COUNT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "bitcount", 1);
+    public static final FunctionIdentifier BIT_SET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "bitset", 2);
+    public static final FunctionIdentifier BIT_CLEAR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "bitclear", 2);
+    public static final FunctionIdentifier BIT_SHIFT_WITHOUT_ROTATE_FLAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "bitshift", 2);
+    public static final FunctionIdentifier BIT_SHIFT_WITH_ROTATE_FLAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "bitshift", 3);
+    public static final FunctionIdentifier BIT_TEST_WITHOUT_ALL_FLAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "bittest", 2);
+    public static final FunctionIdentifier BIT_TEST_WITH_ALL_FLAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "bittest", 3);
+    public static final FunctionIdentifier IS_BIT_SET_WITHOUT_ALL_FLAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "isbitset", 2);
+    public static final FunctionIdentifier IS_BIT_SET_WITH_ALL_FLAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "isbitset", 3);
 
     // String functions
     public static final FunctionIdentifier STRING_EQUAL =
@@ -1682,6 +1710,20 @@ public class BuiltinFunctions {
         addFunction(SUBBINARY_FROM_TO, ABinaryTypeComputer.INSTANCE, true);
         addFunction(FIND_BINARY, AInt64TypeComputer.INSTANCE, true);
         addFunction(FIND_BINARY_FROM, AInt64TypeComputer.INSTANCE, true);
+
+        addFunction(BIT_AND, BitMultipleValuesTypeComputer.INSTANCE_INT64, true);
+        addFunction(BIT_OR, BitMultipleValuesTypeComputer.INSTANCE_INT64, true);
+        addFunction(BIT_XOR, BitMultipleValuesTypeComputer.INSTANCE_INT64, true);
+        addFunction(BIT_NOT, BitMultipleValuesTypeComputer.INSTANCE_INT64, true);
+        addFunction(BIT_COUNT, BitMultipleValuesTypeComputer.INSTANCE_INT32, true);
+        addFunction(BIT_SET, BitValuePositionFlagTypeComputer.INSTANCE_SET_CLEAR, true);
+        addFunction(BIT_CLEAR, BitValuePositionFlagTypeComputer.INSTANCE_SET_CLEAR, true);
+        addFunction(BIT_SHIFT_WITHOUT_ROTATE_FLAG, BitValuePositionFlagTypeComputer.INSTANCE_SHIFT_WITHOUT_FLAG, true);
+        addFunction(BIT_SHIFT_WITH_ROTATE_FLAG, BitValuePositionFlagTypeComputer.INSTANCE_SHIFT_WITH_FLAG, true);
+        addFunction(BIT_TEST_WITHOUT_ALL_FLAG, BitValuePositionFlagTypeComputer.INSTANCE_TEST_WITHOUT_FLAG, true);
+        addFunction(BIT_TEST_WITH_ALL_FLAG, BitValuePositionFlagTypeComputer.INSTANCE_TEST_WITH_FLAG, true);
+        addFunction(IS_BIT_SET_WITHOUT_ALL_FLAG, BitValuePositionFlagTypeComputer.INSTANCE_TEST_WITHOUT_FLAG, true);
+        addFunction(IS_BIT_SET_WITH_ALL_FLAG, BitValuePositionFlagTypeComputer.INSTANCE_TEST_WITH_FLAG, true);
 
         addFunction(STRING_CONSTRUCTOR, AStringTypeComputer.INSTANCE, true);
         addFunction(STRING_LIKE, BooleanFunctionTypeComputer.INSTANCE, true);
