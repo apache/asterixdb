@@ -24,12 +24,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.IntBinaryOperator;
 import java.util.function.IntPredicate;
 
 import org.apache.asterix.dataflow.data.common.TypeResolverUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -103,39 +106,27 @@ public class InjectTypeCastForFunctionArgumentsRule implements IAlgebraicRewrite
         }
         FunctionIdentifier funcId = func.getFunctionIdentifier();
         if (funcId.equals(BuiltinFunctions.SWITCH_CASE)) {
-            rewritten |= rewriteSwitchCase(op, func, context);
+            rewritten |= rewriteFunction(op, func, null, context, 2,
+                    InjectTypeCastForFunctionArgumentsRule::switchIncrement);
         } else if (FUN_TO_ARG_CHECKER.containsKey(funcId)) {
-            rewritten |= rewriteFunction(op, func, FUN_TO_ARG_CHECKER.get(funcId), context);
-        }
-        return rewritten;
-    }
-
-    // Injects casts that cast types for different "THEN" and "ELSE" branches.
-    private boolean rewriteSwitchCase(ILogicalOperator op, AbstractFunctionCallExpression func,
-            IOptimizationContext context) throws AlgebricksException {
-        IVariableTypeEnvironment env = op.computeInputTypeEnvironment(context);
-        IAType producedType = (IAType) env.getType(func);
-        List<Mutable<ILogicalExpression>> argRefs = func.getArguments();
-        int argSize = argRefs.size();
-        boolean rewritten = false;
-        for (int argIndex = 2; argIndex < argSize; argIndex += (argIndex + 2 == argSize) ? 1 : 2) {
-            Mutable<ILogicalExpression> argRef = argRefs.get(argIndex);
-            if (rewriteFunctionArgument(argRef, producedType, env)) {
-                rewritten = true;
-            }
+            rewritten |= rewriteFunction(op, func, FUN_TO_ARG_CHECKER.get(funcId), context, 0,
+                    InjectTypeCastForFunctionArgumentsRule::increment);
         }
         return rewritten;
     }
 
     // Injects casts that cast types for all function parameters
     private boolean rewriteFunction(ILogicalOperator op, AbstractFunctionCallExpression func, IntPredicate argChecker,
-            IOptimizationContext context) throws AlgebricksException {
+            IOptimizationContext context, int argStartIdx, IntBinaryOperator increment) throws AlgebricksException {
         IVariableTypeEnvironment env = op.computeInputTypeEnvironment(context);
         IAType producedType = (IAType) env.getType(func);
+        if (!argumentsNeedCasting(producedType)) {
+            return false;
+        }
         List<Mutable<ILogicalExpression>> argRefs = func.getArguments();
         int argSize = argRefs.size();
         boolean rewritten = false;
-        for (int argIndex = 0; argIndex < argSize; argIndex++) {
+        for (int argIndex = argStartIdx; argIndex < argSize; argIndex += increment.applyAsInt(argIndex, argSize)) {
             if (argChecker == null || argChecker.test(argIndex)) {
                 rewritten |= rewriteFunctionArgument(argRefs.get(argIndex), producedType, env);
             }
@@ -158,5 +149,19 @@ public class InjectTypeCastForFunctionArgumentsRule implements IAlgebraicRewrite
             return true;
         }
         return false;
+    }
+
+    private static boolean argumentsNeedCasting(IAType functionProducedType) {
+        ATypeTag functionProducedTag = TypeComputeUtils.getActualType(functionProducedType).getTypeTag();
+        return functionProducedTag == ATypeTag.ANY || functionProducedTag.isDerivedType();
+    }
+
+    private static int switchIncrement(int currentArgIndex, int numArguments) {
+        return currentArgIndex + 2 == numArguments ? 1 : 2;
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    private static int increment(int currentArgIndex, int numArguments) {
+        return 1;
     }
 }

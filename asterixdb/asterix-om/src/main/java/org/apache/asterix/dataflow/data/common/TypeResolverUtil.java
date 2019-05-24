@@ -89,7 +89,7 @@ public class TypeResolverUtil {
         }
         // Casts are only needed when the original return type is a complex type.
         // (In the runtime, there is already a type tag for scalar types.)
-        if (tag != ATypeTag.OBJECT && tag != ATypeTag.MULTISET && tag != ATypeTag.ARRAY) {
+        if (!tag.isDerivedType()) {
             return false;
         }
         return !TypeComputeUtils.getActualType(reqType).equals(TypeComputeUtils.getActualType(inputType));
