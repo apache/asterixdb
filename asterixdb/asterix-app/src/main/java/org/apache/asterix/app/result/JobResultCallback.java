@@ -25,6 +25,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.IJobResultCallback;
 import org.apache.hyracks.api.result.ResultJobRecord;
+import org.apache.hyracks.api.result.ResultSetMetaData;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
@@ -53,7 +54,11 @@ public class JobResultCallback implements IJobResultCallback {
     }
 
     private void updateResultMetadata(JobId jobId, ResultJobRecord resultJobRecord) {
-        final ResultMetadata metadata = (ResultMetadata) resultJobRecord.getResultSetMetaData().getMetadata();
+        final ResultSetMetaData resultSetMetaData = resultJobRecord.getResultSetMetaData();
+        if (resultSetMetaData == null) {
+            return;
+        }
+        final ResultMetadata metadata = (ResultMetadata) resultSetMetaData.getMetadata();
         metadata.setJobDuration(resultJobRecord.getJobDuration());
         metadata.setProcessedObjects(getJobProccssedObjects(jobId));
     }
