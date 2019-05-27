@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.asterix.api.common.APIFramework;
+import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.api.RequestReference;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -128,7 +129,7 @@ public class AsterixJavaClient {
         SessionOutput output = new SessionOutput(conf, writer);
 
         IStatementExecutor translator = statementExecutorFactory.create(appCtx, statements, output, compilationProvider,
-                storageComponentProvider);
+                storageComponentProvider, new ResponsePrinter(output));
         final RequestReference requestReference =
                 RequestReference.of(UUID.randomUUID().toString(), "CC", System.currentTimeMillis());
         final IRequestParameters requestParameters = new RequestParameters(requestReference, statement, null,

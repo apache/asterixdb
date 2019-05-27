@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.app.cc.CCExtensionManager;
+import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IRequestReference;
@@ -130,7 +131,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             IStatementExecutor.ResultMetadata outMetadata = new IStatementExecutor.ResultMetadata();
             MetadataManager.INSTANCE.init();
             IStatementExecutor translator = statementExecutorFactory.create(ccAppCtx, statements, sessionOutput,
-                    compilationProvider, storageComponentProvider);
+                    compilationProvider, storageComponentProvider, new ResponsePrinter(sessionOutput));
             final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
             final IRequestParameters requestParameters =

@@ -32,11 +32,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultPrinter;
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.result.fields.ResultHandlePrinter;
+import org.apache.asterix.app.result.fields.ResultsPrinter;
+import org.apache.asterix.app.result.fields.StatusPrinter;
 import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.om.types.ARecordType;
@@ -47,8 +48,6 @@ import org.apache.http.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.util.JSONUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -91,76 +90,6 @@ public class ResultUtil {
         new ResultPrinter(appCtx, output, stats, recordType).print(record);
     }
 
-    public static void printResultHandle(SessionOutput output, ResultHandle handle) throws HyracksDataException {
-        try {
-            final AlgebricksAppendable app = new AlgebricksAppendable(output.out());
-            output.appendHandle(app, handle.toString());
-        } catch (AlgebricksException e) {
-            LOGGER.warn("error printing handle", e);
-        }
-    }
-
-    public static void printStatus(SessionOutput output, AbstractQueryApiServlet.ResultStatus rs) {
-        try {
-            final AlgebricksAppendable app = new AlgebricksAppendable(output.out());
-            output.appendStatus(app, rs.str());
-        } catch (AlgebricksException e) {
-            LOGGER.warn("error printing status", e);
-        }
-    }
-
-    public static void printStatus(PrintWriter pw, AbstractQueryApiServlet.ResultStatus rs, boolean comma) {
-        printField(pw, AbstractQueryApiServlet.ResultFields.STATUS.str(), rs.str(), comma);
-    }
-
-    public static void printError(PrintWriter pw, Throwable e) {
-        printError(pw, e, true);
-    }
-
-    public static void printError(PrintWriter pw, Throwable e, boolean comma) {
-        printError(pw, e, 1, comma);
-    }
-
-    public static void printError(PrintWriter pw, Throwable e, int code, boolean comma) {
-        Throwable rootCause = getRootCause(e);
-        String msg = rootCause.getMessage();
-        if (!(rootCause instanceof AlgebricksException || rootCause instanceof HyracksException
-                || rootCause instanceof TokenMgrError
-                || rootCause instanceof org.apache.asterix.aqlplus.parser.TokenMgrError)) {
-            msg = rootCause.getClass().getSimpleName() + (msg == null ? "" : ": " + msg);
-        }
-        printError(pw, msg, code, comma);
-    }
-
-    public static void printError(PrintWriter pw, String msg, int code, boolean comma) {
-        pw.print("\t\"");
-        pw.print(AbstractQueryApiServlet.ResultFields.ERRORS.str());
-        pw.print("\": [{ \n\t");
-        printField(pw, QueryServiceServlet.ErrorField.CODE.str(), code);
-        pw.print("\t");
-        printField(pw, QueryServiceServlet.ErrorField.MSG.str(), JSONUtil.escape(msg), false);
-        pw.print(comma ? "\t}],\n" : "\t}]\n");
-    }
-
-    public static void printWarnings(PrintWriter pw, List<ExecutionWarning> warnings) {
-        pw.print("\t\"");
-        pw.print(AbstractQueryApiServlet.ResultFields.WARNINGS.str());
-        pw.print("\": [");
-        for (int i = 0; i < warnings.size(); i++) {
-            final ExecutionWarning warning = warnings.get(i);
-            pw.print("{ \n\t");
-            printField(pw, QueryServiceServlet.ErrorField.CODE.str(), warning.getCode());
-            pw.print("\t");
-            printField(pw, QueryServiceServlet.ErrorField.MSG.str(), JSONUtil.escape(warning.getMessage()), false);
-            pw.print("\t} \n\t");
-            boolean lastWarning = i == warnings.size() - 1;
-            if (!lastWarning) {
-                pw.print(",");
-            }
-        }
-        pw.print("],\n");
-    }
-
     public static void printField(PrintWriter pw, String name, String value) {
         printField(pw, name, value, true);
     }
@@ -185,7 +114,6 @@ public class ResultUtil {
         if (comma) {
             pw.print(',');
         }
-        pw.print('\n');
     }
 
     public static ObjectNode getErrorResponse(int errorCode, String errorMessage, String errorSummary,
@@ -359,7 +287,7 @@ public class ResultUtil {
             @Override
             public AlgebricksAppendable append(AlgebricksAppendable app) throws AlgebricksException {
                 app.append("\t\"");
-                app.append(AbstractQueryApiServlet.ResultFields.RESULTS.str());
+                app.append(ResultsPrinter.FIELD_NAME);
                 if (resultNo >= 0) {
                     app.append('-').append(String.valueOf(resultNo));
                 }
@@ -371,17 +299,17 @@ public class ResultUtil {
     }
 
     public static SessionOutput.ResultDecorator createPostResultDecorator() {
-        return app -> app.append("\t,\n");
+        return app -> app.append("\t");
     }
 
     public static SessionOutput.ResultAppender createResultHandleAppender(String handleUrl) {
-        return (app, handle) -> app.append("\t\"").append(AbstractQueryApiServlet.ResultFields.HANDLE.str())
-                .append("\": \"").append(handleUrl).append(handle).append("\",\n");
+        return (app, handle) -> app.append("\t\"").append(ResultHandlePrinter.FIELD_NAME).append("\": \"")
+                .append(handleUrl).append(handle).append("\"");
     }
 
     public static SessionOutput.ResultAppender createResultStatusAppender() {
-        return (app, status) -> app.append("\t\"").append(AbstractQueryApiServlet.ResultFields.STATUS.str())
-                .append("\": \"").append(status).append("\",\n");
+        return (app, status) -> app.append("\t\"").append(StatusPrinter.FIELD_NAME).append("\": \"").append(status)
+                .append("\"");
     }
 
     public static class ParseOnlyResult {

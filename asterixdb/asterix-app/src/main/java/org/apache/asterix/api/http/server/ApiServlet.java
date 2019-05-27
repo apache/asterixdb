@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.imageio.ImageIO;
 
+import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -147,7 +148,7 @@ public class ApiServlet extends AbstractServlet {
             SessionOutput sessionOutput = new SessionOutput(sessionConfig, out);
             MetadataManager.INSTANCE.init();
             IStatementExecutor translator = statementExectorFactory.create(appCtx, statements, sessionOutput,
-                    compilationProvider, componentProvider);
+                    compilationProvider, componentProvider, new ResponsePrinter(sessionOutput));
             double duration;
             long startTime = System.currentTimeMillis();
             final IRequestParameters requestParameters = new RequestParameters(requestReference, query, resultSet,

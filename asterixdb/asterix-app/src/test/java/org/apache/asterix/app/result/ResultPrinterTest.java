@@ -23,9 +23,11 @@ import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 
-import org.apache.asterix.api.http.server.AbstractQueryApiServlet;
 import org.apache.asterix.api.http.server.ResultUtil;
+import org.apache.asterix.app.result.fields.ErrorsPrinter;
+import org.apache.asterix.app.result.fields.MetricsPrinter;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.test.common.ResultExtractor;
@@ -65,7 +67,8 @@ public class ResultPrinterTest {
         try {
             rs.print(resultReader);
         } catch (RuntimeException e) {
-            ResultUtil.printError(out, e, true);
+            final ExecutionError error = ExecutionError.of(e);
+            new ErrorsPrinter(Collections.singletonList(error)).print(out);
             printMetrics(out, 1);
         }
         out.print("}");
@@ -98,7 +101,7 @@ public class ResultPrinterTest {
 
     private static void printMetrics(PrintWriter pw, long errorCount) {
         pw.print("\t\"");
-        pw.print(AbstractQueryApiServlet.ResultFields.METRICS.str());
+        pw.print(MetricsPrinter.FIELD_NAME);
         pw.print("\": {\n");
         ResultUtil.printField(pw, "errorCount", errorCount, false);
         pw.print("\t}\n");

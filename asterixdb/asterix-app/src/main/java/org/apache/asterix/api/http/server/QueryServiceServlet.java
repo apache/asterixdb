@@ -31,7 +31,6 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -43,10 +42,23 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.asterix.algebra.base.ILangExtension;
+import org.apache.asterix.app.result.ExecutionError;
+import org.apache.asterix.app.result.ResponseMertics;
+import org.apache.asterix.app.result.ResponsePrinter;
+import org.apache.asterix.app.result.fields.ClientContextIdPrinter;
+import org.apache.asterix.app.result.fields.ErrorsPrinter;
+import org.apache.asterix.app.result.fields.MetricsPrinter;
+import org.apache.asterix.app.result.fields.ParseOnlyResultPrinter;
+import org.apache.asterix.app.result.fields.PlansPrinter;
+import org.apache.asterix.app.result.fields.RequestIdPrinter;
+import org.apache.asterix.app.result.fields.SignaturePrinter;
+import org.apache.asterix.app.result.fields.StatusPrinter;
+import org.apache.asterix.app.result.fields.TypePrinter;
+import org.apache.asterix.app.result.fields.WarningsPrinter;
 import org.apache.asterix.app.translator.QueryTranslator;
-import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IClusterManagementWork;
+import org.apache.asterix.common.api.ICodedMessage;
 import org.apache.asterix.common.api.IReceptionist;
 import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -65,7 +77,6 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.translator.ExecutionPlans;
-import org.apache.asterix.translator.ExecutionPlansJsonPrintUtil;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
@@ -184,26 +195,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
     }
 
-    private enum Metrics {
-        ELAPSED_TIME("elapsedTime"),
-        EXECUTION_TIME("executionTime"),
-        RESULT_COUNT("resultCount"),
-        RESULT_SIZE("resultSize"),
-        ERROR_COUNT("errorCount"),
-        PROCESSED_OBJECTS_COUNT("processedObjects"),
-        WARNING_COUNT("warningCount");
-
-        private final String str;
-
-        Metrics(String str) {
-            this.str = str;
-        }
-
-        public String str() {
-            return str;
-        }
-    }
-
     protected static final class RequestExecutionState {
         private long execStart = -1;
         private long execEnd = -1;
@@ -288,68 +279,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         SessionOutput.ResultAppender appendStatus = ResultUtil.createResultStatusAppender();
         SessionConfig sessionConfig = new SessionConfig(SessionConfig.OutputFormat.CLEAN_JSON);
         return new SessionOutput(sessionConfig, resultWriter, resultPrefix, resultPostfix, null, appendStatus);
-    }
-
-    private static void printClientContextID(PrintWriter pw, QueryServiceRequestParameters params) {
-        if (params.getClientContextID() != null && !params.getClientContextID().isEmpty()) {
-            ResultUtil.printField(pw, ResultFields.CLIENT_ID.str(), params.getClientContextID());
-        }
-    }
-
-    private static void printSignature(PrintWriter pw, QueryServiceRequestParameters param) {
-        if (param.isSignature()) {
-            pw.print("\t\"");
-            pw.print(ResultFields.SIGNATURE.str());
-            pw.print("\": {\n");
-            pw.print("\t");
-            ResultUtil.printField(pw, "*", "*", false);
-            pw.print("\t},\n");
-        }
-    }
-
-    private static void printType(PrintWriter pw, SessionConfig sessionConfig) {
-        switch (sessionConfig.fmt()) {
-            case ADM:
-                ResultUtil.printField(pw, ResultFields.TYPE.str(), HttpUtil.ContentType.APPLICATION_ADM);
-                break;
-            case CSV:
-                String contentType = HttpUtil.ContentType.CSV + "; header="
-                        + (sessionConfig.is(SessionConfig.FORMAT_CSV_HEADER) ? "present" : "absent");
-                ResultUtil.printField(pw, ResultFields.TYPE.str(), contentType);
-                break;
-            default:
-                break;
-        }
-    }
-
-    public static void printMetrics(PrintWriter pw, long elapsedTime, long executionTime, long resultCount,
-            long resultSize, long processedObjects, long errorCount, long warnCount, Charset resultCharset) {
-        boolean hasErrors = errorCount != 0;
-        boolean hasWarnings = warnCount != 0;
-        boolean useAscii = !StandardCharsets.UTF_8.equals(resultCharset)
-                && !"μ".contentEquals(resultCharset.decode(resultCharset.encode("μ")));
-        pw.print("\t\"");
-        pw.print(ResultFields.METRICS.str());
-        pw.print("\": {\n");
-        pw.print("\t");
-        ResultUtil.printField(pw, Metrics.ELAPSED_TIME.str(), Duration.formatNanos(elapsedTime, useAscii));
-        pw.print("\t");
-        ResultUtil.printField(pw, Metrics.EXECUTION_TIME.str(), Duration.formatNanos(executionTime, useAscii));
-        pw.print("\t");
-        ResultUtil.printField(pw, Metrics.RESULT_COUNT.str(), resultCount, true);
-        pw.print("\t");
-        ResultUtil.printField(pw, Metrics.RESULT_SIZE.str(), resultSize, true);
-        pw.print("\t");
-        ResultUtil.printField(pw, Metrics.PROCESSED_OBJECTS_COUNT.str(), processedObjects, hasWarnings || hasErrors);
-        if (hasWarnings) {
-            pw.print("\t");
-            ResultUtil.printField(pw, Metrics.WARNING_COUNT.str(), warnCount, hasErrors);
-        }
-        if (hasErrors) {
-            pw.print("\t");
-            ResultUtil.printField(pw, Metrics.ERROR_COUNT.str(), errorCount, false);
-        }
-        pw.print("\t}\n");
     }
 
     protected String getOptText(JsonNode node, Parameter parameter) {
@@ -539,72 +468,94 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         long errorCount = 1;
         Stats stats = new Stats();
         RequestExecutionState execution = new RequestExecutionState();
-        List<ExecutionWarning> warnings = Collections.emptyList();
+        List<ICodedMessage> warnings = Collections.emptyList();
         Charset resultCharset = HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         PrintWriter httpWriter = response.writer();
         SessionOutput sessionOutput = createSessionOutput(httpWriter);
         QueryServiceRequestParameters param = newRequestParameters();
+        ResponsePrinter responsePrinter = new ResponsePrinter(sessionOutput);
+        ResultDelivery delivery = ResultDelivery.IMMEDIATE;
         try {
             // buffer the output until we are ready to set the status of the response message correctly
-            sessionOutput.hold();
-            sessionOutput.out().print("{\n");
+            responsePrinter.begin();
             Map<String, String> optionalParams = null;
             if (optionalParamProvider != null) {
                 optionalParams = optionalParamProvider.apply(request);
             }
             setRequestParam(request, param, optionalParams);
             LOGGER.info(() -> "handleRequest: " + LogRedactionUtil.userData(param.toString()));
-            ResultDelivery delivery = parseResultDelivery(param.getMode());
+            delivery = parseResultDelivery(param.getMode());
             setSessionConfig(sessionOutput, param, delivery);
             final ResultProperties resultProperties = param.getMaxResultReads() == null ? new ResultProperties(delivery)
                     : new ResultProperties(delivery, Long.parseLong(param.getMaxResultReads()));
-            printAdditionalResultFields(sessionOutput.out());
-            printRequestId(sessionOutput.out(), requestRef.getUuid());
-            printClientContextID(sessionOutput.out(), param);
-            if (!param.isParseOnly()) {
-                printSignature(sessionOutput.out(), param);
-            }
-            printType(sessionOutput.out(), sessionOutput.config());
+            buildResponseHeaders(requestRef, sessionOutput, param, responsePrinter, delivery);
+            responsePrinter.printHeaders();
             validateStatement(param.getStatement());
             String statementsText = param.getStatement() + ";";
             if (param.isParseOnly()) {
                 ResultUtil.ParseOnlyResult parseOnlyResult = parseStatement(statementsText);
                 setAccessControlHeaders(request, response);
-                response.setStatus(HttpResponseStatus.OK);
-                printParseOnlyValueResult(sessionOutput, parseOnlyResult);
-                ResultUtil.printStatus(sessionOutput, execution.getResultStatus());
+                response.setStatus(execution.getHttpStatus());
+                responsePrinter.addResultPrinter(new ParseOnlyResultPrinter(parseOnlyResult));
             } else {
                 Map<String, byte[]> statementParams = org.apache.asterix.app.translator.RequestParameters
                         .serializeParameterValues(param.getStatementParams());
                 setAccessControlHeaders(request, response);
                 response.setStatus(execution.getHttpStatus());
                 executeStatement(requestRef, statementsText, sessionOutput, resultProperties, stats, param, execution,
-                        optionalParams, statementParams);
-                if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
-                    ResultUtil.printStatus(sessionOutput, execution.getResultStatus());
-                }
-            }
-            if (!warnings.isEmpty()) {
-                printWarnings(sessionOutput.out(), warnings);
+                        optionalParams, statementParams, responsePrinter);
             }
             errorCount = 0;
         } catch (Exception | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError e) {
             handleExecuteStatementException(e, execution, param);
             response.setStatus(execution.getHttpStatus());
-            printError(sessionOutput.out(), e);
-            ResultUtil.printStatus(sessionOutput, execution.getResultStatus());
+            requestFailed(e, responsePrinter);
         } finally {
-            // make sure that we stop buffering and return the result to the http response
-            sessionOutput.release();
             execution.finish();
         }
-        printMetrics(sessionOutput.out(), System.nanoTime() - elapsedStart, execution.duration(), stats.getCount(),
-                stats.getSize(), stats.getProcessedObjects(), errorCount, warnings.size(), resultCharset);
-        sessionOutput.out().print("}\n");
-        sessionOutput.out().flush();
+        responsePrinter.printResults();
+        buildResponseFooters(elapsedStart, errorCount, stats, execution, warnings, resultCharset, responsePrinter,
+                delivery);
+        responsePrinter.printFooters();
+        responsePrinter.end();
         if (sessionOutput.out().checkError()) {
             LOGGER.warn("Error flushing output writer");
         }
+    }
+
+    protected void buildResponseHeaders(IRequestReference requestRef, SessionOutput sessionOutput,
+            QueryServiceRequestParameters param, ResponsePrinter responsePrinter, ResultDelivery delivery) {
+        responsePrinter.addHeaderPrinter(new RequestIdPrinter(requestRef.getUuid()));
+        if (param.getClientContextID() != null && !param.getClientContextID().isEmpty()) {
+            responsePrinter.addHeaderPrinter(new ClientContextIdPrinter(param.getClientContextID()));
+        }
+        if (param.isSignature() && delivery != ResultDelivery.ASYNC && !param.isParseOnly()) {
+            responsePrinter.addHeaderPrinter(SignaturePrinter.INSTANCE);
+        }
+        if (sessionOutput.config().fmt() == SessionConfig.OutputFormat.ADM
+                || sessionOutput.config().fmt() == SessionConfig.OutputFormat.CSV) {
+            responsePrinter.addHeaderPrinter(new TypePrinter(sessionOutput.config()));
+        }
+    }
+
+    protected void buildResponseResults(ResponsePrinter responsePrinter, SessionOutput sessionOutput,
+            ExecutionPlans plans) {
+        responsePrinter.addResultPrinter(new PlansPrinter(plans, sessionOutput.config().getPlanFormat()));
+    }
+
+    protected void buildResponseFooters(long elapsedStart, long errorCount, Stats stats,
+            RequestExecutionState execution, List<ICodedMessage> warnings, Charset resultCharset,
+            ResponsePrinter responsePrinter, ResultDelivery delivery) {
+        if (ResultDelivery.ASYNC != delivery) {
+            // in case of ASYNC delivery, the status is printed by query translator
+            responsePrinter.addFooterPrinter(new StatusPrinter(execution.getResultStatus()));
+        }
+        if (!warnings.isEmpty()) {
+            responsePrinter.addFooterPrinter(new WarningsPrinter(warnings));
+        }
+        final ResponseMertics mertics = ResponseMertics.of(System.nanoTime() - elapsedStart, execution.duration(),
+                stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount, warnings.size());
+        responsePrinter.addFooterPrinter(new MetricsPrinter(mertics, resultCharset));
     }
 
     protected void validateStatement(String statement) throws RuntimeDataException {
@@ -628,7 +579,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     protected void executeStatement(IRequestReference requestReference, String statementsText,
             SessionOutput sessionOutput, ResultProperties resultProperties, Stats stats,
             QueryServiceRequestParameters param, RequestExecutionState execution,
-            Map<String, String> optionalParameters, Map<String, byte[]> statementParameters) throws Exception {
+            Map<String, String> optionalParameters, Map<String, byte[]> statementParameters,
+            ResponsePrinter responsePrinter) throws Exception {
         IClusterManagementWork.ClusterState clusterState =
                 ((ICcApplicationContext) appCtx).getClusterStateManager().getState();
         if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
@@ -639,7 +591,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         List<Statement> statements = parser.parse();
         MetadataManager.INSTANCE.init();
         IStatementExecutor translator = statementExecutorFactory.create((ICcApplicationContext) appCtx, statements,
-                sessionOutput, compilationProvider, componentProvider);
+                sessionOutput, compilationProvider, componentProvider, responsePrinter);
         execution.start();
         Map<String, IAObject> stmtParams =
                 org.apache.asterix.app.translator.RequestParameters.deserializeParameterValues(statementParameters);
@@ -648,7 +600,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 optionalParameters, stmtParams, param.isMultiStatement());
         translator.compileAndExecute(getHyracksClientConnection(), requestParameters);
         execution.end();
-        printExecutionPlans(sessionOutput, translator.getExecutionPlans());
+        buildResponseResults(responsePrinter, sessionOutput, translator.getExecutionPlans());
     }
 
     protected void handleExecuteStatementException(Throwable t, RequestExecutionState state,
@@ -716,42 +668,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 && "present".equals(getParameterValue(param.getFormat(), Attribute.HEADER.str())));
     }
 
-    protected void printError(PrintWriter sessionOut, Throwable throwable) {
-        ResultUtil.printError(sessionOut, throwable);
-    }
-
-    protected void printAdditionalResultFields(PrintWriter sessionOut) {
-        // do nothing
-    }
-
-    protected void printWarnings(PrintWriter pw, List<ExecutionWarning> warnings) {
-        ResultUtil.printWarnings(pw, warnings);
-    }
-
-    protected void printParseOnlyValueResult(SessionOutput output, ResultUtil.ParseOnlyResult parseOnlyResult) {
-        final PrintWriter pw = output.out();
-        pw.print("\t\"");
-        pw.print(ResultFields.RESULTS.str()); //TODO: use ResultUtil, ResultPrinter
-        pw.print("\":");
-        pw.print(parseOnlyResult.asJson());
-        pw.print(",\n");
-    }
-
-    protected void printExecutionPlans(SessionOutput output, ExecutionPlans executionPlans) {
-        final PrintWriter pw = output.out();
-        pw.print("\t\"");
-        pw.print(ResultFields.PLANS.str());
-        pw.print("\":");
-        final SessionConfig.PlanFormat planFormat = output.config().getPlanFormat();
-        switch (planFormat) {
-            case JSON:
-            case STRING:
-                pw.print(ExecutionPlansJsonPrintUtil.asJson(executionPlans, planFormat));
-                break;
-            default:
-                throw new IllegalStateException("Unrecognized plan format: " + planFormat);
-        }
-        pw.print(",\n");
+    protected void requestFailed(Throwable throwable, ResponsePrinter responsePrinter) {
+        final ExecutionError executionError = ExecutionError.of(throwable);
+        responsePrinter.addResultPrinter(new ErrorsPrinter(Collections.singletonList(executionError)));
     }
 
     protected QueryServiceRequestParameters newRequestParameters() {

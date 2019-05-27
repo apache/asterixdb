@@ -33,8 +33,9 @@ import java.util.Set;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
-import org.apache.asterix.api.http.server.ResultUtil;
+import org.apache.asterix.app.result.fields.ExplainOnlyResultsPrinter;
 import org.apache.asterix.common.api.INodeJobTracker;
+import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -74,7 +75,6 @@ import org.apache.asterix.optimizer.rules.am.AbstractIntroduceAccessMethodRule;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.ExecutionPlans;
-import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.asterix.translator.SqlppExpressionToPlanTranslator;
@@ -192,7 +192,7 @@ public class APIFramework {
 
     public JobSpecification compileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
             Query query, int varCounter, String outputDatasetName, SessionOutput output,
-            ICompiledDmlStatement statement, Map<VarIdentifier, IAObject> externalVars)
+            ICompiledDmlStatement statement, Map<VarIdentifier, IAObject> externalVars, IResponsePrinter printer)
             throws AlgebricksException, ACIDException {
 
         // establish facts
@@ -261,7 +261,7 @@ public class APIFramework {
             }
         }
         if (isExplainOnly) {
-            printPlanAsResult(metadataProvider, output);
+            printPlanAsResult(metadataProvider, output, printer);
             if (!conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
                 executionPlans.setOptimizedLogicalPlan(null);
             }
@@ -307,13 +307,12 @@ public class APIFramework {
         return spec;
     }
 
-    private void printPlanAsResult(MetadataProvider metadataProvider, SessionOutput output) throws AlgebricksException {
-        final SessionConfig conf = output.config();
-        boolean quoteResult = output.config().getPlanFormat() == SessionConfig.PlanFormat.STRING;
-        conf.set(SessionConfig.FORMAT_QUOTE_RECORD, quoteResult);
+    private void printPlanAsResult(MetadataProvider metadataProvider, SessionOutput output, IResponsePrinter printer)
+            throws AlgebricksException {
         try {
-            ResultUtil.printResults(metadataProvider.getApplicationContext(), executionPlans.getOptimizedLogicalPlan(),
-                    output, new Stats(), null);
+            printer.addResultPrinter(new ExplainOnlyResultsPrinter(metadataProvider.getApplicationContext(),
+                    executionPlans.getOptimizedLogicalPlan(), output));
+            printer.printResults();
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }

@@ -29,7 +29,8 @@ import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.app.message.CancelQueryRequest;
 import org.apache.asterix.app.message.ExecuteStatementRequestMessage;
 import org.apache.asterix.app.message.ExecuteStatementResponseMessage;
-import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.result.ResponsePrinter;
+import org.apache.asterix.app.result.fields.NcResultPrinter;
 import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IRequestReference;
@@ -40,14 +41,10 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
-import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.ResultProperties;
 import org.apache.asterix.translator.SessionOutput;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.hyracks.api.application.INCServiceContext;
-import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.http.api.IChannelClosedHandler;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.HttpServer;
@@ -73,7 +70,8 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     protected void executeStatement(IRequestReference requestReference, String statementsText,
             SessionOutput sessionOutput, ResultProperties resultProperties, IStatementExecutor.Stats stats,
             QueryServiceRequestParameters param, RequestExecutionState execution,
-            Map<String, String> optionalParameters, Map<String, byte[]> statementParameters) throws Exception {
+            Map<String, String> optionalParameters, Map<String, byte[]> statementParameters,
+            ResponsePrinter responsePrinter) throws Exception {
         // Running on NC -> send 'execute' message to CC
         INCServiceContext ncCtx = (INCServiceContext) serviceCtx;
         INCMessageBroker ncMb = (INCMessageBroker) ncCtx.getMessageBroker();
@@ -119,20 +117,11 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                 throw new Exception(err.toString(), err);
             }
         }
-        // no errors - stop buffering and allow for streaming result delivery
-        sessionOutput.release();
-
-        IStatementExecutor.ResultMetadata resultMetadata = responseMsg.getMetadata();
-        if (delivery == IStatementExecutor.ResultDelivery.IMMEDIATE && !resultMetadata.getResultSets().isEmpty()) {
-            stats.setProcessedObjects(responseMsg.getStats().getProcessedObjects());
-            for (Triple<JobId, ResultSetId, ARecordType> rsmd : resultMetadata.getResultSets()) {
-                ResultReader resultReader = new ResultReader(getResultSet(), rsmd.getLeft(), rsmd.getMiddle());
-                ResultUtil.printResults(appCtx, resultReader, sessionOutput, stats, rsmd.getRight());
-            }
-        } else {
-            sessionOutput.out().append(responseMsg.getResult());
+        if (hasResult(responseMsg)) {
+            responsePrinter.addResultPrinter(
+                    new NcResultPrinter(appCtx, responseMsg, getResultSet(), delivery, sessionOutput));
         }
-        printExecutionPlans(sessionOutput, responseMsg.getExecutionPlans());
+        buildResponseResults(responsePrinter, sessionOutput, responseMsg.getExecutionPlans());
     }
 
     private void cancelQuery(INCMessageBroker messageBroker, String nodeId, String uuid, String clientContextID,
@@ -173,5 +162,9 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     @Override
     public IChannelClosedHandler getChannelClosedHandler(HttpServer server) {
         return InterruptOnCloseHandler.INSTANCE;
+    }
+
+    private static boolean hasResult(ExecuteStatementResponseMessage responseMsg) {
+        return !responseMsg.getMetadata().getResultSets().isEmpty() || !responseMsg.getResult().isEmpty();
     }
 }

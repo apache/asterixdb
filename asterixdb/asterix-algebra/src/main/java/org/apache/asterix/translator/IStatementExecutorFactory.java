@@ -20,6 +20,7 @@ package org.apache.asterix.translator;
 
 import java.util.List;
 
+import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
@@ -43,8 +44,10 @@ public interface IStatementExecutorFactory {
      *            provides query language related components
      * @param storageComponentProvider
      *            provides storage related components
+     * @param responsePrinter
      * @return an implementation of {@code IStatementExecutor} thaxt is used to execute the passed list of statements
      */
     IStatementExecutor create(ICcApplicationContext appCtx, List<Statement> statements, SessionOutput output,
-            ILangCompilationProvider compilationProvider, IStorageComponentProvider storageComponentProvider);
+            ILangCompilationProvider compilationProvider, IStorageComponentProvider storageComponentProvider,
+            IResponsePrinter responsePrinter);
 }

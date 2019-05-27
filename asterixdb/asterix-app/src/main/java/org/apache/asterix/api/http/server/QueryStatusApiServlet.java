@@ -21,12 +21,19 @@ package org.apache.asterix.api.http.server;
 import static org.apache.asterix.api.http.server.AbstractQueryApiServlet.ResultStatus.FAILED;
 
 import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.asterix.app.result.ExecutionError;
+import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.result.fields.ErrorsPrinter;
+import org.apache.asterix.app.result.fields.ResultHandlePrinter;
+import org.apache.asterix.app.result.fields.StatusPrinter;
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.api.result.ResultJobRecord;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -52,37 +59,32 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
         }
-
         ResultReader resultReader = new ResultReader(getResultSet(), handle.getJobId(), handle.getResultSetId());
-
         final ResultJobRecord.Status resultReaderStatus = resultReader.getStatus();
         if (resultReaderStatus == null) {
             LOGGER.log(Level.INFO, "No results for: \"" + strHandle + "\"");
             response.setStatus(HttpResponseStatus.NOT_FOUND);
             return;
         }
-
         ResultStatus resultStatus = resultStatus(resultReaderStatus);
         Exception ex = extractException(resultReaderStatus);
-
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         final PrintWriter resultWriter = response.writer();
-
-        HttpResponseStatus httpStatus = HttpResponseStatus.OK;
-
-        resultWriter.print("{\n");
-        ResultUtil.printStatus(resultWriter, resultStatus, (ex != null) || ResultStatus.SUCCESS == resultStatus);
-
+        response.setStatus(HttpResponseStatus.OK);
+        SessionOutput sessionOutput = new SessionOutput(resultWriter);
+        ResponsePrinter printer = new ResponsePrinter(sessionOutput);
+        printer.begin();
+        printer.addHeaderPrinter(new StatusPrinter(resultStatus));
+        printer.printHeaders();
         if (ResultStatus.SUCCESS == resultStatus) {
             String servletPath = servletPath(request).replace("status", "result");
             String resHandle = "http://" + host(request) + servletPath + strHandle;
-            printHandle(resultWriter, resHandle, false);
+            printer.addResultPrinter(new ResultHandlePrinter(resHandle));
         } else if (ex != null) {
-            ResultUtil.printError(resultWriter, ex, false);
+            printer.addResultPrinter(new ErrorsPrinter(Collections.singletonList(ExecutionError.of(ex))));
         }
-
-        resultWriter.print("}\n");
-        response.setStatus(httpStatus);
+        printer.printResults();
+        printer.end();
         if (response.writer().checkError()) {
             LOGGER.warn("Error flushing output writer");
         }

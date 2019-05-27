@@ -36,6 +36,7 @@ import org.apache.asterix.app.active.ActiveEntityEventsListener;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
+import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.feed.watch.WaitForStateSubscriber;
 import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
@@ -94,10 +95,12 @@ public class ActiveStatsTest {
 
         // Mock MetadataProvider
         CCExtensionManager extensionManager = (CCExtensionManager) appCtx.getExtensionManager();
+        SessionOutput sessionOutput = Mockito.mock(SessionOutput.class);
         IStatementExecutor statementExecutor = extensionManager
                 .getStatementExecutorFactory(appCtx.getServiceContext().getControllerService().getExecutor())
-                .create(appCtx, Collections.emptyList(), Mockito.mock(SessionOutput.class),
-                        extensionManager.getCompilationProvider(Language.SQLPP), appCtx.getStorageComponentProvider());
+                .create(appCtx, Collections.emptyList(), sessionOutput,
+                        extensionManager.getCompilationProvider(Language.SQLPP), appCtx.getStorageComponentProvider(),
+                        new ResponsePrinter(sessionOutput));
         MetadataProvider mdProvider = new MetadataProvider(appCtx, null);
         // Add event listener
         ActiveEntityEventsListener eventsListener = new DummyFeedEventsListener(statementExecutor, appCtx, null,

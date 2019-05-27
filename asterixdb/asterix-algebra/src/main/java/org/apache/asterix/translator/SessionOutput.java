@@ -38,6 +38,10 @@ public class SessionOutput {
     private SessionOutput.ResultAppender handleAppender;
     private final SessionOutput.ResultAppender statusAppender;
 
+    public SessionOutput(PrintWriter out) {
+        this(null, out);
+    }
+
     public SessionOutput(SessionConfig config, PrintWriter out) {
         this(config, out, null, null, null, null);
     }

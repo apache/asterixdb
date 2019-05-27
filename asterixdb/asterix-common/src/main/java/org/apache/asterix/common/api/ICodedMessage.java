@@ -16,23 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.api.http.server;
+package org.apache.asterix.common.api;
 
-public class ExecutionWarning {
+public interface ICodedMessage {
 
-    private final int code;
-    private final String message;
+    /**
+     * Gets the code of the message
+     *
+     * @return the code
+     */
+    int getCode();
 
-    public ExecutionWarning(int code, String message) {
-        this.code = code;
-        this.message = message;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
+    /**
+     * Gets the message
+     *
+     * @return the message
+     */
+    String getMessage();
 }

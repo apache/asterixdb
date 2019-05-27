@@ -22,8 +22,12 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.api.common.ResultMetadata;
+import org.apache.asterix.app.result.ResponseMertics;
+import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.result.fields.MetricsPrinter;
+import org.apache.asterix.app.result.fields.ResultsPrinter;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionConfig;
@@ -87,15 +91,19 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             }
             ResultMetadata metadata = (ResultMetadata) resultReader.getMetadata();
             SessionOutput sessionOutput = initResponse(request, response, metadata.getFormat());
+            ResponsePrinter printer = new ResponsePrinter(sessionOutput);
             if (metadata.getFormat() == SessionConfig.OutputFormat.CLEAN_JSON
                     || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_JSON) {
                 final Stats stats = new Stats();
-                sessionOutput.out().print("{\n");
-                ResultUtil.printResults(appCtx, resultReader, sessionOutput, stats, null);
-                QueryServiceServlet.printMetrics(sessionOutput.out(), System.nanoTime() - elapsedStart,
-                        metadata.getJobDuration(), stats.getCount(), stats.getSize(), metadata.getProcessedObjects(), 0,
-                        0, HttpUtil.getPreferredCharset(request));
-                sessionOutput.out().print("}\n");
+                printer.begin();
+                printer.addResultPrinter(new ResultsPrinter(appCtx, resultReader, null, stats, sessionOutput));
+                printer.printResults();
+                ResponseMertics mertics =
+                        ResponseMertics.of(System.nanoTime() - elapsedStart, metadata.getJobDuration(),
+                                stats.getCount(), stats.getSize(), metadata.getProcessedObjects(), 0, 0);
+                printer.addFooterPrinter(new MetricsPrinter(mertics, HttpUtil.getPreferredCharset(request)));
+                printer.printFooters();
+                printer.end();
             } else {
                 ResultUtil.printResults(appCtx, resultReader, sessionOutput, new Stats(), null);
             }

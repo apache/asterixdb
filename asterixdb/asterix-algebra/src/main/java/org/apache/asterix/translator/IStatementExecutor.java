@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
@@ -155,4 +156,11 @@ public interface IStatementExecutor {
      * @return the executions plans
      */
     ExecutionPlans getExecutionPlans();
+
+    /**
+     * Gets the response printer
+     *
+     * @return the responer printer
+     */
+    IResponsePrinter getResponsePrinter();
 }

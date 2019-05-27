@@ -62,6 +62,6 @@ public class ResultHandle {
 
     @Override
     public String toString() {
-        return Long.toString(jobId.getId()) + "-" + Long.toString(resultSetId.getId());
+        return jobId.getId() + "-" + resultSetId.getId();
     }
 }

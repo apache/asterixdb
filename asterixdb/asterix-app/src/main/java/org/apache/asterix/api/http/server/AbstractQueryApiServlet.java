@@ -20,7 +20,6 @@ package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
-import java.io.PrintWriter;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.common.api.IApplicationContext;
@@ -38,30 +37,6 @@ public class AbstractQueryApiServlet extends AbstractServlet {
     private static final Logger LOGGER = LogManager.getLogger();
     protected final IApplicationContext appCtx;
 
-    public enum ResultFields {
-        REQUEST_ID("requestID"),
-        CLIENT_ID("clientContextID"),
-        SIGNATURE("signature"),
-        TYPE("type"),
-        STATUS("status"),
-        RESULTS("results"),
-        HANDLE("handle"),
-        ERRORS("errors"),
-        METRICS("metrics"),
-        PLANS("plans"),
-        WARNINGS("warnings");
-
-        private final String str;
-
-        ResultFields(String str) {
-            this.str = str;
-        }
-
-        public String str() {
-            return str;
-        }
-    }
-
     public enum ResultStatus {
         RUNNING("running"),
         SUCCESS("success"),
@@ -72,22 +47,6 @@ public class AbstractQueryApiServlet extends AbstractServlet {
         private final String str;
 
         ResultStatus(String str) {
-            this.str = str;
-        }
-
-        public String str() {
-            return str;
-        }
-    }
-
-    public enum ErrorField {
-        CODE("code"),
-        MSG("msg"),
-        STACK("stack");
-
-        private final String str;
-
-        ErrorField(String str) {
             this.str = str;
         }
 
@@ -118,13 +77,4 @@ public class AbstractQueryApiServlet extends AbstractServlet {
         }
         return hcc;
     }
-
-    protected static void printRequestId(PrintWriter pw, String requestId) {
-        ResultUtil.printField(pw, ResultFields.REQUEST_ID.str(), requestId);
-    }
-
-    protected static void printHandle(PrintWriter pw, String handle, boolean comma) {
-        ResultUtil.printField(pw, ResultFields.HANDLE.str(), handle, comma);
-    }
-
 }
