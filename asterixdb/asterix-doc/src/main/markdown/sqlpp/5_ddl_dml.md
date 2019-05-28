@@ -26,10 +26,11 @@
 The INSERT statement is used to insert new data into a dataset.
 The data to be inserted comes from a query expression.
 This expression can be as simple as a constant expression, or in general it can be any legal query.
-If the target dataset has an auto-generated primary key field, the insert statement should not include a
-value for that field in it.
-(The system will automatically extend the provided object with this additional field and a corresponding value.)
-Insertion will fail if the dataset already has data with the primary key value(s) being inserted.
+In case the dataset has an auto-generated primary key, when performing an INSERT operation, the system allows the user to manually add the
+auto-generated key field in the INSERT statement, or skip that field and the system will automatically generate it and add it. However,
+it is important to note that if the a record already exists in the dataset with the auto-generated key provided by the user, then
+that operation is going to fail. As a general rule, insertion will fail if the dataset already has data with the primary key value(s)
+being inserted.
 
 Inserts are processed transactionally by the system.
 The transactional scope of each insert transaction is the insertion of a single object plus its affiliated secondary index entries (if any).
@@ -47,7 +48,10 @@ The following example illustrates a query-based insertion.
 
 The UPSERT statement syntactically mirrors the INSERT statement discussed above.
 The difference lies in its semantics, which for UPSERT are "add or replace" instead of the INSERT "add if not present, else error" semantics.
-Whereas an INSERT can fail if another object already exists with the specified key, the analogous UPSERT will replace the previous object's value with that of the new object in such cases.
+Whereas an INSERT can fail if another object already exists with the specified key, the analogous UPSERT will replace the previous object's value
+with that of the new object in such cases. Like the INSERT statement, the system allows the user to manually provide the auto-generated key
+for datasets with an auto-generated key as its primary key. This operation will insert the record if no record with that key already exists, but
+if a record with the key already exists, then the operation will be converted to a replace/update operation.
 
 The following example illustrates a query-based upsert operation.
 
