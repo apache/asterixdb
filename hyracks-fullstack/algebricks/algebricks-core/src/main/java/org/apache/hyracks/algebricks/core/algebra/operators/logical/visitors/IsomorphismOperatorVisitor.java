@@ -663,7 +663,10 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
                         winOp2.getFrameEndValidationExpressions())
                 && compareExpressions(winOp1.getFrameExcludeExpressions(), winOp2.getFrameExcludeExpressions())
                 && winOp1.getFrameExcludeNegationStartIdx() == winOp2.getFrameExcludeNegationStartIdx()
-                && Objects.equals(winOp1.getFrameOffset().getValue(), winOp2.getFrameOffset().getValue());
+                && Objects.equals(winOp1.getFrameExcludeUnaryExpression().getValue(),
+                        winOp2.getFrameExcludeUnaryExpression().getValue())
+                && Objects.equals(winOp1.getFrameOffsetExpression().getValue(),
+                        winOp2.getFrameOffsetExpression().getValue());
         // do not include WindowOperator.getFrameMaxObjects()
     }
 

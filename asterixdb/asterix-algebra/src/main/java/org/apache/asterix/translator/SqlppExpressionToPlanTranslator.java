@@ -33,10 +33,12 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.AbstractClause;
+import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
@@ -1054,6 +1056,8 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 BuiltinFunctions.WindowFunctionProperty.NO_ORDER_CLAUSE);
         boolean prohibitFrameClause = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
                 BuiltinFunctions.WindowFunctionProperty.NO_FRAME_CLAUSE);
+        boolean allowRespectIgnoreNulls = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
+                BuiltinFunctions.WindowFunctionProperty.ALLOW_RESPECT_IGNORE_NULLS);
 
         Mutable<ILogicalOperator> currentOpRef = tupSource;
 
@@ -1079,6 +1083,8 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         List<Mutable<ILogicalExpression>> frameEndValidationExprRefs = null;
         List<Mutable<ILogicalExpression>> frameExcludeExprRefs = null;
         int frameExcludeNotStartIdx = -1;
+        AbstractLogicalExpression frameExcludeUnaryExpr = null;
+        AbstractLogicalExpression frameOffsetExpr = null;
 
         if (winExpr.hasOrderByList()) {
             if (prohibitOrderClause) {
@@ -1107,8 +1113,8 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         WindowExpression.FrameExclusionKind winFrameExclusionKind = null;
         WindowExpression.FrameBoundaryKind winFrameStartKind = null, winFrameEndKind = null;
         Expression winFrameStartExpr = null, winFrameEndExpr = null;
-        Expression winFrameOffsetExpr = null;
-        int winFrameMaxOjbects = -1;
+        AbstractExpression winFrameExcludeUnaryExpr = null, winFrameOffsetExpr = null;
+        int winFrameMaxOjbects = WindowOperator.FRAME_MAX_OBJECTS_UNLIMITED;
 
         if (winExpr.hasFrameDefinition()) {
             if (prohibitFrameClause) {
@@ -1130,6 +1136,9 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             winFrameExclusionKind = WindowExpression.FrameExclusionKind.NO_OTHERS;
         }
 
+        boolean respectNulls = !getBooleanModifier(winExpr.getIgnoreNulls(), false, allowRespectIgnoreNulls, sourceLoc,
+                "RESPECT/IGNORE NULLS", fs.getName());
+
         boolean makeRunningAgg = false, makeNestedAgg = false;
         FunctionIdentifier runningAggFunc = null, nestedAggFunc = null, winResultFunc = null, postWinResultFunc = null;
         Expression postWinExpr = null;
@@ -1138,43 +1147,79 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
 
         if (isWinAgg) {
             makeNestedAgg = true;
-            if (BuiltinFunctions.LEAD_IMPL.equals(fi) || BuiltinFunctions.LAG_IMPL.equals(fi)) {
+            nestedAggArgs = new ArrayList<>(fargs.size());
+            nestedAggArgs.add(fargs.get(0));
+
+            boolean isLead;
+            if ((isLead = BuiltinFunctions.LEAD_IMPL.equals(fi)) || BuiltinFunctions.LAG_IMPL.equals(fi)) {
+                boolean isLag = !isLead;
+
                 int argCount = fargs.size();
-                if (argCount < 1 || argCount > 3) {
+                // LEAD_IMPL() and LAG_IMPL() have one extra (last) argument introduced by SqlppWindowRewriteVisitor
+                // which is a copy of the original first argument
+                if (argCount < 2 || argCount > 4) {
                     throw new CompilationException(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, sourceLoc, fi.getName());
                 }
+
                 winFrameMode = WindowExpression.FrameMode.ROWS;
                 winFrameExclusionKind = WindowExpression.FrameExclusionKind.NO_OTHERS;
-                winFrameStartKind = winFrameEndKind =
-                        BuiltinFunctions.LEAD_IMPL.equals(fi) ? WindowExpression.FrameBoundaryKind.BOUNDED_FOLLOWING
-                                : WindowExpression.FrameBoundaryKind.BOUNDED_PRECEDING;
-                winFrameStartExpr = argCount > 1 ? fargs.get(1) : new LiteralExpr(new IntegerLiteral(1));
-                winFrameEndExpr = (Expression) SqlppRewriteUtil.deepCopy(winFrameStartExpr);
-                // if lead/lag default expression is specified
-                // then use local-first-element() because it returns SYSTEM_NULL if the list is empty,
-                // otherwise (no default expression) use first-element() which returns NULL if the list is empty
-                if (argCount > 2) {
+
+                if (respectNulls) {
+                    winFrameStartKind = winFrameEndKind = isLead ? WindowExpression.FrameBoundaryKind.BOUNDED_FOLLOWING
+                            : WindowExpression.FrameBoundaryKind.BOUNDED_PRECEDING;
+                    winFrameStartExpr = argCount == 2 ? new LiteralExpr(new IntegerLiteral(1)) : fargs.get(1);
+                    winFrameEndExpr = (Expression) SqlppRewriteUtil.deepCopy(winFrameStartExpr);
+                    winFrameMaxOjbects = 1;
+                } else {
+                    // IGNORE NULLS
+                    if (isLag) {
+                        // reverse order for LAG()
+                        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> orderExprPair : orderExprListOut) {
+                            orderExprPair.setFirst(reverseOrder(orderExprPair.getFirst()));
+                        }
+                    }
+                    winFrameStartKind = WindowExpression.FrameBoundaryKind.BOUNDED_FOLLOWING;
+                    winFrameStartExpr = new LiteralExpr(new IntegerLiteral(1));
+                    winFrameEndKind = WindowExpression.FrameBoundaryKind.UNBOUNDED_FOLLOWING;
+                    Expression fargLast = fargs.get(fargs.size() - 1);
+                    winFrameExcludeUnaryExpr = createCallExpr(BuiltinFunctions.IS_UNKNOWN, fargLast, sourceLoc);
+                    if (argCount > 2) {
+                        winFrameOffsetExpr =
+                                createOperatorExpr(fargs.get(1), OperatorType.MINUS, new IntegerLiteral(1), sourceLoc);
+                    }
+                }
+                if (argCount < 4) {
+                    nestedAggFunc = BuiltinFunctions.SCALAR_FIRST_ELEMENT;
+                } else {
+                    // return SYSTEM_NULL if required offset is not reached
                     nestedAggFunc = BuiltinFunctions.SCALAR_LOCAL_FIRST_ELEMENT;
                     postWinResultFunc = BuiltinFunctions.IF_SYSTEM_NULL;
                     postWinExpr = fargs.get(2);
-                } else {
-                    nestedAggFunc = BuiltinFunctions.SCALAR_FIRST_ELEMENT;
                 }
-                winFrameMaxOjbects = 1;
             } else if (BuiltinFunctions.FIRST_VALUE_IMPL.equals(fi)) {
                 nestedAggFunc = BuiltinFunctions.SCALAR_FIRST_ELEMENT;
-                winFrameMaxOjbects = 1;
+                if (respectNulls) {
+                    winFrameMaxOjbects = 1;
+                } else {
+                    Expression fargLast = fargs.get(fargs.size() - 1);
+                    winFrameExcludeUnaryExpr = createCallExpr(BuiltinFunctions.IS_UNKNOWN, fargLast, sourceLoc);
+                }
             } else if (BuiltinFunctions.LAST_VALUE_IMPL.equals(fi)) {
                 nestedAggFunc = BuiltinFunctions.SCALAR_LAST_ELEMENT;
+                if (!respectNulls) {
+                    Expression fargLast = fargs.get(fargs.size() - 1);
+                    winFrameExcludeUnaryExpr = createCallExpr(BuiltinFunctions.IS_UNKNOWN, fargLast, sourceLoc);
+                }
             } else if (BuiltinFunctions.NTH_VALUE_IMPL.equals(fi)) {
                 nestedAggFunc = BuiltinFunctions.SCALAR_FIRST_ELEMENT;
-                winFrameMaxOjbects = 1;
-                OperatorExpr opExpr = new OperatorExpr();
-                opExpr.addOperand(fargs.get(1));
-                opExpr.addOperator(OperatorType.MINUS);
-                opExpr.addOperand(new LiteralExpr(new IntegerLiteral(1)));
-                opExpr.setSourceLocation(sourceLoc);
-                winFrameOffsetExpr = opExpr;
+                if (respectNulls) {
+                    winFrameMaxOjbects = 1;
+                } else {
+                    Expression fargLast = fargs.get(fargs.size() - 1);
+                    winFrameExcludeUnaryExpr = createCallExpr(BuiltinFunctions.IS_UNKNOWN, fargLast, sourceLoc);
+                }
+                winFrameOffsetExpr =
+                        createOperatorExpr(fargs.get(1), OperatorType.MINUS, new IntegerLiteral(1), sourceLoc);
             } else if (BuiltinFunctions.RATIO_TO_REPORT_IMPL.equals(fi)) {
                 // ratio_to_report(x) over (...) --> x / sum(x) over (...)
                 nestedAggFunc = BuiltinFunctions.SCALAR_SQL_SUM;
@@ -1184,7 +1229,6 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             } else {
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, fi.getName());
             }
-            nestedAggArgs = mkSingletonArrayList(fargs.get(0));
         } else if (isWin) {
             makeRunningAgg = true;
             if (BuiltinFunctions.CUME_DIST_IMPL.equals(fi)) {
@@ -1253,19 +1297,28 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                     currentOpRef = new MutableObject<>(frameEndResult.first);
                 }
             }
-        }
 
-        AbstractLogicalExpression frameOffsetExpr = null;
-        if (winFrameOffsetExpr != null) {
-            Pair<ILogicalOperator, LogicalVariable> frameOffsetResult = winFrameOffsetExpr.accept(this, currentOpRef);
-            frameOffsetExpr = new VariableReferenceExpression(frameOffsetResult.second);
-            frameOffsetExpr.setSourceLocation(sourceLoc);
-            currentOpRef = new MutableObject<>(frameOffsetResult.first);
+            if (winFrameExcludeUnaryExpr != null) {
+                Pair<ILogicalOperator, LogicalVariable> frameExcludeUnaryResult =
+                        winFrameExcludeUnaryExpr.accept(this, currentOpRef);
+                frameExcludeUnaryExpr = new VariableReferenceExpression(frameExcludeUnaryResult.second);
+                frameExcludeUnaryExpr.setSourceLocation(sourceLoc);
+                currentOpRef = new MutableObject<>(frameExcludeUnaryResult.first);
+            }
+
+            if (winFrameOffsetExpr != null) {
+                Pair<ILogicalOperator, LogicalVariable> frameOffsetResult =
+                        winFrameOffsetExpr.accept(this, currentOpRef);
+                frameOffsetExpr = new VariableReferenceExpression(frameOffsetResult.second);
+                frameOffsetExpr.setSourceLocation(sourceLoc);
+                currentOpRef = new MutableObject<>(frameOffsetResult.first);
+            }
         }
 
         WindowOperator winOp = new WindowOperator(partExprListOut, orderExprListOut, frameValueExprRefs,
                 frameStartExprRefs, frameStartValidationExprRefs, frameEndExprRefs, frameEndValidationExprRefs,
-                frameExcludeExprRefs, frameExcludeNotStartIdx, frameOffsetExpr, winFrameMaxOjbects);
+                frameExcludeExprRefs, frameExcludeNotStartIdx, frameExcludeUnaryExpr, frameOffsetExpr,
+                winFrameMaxOjbects);
         winOp.setSourceLocation(sourceLoc);
 
         LogicalVariable runningAggResultVar = null, nestedAggResultVar = null;
@@ -1608,5 +1661,43 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             winOp.getExpressions().add(new MutableObject<>(valueExpr));
         }
         return winOp;
+    }
+
+    private boolean getBooleanModifier(Boolean value, boolean defaultValue, boolean isAllowed, SourceLocation sourceLoc,
+            String displayName, String funcName) throws CompilationException {
+        if (isAllowed) {
+            return value != null ? value : defaultValue;
+        }
+        if (value != null) {
+            throw new CompilationException(ErrorCode.INVALID_FUNCTION_MODIFIER, sourceLoc, displayName, funcName);
+        }
+        return defaultValue;
+    }
+
+    private CallExpr createCallExpr(FunctionIdentifier func, Expression arg, SourceLocation sourceLoc) {
+        CallExpr callExpr = new CallExpr(new FunctionSignature(func), mkSingletonArrayList(arg));
+        callExpr.setSourceLocation(sourceLoc);
+        return callExpr;
+    }
+
+    private AbstractExpression createOperatorExpr(Expression arg1, OperatorType opType, Literal arg2,
+            SourceLocation sourceLoc) {
+        OperatorExpr opExpr = new OperatorExpr();
+        opExpr.addOperand(arg1);
+        opExpr.addOperator(opType);
+        opExpr.addOperand(new LiteralExpr(arg2));
+        opExpr.setSourceLocation(sourceLoc);
+        return opExpr;
+    }
+
+    private static OrderOperator.IOrder reverseOrder(OrderOperator.IOrder order) throws CompilationException {
+        switch (order.getKind()) {
+            case ASC:
+                return OrderOperator.DESC_ORDER;
+            case DESC:
+                return OrderOperator.ASC_ORDER;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR);
+        }
     }
 }

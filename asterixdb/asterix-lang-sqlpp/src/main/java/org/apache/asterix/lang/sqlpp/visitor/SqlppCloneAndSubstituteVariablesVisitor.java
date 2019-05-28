@@ -423,7 +423,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         WindowExpression newWinExpr = new WindowExpression(winExpr.getFunctionSignature(), newExprList,
                 newPartitionList, newOrderbyList, newOrderbyModifierList, winExpr.getFrameMode(),
                 winExpr.getFrameStartKind(), newFrameStartExpr, winExpr.getFrameEndKind(), newFrameEndExpr,
-                winExpr.getFrameExclusionKind(), newWindowVar, newWindowFieldList);
+                winExpr.getFrameExclusionKind(), newWindowVar, newWindowFieldList, winExpr.getIgnoreNulls());
         newWinExpr.setSourceLocation(winExpr.getSourceLocation());
         newWinExpr.addHints(winExpr.getHints());
         return new Pair<>(newWinExpr, env);

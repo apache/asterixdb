@@ -1,0 +1,4 @@
+{ "first_value_ignore": "a", "y": 1, "p": 0 }
+{ "first_value_ignore": "a", "x": "a", "y": 2, "p": 0 }
+{ "first_value_respect": null, "first_value_ignore": "b", "x": null, "y": 3, "p": 1 }
+{ "first_value_respect": null, "first_value_ignore": "b", "x": "b", "y": 4, "p": 1 }

@@ -628,17 +628,19 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
                 exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getFrameEndExpressions());
         List<Mutable<ILogicalExpression>> frameEndValidationExprCopy =
                 exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getFrameEndValidationExpressions());
-        List<Mutable<ILogicalExpression>> frameExclusionExprCopy =
+        List<Mutable<ILogicalExpression>> frameExcludeExprCopy =
                 exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getFrameExcludeExpressions());
-        ILogicalExpression frameOffsetCopy = exprDeepCopyVisitor.deepCopy(op.getFrameOffset().getValue());
+        ILogicalExpression frameExcludeUnaryExprCopy =
+                exprDeepCopyVisitor.deepCopy(op.getFrameExcludeUnaryExpression().getValue());
+        ILogicalExpression frameOffsetExprCopy = exprDeepCopyVisitor.deepCopy(op.getFrameOffsetExpression().getValue());
         List<LogicalVariable> varCopy = deepCopyVariableList(op.getVariables());
         List<Mutable<ILogicalExpression>> exprCopy =
                 exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getExpressions());
         List<ILogicalPlan> nestedPlansCopy = new ArrayList<>();
         WindowOperator opCopy = new WindowOperator(partitionExprCopy, orderExprCopy, frameValueExprCopy,
                 frameStartExprCopy, frameStartValidationExprCopy, frameEndExprCopy, frameEndValidationExprCopy,
-                frameExclusionExprCopy, op.getFrameExcludeNegationStartIdx(), frameOffsetCopy, op.getFrameMaxObjects(),
-                varCopy, exprCopy, nestedPlansCopy);
+                frameExcludeExprCopy, op.getFrameExcludeNegationStartIdx(), frameExcludeUnaryExprCopy,
+                frameOffsetExprCopy, op.getFrameMaxObjects(), varCopy, exprCopy, nestedPlansCopy);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         deepCopyPlanList(op.getNestedPlans(), nestedPlansCopy, opCopy);
         return opCopy;
@@ -647,5 +649,4 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     public LinkedHashMap<LogicalVariable, LogicalVariable> getInputToOutputVariableMapping() {
         return inputVarToOutputVarMapping;
     }
-
 }

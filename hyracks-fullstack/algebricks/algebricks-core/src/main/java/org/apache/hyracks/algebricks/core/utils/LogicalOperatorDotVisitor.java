@@ -635,10 +635,16 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
                 stringBuilder.append(" (negation start: ").append(op.getFrameExcludeNegationStartIdx()).append(") ");
                 printExprList(frameExcludeExpressions);
             }
-            Mutable<ILogicalExpression> frameOffset = op.getFrameOffset();
-            if (frameOffset.getValue() != null) {
+            Mutable<ILogicalExpression> frameExcludeUnaryExpression = op.getFrameExcludeUnaryExpression();
+            if (frameExcludeUnaryExpression.getValue() != null) {
+                stringBuilder.append(") frame exclude unary (");
+                stringBuilder.append(frameExcludeUnaryExpression.getValue());
+                stringBuilder.append(") ");
+            }
+            Mutable<ILogicalExpression> frameOffsetExpression = op.getFrameOffsetExpression();
+            if (frameOffsetExpression.getValue() != null) {
                 stringBuilder.append(") frame offset (");
-                stringBuilder.append(frameOffset.getValue());
+                stringBuilder.append(frameOffsetExpression.getValue());
                 stringBuilder.append(") ");
             }
             int frameMaxObjects = op.getFrameMaxObjects();

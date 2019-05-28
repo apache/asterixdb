@@ -742,11 +742,17 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 addIndent(indent).append("\"frame-exclude-negation-start\": ")
                         .append(String.valueOf(op.getFrameExcludeNegationStartIdx()));
             }
-            Mutable<ILogicalExpression> frameOffset = op.getFrameOffset();
-            if (frameOffset.getValue() != null) {
+            Mutable<ILogicalExpression> frameExcludeUnaryExpression = op.getFrameExcludeUnaryExpression();
+            if (frameExcludeUnaryExpression.getValue() != null) {
+                buffer.append(",\n");
+                addIndent(indent).append("\"frame-exclude-unary\": ");
+                pprintExpr(frameExcludeUnaryExpression, fldIndent);
+            }
+            Mutable<ILogicalExpression> frameOffsetExpression = op.getFrameOffsetExpression();
+            if (frameOffsetExpression.getValue() != null) {
                 buffer.append(",\n");
                 addIndent(indent).append("\"frame-offset\": ");
-                pprintExpr(frameOffset, fldIndent);
+                pprintExpr(frameOffsetExpression, fldIndent);
             }
             int frameMaxObjects = op.getFrameMaxObjects();
             if (frameMaxObjects != -1) {

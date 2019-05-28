@@ -331,8 +331,14 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                     AggregateFunctionCallExpression newAggFun = BuiltinFunctions
                             .makeAggregateFunctionExpression(aggFun.getFunctionIdentifier(), new ArrayList<>());
                     newAggFun.setSourceLocation(oldAggExpr.getSourceLocation());
-                    for (Mutable<ILogicalExpression> arg : oldAggExpr.getArguments()) {
+                    List<Mutable<ILogicalExpression>> oldAggArgs = oldAggExpr.getArguments();
+                    for (Mutable<ILogicalExpression> arg : oldAggArgs) {
                         ILogicalExpression cloned = arg.getValue().cloneExpression();
+                        newAggFun.getArguments().add(new MutableObject<>(cloned));
+                    }
+                    List<Mutable<ILogicalExpression>> aggFunArgs = aggFun.getArguments();
+                    for (int k = oldAggArgs.size(), ln = aggFunArgs.size(); k < ln; k++) {
+                        ILogicalExpression cloned = aggFunArgs.get(k).getValue().cloneExpression();
                         newAggFun.getArguments().add(new MutableObject<>(cloned));
                     }
                     aggOp.getVariables().add(newAggVar);

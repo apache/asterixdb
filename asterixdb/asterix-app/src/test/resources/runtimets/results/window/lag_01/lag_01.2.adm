@@ -1,0 +1,12 @@
+{ "lag_2_respect": null, "lag_2_ignore": null, "x": "a", "y": 1, "p": 0 }
+{ "lag_2_respect": null, "lag_2_ignore": null, "y": 2, "p": 0 }
+{ "lag_2_respect": "a", "lag_2_ignore": null, "x": "b", "y": 3, "p": 0 }
+{ "lag_2_ignore": "a", "x": null, "y": 4, "p": 0 }
+{ "lag_2_respect": "b", "lag_2_ignore": "a", "x": "c", "y": 5, "p": 0 }
+{ "lag_2_respect": null, "lag_2_ignore": "b", "y": 6, "p": 0 }
+{ "lag_2_respect": null, "lag_2_ignore": null, "x": "a", "y": 7, "p": 1 }
+{ "lag_2_respect": null, "lag_2_ignore": null, "x": null, "y": 8, "p": 1 }
+{ "lag_2_respect": "a", "lag_2_ignore": null, "x": "b", "y": 9, "p": 1 }
+{ "lag_2_respect": null, "lag_2_ignore": "a", "y": 10, "p": 1 }
+{ "lag_2_respect": "b", "lag_2_ignore": "a", "x": "c", "y": 11, "p": 1 }
+{ "lag_2_ignore": "b", "x": null, "y": 12, "p": 1 }

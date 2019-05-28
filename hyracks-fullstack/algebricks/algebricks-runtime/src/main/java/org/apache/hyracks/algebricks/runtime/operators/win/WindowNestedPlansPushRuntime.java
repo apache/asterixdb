@@ -110,19 +110,21 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
 
     private PointableTupleReference frameExcludePointables;
 
-    private IPointable frameExcludePointable2;
-
     private final IBinaryComparatorFactory[] frameExcludeComparatorFactories;
 
     private IBinaryComparator[] frameExcludeComparators;
+
+    private final boolean frameExcludeUnaryExists;
+
+    private final IScalarEvaluatorFactory frameExcludeUnaryEvalFactory;
+
+    private IScalarEvaluator frameExcludeUnaryEval;
 
     private final boolean frameOffsetExists;
 
     private final IScalarEvaluatorFactory frameOffsetEvalFactory;
 
     private IScalarEvaluator frameOffsetEval;
-
-    private IPointable frameOffsetPointable;
 
     private final int frameMaxObjects;
 
@@ -133,6 +135,8 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
     private final IBinaryIntegerInspectorFactory integerAccessorFactory;
 
     private IBinaryIntegerInspector integerAccessor;
+
+    private IPointable tmpPointable;
 
     private FrameTupleAccessor tAccess2;
 
@@ -148,7 +152,8 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
             IScalarEvaluatorFactory[] frameStartValidationEvalFactories, boolean frameStartIsMonotonic,
             IScalarEvaluatorFactory[] frameEndEvalFactories, IScalarEvaluatorFactory[] frameEndValidationEvalFactories,
             IScalarEvaluatorFactory[] frameExcludeEvalFactories, int frameExcludeNegationStartIdx,
-            IBinaryComparatorFactory[] frameExcludeComparatorFactories, IScalarEvaluatorFactory frameOffsetEvalFactory,
+            IBinaryComparatorFactory[] frameExcludeComparatorFactories,
+            IScalarEvaluatorFactory frameExcludeUnaryEvalFactory, IScalarEvaluatorFactory frameOffsetEvalFactory,
             int frameMaxObjects, IBinaryBooleanInspectorFactory booleanAccessorFactory,
             IBinaryIntegerInspectorFactory integerAccessorFactory, int[] projectionColumns, int[] runningAggOutColumns,
             IRunningAggregateEvaluatorFactory[] runningAggFactories, int nestedAggOutSchemaSize,
@@ -175,6 +180,8 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
         this.frameExcludeExists = frameExcludeEvalFactories != null && frameExcludeEvalFactories.length > 0;
         this.frameExcludeComparatorFactories = frameExcludeComparatorFactories;
         this.frameExcludeNegationStartIdx = frameExcludeNegationStartIdx;
+        this.frameExcludeUnaryExists = frameExcludeUnaryEvalFactory != null;
+        this.frameExcludeUnaryEvalFactory = frameExcludeUnaryEvalFactory;
         this.frameOffsetExists = frameOffsetEvalFactory != null;
         this.frameOffsetEvalFactory = frameOffsetEvalFactory;
         this.frameMaxObjects = frameMaxObjects;
@@ -215,15 +222,21 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
             frameExcludeComparators = createBinaryComparators(frameExcludeComparatorFactories);
             frameExcludePointables =
                     PointableTupleReference.create(frameExcludeEvalFactories.length, VoidPointable.FACTORY);
-            frameExcludePointable2 = VoidPointable.FACTORY.createPointable();
+        }
+        if (frameExcludeUnaryExists) {
+            frameExcludeUnaryEval = frameExcludeUnaryEvalFactory.createScalarEvaluator(ctx);
         }
         if (frameOffsetExists) {
             frameOffsetEval = frameOffsetEvalFactory.createScalarEvaluator(ctx);
-            frameOffsetPointable = VoidPointable.FACTORY.createPointable();
-            integerAccessor = integerAccessorFactory.createBinaryIntegerInspector(ctx);
         }
-        if (frameStartValidationExists || frameEndValidationExists) {
+        if (frameExcludeExists || frameExcludeUnaryExists || frameOffsetExists) {
+            tmpPointable = VoidPointable.FACTORY.createPointable();
+        }
+        if (frameStartValidationExists || frameEndValidationExists || frameExcludeUnaryExists) {
             booleanAccessor = booleanAccessorFactory.createBinaryBooleanInspector(ctx);
+        }
+        if (frameOffsetExists) {
+            integerAccessor = integerAccessorFactory.createBinaryIntegerInspector(ctx);
         }
         tAccess2 = new FrameTupleAccessor(inputRecordDesc);
         tRef2 = new FrameTupleReference();
@@ -259,36 +272,38 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
             nestedAggInit();
 
             // frame boundaries
-            boolean frameStartValid = true;
+            boolean frameValid = true;
             if (frameStartExists) {
                 if (frameStartValidationExists) {
                     evaluate(frameStartValidationEvals, tRef, frameStartValidationPointables);
-                    frameStartValid = allTrue(frameStartValidationPointables, booleanAccessor);
+                    frameValid = allTrue(frameStartValidationPointables, booleanAccessor);
                 }
-                if (frameStartValid) {
+                if (frameValid) {
                     evaluate(frameStartEvals, tRef, frameStartPointables);
                 }
             }
-            boolean frameEndValid = true;
-            if (frameEndExists) {
+
+            if (frameValid && frameEndExists) {
                 if (frameEndValidationExists) {
                     evaluate(frameEndValidationEvals, tRef, frameEndValidationPointables);
-                    frameEndValid = allTrue(frameEndValidationPointables, booleanAccessor);
+                    frameValid = allTrue(frameEndValidationPointables, booleanAccessor);
                 }
-                if (frameEndValid) {
+                if (frameValid) {
                     evaluate(frameEndEvals, tRef, frameEndPointables);
                 }
             }
 
-            if (frameStartValid && frameEndValid) {
+            int toSkip = 0;
+            if (frameValid && frameOffsetExists) {
+                frameOffsetEval.evaluate(tRef, tmpPointable);
+                toSkip = integerAccessor.getIntegerValue(tmpPointable.getByteArray(), tmpPointable.getStartOffset(),
+                        tmpPointable.getLength());
+                frameValid = toSkip >= 0;
+            }
+
+            if (frameValid) {
                 if (frameExcludeExists) {
                     evaluate(frameExcludeEvals, tRef, frameExcludePointables);
-                }
-                int toSkip = 0;
-                if (frameOffsetExists) {
-                    frameOffsetEval.evaluate(tRef, frameOffsetPointable);
-                    toSkip = integerAccessor.getIntegerValue(frameOffsetPointable.getByteArray(),
-                            frameOffsetPointable.getStartOffset(), frameOffsetPointable.getLength());
                 }
                 int toWrite = frameMaxObjects;
 
@@ -346,7 +361,7 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
                                 break frame_loop;
                             }
                         }
-                        if (frameExcludeExists && isExcluded()) {
+                        if ((frameExcludeExists && isExcluded()) || (frameExcludeUnaryExists && isExcludedUnary())) {
                             // skip if excluded
                             continue;
                         }
@@ -390,8 +405,8 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
 
     private boolean isExcluded() throws HyracksDataException {
         for (int i = 0; i < frameExcludeEvals.length; i++) {
-            frameExcludeEvals[i].evaluate(tRef2, frameExcludePointable2);
-            boolean b = DataUtils.compare(frameExcludePointables.getField(i), frameExcludePointable2,
+            frameExcludeEvals[i].evaluate(tRef2, tmpPointable);
+            boolean b = DataUtils.compare(frameExcludePointables.getField(i), tmpPointable,
                     frameExcludeComparators[i]) != 0;
             if (i >= frameExcludeNegationStartIdx) {
                 b = !b;
@@ -401,6 +416,12 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
             }
         }
         return true;
+    }
+
+    private boolean isExcludedUnary() throws HyracksDataException {
+        frameExcludeUnaryEval.evaluate(tRef2, tmpPointable);
+        return booleanAccessor.getBooleanValue(tmpPointable.getByteArray(), tmpPointable.getStartOffset(),
+                tmpPointable.getLength());
     }
 
     @Override

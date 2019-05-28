@@ -1,0 +1,12 @@
+{ "lag_1_respect": null, "lag_1_ignore": null, "x": "a", "y": 1, "p": 0 }
+{ "lag_1_respect": "a", "lag_1_ignore": "a", "y": 2, "p": 0 }
+{ "lag_1_ignore": "a", "x": "b", "y": 3, "p": 0 }
+{ "lag_1_respect": "b", "lag_1_ignore": "b", "x": null, "y": 4, "p": 0 }
+{ "lag_1_respect": null, "lag_1_ignore": "b", "x": "c", "y": 5, "p": 0 }
+{ "lag_1_respect": "c", "lag_1_ignore": "c", "y": 6, "p": 0 }
+{ "lag_1_respect": null, "lag_1_ignore": null, "x": "a", "y": 7, "p": 1 }
+{ "lag_1_respect": "a", "lag_1_ignore": "a", "x": null, "y": 8, "p": 1 }
+{ "lag_1_respect": null, "lag_1_ignore": "a", "x": "b", "y": 9, "p": 1 }
+{ "lag_1_respect": "b", "lag_1_ignore": "b", "y": 10, "p": 1 }
+{ "lag_1_ignore": "b", "x": "c", "y": 11, "p": 1 }
+{ "lag_1_respect": "c", "lag_1_ignore": "c", "x": null, "y": 12, "p": 1 }

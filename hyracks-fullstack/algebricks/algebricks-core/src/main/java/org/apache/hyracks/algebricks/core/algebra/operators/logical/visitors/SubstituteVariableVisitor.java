@@ -529,9 +529,13 @@ public class SubstituteVariableVisitor
         for (Mutable<ILogicalExpression> expr : op.getFrameExcludeExpressions()) {
             expr.getValue().substituteVar(pair.first, pair.second);
         }
-        ILogicalExpression frameOffset = op.getFrameOffset().getValue();
-        if (frameOffset != null) {
-            frameOffset.substituteVar(pair.first, pair.second);
+        ILogicalExpression frameExcludeUnaryExpr = op.getFrameExcludeUnaryExpression().getValue();
+        if (frameExcludeUnaryExpr != null) {
+            frameExcludeUnaryExpr.substituteVar(pair.first, pair.second);
+        }
+        ILogicalExpression frameOffsetExpr = op.getFrameOffsetExpression().getValue();
+        if (frameOffsetExpr != null) {
+            frameOffsetExpr.substituteVar(pair.first, pair.second);
         }
         substAssignVariables(op.getVariables(), op.getExpressions(), pair);
         substInNestedPlans(pair.first, pair.second, op);

@@ -1,0 +1,8 @@
+{ "last_value_respect": null, "last_value_ignore": "b", "x": "a", "y": 1, "p": 0 }
+{ "last_value_respect": null, "last_value_ignore": "b", "x": "b", "y": 2, "p": 0 }
+{ "last_value_respect": null, "last_value_ignore": "b", "y": 3, "p": 0 }
+{ "last_value_respect": null, "last_value_ignore": "b", "x": null, "y": 4, "p": 0 }
+{ "last_value_ignore": "b", "x": "a", "y": 5, "p": 1 }
+{ "last_value_ignore": "b", "x": "b", "y": 6, "p": 1 }
+{ "last_value_ignore": "b", "x": null, "y": 7, "p": 1 }
+{ "last_value_ignore": "b", "y": 8, "p": 1 }

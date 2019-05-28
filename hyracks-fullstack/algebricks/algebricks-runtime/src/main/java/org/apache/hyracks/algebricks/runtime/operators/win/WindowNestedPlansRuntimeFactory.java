@@ -57,6 +57,8 @@ public class WindowNestedPlansRuntimeFactory extends AbstractWindowNestedPlansRu
 
     private final IBinaryComparatorFactory[] frameExcludeComparatorFactories;
 
+    private final IScalarEvaluatorFactory frameExcludeUnaryEvalFactory;
+
     private final IScalarEvaluatorFactory frameOffsetEvalFactory;
 
     private final int frameMaxObjects;
@@ -72,7 +74,8 @@ public class WindowNestedPlansRuntimeFactory extends AbstractWindowNestedPlansRu
             IScalarEvaluatorFactory[] frameStartValidationEvalFactories, boolean frameStartIsMonotonic,
             IScalarEvaluatorFactory[] frameEndEvalFactories, IScalarEvaluatorFactory[] frameEndValidationEvalFactories,
             IScalarEvaluatorFactory[] frameExcludeEvalFactories, int frameExcludeNegationStartIdx,
-            IBinaryComparatorFactory[] frameExcludeComparatorFactories, IScalarEvaluatorFactory frameOffsetEvalFactory,
+            IBinaryComparatorFactory[] frameExcludeComparatorFactories,
+            IScalarEvaluatorFactory frameExcludeUnaryEvalFactory, IScalarEvaluatorFactory frameOffsetEvalFactory,
             int frameMaxObjects, IBinaryBooleanInspectorFactory booleanAccessorFactory,
             IBinaryIntegerInspectorFactory integerAccessorFactory, int[] projectionColumnsExcludingSubplans,
             int[] runningAggOutColumns, IRunningAggregateEvaluatorFactory[] runningAggFactories,
@@ -90,6 +93,7 @@ public class WindowNestedPlansRuntimeFactory extends AbstractWindowNestedPlansRu
         this.frameExcludeEvalFactories = frameExcludeEvalFactories;
         this.frameExcludeComparatorFactories = frameExcludeComparatorFactories;
         this.frameExcludeNegationStartIdx = frameExcludeNegationStartIdx;
+        this.frameExcludeUnaryEvalFactory = frameExcludeUnaryEvalFactory;
         this.frameOffsetEvalFactory = frameOffsetEvalFactory;
         this.frameMaxObjects = frameMaxObjects;
         this.booleanAccessorFactory = booleanAccessorFactory;
@@ -102,9 +106,10 @@ public class WindowNestedPlansRuntimeFactory extends AbstractWindowNestedPlansRu
                 orderComparatorFactories, frameValueEvalFactories, frameValueComparatorFactories,
                 frameStartEvalFactories, frameStartValidatinoEvalFactories, frameStartIsMonotonic,
                 frameEndEvalFactories, frameEndValidationEvalFactories, frameExcludeEvalFactories,
-                frameExcludeNegationStartIdx, frameExcludeComparatorFactories, frameOffsetEvalFactory, frameMaxObjects,
-                booleanAccessorFactory, integerAccessorFactory, projectionList, runningAggOutColumns,
-                runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, ctx, memSizeInFrames, sourceLoc);
+                frameExcludeNegationStartIdx, frameExcludeComparatorFactories, frameExcludeUnaryEvalFactory,
+                frameOffsetEvalFactory, frameMaxObjects, booleanAccessorFactory, integerAccessorFactory, projectionList,
+                runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, ctx,
+                memSizeInFrames, sourceLoc);
     }
 
     @Override

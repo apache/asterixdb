@@ -49,9 +49,11 @@ public class CollectionMemberResultType extends AbstractResultTypeComputer {
     @Override
     protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
             throws AlgebricksException {
-        ATypeTag actualTypeTag = type.getTypeTag();
-        if (!type.getTypeTag().isListType()) {
-            throw new TypeMismatchException(sourceLoc, actualTypeTag, ATypeTag.MULTISET, ATypeTag.ARRAY);
+        if (argIndex == 0) {
+            ATypeTag actualTypeTag = type.getTypeTag();
+            if (!type.getTypeTag().isListType()) {
+                throw new TypeMismatchException(sourceLoc, actualTypeTag, ATypeTag.MULTISET, ATypeTag.ARRAY);
+            }
         }
     }
 

@@ -16,11 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.data;
+/*
+ * Description  : LEAD() RESPECT / IGNORE NULLS
+ * Expected Res : SUCCESS
+ */
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+from [
+  { "x": "a",         "y": 1,  "p": 0 },
+  {                   "y": 2,  "p": 0 },
+  { "x": "b",         "y": 3,  "p": 0 },
+  { "x": null,        "y": 4,  "p": 0 },
+  { "x": "c",         "y": 5,  "p": 0 },
+  {                   "y": 6,  "p": 0 },
 
-@FunctionalInterface
-public interface IBinaryBooleanInspector {
-    boolean getBooleanValue(byte[] bytes, int offset, int length) throws HyracksDataException;
-}
+  { "x": "a",         "y": 7,  "p": 1 },
+  { "x": null,        "y": 8,  "p": 1 },
+  { "x": "b",         "y": 9,  "p": 1 },
+  {                   "y": 10, "p": 1 },
+  { "x": "c",         "y": 11, "p": 1 },
+  { "x": null,        "y": 12, "p": 1 }
+] t
+select
+  lead(x) respect nulls over (partition by p order by y)
+    as lead_1_respect,
+  lead(x) ignore nulls over (partition by p order by y)
+    as lead_1_ignore,
+  x, y, p
+order by y

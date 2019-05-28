@@ -340,9 +340,13 @@ public class SweepIllegalNonfunctionalFunctions implements IAlgebraicRewriteRule
             for (Mutable<ILogicalExpression> me : op.getFrameExcludeExpressions()) {
                 sweepExpression(me.getValue());
             }
-            ILogicalExpression frameOffset = op.getFrameOffset().getValue();
-            if (frameOffset != null) {
-                sweepExpression(frameOffset);
+            ILogicalExpression frameExcludeUnaryExpr = op.getFrameExcludeUnaryExpression().getValue();
+            if (frameExcludeUnaryExpr != null) {
+                sweepExpression(frameExcludeUnaryExpr);
+            }
+            ILogicalExpression frameOffsetExpr = op.getFrameOffsetExpression().getValue();
+            if (frameOffsetExpr != null) {
+                sweepExpression(frameOffsetExpr);
             }
             for (Mutable<ILogicalExpression> me : op.getExpressions()) {
                 ILogicalExpression expr = me.getValue();

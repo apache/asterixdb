@@ -10355,8 +10355,33 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="window">
+      <compilation-unit name="first_value_01">
+        <output-dir compare="Text">first_value_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="lag_01">
+        <output-dir compare="Text">lag_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="last_value_01">
+        <output-dir compare="Text">last_value_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="lead_01">
+        <output-dir compare="Text">lead_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
       <compilation-unit name="misc_01">
         <output-dir compare="Text">misc_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="nth_value_01">
+        <output-dir compare="Text">nth_value_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="window">
@@ -10397,6 +10422,8 @@
         <expected-error>ASX1037: Invalid query parameter compiler.windowmemory</expected-error>
         <expected-error>ASX1102: Expected window or aggregate function, got: unknown_func</expected-error>
         <expected-error>ASX1079: Compilation error: count is a SQL-92 aggregate function</expected-error>
+        <expected-error>ASX1104: Invalid modifier RESPECT/IGNORE NULLS for function</expected-error>
+        <expected-error>ASX1104: Invalid modifier RESPECT/IGNORE NULLS for function</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

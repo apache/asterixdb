@@ -54,12 +54,14 @@ public class WindowExpression extends AbstractExpression {
     private VariableExpr windowVar;
     private List<Pair<Expression, Identifier>> windowFieldList;
 
+    private Boolean ignoreNulls;
+
     public WindowExpression(FunctionSignature functionSignature, List<Expression> exprList,
             List<Expression> partitionList, List<Expression> orderbyList,
             List<OrderbyClause.OrderModifier> orderbyModifierList, FrameMode frameMode,
             FrameBoundaryKind frameStartKind, Expression frameStartExpr, FrameBoundaryKind frameEndKind,
             Expression frameEndExpr, FrameExclusionKind frameExclusionKind, VariableExpr windowVar,
-            List<Pair<Expression, Identifier>> windowFieldList) {
+            List<Pair<Expression, Identifier>> windowFieldList, Boolean ignoreNulls) {
         if (functionSignature == null || exprList == null) {
             throw new NullPointerException();
         }
@@ -76,6 +78,7 @@ public class WindowExpression extends AbstractExpression {
         this.frameExclusionKind = frameExclusionKind;
         this.windowVar = windowVar;
         this.windowFieldList = windowFieldList;
+        this.ignoreNulls = ignoreNulls;
     }
 
     @Override
@@ -221,12 +224,20 @@ public class WindowExpression extends AbstractExpression {
         this.windowFieldList = windowFieldList;
     }
 
+    public Boolean getIgnoreNulls() {
+        return ignoreNulls;
+    }
+
+    public void setIgnoreNulls(Boolean ignoreNulls) {
+        this.ignoreNulls = ignoreNulls;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(functionSignature, exprList, ExpressionUtils.emptyIfNull(partitionList),
                 ExpressionUtils.emptyIfNull(orderbyList), ExpressionUtils.emptyIfNull(orderbyModifierList), frameMode,
                 frameStartKind, frameStartExpr, frameEndKind, frameEndExpr, frameExclusionKind, windowVar,
-                ExpressionUtils.emptyIfNull(windowFieldList));
+                ExpressionUtils.emptyIfNull(windowFieldList), ignoreNulls);
     }
 
     @Override
@@ -251,7 +262,8 @@ public class WindowExpression extends AbstractExpression {
                 && Objects.equals(frameEndExpr, target.frameEndExpr) && frameExclusionKind == target.frameExclusionKind
                 && Objects.equals(windowVar, target.windowVar)
                 && Objects.equals(ExpressionUtils.emptyIfNull(windowFieldList),
-                        ExpressionUtils.emptyIfNull(target.windowFieldList));
+                        ExpressionUtils.emptyIfNull(target.windowFieldList))
+                && Objects.equals(ignoreNulls, target.ignoreNulls);
     }
 
     @Override
@@ -261,7 +273,11 @@ public class WindowExpression extends AbstractExpression {
         sb.append(functionSignature);
         sb.append('(');
         sb.append(StringUtils.join(exprList, ','));
-        sb.append(") OVER ");
+        sb.append(')');
+        if (ignoreNulls != null && ignoreNulls) {
+            sb.append(" IGNORE NULLS");
+        }
+        sb.append(" OVER ");
         if (hasWindowVar()) {
             sb.append(windowVar);
             if (hasWindowFieldList()) {

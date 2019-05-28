@@ -109,23 +109,24 @@ public final class SqlppWindowRewriteVisitor extends AbstractSqlppExpressionExtr
      * Apply rewritings for specific window functions:
      * <ul>
      * <li>
-     * {@code ratio_to_report(x) -> ratio_to_report_impl(x, x)}.
+     * Add a copy of the first argument as the last argument for all functions
+     * that have {@link BuiltinFunctions.WindowFunctionProperty#HAS_LIST_ARG} modifier.
      * The first argument will then be rewritten by
      * {@link SqlppWindowAggregationSugarVisitor#wrapAggregationArguments(WindowExpression, int)}.
-     * The remaining rewriting to {@code x/sum(x)} will be done by the expression to plan translator
+     * The new last argument will be handled by expression to plan translator
      * </li>
      * </ul>
      */
     private void rewriteSpecificWindowFunctions(FunctionIdentifier winfi, WindowExpression winExpr)
             throws CompilationException {
-        if (BuiltinFunctions.RATIO_TO_REPORT_IMPL.equals(winfi)) {
-            duplicateLastArgument(winExpr);
+        if (BuiltinFunctions.builtinFunctionHasProperty(winfi, BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG)) {
+            duplicateFirstArgument(winExpr);
         }
     }
 
-    private void duplicateLastArgument(WindowExpression winExpr) throws CompilationException {
+    private void duplicateFirstArgument(WindowExpression winExpr) throws CompilationException {
         List<Expression> exprList = winExpr.getExprList();
-        Expression arg = exprList.get(exprList.size() - 1);
+        Expression arg = exprList.get(0);
         exprList.add((Expression) SqlppRewriteUtil.deepCopy(arg));
     }
 }

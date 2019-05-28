@@ -536,10 +536,15 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
                     pprintExprList(frameExcludeExpressions, indent);
                 }
             }
-            Mutable<ILogicalExpression> frameOffset = op.getFrameOffset();
-            if (frameOffset.getValue() != null) {
+            Mutable<ILogicalExpression> frameExcludeUnaryExpression = op.getFrameExcludeUnaryExpression();
+            if (frameExcludeUnaryExpression.getValue() != null) {
+                buffer.append(" exclude unary ");
+                buffer.append(frameExcludeUnaryExpression.getValue().accept(exprVisitor, indent));
+            }
+            Mutable<ILogicalExpression> frameOffsetExpression = op.getFrameOffsetExpression();
+            if (frameOffsetExpression.getValue() != null) {
                 buffer.append(" offset ");
-                buffer.append(frameOffset.getValue().accept(exprVisitor, indent));
+                buffer.append(frameOffsetExpression.getValue().accept(exprVisitor, indent));
             }
             int frameMaxObjects = op.getFrameMaxObjects();
             if (frameMaxObjects != -1) {

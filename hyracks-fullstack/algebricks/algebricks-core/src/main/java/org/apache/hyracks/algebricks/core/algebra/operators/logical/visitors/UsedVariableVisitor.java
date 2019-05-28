@@ -492,9 +492,13 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
         for (Mutable<ILogicalExpression> exprRef : op.getFrameExcludeExpressions()) {
             exprRef.getValue().getUsedVariables(usedVariables);
         }
-        ILogicalExpression frameOffset = op.getFrameOffset().getValue();
-        if (frameOffset != null) {
-            frameOffset.getUsedVariables(usedVariables);
+        ILogicalExpression frameExcludeUnaryExpr = op.getFrameExcludeUnaryExpression().getValue();
+        if (frameExcludeUnaryExpr != null) {
+            frameExcludeUnaryExpr.getUsedVariables(usedVariables);
+        }
+        ILogicalExpression frameOffsetExpr = op.getFrameOffsetExpression().getValue();
+        if (frameOffsetExpr != null) {
+            frameOffsetExpr.getUsedVariables(usedVariables);
         }
         for (Mutable<ILogicalExpression> exprRef : op.getExpressions()) {
             exprRef.getValue().getUsedVariables(usedVariables);

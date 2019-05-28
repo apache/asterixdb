@@ -16,11 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.data;
+/*
+ * Description  : Function that doesn't support RESPECT/IGNORE NULLS
+ * Expected Res : FAILURE
+ */
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-@FunctionalInterface
-public interface IBinaryBooleanInspector {
-    boolean getBooleanValue(byte[] bytes, int offset, int length) throws HyracksDataException;
-}
+from range(1, 4) x
+select value dense_rank() ignore nulls over (order by x)

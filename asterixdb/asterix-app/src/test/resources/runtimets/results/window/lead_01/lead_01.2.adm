@@ -1,0 +1,12 @@
+{ "lead_2_respect": "b", "lead_2_ignore": "c", "x": "a", "y": 1, "p": 0 }
+{ "lead_2_respect": null, "lead_2_ignore": "c", "y": 2, "p": 0 }
+{ "lead_2_respect": "c", "lead_2_ignore": null, "x": "b", "y": 3, "p": 0 }
+{ "lead_2_ignore": null, "x": null, "y": 4, "p": 0 }
+{ "lead_2_respect": null, "lead_2_ignore": null, "x": "c", "y": 5, "p": 0 }
+{ "lead_2_respect": null, "lead_2_ignore": null, "y": 6, "p": 0 }
+{ "lead_2_respect": "b", "lead_2_ignore": "c", "x": "a", "y": 7, "p": 1 }
+{ "lead_2_ignore": "c", "x": null, "y": 8, "p": 1 }
+{ "lead_2_respect": "c", "lead_2_ignore": null, "x": "b", "y": 9, "p": 1 }
+{ "lead_2_respect": null, "lead_2_ignore": null, "y": 10, "p": 1 }
+{ "lead_2_respect": null, "lead_2_ignore": null, "x": "c", "y": 11, "p": 1 }
+{ "lead_2_respect": null, "lead_2_ignore": null, "x": null, "y": 12, "p": 1 }

@@ -16,11 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.data;
+/*
+ * Description  : FIRST_VALUE() RESPECT / IGNORE NULLS
+ * Expected Res : SUCCESS
+ */
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+from [
+  {                   "y": 1, "p": 0 },
+  { "x": "a",         "y": 2, "p": 0 },
 
-@FunctionalInterface
-public interface IBinaryBooleanInspector {
-    boolean getBooleanValue(byte[] bytes, int offset, int length) throws HyracksDataException;
-}
+  { "x": null,        "y": 3, "p": 1 },
+  { "x": "b",         "y": 4, "p": 1 }
+] t
+select
+  first_value(x) respect nulls over (partition by p order by y range between unbounded preceding and unbounded following)
+    as first_value_respect,
+  first_value(x) ignore nulls over (partition by p order by y range between unbounded preceding and unbounded following)
+    as first_value_ignore,
+  x, y, p
+order by y

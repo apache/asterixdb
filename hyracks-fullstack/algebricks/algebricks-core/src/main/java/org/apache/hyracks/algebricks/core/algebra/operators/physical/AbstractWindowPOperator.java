@@ -172,8 +172,15 @@ public abstract class AbstractWindowPOperator extends AbstractPhysicalOperator {
                 createEvaluatorAndComparatorFactories(frameExcludeExprList, v -> v, v -> OrderOperator.ASC_ORDER,
                         inputSchemas, inputTypeEnv, exprRuntimeProvider, binaryComparatorFactoryProvider, context);
 
+        IScalarEvaluatorFactory frameExcludeUnaryEval = null;
+        ILogicalExpression frameExcludeUnaryExpr = winOp.getFrameExcludeUnaryExpression().getValue();
+        if (frameExcludeUnaryExpr != null) {
+            frameExcludeUnaryEval = exprRuntimeProvider.createEvaluatorFactory(frameExcludeUnaryExpr, inputTypeEnv,
+                    inputSchemas, context);
+        }
+
         IScalarEvaluatorFactory frameOffsetExprEval = null;
-        ILogicalExpression frameOffsetExpr = winOp.getFrameOffset().getValue();
+        ILogicalExpression frameOffsetExpr = winOp.getFrameOffsetExpression().getValue();
         if (frameOffsetExpr != null) {
             frameOffsetExprEval =
                     exprRuntimeProvider.createEvaluatorFactory(frameOffsetExpr, inputTypeEnv, inputSchemas, context);
@@ -207,8 +214,9 @@ public abstract class AbstractWindowPOperator extends AbstractPhysicalOperator {
                 partitionComparatorFactories, orderComparatorFactories, frameValueExprEvalsAndComparators.first,
                 frameValueExprEvalsAndComparators.second, frameStartExprEvals, frameStartValidationExprEvals,
                 frameEndExprEvals, frameEndValidationExprEvals, frameExcludeExprEvalsAndComparators.first,
-                frameExcludeExprEvalsAndComparators.second, frameOffsetExprEval, projectionColumnsExcludingSubplans,
-                runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, context);
+                frameExcludeExprEvalsAndComparators.second, frameExcludeUnaryEval, frameOffsetExprEval,
+                projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize,
+                nestedAggFactory, context);
         runtime.setSourceLocation(winOp.getSourceLocation());
 
         // contribute one Asterix framewriter
@@ -225,7 +233,8 @@ public abstract class AbstractWindowPOperator extends AbstractPhysicalOperator {
             IBinaryComparatorFactory[] frameValueComparatorFactories, IScalarEvaluatorFactory[] frameStartExprEvals,
             IScalarEvaluatorFactory[] frameStartValidationExprEvals, IScalarEvaluatorFactory[] frameEndExprEvals,
             IScalarEvaluatorFactory[] frameEndValidationExprEvals, IScalarEvaluatorFactory[] frameExcludeExprEvals,
-            IBinaryComparatorFactory[] frameExcludeComparatorFactories, IScalarEvaluatorFactory frameOffsetExprEval,
+            IBinaryComparatorFactory[] frameExcludeComparatorFactories,
+            IScalarEvaluatorFactory frameExcludeUnaryExprEval, IScalarEvaluatorFactory frameOffsetExprEval,
             int[] projectionColumnsExcludingSubplans, int[] runningAggOutColumns,
             IRunningAggregateEvaluatorFactory[] runningAggFactories, int nestedAggOutSchemaSize,
             WindowAggregatorDescriptorFactory nestedAggFactory, JobGenContext context);

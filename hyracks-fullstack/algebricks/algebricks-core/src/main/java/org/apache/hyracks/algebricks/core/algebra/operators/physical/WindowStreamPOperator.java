@@ -61,7 +61,8 @@ public final class WindowStreamPOperator extends AbstractWindowPOperator {
             IBinaryComparatorFactory[] frameValueComparatorFactories, IScalarEvaluatorFactory[] frameStartExprEvals,
             IScalarEvaluatorFactory[] frameStartValidationExprEvals, IScalarEvaluatorFactory[] frameEndExprEvals,
             IScalarEvaluatorFactory[] frameEndValidationExprEvals, IScalarEvaluatorFactory[] frameExcludeExprEvals,
-            IBinaryComparatorFactory[] frameExcludeComparatorFactories, IScalarEvaluatorFactory frameOffsetExprEval,
+            IBinaryComparatorFactory[] frameExcludeComparatorFactories,
+            IScalarEvaluatorFactory frameExcludeUnaryExprEval, IScalarEvaluatorFactory frameOffsetExprEval,
             int[] projectionColumnsExcludingSubplans, int[] runningAggOutColumns,
             IRunningAggregateEvaluatorFactory[] runningAggFactories, int nestedAggOutSchemaSize,
             WindowAggregatorDescriptorFactory nestedAggFactory, JobGenContext context) {

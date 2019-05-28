@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.om.functions;
 
+import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.ALLOW_RESPECT_IGNORE_NULLS;
 import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG;
 import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.INJECT_ORDER_ARGS;
 import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.MATERIALIZE_PARTITION;
@@ -1011,7 +1012,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier FIRST_VALUE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "first_value", 1);
     public static final FunctionIdentifier FIRST_VALUE_IMPL =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "first-value-impl", 1);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "first-value-impl", 2);
     public static final FunctionIdentifier LAG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "lag", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier LAG_IMPL =
@@ -1019,7 +1020,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier LAST_VALUE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "last_value", 1);
     public static final FunctionIdentifier LAST_VALUE_IMPL =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "last-value-impl", 1);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "last-value-impl", 2);
     public static final FunctionIdentifier LEAD =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "lead", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier LEAD_IMPL =
@@ -1027,7 +1028,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier NTH_VALUE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "nth_value", 2);
     public static final FunctionIdentifier NTH_VALUE_IMPL =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "nth-value-impl", 2);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "nth-value-impl", 3);
     public static final FunctionIdentifier NTILE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ntile", 1);
     public static final FunctionIdentifier NTILE_IMPL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ntile-impl", FunctionIdentifier.VARARGS);
@@ -3028,18 +3029,20 @@ public class BuiltinFunctions {
         /** Whether order by expressions must be injected as arguments */
         INJECT_ORDER_ARGS,
         /** Whether a running aggregate requires partition materialization runtime */
-        MATERIALIZE_PARTITION
+        MATERIALIZE_PARTITION,
+        /** Whether (RESPECT | IGNORE) NULLS modifier is allowed */
+        ALLOW_RESPECT_IGNORE_NULLS,
     }
 
     static {
         // Window functions
         addWindowFunction(CUME_DIST, CUME_DIST_IMPL, NO_FRAME_CLAUSE, MATERIALIZE_PARTITION);
         addWindowFunction(DENSE_RANK, DENSE_RANK_IMPL, NO_FRAME_CLAUSE, INJECT_ORDER_ARGS);
-        addWindowFunction(FIRST_VALUE, FIRST_VALUE_IMPL, HAS_LIST_ARG);
-        addWindowFunction(LAG, LAG_IMPL, NO_FRAME_CLAUSE, HAS_LIST_ARG);
-        addWindowFunction(LAST_VALUE, LAST_VALUE_IMPL, HAS_LIST_ARG);
-        addWindowFunction(LEAD, LEAD_IMPL, NO_FRAME_CLAUSE, HAS_LIST_ARG);
-        addWindowFunction(NTH_VALUE, NTH_VALUE_IMPL, HAS_LIST_ARG);
+        addWindowFunction(FIRST_VALUE, FIRST_VALUE_IMPL, HAS_LIST_ARG, ALLOW_RESPECT_IGNORE_NULLS);
+        addWindowFunction(LAG, LAG_IMPL, NO_FRAME_CLAUSE, HAS_LIST_ARG, ALLOW_RESPECT_IGNORE_NULLS);
+        addWindowFunction(LAST_VALUE, LAST_VALUE_IMPL, HAS_LIST_ARG, ALLOW_RESPECT_IGNORE_NULLS);
+        addWindowFunction(LEAD, LEAD_IMPL, NO_FRAME_CLAUSE, HAS_LIST_ARG, ALLOW_RESPECT_IGNORE_NULLS);
+        addWindowFunction(NTH_VALUE, NTH_VALUE_IMPL, HAS_LIST_ARG, ALLOW_RESPECT_IGNORE_NULLS);
         addWindowFunction(NTILE, NTILE_IMPL, NO_FRAME_CLAUSE, MATERIALIZE_PARTITION);
         addWindowFunction(PERCENT_RANK, PERCENT_RANK_IMPL, NO_FRAME_CLAUSE, INJECT_ORDER_ARGS, MATERIALIZE_PARTITION);
         addWindowFunction(RANK, RANK_IMPL, NO_FRAME_CLAUSE, INJECT_ORDER_ARGS);

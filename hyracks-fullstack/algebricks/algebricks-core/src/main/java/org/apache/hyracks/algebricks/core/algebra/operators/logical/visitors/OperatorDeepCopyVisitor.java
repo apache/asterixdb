@@ -426,7 +426,9 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         deepCopyExpressionRefs(newFrameEndValidationExprs, op.getFrameEndValidationExpressions());
         List<Mutable<ILogicalExpression>> newFrameExclusionExprs = new ArrayList<>();
         deepCopyExpressionRefs(newFrameExclusionExprs, op.getFrameExcludeExpressions());
-        ILogicalExpression newFrameOffset = deepCopyExpressionRef(op.getFrameOffset()).getValue();
+        ILogicalExpression newFrameExcludeUnaryExpr =
+                deepCopyExpressionRef(op.getFrameExcludeUnaryExpression()).getValue();
+        ILogicalExpression newFrameOffsetExpr = deepCopyExpressionRef(op.getFrameOffsetExpression()).getValue();
         List<LogicalVariable> newVariables = new ArrayList<>();
         deepCopyVars(newVariables, op.getVariables());
         List<Mutable<ILogicalExpression>> newExpressions = new ArrayList<>();
@@ -434,8 +436,8 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         List<ILogicalPlan> newNestedPlans = new ArrayList<>();
         WindowOperator newWinOp = new WindowOperator(newPartitionExprs, newOrderExprs, newFrameValueExprs,
                 newFrameStartExprs, newFrameStartValidationExprs, newFrameEndExprs, newFrameEndValidationExprs,
-                newFrameExclusionExprs, op.getFrameExcludeNegationStartIdx(), newFrameOffset, op.getFrameMaxObjects(),
-                newVariables, newExpressions, newNestedPlans);
+                newFrameExclusionExprs, op.getFrameExcludeNegationStartIdx(), newFrameExcludeUnaryExpr,
+                newFrameOffsetExpr, op.getFrameMaxObjects(), newVariables, newExpressions, newNestedPlans);
         for (ILogicalPlan nestedPlan : op.getNestedPlans()) {
             newNestedPlans.add(OperatorManipulationUtil.deepCopy(nestedPlan, newWinOp));
         }

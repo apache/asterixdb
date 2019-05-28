@@ -20,6 +20,7 @@ package org.apache.hyracks.algebricks.data;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+@FunctionalInterface
 public interface IBinaryIntegerInspector {
-    public int getIntegerValue(byte[] bytes, int offset, int length) throws HyracksDataException;
+    int getIntegerValue(byte[] bytes, int offset, int length) throws HyracksDataException;
 }

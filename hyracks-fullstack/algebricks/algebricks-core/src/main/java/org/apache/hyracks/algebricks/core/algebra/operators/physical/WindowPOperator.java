@@ -75,7 +75,8 @@ public final class WindowPOperator extends AbstractWindowPOperator {
             IBinaryComparatorFactory[] frameValueComparatorFactories, IScalarEvaluatorFactory[] frameStartExprEvals,
             IScalarEvaluatorFactory[] frameStartValidationExprEvals, IScalarEvaluatorFactory[] frameEndExprEvals,
             IScalarEvaluatorFactory[] frameEndValidationExprEvals, IScalarEvaluatorFactory[] frameExcludeExprEvals,
-            IBinaryComparatorFactory[] frameExcludeComparatorFactories, IScalarEvaluatorFactory frameOffsetExprEval,
+            IBinaryComparatorFactory[] frameExcludeComparatorFactories,
+            IScalarEvaluatorFactory frameExcludeUnaryExprEval, IScalarEvaluatorFactory frameOffsetExprEval,
             int[] projectionColumnsExcludingSubplans, int[] runningAggOutColumns,
             IRunningAggregateEvaluatorFactory[] runningAggFactories, int nestedAggOutSchemaSize,
             WindowAggregatorDescriptorFactory nestedAggFactory, JobGenContext context) {
@@ -92,8 +93,9 @@ public final class WindowPOperator extends AbstractWindowPOperator {
         boolean hasFrameStart = frameStartExprEvals != null && frameStartExprEvals.length > 0;
         boolean hasFrameEnd = frameEndExprEvals != null && frameEndExprEvals.length > 0;
         boolean hasFrameExclude = frameExcludeExprEvals != null && frameExcludeExprEvals.length > 0;
+        boolean hasFrameExcludeUnary = frameExcludeUnaryExprEval != null;
         boolean hasFrameOffset = frameOffsetExprEval != null;
-        if (!hasFrameStart && !hasFrameExclude && !hasFrameOffset) {
+        if (!hasFrameStart && !hasFrameExclude && !hasFrameExcludeUnary && !hasFrameOffset) {
             if (!hasFrameEnd) {
                 // special case #1: frame == whole partition, no exclusions, no offset
                 return new WindowNestedPlansUnboundedRuntimeFactory(partitionColumnsList, partitionComparatorFactories,
@@ -118,8 +120,9 @@ public final class WindowPOperator extends AbstractWindowPOperator {
                 orderComparatorFactories, frameValueExprEvals, frameValueComparatorFactories, frameStartExprEvals,
                 frameStartValidationExprEvals, frameStartIsMonotonic, frameEndExprEvals, frameEndValidationExprEvals,
                 frameExcludeExprEvals, winOp.getFrameExcludeNegationStartIdx(), frameExcludeComparatorFactories,
-                frameOffsetExprEval, winOp.getFrameMaxObjects(), context.getBinaryBooleanInspectorFactory(),
-                context.getBinaryIntegerInspectorFactory(), projectionColumnsExcludingSubplans, runningAggOutColumns,
-                runningAggFactories, nestedAggOutSchemaSize, nestedAggFactory, memSizeInFrames);
+                frameExcludeUnaryExprEval, frameOffsetExprEval, winOp.getFrameMaxObjects(),
+                context.getBinaryBooleanInspectorFactory(), context.getBinaryIntegerInspectorFactory(),
+                projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize,
+                nestedAggFactory, memSizeInFrames);
     }
 }
