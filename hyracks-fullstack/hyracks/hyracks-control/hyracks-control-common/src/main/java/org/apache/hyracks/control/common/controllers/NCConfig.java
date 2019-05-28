@@ -247,6 +247,10 @@ public class NCConfig extends ControllerConfig {
             return defaultValueDescription;
         }
 
+        @Override
+        public boolean hidden() {
+            return this == KEY_STORE_PASSWORD;
+        }
     }
 
     public String getReplicationPublicAddress() {

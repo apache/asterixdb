@@ -211,6 +211,11 @@ public class CCConfig extends ControllerConfig {
         public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
             return defaultValueDescription;
         }
+
+        @Override
+        public boolean hidden() {
+            return this == KEY_STORE_PASSWORD;
+        }
     }
 
     private List<String> appArgs = new ArrayList<>();
