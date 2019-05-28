@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.lang.common.base.Expression;
@@ -50,6 +51,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 
@@ -145,19 +147,25 @@ public class RangeMapBuilder {
         }
     }
 
-    public static void verifyRangeOrder(RangeMap rangeMap, boolean ascending) throws CompilationException {
+    public static void verifyRangeOrder(RangeMap rangeMap, boolean ascending, SourceLocation sourceLoc)
+            throws CompilationException {
         // TODO Add support for composite fields.
         int fieldIndex = 0;
         int fieldType = rangeMap.getTag(0, 0);
         BinaryComparatorFactoryProvider comparatorFactory = BinaryComparatorFactoryProvider.INSTANCE;
-        IBinaryComparatorFactory bcf =
-                comparatorFactory.getBinaryComparatorFactory(ATypeTag.VALUE_TYPE_MAPPING[fieldType], ascending);
+        IBinaryComparatorFactory bcf;
+        try {
+            bcf = comparatorFactory.getBinaryComparatorFactory(ATypeTag.VALUE_TYPE_MAPPING[fieldType], ascending);
+        } catch (RuntimeDataException e) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+        }
         IBinaryComparator comparator = bcf.createBinaryComparator();
         int c = 0;
         for (int split = 1; split < rangeMap.getSplitCount(); ++split) {
             if (fieldType != rangeMap.getTag(fieldIndex, split)) {
-                throw new CompilationException("Range field contains more than a single type of items (" + fieldType
-                        + " and " + rangeMap.getTag(fieldIndex, split) + ").");
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                        "Range field contains more than a single type of items (" + fieldType + " and "
+                                + rangeMap.getTag(fieldIndex, split) + ").");
             }
             int previousSplit = split - 1;
             try {
@@ -165,10 +173,11 @@ public class RangeMapBuilder {
                         rangeMap.getLength(fieldIndex, previousSplit), rangeMap.getByteArray(),
                         rangeMap.getStartOffset(fieldIndex, split), rangeMap.getLength(fieldIndex, split));
             } catch (HyracksDataException e) {
-                throw new CompilationException(e);
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
             }
             if (c >= 0) {
-                throw new CompilationException("Range fields are not in sorted order.");
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                        "Range fields are not in sorted order.");
             }
         }
     }

@@ -20,6 +20,8 @@ package org.apache.asterix.formats.nontagged;
 
 import java.io.Serializable;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ACirclePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ADurationPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AGenericAscBinaryComparatorFactory;
@@ -112,13 +114,13 @@ public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactory
         return createGenericBinaryComparatorFactory((IAType) leftType, (IAType) rightType, ascending);
     }
 
-    public IBinaryComparatorFactory getBinaryComparatorFactory(ATypeTag type, boolean ascending) {
+    public IBinaryComparatorFactory getBinaryComparatorFactory(ATypeTag type, boolean ascending)
+            throws RuntimeDataException {
         switch (type) {
             case ANY:
-            case UNION:
-                // i think UNION shouldn't be allowed. the actual type could be closed array or record. ANY would fail.
-                // we could do smth better for nullable fields
                 return createGenericBinaryComparatorFactory(BuiltinType.ANY, BuiltinType.ANY, ascending);
+            case UNION:
+                throw new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Comparator", type);
             case NULL:
             case MISSING:
                 return new AnyBinaryComparatorFactory();

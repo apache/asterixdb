@@ -1252,7 +1252,7 @@ class LangExpressionToPlanTranslator
         if (oc.getRangeMap() != null) {
             Iterator<OrderModifier> orderModifIter = oc.getModifierList().iterator();
             boolean ascending = orderModifIter.next() == OrderModifier.ASC;
-            RangeMapBuilder.verifyRangeOrder(oc.getRangeMap(), ascending);
+            RangeMapBuilder.verifyRangeOrder(oc.getRangeMap(), ascending, sourceLoc);
             ord.getAnnotations().put(OperatorAnnotations.USE_STATIC_RANGE, oc.getRangeMap());
         }
         return new Pair<>(ord, null);
