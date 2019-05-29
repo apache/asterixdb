@@ -93,10 +93,10 @@ public class BitValuePositionFlagTypeComputer extends AbstractResultTypeComputer
             case SMALLINT:
             case INTEGER:
             case BIGINT:
+            case ANY:
                 break;
             case FLOAT:
             case DOUBLE:
-            case ANY:
                 isReturnNullable = true;
                 break;
             default:
@@ -109,10 +109,10 @@ public class BitValuePositionFlagTypeComputer extends AbstractResultTypeComputer
             case SMALLINT:
             case INTEGER:
             case BIGINT:
+            case ANY:
                 break;
             case FLOAT:
             case DOUBLE:
-            case ANY:
                 isReturnNullable = true;
                 break;
             case ARRAY:
@@ -148,9 +148,7 @@ public class BitValuePositionFlagTypeComputer extends AbstractResultTypeComputer
             IAType thirdArgument = strippedInputTypes[2];
             switch (thirdArgument.getTypeTag()) {
                 case BOOLEAN:
-                    break;
                 case ANY:
-                    isReturnNullable = true;
                     break;
                 default:
                     return BuiltinType.ANULL;

@@ -73,10 +73,10 @@ public class BitMultipleValuesTypeComputer extends AbstractResultTypeComputer {
                 case SMALLINT:
                 case INTEGER:
                 case BIGINT:
+                case ANY:
                     continue;
                 case FLOAT:
                 case DOUBLE:
-                case ANY:
                     isReturnNullable = true;
                     continue;
                 default:
