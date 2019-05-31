@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.om.functions;
 
+import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.ALLOW_FROM_FIRST_LAST;
 import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.ALLOW_RESPECT_IGNORE_NULLS;
 import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG;
 import static org.apache.asterix.om.functions.BuiltinFunctions.WindowFunctionProperty.INJECT_ORDER_ARGS;
@@ -3030,8 +3031,10 @@ public class BuiltinFunctions {
         INJECT_ORDER_ARGS,
         /** Whether a running aggregate requires partition materialization runtime */
         MATERIALIZE_PARTITION,
+        /** Whether FROM (FIRST | LAST) modifier is allowed */
+        ALLOW_FROM_FIRST_LAST,
         /** Whether (RESPECT | IGNORE) NULLS modifier is allowed */
-        ALLOW_RESPECT_IGNORE_NULLS,
+        ALLOW_RESPECT_IGNORE_NULLS
     }
 
     static {
@@ -3042,7 +3045,7 @@ public class BuiltinFunctions {
         addWindowFunction(LAG, LAG_IMPL, NO_FRAME_CLAUSE, HAS_LIST_ARG, ALLOW_RESPECT_IGNORE_NULLS);
         addWindowFunction(LAST_VALUE, LAST_VALUE_IMPL, HAS_LIST_ARG, ALLOW_RESPECT_IGNORE_NULLS);
         addWindowFunction(LEAD, LEAD_IMPL, NO_FRAME_CLAUSE, HAS_LIST_ARG, ALLOW_RESPECT_IGNORE_NULLS);
-        addWindowFunction(NTH_VALUE, NTH_VALUE_IMPL, HAS_LIST_ARG, ALLOW_RESPECT_IGNORE_NULLS);
+        addWindowFunction(NTH_VALUE, NTH_VALUE_IMPL, HAS_LIST_ARG, ALLOW_FROM_FIRST_LAST, ALLOW_RESPECT_IGNORE_NULLS);
         addWindowFunction(NTILE, NTILE_IMPL, NO_FRAME_CLAUSE, MATERIALIZE_PARTITION);
         addWindowFunction(PERCENT_RANK, PERCENT_RANK_IMPL, NO_FRAME_CLAUSE, INJECT_ORDER_ARGS, MATERIALIZE_PARTITION);
         addWindowFunction(RANK, RANK_IMPL, NO_FRAME_CLAUSE, INJECT_ORDER_ARGS);

@@ -420,10 +420,11 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 winExpr.hasWindowVar() ? (VariableExpr) winExpr.getWindowVar().accept(this, env).first : null;
         List<Pair<Expression, Identifier>> newWindowFieldList = winExpr.hasWindowFieldList()
                 ? VariableCloneAndSubstitutionUtil.substInFieldList(winExpr.getWindowFieldList(), env, this) : null;
-        WindowExpression newWinExpr = new WindowExpression(winExpr.getFunctionSignature(), newExprList,
-                newPartitionList, newOrderbyList, newOrderbyModifierList, winExpr.getFrameMode(),
-                winExpr.getFrameStartKind(), newFrameStartExpr, winExpr.getFrameEndKind(), newFrameEndExpr,
-                winExpr.getFrameExclusionKind(), newWindowVar, newWindowFieldList, winExpr.getIgnoreNulls());
+        WindowExpression newWinExpr =
+                new WindowExpression(winExpr.getFunctionSignature(), newExprList, newPartitionList, newOrderbyList,
+                        newOrderbyModifierList, winExpr.getFrameMode(), winExpr.getFrameStartKind(), newFrameStartExpr,
+                        winExpr.getFrameEndKind(), newFrameEndExpr, winExpr.getFrameExclusionKind(), newWindowVar,
+                        newWindowFieldList, winExpr.getIgnoreNulls(), winExpr.getFromLast());
         newWinExpr.setSourceLocation(winExpr.getSourceLocation());
         newWinExpr.addHints(winExpr.getHints());
         return new Pair<>(newWinExpr, env);

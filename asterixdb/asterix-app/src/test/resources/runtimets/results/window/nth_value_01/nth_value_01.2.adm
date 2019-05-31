@@ -1,0 +1,8 @@
+{ "nth_value_ignore": "b", "x": "a", "y": 1, "p": 0 }
+{ "nth_value_ignore": "b", "y": 2, "p": 0 }
+{ "nth_value_ignore": "b", "x": null, "y": 3, "p": 0 }
+{ "nth_value_ignore": "b", "x": "b", "y": 4, "p": 0 }
+{ "nth_value_default_respect": null, "nth_value_respect": null, "nth_value_ignore": "b", "x": "a", "y": 5, "p": 1 }
+{ "nth_value_default_respect": null, "nth_value_respect": null, "nth_value_ignore": "b", "x": null, "y": 6, "p": 1 }
+{ "nth_value_default_respect": null, "nth_value_respect": null, "nth_value_ignore": "b", "y": 7, "p": 1 }
+{ "nth_value_default_respect": null, "nth_value_respect": null, "nth_value_ignore": "b", "x": "b", "y": 8, "p": 1 }

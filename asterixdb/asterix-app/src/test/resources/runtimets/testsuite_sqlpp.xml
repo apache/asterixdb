@@ -10424,6 +10424,8 @@
         <expected-error>ASX1079: Compilation error: count is a SQL-92 aggregate function</expected-error>
         <expected-error>ASX1104: Invalid modifier RESPECT/IGNORE NULLS for function</expected-error>
         <expected-error>ASX1104: Invalid modifier RESPECT/IGNORE NULLS for function</expected-error>
+        <expected-error>ASX1104: Invalid modifier FROM FIRST/LAST for function</expected-error>
+        <expected-error>ASX1104: Invalid modifier FROM FIRST/LAST for function</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

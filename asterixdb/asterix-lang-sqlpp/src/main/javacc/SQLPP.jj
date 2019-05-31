@@ -191,9 +191,11 @@ class SQLPPParser extends ScopeChecker implements IParser {
     // tokens parsed as identifiers
     private static final String CURRENT = "CURRENT";
     private static final String EXCLUDE = "EXCLUDE";
+    private static final String FIRST = "FIRST";
     private static final String FOLLOWING = "FOLLOWING";
     private static final String GROUPS = "GROUPS";
     private static final String IGNORE = "IGNORE";
+    private static final String LAST = "LAST";
     private static final String NO = "NO";
     private static final String NULLS = "NULLS";
     private static final String OTHERS = "OTHERS";
@@ -1973,7 +1975,7 @@ Expression NotExpr() throws ParseException:
    Token startToken = null;
 }
 {
-  (<NOT> { not = true; startToken = token; } )? inputExpr = RelExpr()
+  (LOOKAHEAD(2) <NOT> { not = true; startToken = token; } )? inputExpr = RelExpr()
   {
     if(not) {
         FunctionSignature signature = new FunctionSignature(BuiltinFunctions.NOT);
@@ -2749,14 +2751,60 @@ Expression FunctionCallExpr() throws ParseException:
       resultExpr = callExpr;
     }
 
-  ( resultExpr = WindowExpr(callExpr.getFunctionSignature(), callExpr.getExprList(), token) )?
+  ( LOOKAHEAD(5) resultExpr = WindowExpr(callExpr.getFunctionSignature(), callExpr.getExprList()) )?
 
   {
      return resultExpr;
   }
 }
 
-WindowExpression WindowExpr(FunctionSignature signature, List<Expression> argList, Token startToken) throws ParseException:
+WindowExpression WindowExpr(FunctionSignature signature, List<Expression> argList) throws ParseException:
+{
+  Boolean fromLast = null, ignoreNulls = null;
+}
+{
+  (
+    // FROM ( FIRST | LAST ) ( ( RESPECT | IGNORE ) NULLS )? OVER
+    LOOKAHEAD(5, <FROM> <IDENTIFIER> ( <IDENTIFIER> <IDENTIFIER> )? <OVER>)
+    <FROM> <IDENTIFIER>
+    {
+      if (isToken(FIRST)) {
+        fromLast = false;
+      } else if (isToken(LAST)) {
+        fromLast = true;
+      } else {
+        throw createUnexpectedTokenError();
+      }
+    }
+  )?
+  (
+    // ( RESPECT | IGNORE ) NULLS OVER
+    LOOKAHEAD(3, <IDENTIFIER> <IDENTIFIER> <OVER>)
+    <IDENTIFIER>
+    {
+      if (isToken(RESPECT)) {
+        ignoreNulls = false;
+      } else if (isToken(IGNORE)) {
+        ignoreNulls = true;
+      } else {
+        throw createUnexpectedTokenError();
+      }
+    }
+    <IDENTIFIER>
+    {
+      if (!isToken(NULLS)) {
+        throw createUnexpectedTokenError();
+      }
+    }
+  )?
+  <OVER>
+  {
+    return OverClause(signature, argList, token, fromLast, ignoreNulls);
+  }
+}
+
+WindowExpression OverClause(FunctionSignature signature, List<Expression> argList, Token startToken, Boolean fromLast,
+    Boolean ignoreNulls) throws ParseException:
 {
   Expression partitionExpr = null;
   List<Expression> partitionExprs = new ArrayList<Expression>();
@@ -2771,17 +2819,8 @@ WindowExpression WindowExpr(FunctionSignature signature, List<Expression> argLis
   Pair<VariableExpr, List<Pair<Expression, Identifier>>> windowVarWithFieldList = null;
   VariableExpr windowVar = null;
   List<Pair<Expression, Identifier>> windowFieldList = null;
-  Boolean ignoreNulls = null;
 }
 {
-  (
-    (
-      LOOKAHEAD({ laIdentifier(RESPECT) }) <IDENTIFIER> { ignoreNulls = false; }
-      | LOOKAHEAD({ laIdentifier(IGNORE) }) <IDENTIFIER> { ignoreNulls = true; }
-    )
-    LOOKAHEAD({ laIdentifier(NULLS) }) <IDENTIFIER>
-  )?
-  <OVER>
   (
     windowVarWithFieldList = VariableWithFieldMap() <AS>
     {
@@ -2827,7 +2866,7 @@ WindowExpression WindowExpr(FunctionSignature signature, List<Expression> argLis
   {
     WindowExpression winExp = new WindowExpression(signature, argList, partitionExprs, orderbyList, orderbyModifierList,
       frameMode, frameStartKind, frameStartExpr, frameEndKind, frameEndExpr, frameExclusionKind, windowVar,
-      windowFieldList, ignoreNulls);
+      windowFieldList, ignoreNulls, fromLast);
     return addSourceLocation(winExp, startToken);
   }
 }
@@ -2857,8 +2896,7 @@ Pair<WindowExpression.FrameBoundaryKind, Expression> WindowFrameBoundary() throw
 }
 {
   (
-    LOOKAHEAD({ laIdentifier(CURRENT) }) <IDENTIFIER> { current = true; }
-    | LOOKAHEAD({ laIdentifier(UNBOUNDED) }) <IDENTIFIER>
+    LOOKAHEAD({ laIdentifier(CURRENT) || laIdentifier(UNBOUNDED) }) <IDENTIFIER> { current = isToken(CURRENT); }
     | expr = Expression()
   )
   <IDENTIFIER>

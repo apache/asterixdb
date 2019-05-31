@@ -525,7 +525,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         WindowExpression copy = new WindowExpression(winExpr.getFunctionSignature(), newExprList, newPartitionList,
                 newOrderbyList, newOrderbyModifierList, winExpr.getFrameMode(), winExpr.getFrameStartKind(),
                 newFrameStartExpr, winExpr.getFrameEndKind(), newFrameEndExpr, winExpr.getFrameExclusionKind(),
-                newWindowVar, newWindowFieldList, winExpr.getIgnoreNulls());
+                newWindowVar, newWindowFieldList, winExpr.getIgnoreNulls(), winExpr.getFromLast());
         copy.setSourceLocation(winExpr.getSourceLocation());
         copy.addHints(winExpr.getHints());
         return copy;

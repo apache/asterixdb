@@ -1058,6 +1058,8 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 BuiltinFunctions.WindowFunctionProperty.NO_FRAME_CLAUSE);
         boolean allowRespectIgnoreNulls = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
                 BuiltinFunctions.WindowFunctionProperty.ALLOW_RESPECT_IGNORE_NULLS);
+        boolean allowFromFirstLast = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
+                BuiltinFunctions.WindowFunctionProperty.ALLOW_FROM_FIRST_LAST);
 
         Mutable<ILogicalOperator> currentOpRef = tupSource;
 
@@ -1138,6 +1140,8 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
 
         boolean respectNulls = !getBooleanModifier(winExpr.getIgnoreNulls(), false, allowRespectIgnoreNulls, sourceLoc,
                 "RESPECT/IGNORE NULLS", fs.getName());
+        boolean fromLast = getBooleanModifier(winExpr.getFromLast(), false, allowFromFirstLast, sourceLoc,
+                "FROM FIRST/LAST", fs.getName());
 
         boolean makeRunningAgg = false, makeNestedAgg = false;
         FunctionIdentifier runningAggFunc = null, nestedAggFunc = null, winResultFunc = null, postWinResultFunc = null;
@@ -1174,9 +1178,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                     // IGNORE NULLS
                     if (isLag) {
                         // reverse order for LAG()
-                        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> orderExprPair : orderExprListOut) {
-                            orderExprPair.setFirst(reverseOrder(orderExprPair.getFirst()));
-                        }
+                        reverseOrder(orderExprListOut);
                     }
                     winFrameStartKind = WindowExpression.FrameBoundaryKind.BOUNDED_FOLLOWING;
                     winFrameStartExpr = new LiteralExpr(new IntegerLiteral(1));
@@ -1212,6 +1214,10 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 }
             } else if (BuiltinFunctions.NTH_VALUE_IMPL.equals(fi)) {
                 nestedAggFunc = BuiltinFunctions.SCALAR_FIRST_ELEMENT;
+                if (fromLast) {
+                    // reverse order if FROM LAST modifier is present
+                    reverseOrder(orderExprListOut);
+                }
                 if (respectNulls) {
                     winFrameMaxOjbects = 1;
                 } else {
@@ -1688,6 +1694,13 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         opExpr.addOperand(new LiteralExpr(arg2));
         opExpr.setSourceLocation(sourceLoc);
         return opExpr;
+    }
+
+    private static void reverseOrder(List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprList)
+            throws CompilationException {
+        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> orderExprPair : orderExprList) {
+            orderExprPair.setFirst(reverseOrder(orderExprPair.getFirst()));
+        }
     }
 
     private static OrderOperator.IOrder reverseOrder(OrderOperator.IOrder order) throws CompilationException {
