@@ -220,10 +220,9 @@ public class ClusterControllerService implements IControllerService {
                 new IPCSystem(new InetSocketAddress(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort()),
                         networkSecurityManager.getSocketChannelFactory(), ciIPCI,
                         new JavaSerializationBasedPayloadSerializerDeserializer());
-        webServer = new WebServer(this, ccConfig.getConsoleListenPort());
         clusterIPC.start();
         clientIPC.start();
-        webServer.start();
+        startWebServers();
         info = new ClusterControllerInfo(ccId, ccConfig.getClientPublicAddress(), ccConfig.getClientPublicPort(),
                 ccConfig.getConsolePublicPort());
         timer.schedule(sweeper, 0, ccConfig.getDeadNodeSweepThreshold());
@@ -235,6 +234,11 @@ public class ClusterControllerService implements IControllerService {
         connectNCs();
         LOGGER.log(Level.INFO, "Started ClusterControllerService");
         notifyApplication();
+    }
+
+    protected void startWebServers() throws Exception {
+        webServer = new WebServer(this, ccConfig.getConsoleListenPort());
+        webServer.start();
     }
 
     private void startApplication() throws Exception {
@@ -326,7 +330,7 @@ public class ClusterControllerService implements IControllerService {
     public void stop() throws Exception {
         LOGGER.log(Level.INFO, "Stopping ClusterControllerService");
         stopApplication();
-        webServer.stop();
+        stopWebServers();
         sweeper.cancel();
         workQueue.stop();
         executor.shutdownNow();
@@ -336,8 +340,11 @@ public class ClusterControllerService implements IControllerService {
         LOGGER.log(Level.INFO, "Stopped ClusterControllerService");
     }
 
-    private void stopApplication() throws Exception {
+    protected void stopWebServers() throws Exception {
+        webServer.stop();
+    }
 
+    private void stopApplication() throws Exception {
         application.stop();
     }
 
