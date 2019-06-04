@@ -2690,12 +2690,21 @@ RecordConstructor RecordConstructor() throws ParseException:
 
 FieldBinding FieldBinding() throws ParseException:
 {
-  Expression left, right;
+  Expression left, right = null;
 }
 {
-  left = Expression() <COLON> right = Expression()
+  left = Expression() ( <COLON> right = Expression() )?
   {
-    return new FieldBinding(left, right);
+    if (right == null) {
+        String generatedIdentifier = ExpressionToVariableUtil.getGeneratedIdentifier(left, false);
+        if (generatedIdentifier == null) {
+          throw new SqlppParseException(getSourceLocation(token), "Cannot infer field name");
+        }
+        String generatedName = SqlppVariableUtil.toUserDefinedName(generatedIdentifier);
+        return new FieldBinding(new LiteralExpr(new StringLiteral(generatedName)), left);
+    } else {
+      return new FieldBinding(left, right);
+    }
   }
 }
 

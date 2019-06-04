@@ -423,7 +423,7 @@ The following example illustrates the form of a case expression.
     ArrayConstructor         ::= "[" ( Expression ( "," Expression )* )? "]"
     MultisetConstructor      ::= "{{" ( Expression ( "," Expression )* )? "}}"
     ObjectConstructor        ::= "{" ( FieldBinding ( "," FieldBinding )* )? "}"
-    FieldBinding             ::= Expression ":" Expression
+    FieldBinding             ::= Expression ( ":" Expression )?
 
 A major feature of the query language is its ability to construct new data model instances. This is accomplished using
 its constructors for each of the model's complex object structures, namely arrays, multisets, and objects.
@@ -449,4 +449,26 @@ duplicate field errors will be raised if they are not distinct.
       'project name': 'Hyracks',
       'project members': [ 'vinayakb', 'dtabass', 'chenli', 'tsotras', 'tillw' ]
     }
+
+
+If only one expression is specified instead of the field-name/field-value pair in an object constructor then this
+expression is supposed to provide the field value. The field name is then automatically generated based on the 
+kind of the value expression:
+
+  * If it is a variable reference expression then generated field name is the name of that variable.
+  * If it is a field access expression then generated field name is the last identifier in that expression.
+  * For all other cases, a compilation error will be raised.
+ 
+##### Example
+
+    SELECT VALUE { user.alias, user.userSince }
+    FROM GleambookUsers user
+    WHERE user.id = 1;
+
+This query outputs:
+
+    [ {
+        "alias": "Margarita",
+        "userSince": "2012-08-20T10:10:00"
+    } ]
 

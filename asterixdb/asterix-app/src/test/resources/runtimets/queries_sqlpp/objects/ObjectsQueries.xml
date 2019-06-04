@@ -103,6 +103,17 @@
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">
+    <compilation-unit name="no_fieldname_constr">
+      <output-dir compare="Text">no_fieldname_constr</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects">
+    <compilation-unit name="no_fieldname_constr_negative">
+      <output-dir compare="Text">no_fieldname_constr</output-dir>
+      <expected-error>ASX1001: Syntax error: Cannot infer field name</expected-error>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects">
     <compilation-unit name="object_concat">
       <output-dir compare="Text">object_concat</output-dir>
     </compilation-unit>
