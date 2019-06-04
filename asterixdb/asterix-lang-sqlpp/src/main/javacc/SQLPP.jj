@@ -434,7 +434,7 @@ List<Statement> Statement() throws ParseException:
 }
 {
   (
-    (stmt = SingleStatement()
+    (stmt = ExplainStatement()
       {
         decls.add(stmt);
       }
@@ -445,6 +445,27 @@ List<Statement> Statement() throws ParseException:
   {
     return decls;
   }
+}
+
+Statement ExplainStatement() throws ParseException:
+{
+  Statement stmt = null;
+  Token explainToken = null;
+}
+{
+   ( <EXPLAIN> { explainToken = token; } )?
+   stmt = SingleStatement()
+   {
+      if (explainToken != null) {
+        if (stmt.getKind() == Statement.Kind.QUERY) {
+          ((Query)stmt).setExplain(true);
+        } else {
+          throw new SqlppParseException(getSourceLocation(explainToken),
+            "EXPLAIN is not supported for this kind of statement");
+        }
+      }
+      return stmt;
+   }
 }
 
 Statement SingleStatement() throws ParseException:
@@ -466,8 +487,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = UpsertStatement()
     | stmt = ConnectionStatement()
     | stmt = CompactStatement()
-    | stmt = ExplainStatement()
-    | stmt = Query(false)
+    | stmt = Query()
     | stmt = RefreshExternalDatasetStatement()
   )
   {
@@ -1090,7 +1110,7 @@ InsertStatement InsertStatement() throws ParseException:
 }
 {
   <INSERT> { startToken = token; } <INTO> nameComponents = QualifiedName() (<AS> var = Variable())?
-    query = Query(false)
+    query = Query()
     ( <RETURNING> returnExpression = Expression())?
     {
       if (var == null && returnExpression != null) {
@@ -1114,7 +1134,7 @@ UpsertStatement UpsertStatement() throws ParseException:
 }
 {
   <UPSERT> { startToken = token; } <INTO> nameComponents = QualifiedName() (<AS> var = Variable())?
-    query = Query(false)
+    query = Query()
     ( <RETURNING> returnExpression = Expression())?
     {
       if (var == null && returnExpression != null) {
@@ -1852,20 +1872,9 @@ FunctionDecl FunctionDeclaration() throws ParseException:
   }
 }
 
-Query ExplainStatement() throws ParseException:
+Query Query() throws ParseException:
 {
-  Query query;
-}
-{
-  <EXPLAIN> query = Query(true)
-  {
-    return query;
-  }
-}
-
-Query Query(boolean explain) throws ParseException:
-{
-  Query query = new Query(explain);
+  Query query = new Query();
   Expression expr;
 }
 {

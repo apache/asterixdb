@@ -30,10 +30,14 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class Query extends AbstractStatement implements IReturningStatement {
-    private final boolean explain;
+    private boolean explain;
     private boolean topLevel = true;
     private Expression body;
     private int varCounter;
+
+    public Query() {
+        this(false);
+    }
 
     public Query(boolean explain) {
         this.explain = explain;
@@ -78,6 +82,10 @@ public class Query extends AbstractStatement implements IReturningStatement {
     @Override
     public boolean isTopLevel() {
         return topLevel;
+    }
+
+    public void setExplain(boolean explain) {
+        this.explain = explain;
     }
 
     public boolean isExplain() {
