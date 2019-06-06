@@ -111,6 +111,7 @@
     <compilation-unit name="no_fieldname_constr_negative">
       <output-dir compare="Text">no_fieldname_constr</output-dir>
       <expected-error>ASX1001: Syntax error: Cannot infer field name</expected-error>
+      <expected-error>ASX0013: Duplicate field name "a"</expected-error>
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">

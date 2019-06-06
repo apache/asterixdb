@@ -32,6 +32,7 @@ import org.apache.asterix.optimizer.rules.AsterixInlineVariablesRule;
 import org.apache.asterix.optimizer.rules.AsterixIntroduceGroupByCombinerRule;
 import org.apache.asterix.optimizer.rules.AsterixPushAssignBelowUnionAllRule;
 import org.apache.asterix.optimizer.rules.ByNameToByIndexFieldAccessRule;
+import org.apache.asterix.optimizer.rules.CancelUnnestSingletonListRule;
 import org.apache.asterix.optimizer.rules.CancelUnnestWithNestedListifyRule;
 import org.apache.asterix.optimizer.rules.CheckFilterExpressionTypeRule;
 import org.apache.asterix.optimizer.rules.CheckFullParallelSortRule;
@@ -203,6 +204,7 @@ public final class RuleCollections {
         normalization.add(new PushAggFuncIntoStandaloneAggregateRule());
         normalization.add(new ListifyUnnestingFunctionRule());
         normalization.add(new RemoveRedundantSelectRule());
+        normalization.add(new CancelUnnestSingletonListRule());
         normalization.add(new UnnestToDataScanRule());
         normalization.add(new MetaFunctionToMetaVariableRule());
         normalization.add(new FuzzyEqRule());

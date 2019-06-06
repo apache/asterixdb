@@ -3114,18 +3114,36 @@ SelectBlock SelectBlock() throws ParseException:
   (
      selectClause = SelectClause() { startSrcLoc = selectClause.getSourceLocation(); }
      (
-        LOOKAHEAD(1)
-        fromClause = FromClause()
         (
-            LOOKAHEAD(1)
-            fromLetClauses = LetClause()
-        )?
+          fromClause = FromClause()
+          (
+              fromLetClauses = LetClause()
+          )?
+        )
+        |
+        (
+          fromLetClauses = LetClause()
+          {
+            // LET without FROM -> create dummy FROM clause: FROM {{missing}} AS #0
+            SourceLocation sourceLoc = getSourceLocation(token);
+            LiteralExpr missingExpr = new LiteralExpr(MissingLiteral.INSTANCE);
+            missingExpr.setSourceLocation(sourceLoc);
+            List<Expression> list = new ArrayList<Expression>(1);
+            list.add(missingExpr);
+            ListConstructor listExpr = new ListConstructor(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, list);
+            listExpr.setSourceLocation(sourceLoc);
+            List<FromTerm> fromTerms = new ArrayList<FromTerm>(1);
+            VariableExpr fromVar = new VariableExpr(new VarIdentifier("#0"));
+            fromVar.setSourceLocation(sourceLoc);
+            fromTerms.add(new FromTerm(listExpr, fromVar, null, new ArrayList<AbstractBinaryCorrelateClause>()));
+            fromClause = new FromClause(fromTerms);
+          }
+        )
      )?
      (whereClause = WhereClause())?
      (
         groupbyClause = GroupbyClause()
         (
-            LOOKAHEAD(1)
             gbyLetClauses = LetClause()
         )?
         (havingClause = HavingClause())?
@@ -3133,7 +3151,6 @@ SelectBlock SelectBlock() throws ParseException:
     |
      fromClause = FromClause() { startSrcLoc = fromClause.getSourceLocation(); }
      (
-        LOOKAHEAD(1)
         fromLetClauses = LetClause()
      )?
      (whereClause = WhereClause())?

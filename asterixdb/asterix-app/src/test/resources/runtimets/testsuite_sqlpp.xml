@@ -119,6 +119,11 @@
         <expected-error>ASX0013: Duplicate field name "g" (in line 27, at column 11)</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="select-let">
+        <output-dir compare="Text">select-let</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="sorting">
     <test-case FilePath="sorting">
