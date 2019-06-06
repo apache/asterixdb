@@ -28,8 +28,6 @@ public class ScalarSqlMinDistinctAggregateDescriptor extends AbstractScalarDisti
 
     private static final long serialVersionUID = 1L;
 
-    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_MIN_DISTINCT;
-
     public static final IFunctionDescriptorFactory FACTORY =
             createDescriptorFactory(ScalarSqlMinDistinctAggregateDescriptor::new);
 
@@ -39,6 +37,12 @@ public class ScalarSqlMinDistinctAggregateDescriptor extends AbstractScalarDisti
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return BuiltinFunctions.SCALAR_SQL_MIN_DISTINCT;
+    }
+
+    @Override
+    public void setImmutableStates(Object... states) {
+        super.setImmutableStates(states);
+        aggFuncDesc.setImmutableStates(itemType);
     }
 }

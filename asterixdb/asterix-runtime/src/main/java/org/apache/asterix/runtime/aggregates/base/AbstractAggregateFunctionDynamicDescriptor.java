@@ -18,11 +18,21 @@
  */
 package org.apache.asterix.runtime.aggregates.base;
 
+import java.util.function.Supplier;
+
 import org.apache.asterix.common.functions.FunctionDescriptorTag;
 import org.apache.asterix.om.functions.AbstractFunctionDescriptor;
+import org.apache.asterix.om.functions.IFunctionDescriptor;
+import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 
 public abstract class AbstractAggregateFunctionDynamicDescriptor extends AbstractFunctionDescriptor {
     private static final long serialVersionUID = 1L;
+
+    public static IFunctionDescriptorFactory createFactory(Supplier<IFunctionDescriptor> descriptorSupplier) {
+        return DescriptorFactoryUtil.createFactory(descriptorSupplier, FunctionTypeInferers.SET_ARGUMENT_TYPE);
+    }
 
     public FunctionDescriptorTag getFunctionDescriptorTag() {
         return FunctionDescriptorTag.AGGREGATE;

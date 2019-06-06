@@ -31,7 +31,7 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
 
     private static final long serialVersionUID = 1L;
     private static final String ITEM_TYPE_FIELD = "itemType";
-    protected IAType itemType;
+    private IAType itemType;
 
     AbstractCollectionType(IAType itemType, String typeName) {
         super(typeName);
@@ -39,6 +39,7 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
     }
 
     public boolean isTyped() {
+        // TODO(ali): this should be removed. itemType is already enforced to be NonNull
         return itemType != null;
     }
 
@@ -47,7 +48,7 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
     }
 
     public void setItemType(IAType itemType) {
-        this.itemType = itemType;
+        this.itemType = Objects.requireNonNull(itemType);
     }
 
     @Override
@@ -58,7 +59,7 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
     @Override
     public void generateNestedDerivedTypeNames() {
         if (itemType.getTypeTag().isDerivedType() && itemType.getTypeName() == null) {
-            AbstractComplexType nestedType = ((AbstractComplexType) itemType);
+            AbstractComplexType nestedType = (AbstractComplexType) itemType;
             nestedType.setTypeName(getTypeName() + "_Item");
             nestedType.generateNestedDerivedTypeNames();
         }
@@ -69,16 +70,16 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
         return isTyped() && itemType.getTypeName().equals(type.getTypeName());
     }
 
-    protected JsonNode convertToJson(IPersistedResourceRegistry registry, Class<? extends IJsonSerializable> clazz,
-            long version) throws HyracksDataException {
+    JsonNode convertToJson(IPersistedResourceRegistry registry, Class<? extends IJsonSerializable> clazz, long version)
+            throws HyracksDataException {
         final ObjectNode jsonObject = registry.getClassIdentifier(clazz, version);
         addToJson(jsonObject);
         jsonObject.set(ITEM_TYPE_FIELD, itemType.toJson(registry));
         return jsonObject;
     }
 
-    protected static IJsonSerializable convertToObject(IPersistedResourceRegistry registry, JsonNode json,
-            boolean ordered) throws HyracksDataException {
+    static IJsonSerializable convertToObject(IPersistedResourceRegistry registry, JsonNode json, boolean ordered)
+            throws HyracksDataException {
         String typeName = json.get(TYPE_NAME_FIELD).asText();
         JsonNode itemTypeJson = json.get(ITEM_TYPE_FIELD);
         IAType itemType = (IAType) registry.deserialize(itemTypeJson);

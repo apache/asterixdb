@@ -18,49 +18,29 @@
  */
 package org.apache.asterix.runtime.aggregates.std;
 
-import java.io.IOException;
-
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
+/**
+ * SQL++ min/max functions will mark aggregation as NULL and start to skip aggregating tuples when:
+ * <ul>
+ *     <li>NULL/MISSING value was encountered locally or globally</li>
+ *     <li>Input data type is invalid (i.e. min/max on records) or incompatible (i.e. min/max on string & int)</li>
+ * </ul>
+ */
 public class MinMaxAggregateFunction extends AbstractMinMaxAggregateFunction {
-    private final boolean isLocalAgg;
 
-    public MinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin,
-            boolean isLocalAgg, SourceLocation sourceLoc) throws HyracksDataException {
-        super(args, context, isMin, sourceLoc);
-        this.isLocalAgg = isLocalAgg;
+    MinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin, Type type,
+            SourceLocation sourceLoc, IAType aggFieldType) throws HyracksDataException {
+        super(args, context, isMin, sourceLoc, type == Type.LOCAL, aggFieldType);
     }
 
     @Override
     protected void processNull() {
         aggType = ATypeTag.NULL;
     }
-
-    @Override
-    protected boolean skipStep() {
-        return aggType == ATypeTag.NULL;
-    }
-
-    @Override
-    protected void processSystemNull() throws HyracksDataException {
-        if (isLocalAgg) {
-            throw new UnsupportedItemTypeException(sourceLoc, "min/max", ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
-        }
-    }
-
-    @Override
-    protected void finishSystemNull() throws IOException {
-        // Empty stream. For local agg return system null. For global agg return null.
-        if (isLocalAgg) {
-            resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
-        } else {
-            resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
-        }
-    }
-
 }

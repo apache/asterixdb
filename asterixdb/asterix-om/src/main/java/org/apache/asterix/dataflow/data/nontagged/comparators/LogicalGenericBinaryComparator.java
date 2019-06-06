@@ -27,14 +27,14 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
-public class LogicalGenericBinaryComparator implements ILogicalBinaryComparator {
+public final class LogicalGenericBinaryComparator implements ILogicalBinaryComparator {
 
     private final LogicalComplexBinaryComparator complexComparator;
     private final LogicalScalarBinaryComparator scalarComparator;
 
     LogicalGenericBinaryComparator(IAType leftType, IAType rightType, boolean isEquality) {
         complexComparator = new LogicalComplexBinaryComparator(leftType, rightType, isEquality);
-        scalarComparator = new LogicalScalarBinaryComparator(isEquality);
+        scalarComparator = LogicalScalarBinaryComparator.of(isEquality);
     }
 
     @Override

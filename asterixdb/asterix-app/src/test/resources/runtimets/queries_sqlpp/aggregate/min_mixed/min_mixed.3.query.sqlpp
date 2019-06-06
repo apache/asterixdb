@@ -18,7 +18,7 @@
  */
 /*
 * Description  : Run min over an ordered list with mixed types
-* Expected Res : Failure
+* Expected Res : NULL
 * Date         : Jun 2nd 2013
 */
 

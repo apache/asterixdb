@@ -223,7 +223,6 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="min_mixed">
         <output-dir compare="Text">min_mixed</output-dir>
-        <expected-error>Type incompatibility: function min/max gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -1453,8 +1452,18 @@
         <output-dir compare="Text">var_pop_misc</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="min_max_arrays">
+        <output-dir compare="Text">min_max_arrays</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="aggregate-sql">
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="min_max_arrays">
+        <output-dir compare="Text">min_max_arrays</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="issue531_string_min_max">
         <output-dir compare="Text">issue531_string_min_max</output-dir>
@@ -1489,7 +1498,6 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="min_mixed">
         <output-dir compare="Text">min_mixed</output-dir>
-        <expected-error>Type incompatibility: function min/max gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">

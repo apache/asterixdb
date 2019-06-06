@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.aggregates.std.MaxAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
@@ -27,9 +28,7 @@ public class ScalarMaxAggregateDescriptor extends AbstractScalarAggregateDescrip
 
     private static final long serialVersionUID = 1L;
 
-    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_MAX;
-
-    public static final IFunctionDescriptorFactory FACTORY = ScalarMaxAggregateDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = createDescriptorFactory(ScalarMaxAggregateDescriptor::new);
 
     private ScalarMaxAggregateDescriptor() {
         super(MaxAggregateDescriptor.FACTORY);
@@ -37,6 +36,12 @@ public class ScalarMaxAggregateDescriptor extends AbstractScalarAggregateDescrip
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return BuiltinFunctions.SCALAR_MAX;
+    }
+
+    @Override
+    public void setImmutableStates(Object... states) {
+        super.setImmutableStates(states);
+        aggFuncDesc.setImmutableStates(getItemType((IAType) states[0]));
     }
 }

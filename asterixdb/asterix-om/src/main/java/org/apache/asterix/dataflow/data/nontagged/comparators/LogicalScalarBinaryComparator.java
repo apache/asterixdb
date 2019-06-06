@@ -18,17 +18,8 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
-import static org.apache.asterix.om.types.ATypeTag.CIRCLE;
-import static org.apache.asterix.om.types.ATypeTag.DURATION;
-import static org.apache.asterix.om.types.ATypeTag.INTERVAL;
-import static org.apache.asterix.om.types.ATypeTag.LINE;
-import static org.apache.asterix.om.types.ATypeTag.POINT;
-import static org.apache.asterix.om.types.ATypeTag.POINT3D;
-import static org.apache.asterix.om.types.ATypeTag.POLYGON;
-import static org.apache.asterix.om.types.ATypeTag.RECTANGLE;
+import static org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.inequalityUndefined;
 import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
-
-import java.util.EnumSet;
 
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
@@ -47,12 +38,16 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 public final class LogicalScalarBinaryComparator implements ILogicalBinaryComparator {
 
-    private static final EnumSet<ATypeTag> INEQUALITY_UNDEFINED_TYPES =
-            EnumSet.of(DURATION, INTERVAL, LINE, POINT, POINT3D, POLYGON, CIRCLE, RECTANGLE);
     private final boolean isEquality;
+    private static final LogicalScalarBinaryComparator INSTANCE_EQ = new LogicalScalarBinaryComparator(true);
+    private static final LogicalScalarBinaryComparator INSTANCE_INEQ = new LogicalScalarBinaryComparator(false);
 
-    LogicalScalarBinaryComparator(boolean isEquality) {
+    private LogicalScalarBinaryComparator(boolean isEquality) {
         this.isEquality = isEquality;
+    }
+
+    static LogicalScalarBinaryComparator of(boolean isEquality) {
+        return isEquality ? INSTANCE_EQ : INSTANCE_INEQ;
     }
 
     @Override
@@ -206,7 +201,6 @@ public final class LogicalScalarBinaryComparator implements ILogicalBinaryCompar
     }
 
     private static boolean comparisonUndefined(ATypeTag leftTag, ATypeTag rightTag, boolean isEquality) {
-        return !isEquality
-                && (INEQUALITY_UNDEFINED_TYPES.contains(leftTag) || INEQUALITY_UNDEFINED_TYPES.contains(rightTag));
+        return !isEquality && (inequalityUndefined(leftTag) || inequalityUndefined(rightTag));
     }
 }

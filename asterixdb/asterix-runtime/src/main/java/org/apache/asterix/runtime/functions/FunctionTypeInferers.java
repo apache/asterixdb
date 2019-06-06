@@ -110,6 +110,17 @@ public final class FunctionTypeInferers {
         }
     };
 
+    public static final IFunctionTypeInferer LISTIFY_INFERER = new IFunctionTypeInferer() {
+        @Override
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
+            AbstractFunctionCallExpression listifyExpression = (AbstractFunctionCallExpression) expr;
+            IAType outputListType = (IAType) context.getType(listifyExpression);
+            IAType itemType = (IAType) context.getType(listifyExpression.getArguments().get(0).getValue());
+            fd.setImmutableStates(outputListType, TypeComputeUtils.getActualType(itemType));
+        }
+    };
+
     public static final class CastTypeInferer implements IFunctionTypeInferer {
         @Override
         public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
@@ -139,11 +150,10 @@ public final class FunctionTypeInferers {
             AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
             IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
             switch (t.getTypeTag()) {
-                case OBJECT: {
+                case OBJECT:
                     fd.setImmutableStates(t);
                     break;
-                }
-                case UNION: {
+                case UNION:
                     AUnionType unionT = (AUnionType) t;
                     if (unionT.isUnknownableType()) {
                         IAType t2 = unionT.getActualType();
@@ -153,10 +163,8 @@ public final class FunctionTypeInferers {
                         }
                     }
                     throw new NotImplementedException("field-access-by-index for data of type " + t);
-                }
-                default: {
+                default:
                     throw new NotImplementedException("field-access-by-index for data of type " + t);
-                }
             }
         }
     }
@@ -176,16 +184,14 @@ public final class FunctionTypeInferers {
             }
 
             switch (t.getTypeTag()) {
-                case OBJECT: {
+                case OBJECT:
                     fd.setImmutableStates(t, listFieldPath);
                     break;
-                }
                 case ANY:
                     fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE, listFieldPath);
                     break;
-                default: {
+                default:
                     throw new NotImplementedException("field-access-nested for data of type " + t);
-                }
             }
         }
     }
@@ -209,22 +215,19 @@ public final class FunctionTypeInferers {
             IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
             ATypeTag typeTag = t.getTypeTag();
             switch (typeTag) {
-                case OBJECT: {
+                case OBJECT:
                     fd.setImmutableStates(t);
                     break;
-                }
-                case ANY: {
+                case ANY:
                     fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE);
                     break;
-                }
-                default: {
+                default:
                     if (strict) {
                         throw new NotImplementedException(fd.getIdentifier().getName() + " for data of type " + t);
                     } else {
                         fd.setImmutableStates(new Object[] { null });
                     }
                     break;
-                }
             }
         }
     }

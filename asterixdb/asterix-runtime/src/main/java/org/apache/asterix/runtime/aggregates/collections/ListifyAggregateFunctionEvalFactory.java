@@ -22,7 +22,12 @@ import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeHelper;
 import org.apache.asterix.runtime.aggregates.std.AbstractAggregateFunction;
+import org.apache.asterix.runtime.evaluators.functions.CastTypeEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -39,13 +44,15 @@ public class ListifyAggregateFunctionEvalFactory implements IAggregateEvaluatorF
 
     private static final long serialVersionUID = 1L;
     private IScalarEvaluatorFactory[] args;
-    private final AOrderedListType orderedlistType;
+    private final AOrderedListType orderedListType;
+    private final IAType itemType;
     private final SourceLocation sourceLoc;
 
-    public ListifyAggregateFunctionEvalFactory(IScalarEvaluatorFactory[] args, AOrderedListType type,
+    ListifyAggregateFunctionEvalFactory(IScalarEvaluatorFactory[] args, AOrderedListType type, IAType itemType,
             SourceLocation sourceLoc) {
         this.args = args;
-        this.orderedlistType = type;
+        this.orderedListType = type;
+        this.itemType = itemType;
         this.sourceLoc = sourceLoc;
     }
 
@@ -57,16 +64,24 @@ public class ListifyAggregateFunctionEvalFactory implements IAggregateEvaluatorF
             private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
             private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
             private OrderedListBuilder builder = new OrderedListBuilder();
+            // create caster to open up input item if the list item type is ANY but the received item is not fully open
+            private final CastTypeEvaluator caster =
+                    orderedListType.getItemType().getTypeTag() == ATypeTag.ANY && !TypeHelper.isFullyOpen(itemType)
+                            ? new CastTypeEvaluator(BuiltinType.ANY, itemType, eval) : null;
 
             @Override
             public void init() throws HyracksDataException {
-                builder.reset(orderedlistType);
+                builder.reset(orderedListType);
             }
 
             @Override
             public void step(IFrameTupleReference tuple) throws HyracksDataException {
                 try {
-                    eval.evaluate(tuple, inputVal);
+                    if (caster != null) {
+                        caster.evaluate(tuple, inputVal);
+                    } else {
+                        eval.evaluate(tuple, inputVal);
+                    }
                     builder.addItem(inputVal);
                 } catch (IOException e) {
                     throw HyracksDataException.create(e);

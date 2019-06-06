@@ -53,6 +53,7 @@ public class ScalarVersionOfAggregateResultType extends AbstractResultTypeComput
             return BuiltinType.ANY;
         }
         if (tag != ATypeTag.ARRAY && tag != ATypeTag.MULTISET) {
+            // this condition being true would've thrown an exception above, no?
             return strippedInputTypes[0];
         }
         AbstractCollectionType act = (AbstractCollectionType) strippedInputTypes[0];

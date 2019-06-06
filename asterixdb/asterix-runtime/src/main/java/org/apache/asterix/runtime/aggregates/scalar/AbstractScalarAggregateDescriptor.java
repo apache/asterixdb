@@ -18,13 +18,18 @@
  */
 package org.apache.asterix.runtime.aggregates.scalar;
 
+import java.util.function.Supplier;
+
+import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor.ScanCollectionUnnestingFunctionFactory;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
@@ -84,5 +89,9 @@ public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFu
     static IAType getItemType(IAType listType) {
         IAType itemType = TypeComputeUtils.extractListItemType(listType);
         return itemType != null ? itemType : BuiltinType.ANY;
+    }
+
+    public static IFunctionDescriptorFactory createDescriptorFactory(Supplier<IFunctionDescriptor> descriptorSupplier) {
+        return DescriptorFactoryUtil.createFactory(descriptorSupplier, FunctionTypeInferers.SET_ARGUMENT_TYPE);
     }
 }

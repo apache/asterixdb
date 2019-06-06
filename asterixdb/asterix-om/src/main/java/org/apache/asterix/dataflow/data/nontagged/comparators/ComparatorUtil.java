@@ -59,13 +59,12 @@ public class ComparatorUtil {
         IAType leftType = TypeComputeUtils.getActualType(left);
         IAType rightType = TypeComputeUtils.getActualType(right);
 
-        // TODO(ali): after making comparators in scalar comparator stateless, create an INSTANCE only and use it here
         if (leftType.getTypeTag().isDerivedType() && rightType.getTypeTag().isDerivedType()) {
             return new LogicalComplexBinaryComparator(leftType, rightType, isEquality);
         } else if (leftType.getTypeTag() == ATypeTag.ANY || rightType.getTypeTag() == ATypeTag.ANY) {
             return new LogicalGenericBinaryComparator(leftType, rightType, isEquality);
         } else {
-            return new LogicalScalarBinaryComparator(isEquality);
+            return LogicalScalarBinaryComparator.of(isEquality);
         }
     }
 

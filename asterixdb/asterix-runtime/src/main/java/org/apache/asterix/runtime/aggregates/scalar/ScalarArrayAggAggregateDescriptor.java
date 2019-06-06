@@ -44,7 +44,7 @@ public final class ScalarArrayAggAggregateDescriptor extends AbstractScalarAggre
         super.setImmutableStates(states);
         // listify() needs an ordered list type for its output
         IAType itemType = getItemType((IAType) states[0]);
-        aggFuncDesc.setImmutableStates(new AOrderedListType(itemType, null));
+        aggFuncDesc.setImmutableStates(new AOrderedListType(itemType, null), itemType);
     }
 
     @Override

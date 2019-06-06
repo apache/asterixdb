@@ -18,15 +18,14 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.exceptions.UnsupportedTypeException;
+import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class MinMaxAggTypeComputer extends AbstractResultTypeComputer {
 
@@ -36,31 +35,11 @@ public class MinMaxAggTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
-            throws AlgebricksException {
-        ATypeTag tag = type.getTypeTag();
-        switch (tag) {
-            case DOUBLE:
-            case FLOAT:
-            case BIGINT:
-            case INTEGER:
-            case SMALLINT:
-            case TINYINT:
-            case STRING:
-            case DATE:
-            case TIME:
-            case DATETIME:
-            case YEARMONTHDURATION:
-            case DAYTIMEDURATION:
-            case ANY:
-                return;
-            default:
-                throw new UnsupportedTypeException(sourceLoc, funcId, tag);
-        }
-    }
-
-    @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return AUnionType.createUnknownableType(strippedInputTypes[0]);
+        ATypeTag typeTag = strippedInputTypes[0].getTypeTag();
+        if (ILogicalBinaryComparator.inequalityUndefined(typeTag)) {
+            return BuiltinType.ANULL;
+        }
+        return typeTag == ATypeTag.ANY ? BuiltinType.ANY : AUnionType.createUnknownableType(strippedInputTypes[0]);
     }
 }

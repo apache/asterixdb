@@ -19,6 +19,7 @@
 package org.apache.asterix.dataflow.data.common;
 
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
@@ -35,6 +36,26 @@ public interface ILogicalBinaryComparator {
 
     static Result asResult(int result) {
         return result < 0 ? Result.LT : (result == 0 ? Result.EQ : Result.GT);
+    }
+
+    static boolean inequalityUndefined(ATypeTag tag) {
+        switch (tag) {
+            case OBJECT:
+            case MULTISET:
+            case DURATION:
+            case INTERVAL:
+            case LINE:
+            case POINT:
+            case POINT3D:
+            case POLYGON:
+            case CIRCLE:
+            case RECTANGLE:
+                return true;
+            case UNION:
+                throw new IllegalArgumentException();
+            default:
+                return false;
+        }
     }
 
     Result compare(IPointable left, IPointable right) throws HyracksDataException;

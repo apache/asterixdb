@@ -53,21 +53,21 @@ public class AOrderedListType extends AbstractCollectionType {
 
     @Override
     public String toString() {
-        return "[ " + itemType + " ]";
+        return "[ " + getItemType() + " ]";
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof AOrderedListType) {
             AOrderedListType type = (AOrderedListType) obj;
-            return this.itemType.equals(type.itemType);
+            return this.getItemType().equals(type.getItemType());
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return this.itemType.hashCode() * 10;
+        return this.getItemType().hashCode() * 10;
     }
 
     @Override
@@ -85,7 +85,7 @@ public class AOrderedListType extends AbstractCollectionType {
         ObjectMapper om = new ObjectMapper();
         ObjectNode type = om.createObjectNode();
         type.put("type", AOrderedListType.class.getName());
-        type.set("item-type", itemType.toJSON());
+        type.set("item-type", getItemType().toJSON());
         return type;
     }
 

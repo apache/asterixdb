@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.aggregates.std.SqlMinAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
@@ -27,9 +28,8 @@ public class ScalarSqlMinAggregateDescriptor extends AbstractScalarAggregateDesc
 
     private static final long serialVersionUID = 1L;
 
-    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_MIN;
-
-    public static final IFunctionDescriptorFactory FACTORY = ScalarSqlMinAggregateDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY =
+            createDescriptorFactory(ScalarSqlMinAggregateDescriptor::new);
 
     private ScalarSqlMinAggregateDescriptor() {
         super(SqlMinAggregateDescriptor.FACTORY);
@@ -37,6 +37,12 @@ public class ScalarSqlMinAggregateDescriptor extends AbstractScalarAggregateDesc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return BuiltinFunctions.SCALAR_SQL_MIN;
+    }
+
+    @Override
+    public void setImmutableStates(Object... states) {
+        super.setImmutableStates(states);
+        aggFuncDesc.setImmutableStates(getItemType((IAType) states[0]));
     }
 }

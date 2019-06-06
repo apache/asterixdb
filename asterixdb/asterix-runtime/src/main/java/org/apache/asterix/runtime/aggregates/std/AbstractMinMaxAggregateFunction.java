@@ -20,16 +20,17 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
+import org.apache.asterix.dataflow.data.nontagged.comparators.ComparatorUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
-import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
+import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -38,20 +39,24 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateFunction {
-    protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final IPointable inputVal = new VoidPointable();
     private final ArrayBackedValueStorage outputVal = new ArrayBackedValueStorage();
     private final ArrayBackedValueStorage tempValForCasting = new ArrayBackedValueStorage();
     private final IScalarEvaluator eval;
     private final boolean isMin;
+    private final IAType aggFieldType;
+    private final boolean isLocal;
     protected ATypeTag aggType;
-    private IBinaryComparator cmp;
+    private ILogicalBinaryComparator cmp;
 
     AbstractMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin,
-            SourceLocation sourceLoc) throws HyracksDataException {
+            SourceLocation sourceLoc, boolean isLocal, IAType aggFieldType) throws HyracksDataException {
         super(sourceLoc);
-        eval = args[0].createScalarEvaluator(context);
+        this.eval = args[0].createScalarEvaluator(context);
         this.isMin = isMin;
+        this.aggFieldType = aggFieldType;
+        this.isLocal = isLocal;
     }
 
     @Override
@@ -70,40 +75,30 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
         if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
             processNull();
-            return;
+        } else if (typeTag == ATypeTag.SYSTEM_NULL) {
+            // if a system_null is encountered locally, it would be an error; otherwise it is ignored
+            if (isLocal) {
+                throw new UnsupportedItemTypeException(sourceLoc, "min/max", ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
+            }
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
-            if (typeTag == ATypeTag.SYSTEM_NULL) {
-                // Ignore.
-                return;
-            }
             // First value encountered. Set type, comparator, and initial value.
-            aggType = typeTag;
-            // Set comparator.
-            cmp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(aggType, isMin)
-                    .createBinaryComparator();
-            // Initialize min value.
-            outputVal.assign(inputVal);
-        } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            if (typeTag.ordinal() > aggType.ordinal()) {
-                throw new IncompatibleTypeException(sourceLoc, "min/max", typeTag.serialize(), aggType.serialize());
-            } else {
-                throw new IncompatibleTypeException(sourceLoc, "min/max", aggType.serialize(), typeTag.serialize());
-            }
-        } else {
-            // If a system_null is encountered locally, it would be an error; otherwise if it is seen
-            // by a global aggregator, it is simple ignored.
-            if (typeTag == ATypeTag.SYSTEM_NULL) {
-                processSystemNull();
+            if (ILogicalBinaryComparator.inequalityUndefined(typeTag)) {
+                handleInvalidInput();
                 return;
             }
+            aggType = typeTag;
+            cmp = ComparatorUtil.createLogicalComparator(aggFieldType, aggFieldType, false);
+            outputVal.assign(inputVal);
+        } else if (!ATypeHierarchy.isCompatible(typeTag, aggType)) {
+            handleInvalidInput();
+        } else {
+            // the two values are compatible non-null/non-missing values
             if (aggType == typeTag) {
                 compareAndUpdate(cmp, inputVal, outputVal);
                 return;
             }
             if (ATypeHierarchy.canPromote(aggType, typeTag)) {
                 // switch to new comp & aggregation type (i.e. current min/max is int and new input is double)
-                cmp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(typeTag, isMin)
-                        .createBinaryComparator();
                 castValue(ATypeHierarchy.getTypePromoteComputer(aggType, typeTag), outputVal, tempValForCasting);
                 outputVal.assign(tempValForCasting);
                 compareAndUpdate(cmp, inputVal, outputVal);
@@ -125,7 +120,11 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
                     result.set(resultStorage);
                     break;
                 case SYSTEM_NULL:
-                    finishSystemNull();
+                    if (isLocal) {
+                        resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
+                    } else {
+                        resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                    }
                     result.set(resultStorage);
                     break;
                 default:
@@ -142,21 +141,45 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
         finish(result);
     }
 
-    protected boolean skipStep() {
-        return false;
-    }
-
     protected abstract void processNull();
 
-    protected abstract void processSystemNull() throws HyracksDataException;
+    private boolean skipStep() {
+        return aggType == ATypeTag.NULL;
+    }
 
-    protected abstract void finishSystemNull() throws IOException;
+    private void handleInvalidInput() {
+        aggType = ATypeTag.NULL;
+    }
 
-    private static void compareAndUpdate(IBinaryComparator comp, IPointable newVal, ArrayBackedValueStorage oldVal)
+    private void compareAndUpdate(ILogicalBinaryComparator c, IPointable newVal, ArrayBackedValueStorage currentVal)
             throws HyracksDataException {
-        if (comp.compare(newVal.getByteArray(), newVal.getStartOffset(), newVal.getLength(), oldVal.getByteArray(),
-                oldVal.getStartOffset(), oldVal.getLength()) < 0) {
-            oldVal.assign(newVal);
+        // newVal is never NULL/MISSING here. it's already checked up. current value is the first encountered non-null.
+        ILogicalBinaryComparator.Result result = c.compare(newVal, currentVal);
+        switch (result) {
+            case LT:
+                if (isMin) {
+                    currentVal.assign(newVal);
+                }
+                break;
+            case GT:
+                if (!isMin) {
+                    // update the current value with the new maximum
+                    currentVal.assign(newVal);
+                }
+                break;
+            case MISSING:
+            case NULL:
+                // this should never happen given that the two values were not NULL/MISSING. aggregation is made NULL.
+                // it shouldn't happen for scalar values. For ARRAY values this should not happen as well.
+                // if some elements are NULL/MISSING, the ARRAY comparison returns INCOMPARABLE.
+                aggType = ATypeTag.NULL;
+                return;
+            case INCOMPARABLE:
+                handleInvalidInput();
+                return;
+            default:
+                // EQ, do nothing
+                break;
         }
     }
 
@@ -169,5 +192,11 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    enum Type {
+        LOCAL,
+        GLOBAL,
+        ONE_STEP
     }
 }

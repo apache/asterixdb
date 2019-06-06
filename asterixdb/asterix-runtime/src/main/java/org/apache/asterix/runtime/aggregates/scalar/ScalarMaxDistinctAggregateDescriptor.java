@@ -28,8 +28,6 @@ public class ScalarMaxDistinctAggregateDescriptor extends AbstractScalarDistinct
 
     private static final long serialVersionUID = 1L;
 
-    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_MAX_DISTINCT;
-
     public static final IFunctionDescriptorFactory FACTORY =
             createDescriptorFactory(ScalarMaxDistinctAggregateDescriptor::new);
 
@@ -39,6 +37,12 @@ public class ScalarMaxDistinctAggregateDescriptor extends AbstractScalarDistinct
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return BuiltinFunctions.SCALAR_MAX_DISTINCT;
+    }
+
+    @Override
+    public void setImmutableStates(Object... states) {
+        super.setImmutableStates(states);
+        aggFuncDesc.setImmutableStates(itemType);
     }
 }

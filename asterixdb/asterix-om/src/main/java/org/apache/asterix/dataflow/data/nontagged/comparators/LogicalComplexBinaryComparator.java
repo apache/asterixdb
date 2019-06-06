@@ -51,7 +51,7 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
-public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator {
+public final class LogicalComplexBinaryComparator implements ILogicalBinaryComparator {
 
     private final IAType leftType;
     private final IAType rightType;
@@ -66,7 +66,7 @@ public class LogicalComplexBinaryComparator implements ILogicalBinaryComparator 
         this.leftType = leftType;
         this.rightType = rightType;
         this.isEquality = isEquality;
-        this.scalarComparator = new LogicalScalarBinaryComparator(isEquality);
+        this.scalarComparator = LogicalScalarBinaryComparator.of(isEquality);
         storageAllocator = new ListObjectPool<>(STORAGE_FACTORY);
         voidPointableAllocator = new ListObjectPool<>(VOID_FACTORY);
         bitSetAllocator = new ListObjectPool<>(BIT_SET_FACTORY);

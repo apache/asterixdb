@@ -28,17 +28,21 @@ public class ScalarSqlMaxDistinctAggregateDescriptor extends AbstractScalarDisti
 
     private static final long serialVersionUID = 1L;
 
-    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_MAX_DISTINCT;
-
     public static final IFunctionDescriptorFactory FACTORY =
             createDescriptorFactory(ScalarSqlMaxDistinctAggregateDescriptor::new);
 
-    public ScalarSqlMaxDistinctAggregateDescriptor() {
+    private ScalarSqlMaxDistinctAggregateDescriptor() {
         super(SqlMaxAggregateDescriptor.FACTORY);
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return BuiltinFunctions.SCALAR_SQL_MAX_DISTINCT;
+    }
+
+    @Override
+    public void setImmutableStates(Object... states) {
+        super.setImmutableStates(states);
+        aggFuncDesc.setImmutableStates(itemType);
     }
 }

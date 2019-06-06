@@ -18,8 +18,9 @@
  */
 package org.apache.asterix.runtime.aggregates.std;
 
+import static org.apache.asterix.runtime.aggregates.std.AbstractMinMaxAggregateFunction.Type;
+
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -29,21 +30,15 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class LocalSqlMaxAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
+public class LocalSqlMaxAggregateDescriptor extends AbstractMinMaxAggregateDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = BuiltinFunctions.LOCAL_SQL_MAX;
-
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new LocalSqlMaxAggregateDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY =
+            AbstractAggregateFunctionDynamicDescriptor.createFactory(LocalSqlMaxAggregateDescriptor::new);
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return BuiltinFunctions.LOCAL_SQL_MAX;
     }
 
     @Override
@@ -54,7 +49,7 @@ public class LocalSqlMaxAggregateDescriptor extends AbstractAggregateFunctionDyn
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new SqlMinMaxAggregateFunction(args, ctx, false, true, sourceLoc);
+                return new SqlMinMaxAggregateFunction(args, ctx, false, Type.LOCAL, sourceLoc, aggFieldType);
             }
         };
     }

@@ -40,7 +40,7 @@ public final class ScalarArrayAggDistinctAggregateDescriptor extends AbstractSca
     public void setImmutableStates(Object... states) {
         super.setImmutableStates(states);
         // listify() needs an ordered list type for its output
-        aggFuncDesc.setImmutableStates(new AOrderedListType(itemType, null));
+        aggFuncDesc.setImmutableStates(new AOrderedListType(itemType, null), itemType);
     }
 
     @Override

@@ -18,7 +18,13 @@
  */
 package org.apache.asterix.om.types;
 
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+
 public class TypeHelper {
+
+    private TypeHelper() {
+    }
 
     public static boolean canBeMissing(IAType t) {
         switch (t.getTypeTag()) {
@@ -26,9 +32,8 @@ public class TypeHelper {
                 return true;
             case UNION:
                 return ((AUnionType) t).isMissableType();
-            default: {
+            default:
                 return false;
-            }
         }
     }
 
@@ -57,4 +62,29 @@ public class TypeHelper {
         }
     }
 
+    /**
+     * Decides whether the {@param type} represents a type for data in the "opened up" form.
+     * @param type type
+     * @return true if the type will represent data in the "opened up" form. False, otherwise.
+     */
+    public static boolean isFullyOpen(IAType type) {
+        IAType actualType = TypeComputeUtils.getActualType(type);
+        switch (actualType.getTypeTag()) {
+            case OBJECT:
+                ARecordType recordType = (ARecordType) actualType;
+                return recordType.getFieldNames().length == 0 && recordType.isOpen();
+            case ARRAY:
+            case MULTISET:
+                AbstractCollectionType collectionType = (AbstractCollectionType) actualType;
+                return TypeComputeUtils.getActualType(collectionType.getItemType()).getTypeTag() == ATypeTag.ANY;
+            case ANY:
+                return true;
+            default:
+                if (actualType.getTypeTag().isDerivedType()) {
+                    throw new NotImplementedException();
+                }
+                // all other scalar types & ANY are open by nature and they don't need to be "opened up"
+                return true;
+        }
+    }
 }

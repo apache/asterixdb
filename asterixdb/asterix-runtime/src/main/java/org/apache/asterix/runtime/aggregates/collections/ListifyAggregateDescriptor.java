@@ -23,6 +23,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -39,16 +40,18 @@ public class ListifyAggregateDescriptor extends AbstractAggregateFunctionDynamic
 
         @Override
         public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_EXPRESSION_TYPE;
+            return FunctionTypeInferers.LISTIFY_INFERER;
         }
     };
 
     private static final long serialVersionUID = 1L;
     private AOrderedListType oltype;
+    private IAType itemType;
 
     @Override
     public void setImmutableStates(Object... states) {
         this.oltype = (AOrderedListType) states[0];
+        this.itemType = (IAType) states[1];
     }
 
     @Override
@@ -58,6 +61,6 @@ public class ListifyAggregateDescriptor extends AbstractAggregateFunctionDynamic
 
     @Override
     public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
-        return new ListifyAggregateFunctionEvalFactory(args, oltype, sourceLoc);
+        return new ListifyAggregateFunctionEvalFactory(args, oltype, itemType, sourceLoc);
     }
 }

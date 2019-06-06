@@ -18,42 +18,39 @@
  */
 package org.apache.asterix.runtime.aggregates.std;
 
-import java.io.IOException;
-
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
+/**
+ * SQL min/max functions will mark aggregation as NULL and start to skip aggregating tuples when:
+ * <ul>
+ *     <li>NULL/MISSING value was encountered globally</li>
+ *     <li>Input data type is invalid (i.e. min/max on records) or incompatible (i.e. min/max on string & int)</li>
+ * </ul>
+ * When NULL/MISSING value is encountered, local aggregator will ignore and continue aggregation. Global aggregator
+ * will mark aggregation as NULL since getting NULL/MISSING at the global level indicates type invalidity (Some
+ * aggregators are global in nature yet they ignore NULLs similar to a local aggregator, e.g. scalar min/max, normal
+ * global aggregators with no local aggregators like distinct min/max (one-step aggregators)).
+ */
 public class SqlMinMaxAggregateFunction extends AbstractMinMaxAggregateFunction {
-    private final boolean isLocalAgg;
 
-    public SqlMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin,
-            boolean isLocalAgg, SourceLocation sourceLoc) throws HyracksDataException {
-        super(args, context, isMin, sourceLoc);
-        this.isLocalAgg = isLocalAgg;
+    private final Type type;
+
+    SqlMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin, Type type,
+            SourceLocation sourceLoc, IAType aggFieldType) throws HyracksDataException {
+        super(args, context, isMin, sourceLoc, type == Type.LOCAL, aggFieldType);
+        this.type = type;
     }
 
     @Override
     protected void processNull() {
-    }
-
-    @Override
-    protected void processSystemNull() throws HyracksDataException {
-        if (isLocalAgg) {
-            throw new UnsupportedItemTypeException(sourceLoc, "min/max", ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
-        }
-    }
-
-    @Override
-    protected void finishSystemNull() throws IOException {
-        // Empty stream. For local agg return system null. For global agg return null.
-        if (isLocalAgg) {
-            resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
-        } else {
-            resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+        if (type == Type.GLOBAL) {
+            // getting NULL at the global step should only mean the local step ran into type invalidity
+            aggType = ATypeTag.NULL;
         }
     }
 }

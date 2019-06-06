@@ -517,9 +517,13 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-max", 1);
     public static final FunctionIdentifier LOCAL_MAX =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-max", 1);
+    public static final FunctionIdentifier GLOBAL_MAX =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-max", 1);
     public static final FunctionIdentifier MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-min", 1);
     public static final FunctionIdentifier LOCAL_MIN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-min", 1);
+    public static final FunctionIdentifier GLOBAL_MIN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-min", 1);
     public static final FunctionIdentifier GLOBAL_AVG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-avg", 1);
     public static final FunctionIdentifier INTERMEDIATE_AVG =
@@ -779,10 +783,14 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-max", 1);
     public static final FunctionIdentifier LOCAL_SQL_MAX =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-max", 1);
+    public static final FunctionIdentifier GLOBAL_SQL_MAX =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-max", 1);
     public static final FunctionIdentifier SQL_MIN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-min", 1);
     public static final FunctionIdentifier LOCAL_SQL_MIN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-min", 1);
+    public static final FunctionIdentifier GLOBAL_SQL_MIN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-min", 1);
     public static final FunctionIdentifier GLOBAL_SQL_AVG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-avg", 1);
     public static final FunctionIdentifier LOCAL_SQL_AVG =
@@ -1805,8 +1813,10 @@ public class BuiltinFunctions {
         addFunction(SCALAR_ARRAYAGG, ScalarArrayAggTypeComputer.INSTANCE, true);
         addFunction(MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(GLOBAL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addFunction(MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(GLOBAL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE, true);
         addFunction(COUNT, AInt64TypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_AVG, LocalAvgTypeComputer.INSTANCE, true);
@@ -1930,8 +1940,10 @@ public class BuiltinFunctions {
         addFunction(SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
         addFunction(SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(GLOBAL_SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addFunction(SQL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(GLOBAL_SQL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
         addPrivateFunction(SCALAR_GLOBAL_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
@@ -2413,18 +2425,18 @@ public class BuiltinFunctions {
         addScalarAgg(COUNT_DISTINCT, SCALAR_COUNT_DISTINCT);
 
         // MAX
-
         addAgg(MAX);
         addAgg(LOCAL_MAX);
+        addAgg(GLOBAL_MAX);
         addLocalAgg(MAX, LOCAL_MAX);
-        addIntermediateAgg(LOCAL_MAX, MAX);
-        addIntermediateAgg(MAX, MAX);
-        addGlobalAgg(MAX, MAX);
+        addIntermediateAgg(LOCAL_MAX, GLOBAL_MAX);
+        addIntermediateAgg(GLOBAL_MAX, GLOBAL_MAX);
+        addIntermediateAgg(MAX, GLOBAL_MAX);
+        addGlobalAgg(MAX, GLOBAL_MAX);
 
         addScalarAgg(MAX, SCALAR_MAX);
 
         // MAX DISTINCT
-
         addDistinctAgg(MAX_DISTINCT, MAX);
         addScalarAgg(MAX_DISTINCT, SCALAR_MAX_DISTINCT);
 
@@ -2651,17 +2663,18 @@ public class BuiltinFunctions {
         addGlobalAgg(NULL_WRITER, NULL_WRITER);
 
         // MIN
-
         addAgg(MIN);
+        addAgg(LOCAL_MIN);
+        addAgg(GLOBAL_MIN);
         addLocalAgg(MIN, LOCAL_MIN);
-        addIntermediateAgg(LOCAL_MIN, MIN);
-        addIntermediateAgg(MIN, MIN);
-        addGlobalAgg(MIN, MIN);
+        addIntermediateAgg(LOCAL_MIN, GLOBAL_MIN);
+        addIntermediateAgg(GLOBAL_MIN, GLOBAL_MIN);
+        addIntermediateAgg(MIN, GLOBAL_MIN);
+        addGlobalAgg(MIN, GLOBAL_MIN);
 
         addScalarAgg(MIN, SCALAR_MIN);
 
         // MIN DISTINCT
-
         addDistinctAgg(MIN_DISTINCT, MIN);
         addScalarAgg(MIN_DISTINCT, SCALAR_MIN_DISTINCT);
 
@@ -2949,33 +2962,34 @@ public class BuiltinFunctions {
         addScalarAgg(SQL_COUNT_DISTINCT, SCALAR_SQL_COUNT_DISTINCT);
 
         // SQL MAX
-
         addAgg(SQL_MAX);
         addAgg(LOCAL_SQL_MAX);
+        addAgg(GLOBAL_SQL_MAX);
         addLocalAgg(SQL_MAX, LOCAL_SQL_MAX);
-        addIntermediateAgg(LOCAL_SQL_MAX, SQL_MAX);
-        addIntermediateAgg(SQL_MAX, SQL_MAX);
-        addGlobalAgg(SQL_MAX, SQL_MAX);
+        addIntermediateAgg(LOCAL_SQL_MAX, GLOBAL_SQL_MAX);
+        addIntermediateAgg(GLOBAL_SQL_MAX, GLOBAL_SQL_MAX);
+        addIntermediateAgg(SQL_MAX, GLOBAL_SQL_MAX);
+        addGlobalAgg(SQL_MAX, GLOBAL_SQL_MAX);
 
         addScalarAgg(SQL_MAX, SCALAR_SQL_MAX);
 
         // SQL MAX DISTINCT
-
         addDistinctAgg(SQL_MAX_DISTINCT, SQL_MAX);
         addScalarAgg(SQL_MAX_DISTINCT, SCALAR_SQL_MAX_DISTINCT);
 
         // SQL MIN
-
         addAgg(SQL_MIN);
+        addAgg(LOCAL_SQL_MIN);
+        addAgg(GLOBAL_SQL_MIN);
         addLocalAgg(SQL_MIN, LOCAL_SQL_MIN);
-        addIntermediateAgg(LOCAL_SQL_MIN, SQL_MIN);
-        addIntermediateAgg(SQL_MIN, SQL_MIN);
-        addGlobalAgg(SQL_MIN, SQL_MIN);
+        addIntermediateAgg(LOCAL_SQL_MIN, GLOBAL_SQL_MIN);
+        addIntermediateAgg(GLOBAL_SQL_MIN, GLOBAL_SQL_MIN);
+        addIntermediateAgg(SQL_MIN, GLOBAL_SQL_MIN);
+        addGlobalAgg(SQL_MIN, GLOBAL_SQL_MIN);
 
         addScalarAgg(SQL_MIN, SCALAR_SQL_MIN);
 
         // SQL MIN DISTINCT
-
         addDistinctAgg(SQL_MIN_DISTINCT, SQL_MIN);
         addScalarAgg(SQL_MIN_DISTINCT, SCALAR_SQL_MIN_DISTINCT);
 
