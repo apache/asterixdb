@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.function;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.EXPECTED_CONSTANT_VALUE;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +28,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
+import org.apache.asterix.om.exceptions.UnsupportedTypeException;
 import org.apache.asterix.om.functions.IFunctionToDataSourceRewriter;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.optimizer.rules.UnnestToDataScanRule;
@@ -42,6 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstan
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public abstract class FunctionRewriter implements IFunctionToDataSourceRewriter {
 
@@ -90,15 +94,17 @@ public abstract class FunctionRewriter implements IFunctionToDataSourceRewriter 
     protected abstract FunctionDataSource toDatasource(IOptimizationContext context, AbstractFunctionCallExpression f)
             throws AlgebricksException;
 
-    protected String getString(List<Mutable<ILogicalExpression>> args, int i) throws AlgebricksException {
+    protected String getString(SourceLocation loc, List<Mutable<ILogicalExpression>> args, int i)
+            throws AlgebricksException {
         ConstantExpression ce = (ConstantExpression) args.get(i).getValue();
         IAlgebricksConstantValue acv = ce.getValue();
         if (!(acv instanceof AsterixConstantValue)) {
-            throw new AlgebricksException("Expected arg[" + i + "] to be of type String");
+            throw new CompilationException(EXPECTED_CONSTANT_VALUE, loc);
         }
         AsterixConstantValue acv2 = (AsterixConstantValue) acv;
-        if (acv2.getObject().getType().getTypeTag() != ATypeTag.STRING) {
-            throw new AlgebricksException("Expected arg[" + i + "] to be of type String");
+        final ATypeTag typeTag = acv2.getObject().getType().getTypeTag();
+        if (typeTag != ATypeTag.STRING) {
+            throw new UnsupportedTypeException(loc, functionId, typeTag);
         }
         return ((AString) acv2.getObject()).getStringValue();
     }

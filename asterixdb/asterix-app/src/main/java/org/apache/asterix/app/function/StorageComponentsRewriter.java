@@ -27,6 +27,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class StorageComponentsRewriter extends FunctionRewriter {
 
@@ -42,13 +43,13 @@ public class StorageComponentsRewriter extends FunctionRewriter {
     @Override
     public StorageComponentsDatasource toDatasource(IOptimizationContext context, AbstractFunctionCallExpression f)
             throws AlgebricksException {
-        String dataverseName = getString(f.getArguments(), 0);
-        String datasetName = getString(f.getArguments(), 1);
+        SourceLocation loc = f.getSourceLocation();
+        String dataverseName = getString(loc, f.getArguments(), 0);
+        String datasetName = getString(loc, f.getArguments(), 1);
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, f.getSourceLocation(), datasetName,
-                    dataverseName);
+            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, loc, datasetName, dataverseName);
         }
         return new StorageComponentsDatasource(context.getComputationNodeDomain(), dataset.getDatasetId());
     }

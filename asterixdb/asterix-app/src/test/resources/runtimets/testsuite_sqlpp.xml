@@ -6046,6 +6046,12 @@
     <test-case FilePath="misc">
       <compilation-unit name="dump_index">
         <output-dir compare="Text">dump_index</output-dir>
+        <expected-error>Cannot find index with name noindex</expected-error>
+        <expected-error>Cannot find dataset with name nodataset in dataverse test</expected-error>
+        <expected-error>Cannot find dataset with name ds in dataverse nodataverse</expected-error>
+        <expected-error>Unsupported type: dump-index cannot process input type null</expected-error>
+        <expected-error>Unsupported type: dump-index cannot process input type null</expected-error>
+        <expected-error>Unsupported type: dump-index cannot process input type null</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">

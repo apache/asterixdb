@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 
 public class DumpIndexRewriter extends FunctionRewriter {
@@ -44,24 +45,24 @@ public class DumpIndexRewriter extends FunctionRewriter {
     @Override
     public DumpIndexDatasource toDatasource(IOptimizationContext context, AbstractFunctionCallExpression f)
             throws AlgebricksException {
-        String dataverseName = getString(f.getArguments(), 0);
-        String datasetName = getString(f.getArguments(), 1);
-        String indexName = getString(f.getArguments(), 2);
+        final SourceLocation loc = f.getSourceLocation();
+        String dataverseName = getString(loc, f.getArguments(), 0);
+        String datasetName = getString(loc, f.getArguments(), 1);
+        String indexName = getString(loc, f.getArguments(), 2);
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         final Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, f.getSourceLocation(), datasetName,
-                    dataverseName);
+            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, loc, datasetName, dataverseName);
         }
         Index index = metadataProvider.getIndex(dataverseName, datasetName, indexName);
         if (index == null) {
-            throw new CompilationException(ErrorCode.UNKNOWN_INDEX, f.getSourceLocation(), index);
+            throw new CompilationException(ErrorCode.UNKNOWN_INDEX, loc, indexName);
         }
         if (index.isPrimaryIndex()) {
-            throw new IllegalStateException("primary indexes are not supported");
+            throw new CompilationException(ErrorCode.OPERATION_NOT_SUPPORTED_ON_PRIMARY_INDEX, loc, indexName);
         }
-        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
-                .createIndexOperationsHelper(dataset, index, metadataProvider, f.getSourceLocation());
+        SecondaryIndexOperationsHelper secondaryIndexHelper =
+                SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, loc);
         IndexDataflowHelperFactory indexDataflowHelperFactory =
                 new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
                         secondaryIndexHelper.getSecondaryFileSplitProvider());
