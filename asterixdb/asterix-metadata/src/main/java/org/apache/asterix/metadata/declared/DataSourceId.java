@@ -19,43 +19,63 @@
 
 package org.apache.asterix.metadata.declared;
 
-import java.util.Objects;
+import java.util.Arrays;
 
 public final class DataSourceId {
 
-    private String dataverseName;
-    private String datasourceName;
+    private String[] components;
 
+    /**
+     * The original constructor taking
+     *
+     * @param dataverseName
+     *            the dataverse (namespace) for this datasource
+     * @param datasourceName
+     *            the name for this datasource
+     */
     public DataSourceId(String dataverseName, String datasourceName) {
-        this.dataverseName = dataverseName;
-        this.datasourceName = datasourceName;
+        this(new String[] { dataverseName, datasourceName });
+    }
+
+    /**
+     * An extended constructor taking an arbitrary number of name components.
+     * This constructor allows the definition of datasources that have the same dataverse name and datasource name but
+     * that would expose different behavior. It enables the definition of (compile-time) parameterized datasources.
+     * Please note that the first 2 parameters still need to be 1) a dataverse name and 2) a datasource name.
+     *
+     * @param components
+     *            name components used to construct the datasource identifier.
+     */
+    public DataSourceId(String... components) {
+        this.components = components;
     }
 
     @Override
     public String toString() {
-        return dataverseName + "." + datasourceName;
+        return String.join(".", components);
     }
 
     public String getDataverseName() {
-        return dataverseName;
+        return components[0];
     }
 
     public String getDatasourceName() {
-        return datasourceName;
+        return components[1];
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
-        DataSourceId that = (DataSourceId) o;
-        return Objects.equals(dataverseName, that.dataverseName) && Objects.equals(datasourceName, that.datasourceName);
+        }
+        return Arrays.equals(components, ((DataSourceId) o).components);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dataverseName, datasourceName);
+        return Arrays.hashCode(components);
     }
 }

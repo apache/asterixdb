@@ -36,7 +36,7 @@ public class TPCDSDataGeneratorDatasource extends FunctionDataSource {
 
     public TPCDSDataGeneratorDatasource(INodeDomain domain, String tableName, double scalingFactor)
             throws AlgebricksException {
-        super(createDataSourceId(tableName), domain);
+        super(createDataSourceId(tableName, scalingFactor), domain);
         this.tableName = tableName;
         this.scalingFactor = scalingFactor;
     }
@@ -46,13 +46,15 @@ public class TPCDSDataGeneratorDatasource extends FunctionDataSource {
      * DataSourceId. This eliminates the issue of creating a single function even though multiple functions calls
      * are happening with different parameters and the optimizer understands them as a single function.
      *
-     * @param tableName table name to be added as part of the DataSourceId
-     *
+     * @param tableName
+     *            table name to be added as part of the DataSourceId
+     * @param scalingFactor
+     *            scaling factor to be added as part of the DataSourceId
      * @return A DataSourceId that's based on the function details and its parameters
      */
-    private static DataSourceId createDataSourceId(String tableName) {
+    private static DataSourceId createDataSourceId(String tableName, double scalingFactor) {
         return new DataSourceId(TPCDSDataGeneratorRewriter.TPCDS_DATA_GENERATOR.getNamespace(),
-                TPCDSDataGeneratorRewriter.TPCDS_DATA_GENERATOR.getName() + "." + tableName);
+                TPCDSDataGeneratorRewriter.TPCDS_DATA_GENERATOR.getName(), tableName, Double.toString(scalingFactor));
     }
 
     @Override
