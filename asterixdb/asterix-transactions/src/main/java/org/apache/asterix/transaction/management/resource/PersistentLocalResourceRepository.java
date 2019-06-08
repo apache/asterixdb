@@ -47,6 +47,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.replication.ReplicationJob;
+import org.apache.asterix.common.storage.DatasetCopyIdentifier;
 import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
@@ -555,6 +556,23 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             LOGGER.warn("Couldn't get stats for resource {}", resource.getRelativePath(), e);
         }
         return null;
+    }
+
+    public long getDatasetSize(DatasetCopyIdentifier datasetIdentifier) throws HyracksDataException {
+        long totalSize = 0;
+        final Map<Long, LocalResource> dataverse = getResources(lr -> {
+            final ResourceReference resourceReference = ResourceReference.ofIndex(lr.getPath());
+            return datasetIdentifier.isMatch(resourceReference);
+        });
+        final List<DatasetResourceReference> allResources =
+                dataverse.values().stream().map(DatasetResourceReference::of).collect(Collectors.toList());
+        for (DatasetResourceReference res : allResources) {
+            final ResourceStorageStats resourceStats = getResourceStats(res);
+            if (resourceStats != null) {
+                totalSize += resourceStats.getTotalSize();
+            }
+        }
+        return totalSize;
     }
 
     private void createResourceFileMask(FileReference resourceFile) throws HyracksDataException {
