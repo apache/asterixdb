@@ -46,17 +46,17 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
     private final IScalarEvaluator eval;
     private final boolean isMin;
     private final IAType aggFieldType;
-    private final boolean isLocal;
+    protected final Type type;
     protected ATypeTag aggType;
     private ILogicalBinaryComparator cmp;
 
     AbstractMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin,
-            SourceLocation sourceLoc, boolean isLocal, IAType aggFieldType) throws HyracksDataException {
+            SourceLocation sourceLoc, Type type, IAType aggFieldType) throws HyracksDataException {
         super(sourceLoc);
         this.eval = args[0].createScalarEvaluator(context);
         this.isMin = isMin;
         this.aggFieldType = aggFieldType;
-        this.isLocal = isLocal;
+        this.type = type;
     }
 
     @Override
@@ -77,7 +77,7 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
             processNull();
         } else if (typeTag == ATypeTag.SYSTEM_NULL) {
             // if a system_null is encountered locally, it would be an error; otherwise it is ignored
-            if (isLocal) {
+            if (type == Type.LOCAL) {
                 throw new UnsupportedItemTypeException(sourceLoc, "min/max", ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
             }
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
@@ -112,6 +112,15 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
 
     @Override
     public void finish(IPointable result) throws HyracksDataException {
+        finish(result, false);
+    }
+
+    @Override
+    public void finishPartial(IPointable result) throws HyracksDataException {
+        finish(result, true);
+    }
+
+    private void finish(IPointable result, boolean isPartial) throws HyracksDataException {
         resultStorage.reset();
         try {
             switch (aggType) {
@@ -120,7 +129,7 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
                     result.set(resultStorage);
                     break;
                 case SYSTEM_NULL:
-                    if (isLocal) {
+                    if (type == Type.LOCAL || type == Type.INTERMEDIATE || isPartial) {
                         resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
                     } else {
                         resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
@@ -134,11 +143,6 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
-    }
-
-    @Override
-    public void finishPartial(IPointable result) throws HyracksDataException {
-        finish(result);
     }
 
     protected abstract void processNull();
@@ -196,6 +200,7 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
 
     enum Type {
         LOCAL,
+        INTERMEDIATE,
         GLOBAL,
         ONE_STEP
     }

@@ -144,6 +144,7 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
                 nts.setSourceLocation(sourceLoc);
                 nts.setExecutionMode(ExecutionMode.LOCAL);
                 bottomRef.setValue(nts);
+                // is there a reason we are not setting pushedAgg.setGlobal(false)?
                 pushedAgg.getInputs().add(inputRef);
             } else {
                 // The local aggregate operator is fed by the input of the original aggregate operator.

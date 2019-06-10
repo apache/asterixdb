@@ -44,6 +44,34 @@ insert into openDs2([
 {"id": 7, "group_id": "g3", "array_f": [[6.0, 10], [20, 11], [4, "str"]]}
 ]);
 
+insert into openDs3 (
+FROM range(0,100000) i
+SELECT VALUE {"id": i, "group_id":
+CASE (i % 8)
+WHEN 0 THEN "g1" // values & nulls
+WHEN 1 THEN "g2" // all nulls
+WHEN 2 THEN "g3" // all values with one incompatible
+WHEN 3 THEN "g4" // all nulls
+WHEN 4 THEN "g5" // all nulls with one value
+WHEN 5 THEN "g6" // all values
+WHEN 6 THEN "g7" // all values
+WHEN 7 THEN "g" || to_string(i) // all values
+END,
+"array_f": CASE (i % 8)
+WHEN 0 THEN CASE ((to_bigint(random()*10)) % 2) WHEN 0 THEN [1] WHEN 1 THEN null END
+WHEN 1 THEN null
+WHEN 2 THEN [3]
+WHEN 3 THEN null
+WHEN 4 THEN null
+ELSE [-1]
+END}
+);
+
+insert into openDs3([
+{"id": -1, "group_id": "g5", "array_f": [5]},
+{"id": -2, "group_id": "g3", "array_f": "incompatible_type"}
+]);
+
 insert into closedDs1([
 {"id": 1, "group_id": "g1", "array_f": [4, 3]},
 {"id": 2, "group_id": "g1", "array_f": [9, 7]},

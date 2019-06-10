@@ -28,5 +28,6 @@ create type closedType2 as closed { id : integer, group_id : string, array_f : [
 
 create dataset openDs(openType) primary key id;
 create dataset openDs2(openType) primary key id;
+create dataset openDs3(openType) primary key id;
 create dataset closedDs1(closedType1) primary key id;
 create dataset closedDs2(closedType2) primary key id;

@@ -517,11 +517,15 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-max", 1);
     public static final FunctionIdentifier LOCAL_MAX =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-max", 1);
+    public static final FunctionIdentifier INTERMEDIATE_MAX =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-max", 1);
     public static final FunctionIdentifier GLOBAL_MAX =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-max", 1);
     public static final FunctionIdentifier MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-min", 1);
     public static final FunctionIdentifier LOCAL_MIN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-min", 1);
+    public static final FunctionIdentifier INTERMEDIATE_MIN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-min", 1);
     public static final FunctionIdentifier GLOBAL_MIN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-min", 1);
     public static final FunctionIdentifier GLOBAL_AVG =
@@ -783,12 +787,16 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-max", 1);
     public static final FunctionIdentifier LOCAL_SQL_MAX =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-max", 1);
+    public static final FunctionIdentifier INTERMEDIATE_SQL_MAX =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-sql-max", 1);
     public static final FunctionIdentifier GLOBAL_SQL_MAX =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-max", 1);
     public static final FunctionIdentifier SQL_MIN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-min", 1);
     public static final FunctionIdentifier LOCAL_SQL_MIN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-min", 1);
+    public static final FunctionIdentifier INTERMEDIATE_SQL_MIN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-sql-min", 1);
     public static final FunctionIdentifier GLOBAL_SQL_MIN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-min", 1);
     public static final FunctionIdentifier GLOBAL_SQL_AVG =
@@ -1813,9 +1821,11 @@ public class BuiltinFunctions {
         addFunction(SCALAR_ARRAYAGG, ScalarArrayAggTypeComputer.INSTANCE, true);
         addFunction(MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERMEDIATE_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addFunction(MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERMEDIATE_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE, true);
         addFunction(COUNT, AInt64TypeComputer.INSTANCE, true);
@@ -1940,9 +1950,11 @@ public class BuiltinFunctions {
         addFunction(SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
         addFunction(SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERMEDIATE_SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addFunction(SQL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERMEDIATE_SQL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SQL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
@@ -2429,7 +2441,7 @@ public class BuiltinFunctions {
         addAgg(LOCAL_MAX);
         addAgg(GLOBAL_MAX);
         addLocalAgg(MAX, LOCAL_MAX);
-        addIntermediateAgg(LOCAL_MAX, GLOBAL_MAX);
+        addIntermediateAgg(LOCAL_MAX, INTERMEDIATE_MAX);
         addIntermediateAgg(GLOBAL_MAX, GLOBAL_MAX);
         addIntermediateAgg(MAX, GLOBAL_MAX);
         addGlobalAgg(MAX, GLOBAL_MAX);
@@ -2667,7 +2679,7 @@ public class BuiltinFunctions {
         addAgg(LOCAL_MIN);
         addAgg(GLOBAL_MIN);
         addLocalAgg(MIN, LOCAL_MIN);
-        addIntermediateAgg(LOCAL_MIN, GLOBAL_MIN);
+        addIntermediateAgg(LOCAL_MIN, INTERMEDIATE_MIN);
         addIntermediateAgg(GLOBAL_MIN, GLOBAL_MIN);
         addIntermediateAgg(MIN, GLOBAL_MIN);
         addGlobalAgg(MIN, GLOBAL_MIN);
@@ -2966,7 +2978,7 @@ public class BuiltinFunctions {
         addAgg(LOCAL_SQL_MAX);
         addAgg(GLOBAL_SQL_MAX);
         addLocalAgg(SQL_MAX, LOCAL_SQL_MAX);
-        addIntermediateAgg(LOCAL_SQL_MAX, GLOBAL_SQL_MAX);
+        addIntermediateAgg(LOCAL_SQL_MAX, INTERMEDIATE_SQL_MAX);
         addIntermediateAgg(GLOBAL_SQL_MAX, GLOBAL_SQL_MAX);
         addIntermediateAgg(SQL_MAX, GLOBAL_SQL_MAX);
         addGlobalAgg(SQL_MAX, GLOBAL_SQL_MAX);
@@ -2982,7 +2994,7 @@ public class BuiltinFunctions {
         addAgg(LOCAL_SQL_MIN);
         addAgg(GLOBAL_SQL_MIN);
         addLocalAgg(SQL_MIN, LOCAL_SQL_MIN);
-        addIntermediateAgg(LOCAL_SQL_MIN, GLOBAL_SQL_MIN);
+        addIntermediateAgg(LOCAL_SQL_MIN, INTERMEDIATE_SQL_MIN);
         addIntermediateAgg(GLOBAL_SQL_MIN, GLOBAL_SQL_MIN);
         addIntermediateAgg(SQL_MIN, GLOBAL_SQL_MIN);
         addGlobalAgg(SQL_MIN, GLOBAL_SQL_MIN);

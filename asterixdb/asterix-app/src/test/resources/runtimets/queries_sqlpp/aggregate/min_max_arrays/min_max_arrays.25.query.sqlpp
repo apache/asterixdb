@@ -16,19 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-drop dataverse test if exists;
-create dataverse test;
+/*
+ * Description  : agg-global-min() & agg-local-min() with group by
+ * Expected Res : SUCCESS
+ */
 
 use test;
 
-create type openType as { id : integer, group_id : string };
-create type closedType1 as closed { id : integer, group_id : string, array_f : [int] };
-create type closedType2 as closed { id : integer, group_id : string, array_f : [int]?};
-
-create dataset openDs(openType) primary key id;
-create dataset openDs2(openType) primary key id;
-create dataset openDs3(openType) primary key id;
-create dataset closedDs1(closedType1) primary key id;
-create dataset closedDs2(closedType2) primary key id;
-create dataset closedDs3(closedType2) primary key id;
+from closedDs2 as ds
+group by ds.group_id group as g
+select ds.group_id, strict_min((from g select value g.ds.array_f))
+order by group_id;

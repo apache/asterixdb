@@ -38,17 +38,14 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  */
 public class SqlMinMaxAggregateFunction extends AbstractMinMaxAggregateFunction {
 
-    private final Type type;
-
     SqlMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin, Type type,
             SourceLocation sourceLoc, IAType aggFieldType) throws HyracksDataException {
-        super(args, context, isMin, sourceLoc, type == Type.LOCAL, aggFieldType);
-        this.type = type;
+        super(args, context, isMin, sourceLoc, type, aggFieldType);
     }
 
     @Override
     protected void processNull() {
-        if (type == Type.GLOBAL) {
+        if (type == Type.GLOBAL || type == Type.INTERMEDIATE) {
             // getting NULL at the global step should only mean the local step ran into type invalidity
             aggType = ATypeTag.NULL;
         }

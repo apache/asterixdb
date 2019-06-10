@@ -36,7 +36,7 @@ public class MinMaxAggregateFunction extends AbstractMinMaxAggregateFunction {
 
     MinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin, Type type,
             SourceLocation sourceLoc, IAType aggFieldType) throws HyracksDataException {
-        super(args, context, isMin, sourceLoc, type == Type.LOCAL, aggFieldType);
+        super(args, context, isMin, sourceLoc, type, aggFieldType);
     }
 
     @Override

@@ -16,19 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-drop dataverse test if exists;
-create dataverse test;
+/*
+ * Description  : SQL92 agg-global-sql-min() & agg-local-sql-min() with group by
+ * Expected Res : SUCCESS; testing group "g3" ignores NULL value
+ */
 
 use test;
 
-create type openType as { id : integer, group_id : string };
-create type closedType1 as closed { id : integer, group_id : string, array_f : [int] };
-create type closedType2 as closed { id : integer, group_id : string, array_f : [int]?};
-
-create dataset openDs(openType) primary key id;
-create dataset openDs2(openType) primary key id;
-create dataset openDs3(openType) primary key id;
-create dataset closedDs1(closedType1) primary key id;
-create dataset closedDs2(closedType2) primary key id;
-create dataset closedDs3(closedType2) primary key id;
+select group_id,min(array_f) from closedDs3 group by group_id order by group_id;
