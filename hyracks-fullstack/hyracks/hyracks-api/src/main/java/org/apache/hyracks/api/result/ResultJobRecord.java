@@ -21,12 +21,12 @@ package org.apache.hyracks.api.result;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ResultJobRecord implements IResultStateRecord {
 
@@ -77,15 +77,13 @@ public class ResultJobRecord implements IResultStateRecord {
     }
 
     private static final long serialVersionUID = 1L;
-
+    private static final Logger LOGGER = LogManager.getLogger();
     private final long timestamp;
     private long jobStartTime;
     private long jobEndTime;
     private Status status;
-
+    private ResultSetId rsId;
     private ResultSetMetaData resultSetMetaData;
-
-    private Map<ResultSetId, ResultSetMetaData> resultSetMetadataMap = new HashMap<>();
 
     public ResultJobRecord() {
         this.timestamp = System.nanoTime();
@@ -116,10 +114,6 @@ public class ResultJobRecord implements IResultStateRecord {
         updateState(State.SUCCESS);
     }
 
-    public void fail(ResultSetId rsId, int partition) {
-        getOrCreateDirectoryRecord(rsId, partition).fail();
-    }
-
     public void fail(List<Exception> exceptions) {
         updateState(State.FAILED);
         status.setExceptions(exceptions);
@@ -139,47 +133,40 @@ public class ResultJobRecord implements IResultStateRecord {
         StringBuilder sb = new StringBuilder();
         sb.append("{ \"status\": ").append(status.toString()).append(", ");
         sb.append("\"timestamp\": ").append(timestamp).append(", ");
-        sb.append("\"resultsets\": ").append(Arrays.toString(resultSetMetadataMap.entrySet().toArray())).append(" }");
+        sb.append("\"resultset\": ").append(resultSetMetaData).append(" }");
         return sb.toString();
     }
 
     public synchronized void setResultSetMetaData(ResultSetId rsId, IResultMetadata metadata, int nPartitions)
             throws HyracksDataException {
-        ResultSetMetaData rsMd = resultSetMetadataMap.get(rsId);
-        if (rsMd == null) {
-            final ResultSetMetaData resultSetMetaData = new ResultSetMetaData(nPartitions, metadata);
-            resultSetMetadataMap.put(rsId, resultSetMetaData);
-            this.resultSetMetaData = resultSetMetaData;
-        } else if (rsMd.getRecords().length != nPartitions) {
-            throw HyracksDataException.create(ErrorCode.INCONSISTENT_RESULT_METADATA, rsId.toString());
+        if (this.rsId == null) {
+            this.rsId = rsId;
+            this.resultSetMetaData = new ResultSetMetaData(nPartitions, metadata);
+        } else if (!this.rsId.equals(rsId) || resultSetMetaData.getRecords().length != nPartitions) {
+            logInconsistentMetadata(rsId, nPartitions);
+            throw HyracksDataException.create(ErrorCode.INCONSISTENT_RESULT_METADATA, this.rsId.toString());
         }
-        //TODO(tillw) throwing a HyracksDataException here hangs the execution tests
     }
 
-    public ResultSetMetaData getResultSetMetaData(ResultSetId rsId) {
-        return resultSetMetadataMap.get(rsId);
-    }
-
-    public synchronized ResultDirectoryRecord getOrCreateDirectoryRecord(ResultSetId rsId, int partition) {
-        ResultDirectoryRecord[] records = getResultSetMetaData(rsId).getRecords();
+    public synchronized ResultDirectoryRecord getOrCreateDirectoryRecord(int partition) {
+        ResultDirectoryRecord[] records = resultSetMetaData.getRecords();
         if (records[partition] == null) {
             records[partition] = new ResultDirectoryRecord();
         }
         return records[partition];
     }
 
-    public synchronized ResultDirectoryRecord getDirectoryRecord(ResultSetId rsId, int partition)
-            throws HyracksDataException {
-        ResultDirectoryRecord[] records = getResultSetMetaData(rsId).getRecords();
+    public synchronized ResultDirectoryRecord getDirectoryRecord(int partition) throws HyracksDataException {
+        ResultDirectoryRecord[] records = resultSetMetaData.getRecords();
         if (records[partition] == null) {
             throw HyracksDataException.create(ErrorCode.RESULT_NO_RECORD, partition, rsId);
         }
         return records[partition];
     }
 
-    public synchronized void updateState(ResultSetId rsId) {
+    public synchronized void updateState() {
         int successCount = 0;
-        ResultDirectoryRecord[] records = getResultSetMetaData(rsId).getRecords();
+        ResultDirectoryRecord[] records = resultSetMetaData.getRecords();
         for (ResultDirectoryRecord record : records) {
             if ((record != null) && (record.getStatus() == ResultDirectoryRecord.Status.SUCCESS)) {
                 successCount++;
@@ -192,5 +179,19 @@ public class ResultJobRecord implements IResultStateRecord {
 
     public synchronized ResultSetMetaData getResultSetMetaData() {
         return resultSetMetaData;
+    }
+
+    private void logInconsistentMetadata(ResultSetId rsId, int nPartitions) {
+        if (LOGGER.isWarnEnabled()) {
+            LOGGER.warn("inconsistent result metadata for result set {}", this.rsId);
+            if (!this.rsId.equals(rsId)) {
+                LOGGER.warn("inconsistent result set id. Current {}, new {}", this.rsId, rsId);
+            }
+            final int expectedPartitions = resultSetMetaData.getRecords().length;
+            if (expectedPartitions != nPartitions) {
+                LOGGER.warn("inconsistent result set number of partitions. Current {}, new {}", expectedPartitions,
+                        nPartitions);
+            }
+        }
     }
 }
