@@ -603,10 +603,6 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier SCALAR_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sum", 1);
     public static final FunctionIdentifier SCALAR_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "max", 1);
     public static final FunctionIdentifier SCALAR_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "min", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_AVG =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-avg", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_AVG =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-avg", 1);
     public static final FunctionIdentifier SCALAR_FIRST_ELEMENT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "first-element", 1);
     public static final FunctionIdentifier SCALAR_LOCAL_FIRST_ELEMENT =
@@ -615,40 +611,16 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "last-element", 1);
     public static final FunctionIdentifier SCALAR_STDDEV_SAMP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "stddev_samp", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_STDDEV_SAMP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-stddev_samp", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_STDDEV_SAMP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-stddev_samp", 1);
     public static final FunctionIdentifier SCALAR_STDDEV_POP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "stddev_pop", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_STDDEV_POP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-stddev_pop", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_STDDEV_POP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-stddev_pop", 1);
     public static final FunctionIdentifier SCALAR_VAR_SAMP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "var_samp", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_VAR_SAMP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-var_samp", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_VAR_SAMP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-var_samp", 1);
     public static final FunctionIdentifier SCALAR_VAR_POP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "var_pop", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_VAR_POP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-var_pop", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_VAR_POP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-var_pop", 1);
     public static final FunctionIdentifier SCALAR_SKEWNESS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "skewness", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_SKEWNESS =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-skewness", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_SKEWNESS =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-skewness", 1);
     public static final FunctionIdentifier SCALAR_KURTOSIS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "kurtosis", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_KURTOSIS =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-kurtosis", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_KURTOSIS =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-kurtosis", 1);
 
     // serializable aggregate functions
     public static final FunctionIdentifier SERIAL_AVG =
@@ -862,46 +834,18 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-max", 1);
     public static final FunctionIdentifier SCALAR_SQL_MIN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-min", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_SQL_AVG =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-sql-avg", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_SQL_AVG =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-avg", 1);
     public static final FunctionIdentifier SCALAR_SQL_STDDEV_SAMP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-stddev_samp", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_SQL_STDDEV_SAMP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-sql-stddev_samp", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_SQL_STDDEV_SAMP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-stddev_samp", 1);
     public static final FunctionIdentifier SCALAR_SQL_STDDEV_POP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-stddev_pop", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_SQL_STDDEV_POP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-sql-stddev_pop", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_SQL_STDDEV_POP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-stddev_pop", 1);
     public static final FunctionIdentifier SCALAR_SQL_VAR_SAMP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-var_samp", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_SQL_VAR_SAMP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-sql-var_samp", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_SQL_VAR_SAMP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-var_samp", 1);
     public static final FunctionIdentifier SCALAR_SQL_VAR_POP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-var_pop", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_SQL_VAR_POP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-sql-var_pop", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_SQL_VAR_POP =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-var_pop", 1);
     public static final FunctionIdentifier SCALAR_SQL_SKEWNESS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-skewness", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_SQL_SKEWNESS =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-sql-skewness", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_SQL_SKEWNESS =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-skewness", 1);
     public static final FunctionIdentifier SCALAR_SQL_KURTOSIS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-kurtosis", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_SQL_KURTOSIS =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-sql-kurtosis", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_SQL_KURTOSIS =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-kurtosis", 1);
 
     // serializable sql aggregate functions
     public static final FunctionIdentifier SERIAL_SQL_AVG =
@@ -1878,54 +1822,40 @@ public class BuiltinFunctions {
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addFunction(SCALAR_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_COUNT, AInt64TypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_MAX, ScalarVersionOfAggregateResultType.INSTANCE, true);
         addFunction(SCALAR_MIN, ScalarVersionOfAggregateResultType.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addFunction(SCALAR_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_STDDEV_SAMP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SQL_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_GLOBAL_SQL_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_SQL_STDDEV_SAMP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_STDDEV_SAMP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_GLOBAL_SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_SQL_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_VAR_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_VAR_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_VAR_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_VAR_SAMP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SQL_VAR_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_GLOBAL_SQL_VAR_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_SQL_VAR_SAMP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_VAR_SAMP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_VAR_POP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_VAR_POP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_VAR_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_VAR_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SQL_VAR_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_GLOBAL_SQL_VAR_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_SQL_VAR_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_VAR_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SKEWNESS, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_SKEWNESS, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_SKEWNESS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SKEWNESS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SQL_SKEWNESS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_GLOBAL_SQL_SKEWNESS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_SQL_SKEWNESS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_SKEWNESS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SQL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_GLOBAL_SQL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
@@ -1958,8 +1888,6 @@ public class BuiltinFunctions {
         addPrivateFunction(GLOBAL_SQL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_MAX, ScalarVersionOfAggregateResultType.INSTANCE, true);
         addFunction(SCALAR_SQL_MIN, ScalarVersionOfAggregateResultType.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
@@ -1968,43 +1896,31 @@ public class BuiltinFunctions {
         addPrivateFunction(LOCAL_SQL_STDDEV_SAMP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_STDDEV_SAMP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_SQL_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_SQL_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SQL_VAR_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SQL_VAR_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_VAR_SAMP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_VAR_SAMP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_VAR_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_SQL_VAR_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_SQL_VAR_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SQL_VAR_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SQL_VAR_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_VAR_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_VAR_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_VAR_POP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_SQL_VAR_POP, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_SQL_VAR_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SQL_SKEWNESS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SQL_SKEWNESS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_SKEWNESS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_SKEWNESS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_SKEWNESS, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_SQL_SKEWNESS, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_SQL_SKEWNESS, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SQL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SQL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_GLOBAL_SQL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
-        addPrivateFunction(SCALAR_LOCAL_SQL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
 
         addPrivateFunction(SERIAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE, true);
@@ -2396,8 +2312,6 @@ public class BuiltinFunctions {
         addGlobalAgg(AVG, GLOBAL_AVG);
 
         addScalarAgg(AVG, SCALAR_AVG);
-        addScalarAgg(GLOBAL_AVG, SCALAR_GLOBAL_AVG);
-        addScalarAgg(LOCAL_AVG, SCALAR_LOCAL_AVG);
 
         addSerialAgg(AVG, SERIAL_AVG);
         addSerialAgg(LOCAL_AVG, SERIAL_LOCAL_AVG);
@@ -2464,8 +2378,6 @@ public class BuiltinFunctions {
         addGlobalAgg(STDDEV_SAMP, GLOBAL_STDDEV_SAMP);
 
         addScalarAgg(STDDEV_SAMP, SCALAR_STDDEV_SAMP);
-        addScalarAgg(GLOBAL_STDDEV_SAMP, SCALAR_GLOBAL_STDDEV_SAMP);
-        addScalarAgg(LOCAL_STDDEV_SAMP, SCALAR_LOCAL_STDDEV_SAMP);
 
         addSerialAgg(STDDEV_SAMP, SERIAL_STDDEV_SAMP);
         addSerialAgg(LOCAL_STDDEV_SAMP, SERIAL_LOCAL_STDDEV_SAMP);
@@ -2496,8 +2408,6 @@ public class BuiltinFunctions {
         addGlobalAgg(STDDEV_POP, GLOBAL_STDDEV_POP);
 
         addScalarAgg(STDDEV_POP, SCALAR_STDDEV_POP);
-        addScalarAgg(GLOBAL_STDDEV_POP, SCALAR_GLOBAL_STDDEV_POP);
-        addScalarAgg(LOCAL_STDDEV_POP, SCALAR_LOCAL_STDDEV_POP);
 
         addSerialAgg(STDDEV_POP, SERIAL_STDDEV_POP);
         addSerialAgg(LOCAL_STDDEV_POP, SERIAL_LOCAL_STDDEV_POP);
@@ -2528,8 +2438,6 @@ public class BuiltinFunctions {
         addGlobalAgg(VAR_SAMP, GLOBAL_VAR_SAMP);
 
         addScalarAgg(VAR_SAMP, SCALAR_VAR_SAMP);
-        addScalarAgg(GLOBAL_VAR_SAMP, SCALAR_GLOBAL_VAR_SAMP);
-        addScalarAgg(LOCAL_VAR_SAMP, SCALAR_LOCAL_VAR_SAMP);
 
         addSerialAgg(VAR_SAMP, SERIAL_VAR_SAMP);
         addSerialAgg(LOCAL_VAR_SAMP, SERIAL_LOCAL_VAR_SAMP);
@@ -2560,8 +2468,6 @@ public class BuiltinFunctions {
         addGlobalAgg(VAR_POP, GLOBAL_VAR_POP);
 
         addScalarAgg(VAR_POP, SCALAR_VAR_POP);
-        addScalarAgg(GLOBAL_VAR_POP, SCALAR_GLOBAL_VAR_POP);
-        addScalarAgg(LOCAL_VAR_POP, SCALAR_LOCAL_VAR_POP);
 
         addSerialAgg(VAR_POP, SERIAL_VAR_POP);
         addSerialAgg(LOCAL_VAR_POP, SERIAL_LOCAL_VAR_POP);
@@ -2592,8 +2498,6 @@ public class BuiltinFunctions {
         addGlobalAgg(SKEWNESS, GLOBAL_SKEWNESS);
 
         addScalarAgg(SKEWNESS, SCALAR_SKEWNESS);
-        addScalarAgg(GLOBAL_SKEWNESS, SCALAR_GLOBAL_SKEWNESS);
-        addScalarAgg(LOCAL_SKEWNESS, SCALAR_LOCAL_SKEWNESS);
 
         addSerialAgg(SKEWNESS, SERIAL_SKEWNESS);
         addSerialAgg(LOCAL_SKEWNESS, SERIAL_LOCAL_SKEWNESS);
@@ -2624,8 +2528,6 @@ public class BuiltinFunctions {
         addGlobalAgg(KURTOSIS, GLOBAL_KURTOSIS);
 
         addScalarAgg(KURTOSIS, SCALAR_KURTOSIS);
-        addScalarAgg(GLOBAL_KURTOSIS, SCALAR_GLOBAL_KURTOSIS);
-        addScalarAgg(LOCAL_KURTOSIS, SCALAR_LOCAL_KURTOSIS);
 
         addSerialAgg(KURTOSIS, SERIAL_KURTOSIS);
         addSerialAgg(LOCAL_KURTOSIS, SERIAL_LOCAL_KURTOSIS);
@@ -2741,8 +2643,6 @@ public class BuiltinFunctions {
         addGlobalAgg(SQL_AVG, GLOBAL_SQL_AVG);
 
         addScalarAgg(SQL_AVG, SCALAR_SQL_AVG);
-        addScalarAgg(GLOBAL_SQL_AVG, SCALAR_GLOBAL_SQL_AVG);
-        addScalarAgg(LOCAL_SQL_AVG, SCALAR_LOCAL_SQL_AVG);
 
         addSerialAgg(SQL_AVG, SERIAL_SQL_AVG);
         addSerialAgg(LOCAL_SQL_AVG, SERIAL_LOCAL_SQL_AVG);
@@ -2768,8 +2668,6 @@ public class BuiltinFunctions {
         addGlobalAgg(SQL_STDDEV_SAMP, GLOBAL_SQL_STDDEV_SAMP);
 
         addScalarAgg(SQL_STDDEV_SAMP, SCALAR_SQL_STDDEV_SAMP);
-        addScalarAgg(GLOBAL_SQL_STDDEV_SAMP, SCALAR_GLOBAL_SQL_STDDEV_SAMP);
-        addScalarAgg(LOCAL_SQL_STDDEV_SAMP, SCALAR_LOCAL_SQL_STDDEV_SAMP);
 
         addSerialAgg(SQL_STDDEV_SAMP, SERIAL_SQL_STDDEV_SAMP);
         addSerialAgg(LOCAL_SQL_STDDEV_SAMP, SERIAL_LOCAL_SQL_STDDEV_SAMP);
@@ -2795,8 +2693,6 @@ public class BuiltinFunctions {
         addGlobalAgg(SQL_STDDEV_POP, GLOBAL_SQL_STDDEV_POP);
 
         addScalarAgg(SQL_STDDEV_POP, SCALAR_SQL_STDDEV_POP);
-        addScalarAgg(GLOBAL_SQL_STDDEV_POP, SCALAR_GLOBAL_SQL_STDDEV_POP);
-        addScalarAgg(LOCAL_SQL_STDDEV_POP, SCALAR_LOCAL_SQL_STDDEV_POP);
 
         addSerialAgg(SQL_STDDEV_POP, SERIAL_SQL_STDDEV_POP);
         addSerialAgg(LOCAL_SQL_STDDEV_POP, SERIAL_LOCAL_SQL_STDDEV_POP);
@@ -2822,8 +2718,6 @@ public class BuiltinFunctions {
         addGlobalAgg(SQL_VAR_SAMP, GLOBAL_SQL_VAR_SAMP);
 
         addScalarAgg(SQL_VAR_SAMP, SCALAR_SQL_VAR_SAMP);
-        addScalarAgg(GLOBAL_SQL_VAR_SAMP, SCALAR_GLOBAL_SQL_VAR_SAMP);
-        addScalarAgg(LOCAL_SQL_VAR_SAMP, SCALAR_LOCAL_SQL_VAR_SAMP);
 
         addSerialAgg(SQL_VAR_SAMP, SERIAL_SQL_VAR_SAMP);
         addSerialAgg(LOCAL_SQL_VAR_SAMP, SERIAL_LOCAL_SQL_VAR_SAMP);
@@ -2849,8 +2743,6 @@ public class BuiltinFunctions {
         addGlobalAgg(SQL_VAR_POP, GLOBAL_SQL_VAR_POP);
 
         addScalarAgg(SQL_VAR_POP, SCALAR_SQL_VAR_POP);
-        addScalarAgg(GLOBAL_SQL_VAR_POP, SCALAR_GLOBAL_SQL_VAR_POP);
-        addScalarAgg(LOCAL_SQL_VAR_POP, SCALAR_LOCAL_SQL_VAR_POP);
 
         addSerialAgg(SQL_VAR_POP, SERIAL_SQL_VAR_POP);
         addSerialAgg(LOCAL_SQL_VAR_POP, SERIAL_LOCAL_SQL_VAR_POP);
@@ -2876,8 +2768,6 @@ public class BuiltinFunctions {
         addGlobalAgg(SQL_SKEWNESS, GLOBAL_SQL_SKEWNESS);
 
         addScalarAgg(SQL_SKEWNESS, SCALAR_SQL_SKEWNESS);
-        addScalarAgg(GLOBAL_SQL_SKEWNESS, SCALAR_GLOBAL_SQL_SKEWNESS);
-        addScalarAgg(LOCAL_SQL_SKEWNESS, SCALAR_LOCAL_SQL_SKEWNESS);
 
         addSerialAgg(SQL_SKEWNESS, SERIAL_SQL_SKEWNESS);
         addSerialAgg(LOCAL_SQL_SKEWNESS, SERIAL_LOCAL_SQL_SKEWNESS);
@@ -2903,8 +2793,6 @@ public class BuiltinFunctions {
         addGlobalAgg(SQL_KURTOSIS, GLOBAL_SQL_KURTOSIS);
 
         addScalarAgg(SQL_KURTOSIS, SCALAR_SQL_KURTOSIS);
-        addScalarAgg(GLOBAL_SQL_KURTOSIS, SCALAR_GLOBAL_SQL_KURTOSIS);
-        addScalarAgg(LOCAL_SQL_KURTOSIS, SCALAR_LOCAL_SQL_KURTOSIS);
 
         addSerialAgg(SQL_KURTOSIS, SERIAL_SQL_KURTOSIS);
         addSerialAgg(LOCAL_SQL_KURTOSIS, SERIAL_LOCAL_SQL_KURTOSIS);

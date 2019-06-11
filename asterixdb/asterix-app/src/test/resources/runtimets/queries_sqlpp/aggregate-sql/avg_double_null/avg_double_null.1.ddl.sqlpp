@@ -22,7 +22,6 @@ create  dataverse test;
 
 use test;
 
-
 create type test.NumericType as
 {
   id : integer,
@@ -34,5 +33,4 @@ create type test.NumericType as
   doubleField : double?
 };
 
-create external  dataset Numeric(NumericType) using localfs((`path`=`asterix_nc1://data/nontagged/numericData.json`),(`format`=`adm`));
-
+create internal dataset Numeric(NumericType) primary key id;

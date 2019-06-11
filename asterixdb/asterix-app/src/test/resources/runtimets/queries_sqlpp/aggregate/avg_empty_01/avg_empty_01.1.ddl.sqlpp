@@ -25,3 +25,13 @@
 drop  dataverse test if exists;
 create  dataverse test;
 
+use test;
+
+
+create type test.TestType as
+ closed {
+  id : integer,
+  val : double
+};
+
+create  dataset Test(TestType) primary key id;

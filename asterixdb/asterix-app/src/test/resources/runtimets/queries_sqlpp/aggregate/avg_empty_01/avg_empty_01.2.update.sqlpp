@@ -22,3 +22,7 @@
  * Success        : Yes
  */
 
+use test;
+
+insert into Test
+select element {'id':0,'val':1.0};

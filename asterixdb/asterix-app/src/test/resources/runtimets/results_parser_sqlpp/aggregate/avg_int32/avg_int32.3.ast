@@ -4,15 +4,25 @@ SELECT ELEMENT [
 FunctionCall asterix.avg@1[
   (
     SELECT ELEMENT [
-    Variable [ Name=$x ]
+    FieldAccessor [
+      Variable [ Name=$x ]
+      Field=int32Field
     ]
-    FROM [      OrderedListConstructor [
-        LiteralExpr [LONG] [1]
-        LiteralExpr [LONG] [2]
-        LiteralExpr [LONG] [3]
+    ]
+    FROM [      FunctionCall asterix.dataset@1[
+        LiteralExpr [STRING] [test.Numeric]
       ]
       AS Variable [ Name=$x ]
     ]
+    Where
+      FunctionCall algebricks.not@1[
+        FunctionCall asterix.is-unknown@1[
+          FieldAccessor [
+            Variable [ Name=$x ]
+            Field=int32Field
+          ]
+        ]
+      ]
   )
 ]
 ]

@@ -1,0 +1,36 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [average]
+    :
+    (
+      SELECT ELEMENT [
+      WINDOW test.strict_avg@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=$w ]
+              Field=x
+            ]
+            Field=int32Field
+          ]
+          ]
+          FROM [            Variable [ Name=$w ]
+            AS Variable [ Name=$w ]
+          ]
+        )
+      ]
+        AS Variable [ Name=$w ]
+      OVER (
+      )
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.Numeric]
+        ]
+        AS Variable [ Name=$x ]
+      ]
+    )
+  )
+]

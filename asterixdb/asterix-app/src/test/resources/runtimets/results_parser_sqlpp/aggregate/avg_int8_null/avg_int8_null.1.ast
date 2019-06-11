@@ -10,4 +10,4 @@ TypeDecl NumericType [
     doubleField : double?
   }
 ]
-DatasetDecl Numeric(NumericType)is an external dataset
+DatasetDecl Numeric(NumericType) partitioned by [[id]]

@@ -17,3 +17,6 @@
  * under the License.
  */
 
+use test;
+
+load dataset Numeric using localfs((`path`=`asterix_nc1://data/nontagged/numericData.json`),(`format`=`adm`));

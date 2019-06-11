@@ -1,0 +1,37 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+WINDOW test.strict_avg@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=$w ]
+        Field=x
+      ]
+      Field=int64Field
+    ]
+    ]
+    FROM [      Variable [ Name=$w ]
+      AS Variable [ Name=$w ]
+    ]
+  )
+]
+  AS Variable [ Name=$w ]
+OVER (
+)
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.Numeric]
+  ]
+  AS Variable [ Name=$x ]
+]
+Where
+  FunctionCall algebricks.not@1[
+    FunctionCall asterix.is-unknown@1[
+      FieldAccessor [
+        Variable [ Name=$x ]
+        Field=int64Field
+      ]
+    ]
+  ]

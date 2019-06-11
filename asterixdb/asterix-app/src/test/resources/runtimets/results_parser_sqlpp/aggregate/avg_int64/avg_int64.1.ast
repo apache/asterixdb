@@ -1,0 +1,13 @@
+DataverseUse test
+TypeDecl NumericType [
+  open RecordType {
+    id : integer,
+    int8Field : tinyint?,
+    int16Field : smallint?,
+    int32Field : integer?,
+    int64Field : bigint?,
+    floatField : float?,
+    doubleField : double?
+  }
+]
+DatasetDecl Numeric(NumericType) partitioned by [[id]]

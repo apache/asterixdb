@@ -1,19 +1,28 @@
+DataverseUse test
 Query:
 SELECT ELEMENT [
 FunctionCall asterix.avg@1[
   (
     SELECT ELEMENT [
-    Variable [ Name=$x ]
+    FieldAccessor [
+      Variable [ Name=$x ]
+      Field=doubleField
     ]
-    FROM [      OrderedListConstructor [
-        LiteralExpr [DOUBLE] [1.0]
-        LiteralExpr [DOUBLE] [2.0]
-        FunctionCall null.double@1[
-          LiteralExpr [STRING] [3.0]
-        ]
+    ]
+    FROM [      FunctionCall asterix.dataset@1[
+        LiteralExpr [STRING] [test.Numeric]
       ]
       AS Variable [ Name=$x ]
     ]
+    Where
+      FunctionCall algebricks.not@1[
+        FunctionCall asterix.is-unknown@1[
+          FieldAccessor [
+            Variable [ Name=$x ]
+            Field=doubleField
+          ]
+        ]
+      ]
   )
 ]
 ]

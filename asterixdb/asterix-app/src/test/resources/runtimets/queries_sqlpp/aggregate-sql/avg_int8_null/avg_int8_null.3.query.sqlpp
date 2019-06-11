@@ -17,10 +17,16 @@
  * under the License.
  */
 
+/*
+ * Description    : Tests array_avg() with aggregate combiner
+ * Success        : Yes
+ */
+
 use test;
 
-
-{'average':test.array_avg((
+{'average':
+  array_avg((
     select element x.int8Field
     from  Numeric as x
-))};
+  ))
+};

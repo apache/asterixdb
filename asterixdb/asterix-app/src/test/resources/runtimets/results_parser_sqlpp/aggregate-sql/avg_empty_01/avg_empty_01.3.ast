@@ -1,24 +1,40 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall asterix.sql-avg@1[
+WINDOW test.array_avg@1[
   (
     SELECT ELEMENT [
-    Variable [ Name=$x ]
-    ]
-    FROM [      OrderedListConstructor [
-        LiteralExpr [LONG] [1]
-        LiteralExpr [LONG] [2]
-        LiteralExpr [LONG] [3]
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=$w ]
+        Field=x
       ]
-      AS Variable [ Name=$x ]
+      Field=val
+    ]
+    ]
+    FROM [      Variable [ Name=$w ]
+      AS Variable [ Name=$w ]
     ]
     Where
       OperatorExpr [
-        Variable [ Name=$x ]
-        >
-        LiteralExpr [LONG] [10]
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=$w ]
+            Field=x
+          ]
+          Field=val
+        ]
+        <
+        LiteralExpr [LONG] [0]
       ]
   )
 ]
+  AS Variable [ Name=$w ]
+OVER (
+)
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.Test]
+  ]
+  AS Variable [ Name=$x ]
 ]
