@@ -7235,6 +7235,41 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="round5_with_digit_int8">
+        <output-dir compare="Text">round5_with_digit_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round6_with_digit_int16">
+        <output-dir compare="Text">round6_with_digit_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round7_with_digit_int32">
+        <output-dir compare="Text">round7_with_digit_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round8_with_digit_int64">
+        <output-dir compare="Text">round8_with_digit_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round9_with_digit_float">
+        <output-dir compare="Text">round9_with_digit_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round10_with_digit_double">
+        <output-dir compare="Text">round10_with_digit_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="round11_invalid">
+        <output-dir compare="Text">round11_invalid</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="subtract_double">
         <output-dir compare="Text">subtract_double</output-dir>
       </compilation-unit>

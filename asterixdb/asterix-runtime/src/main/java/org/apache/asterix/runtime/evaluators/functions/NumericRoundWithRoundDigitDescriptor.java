@@ -34,13 +34,14 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @MissingNullInOutFunction
-public class NumericRoundDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class NumericRoundWithRoundDigitDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = NumericRoundDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = NumericRoundWithRoundDigitDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.NUMERIC_ROUND;
+        return BuiltinFunctions.NUMERIC_ROUND_WITH_ROUND_DIGIT;
     }
 
     @Override

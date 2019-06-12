@@ -105,6 +105,7 @@ import org.apache.asterix.om.typecomputer.impl.NumericDivideTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericDoubleOutputFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericInt8OutputFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericRound2TypeComputer;
+import org.apache.asterix.om.typecomputer.impl.NumericRoundFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericSumAggTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericUnaryFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OpenARecordTypeComputer;
@@ -360,6 +361,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "floor", 1);
     public static final FunctionIdentifier NUMERIC_ROUND =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "round", 1);
+    public static final FunctionIdentifier NUMERIC_ROUND_WITH_ROUND_DIGIT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "round", 2);
     public static final FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "round-half-to-even", 1);
     public static final FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN2 =
@@ -1659,7 +1662,8 @@ public class BuiltinFunctions {
         addFunction(NUMERIC_SIGN, NumericInt8OutputFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_CEILING, NumericUnaryFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_FLOOR, NumericUnaryFunctionTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_ROUND, NumericUnaryFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ROUND, NumericRoundFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ROUND_WITH_ROUND_DIGIT, NumericRoundFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ROUND_HALF_TO_EVEN, NumericUnaryFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ROUND_HALF_TO_EVEN2, NumericRound2TypeComputer.INSTANCE, true);
         addFunction(NUMERIC_TRUNC, NumericRound2TypeComputer.INSTANCE, true);
