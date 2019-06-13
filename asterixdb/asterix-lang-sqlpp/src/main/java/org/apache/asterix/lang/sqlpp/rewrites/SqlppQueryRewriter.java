@@ -150,10 +150,6 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Rewrites like/not-like expressions.
         rewriteOperatorExpression();
 
-        // Inlines WITH expressions after variableCheckAndRewrite(...) so that the variable scoping for WITH
-        // expression is correct.
-        inlineWithExpressions();
-
         // Rewrites several variable-arg functions into their corresponding internal list-input functions.
         rewriteListInputFunctions();
 
@@ -164,6 +160,10 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // This should be done after inlineDeclaredUdfs() because user-defined function
         // names could be case sensitive.
         rewriteFunctionNames();
+
+        // Inlines WITH expressions after variableCheckAndRewrite(...) so that the variable scoping for WITH
+        // expression is correct.
+        inlineWithExpressions();
 
         // Sets the var counter of the query.
         topStatement.setVarCounter(context.getVarCounter().get());

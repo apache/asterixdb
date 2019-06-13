@@ -37,6 +37,7 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
 
     public ExternalFunctionInfo(String namespace, String name, int arity, FunctionKind kind, List<IAType> argumentTypes,
             IAType returnType, IResultTypeComputer rtc, String body, String language) {
+        // TODO: fix CheckNonFunctionalExpressionVisitor once we have non-functional external functions
         super(namespace, name, arity, true);
         this.rtc = rtc;
         this.argumentTypes = argumentTypes;

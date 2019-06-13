@@ -32,9 +32,13 @@ import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
+import org.apache.asterix.lang.sqlpp.visitor.CheckNonFunctionalExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 
 public class InlineWithExpressionVisitor extends AbstractSqlppExpressionScopingVisitor {
+
+    private final CheckNonFunctionalExpressionVisitor checkNonFunctionalExpressionVisitor =
+            new CheckNonFunctionalExpressionVisitor();
 
     public InlineWithExpressionVisitor(LangRewritingContext context) {
         super(context);
@@ -57,11 +61,14 @@ public class InlineWithExpressionVisitor extends AbstractSqlppExpressionScopingV
                 // Performs the rewriting recursively in the newBindingExpr itself.
                 super.visit(newBindingExpr, arg);
 
+                Expression bindingExpr = letClause.getBindingExpr();
+                Boolean isNonFunctional = bindingExpr.accept(checkNonFunctionalExpressionVisitor, null);
+                if (isNonFunctional != null && isNonFunctional) {
+                    continue;
+                }
+
                 // Removes the WITH entry and adds variable-expr mapping into the varExprMap.
                 with.remove();
-                Expression bindingExpr = letClause.getBindingExpr();
-                // Wraps the binding expression with IndependentSubquery, so that free identifier references
-                // in the binding expression will not be resolved use outer-scope variables.
                 varExprMap.put(letClause.getVarExpr(), bindingExpr);
             }
 

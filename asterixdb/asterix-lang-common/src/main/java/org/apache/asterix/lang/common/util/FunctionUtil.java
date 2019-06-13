@@ -58,6 +58,15 @@ public class FunctionUtil {
         return getFunctionInfo(new FunctionIdentifier(fs.getNamespace(), fs.getName(), fs.getArity()));
     }
 
+    public static IFunctionInfo getBuiltinFunctionInfo(String functionName, int arity) {
+        IFunctionInfo fi =
+                getFunctionInfo(new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, functionName, arity));
+        if (fi == null) {
+            fi = getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS, functionName, arity));
+        }
+        return fi;
+    }
+
     @FunctionalInterface
     public interface IFunctionCollector {
         Set<CallExpr> getFunctionCalls(Expression expression) throws CompilationException;
