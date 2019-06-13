@@ -172,7 +172,7 @@ class NumericRoundEvaluator extends AbstractScalarEval {
         if (roundingDigit >= 0) {
 
             // Multiplier based on round digit
-            double multiplier = Math.pow(10, Math.abs(roundingDigit));
+            double multiplier = Math.pow(10, roundingDigit);
 
             switch (valueTypeTag) {
                 // For zero and positive digit rounding, no need to do anything for integers
@@ -209,8 +209,8 @@ class NumericRoundEvaluator extends AbstractScalarEval {
         }
         // Left of decimal (negative roundingDigit value)
         else {
-            // Multiplier based on round digit
-            double multiplier = Math.pow(10, Math.abs(roundingDigit));
+            // Multiplier based on round digit (convert to positive digit)
+            double multiplier = Math.pow(10, -roundingDigit);
 
             switch (valueTypeTag) {
                 case TINYINT:
