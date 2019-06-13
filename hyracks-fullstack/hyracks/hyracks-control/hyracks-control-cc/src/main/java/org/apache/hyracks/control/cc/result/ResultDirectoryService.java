@@ -96,7 +96,10 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     @Override
     public void notifyJobFinish(JobId jobId, JobStatus jobStatus, List<Exception> exceptions) throws HyracksException {
         if (exceptions == null || exceptions.isEmpty()) {
-            final ResultJobRecord resultJobRecord = getNonNullResultJobRecord(jobId);
+            final ResultJobRecord resultJobRecord = getResultJobRecord(jobId);
+            if (resultJobRecord == null) {
+                return;
+            }
             resultJobRecord.finish();
             jobResultCallback.completed(jobId, resultJobRecord);
         }
