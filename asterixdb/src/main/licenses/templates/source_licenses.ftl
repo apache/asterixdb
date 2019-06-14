@@ -138,3 +138,6 @@
 Source files in asterix-hivecompat are derived from portions of Apache Hive Query Language v0.13.0 (org.apache.hive:hive-exec).
     </@license>
 </#if>
+<#if !asterixDashboardSkip!false>
+    <#include "../../../../asterix-dashboard/src/main/licenses/dashboard-source-license.ftl">
+</#if>

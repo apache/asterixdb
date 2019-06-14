@@ -24,13 +24,8 @@ ${license.content}
   </#if>
 </#list>
 </@indent>
+---
+<#include "dashboard-source-license.ftl">
 
-===
-   ASTERIXDB Dashboard JS COMPONENTS:
+<#include "${asterixDashboardResourcesPrefix!'../../../target/dashboard/'}static/3rdpartylicenses.txt">
 
-    includes a number of packed subcomponents under
-    dashboard/static/ with separate copyright
-    notices and license terms. Your use of these subcomponents is subject
-    to the terms and condition of the following licenses.
-===
-<#include "/target/dashboard/static/3rdpartylicenses.txt">

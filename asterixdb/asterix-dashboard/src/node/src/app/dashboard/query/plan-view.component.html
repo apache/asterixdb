@@ -12,19 +12,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */ -->
 <div *ngIf="plan_" class="plan-graph" id={{planName}}>
-    <mat-expansion-panel hideToggle>
+    <mat-expansion-panel hideToggle [expanded]="true">
         <mat-expansion-panel-header class="plan-header header-centered-v">
         <mat-icon>assessment</mat-icon>
         <mat-panel-title>{{planName}}</mat-panel-title>
         <mat-panel-description></mat-panel-description>
         </mat-expansion-panel-header>
         <mat-panel-description class='content'>
-        <div class='panel'>
-            <button mat-button class='button' (click)="showJSON()" matTooltip="Toggle JSON or Graphic View">JSON</button>
+        <div *ngIf="!jsonButtonDisabled" class='panel'>
+            <button id='jsonButton' mat-button class='button' (click)="showJSON()" matTooltip="Toggle JSON or Graphic View">JSON</button>
         </div>
         <div class="divider">
             <div *ngIf="!jsonVisible" class="plan">
-            <plan-node-svg [planName]="planName" [node]="plan_" [level]="0" [item]="0" [subplan]="0"></plan-node-svg>
+              <plan-node-svg [planName]="planName" [node]="plan_" [level]="0" [item]="0" [subplan]="0"></plan-node-svg>
             </div>
             <div *ngIf="jsonVisible" class="json">
             <div class='center'>

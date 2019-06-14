@@ -13,6 +13,7 @@ export  interface planCount {
 
 export class PlanViewComponent {
 
+    @Input() planFormat: any;
     @Input() plan: any;
     @Input() planName: any;
     @Input() jsonPlan: any;
@@ -21,25 +22,26 @@ export class PlanViewComponent {
     numberOfLevels: number = 0;
     numberOfNodes: number = 0;
     jsonVisible = false;
+    jsonButtonDisabled = false;
 
     constructor() {}
 
-    ngOnInit() {
-        this.plan_ = this.plan;
-        /* find the number of nodes in the tree */
-        let summary : planCount = {nodesCnt:0, levelsCnt:0}
-        summary = this.analyzePlan(this.plan_, summary);
-        this.numberOfLevels = summary.levelsCnt;
-        this.numberOfNodes = summary.nodesCnt;
-    }
+    ngOnInit() {}
 
-    ngOnChanges(changes: SimpleChange) {
+    ngOnChanges() {
         this.plan_ = this.plan;
-        /* find the number of nodes in the tree */
-        let summary : planCount = {nodesCnt:0, levelsCnt:0}
-        summary = this.analyzePlan(this.plan_, summary);
-        this.numberOfLevels = summary.levelsCnt;
-        this.numberOfNodes = summary.nodesCnt;
+        /* If plan format is JSON analyze and augment for visualization */
+        if (this.planFormat === 'JSON') {
+            let summary : planCount = {nodesCnt:0, levelsCnt:0}
+            summary = this.analyzePlan(this.plan_, summary);
+            this.numberOfLevels = summary.levelsCnt;
+            this.numberOfNodes = summary.nodesCnt;
+            this.jsonVisible = false;
+            this.jsonButtonDisabled = false;
+        } else {
+            this.jsonVisible = true;
+            this.jsonButtonDisabled = true;
+        }
 	}
 
     /*

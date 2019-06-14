@@ -48,6 +48,8 @@ export class InputQueryComponent {
     queryErrorMessages: {};
     queryPrepared$: Observable <any> ;
     queryPrepared: {};
+    queryPlanFormats$: Observable <any> ;
+    queryPlanFormats: {};
     preparedQueryCount: number;
     previousDisabled = true;
     nextDisabled = true;
@@ -56,13 +58,16 @@ export class InputQueryComponent {
     dataverses$: Observable<any>;
     dataverses: any;
     defaultDataverse = 'Default';
-    selected = 'Default';
+    selected = 'None';
     history = [];
     currentHistory = 0;
     viewCurrentHistory = 0; // for the view
     sideMenuVisible$: Observable<any>;
     sideMenuVisible: any;
     none = 'None';
+    planFormat = 'JSON';
+    historyStringSelected = '';
+    formatOptions = 'JSON';
     /* Codemirror configuration */
     codemirrorConfig = {
     mode: "asterix",
@@ -109,7 +114,8 @@ export class InputQueryComponent {
                     // Initialize Query Editor, prepare the default query
                     this.queryPrepare = {
                         editorId: String(this.currentQuery),
-                        queryString: this.queryString
+                        queryString: this.queryString,
+                        planFormat: this.planFormat
                     };
                     this.store.dispatch(new sqlQueryActions.PrepareQuery(this.queryPrepare));
                 } else {
@@ -131,6 +137,7 @@ export class InputQueryComponent {
                     this.metricsString = "SUCCESS: ";
                     this.metricsString += " Execution time: " + this.queryMetrics[this.currentQuery].executionTime;
                     this.metricsString += " Elapsed time: " + this.queryMetrics[this.currentQuery].elapsedTime;
+                    this.metricsString += " Size: " + (this.queryMetrics[this.currentQuery].resultSize/1024).toFixed(2) + ' Kb';
                 }
             } else {
                 this.queryMetrics = {};
@@ -148,11 +155,22 @@ export class InputQueryComponent {
             }
         })
 
+        /* Watching for SQL Input Errors: Error Message stored in Query Cache */
+        this.queryPlanFormats$ = this.store.select(s => s.sqlQuery.sqlQueryPlanFormatHash);
+        this.queryPlanFormats$.subscribe((data: any) => {
+            if (data) {
+                this.queryPlanFormats = data;
+            } else {
+                this.queryPlanFormats = {};
+            }
+        })
+
         this.preparedQueryCount = 0;
         // Initialize Query Editor, prepare the default query
         this.queryPrepare = {
             editorId: String(this.currentQuery),
-            queryString: this.queryString
+            queryString: this.queryString,
+            planFormat: this.formatOptions
         };
         this.store.dispatch(new sqlQueryActions.PrepareQuery(this.queryPrepare));
         // lets inform other views what's the current SQL editor
@@ -165,9 +183,9 @@ export class InputQueryComponent {
         this.dataverses$ = this.store.select(s => s.dataverse.dataverses.results);
         this.dataverses$.subscribe((data: any[]) => {
             this.dataverses = data;
-            this.defaultDataverse = 'KAMON'
+            this.defaultDataverse = ''
         });
-        this.store.dispatch(new dataverseActions.SelectDataverses('-'));
+        this.store.dispatch(new dataverseActions.SelectDataverses('-'), );
     }
 
     showMetrics() {
@@ -176,6 +194,7 @@ export class InputQueryComponent {
             this.metricsString = "SUCCESS: ";
             this.metricsString += " Execution time: " + this.queryMetrics[this.currentQuery].executionTime;
             this.metricsString += " Elapsed time: " + this.queryMetrics[this.currentQuery].elapsedTime;
+            this.metricsString += " Size: " + (this.queryMetrics[this.currentQuery].resultSize/1024).toFixed(2) + ' Kb';
             this.querySuccess = true;
         }
     }
@@ -192,18 +211,23 @@ export class InputQueryComponent {
         }
     }
 
-    getQueryResults(queryString: string) {
+    getQueryResults(queryString: string, planFormat: string) {
         let QueryOrder = this.currentQuery;
         this.queryRequest = {
             requestId: String(QueryOrder),
-            queryString: queryString
+            queryString: queryString,
+            planFormat: planFormat
         };
         this.store.dispatch(new sqlQueryActions.ExecuteQuery(this.queryRequest));
         this.querySpinnerVisible = true;
     }
 
     onClickRun() {
-        this.getQueryResults(this.queryString); // .replace(/\n/g, " "));
+        let planFormat = this.formatOptions;
+        this.getQueryResults(this.queryString, planFormat); // .replace(/\n/g, " "));
+        if (this.history.length === 0) {
+            this.history.push('Clear');
+        }
         this.history.push(this.queryString);
         this.currentHistory = this.history.length - 1;
         this.viewCurrentHistory = this.history.length;
@@ -213,7 +237,8 @@ export class InputQueryComponent {
         // Saving first
         this.queryPrepare = {
             editorId: String(this.currentQuery),
-            queryString: this.queryString
+            queryString: this.queryString,
+            planFormat: this.formatOptions
         };
         this.store.dispatch(new sqlQueryActions.PrepareQuery(this.queryPrepare));
         // Prepare a new Query String, cleanup screen messages
@@ -226,25 +251,28 @@ export class InputQueryComponent {
         this.queryError = false;
         this.queryPrepare = {
             editorId: String(this.currentQuery),
-            queryString: ""
+            queryString: "",
+            planFormat: this.formatOptions
         };
         this.store.dispatch(new sqlQueryActions.PrepareQuery(this.queryPrepare));
         // lets inform other views what's the current SQL editor
         let currentQueryIndex = String(this.currentQuery);
         this.store.dispatch(new appActions.setEditorIndex(currentQueryIndex));
-        this.dataverseSelected();
+        this.selected = "None";
         this.editor.focus();
     }
 
     onClickClear() {
         let queryClear = {
             editorId: String(this.currentQuery),
-            queryString: ""
+            queryString: "",
+            planFormat: "JSON"
         };
         this.store.dispatch(new sqlQueryActions.CleanQuery(queryClear));
         this.queryErrorMessageString = "";
         this.queryString = "";
         this.metricsString = "";
+        this.dataverseSelected();
         this.editor.getDoc().setValue(this.queryString);
         this.editor.focus();
     }
@@ -281,10 +309,10 @@ export class InputQueryComponent {
         // Saving First
         this.queryPrepare = {
             editorId: String(this.currentQuery),
-            queryString: this.queryString
+            queryString: this.queryString,
+            planFormat: this.formatOptions
         };
         this.store.dispatch(new sqlQueryActions.PrepareQuery(this.queryPrepare));
-
         this.currentQuery = this.currentQuery + next;
         this.queryErrorMessageString = "";
         this.metricsString = "";
@@ -298,6 +326,9 @@ export class InputQueryComponent {
         // Retrieve the prepared SQL string
         this.queryString = this.queryPrepared[this.currentQuery];
         this.editor.getDoc().setValue(this.queryString);
+
+        // Retrieve the prepared SQL plan Format
+        this.formatOptions = this.queryPlanFormats[this.currentQuery];
 
         // lets inform other views what's the current SQL editor
         let currentQueryIndex = String(this.currentQuery);
@@ -337,13 +368,30 @@ export class InputQueryComponent {
 
     dataverseSelected() {
         if (this.selected == undefined) {
+            this.queryString = 'None';
+        } else if (this.selected === 'None') {
             this.queryString = '';
+            this.selected = 'None';
         } else {
             this.queryString = 'Use ' + this.selected + '; ';
         }
         this.editor.getDoc().setValue(this.queryString);
         this.editor.focus();
     }
+
+    historySelected() {
+        if (this.historyStringSelected == undefined) {
+            this.historyStringSelected = '';
+        } else if (this.historyStringSelected === 'Clear') {
+            this.history = [];
+            this.historyStringSelected = '';
+        }
+        this.queryString = this.historyStringSelected;
+        this.editor.getDoc().setValue(this.queryString);
+        this.editor.focus();
+    }
+
+    planFormatSelected() {}
 
     onClickNextHistory() {
         if (this.currentHistory < this.history.length - 1) {
@@ -363,10 +411,5 @@ export class InputQueryComponent {
             this.editor.getDoc().setValue(this.queryString);
             this.editor.focus();
         }
-    }
-
-    onClickMetadata() {
-        this.sideMenuVisible = !this.sideMenuVisible;
-        this.store.dispatch(new appActions.setSideMenuVisible(this.sideMenuVisible));
     }
 }

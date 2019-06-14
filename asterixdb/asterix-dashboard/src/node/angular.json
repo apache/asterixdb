@@ -22,6 +22,8 @@
             ],
             "styles": [
               "node_modules/codemirror/lib/codemirror.css",
+              "src/assets/fonts/material-icons/material-icons.css",
+              "node_modules/roboto-fontface/css/roboto/roboto-fontface.css",
               "src/main.scss"
             ],
             "scripts": [

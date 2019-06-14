@@ -35,6 +35,7 @@ if (environment.production) {
 */
 @Injectable()
 export class SQLService {
+    defaultPlanFormat='JSON';
     /*
     * SQLQueryService constructor using
     * HttpClient from Angular 5
@@ -47,7 +48,7 @@ export class SQLService {
      */
     selectDataverses() : Observable<any> {
          let query = "SELECT VALUE dv FROM Metadata.`Dataverse` dv"
-         return this.executeSQLQuery(query);
+         return this.executeSQLQuery(query, this.defaultPlanFormat);
     }
 
     /*
@@ -56,7 +57,7 @@ export class SQLService {
     */
     selectDatasets() : Observable<any> {
         let query = "SELECT VALUE ds FROM Metadata.`Dataset` ds"
-        return this.executeSQLQuery(query);
+        return this.executeSQLQuery(query, this.defaultPlanFormat);
     }
 
     /*
@@ -65,7 +66,7 @@ export class SQLService {
     */
     selectDatatypes() : Observable<any> {
         let query = "SELECT VALUE dt FROM Metadata.`Datatype` dt"
-        return this.executeSQLQuery(query);
+        return this.executeSQLQuery(query, this.defaultPlanFormat);
     }
 
     /*
@@ -74,7 +75,7 @@ export class SQLService {
     */
     selectIndexes() : Observable<any> {
         let query = "SELECT VALUE ix FROM Metadata.`Index` ix"
-        return this.executeSQLQuery(query);
+        return this.executeSQLQuery(query, this.defaultPlanFormat);
     }
 
     /*
@@ -174,7 +175,7 @@ export class SQLService {
           status: string;
           login(username: string, password: string): Observable<boolean>
     */
-    executeSQLQuery(query: string): Observable<any> {
+    executeSQLQuery(query: string, planFormat: string): Observable<any> {
         const apiUrl = AsterixRestApiUrl;
         const headers = new HttpHeaders();
         headers.append('Content-Type', 'application/json');
@@ -182,7 +183,8 @@ export class SQLService {
 
         return this.http.post(apiUrl, {statement: query,
             'logical-plan': true,
-            'optimized-logical-plan': true }, options)
+            'optimized-logical-plan': true,
+            'plan-format': planFormat }, options)
                 .map((response: Response) => { return response; })
                 .catch((error: any) => this.handleExecuteQueryError(error))
     }

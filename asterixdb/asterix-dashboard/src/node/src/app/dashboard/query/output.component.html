@@ -18,10 +18,10 @@ limitations under the License.
             <tree-view [data]="data" [queryId]="queryId"></tree-view>
         </div>
         <div *ngIf='queryOptimizedLogicalPlan != ""'>
-            <plan-view [jsonPlan]="queryOptimizedLogicalPlan" [plan]="optimalLogicalPlan" [planName]="'OPTIMIZED PLAN'"></plan-view>
+            <plan-view [planFormat]="planFormat" [jsonPlan]="queryOptimizedLogicalPlan" [plan]="optimalLogicalPlan" [planName]="'OPTIMIZED PLAN'"></plan-view>
         </div>
         <div *ngIf='queryLogicalPlan != ""'>
-            <plan-view [jsonPlan]="queryLogicalPlan" [plan]="logicalPlan" [planName]="'LOGICAL PLAN'"></plan-view>
+            <plan-view [planFormat]="planFormat" [jsonPlan]="queryLogicalPlan" [plan]="logicalPlan" [planName]="'LOGICAL PLAN'"></plan-view>
         </div>
         </div>
     </mat-card-content>

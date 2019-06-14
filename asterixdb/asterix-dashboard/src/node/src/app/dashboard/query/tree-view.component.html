@@ -19,12 +19,12 @@ limitations under the License.
         </mat-expansion-panel-header>
         <mat-panel-description class='content'>
             <div class='panel'>
-                <span class='summary' >Items: {{metrics.resultCount}} Size: {{metrics.resultSizeKb}} Kb</span>
+                <!--<span class='summary' >Items: {{metrics.resultCount}} Size: {{metrics.resultSizeKb}} Kb</span>-->
                 <mat-paginator [showFirstLastButtons]="true" [length]='metrics.resultCount' [pageSize]='pagedefaults.pageSize' [pageSizeOptions]='pageSizeOptions' (page)='showResults($event, false)'>
                     </mat-paginator>
                 <span class='options'>
-                    <button mat-button class='button' (click)='dataExpand()' matTooltip="Expand Data"><mat-icon>add_circle</mat-icon></button>
-                    <button mat-button class='button' (click)='dataCollapse()' matTooltip="Collapse Data"><mat-icon>remove_circle_outline</mat-icon></button>
+                    <button mat-button class='button' (click)='dataExpand()' [disabled]= 'checkView()' matTooltip="Expand Data"><mat-icon>add_circle</mat-icon></button>
+                    <button mat-button class='button' (click)='dataCollapse()' [disabled]= 'checkView()' matTooltip="Collapse Data"><mat-icon>remove_circle_outline</mat-icon></button>
                     <button mat-button class='button button-json' (click)='showTable()' matTooltip="Show Table View">TABLE</button>
                     <button mat-button class='button button-json' (click)='showTree()' matTooltip="Show Tree View">TREE</button>
                     <button mat-button class='button button-json' (click)='showJSON()' matTooltip="Show JSON View">JSON</button>
@@ -37,7 +37,7 @@ limitations under the License.
             </div>
             <div class='divider'>
                 <div *ngIf='tableVisible'>
-                    <table mat-table [dataSource]="dataSource" class='items-table'>
+                    <table mat-table [dataSource]="dataSource" class='items-table table-responsive'>
                         <ng-container matColumnDef="{{col}}" *ngFor="let col of displayedColumns">
                             <th mat-header-cell *matHeaderCellDef class='cell'>{{col}}</th>
                             <td mat-cell *matCellDef="let element"class='cell' >{{element[col]}}</td>
@@ -54,7 +54,7 @@ limitations under the License.
                 </div>
                 <div id='bottom'></div>
             </div>
-            <button *ngIf='showGoTop' mat-fab color='warn' class='button back-button' (click)='gotoTop()'>
+            <button *ngIf='showGoTop' mat-fab color='primary' class='button back-button' (click)='gotoTop()'>
                 <mat-icon>keyboard_arrow_up</mat-icon>
             </button>
         </mat-panel-description>

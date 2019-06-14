@@ -53,17 +53,17 @@
           </execution>
         </executions>
         <configuration>
-          <templateRootDir>${basedir}/../src/main/licenses/templates</templateRootDir>
+          <templateRootDir>${basedir}/..</templateRootDir>
           <outputDir>${basedir}/..</outputDir>
           <location>ignored</location>
           <generatedFiles>
             <generatedFile>
-              <template>asterix-source-license.ftl</template>
+              <template>src/main/licenses/templates/asterix-source-license.ftl</template>
               <outputFile>LICENSE</outputFile>
             </generatedFile>
             <generatedFile>
               <!-- TODO(mblow): share the template with hyracks as a maven artifact -->
-              <template>asterix-notice.ftl</template>
+              <template>src/main/licenses/templates/asterix-notice.ftl</template>
               <outputFile>NOTICE</outputFile>
             </generatedFile>
           </generatedFiles>

@@ -38,8 +38,14 @@ $query-spacing-unit: 5px;
     border-bottom: 1px solid gray;
 }
 
-.content-area {
-    //min-height: 130px;
+.contentarea {
+    display: flex;
+    flex-flow: column;
+}
+
+.options {
+    display: flex;
+    flex-flow: row;
 }
 
 .codemirror-container {
@@ -54,6 +60,10 @@ $query-spacing-unit: 5px;
 
 .input-button {
     font-size: 12px !important;
+}
+
+.message {
+    margin-top: 30px;
 }
 
 .metrics {
@@ -71,6 +81,7 @@ $query-spacing-unit: 5px;
 
 .queryErrorMessage {
     color: rgba(209, 54, 54, 0.87);
+    font-size: 14px !important;
     word-break: break-all;
     font-size: 1.0rem;
     font-weight: 500;
@@ -83,19 +94,34 @@ $query-spacing-unit: 5px;
 }
 
 .dataverses {
+    display: flex;
+    flex-flow: row;
+    width: 100%;
     margin-top: 15px;
     margin-right: 15px;
     font-size: 0.80rem !important;
     font-weight: 500 !important;
 }
 
+.d1 {
+    margin-right: 15px;
+}
+
+.flex-spacer {
+    flex: 1 1 20%;
+}
+
 .history {
     display: flex;
-    flex-flow: column;
+    flex-flow: row;
     align-items: center;
     width: 88px;
     margin-top: 15px;
     margin-left: 15px;
     font-size: 0.80rem !important;
     font-weight: 500 !important;
+}
+
+.sql-history {
+    width: 500px !important;
 }

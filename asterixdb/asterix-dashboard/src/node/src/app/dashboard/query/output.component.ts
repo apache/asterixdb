@@ -32,8 +32,12 @@ export class QueryOutputComponent {
     logicalPlan: any;
     optimalLogicalPlan: any;
     results$: Observable < any > ;
+    planFormat$: Observable < any > ;
+    planFormat: any;
     SQLresults: any;
     queryId: any = "";
+    observedPlanFormat = "";
+
 
     constructor(private store: Store <any>) {
         let key = '1';
@@ -65,16 +69,28 @@ export class QueryOutputComponent {
         this.SQLresults = data;
         this.queryLogicalPlan = "";
         this.queryOptimizedLogicalPlan = "";
+        this.planFormat = "JSON";
         if (this.SQLresults[queryId]) {
             // Extract the logical plan
             if (this.SQLresults[queryId]['plans']) {
                 if (this.SQLresults[queryId]['plans']['logicalPlan']) {
                     this.queryLogicalPlan = JSON.stringify(this.SQLresults[queryId]['plans']['logicalPlan'], null, 8);
                     this.logicalPlan = this.SQLresults[queryId]['plans']['logicalPlan'];
+                    this.planFormat = this.SQLresults[queryId]['planFormat'];
+                    if (this.planFormat === 'JSON') {
+                        this.queryLogicalPlan = JSON.stringify(this.SQLresults[queryId]['plans']['logicalPlan'], null, 8);
+                    } else {
+                        this.queryLogicalPlan = this.SQLresults[queryId]['plans']['logicalPlan'];
+                    }
                 }
                 if (this.SQLresults[queryId]['plans']['optimizedLogicalPlan']) {
-                    this.queryOptimizedLogicalPlan = JSON.stringify(this.SQLresults[queryId]['plans']['optimizedLogicalPlan'], null, 8);
                     this.optimalLogicalPlan = this.SQLresults[queryId]['plans']['optimizedLogicalPlan'];
+                    this.planFormat = this.SQLresults[queryId]['planFormat'];
+                    if (this.planFormat === 'JSON') {
+                        this.queryOptimizedLogicalPlan = JSON.stringify(this.SQLresults[queryId]['plans']['optimizedLogicalPlan'], null, 8);
+                    } else {
+                        this.queryOptimizedLogicalPlan = this.SQLresults[queryId]['plans']['optimizedLogicalPlan'];
+                    }
                 }
             }
 

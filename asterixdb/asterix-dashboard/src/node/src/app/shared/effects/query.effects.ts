@@ -30,7 +30,7 @@ export class SQLQueryEffects {
     executeQuery$: Observable<Action> = this.actions
         .ofType(sqlQueryActions.EXECUTE_QUERY)
         .switchMap(query => {
-            return this.sqlService.executeSQLQuery((query as any).payload.queryString)
+            return this.sqlService.executeSQLQuery((query as any).payload.queryString, (query as any).payload.planFormat)
                 .map(sqlQueryResult => new sqlQueryActions.ExecuteQuerySuccess(sqlQueryResult))
                 .catch(sqlQueryError => of(new sqlQueryActions.ExecuteQueryFail(sqlQueryError)));
     });
@@ -41,7 +41,7 @@ export class SQLQueryEffects {
     executeMetadataQuery$: Observable<Action> = this.actions
         .ofType(sqlQueryActions.EXECUTE_METADATA_QUERY)
         .switchMap(query => {
-            return this.sqlService.executeSQLQuery((query as any).payload)
+            return this.sqlService.executeSQLQuery((query as any).payload, (query as any).payload.planFormat)
                 .map(sqlMetadataQueryResult => new sqlQueryActions.ExecuteMetadataQuerySuccess(sqlMetadataQueryResult))
                 .catch(sqlMetadataQueryError => of(new sqlQueryActions.ExecuteMetadataQueryFail(sqlMetadataQueryError)));
     });

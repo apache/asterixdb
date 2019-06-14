@@ -25,7 +25,9 @@ export interface State {
     successHash:{},
     errorHash: {},
     sqlQueryString: string,
+    sqlQueryPlanFormat: string,
     sqlQueryStringHash: {},
+    sqlQueryPlanFormatHash: {},
     sqlQueryResultHash: {},
     sqlQueryErrorHash: {},
     sqlQueryPrepared: {},
@@ -39,7 +41,9 @@ const initialState: State = {
     successHash:{},
     errorHash: {},
     sqlQueryString: "",
+    sqlQueryPlanFormat: "",
     sqlQueryStringHash: {},
+    sqlQueryPlanFormatHash: {},
     sqlQueryResultHash: {},
     sqlQueryErrorHash: {},
     sqlQueryPrepared: {},
@@ -60,6 +64,7 @@ export function sqlReducer(state = initialState, action: Action) {
                 sqlQueryErrorHash: state.sqlQueryErrorHash,
                 sqlQueryResultHash: state.sqlQueryResultHash,
                 sqlQueryStringHash: state.sqlQueryStringHash,
+                sqlQueryPlanFormatHash: { ...state.sqlQueryPlanFormatHash, [action.payload.editorId]: action.payload.planFormat },
                 sqlQueryMetrics: state.sqlQueryMetrics,
                 currentRequestId: state.currentRequestId
             });
@@ -92,7 +97,9 @@ export function sqlReducer(state = initialState, action: Action) {
                 successHash: { ...state.successHash, [action.payload.requestId]: false },
                 errorHash: { ...state.errorHash, [action.payload.requestId]: false },
                 sqlQueryString: action.payload.queryString,
+                sqlQueryPlanFormat: action.payload.planFormat,
                 sqlQueryStringHash: { ...state.sqlQueryStringHash, [action.payload.requestId]: action.payload.queryString },
+                sqlQueryPlanFormatHash: { ...state.sqlQueryPlanFormatHash, [action.payload.requestId]: action.payload.planFormat },
                 sqlQueryResultHash: { ...state.sqlQueryResultHash, [action.payload.requestId]: [] },
                 sqlQueryErrorHash: { ...state.sqlQueryErrorHash, [action.payload.requestId]: [] },
                 sqlQueryMetrics: { ...state.sqlQueryMetrics, [action.payload.requestId]: [] },
@@ -105,11 +112,13 @@ export function sqlReducer(state = initialState, action: Action) {
         * store
         */
         case sqlQueryActions.EXECUTE_QUERY_SUCCESS: {
+            action.payload['planFormat'] = state.sqlQueryPlanFormat;
             return Object.assign({}, state, {
                 loadingHash: { ...state.loadingHash, [state.currentRequestId]: false },
                 loadedHash: { ...state.loadedHash, [state.currentRequestId]: true },
                 successHash: { ...state.successHash, [state.currentRequestId]: true },
                 errorHash: { ...state.errorHash, [state.currentRequestId]: false },
+                sqlQueryPlanFormatHash: state.sqlQueryPlanFormatHash,
                 sqlQueryStringHash: { ...state.sqlQueryStringHash, [state.currentRequestId]: state.sqlQueryString },
                 sqlQueryResultHash: { ...state.sqlQueryResultHash, [state.currentRequestId]: action.payload },
                 sqlQueryErrorHash: { ...state.sqlQueryErrorHash, [state.currentRequestId]: [] },
@@ -123,11 +132,13 @@ export function sqlReducer(state = initialState, action: Action) {
         * store
         */
         case sqlQueryActions.EXECUTE_QUERY_FAIL: {
+            action.payload['planFormat'] = state.sqlQueryPlanFormat;
             return Object.assign({}, state, {
                 loadingHash: { ...state.loadingHash, [state.currentRequestId]: false },
                 loadedHash: { ...state.loadedHash, [state.currentRequestId]: true },
                 successHash: { ...state.successHash, [state.currentRequestId]: false },
                 errorHash: { ...state.errorHash, [state.currentRequestId]: true },
+                sqlQueryPlanFormatHash: state.sqlQueryPlanFormatHash,
                 sqlQueryStringHash: { ...state.sqlQueryStringHash, [state.currentRequestId]: state.sqlQueryString },
                 sqlQueryResultHash: { ...state.sqlQueryResultHash, [state.currentRequestId]: [] },
                 sqlQueryErrorHash: { ...state.sqlQueryErrorHash, [state.currentRequestId]: action.payload.errors },

@@ -51,8 +51,8 @@ limitations under the License.
     align-items: flex-start;
     font-size: 14px;
     border: 1px dashed gainsboro;
-    padding-top: 20px;
-    padding-bottom: 20px
+    padding: 20px;
+    overflow: auto;
 }
 
 .content {
@@ -124,8 +124,8 @@ limitations under the License.
     display: inline-flex;
 }
 
-table {
-    width: 100%;
+.items-table {
+    min-width: 100%;
 }
 
 tr.example-element-row:not(.example-expanded-row):hover {
@@ -138,4 +138,35 @@ tr.example-element-row:not(.example-expanded-row):active {
 
 .cell {
     padding-left: 15px;
+}
+
+.table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+
+    .mat-table {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+        display: table;
+        border-collapse: collapse;
+        margin: 0px;
+    }
+
+    .mat-row,
+    .mat-header-row {
+        display: table-row;
+    }
+
+    .mat-cell,
+    .mat-header-cell {
+        word-wrap: initial;
+        display: table-cell;
+        //padding: 0px 5px;
+        line-break: unset;
+        white-space: nowrap;
+        overflow: hidden;
+        vertical-align: middle;
+    }
 }

@@ -15,24 +15,16 @@ limitations under the License.
   <li class='node-children' *ngFor="let node of node_ let i = index" >
     <div id="item{{node.item}}{{node.key}}{{node.value}}{{i}}" [ngSwitch]="nodeCheckType(node)">
         <div *ngSwitchCase="'ROOT'" class="node-details" (click)="toggle(node)" (mouseover)="jsonPathSelect(node, i)" (mouseleave)="jsonPathDeselect(node, i)">
-            <i class='pre-item-icon' *ngIf="!checkRoot(node)">
-              <img src="/assets/tree.svg">
-            </i>
             {{(node.label)}} [{{node.item}}] {{actionIcon(node)}} </div>
+        <div *ngSwitchCase="'ROOT-VALUE'" class="node-details" (click)="toggle(node)" (mouseover)="jsonPathSelect(node, i)" (mouseleave)="jsonPathDeselect(node, i)">
+            {{(node.label)}}
+        </div>
         <div *ngSwitchCase="'ARRAY'" class="node-details" (click)="toggle(node)" (mouseover)="jsonPathSelect(node, i)" (mouseleave)="jsonPathDeselect(node, i)">
-              <i class='pre-item-icon' *ngIf="!checkRoot(node)">
-                <img src="./assets/tree.svg">
-              </i>
               <span class='node-content'>{{node.label}}: [ {{childrenCount(node.children)}} ] {{actionIcon(node)}}</span></div>
         <div *ngSwitchCase="'OBJECT'" class="node-details" (click)="toggle(node)" (mouseover)="jsonPathSelect(node, i)" (mouseleave)="jsonPathDeselect(node, i)">
-            <i class='pre-item-icon' *ngIf="!checkRoot(node)">
-                <img src="./assets/tree.svg">
-            </i>
-            <span class='node-content'>{{(node.label)}}: {{actionIcon(node)}}</span></div>
+            <span class='node-content'>{{(node.label)}}: {{actionIcon(node)}}</span>
+        </div>
         <div *ngSwitchCase="'KEYVALUE'" class="node-details" (click)="toggle(node)" (mouseover)="jsonPathSelect(node, i)" (mouseleave)="jsonPathDeselect(node, i)">
-            <i class='pre-item-icon' *ngIf="!checkRoot(node)">
-              <img src="./assets/tree.svg">
-            </i>
             <span class='node-content'>{{(node.key)}}: <span class='value'>{{(node.value)}}</span></span>
         </div>
     </div>

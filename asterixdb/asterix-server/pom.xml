@@ -90,14 +90,14 @@
           </execution>
         </executions>
         <configuration>
-          <templateRootDir>${basedir}/../src/main/licenses/templates</templateRootDir>
+          <templateRootDir>${basedir}/..</templateRootDir>
           <generatedFiles>
             <generatedFile>
-              <template>asterix-license.ftl</template>
+              <template>src/main/licenses/templates/asterix-license.ftl</template>
               <outputFile>LICENSE</outputFile>
             </generatedFile>
             <generatedFile>
-              <template>asterix-notice.ftl</template>
+              <template>src/main/licenses/templates/asterix-notice.ftl</template>
               <outputFile>NOTICE</outputFile>
             </generatedFile>
           </generatedFiles>

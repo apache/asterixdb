@@ -12,6 +12,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { Component } from '@angular/core';
+import { Store } from '@ngrx/store';
+import * as appActions from '../shared/actions/app.actions'
 
 @Component({
     moduleId: module.id,
@@ -20,4 +22,13 @@ import { Component } from '@angular/core';
     styleUrls: ['appbar.component.scss']
 })
 
-export class AppBarComponent {}
+export class AppBarComponent {
+    sideMenuVisible = false;
+
+    constructor(private store: Store <any> ) {}
+
+    showMetadata() {
+        this.sideMenuVisible = !this.sideMenuVisible;
+        this.store.dispatch(new appActions.setSideMenuVisible(this.sideMenuVisible));
+    }
+}

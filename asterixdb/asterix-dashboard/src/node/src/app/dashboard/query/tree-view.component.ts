@@ -14,6 +14,7 @@ limitations under the License.
 import { Component, Input, NgZone, SimpleChange, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { saveAs } from 'file-saver';
+import * as cloneDeep from 'lodash/cloneDeep';
 
 @Component({
     selector: 'tree-view',
@@ -46,6 +47,8 @@ export class TreeViewComponent {
     COLLAPSED = false;
 
     flattenData = [];
+    displayedColumns: string[] = [];
+
     dataSource = new MatTableDataSource<any>();
 
 
@@ -80,18 +83,16 @@ export class TreeViewComponent {
         this.currentIndex = this.currentRange.pageIndex;
         this.treeData = this.rawData.filter(this.filter, this.currentRange);
         // Build the dynamic table column names
-        this.buildTableColums(this.treeData[0]);
         // Flat the results to display in a table
-        this.flatDataforTable(this.treeData);
+        this.BuildTableFlatData(this.treeData);
 
         if (this.treeData.length > 0) {
             this.metrics = this.data['metrics'];
             this.metrics['resultSizeKb'] = (this.metrics.resultSize/1024).toFixed(2);
             var myData_ = [];
             for (let i = 0; i < this.treeData.length; i++) {
-                let  nodeContent= {};
                 // mat-paginator start counting from 1, thats why the i+1 trick
-                myData_.push(this.generateTree(this.treeData[i], '/', nodeContent, (this.currentRange.pageSize * this.currentRange.pageIndex) + (i + 1), 0, expanded));
+                myData_.push(this.generateTree(this.treeData[i], '/', {}, (this.currentRange.pageSize * this.currentRange.pageIndex) + (i + 1), 0, expanded));
             }
 
             this.treeData_ = myData_;
@@ -151,67 +152,50 @@ export class TreeViewComponent {
     }
 
     /*
-    * This function converts the json object into a node/array graph structure ready to be display as a tree
+    * This function converts ONE json object into a node/array graph structure ready to be display as a tree
     * it will also augment the nodes with a link containing the path that the elements occupies in the json graph
     */
-    generateTree(node, nodeLink, rootMenu, index, level, expanded): any {
-        // Check in case the root object is not defined properly
-        if (rootMenu === {}) {
-            console.log(expanded)
-            rootMenu = { item: '', label: 'K', key: '', value: '', link: '/', visible: expanded, children: [], level: 0};
-        }
+    generateTree(node, nodeLink, nodeRoot, index, level, expanded): any {
 
-        let nodeArray = [];
+        // this for the case when the result does not have a key value
+        // manually create the root node
+        if(Object.keys(nodeRoot).length === 0) {
+            var rootLabel = '';
+            var rootType = 'ROOT'
+            if (typeof node !== 'object') {
+              index = ""
+              rootLabel = node;
+              rootType = 'ROOT-VALUE'
+            }
+            nodeRoot = { item: index, label: rootLabel, key: '', value: '', type: rootType, link: '/', visible: expanded, children: [], level: 0}
+            level = 1;
+        }
 
         // Going through all the keys in a node looking for objects or array of key values
         // and create a sub menu if is an object.
+        let nodeArray = [];
         Object.keys(node).map((k) => {
-
             if (typeof node[k] === 'object') {
+                let nodeObject = { nested: true, item: '', label: '', key: '', value: '', type: '', link: '/', visible: expanded, children: [], level: level };
+                nodeObject.item = index;
+                nodeObject.label = k;
+                nodeObject.key = k;
+                nodeObject.value = node[k];
+                nodeObject.link = nodeLink + '/' + k;
+                nodeObject.level = level;
+                level = level + 1;
                 if(Array.isArray(node[k]) ){
-                    let nodeObject = { nested: true, item: '', label: '', key: '', value: '', type: 'ARRAY', link: '/', visible: expanded, children: [], level: level };
-                    nodeObject.item = index;
-                    nodeObject.label = k;
-                    nodeObject.key = k;
-                    nodeObject.value = node[k];
-                    nodeObject.link = nodeLink + '/' + k;
-                    nodeObject.level = level;
-                    level = level + 1;
-                    // if this is an object then a new node is created and
-                    // recursive call to find and fill with the nested elements
-                    let newNodeObject = this.generateTree(node[k], nodeObject.link, nodeObject, index, level, expanded);
-                    // if this is the first node, then will become the root.
-                    if (rootMenu.children) {
-                        rootMenu.children.push(newNodeObject)
-                    } else {
-                        rootMenu = newNodeObject;
-                        newNodeObject.type = 'ROOT';
-                    }
+                    nodeObject.type = 'ARRAY';
                 } else {
-                    let nodeObject = { nested: true, item: '', label: '', key: '', value: '', type: 'OBJECT', link: '/', visible: expanded, children: [], level: level };
-                    nodeObject.item = index;
-                    nodeObject.label = k;
-                    nodeObject.key = k;
-                    nodeObject.value = node[k];
-                    nodeObject.link = nodeLink + '/' + k;
-                    nodeObject.level = level;
-                    level = level + 1;
-                    // if this is an object then a new node is created and
-                    // recursive call to find and fill with the nested elements
-                    let newNodeObject = this.generateTree(node[k], nodeObject.link, nodeObject, index, level, expanded);
-                    // if this is the first node, then will become the root.
-                    if (rootMenu.children) {
-                        rootMenu.children.push(newNodeObject)
-                    } else {
-                        nodeObject.nested = false;
-                        newNodeObject.visible = expanded;
-                        newNodeObject.type = 'ROOT';
-                        rootMenu = newNodeObject
-                    }
+                    nodeObject.type = 'OBJECT';
+                }
+                var newNodeObject = this.generateTree(node[k], nodeObject.link, nodeObject, index, level, expanded);
+                if (nodeRoot.children) {
+                    nodeRoot.children.push(newNodeObject)
                 }
             }
             else {
-                // Array of key values converted into a unique string with a : separator
+                // key values converted into a unique string with a : separator
                 let nodeKeyValue = { nested: false, item: '', label: '', key: '', value: '', type: 'KEYVALUE', link: '/', visible: expanded, children: [], level: level};
                 nodeKeyValue.item = index;
                 nodeKeyValue.label = k + " : " + node[k];
@@ -224,10 +208,10 @@ export class TreeViewComponent {
         })
         // The array will be added as value to a parent key.
         if (nodeArray.length > 0) {
-            rootMenu.children = nodeArray.concat(rootMenu.children)
+            nodeRoot.children = nodeArray.concat(nodeRoot.children)
         }
 
-        return rootMenu
+        return nodeRoot
     }
 
     gotoTop() {
@@ -284,43 +268,36 @@ export class TreeViewComponent {
 
     /*
     * Build the table column names from result data
-    */
-    displayedColumns: string[] = [];
-    buildTableColums(item) {
-        var resultKeyList = Object.keys(item);
-        var resultKey: string = resultKeyList[0];
-        if (item[resultKey] instanceof Object) {
-            // is a SQL++ Query Results
-            var nestedKeyList = Object.keys(item[resultKey]);
-            this.displayedColumns = nestedKeyList;
-        }
-        else { // is a SQL++ Metadata Results and there is an Array
-            this.displayedColumns = resultKeyList;
-        }
-    }
-
-    /*
     * Flat the result data for Table display
     */
-    flatDataforTable(data) {
-        var resultKeyList = Object.keys(data[0]);
-        var resultKey: string = resultKeyList[0];
+    BuildTableFlatData(data) {
+
         this.flattenData = [];
-        if (data[0][resultKey] instanceof Object) {
-            for (let i = 0; i < data.length; i++) {
-                var nestedKeyList = Object.keys(data[i][resultKey]);
-                for (let k = 0; k < nestedKeyList.length; k++) {
-                    if ( typeof data[i][resultKey][nestedKeyList[k]] === 'object' ){
-                        var nestedObjectStr = JSON.stringify(data[i][resultKey][nestedKeyList[k]], null, '\n');
-                        // Not Implemented Yet
+        this.displayedColumns = []
+
+        for (let i = 0; i < data.length; i++) {
+            if (data[i] instanceof Object) {
+
+                var itemsKeyList = Object.keys(data[i]);
+                var objectNode = cloneDeep(data[i]);
+
+                for (let j = 0; j < itemsKeyList.length; j++) {
+
+                    var itemsKey: string = itemsKeyList[j];
+                    if (data[i][itemsKey] instanceof Object) {
+                        objectNode[itemsKey] = JSON.stringify(data[i][itemsKey], null, '\n');
                     } else {
-                        this.flattenData[i] = data[i][resultKey];
+                        objectNode[itemsKey] = data[i][itemsKey]
+                    }
+                    if (this.displayedColumns.indexOf(itemsKey) === -1) {
+                        this.displayedColumns.push(itemsKey)
                     }
                 }
+                this.flattenData.push(objectNode)
+            } else {
+                this.displayedColumns.push('value')
+                this.flattenData.push({ 'value': data[0] })
             }
-        }
-        else {
-            this.flattenData = data;
         }
 
         this.dataSource.data = this.flattenData;
@@ -328,5 +305,13 @@ export class TreeViewComponent {
 
     jsonTransform(item) {
         return JSON.stringify(item, null, 4);
+    }
+
+    checkView() {
+        if (!this.treeVisible) {
+            return true;
+        } else {
+            return false
+        }
     }
 }

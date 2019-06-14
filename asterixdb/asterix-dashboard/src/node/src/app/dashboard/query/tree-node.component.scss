@@ -25,7 +25,7 @@ limitations under the License.
 }
 
 .node-content{
-    padding-top: 5px;
+    padding: 5px;
     border: 1px dashed gainsboro;
 }
 
@@ -43,8 +43,8 @@ limitations under the License.
     &:hover {
         cursor: pointer;
     }
-    margin-left: 20px;
-    margin-bottom: 30px;
+    margin-left: 15px;
+    margin-bottom: 15px;
 }
 
 ul {
@@ -58,6 +58,8 @@ ul {
 
 .value {
     color: blue;
-    padding: 5px;
-    border: 1px dashed gainsboro;
+    padding: 15px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    //border: 1px dashed gainsboro;
 }

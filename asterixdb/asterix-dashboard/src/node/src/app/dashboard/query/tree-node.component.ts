@@ -37,6 +37,7 @@ export class TreeNodeComponent {
 
     initData() {
         this.node_ = this.node;
+       // this.nodeChildren = this.node.children;
     }
 
     changeJsonPathValue(event) {
