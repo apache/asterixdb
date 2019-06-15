@@ -119,7 +119,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         }
         if (hasResult(responseMsg)) {
             responsePrinter.addResultPrinter(
-                    new NcResultPrinter(appCtx, responseMsg, getResultSet(), delivery, sessionOutput));
+                    new NcResultPrinter(appCtx, responseMsg, getResultSet(), delivery, sessionOutput, stats));
         }
         buildResponseResults(responsePrinter, sessionOutput, responseMsg.getExecutionPlans());
     }

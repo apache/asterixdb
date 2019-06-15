@@ -12342,4 +12342,11 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="metrics">
+    <test-case FilePath="metrics">
+      <compilation-unit name="full-scan">
+        <output-dir compare="Text">full-scan</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

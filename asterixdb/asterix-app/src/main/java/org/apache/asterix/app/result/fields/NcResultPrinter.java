@@ -43,14 +43,17 @@ public class NcResultPrinter implements IResponseFieldPrinter {
     private final IApplicationContext appCtx;
     private final IResultSet resultSet;
     private final SessionOutput sessionOutput;
+    private final IStatementExecutor.Stats stats;
 
     public NcResultPrinter(IApplicationContext appCtx, ExecuteStatementResponseMessage responseMsg,
-            IResultSet resultSet, IStatementExecutor.ResultDelivery delivery, SessionOutput sessionOutput) {
+            IResultSet resultSet, IStatementExecutor.ResultDelivery delivery, SessionOutput sessionOutput,
+            IStatementExecutor.Stats stats) {
         this.appCtx = appCtx;
         this.responseMsg = responseMsg;
         this.delivery = delivery;
         this.resultSet = resultSet;
         this.sessionOutput = sessionOutput;
+        this.stats = stats;
     }
 
     @Override
@@ -58,7 +61,6 @@ public class NcResultPrinter implements IResponseFieldPrinter {
         IStatementExecutor.ResultMetadata resultMetadata = responseMsg.getMetadata();
         List<Triple<JobId, ResultSetId, ARecordType>> resultSets = resultMetadata.getResultSets();
         if (delivery == IStatementExecutor.ResultDelivery.IMMEDIATE && !resultSets.isEmpty()) {
-            final IStatementExecutor.Stats stats = responseMsg.getStats();
             stats.setProcessedObjects(responseMsg.getStats().getProcessedObjects());
             for (int i = 0; i < resultSets.size(); i++) {
                 Triple<JobId, ResultSetId, ARecordType> rsmd = resultSets.get(i);
