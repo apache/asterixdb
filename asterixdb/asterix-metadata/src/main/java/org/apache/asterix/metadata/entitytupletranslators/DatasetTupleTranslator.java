@@ -282,7 +282,8 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             final ARecordType compressionType = (ARecordType) datasetType.getFieldTypes()[compressionIndex];
             final int schemeIndex = compressionType
                     .getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_DATASET_COMPRESSION_SCHEME_FIELD_NAME);
-            return ((AString) datasetRecord.getValueByPos(schemeIndex)).getStringValue();
+            final ARecord compressionRecord = (ARecord) datasetRecord.getValueByPos(compressionIndex);
+            return ((AString) compressionRecord.getValueByPos(schemeIndex)).getStringValue();
         }
         return CompressionManager.NONE;
     }
