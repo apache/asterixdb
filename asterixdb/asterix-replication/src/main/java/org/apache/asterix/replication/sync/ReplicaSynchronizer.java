@@ -53,10 +53,12 @@ public class ReplicaSynchronizer {
 
     private void syncFiles() throws IOException {
         final ReplicaFilesSynchronizer fileSync = new ReplicaFilesSynchronizer(appCtx, replica);
+        waitForReplicatedDatasetsIO();
         fileSync.sync();
         // flush replicated dataset to generate disk component for any remaining in-memory components
         final IReplicationStrategy replStrategy = appCtx.getReplicationManager().getReplicationStrategy();
         appCtx.getDatasetLifecycleManager().flushDataset(replStrategy);
+        waitForReplicatedDatasetsIO();
         // sync any newly generated files
         fileSync.sync();
     }
@@ -74,5 +76,11 @@ public class ReplicaSynchronizer {
         final PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         return localResourceRepository.getReplicatedIndexesMaxComponentId(partition, replStrategy);
+    }
+
+    private void waitForReplicatedDatasetsIO() throws HyracksDataException {
+        // wait for IO operations to ensure replicated datasets files won't change during replica sync
+        final IReplicationStrategy replStrategy = appCtx.getReplicationManager().getReplicationStrategy();
+        appCtx.getDatasetLifecycleManager().waitForIO(replStrategy);
     }
 }
