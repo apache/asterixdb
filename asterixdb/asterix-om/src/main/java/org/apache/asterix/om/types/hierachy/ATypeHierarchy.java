@@ -20,7 +20,6 @@ package org.apache.asterix.om.types.hierachy;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -32,6 +31,7 @@ import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.commons.lang3.tuple.Pair;
@@ -315,10 +315,8 @@ public class ATypeHierarchy {
             case DOUBLE:
                 return DoubleToInt32TypeConvertComputer.getInstance(strictDemote).convertType(bytes, offset);
             default:
-                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH_FUNCTION, name, argIndex,
-                        Arrays.toString(new Object[] { ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER,
-                                ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE }),
-                        sourceTypeTag);
+                throw createTypeMismatchException(name, argIndex, sourceTypeTag, ATypeTag.TINYINT, ATypeTag.SMALLINT,
+                        ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE);
         }
     }
 
@@ -354,10 +352,8 @@ public class ATypeHierarchy {
             case DOUBLE:
                 return DoubleToInt64TypeConvertComputer.getInstance(strictDemote).convertType(bytes, offset);
             default:
-                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH_FUNCTION, name, argIndex,
-                        Arrays.toString(new Object[] { ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER,
-                                ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE }),
-                        sourceTypeTag);
+                throw createTypeMismatchException(name, argIndex, sourceTypeTag, ATypeTag.TINYINT, ATypeTag.SMALLINT,
+                        ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE);
         }
     }
 
@@ -385,18 +381,16 @@ public class ATypeHierarchy {
             case BIGINT:
                 return IntegerToDoubleTypeConvertComputer.getInstance().convertType(bytes, offset, sourceTypeTag);
             default:
-                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH_FUNCTION, name, argIndex,
-                        Arrays.toString(new ATypeTag[] { ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER,
-                                ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE }),
-                        sourceTypeTag);
+                throw createTypeMismatchException(name, argIndex, sourceTypeTag, ATypeTag.TINYINT, ATypeTag.SMALLINT,
+                        ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE);
         }
     }
 
     /**
      * Applies certain math function (e.g., ceil or floor) to a double value and returns that value.
      */
-    public static double applyMathFunctionToDoubleValue(IAObject sourceObject, TypeCastingMathFunctionType mathFunction)
-            throws RuntimeDataException {
+    public static double applyMathFunctionToDoubleValue(IAObject sourceObject,
+            TypeCastingMathFunctionType mathFunction) {
         switch (mathFunction) {
             case CEIL:
                 return Math.ceil(((ADouble) sourceObject).getDoubleValue());
@@ -419,6 +413,13 @@ public class ATypeHierarchy {
             default:
                 return ((AFloat) sourceObject).getFloatValue();
         }
+    }
+
+    private static RuntimeDataException createTypeMismatchException(String functionName, int argIdx,
+            ATypeTag actualTypeTag, ATypeTag... expectedTypeTags) {
+        return new RuntimeDataException(ErrorCode.TYPE_MISMATCH_FUNCTION, functionName,
+                ExceptionUtil.indexToPosition(argIdx), ExceptionUtil.toExpectedTypeString(expectedTypeTags),
+                actualTypeTag);
     }
 
     public enum Domain {

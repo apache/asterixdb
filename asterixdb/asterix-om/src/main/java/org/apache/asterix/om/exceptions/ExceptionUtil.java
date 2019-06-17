@@ -24,7 +24,7 @@ public class ExceptionUtil {
     private ExceptionUtil() {
     }
 
-    static String toExpectedTypeString(Object... expectedItems) {
+    public static String toExpectedTypeString(Object... expectedItems) {
         StringBuilder expectedTypes = new StringBuilder();
         int numCandidateTypes = expectedItems.length;
         for (int index = 0; index < numCandidateTypes; ++index) {
@@ -40,7 +40,7 @@ public class ExceptionUtil {
         return expectedTypes.toString();
     }
 
-    static String indexToPosition(int index) {
+    public static String indexToPosition(int index) {
         int i = index + 1;
         switch (i % 100) {
             case 11:
