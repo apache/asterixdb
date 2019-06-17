@@ -75,7 +75,7 @@ public class AsterixHyracksIntegrationUtil {
     public static final String DEFAULT_CONF_FILE = joinPath(RESOURCES_PATH, "cc.conf");
     private static final String DEFAULT_STORAGE_PATH = joinPath("target", "io", "dir");
     private static String storagePath = DEFAULT_STORAGE_PATH;
-    private static final long RESULT_TTL = TimeUnit.MINUTES.toMillis(5);
+    private static final long RESULT_TTL = TimeUnit.MINUTES.toMillis(30);
 
     static {
         System.setProperty("java.util.logging.manager", org.apache.logging.log4j.jul.LogManager.class.getName());
