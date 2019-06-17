@@ -1228,11 +1228,6 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                         createOperatorExpr(fargs.get(1), OperatorType.MINUS, new IntegerLiteral(1), sourceLoc);
             } else if (BuiltinFunctions.RATIO_TO_REPORT_IMPL.equals(fi)) {
                 // ratio_to_report(x) over (...) --> x / sum(x) over (...)
-                winFrameMode = WindowExpression.FrameMode.RANGE;
-                winFrameStartKind = WindowExpression.FrameBoundaryKind.UNBOUNDED_PRECEDING;
-                winFrameEndKind = WindowExpression.FrameBoundaryKind.CURRENT_ROW;
-                winFrameExclusionKind = WindowExpression.FrameExclusionKind.NO_OTHERS;
-
                 nestedAggFunc = BuiltinFunctions.SCALAR_SQL_SUM;
                 postWinResultFunc = BuiltinFunctions.NUMERIC_DIVIDE;
                 postWinExpr = fargs.get(1);
