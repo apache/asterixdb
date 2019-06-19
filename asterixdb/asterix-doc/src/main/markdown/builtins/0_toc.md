@@ -34,6 +34,8 @@
 * [Type Functions](#TypeFunctions)
 * [Conditional Functions](#ConditionalFunctions)
 * [Miscellaneous Functions](#MiscFunctions)
+* [Window Functions](#WindowFunctions)
+* [OVER Clause (Window Function Calls)](#OverClause)
 
 The system provides various classes of functions to support operations on numeric, string, spatial, and temporal data.
 This document explains how to use these functions.

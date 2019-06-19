@@ -1180,15 +1180,27 @@ The following table catalogs the built-in aggregation functions of the query lan
 | STRICT_MAX     | returns NULL | returns NULL | returns NULL     |
 | STRICT_MIN     | returns NULL | returns NULL | returns NULL     |
 | STRICT_AVG     | returns NULL | returns NULL | returns NULL     |
+| STRICT_STDDEV_SAMP | returns NULL | returns NULL | returns NULL |
+| STRICT_STDDEV_POP  | returns NULL | returns NULL | returns NULL |
+| STRICT_VAR_SAMP    | returns NULL | returns NULL | returns NULL |
+| STRICT_VAR_POP     | returns NULL | returns NULL | returns NULL |
+| STRICT_SKEWNESS    | returns NULL | returns NULL | returns NULL |
+| STRICT_KURTOSIS    | returns NULL | returns NULL | returns NULL |
 | ARRAY_COUNT    | not counted  | not counted  | 0                |
 | ARRAY_SUM      | ignores NULL | ignores NULL | returns NULL     |
 | ARRAY_MAX      | ignores NULL | ignores NULL | returns NULL     |
 | ARRAY_MIN      | ignores NULL | ignores NULL | returns NULL     |
 | ARRAY_AVG      | ignores NULL | ignores NULL | returns NULL     |
+| ARRAY_STDDEV_SAMP  | ignores NULL | ignores NULL | returns NULL |
+| ARRAY_STDDEV_POP   | ignores NULL | ignores NULL | returns NULL |
+| ARRAY_VAR_SAMP     | ignores NULL | ignores NULL | returns NULL |
+| ARRAY_VAR_POP      | ignores NULL | ignores NULL | returns NULL |
+| ARRAY_SKEWNESS     | ignores NULL | ignores NULL | returns NULL |
+| ARRAY_KURTOSIS     | ignores NULL | ignores NULL | returns NULL |
 
-Notice that the query language has twice as many functions listed above as there are aggregate functions in SQL-92.
-This is because the language offers two versions of each -- one that handles `UNKNOWN` values in a semantically
-strict fashion, where unknown values in the input result in unknown values in the output -- and one that
+Notice that the query language offers two versions for each of the aggregate functions listed above.
+For each function, the STRICT version handles `UNKNOWN` values in a semantically strict fashion,
+where unknown values in the input result in unknown values in the output; and the ARRAY version
 handles them in the ad hoc "just ignore the unknown values" fashion that the SQL standard chose to adopt.
 
 ##### Example
@@ -1225,7 +1237,7 @@ Notice how the query forms groups where each group involves a message author and
 The query then uses the collection aggregate function ARRAY_COUNT to get the cardinality of each
 group of messages.
 
-Each aggregation function in the query language supports DISTINCT modifier that removes duplicate values from
+Each aggregation function in the query language supports the DISTINCT modifier that removes duplicate values from
 the input collection.
 
 ##### Example
@@ -1265,15 +1277,26 @@ The same sort of rewritings apply to the function symbols `SUM`, `MAX`, `MIN`, `
 In contrast to the collection aggregate functions of the query language, these special SQL-92 function symbols
 can only be used in the same way they are in standard SQL (i.e., with the same restrictions).
 
-DISTINCT modifier is also supported for these aggregate functions.
+The DISTINCT modifier is also supported for these aggregate functions.
 
-The following aggregate function aliases are supported
+The following table shows the SQL-92 functions supported by the query language, their aliases where available,
+and their corresponding built-in functions.
 
-| Function       | Aliases                 |
-|----------------|-------------------------|
-| STDDEV_SAMP    | STDDEV                  |
-| VAR_SAMP       | VARIANCE, VARIANCE_SAMP |
-| VAR_POP        | VARIANCE_POP            |
+| SQL-92 Function | Aliases                 | Corresponding Built-in Function |
+|-----------------|-------------------------|---------------------------------|
+| COUNT           |                         | ARRAY_COUNT                     |
+| SUM             |                         | ARRAY_SUM                       |
+| MAX             |                         | ARRAY_MAX                       |
+| MIN             |                         | ARRAY_MIN                       |
+| AVG             |                         | ARRAY_AVG                       |
+| ARRAY_AGG       |                         | (none)                          |
+| STDDEV_SAMP     | STDDEV                  | ARRAY_STDDEV_SAMP               |
+| STDDEV_POP      |                         | ARRAY_STDDEV_POP                |
+| VAR_SAMP        | VARIANCE, VARIANCE_SAMP | ARRAY_VAR_SAMP                  |
+| VAR_POP         | VARIANCE_POP            | ARRAY_VAR_POP                   |
+
+Note that the `ARRAY_AGG` function symbol is rewritten simply to return the result of the generated subquery,
+without applying any built-in function.
 
 ### <a id="SQL-92_compliant_gby">SQL-92 Compliant GROUP BY Aggregations</a>
 The query language provides full support for SQL-92 `GROUP BY` aggregation queries.
@@ -1329,7 +1352,7 @@ This query returns:
 ## <a id="Where_having_clauses">WHERE Clauses and HAVING Clauses</a>
 Both `WHERE` clauses and `HAVING` clauses are used to filter input data based on a condition expression.
 Only tuples for which the condition expression evaluates to `TRUE` are propagated.
-Note that if the condition expression evaluates to `NULL` or `MISSING` the input tuple will be disgarded.
+Note that if the condition expression evaluates to `NULL` or `MISSING` the input tuple will be discarded.
 
 ## <a id="Order_By_clauses">ORDER BY Clauses</a>
 The `ORDER BY` clause is used to globally sort data in either ascending order (i.e., `ASC`) or descending order (i.e., `DESC`).

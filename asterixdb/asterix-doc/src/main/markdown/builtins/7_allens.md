@@ -272,3 +272,4 @@ Note that `interval_overlapping` is not an Allen's Relation, but syntactic sugar
 * The expected result is:
 
         { "interval_ends": true, "interval_ended_by": true }
+

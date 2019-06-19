@@ -295,3 +295,4 @@ This section contains detailed descriptions of each AQL aggregate function (i.e.
  * The expected result is:
 
         100.0
+

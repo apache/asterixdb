@@ -19,11 +19,21 @@
 
 ## <a id="AggregateFunctions">Aggregate Functions (Array Functions) </a> ##
 
-This section contains detailed descriptions of each aggregate function (i.e., array function) in the query language.
-Note that standard SQL aggregate functions (e.g., `MIN`, `MAX`, `SUM`, `COUNT`, and `AVG`)
-are not real functions in the query language, but just syntactic sugars over corresponding
+This section contains detailed descriptions of the built-in aggregate functions in the query language.
+
+The query language also supports standard SQL aggregate functions (e.g., `MIN`, `MAX`, `SUM`, `COUNT`, and `AVG`).
+Note that these are not real functions in the query language, but just syntactic sugars over corresponding
 builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 `ARRAY_SUM`, `ARRAY_COUNT`, and `ARRAY_AVG`).
+Refer to [SQL-92 Aggregation Functions](manual.html#SQL-92_aggregation_functions) for details.
+
+The `DISTINCT` keyword may be used with built-in aggregate functions and standard SQL aggregate functions.
+It may also be used with aggregate functions used as window functions.
+It determines whether the function aggregates all values in the group, or distinct values only.
+Refer to [Aggregation Functions](manual.html#Aggregation_functions) for details.
+
+Aggregate functions may be used as window functions when they are used with an OVER clause.
+Refer to [OVER Clause](#OverClause) for details.
 
 ### array_count ###
  * Syntax:
@@ -610,3 +620,4 @@ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
  * The expected result is:
 
         -1.5
+
