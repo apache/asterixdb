@@ -50,6 +50,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
 /**
@@ -291,8 +292,15 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             inputVars.add(orderedColumn);
         }
 
-        List<LogicalVariable> outputVar = inputVars.get(0);
-        IntersectOperator intersect = new IntersectOperator(outputVar, inputVars);
+        List<LogicalVariable> inputVars0 = inputVars.get(0);
+        List<LogicalVariable> outputVars = new ArrayList<>(inputVars0.size());
+        for (LogicalVariable inputVar : inputVars0) {
+            LogicalVariable outputVar = context.newVar();
+            outputVars.add(outputVar);
+            VariableUtilities.substituteVariables(lop, inputVar, outputVar, context);
+        }
+
+        IntersectOperator intersect = new IntersectOperator(outputVars, inputVars);
         intersect.setSourceLocation(lop.getSourceLocation());
         for (ILogicalOperator secondarySearch : subRoots) {
             intersect.getInputs().add(secondarySearch.getInputs().get(0));
@@ -460,6 +468,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         selectRef = null;
         selectOp = null;
         selectCond = null;
+        typeEnvironment = null;
         subTree.reset();
     }
 }

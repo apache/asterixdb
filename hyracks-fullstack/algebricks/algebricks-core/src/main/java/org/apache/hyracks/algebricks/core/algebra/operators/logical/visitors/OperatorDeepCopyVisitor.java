@@ -209,12 +209,18 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
 
     @Override
     public ILogicalOperator visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
-        List<LogicalVariable> outputVar = new ArrayList<>(op.getOutputVars());
-        List<List<LogicalVariable>> inputVars = new ArrayList<>(op.getNumInput());
-        for (int i = 0; i < op.getNumInput(); i++) {
-            inputVars.add(new ArrayList<>(op.getInputVariables(i)));
+        List<LogicalVariable> newOutputVars = new ArrayList<>(op.getOutputVars());
+        int numInput = op.getNumInput();
+        List<List<LogicalVariable>> newCompareVars = new ArrayList<>(numInput);
+        List<List<LogicalVariable>> extraVars = op.getExtraVariables();
+        List<List<LogicalVariable>> newExtraVars = extraVars != null ? new ArrayList<>(numInput) : null;
+        for (int i = 0; i < numInput; i++) {
+            newCompareVars.add(new ArrayList<>(op.getCompareVariables(i)));
+            if (extraVars != null) {
+                newExtraVars.add(new ArrayList<>(extraVars.get(i)));
+            }
         }
-        return new IntersectOperator(outputVar, inputVars);
+        return new IntersectOperator(newOutputVars, newCompareVars, newExtraVars);
     }
 
     @Override

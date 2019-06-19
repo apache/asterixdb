@@ -48,7 +48,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.AssignPOper
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StreamProjectPOperator;
-import org.apache.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -259,7 +258,8 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                     int index = parentOp.getInputs().indexOf(ref);
                     ILogicalOperator childOp =
                             parentOp.getOperatorTag() == LogicalOperatorTag.PROJECT ? assignOperator : projectOperator;
-                    if (!HeuristicOptimizer.isHyracksOp(parentOp.getPhysicalOperator().getOperatorTag())) {
+                    if (parentOp.getPhysicalOperator().isMicroOperator()
+                            || parentOp.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
                         parentOp.getInputs().set(index, new MutableObject<ILogicalOperator>(childOp));
                     } else {
                         // If the parent operator is a hyracks operator,

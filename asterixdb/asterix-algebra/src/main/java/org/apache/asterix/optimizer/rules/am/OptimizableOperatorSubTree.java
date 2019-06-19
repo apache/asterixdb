@@ -377,6 +377,7 @@ public class OptimizableOperatorSubTree {
         setRootRef(null);
         getAssignsAndUnnestsRefs().clear();
         getAssignsAndUnnests().clear();
+        getVarsToFieldNameMap().clear();
         setDataSourceRef(null);
         setDataSourceType(DataSourceType.NO_DATASOURCE);
         setIxJoinOuterAdditionalDataSourceRefs(null);
@@ -384,6 +385,7 @@ public class OptimizableOperatorSubTree {
         setDataset(null);
         setIxJoinOuterAdditionalDatasets(null);
         setRecordType(null);
+        setMetaRecordType(null);
         setIxJoinOuterAdditionalRecordTypes(null);
     }
 

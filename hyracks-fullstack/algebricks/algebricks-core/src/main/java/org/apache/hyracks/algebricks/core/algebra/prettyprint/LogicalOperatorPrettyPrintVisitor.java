@@ -271,6 +271,22 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
                 }
                 buffer.append(str(op.getInputVariables(i).get(j)));
             }
+            buffer.append("] cmp [");
+            for (int j = 0; j < op.getCompareVariables(i).size(); j++) {
+                if (j > 0) {
+                    buffer.append(", ");
+                }
+                buffer.append(str(op.getCompareVariables(i).get(j)));
+            }
+            if (op.getExtraVariables() != null) {
+                buffer.append("] ext [");
+                for (int j = 0; j < op.getExtraVariables().get(i).size(); j++) {
+                    if (j > 0) {
+                        buffer.append(", ");
+                    }
+                    buffer.append(str(op.getExtraVariables().get(i).get(j)));
+                }
+            }
             buffer.append(']');
         }
         buffer.append("])");

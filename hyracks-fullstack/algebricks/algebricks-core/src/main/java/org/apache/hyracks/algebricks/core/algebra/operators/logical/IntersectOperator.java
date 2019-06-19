@@ -110,23 +110,25 @@ public class IntersectOperator extends AbstractLogicalOperator {
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         IVariableTypeEnvironment typeEnv = ctx.getOutputTypeEnvironment(inputs.get(0).getValue());
 
+        List<LogicalVariable> compareVars0 = compareVars.get(0);
         for (int i = 1; i < inputs.size(); i++) {
-            checkTypeConsistency(typeEnv, compareVars.get(0), ctx.getOutputTypeEnvironment(inputs.get(i).getValue()),
+            checkTypeConsistency(typeEnv, compareVars0, ctx.getOutputTypeEnvironment(inputs.get(i).getValue()),
                     compareVars.get(i));
         }
 
         IVariableTypeEnvironment env =
                 new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMetadataProvider());
         int i = 0;
-        for (; i < compareVars.get(0).size(); i++) {
-            env.setVarType(outputVars.get(i), typeEnv.getVarType(compareVars.get(0).get(i)));
+        for (; i < compareVars0.size(); i++) {
+            env.setVarType(outputVars.get(i), typeEnv.getVarType(compareVars0.get(i)));
         }
         if (extraVars != null) {
-            for (int k = 0; k < extraVars.get(0).size(); k++) {
-                env.setVarType(outputVars.get(i + k), typeEnv.getVarType(extraVars.get(0).get(k)));
+            List<LogicalVariable> extraVars0 = extraVars.get(0);
+            for (int k = 0; k < extraVars0.size(); k++) {
+                env.setVarType(outputVars.get(i + k), typeEnv.getVarType(extraVars0.get(k)));
             }
         }
-        return typeEnv;
+        return env;
     }
 
     public List<LogicalVariable> getOutputVars() {

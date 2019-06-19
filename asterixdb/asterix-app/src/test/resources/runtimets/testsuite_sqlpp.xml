@@ -5259,6 +5259,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="intersection-misc-01">
+        <output-dir compare="Text">intersection-misc-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="intersection-with-between">
         <output-dir compare="Text">intersection-with-between</output-dir>
       </compilation-unit>

@@ -31,6 +31,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
@@ -114,14 +115,15 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
         int nInput = logicalOp.getNumInput();
         int[][] compareFields = new int[nInput][];
 
-        IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
-                logicalOp.getCompareVariables(0), context.getTypeEnvironment(op), context);
+        List<LogicalVariable> compareVars0 = logicalOp.getCompareVariables(0);
+        IVariableTypeEnvironment inputTypeEnv0 = context.getTypeEnvironment(logicalOp.getInputs().get(0).getValue());
+        IBinaryComparatorFactory[] comparatorFactories =
+                JobGenHelper.variablesToAscBinaryComparatorFactories(compareVars0, inputTypeEnv0, context);
 
         INormalizedKeyComputerFactoryProvider nkcfProvider = context.getNormalizedKeyComputerFactoryProvider();
         INormalizedKeyComputerFactory nkcf = null;
-
         if (nkcfProvider != null) {
-            Object type = context.getTypeEnvironment(op).getVarType(logicalOp.getCompareVariables(0).get(0));
+            Object type = inputTypeEnv0.getVarType(compareVars0.get(0));
             if (type != null) {
                 nkcf = nkcfProvider.getNormalizedKeyComputerFactory(type, true);
             }

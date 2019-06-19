@@ -43,13 +43,6 @@ public class HeuristicOptimizer {
     private final List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> physicalRewrites;
     private final ILogicalPlan plan;
 
-    private static final PhysicalOperatorTag[] hyracksOperators =
-            new PhysicalOperatorTag[] { PhysicalOperatorTag.DATASOURCE_SCAN, PhysicalOperatorTag.BTREE_SEARCH,
-                    PhysicalOperatorTag.EXTERNAL_GROUP_BY, PhysicalOperatorTag.HDFS_READER,
-                    PhysicalOperatorTag.HYBRID_HASH_JOIN, PhysicalOperatorTag.IN_MEMORY_HASH_JOIN,
-                    PhysicalOperatorTag.NESTED_LOOP, PhysicalOperatorTag.PRE_SORTED_DISTINCT_BY,
-                    PhysicalOperatorTag.PRE_CLUSTERED_GROUP_BY, PhysicalOperatorTag.REPLICATE,
-                    PhysicalOperatorTag.STABLE_SORT, PhysicalOperatorTag.UNION_ALL, PhysicalOperatorTag.FORWARD };
     public static final PhysicalOperatorTag[] hyraxOperatorsBelowWhichJobGenIsDisabled = new PhysicalOperatorTag[] {};
 
     public HeuristicOptimizer(ILogicalPlan plan,
@@ -60,15 +53,6 @@ public class HeuristicOptimizer {
         this.context = context;
         this.logicalRewrites = logicalRewrites;
         this.physicalRewrites = physicalRewrites;
-    }
-
-    public static boolean isHyracksOp(PhysicalOperatorTag opTag) {
-        for (PhysicalOperatorTag t : hyracksOperators) {
-            if (t == opTag) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public void optimize() throws AlgebricksException {
