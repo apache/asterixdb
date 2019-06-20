@@ -91,7 +91,7 @@ public abstract class FunctionDataSource extends DataSource {
     protected abstract IDatasourceFunction createFunction(MetadataProvider metadataProvider,
             AlgebricksAbsolutePartitionConstraint locations);
 
-    protected static AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm) {
+    protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm) {
         String[] allPartitions = csm.getClusterLocations().getLocations();
         Set<String> ncs = new HashSet<>(Arrays.asList(allPartitions));
         return new AlgebricksAbsolutePartitionConstraint(ncs.toArray(new String[ncs.size()]));

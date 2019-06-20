@@ -49,7 +49,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public abstract class FunctionRewriter implements IFunctionToDataSourceRewriter {
 
-    private FunctionIdentifier functionId;
+    FunctionIdentifier functionId;
 
     public FunctionRewriter(FunctionIdentifier functionId) {
         this.functionId = functionId;

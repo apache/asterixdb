@@ -18,27 +18,30 @@
  */
 package org.apache.asterix.app.function;
 
+import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
 /**
  * This TPC-DS function is used to generate data with accordance to the specifications of the TPC Benchmark DS.
  */
-public class TPCDSDataGeneratorDatasource extends FunctionDataSource {
 
-    private final String tableName;
+public class TPCDSAllTablesDataGeneratorDatasource extends FunctionDataSource {
+
     private final double scalingFactor;
+    private final FunctionIdentifier functionIdentifier;
 
-    public TPCDSDataGeneratorDatasource(INodeDomain domain, String tableName, double scalingFactor)
-            throws AlgebricksException {
-        super(createDataSourceId(tableName, scalingFactor), domain);
-        this.tableName = tableName;
+    TPCDSAllTablesDataGeneratorDatasource(INodeDomain domain, double scalingFactor,
+            FunctionIdentifier functionIdentifier) throws AlgebricksException {
+        super(createDataSourceId(scalingFactor), domain);
         this.scalingFactor = scalingFactor;
+        this.functionIdentifier = functionIdentifier;
     }
 
     /**
@@ -46,20 +49,24 @@ public class TPCDSDataGeneratorDatasource extends FunctionDataSource {
      * DataSourceId. This eliminates the issue of creating a single function even though multiple functions calls
      * are happening with different parameters and the optimizer understands them as a single function.
      *
-     * @param tableName
-     *            table name to be added as part of the DataSourceId
      * @param scalingFactor
      *            scaling factor to be added as part of the DataSourceId
      * @return A DataSourceId that's based on the function details and its parameters
      */
-    private static DataSourceId createDataSourceId(String tableName, double scalingFactor) {
-        return new DataSourceId(TPCDSDataGeneratorRewriter.TPCDS_DATA_GENERATOR.getNamespace(),
-                TPCDSDataGeneratorRewriter.TPCDS_DATA_GENERATOR.getName(), tableName, Double.toString(scalingFactor));
+    private static DataSourceId createDataSourceId(double scalingFactor) {
+        return new DataSourceId(TPCDSAllTablesDataGeneratorRewriter.TPCDS_ALL_TABLES_DATA_GENERATOR.getNamespace(),
+                TPCDSAllTablesDataGeneratorRewriter.TPCDS_ALL_TABLES_DATA_GENERATOR.getName(),
+                Double.toString(scalingFactor));
     }
 
     @Override
     protected IDatasourceFunction createFunction(MetadataProvider metadataProvider,
             AlgebricksAbsolutePartitionConstraint locations) {
-        return new TPCDSDataGeneratorFunction(locations, tableName, scalingFactor);
+        return new TPCDSDataGeneratorFunction(locations, null, scalingFactor, functionIdentifier);
+    }
+
+    @Override
+    protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm) {
+        return new AlgebricksAbsolutePartitionConstraint(csm.getClusterLocations().getLocations());
     }
 }

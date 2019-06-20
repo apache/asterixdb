@@ -21,12 +21,14 @@ package org.apache.asterix.app.function;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.metadata.declared.AbstractDatasourceFunction;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * This TPC-DS function is used to generate data with accordance to the specifications of the TPC Benchmark DS.
  */
+
 public class TPCDSDataGeneratorFunction extends AbstractDatasourceFunction {
 
     private static final long serialVersionUID = 1L;
@@ -34,12 +36,14 @@ public class TPCDSDataGeneratorFunction extends AbstractDatasourceFunction {
     private final String tableName;
     private final double scalingFactor;
     private final int parallelism;
+    private final FunctionIdentifier functionIdentifier;
 
-    public TPCDSDataGeneratorFunction(AlgebricksAbsolutePartitionConstraint locations, String tableName,
-            double scalingFactor) {
+    TPCDSDataGeneratorFunction(AlgebricksAbsolutePartitionConstraint locations, String tableName, double scalingFactor,
+            FunctionIdentifier functionIdentifier) {
         super(locations);
         this.tableName = tableName;
         this.scalingFactor = scalingFactor;
+        this.functionIdentifier = functionIdentifier;
 
         /*
         TPC-DS has the option to parallelize the data generation and produce the data as chunks. We'll match the
@@ -51,6 +55,15 @@ public class TPCDSDataGeneratorFunction extends AbstractDatasourceFunction {
     @Override
     public IRecordReader<char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
-        return new TPCDSDataGeneratorReader(tableName, scalingFactor, parallelism, partition);
+        return new TPCDSDataGeneratorReader(tableName, scalingFactor, parallelism, partition, getFunctionIdentifier());
+    }
+
+    /**
+     * Gets the function identifier
+     *
+     * @return function identifier
+     */
+    private FunctionIdentifier getFunctionIdentifier() {
+        return functionIdentifier;
     }
 }
