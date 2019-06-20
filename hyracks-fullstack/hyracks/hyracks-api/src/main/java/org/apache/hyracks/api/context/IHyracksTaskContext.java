@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
 import org.apache.hyracks.api.job.IOperatorEnvironment;
 import org.apache.hyracks.api.job.JobFlag;
@@ -53,9 +54,16 @@ public interface IHyracksTaskContext
 
     Object getSharedObject();
 
-    public byte[] getJobParameter(byte[] name, int start, int length) throws HyracksException;
+    byte[] getJobParameter(byte[] name, int start, int length) throws HyracksException;
 
     Set<JobFlag> getJobFlags();
 
     IStatsCollector getStatsCollector();
+
+    /**
+     * Adds a warning to this {@link IHyracksTaskContext}
+     *
+     * @param warning
+     */
+    void warn(Warning warning);
 }

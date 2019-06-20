@@ -206,7 +206,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         counterMap.forEach((key, value) -> counters.put(key, value.get()));
         for (Task task : taskMap.values()) {
             TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(),
-                    new Hashtable<>(task.getPartitionSendProfile()), new StatsCollector());
+                    new Hashtable<>(task.getPartitionSendProfile()), new StatsCollector(), task.getWarnings());
             task.dumpProfile(taskProfile);
             jProfile.getTaskProfiles().put(task.getTaskAttemptId(), taskProfile);
         }

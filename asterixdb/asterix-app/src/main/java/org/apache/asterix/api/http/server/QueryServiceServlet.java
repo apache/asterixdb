@@ -31,6 +31,7 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -43,6 +44,7 @@ import java.util.function.Function;
 
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.app.result.ExecutionError;
+import org.apache.asterix.app.result.ExecutionWarning;
 import org.apache.asterix.app.result.ResponseMertics;
 import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.result.fields.ClientContextIdPrinter;
@@ -88,6 +90,7 @@ import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -468,7 +471,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         long errorCount = 1;
         Stats stats = new Stats();
         RequestExecutionState execution = new RequestExecutionState();
-        List<ICodedMessage> warnings = Collections.emptyList();
+        List<Warning> warnings = new ArrayList<>();
         Charset resultCharset = HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         PrintWriter httpWriter = response.writer();
         SessionOutput sessionOutput = createSessionOutput(httpWriter);
@@ -503,7 +506,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 setAccessControlHeaders(request, response);
                 response.setStatus(execution.getHttpStatus());
                 executeStatement(requestRef, statementsText, sessionOutput, resultProperties, stats, param, execution,
-                        optionalParams, statementParams, responsePrinter);
+                        optionalParams, statementParams, responsePrinter, warnings);
             }
             errorCount = 0;
         } catch (Exception | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError e) {
@@ -539,19 +542,21 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     protected void buildResponseResults(ResponsePrinter responsePrinter, SessionOutput sessionOutput,
-            ExecutionPlans plans) {
+            ExecutionPlans plans, List<Warning> warnings) {
         responsePrinter.addResultPrinter(new PlansPrinter(plans, sessionOutput.config().getPlanFormat()));
+        if (!warnings.isEmpty()) {
+            List<ICodedMessage> codedWarnings = new ArrayList<>();
+            warnings.forEach(warn -> codedWarnings.add(ExecutionWarning.of(warn)));
+            responsePrinter.addResultPrinter(new WarningsPrinter(codedWarnings));
+        }
     }
 
     protected void buildResponseFooters(long elapsedStart, long errorCount, Stats stats,
-            RequestExecutionState execution, List<ICodedMessage> warnings, Charset resultCharset,
+            RequestExecutionState execution, List<Warning> warnings, Charset resultCharset,
             ResponsePrinter responsePrinter, ResultDelivery delivery) {
         if (ResultDelivery.ASYNC != delivery) {
             // in case of ASYNC delivery, the status is printed by query translator
             responsePrinter.addFooterPrinter(new StatusPrinter(execution.getResultStatus()));
-        }
-        if (!warnings.isEmpty()) {
-            responsePrinter.addFooterPrinter(new WarningsPrinter(warnings));
         }
         final ResponseMertics mertics = ResponseMertics.of(System.nanoTime() - elapsedStart, execution.duration(),
                 stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount, warnings.size());
@@ -580,7 +585,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             SessionOutput sessionOutput, ResultProperties resultProperties, Stats stats,
             QueryServiceRequestParameters param, RequestExecutionState execution,
             Map<String, String> optionalParameters, Map<String, byte[]> statementParameters,
-            ResponsePrinter responsePrinter) throws Exception {
+            ResponsePrinter responsePrinter, List<Warning> warnings) throws Exception {
         IClusterManagementWork.ClusterState clusterState =
                 ((ICcApplicationContext) appCtx).getClusterStateManager().getState();
         if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
@@ -600,7 +605,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 optionalParameters, stmtParams, param.isMultiStatement());
         translator.compileAndExecute(getHyracksClientConnection(), requestParameters);
         execution.end();
-        buildResponseResults(responsePrinter, sessionOutput, translator.getExecutionPlans());
+        warnings.addAll(translator.getWarnings());
+        buildResponseResults(responsePrinter, sessionOutput, translator.getExecutionPlans(), warnings);
     }
 
     protected void handleExecuteStatementException(Throwable t, RequestExecutionState state,

@@ -152,7 +152,10 @@ public class TestExecutor {
             Collections.unmodifiableSet(new HashSet<>(Arrays.asList("store", "validate")));
     private static final int MAX_NON_UTF_8_STATEMENT_SIZE = 64 * 1024;
 
-    private final IPollTask plainExecutor = this::executeTestFile;
+    private final IPollTask plainExecutor = (testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
+            queryCount, expectedResultFileCtxs, testFile, actualPath, actualWarnCount) -> executeTestFile(testCaseCtx,
+                    ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount, expectedResultFileCtxs,
+                    testFile, actualPath, actualWarnCount);
 
     public static final String DELIVERY_ASYNC = "async";
     public static final String DELIVERY_DEFERRED = "deferred";
@@ -903,9 +906,8 @@ public class TestExecutor {
 
     public void executeTestFile(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
             String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit,
-            MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath)
-            throws Exception {
-        URI uri;
+            MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
+            MutableInt actualWarnCount) throws Exception {
         InputStream resultStream;
         File qbcFile;
         boolean failed = false;
@@ -933,11 +935,11 @@ public class TestExecutor {
             case "pollquery":
                 poll(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
                         expectedResultFileCtxs, testFile, actualPath, ctx.getType().substring("poll".length()),
-                        plainExecutor);
+                        actualWarnCount, plainExecutor);
                 break;
             case "polldynamic":
                 polldynamic(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
-                        expectedResultFileCtxs, testFile, actualPath);
+                        expectedResultFileCtxs, testFile, actualPath, actualWarnCount);
                 break;
             case "query":
             case "async":
@@ -957,9 +959,12 @@ public class TestExecutor {
                                 : expectedResultFileCtxs.get(queryCount.intValue()).getFile();
                 File actualResultFile = expectedResultFile == null ? null
                         : testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
-                executeQuery(OutputFormat.forCompilationUnit(cUnit), statement, variableCtx, ctx.getType(), testFile,
-                        expectedResultFile, actualResultFile, queryCount, expectedResultFileCtxs.size(),
-                        cUnit.getParameter(), ComparisonEnum.TEXT);
+                ExtractedResult extractedResult = executeQuery(OutputFormat.forCompilationUnit(cUnit), statement,
+                        variableCtx, ctx.getType(), testFile, expectedResultFile, actualResultFile, queryCount,
+                        expectedResultFileCtxs.size(), cUnit.getParameter(), ComparisonEnum.TEXT);
+                if (testCaseCtx.getTestCase().isCheckWarnings()) {
+                    validateWarnings(extractedResult.getWarnings(), cUnit.getExpectedWarn(), actualWarnCount);
+                }
                 break;
             case "store":
                 // This is a query that returns the expected output of a subsequent query
@@ -1232,7 +1237,7 @@ public class TestExecutor {
         } else if ("uri".equals(extension)) {
             resultStream = executeURI(reqType, URI.create(variablesReplaced), fmt, params, statusCodePredicate, body);
             if (extracResult) {
-                resultStream = ResultExtractor.extract(resultStream, UTF_8);
+                resultStream = ResultExtractor.extract(resultStream, UTF_8).getResult();
             }
         } else {
             throw new IllegalArgumentException("Unexpected format for method " + reqType + ": " + extension);
@@ -1261,9 +1266,9 @@ public class TestExecutor {
         queryCount.increment();
     }
 
-    public void executeQuery(OutputFormat fmt, String statement, Map<String, Object> variableCtx, String reqType,
-            File testFile, File expectedResultFile, File actualResultFile, MutableInt queryCount, int numResultFiles,
-            List<Parameter> params, ComparisonEnum compare) throws Exception {
+    public ExtractedResult executeQuery(OutputFormat fmt, String statement, Map<String, Object> variableCtx,
+            String reqType, File testFile, File expectedResultFile, File actualResultFile, MutableInt queryCount,
+            int numResultFiles, List<Parameter> params, ComparisonEnum compare) throws Exception {
         String delivery = DELIVERY_IMMEDIATE;
         if (reqType.equalsIgnoreCase("async")) {
             delivery = DELIVERY_ASYNC;
@@ -1275,6 +1280,7 @@ public class TestExecutor {
         boolean isJsonEncoded = isJsonEncoded(extractHttpRequestType(statement));
         Charset responseCharset = expectedResultFile == null ? UTF_8 : nextCharset();
         InputStream resultStream;
+        ExtractedResult extractedResult = null;
         if (DELIVERY_IMMEDIATE.equals(delivery)) {
             resultStream = executeQueryService(statement, fmt, uri, params, isJsonEncoded, responseCharset, null,
                     isCancellable(reqType));
@@ -1286,7 +1292,8 @@ public class TestExecutor {
                     resultStream = ResultExtractor.extractPlans(resultStream, responseCharset);
                     break;
                 default:
-                    resultStream = ResultExtractor.extract(resultStream, responseCharset);
+                    extractedResult = ResultExtractor.extract(resultStream, responseCharset);
+                    resultStream = extractedResult.getResult();
                     break;
             }
         } else {
@@ -1308,7 +1315,7 @@ public class TestExecutor {
             writeOutputToFile(actualResultFile, resultStream);
             if (expectedResultFile == null) {
                 if (reqType.equals("store")) {
-                    return;
+                    return extractedResult;
                 }
                 Assert.fail("no result file for " + testFile.toString() + "; queryCount: " + queryCount
                         + ", filectxs.size: " + numResultFiles);
@@ -1320,22 +1327,23 @@ public class TestExecutor {
         }
         // Deletes the matched result file.
         actualResultFile.getParentFile().delete();
+        return extractedResult;
     }
 
     private void polldynamic(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
             String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit,
-            MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath)
-            throws Exception {
+            MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
+            MutableInt actualWarnCount) throws Exception {
         IExpectedResultPoller poller = getExpectedResultPoller(statement);
         final String key = getKey(statement);
         poll(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount, expectedResultFileCtxs,
-                testFile, actualPath, "validate", new IPollTask() {
+                testFile, actualPath, "validate", actualWarnCount, new IPollTask() {
                     @Override
                     public void execute(TestCaseContext testCaseCtx, TestFileContext ctx,
                             Map<String, Object> variableCtx, String statement, boolean isDmlRecoveryTest,
                             ProcessBuilder pb, CompilationUnit cUnit, MutableInt queryCount,
-                            List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath)
-                            throws Exception {
+                            List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
+                            MutableInt actualWarnCount) throws Exception {
                         File actualResultFile = new File(actualPath, testCaseCtx.getTestCase().getFilePath()
                                 + File.separatorChar + cUnit.getName() + '.' + ctx.getSeqNum() + ".polled.adm");
                         if (actualResultFile.exists() && !actualResultFile.delete()) {
@@ -1373,7 +1381,7 @@ public class TestExecutor {
     private void poll(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
             String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit,
             MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
-            String newType, IPollTask pollTask) throws Exception {
+            String newType, MutableInt actualWarnCount, IPollTask pollTask) throws Exception {
         // polltimeoutsecs=nnn, polldelaysecs=nnn
         int timeoutSecs = getTimeoutSecs(statement);
         int retryDelaySecs = getRetryDelaySecs(statement);
@@ -1396,7 +1404,7 @@ public class TestExecutor {
                         try {
                             startSemaphore.release();
                             pollTask.execute(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
-                                    queryCount, expectedResultFileCtxs, testFile, actualPath);
+                                    queryCount, expectedResultFileCtxs, testFile, actualPath, actualWarnCount);
                         } finally {
                             endSemaphore.release();
                         }
@@ -1475,7 +1483,7 @@ public class TestExecutor {
     private InputStream executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri)
             throws Exception {
         InputStream resultStream = executeQueryService(statement, serviceUri, outputFormat, UTF_8);
-        return ResultExtractor.extract(resultStream, UTF_8);
+        return ResultExtractor.extract(resultStream, UTF_8).getResult();
     }
 
     protected static boolean isExpected(Exception e, CompilationUnit cUnit) {
@@ -1684,6 +1692,8 @@ public class TestExecutor {
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
             List<String> expectedErrors = cUnit.getExpectedError();
+            int expectedWarnCount = cUnit.getExpectedWarn().size();
+            MutableInt actualWarnCount = new MutableInt(0);
             LOGGER.info(
                     "Starting [TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " ... ");
             Map<String, Object> variableCtx = new HashMap<>();
@@ -1703,7 +1713,7 @@ public class TestExecutor {
                 try {
                     if (!testFile.getName().startsWith(DIAGNOSE)) {
                         executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
-                                queryCount, expectedResultFileCtxs, testFile, actualPath);
+                                queryCount, expectedResultFileCtxs, testFile, actualPath, actualWarnCount);
                     }
                 } catch (TestLoop loop) {
                     // rewind the iterator until we find our target
@@ -1735,6 +1745,7 @@ public class TestExecutor {
                         throw new Exception(
                                 "Test \"" + cUnit.getName() + "\" FAILED; expected exception was not thrown...");
                     }
+                    ensureWarnings(actualWarnCount.getValue(), expectedWarnCount, cUnit);
                     LOGGER.info(
                             "[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " PASSED ");
                     if (passedGroup != null) {
@@ -1757,7 +1768,7 @@ public class TestExecutor {
                         final File file = ctx.getFile();
                         final String statement = readTestFile(file);
                         executeTestFile(testCaseCtx, ctx, variableCtx, statement, false, pb, cUnit, new MutableInt(-1),
-                                Collections.emptyList(), file, null);
+                                Collections.emptyList(), file, null, new MutableInt(-1));
                     }
                 }
             } catch (Exception diagnosticFailure) {
@@ -1954,6 +1965,13 @@ public class TestExecutor {
         LOGGER.info("Cluster state now " + desiredState);
     }
 
+    protected void ensureWarnings(int actualWarnCount, int expectedWarnCount, CompilationUnit cUnit) throws Exception {
+        if (actualWarnCount < expectedWarnCount) {
+            LOGGER.error("Test {} failed to raise (an) expected warning(s)", cUnit.getName());
+            throw new Exception("Test \"" + cUnit.getName() + "\" FAILED; expected warning(s) was not returned...");
+        }
+    }
+
     private void executeStorageCommand(String[] command) throws Exception {
         String srcNode = command[0];
         String api = command[1];
@@ -2078,11 +2096,25 @@ public class TestExecutor {
         final URI uri = getQueryServiceUri(testFile);
         final InputStream inputStream = executeQueryService(statement, OutputFormat.forCompilationUnit(cUnit), uri,
                 cUnit.getParameter(), true, responseCharset, null, false);
-        return ResultExtractor.extract(inputStream, responseCharset);
+        return ResultExtractor.extract(inputStream, responseCharset).getResult();
     }
 
     private URI getQueryServiceUri(String extension) throws URISyntaxException {
         return extension.endsWith(AQL) ? getEndpoint(Servlets.QUERY_AQL) : getEndpoint(Servlets.QUERY_SERVICE);
+    }
+
+    private void validateWarnings(List<String> actualWarnings, List<String> expectedWarn, MutableInt actualWarnCount)
+            throws Exception {
+        if (actualWarnCount.getValue() > expectedWarn.size()) {
+            throw new IllegalStateException("returned warnings exceeded expected warnings");
+        }
+        for (String actualWarn : actualWarnings) {
+            if (expectedWarn.stream().anyMatch(actualWarn::contains)) {
+                actualWarnCount.increment();
+            } else {
+                throw new Exception("unexpected warning was encountered (" + actualWarn + ")");
+            }
+        }
     }
 
     private static String toQueryServiceHandle(String handle) {

@@ -22,10 +22,13 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.job.profiling.StatsCollector;
@@ -44,6 +47,8 @@ public class TaskProfile extends AbstractProfile {
 
     private IStatsCollector statsCollector;
 
+    private Set<Warning> warnings;
+
     public static TaskProfile create(DataInput dis) throws IOException {
         TaskProfile taskProfile = new TaskProfile();
         taskProfile.readFields(dis);
@@ -55,10 +60,11 @@ public class TaskProfile extends AbstractProfile {
     }
 
     public TaskProfile(TaskAttemptId taskAttemptId, Map<PartitionId, PartitionProfile> partitionSendProfile,
-            IStatsCollector statsCollector) {
+            IStatsCollector statsCollector, Set<Warning> warnings) {
         this.taskAttemptId = taskAttemptId;
         this.partitionSendProfile = new HashMap<>(partitionSendProfile);
         this.statsCollector = statsCollector;
+        this.warnings = warnings;
     }
 
     public TaskAttemptId getTaskId() {
@@ -115,6 +121,10 @@ public class TaskProfile extends AbstractProfile {
         return statsCollector;
     }
 
+    public Set<Warning> getWarnings() {
+        return warnings;
+    }
+
     @Override
     public void readFields(DataInput input) throws IOException {
         super.readFields(input);
@@ -127,6 +137,8 @@ public class TaskProfile extends AbstractProfile {
             partitionSendProfile.put(key, value);
         }
         statsCollector = StatsCollector.create(input);
+        warnings = new HashSet<>();
+        deserializeWarnings(input, warnings);
     }
 
     @Override
@@ -139,5 +151,20 @@ public class TaskProfile extends AbstractProfile {
             entry.getValue().writeFields(output);
         }
         statsCollector.writeFields(output);
+        serializeWarnings(output);
+    }
+
+    private void serializeWarnings(DataOutput output) throws IOException {
+        output.writeInt(warnings.size());
+        for (Warning warning : warnings) {
+            warning.writeFields(output);
+        }
+    }
+
+    private static void deserializeWarnings(DataInput input, Set<Warning> warnings) throws IOException {
+        int warnCount = input.readInt();
+        for (int i = 0; i < warnCount; i++) {
+            warnings.add(Warning.create(input));
+        }
     }
 }

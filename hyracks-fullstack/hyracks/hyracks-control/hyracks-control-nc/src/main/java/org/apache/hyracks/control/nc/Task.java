@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
@@ -46,6 +47,7 @@ import org.apache.hyracks.api.dataflow.state.IStateObject;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
@@ -115,6 +117,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private volatile boolean completed = false;
 
+    private final Set<Warning> warnings;
+
     public Task(Joblet joblet, Set<JobFlag> jobFlags, TaskAttemptId taskId, String displayName,
             ExecutorService executor, NodeControllerService ncs,
             List<List<PartitionChannel>> inputChannelsFromConnectors) {
@@ -133,6 +137,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         this.ncs = ncs;
         this.inputChannelsFromConnectors = inputChannelsFromConnectors;
         statsCollector = new StatsCollector();
+        warnings = ConcurrentHashMap.newKeySet();
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -468,8 +473,17 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         return statsCollector;
     }
 
+    @Override
+    public void warn(Warning warning) {
+        warnings.add(warning);
+    }
+
     public boolean isCompleted() {
         return completed;
+    }
+
+    public Set<Warning> getWarnings() {
+        return warnings;
     }
 
     @Override

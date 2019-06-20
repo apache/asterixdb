@@ -48,6 +48,7 @@ import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.JobFlag;
@@ -763,6 +764,11 @@ public class LSMInvertedIndexTestUtils {
         @Override
         public IStatsCollector getStatsCollector() {
             return null;
+        }
+
+        @Override
+        public void warn(Warning warning) {
+            // no-op
         }
     }
 

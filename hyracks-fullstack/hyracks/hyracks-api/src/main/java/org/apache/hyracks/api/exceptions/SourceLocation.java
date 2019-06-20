@@ -19,7 +19,11 @@
 
 package org.apache.hyracks.api.exceptions;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
+import java.util.Objects;
 
 public final class SourceLocation implements Serializable {
 
@@ -38,7 +42,33 @@ public final class SourceLocation implements Serializable {
         return line;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        SourceLocation that = (SourceLocation) o;
+        return line == that.line && column == that.column;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(line, column);
+    }
+
     public int getColumn() {
         return column;
+    }
+
+    public void writeFields(DataOutput output) throws IOException {
+        output.writeInt(line);
+        output.writeInt(column);
+    }
+
+    public static SourceLocation create(DataInput dataInput) throws IOException {
+        return new SourceLocation(dataInput.readInt(), dataInput.readInt());
     }
 }

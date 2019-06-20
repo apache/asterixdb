@@ -19,6 +19,7 @@
 
 package org.apache.asterix.api.http.server;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +46,7 @@ import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.ResultProperties;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.http.api.IChannelClosedHandler;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.HttpServer;
@@ -71,7 +73,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             SessionOutput sessionOutput, ResultProperties resultProperties, IStatementExecutor.Stats stats,
             QueryServiceRequestParameters param, RequestExecutionState execution,
             Map<String, String> optionalParameters, Map<String, byte[]> statementParameters,
-            ResponsePrinter responsePrinter) throws Exception {
+            ResponsePrinter responsePrinter, List<Warning> warnings) throws Exception {
         // Running on NC -> send 'execute' message to CC
         INCServiceContext ncCtx = (INCServiceContext) serviceCtx;
         INCMessageBroker ncMb = (INCMessageBroker) ncCtx.getMessageBroker();
@@ -121,7 +123,8 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             responsePrinter.addResultPrinter(
                     new NcResultPrinter(appCtx, responseMsg, getResultSet(), delivery, sessionOutput, stats));
         }
-        buildResponseResults(responsePrinter, sessionOutput, responseMsg.getExecutionPlans());
+        warnings.addAll(responseMsg.getWarnings());
+        buildResponseResults(responsePrinter, sessionOutput, responseMsg.getExecutionPlans(), warnings);
     }
 
     private void cancelQuery(INCMessageBroker messageBroker, String nodeId, String uuid, String clientContextID,

@@ -194,6 +194,7 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.UnmanagedFileSplit;
 import org.apache.hyracks.api.job.JobFlag;
@@ -230,6 +231,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected final EnumSet<JobFlag> jobFlags = EnumSet.noneOf(JobFlag.class);
     protected final IMetadataLockManager lockManager;
     protected final IResponsePrinter responsePrinter;
+    protected final List<Warning> warnings;
 
     public QueryTranslator(ICcApplicationContext appCtx, List<Statement> statements, SessionOutput output,
             ILangCompilationProvider compilationProvider, ExecutorService executorService,
@@ -246,6 +248,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         activeDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
         this.executorService = executorService;
         this.responsePrinter = responsePrinter;
+        warnings = new ArrayList<>();
         if (appCtx.getServiceContext().getAppConfig().getBoolean(CCConfig.Option.ENFORCE_FRAME_WRITER_PROTOCOL)) {
             this.jobFlags.add(JobFlag.ENFORCE_CONTRACT);
         }
@@ -2544,6 +2547,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 (org.apache.asterix.api.common.ResultMetadata) controllerService.getResultDirectoryService()
                         .getResultMetadata(jobId, rsId);
         stats.setProcessedObjects(resultMetadata.getProcessedObjects());
+        warnings.addAll(resultMetadata.getWarnings());
     }
 
     private void asyncCreateAndRunJob(IHyracksClientConnection hcc, IStatementCompiler compiler, IMetadataLocker locker,
@@ -2915,6 +2919,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     public String getActiveDataverse(Identifier dataverse) {
         return getActiveDataverseName(dataverse != null ? dataverse.getValue() : null);
+    }
+
+    @Override
+    public List<Warning> getWarnings() {
+        return warnings;
     }
 
     /**

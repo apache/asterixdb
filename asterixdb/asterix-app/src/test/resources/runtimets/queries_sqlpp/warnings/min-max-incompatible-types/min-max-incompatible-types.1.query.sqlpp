@@ -16,28 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.exceptions;
 
-public interface IFormattedException {
-
-    /**
-     * Gets the component of this {@link IFormattedException}
-     *
-     * @return the exception component
-     */
-    String getComponent();
-
-    /**
-     * Gets the error code of this {@link IFormattedException}
-     *
-     * @return the error code
-     */
-    int getErrorCode();
-
-    /**
-     * Gets the message of this exception
-     *
-     * @return the exception message
-     */
-    String getMessage();
-}
+SELECT VALUE ARRAY_MIN([1, '2']);

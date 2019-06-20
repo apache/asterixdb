@@ -19,9 +19,12 @@
 package org.apache.asterix.app.result;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.asterix.api.common.ResultMetadata;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.IJobResultCallback;
 import org.apache.hyracks.api.result.ResultJobRecord;
@@ -60,11 +63,12 @@ public class JobResultCallback implements IJobResultCallback {
         }
         final ResultMetadata metadata = (ResultMetadata) resultSetMetaData.getMetadata();
         metadata.setJobDuration(resultJobRecord.getJobDuration());
-        metadata.setProcessedObjects(getJobProccssedObjects(jobId));
+        aggregateJobStats(jobId, metadata);
     }
 
-    private long getJobProccssedObjects(JobId jobId) {
+    private void aggregateJobStats(JobId jobId, ResultMetadata metadata) {
         long processedObjects = 0;
+        Set<Warning> warnings = new HashSet<>();
         IJobManager jobManager =
                 ((ClusterControllerService) appCtx.getServiceContext().getControllerService()).getJobManager();
         final JobRun run = jobManager.get(jobId);
@@ -75,9 +79,11 @@ public class JobResultCallback implements IJobResultCallback {
                 final Collection<TaskProfile> jobletTasksProfile = jp.getTaskProfiles().values();
                 for (TaskProfile tp : jobletTasksProfile) {
                     processedObjects += tp.getStatsCollector().getAggregatedStats().getTupleCounter().get();
+                    warnings.addAll(tp.getWarnings());
                 }
             }
         }
-        return processedObjects;
+        metadata.setProcessedObjects(processedObjects);
+        metadata.setWarnings(warnings);
     }
 }

@@ -16,28 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.exceptions;
+package org.apache.asterix.test.common;
 
-public interface IFormattedException {
+import java.io.InputStream;
+import java.util.List;
 
-    /**
-     * Gets the component of this {@link IFormattedException}
-     *
-     * @return the exception component
-     */
-    String getComponent();
+public class ExtractedResult {
 
-    /**
-     * Gets the error code of this {@link IFormattedException}
-     *
-     * @return the error code
-     */
-    int getErrorCode();
+    private InputStream result;
+    private List<String> warnings;
 
-    /**
-     * Gets the message of this exception
-     *
-     * @return the exception message
-     */
-    String getMessage();
+    public void setResult(InputStream result) {
+        this.result = result;
+    }
+
+    public void setWarnings(List<String> warnings) {
+        this.warnings = warnings;
+    }
+
+    public InputStream getResult() {
+        return result;
+    }
+
+    public List<String> getWarnings() {
+        return warnings;
+    }
 }

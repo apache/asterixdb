@@ -12354,4 +12354,13 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="warnings">
+    <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="min-max-incompatible-types">
+        <output-dir compare="Text">min-max-incompatible-types</output-dir>
+        <expected-warn>ASX0003: Type incompatibility: function min/max gets incompatible input values: bigint and string</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: min/max cannot process input type object</expected-warn>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

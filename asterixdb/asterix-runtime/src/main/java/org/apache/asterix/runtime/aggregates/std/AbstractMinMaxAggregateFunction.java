@@ -20,6 +20,8 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.utils.WarningUtil;
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ComparatorUtil;
 import org.apache.asterix.om.types.ATypeTag;
@@ -47,12 +49,14 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
     private final boolean isMin;
     private final IAType aggFieldType;
     protected final Type type;
+    protected final IHyracksTaskContext context;
     protected ATypeTag aggType;
     private ILogicalBinaryComparator cmp;
 
     AbstractMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin,
             SourceLocation sourceLoc, Type type, IAType aggFieldType) throws HyracksDataException {
         super(sourceLoc);
+        this.context = context;
         this.eval = args[0].createScalarEvaluator(context);
         this.isMin = isMin;
         this.aggFieldType = aggFieldType;
@@ -83,29 +87,29 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             // First value encountered. Set type, comparator, and initial value.
             if (ILogicalBinaryComparator.inequalityUndefined(typeTag)) {
-                handleInvalidInput();
+                handleUnsupportedInput(typeTag);
                 return;
             }
             aggType = typeTag;
             cmp = ComparatorUtil.createLogicalComparator(aggFieldType, aggFieldType, false);
             outputVal.assign(inputVal);
         } else if (!ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            handleInvalidInput();
+            handleIncompatibleInput(typeTag);
         } else {
             // the two values are compatible non-null/non-missing values
             if (aggType == typeTag) {
-                compareAndUpdate(cmp, inputVal, outputVal);
+                compareAndUpdate(cmp, inputVal, outputVal, typeTag);
                 return;
             }
             if (ATypeHierarchy.canPromote(aggType, typeTag)) {
                 // switch to new comp & aggregation type (i.e. current min/max is int and new input is double)
                 castValue(ATypeHierarchy.getTypePromoteComputer(aggType, typeTag), outputVal, tempValForCasting);
                 outputVal.assign(tempValForCasting);
-                compareAndUpdate(cmp, inputVal, outputVal);
+                compareAndUpdate(cmp, inputVal, outputVal, typeTag);
                 aggType = typeTag;
             } else {
                 castValue(ATypeHierarchy.getTypePromoteComputer(typeTag, aggType), inputVal, tempValForCasting);
-                compareAndUpdate(cmp, tempValForCasting, outputVal);
+                compareAndUpdate(cmp, tempValForCasting, outputVal, typeTag);
             }
         }
     }
@@ -151,12 +155,18 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
         return aggType == ATypeTag.NULL;
     }
 
-    private void handleInvalidInput() {
-        aggType = ATypeTag.NULL;
+    private void handleIncompatibleInput(ATypeTag typeTag) {
+        context.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_INCOMPATIBLE, "min/max", aggType, typeTag));
+        this.aggType = ATypeTag.NULL;
     }
 
-    private void compareAndUpdate(ILogicalBinaryComparator c, IPointable newVal, ArrayBackedValueStorage currentVal)
-            throws HyracksDataException {
+    private void handleUnsupportedInput(ATypeTag typeTag) {
+        context.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_UNSUPPORTED, "min/max", typeTag));
+        this.aggType = ATypeTag.NULL;
+    }
+
+    private void compareAndUpdate(ILogicalBinaryComparator c, IPointable newVal, ArrayBackedValueStorage currentVal,
+            ATypeTag typeTag) throws HyracksDataException {
         // newVal is never NULL/MISSING here. it's already checked up. current value is the first encountered non-null.
         ILogicalBinaryComparator.Result result = c.compare(newVal, currentVal);
         switch (result) {
@@ -179,7 +189,7 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
                 aggType = ATypeTag.NULL;
                 return;
             case INCOMPARABLE:
-                handleInvalidInput();
+                handleIncompatibleInput(typeTag);
                 return;
             default:
                 // EQ, do nothing

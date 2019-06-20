@@ -18,7 +18,10 @@
  */
 package org.apache.asterix.api.common;
 
+import java.util.Set;
+
 import org.apache.asterix.translator.SessionConfig;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.result.IResultMetadata;
 
 public class ResultMetadata implements IResultMetadata {
@@ -26,6 +29,7 @@ public class ResultMetadata implements IResultMetadata {
     private final SessionConfig.OutputFormat format;
     private long jobDuration;
     private long processedObjects;
+    private Set<Warning> warnings;
 
     public ResultMetadata(SessionConfig.OutputFormat format) {
         this.format = format;
@@ -47,8 +51,16 @@ public class ResultMetadata implements IResultMetadata {
         this.jobDuration = jobDuration;
     }
 
+    public void setWarnings(Set<Warning> warnings) {
+        this.warnings = warnings;
+    }
+
     public long getJobDuration() {
         return jobDuration;
+    }
+
+    public Set<Warning> getWarnings() {
+        return warnings;
     }
 
     @Override

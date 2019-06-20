@@ -38,6 +38,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
@@ -46,6 +47,12 @@ public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFu
 
     public AbstractScalarAggregateDescriptor(IFunctionDescriptorFactory aggFuncDescFactory) {
         this.aggFuncDesc = (AbstractAggregateFunctionDynamicDescriptor) aggFuncDescFactory.createFunctionDescriptor();
+    }
+
+    @Override
+    public void setSourceLocation(SourceLocation sourceLoc) {
+        super.setSourceLocation(sourceLoc);
+        aggFuncDesc.setSourceLocation(sourceLoc);
     }
 
     @Override

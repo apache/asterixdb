@@ -19,6 +19,8 @@
 
 package org.apache.asterix.app.message;
 
+import java.util.List;
+
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.messaging.api.MessageFuture;
@@ -26,6 +28,7 @@ import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.asterix.translator.ExecutionPlans;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.Warning;
 
 public final class ExecuteStatementResponseMessage implements INcAddressedMessage {
     private static final long serialVersionUID = 1L;
@@ -41,6 +44,8 @@ public final class ExecuteStatementResponseMessage implements INcAddressedMessag
     private Throwable error;
 
     private ExecutionPlans executionPlans;
+
+    private List<Warning> warnings;
 
     public ExecuteStatementResponseMessage(long requestMessageId) {
         this.requestMessageId = requestMessageId;
@@ -93,6 +98,14 @@ public final class ExecuteStatementResponseMessage implements INcAddressedMessag
 
     public void setExecutionPlans(ExecutionPlans executionPlans) {
         this.executionPlans = executionPlans;
+    }
+
+    public List<Warning> getWarnings() {
+        return warnings;
+    }
+
+    public void setWarnings(List<Warning> warnings) {
+        this.warnings = warnings;
     }
 
     @Override

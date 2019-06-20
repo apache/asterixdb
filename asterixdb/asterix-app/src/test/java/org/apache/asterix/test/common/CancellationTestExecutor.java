@@ -126,4 +126,10 @@ public class CancellationTestExecutor extends TestExecutor {
             return true;
         }
     }
+
+    @Override
+    protected void ensureWarnings(int actualWarnCount, int expectedWarnCount, TestCase.CompilationUnit cUnit)
+            throws Exception {
+        // skip checking warnings as currently cancelled queries with warnings might not run successfully at all
+    }
 }

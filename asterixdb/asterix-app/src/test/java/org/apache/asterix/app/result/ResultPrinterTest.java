@@ -77,7 +77,8 @@ public class ResultPrinterTest {
         boolean exceptionThrown = false;
         try {
             // ensure result is valid json and error will be returned and not results.
-            ResultExtractor.extract(IOUtils.toInputStream(resultStr, StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+            ResultExtractor.extract(IOUtils.toInputStream(resultStr, StandardCharsets.UTF_8), StandardCharsets.UTF_8)
+                    .getResult();
         } catch (Exception e) {
             exceptionThrown = true;
             Assert.assertTrue(e.getMessage().contains(expectedException.getMessage()));

@@ -37,6 +37,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.result.ResultSetId;
@@ -163,4 +164,11 @@ public interface IStatementExecutor {
      * @return the responer printer
      */
     IResponsePrinter getResponsePrinter();
+
+    /**
+     * Gets the warnings generated during compiling and exeucting a request
+     *
+     * @return the list of warnings
+     */
+    List<Warning> getWarnings();
 }

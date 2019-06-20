@@ -20,9 +20,11 @@ package org.apache.asterix.test.common;
 
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -34,6 +36,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Iterators;
 
@@ -82,16 +85,16 @@ public class ResultExtractor {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    public static InputStream extract(InputStream resultStream, Charset resultCharset) throws Exception {
-        return extract(resultStream, EnumSet.of(ResultField.RESULTS), resultCharset);
+    public static ExtractedResult extract(InputStream resultStream, Charset resultCharset) throws Exception {
+        return extract(resultStream, EnumSet.of(ResultField.RESULTS, ResultField.WARNINGS), resultCharset);
     }
 
     public static InputStream extractMetrics(InputStream resultStream, Charset resultCharset) throws Exception {
-        return extract(resultStream, EnumSet.of(ResultField.METRICS), resultCharset);
+        return extract(resultStream, EnumSet.of(ResultField.METRICS), resultCharset).getResult();
     }
 
     public static InputStream extractPlans(InputStream resultStream, Charset resultCharset) throws Exception {
-        return extract(resultStream, EnumSet.of(ResultField.PLANS), resultCharset);
+        return extract(resultStream, EnumSet.of(ResultField.PLANS), resultCharset).getResult();
     }
 
     public static String extractHandle(InputStream resultStream, Charset responseCharset) throws Exception {
@@ -110,8 +113,9 @@ public class ResultExtractor {
         return null;
     }
 
-    private static InputStream extract(InputStream resultStream, EnumSet<ResultField> resultFields,
+    private static ExtractedResult extract(InputStream resultStream, EnumSet<ResultField> resultFields,
             Charset resultCharset) throws Exception {
+        ExtractedResult extractedResult = new ExtractedResult();
         final String resultStr = IOUtils.toString(resultStream, resultCharset);
         final ObjectNode result = OBJECT_MAPPER.readValue(resultStr, ObjectNode.class);
 
@@ -168,14 +172,16 @@ public class ResultExtractor {
                 case STATUS:
                 case TYPE:
                 case PLANS:
-                case WARNINGS:
                     resultBuilder.append(OBJECT_MAPPER.writeValueAsString(fieldValue));
+                case WARNINGS:
+                    extractWarnings(fieldValue, extractedResult);
                     break;
                 default:
                     throw new IllegalStateException("Unexpected result field: " + fieldKind);
             }
         }
-        return IOUtils.toInputStream(resultBuilder, resultCharset);
+        extractedResult.setResult(IOUtils.toInputStream(resultBuilder, resultCharset));
+        return extractedResult;
     }
 
     private static void checkForErrors(ObjectNode result) throws Exception {
@@ -187,5 +193,16 @@ public class ResultExtractor {
             }
             throw new Exception(errors.asText());
         }
+    }
+
+    private static void extractWarnings(JsonNode warningsValue, ExtractedResult exeResult) {
+        List<String> warnings = new ArrayList<>();
+        if (warningsValue.isArray()) {
+            final ArrayNode warningsArray = (ArrayNode) warningsValue;
+            for (JsonNode warn : warningsArray) {
+                warnings.add(warn.get("msg").asText());
+            }
+        }
+        exeResult.setWarnings(warnings);
     }
 }

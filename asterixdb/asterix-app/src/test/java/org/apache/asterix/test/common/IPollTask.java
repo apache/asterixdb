@@ -43,9 +43,11 @@ public interface IPollTask {
      * @param expectedResultFileCtxs
      * @param testFile
      * @param actualPath
+     * @param actualWarnCount
      */
     void execute(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx, String statement,
             boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit, MutableInt queryCount,
-            List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath) throws Exception;
+            List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath, MutableInt actualWarnCount)
+            throws Exception;
 
 }

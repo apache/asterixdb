@@ -19,6 +19,7 @@
 package org.apache.asterix.app.result;
 
 import org.apache.asterix.common.api.ICodedMessage;
+import org.apache.hyracks.api.exceptions.Warning;
 
 public class ExecutionWarning implements ICodedMessage {
 
@@ -28,6 +29,10 @@ public class ExecutionWarning implements ICodedMessage {
     public ExecutionWarning(int code, String message) {
         this.code = code;
         this.message = message;
+    }
+
+    public static ICodedMessage of(Warning warning) {
+        return new ExecutionWarning(1, warning.getMessage());
     }
 
     @Override
