@@ -39,7 +39,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Syntax:
 
-      CUME_DIST() OVER ([window-partition-clause] window-order-clause)
+        CUME_DIST() OVER ([window-partition-clause] window-order-clause)
 
 * Returns the percentile rank of the current tuple as part of the cumulative
   distribution – that is, the number of tuples ranked lower than or equal to
@@ -63,60 +63,60 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Example:
 
-  For each author, find the cumulative distribution of all messages
-  in order of message ID.
+    For each author, find the cumulative distribution of all messages
+    in order of message ID.
 
-      SELECT m.messageId, m.authorId, CUME_DIST() OVER (
-        PARTITION BY m.authorId
-        ORDER BY m.messageId
-      ) AS `rank`
-      FROM GleambookMessages AS m;
+        SELECT m.messageId, m.authorId, CUME_DIST() OVER (
+          PARTITION BY m.authorId
+          ORDER BY m.messageId
+        ) AS `rank`
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "rank": 0.2,
-          "messageId": 2,
-          "authorId": 1
-        },
-        {
-          "rank": 0.4,
-          "messageId": 4,
-          "authorId": 1
-        },
-        {
-          "rank": 0.6,
-          "messageId": 8,
-          "authorId": 1
-        },
-        {
-          "rank": 0.8,
-          "messageId": 10,
-          "authorId": 1
-        },
-        {
-          "rank": 1,
-          "messageId": 11,
-          "authorId": 1
-        },
-        {
-          "rank": 0.5,
-          "messageId": 3,
-          "authorId": 2
-        },
-        {
-          "rank": 1,
-          "messageId": 6,
-          "authorId": 2
-        }
-      ]
+        [
+          {
+            "rank": 0.2,
+            "messageId": 2,
+            "authorId": 1
+          },
+          {
+            "rank": 0.4,
+            "messageId": 4,
+            "authorId": 1
+          },
+          {
+            "rank": 0.6,
+            "messageId": 8,
+            "authorId": 1
+          },
+          {
+            "rank": 0.8,
+            "messageId": 10,
+            "authorId": 1
+          },
+          {
+            "rank": 1,
+            "messageId": 11,
+            "authorId": 1
+          },
+          {
+            "rank": 0.5,
+            "messageId": 3,
+            "authorId": 2
+          },
+          {
+            "rank": 1,
+            "messageId": 6,
+            "authorId": 2
+          }
+        ]
 
 ### dense_rank ###
 
 * Syntax:
 
-      DENSE_RANK() OVER ([window-partition-clause] window-order-clause)
+        DENSE_RANK() OVER ([window-partition-clause] window-order-clause)
 
 * Returns the dense rank of the current tuple – that is, the number of
   distinct tuples preceding this tuple in the current window partition, plus
@@ -146,67 +146,67 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Example:
 
-  For each author, find the dense rank of all messages in order of location.
+    For each author, find the dense rank of all messages in order of location.
 
-      SELECT m.authorId, m.messageId, m.senderLocation[1] as longitude,
-      DENSE_RANK() OVER (
-        PARTITION BY m.authorId
-        ORDER BY m.senderLocation[1]
-      ) AS `rank`
-      FROM GleambookMessages AS m;
+        SELECT m.authorId, m.messageId, m.senderLocation[1] as longitude,
+        DENSE_RANK() OVER (
+          PARTITION BY m.authorId
+          ORDER BY m.senderLocation[1]
+        ) AS `rank`
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "rank": 1,
-          "authorId": 1,
-          "messageId": 10,
-          "longitude": 70.01
-        },
-        {
-          "rank": 2,
-          "authorId": 1,
-          "messageId": 11,
-          "longitude": 77.49
-        },
-        {
-          "rank": 3,
-          "authorId": 1,
-          "messageId": 2,
-          "longitude": 80.87
-        },
-        {
-          "rank": 3,
-          "authorId": 1,
-          "messageId": 8,
-          "longitude": 80.87
-        },
-        {
-          "rank": 4,
-          "authorId": 1,
-          "messageId": 4,
-          "longitude": 97.04
-        },
-        {
-          "rank": 1,
-          "authorId": 2,
-          "messageId": 6,
-          "longitude": 75.56
-        },
-        {
-          "rank": 2,
-          "authorId": 2,
-          "messageId": 3,
-          "longitude": 81.01
-        }
-      ]
+        [
+          {
+            "rank": 1,
+            "authorId": 1,
+            "messageId": 10,
+            "longitude": 70.01
+          },
+          {
+            "rank": 2,
+            "authorId": 1,
+            "messageId": 11,
+            "longitude": 77.49
+          },
+          {
+            "rank": 3,
+            "authorId": 1,
+            "messageId": 2,
+            "longitude": 80.87
+          },
+          {
+            "rank": 3,
+            "authorId": 1,
+            "messageId": 8,
+            "longitude": 80.87
+          },
+          {
+            "rank": 4,
+            "authorId": 1,
+            "messageId": 4,
+            "longitude": 97.04
+          },
+          {
+            "rank": 1,
+            "authorId": 2,
+            "messageId": 6,
+            "longitude": 75.56
+          },
+          {
+            "rank": 2,
+            "authorId": 2,
+            "messageId": 3,
+            "longitude": 81.01
+          }
+        ]
 
 ### first_value ###
 
 * Syntax:
 
-      FIRST_VALUE(expr) [nulls-treatment] OVER (window-definition)
+        FIRST_VALUE(expr) [nulls-treatment] OVER (window-definition)
 
 * Returns the requested value from the first tuple in the current window
   frame, where the window frame is specified by the [window
@@ -231,7 +231,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
         - `RESPECT NULLS`: If the values for any tuples evaluate to NULL or
           MISSING, those tuples are included when finding the first tuple.
 
-      If this modifier is omitted, the default is `RESPECT NULLS`.
+        If this modifier is omitted, the default is `RESPECT NULLS`.
 
 * Clauses:
 
@@ -265,69 +265,69 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Example:
 
-  For each author, show the length of each message, including the
-  length of the shortest message from that author.
+    For each author, show the length of each message, including the
+    length of the shortest message from that author.
 
-      SELECT m.authorId, m.messageId,
-      LENGTH(m.message) AS message_length,
-      FIRST_VALUE(LENGTH(m.message)) OVER (
-        PARTITION BY m.authorId
-        ORDER BY LENGTH(m.message)
-      ) AS shortest_message
-      FROM GleambookMessages AS m;
+        SELECT m.authorId, m.messageId,
+        LENGTH(m.message) AS message_length,
+        FIRST_VALUE(LENGTH(m.message)) OVER (
+          PARTITION BY m.authorId
+          ORDER BY LENGTH(m.message)
+        ) AS shortest_message
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "message_length": 31,
-          "shortest_message": 31,
-          "authorId": 1,
-          "messageId": 8
-        },
-        {
-          "message_length": 39,
-          "shortest_message": 31,
-          "authorId": 1,
-          "messageId": 11
-        },
-        {
-          "message_length": 44,
-          "shortest_message": 31,
-          "authorId": 1,
-          "messageId": 4
-        },
-        {
-          "message_length": 45,
-          "shortest_message": 31,
-          "authorId": 1,
-          "messageId": 2
-        },
-        {
-          "message_length": 51,
-          "shortest_message": 31,
-          "authorId": 1,
-          "messageId": 10
-        },
-        {
-          "message_length": 35,
-          "shortest_message": 35,
-          "authorId": 2,
-          "messageId": 3
-        },
-        {
-          "message_length": 44,
-          "shortest_message": 35,
-          "authorId": 2,
-          "messageId": 6
-        }
-      ]
+        [
+          {
+            "message_length": 31,
+            "shortest_message": 31,
+            "authorId": 1,
+            "messageId": 8
+          },
+          {
+            "message_length": 39,
+            "shortest_message": 31,
+            "authorId": 1,
+            "messageId": 11
+          },
+          {
+            "message_length": 44,
+            "shortest_message": 31,
+            "authorId": 1,
+            "messageId": 4
+          },
+          {
+            "message_length": 45,
+            "shortest_message": 31,
+            "authorId": 1,
+            "messageId": 2
+          },
+          {
+            "message_length": 51,
+            "shortest_message": 31,
+            "authorId": 1,
+            "messageId": 10
+          },
+          {
+            "message_length": 35,
+            "shortest_message": 35,
+            "authorId": 2,
+            "messageId": 3
+          },
+          {
+            "message_length": 44,
+            "shortest_message": 35,
+            "authorId": 2,
+            "messageId": 6
+          }
+        ]
 
 ### lag ###
 
 * Syntax:
 
-      LAG(expr[, offset[, default]]) [nulls-treatment] OVER ([window-partition-clause] window-order-clause)
+        LAG(expr[, offset[, default]]) [nulls-treatment] OVER ([window-partition-clause] window-order-clause)
 
 * Returns the value of a tuple at a given offset prior to the current tuple
   position.
@@ -358,7 +358,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
         - `RESPECT NULLS`: If the values for any tuples evaluate to NULL or
           MISSING, those tuples are included when finding the first tuple.
 
-      If this modifier is omitted, the default is `RESPECT NULLS`.
+        If this modifier is omitted, the default is `RESPECT NULLS`.
 
 * Clauses:
 
@@ -375,69 +375,69 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Example:
 
-  For each author, show the length of each message, including the
-  length of the next-shortest message.
+    For each author, show the length of each message, including the
+    length of the next-shortest message.
 
-      SELECT m.authorId, m.messageId,
-      LENGTH(m.message) AS message_length,
-      LAG(LENGTH(m.message), 1, "No shorter message") OVER (
-        PARTITION BY m.authorId
-        ORDER BY LENGTH(m.message)
-      ) AS previous_message
-      FROM GleambookMessages AS m;
+        SELECT m.authorId, m.messageId,
+        LENGTH(m.message) AS message_length,
+        LAG(LENGTH(m.message), 1, "No shorter message") OVER (
+          PARTITION BY m.authorId
+          ORDER BY LENGTH(m.message)
+        ) AS next_shortest_message
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "message_length": 31,
-          "authorId": 1,
-          "messageId": 8,
-          "previous_message": "No shorter message"
-        },
-        {
-          "message_length": 39,
-          "authorId": 1,
-          "messageId": 11,
-          "previous_message": 31
-        },
-        {
-          "message_length": 44,
-          "authorId": 1,
-          "messageId": 4,
-          "previous_message": 39
-        },
-        {
-          "message_length": 45,
-          "authorId": 1,
-          "messageId": 2,
-          "previous_message": 44
-        },
-        {
-          "message_length": 51,
-          "authorId": 1,
-          "messageId": 10,
-          "previous_message": 45
-        },
-        {
-          "message_length": 35,
-          "authorId": 2,
-          "messageId": 3,
-          "previous_message": "No shorter message"
-        },
-        {
-          "message_length": 44,
-          "authorId": 2,
-          "messageId": 6,
-          "previous_message": 35
-        }
-      ]
+        [
+          {
+            "message_length": 31,
+            "authorId": 1,
+            "messageId": 8,
+            "next_shortest_message": "No shorter message"
+          },
+          {
+            "message_length": 39,
+            "authorId": 1,
+            "messageId": 11,
+            "next_shortest_message": 31
+          },
+          {
+            "message_length": 44,
+            "authorId": 1,
+            "messageId": 4,
+            "next_shortest_message": 39
+          },
+          {
+            "message_length": 45,
+            "authorId": 1,
+            "messageId": 2,
+            "next_shortest_message": 44
+          },
+          {
+            "message_length": 51,
+            "authorId": 1,
+            "messageId": 10,
+            "next_shortest_message": 45
+          },
+          {
+            "message_length": 35,
+            "authorId": 2,
+            "messageId": 3,
+            "next_shortest_message": "No shorter message"
+          },
+          {
+            "message_length": 44,
+            "authorId": 2,
+            "messageId": 6,
+            "next_shortest_message": 35
+          }
+        ]
 
 ### last_value ###
 
 * Syntax:
 
-      LAST_VALUE(expr) [nulls-treatment] OVER (window-definition)
+        LAST_VALUE(expr) [nulls-treatment] OVER (window-definition)
 
 * Returns the requested value from the last tuple in the current window frame,
   where the window frame is specified by the window definition.
@@ -461,7 +461,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
         - `RESPECT NULLS`: If the values for any tuples evaluate to NULL or
           MISSING, those tuples are included when finding the first tuple.
 
-      If this modifier is omitted, the default is `RESPECT NULLS`.
+        If this modifier is omitted, the default is `RESPECT NULLS`.
 
 * Clauses:
 
@@ -497,77 +497,77 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Example:
 
-  For each author, show the length of each message, including the
-  length of the longest message from that author.
+    For each author, show the length of each message, including the
+    length of the longest message from that author.
 
-      SELECT m.authorId, m.messageId,
-      LENGTH(m.message) AS message_length,
-      LAST_VALUE(LENGTH(m.message)) OVER (
-        PARTITION BY m.authorId
-        ORDER BY LENGTH(m.message)
-        ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING -- ➊
-      ) AS longest_message
-      FROM GleambookMessages AS m;
+        SELECT m.authorId, m.messageId,
+        LENGTH(m.message) AS message_length,
+        LAST_VALUE(LENGTH(m.message)) OVER (
+          PARTITION BY m.authorId
+          ORDER BY LENGTH(m.message)
+          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING -- ➊
+        ) AS longest_message
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "message_length": 31,
-          "longest_message": 51,
-          "authorId": 1,
-          "messageId": 8
-        },
-        {
-          "message_length": 39,
-          "longest_message": 51,
-          "authorId": 1,
-          "messageId": 11
-        },
-        {
-          "message_length": 44,
-          "longest_message": 51,
-          "authorId": 1,
-          "messageId": 4
-        },
-        {
-          "message_length": 45,
-          "longest_message": 51,
-          "authorId": 1,
-          "messageId": 2
-        },
-        {
-          "message_length": 51,
-          "longest_message": 51,
-          "authorId": 1,
-          "messageId": 10
-        },
-        {
-          "message_length": 35,
-          "longest_message": 44,
-          "authorId": 2,
-          "messageId": 3
-        },
-        {
-          "message_length": 44,
-          "longest_message": 44,
-          "authorId": 2,
-          "messageId": 6
-        }
-      ]
+        [
+          {
+            "message_length": 31,
+            "longest_message": 51,
+            "authorId": 1,
+            "messageId": 8
+          },
+          {
+            "message_length": 39,
+            "longest_message": 51,
+            "authorId": 1,
+            "messageId": 11
+          },
+          {
+            "message_length": 44,
+            "longest_message": 51,
+            "authorId": 1,
+            "messageId": 4
+          },
+          {
+            "message_length": 45,
+            "longest_message": 51,
+            "authorId": 1,
+            "messageId": 2
+          },
+          {
+            "message_length": 51,
+            "longest_message": 51,
+            "authorId": 1,
+            "messageId": 10
+          },
+          {
+            "message_length": 35,
+            "longest_message": 44,
+            "authorId": 2,
+            "messageId": 3
+          },
+          {
+            "message_length": 44,
+            "longest_message": 44,
+            "authorId": 2,
+            "messageId": 6
+          }
+        ]
 
-  ➀ This clause specifies that the window frame should extend to the
-  end of the window partition.
-  Without this clause, the end point of the window frame would always be the
-  current tuple.
-  This would mean that the longest message would always be the same as the
-  current message.
+    ➀ This clause specifies that the window frame should extend to the
+    end of the window partition.
+    Without this clause, the end point of the window frame would always be the
+    current tuple.
+    This would mean that the longest message would always be the same as the
+    current message.
 
 ### lead ###
 
 * Syntax:
 
-      LEAD(expr[, offset[, default]]) [nulls-treatment] OVER ([window-partition-clause] window-order-clause)
+        LEAD(expr[, offset[, default]]) [nulls-treatment] OVER ([window-partition-clause] window-order-clause)
 
 * Returns the value of a tuple at a given offset ahead of the current tuple
   position.
@@ -598,7 +598,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
         - `RESPECT NULLS`: If the values for any tuples evaluate to NULL or
           MISSING, those tuples are included when finding the first tuple.
 
-      If this modifier is omitted, the default is `RESPECT NULLS`.
+        If this modifier is omitted, the default is `RESPECT NULLS`.
 
 * Clauses:
 
@@ -615,69 +615,69 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Example:
 
-  For each author, show the length of each message, including the
-  length of the next-longest message.
+    For each author, show the length of each message, including the
+    length of the next-longest message.
 
-      SELECT m.authorId, m.messageId,
-      LENGTH(m.message) AS message_length,
-      LEAD(LENGTH(m.message), 1, "No longer message") OVER (
-        PARTITION BY m.authorId
-        ORDER BY LENGTH(m.message)
-      ) AS next_message
-      FROM GleambookMessages AS m;
+        SELECT m.authorId, m.messageId,
+        LENGTH(m.message) AS message_length,
+        LEAD(LENGTH(m.message), 1, "No longer message") OVER (
+          PARTITION BY m.authorId
+          ORDER BY LENGTH(m.message)
+        ) AS next_longest_message
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "message_length": 31,
-          "authorId": 1,
-          "messageId": 8,
-          "next_message": 39
-        },
-        {
-          "message_length": 39,
-          "authorId": 1,
-          "messageId": 11,
-          "next_message": 44
-        },
-        {
-          "message_length": 44,
-          "authorId": 1,
-          "messageId": 4,
-          "next_message": 45
-        },
-        {
-          "message_length": 45,
-          "authorId": 1,
-          "messageId": 2,
-          "next_message": 51
-        },
-        {
-          "message_length": 51,
-          "authorId": 1,
-          "messageId": 10,
-          "next_message": "No longer message"
-        },
-        {
-          "message_length": 35,
-          "authorId": 2,
-          "messageId": 3,
-          "next_message": 44
-        },
-        {
-          "message_length": 44,
-          "authorId": 2,
-          "messageId": 6,
-          "next_message": "No longer message"
-        }
-      ]
+        [
+          {
+            "message_length": 31,
+            "authorId": 1,
+            "messageId": 8,
+            "next_longest_message": 39
+          },
+          {
+            "message_length": 39,
+            "authorId": 1,
+            "messageId": 11,
+            "next_longest_message": 44
+          },
+          {
+            "message_length": 44,
+            "authorId": 1,
+            "messageId": 4,
+            "next_longest_message": 45
+          },
+          {
+            "message_length": 45,
+            "authorId": 1,
+            "messageId": 2,
+            "next_longest_message": 51
+          },
+          {
+            "message_length": 51,
+            "authorId": 1,
+            "messageId": 10,
+            "next_longest_message": "No longer message"
+          },
+          {
+            "message_length": 35,
+            "authorId": 2,
+            "messageId": 3,
+            "next_longest_message": 44
+          },
+          {
+            "message_length": 44,
+            "authorId": 2,
+            "messageId": 6,
+            "next_longest_message": "No longer message"
+          }
+        ]
 
 ### nth_value ###
 
 * Syntax:
 
-      NTH_VALUE(expr, offset) [nthval-from] [nulls-treatment] OVER (window-definition)
+        NTH_VALUE(expr, offset) [nthval-from] [nulls-treatment] OVER (window-definition)
 
 * Returns the requested value from a tuple in the current window frame, where
   the window frame is specified by the window definition.
@@ -703,8 +703,8 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
           In this case, an offset of 1 is the last tuple in the window frame,
           2 is the second-to-last tuple, and so on.
 
-      The order of the tuples is determined by the window order clause.
-      If this modifier is omitted, the default is `FROM FIRST`.
+        The order of the tuples is determined by the window order clause.
+        If this modifier is omitted, the default is `FROM FIRST`.
 
     * [Nulls Treatment](#nulls-treatment): (Optional) Determines how NULL or
       MISSING values are treated when finding the first tuple in the window
@@ -718,7 +718,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
         - `RESPECT NULLS`: If the values for any tuples evaluate to NULL or
           MISSING, those tuples are included when finding the first tuple.
 
-      If this modifier is omitted, the default is `RESPECT NULLS`.
+        If this modifier is omitted, the default is `RESPECT NULLS`.
 
 * Clauses:
 
@@ -752,149 +752,149 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Example 1:
 
-  For each author, show the length of each message, including the
-  length of the second shortest message from that author.
+    For each author, show the length of each message, including the
+    length of the second shortest message from that author.
 
-      SELECT m.authorId, m.messageId,
-      LENGTH(m.message) AS message_length,
-      NTH_VALUE(LENGTH(m.message), 2) FROM FIRST OVER (
-        PARTITION BY m.authorId
-        ORDER BY LENGTH(m.message)
-        ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING -- ➊
-      ) AS shortest_message_but_1
-      FROM GleambookMessages AS m;
+        SELECT m.authorId, m.messageId,
+        LENGTH(m.message) AS message_length,
+        NTH_VALUE(LENGTH(m.message), 2) FROM FIRST OVER (
+          PARTITION BY m.authorId
+          ORDER BY LENGTH(m.message)
+          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING -- ➊
+        ) AS shortest_message_but_1
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "message_length": 31,
-          "shortest_message_but_1": 39,
-          "authorId": 1,
-          "messageId": 8
-        },
-        {
-          "message_length": 39,
-          "shortest_message_but_1": 39,
-          "authorId": 1,
-          "messageId": 11 // ➋
-        },
-        {
-          "message_length": 44,
-          "shortest_message_but_1": 39,
-          "authorId": 1,
-          "messageId": 4
-        },
-        {
-          "message_length": 45,
-          "shortest_message_but_1": 39,
-          "authorId": 1,
-          "messageId": 2
-        },
-        {
-          "message_length": 51,
-          "shortest_message_but_1": 39,
-          "authorId": 1,
-          "messageId": 10
-        },
-        {
-          "message_length": 35,
-          "shortest_message_but_1": 44,
-          "authorId": 2,
-          "messageId": 3
-        },
-        {
-          "message_length": 44,
-          "shortest_message_but_1": 44,
-          "authorId": 2,
-          "messageId": 6 // ➋
-        }
-      ]
+        [
+          {
+            "message_length": 31,
+            "shortest_message_but_1": 39,
+            "authorId": 1,
+            "messageId": 8
+          },
+          {
+            "message_length": 39,
+            "shortest_message_but_1": 39,
+            "authorId": 1,
+            "messageId": 11 // ➋
+          },
+          {
+            "message_length": 44,
+            "shortest_message_but_1": 39,
+            "authorId": 1,
+            "messageId": 4
+          },
+          {
+            "message_length": 45,
+            "shortest_message_but_1": 39,
+            "authorId": 1,
+            "messageId": 2
+          },
+          {
+            "message_length": 51,
+            "shortest_message_but_1": 39,
+            "authorId": 1,
+            "messageId": 10
+          },
+          {
+            "message_length": 35,
+            "shortest_message_but_1": 44,
+            "authorId": 2,
+            "messageId": 3
+          },
+          {
+            "message_length": 44,
+            "shortest_message_but_1": 44,
+            "authorId": 2,
+            "messageId": 6 // ➋
+          }
+        ]
 
-  ➀ This clause specifies that the window frame should extend to the
-  end of the window partition.
-  Without this clause, the end point of the window frame would always be the
-  current tuple.
-  This would mean that for the shortest message, the function
-  would be unable to find the route with the second shortest message.
+    ➀ This clause specifies that the window frame should extend to the
+    end of the window partition.
+    Without this clause, the end point of the window frame would always be the
+    current tuple.
+    This would mean that for the shortest message, the function
+    would be unable to find the route with the second shortest message.
 
-  ➁ The second shortest message from this author.
+    ➁ The second shortest message from this author.
 
 * Example 2:
 
-  For each author, show the length of each message, including the
-  length of the second longest message from that author.
+    For each author, show the length of each message, including the
+    length of the second longest message from that author.
 
-      SELECT m.authorId, m.messageId,
-      LENGTH(m.message) AS message_length,
-      NTH_VALUE(LENGTH(m.message), 2) FROM LAST OVER (
-        PARTITION BY m.authorId
-        ORDER BY LENGTH(m.message)
-        ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING -- ➊
-      ) AS longest_message_but_1
-      FROM GleambookMessages AS m;
+        SELECT m.authorId, m.messageId,
+        LENGTH(m.message) AS message_length,
+        NTH_VALUE(LENGTH(m.message), 2) FROM LAST OVER (
+          PARTITION BY m.authorId
+          ORDER BY LENGTH(m.message)
+          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING -- ➊
+        ) AS longest_message_but_1
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "message_length": 31,
-          "longest_message_but_1": 45,
-          "authorId": 1,
-          "messageId": 8
-        },
-        {
-          "message_length": 39,
-          "longest_message_but_1": 45,
-          "authorId": 1,
-          "messageId": 11
-        },
-        {
-          "message_length": 44,
-          "longest_message_but_1": 45,
-          "authorId": 1,
-          "messageId": 4
-        },
-        {
-          "message_length": 45,
-          "longest_message_but_1": 45,
-          "authorId": 1,
-          "messageId": 2 // ➋
-        },
-        {
-          "message_length": 51,
-          "longest_message_but_1": 45,
-          "authorId": 1,
-          "messageId": 10
-        },
-        {
-          "message_length": 35,
-          "longest_message_but_1": 35,
-          "authorId": 2,
-          "messageId": 3 // ➋
-        },
-        {
-          "message_length": 44,
-          "longest_message_but_1": 35,
-          "authorId": 2,
-          "messageId": 6
-        }
-      ]
+        [
+          {
+            "message_length": 31,
+            "longest_message_but_1": 45,
+            "authorId": 1,
+            "messageId": 8
+          },
+          {
+            "message_length": 39,
+            "longest_message_but_1": 45,
+            "authorId": 1,
+            "messageId": 11
+          },
+          {
+            "message_length": 44,
+            "longest_message_but_1": 45,
+            "authorId": 1,
+            "messageId": 4
+          },
+          {
+            "message_length": 45,
+            "longest_message_but_1": 45,
+            "authorId": 1,
+            "messageId": 2 // ➋
+          },
+          {
+            "message_length": 51,
+            "longest_message_but_1": 45,
+            "authorId": 1,
+            "messageId": 10
+          },
+          {
+            "message_length": 35,
+            "longest_message_but_1": 35,
+            "authorId": 2,
+            "messageId": 3 // ➋
+          },
+          {
+            "message_length": 44,
+            "longest_message_but_1": 35,
+            "authorId": 2,
+            "messageId": 6
+          }
+        ]
 
-  ➀ This clause specifies that the window frame should extend to the
-  end of the window partition.
-  Without this clause, the end point of the window frame would always be the
-  current tuple.
-  This would mean the function would be unable to find the second longest
-  message for shorter messages.
+    ➀ This clause specifies that the window frame should extend to the
+    end of the window partition.
+    Without this clause, the end point of the window frame would always be the
+    current tuple.
+    This would mean the function would be unable to find the second longest
+    message for shorter messages.
 
-  ➁ The second longest message from this author.
+    ➁ The second longest message from this author.
 
 ### ntile ###
 
 * Syntax:
 
-      NTILE(num_tiles) OVER ([window-partition-clause] window-order-clause)
+        NTILE(num_tiles) OVER ([window-partition-clause] window-order-clause)
 
 * Divides the window partition into the specified number of tiles, and
   allocates each tuple in the window partition to a tile, so that as far as
@@ -926,59 +926,59 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Example:
 
-  Allocate each message to one of three tiles by length and message ID.
+    Allocate each message to one of three tiles by length and message ID.
 
-      SELECT m.messageId, LENGTH(m.message) AS `length`,
-      NTILE(3) OVER (
-        ORDER BY LENGTH(m.message), m.messageId
-      ) AS `ntile`
-      FROM GleambookMessages AS m;
+        SELECT m.messageId, LENGTH(m.message) AS `length`,
+        NTILE(3) OVER (
+          ORDER BY LENGTH(m.message), m.messageId
+        ) AS `ntile`
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "length": 31,
-          "ntile": 1,
-          "messageId": 8
-        },
-        {
-          "length": 35,
-          "ntile": 1,
-          "messageId": 3
-        },
-        {
-          "length": 39,
-          "ntile": 1,
-          "messageId": 11
-        },
-        {
-          "length": 44,
-          "ntile": 2,
-          "messageId": 4
-        },
-        {
-          "length": 44,
-          "ntile": 2,
-          "messageId": 6
-        },
-        {
-          "length": 45,
-          "ntile": 3,
-          "messageId": 2
-        },
-        {
-          "length": 51,
-          "ntile": 3,
-          "messageId": 10
-        }
-      ]
+        [
+          {
+            "length": 31,
+            "ntile": 1,
+            "messageId": 8
+          },
+          {
+            "length": 35,
+            "ntile": 1,
+            "messageId": 3
+          },
+          {
+            "length": 39,
+            "ntile": 1,
+            "messageId": 11
+          },
+          {
+            "length": 44,
+            "ntile": 2,
+            "messageId": 4
+          },
+          {
+            "length": 44,
+            "ntile": 2,
+            "messageId": 6
+          },
+          {
+            "length": 45,
+            "ntile": 3,
+            "messageId": 2
+          },
+          {
+            "length": 51,
+            "ntile": 3,
+            "messageId": 10
+          }
+        ]
 
 ### percent_rank ###
 
 * Syntax:
 
-      PERCENT_RANK() OVER ([window-partition-clause] window-order-clause)
+        PERCENT_RANK() OVER ([window-partition-clause] window-order-clause)
 
 * Returns the percentile rank of the current tuple – that is, the rank of the
   tuples minus one, divided by the total number of tuples in the window
@@ -1001,60 +1001,60 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Example:
 
-  For each author, find the percentile rank of all messages in order
-  of message ID.
+    For each author, find the percentile rank of all messages in order
+    of message ID.
 
-      SELECT m.messageId, m.authorId, PERCENT_RANK() OVER (
-        PARTITION BY m.authorId
-        ORDER BY m.messageId
-      ) AS `rank`
-      FROM GleambookMessages AS m;
+        SELECT m.messageId, m.authorId, PERCENT_RANK() OVER (
+          PARTITION BY m.authorId
+          ORDER BY m.messageId
+        ) AS `rank`
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "rank": 0,
-          "messageId": 2,
-          "authorId": 1
-        },
-        {
-          "rank": 0.25,
-          "messageId": 4,
-          "authorId": 1
-        },
-        {
-          "rank": 0.5,
-          "messageId": 8,
-          "authorId": 1
-        },
-        {
-          "rank": 0.75,
-          "messageId": 10,
-          "authorId": 1
-        },
-        {
-          "rank": 1,
-          "messageId": 11,
-          "authorId": 1
-        },
-        {
-          "rank": 0,
-          "messageId": 3,
-          "authorId": 2
-        },
-        {
-          "rank": 1,
-          "messageId": 6,
-          "authorId": 2
-        }
-      ]
+        [
+          {
+            "rank": 0,
+            "messageId": 2,
+            "authorId": 1
+          },
+          {
+            "rank": 0.25,
+            "messageId": 4,
+            "authorId": 1
+          },
+          {
+            "rank": 0.5,
+            "messageId": 8,
+            "authorId": 1
+          },
+          {
+            "rank": 0.75,
+            "messageId": 10,
+            "authorId": 1
+          },
+          {
+            "rank": 1,
+            "messageId": 11,
+            "authorId": 1
+          },
+          {
+            "rank": 0,
+            "messageId": 3,
+            "authorId": 2
+          },
+          {
+            "rank": 1,
+            "messageId": 6,
+            "authorId": 2
+          }
+        ]
 
 ### rank ###
 
 * Syntax:
 
-      RANK() OVER ([window-partition-clause] window-order-clause)
+        RANK() OVER ([window-partition-clause] window-order-clause)
 
 * Returns the rank of the current tuple – that is, the number of distinct
   tuples preceding this tuple in the current window partition, plus one.
@@ -1083,67 +1083,67 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Example:
 
-  For each author, find the rank of all messages in order of location.
+    For each author, find the rank of all messages in order of location.
 
-      SELECT m.authorId, m.messageId, m.senderLocation[1] as longitude,
-      RANK() OVER (
-        PARTITION BY m.authorId
-        ORDER BY m.senderLocation[1]
-      ) AS `rank`
-      FROM GleambookMessages AS m;
+        SELECT m.authorId, m.messageId, m.senderLocation[1] as longitude,
+        RANK() OVER (
+          PARTITION BY m.authorId
+          ORDER BY m.senderLocation[1]
+        ) AS `rank`
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "rank": 1,
-          "authorId": 1,
-          "messageId": 10,
-          "longitude": 70.01
-        },
-        {
-          "rank": 2,
-          "authorId": 1,
-          "messageId": 11,
-          "longitude": 77.49
-        },
-        {
-          "rank": 3,
-          "authorId": 1,
-          "messageId": 2,
-          "longitude": 80.87
-        },
-        {
-          "rank": 3,
-          "authorId": 1,
-          "messageId": 8,
-          "longitude": 80.87
-        },
-        {
-          "rank": 5,
-          "authorId": 1,
-          "messageId": 4,
-          "longitude": 97.04
-        },
-        {
-          "rank": 1,
-          "authorId": 2,
-          "messageId": 6,
-          "longitude": 75.56
-        },
-        {
-          "rank": 2,
-          "authorId": 2,
-          "messageId": 3,
-          "longitude": 81.01
-        }
-      ]
+        [
+          {
+            "rank": 1,
+            "authorId": 1,
+            "messageId": 10,
+            "longitude": 70.01
+          },
+          {
+            "rank": 2,
+            "authorId": 1,
+            "messageId": 11,
+            "longitude": 77.49
+          },
+          {
+            "rank": 3,
+            "authorId": 1,
+            "messageId": 2,
+            "longitude": 80.87
+          },
+          {
+            "rank": 3,
+            "authorId": 1,
+            "messageId": 8,
+            "longitude": 80.87
+          },
+          {
+            "rank": 5,
+            "authorId": 1,
+            "messageId": 4,
+            "longitude": 97.04
+          },
+          {
+            "rank": 1,
+            "authorId": 2,
+            "messageId": 6,
+            "longitude": 75.56
+          },
+          {
+            "rank": 2,
+            "authorId": 2,
+            "messageId": 3,
+            "longitude": 81.01
+          }
+        ]
 
 ### ratio_to_report ###
 
 * Syntax:
 
-      RATIO_TO_REPORT(expr) OVER (window-definition)
+        RATIO_TO_REPORT(expr) OVER (window-definition)
 
 * Returns the fractional ratio of the specified value for each tuple to the
   sum of values for all tuples in the window partition.
@@ -1173,60 +1173,60 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Example:
 
-  For each author, calculate the length of each message as a
-  fraction of the total length of all messages.
+    For each author, calculate the length of each message as a
+    fraction of the total length of all messages.
 
-      SELECT m.messageId, m.authorId,
-      RATIO_TO_REPORT(LENGTH(m.message)) OVER (
-        PARTITION BY m.authorId
-      ) AS length_ratio
-      FROM GleambookMessages AS m;
+        SELECT m.messageId, m.authorId,
+        RATIO_TO_REPORT(LENGTH(m.message)) OVER (
+          PARTITION BY m.authorId
+        ) AS length_ratio
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "length_ratio": 0.21428571428571427,
-          "messageId": 2,
-          "authorId": 1
-        },
-        {
-          "length_ratio": 0.20952380952380953,
-          "messageId": 4,
-          "authorId": 1
-        },
-        {
-          "length_ratio": 0.14761904761904762,
-          "messageId": 8,
-          "authorId": 1
-        },
-        {
-          "length_ratio": 0.24285714285714285,
-          "messageId": 10,
-          "authorId": 1
-        },
-        {
-          "length_ratio": 0.18571428571428572,
-          "messageId": 11,
-          "authorId": 1
-        },
-        {
-          "length_ratio": 0.4430379746835443,
-          "messageId": 3,
-          "authorId": 2
-        },
-        {
-          "length_ratio": 0.5569620253164557,
-          "messageId": 6,
-          "authorId": 2
-        }
-      ]
+        [
+          {
+            "length_ratio": 0.21428571428571427,
+            "messageId": 2,
+            "authorId": 1
+          },
+          {
+            "length_ratio": 0.20952380952380953,
+            "messageId": 4,
+            "authorId": 1
+          },
+          {
+            "length_ratio": 0.14761904761904762,
+            "messageId": 8,
+            "authorId": 1
+          },
+          {
+            "length_ratio": 0.24285714285714285,
+            "messageId": 10,
+            "authorId": 1
+          },
+          {
+            "length_ratio": 0.18571428571428572,
+            "messageId": 11,
+            "authorId": 1
+          },
+          {
+            "length_ratio": 0.4430379746835443,
+            "messageId": 3,
+            "authorId": 2
+          },
+          {
+            "length_ratio": 0.5569620253164557,
+            "messageId": 6,
+            "authorId": 2
+          }
+        ]
 
 ### row_number ###
 
 * Syntax:
 
-      ROW_NUMBER() OVER ([window-partition-clause] [window-order-clause])
+        ROW_NUMBER() OVER ([window-partition-clause] [window-order-clause])
 
 * Returns a unique row number for every tuple in every window partition.
   In each window partition, the row numbering starts at 1.
@@ -1250,54 +1250,54 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Example:
 
-  For each author, number all messages in order of length.
+    For each author, number all messages in order of length.
 
-      SELECT m.messageId, m.authorId,
-      ROW_NUMBER() OVER (
-        PARTITION BY m.authorId
-        ORDER BY LENGTH(m.message)
-      ) AS `row`
-      FROM GleambookMessages AS m;
+        SELECT m.messageId, m.authorId,
+        ROW_NUMBER() OVER (
+          PARTITION BY m.authorId
+          ORDER BY LENGTH(m.message)
+        ) AS `row`
+        FROM GleambookMessages AS m;
 
 * The expected result is:
 
-      [
-        {
-          "row": 1,
-          "messageId": 8,
-          "authorId": 1
-        },
-        {
-          "row": 2,
-          "messageId": 11,
-          "authorId": 1
-        },
-        {
-          "row": 3,
-          "messageId": 4,
-          "authorId": 1
-        },
-        {
-          "row": 4,
-          "messageId": 2,
-          "authorId": 1
-        },
-        {
-          "row": 5,
-          "messageId": 10,
-          "authorId": 1
-        },
-        {
-          "row": 1,
-          "messageId": 3,
-          "authorId": 2
-        },
-        {
-          "row": 2,
-          "messageId": 6,
-          "authorId": 2
-        }
-      ]
+        [
+          {
+            "row": 1,
+            "messageId": 8,
+            "authorId": 1
+          },
+          {
+            "row": 2,
+            "messageId": 11,
+            "authorId": 1
+          },
+          {
+            "row": 3,
+            "messageId": 4,
+            "authorId": 1
+          },
+          {
+            "row": 4,
+            "messageId": 2,
+            "authorId": 1
+          },
+          {
+            "row": 5,
+            "messageId": 10,
+            "authorId": 1
+          },
+          {
+            "row": 1,
+            "messageId": 3,
+            "authorId": 2
+          },
+          {
+            "row": 2,
+            "messageId": 6,
+            "authorId": 2
+          }
+        ]
 
 ---
 
