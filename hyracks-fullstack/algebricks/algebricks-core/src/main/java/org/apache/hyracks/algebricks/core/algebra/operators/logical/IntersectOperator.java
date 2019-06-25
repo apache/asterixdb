@@ -20,9 +20,10 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.ListUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -38,41 +39,52 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 
 public class IntersectOperator extends AbstractLogicalOperator {
 
-    private final List<List<LogicalVariable>> inputVars;
-    private final List<List<LogicalVariable>> compareVars;
-    private final List<LogicalVariable> outputVars;
-    private List<List<LogicalVariable>> extraVars;
+    private final List<LogicalVariable> outputCompareVars;
+    private final List<List<LogicalVariable>> inputCompareVars;
 
-    public IntersectOperator(List<LogicalVariable> outputVars, List<List<LogicalVariable>> compareVars)
+    private final List<LogicalVariable> outputExtraVars;
+    private final List<List<LogicalVariable>> inputExtraVars;
+
+    public IntersectOperator(List<LogicalVariable> outputCompareVars, List<List<LogicalVariable>> inputCompareVars)
             throws AlgebricksException {
-        this(outputVars, compareVars,
-                compareVars.stream().map(vars -> new ArrayList<LogicalVariable>()).collect(Collectors.toList()));
+        this(outputCompareVars, Collections.emptyList(), inputCompareVars, Collections.emptyList());
     }
 
-    public IntersectOperator(List<LogicalVariable> outputVars, List<List<LogicalVariable>> compareVars,
-            List<List<LogicalVariable>> extraVars) throws AlgebricksException {
-        int numCompareFields = compareVars.get(0).size();
-        if (compareVars.stream().anyMatch(vlist -> vlist.size() != numCompareFields)) {
-            throw AlgebricksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
+    public IntersectOperator(List<LogicalVariable> outputCompareVars, List<LogicalVariable> outputExtraVars,
+            List<List<LogicalVariable>> inputCompareVars, List<List<LogicalVariable>> inputExtraVars)
+            throws AlgebricksException {
+        int numCompareVars = outputCompareVars.size();
+        for (List<LogicalVariable> vars : inputCompareVars) {
+            if (vars.size() != numCompareVars) {
+                throw AlgebricksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
+            }
         }
-        int numExtraFields = extraVars.get(0).size();
-        if (extraVars.stream().anyMatch(vlist -> vlist.size() != numExtraFields)) {
-            throw AlgebricksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
-        }
-        if (outputVars.size() != numCompareFields + numExtraFields) {
-            throw AlgebricksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
+        if (outputExtraVars == null || outputExtraVars.isEmpty()) {
+            if (inputExtraVars != null && !inputExtraVars.isEmpty()) {
+                throw AlgebricksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
+            }
+        } else {
+            if (inputExtraVars == null || inputExtraVars.isEmpty()) {
+                throw AlgebricksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
+            }
+            int numExtraVars = outputExtraVars.size();
+            for (List<LogicalVariable> vars : inputExtraVars) {
+                if (vars.size() != numExtraVars) {
+                    throw AlgebricksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
+                }
+            }
         }
 
-        this.outputVars = new ArrayList<>(outputVars);
-        this.compareVars = new ArrayList<>(compareVars);
-        this.inputVars = new ArrayList<>(compareVars.size());
-        for (List<LogicalVariable> vars : compareVars) {
-            this.inputVars.add(new ArrayList<>(vars));
+        this.outputCompareVars = new ArrayList<>(outputCompareVars);
+        this.inputCompareVars = new ArrayList<>(inputCompareVars);
+        this.outputExtraVars = new ArrayList<>();
+        if (outputExtraVars != null) {
+            this.outputExtraVars.addAll(outputExtraVars);
         }
-        for (int i = 0; i < extraVars.size(); i++) {
-            this.inputVars.get(i).addAll(extraVars.get(i));
+        this.inputExtraVars = new ArrayList<>();
+        if (inputExtraVars != null) {
+            this.inputExtraVars.addAll(inputExtraVars);
         }
-        this.extraVars = extraVars;
     }
 
     @Override
@@ -81,8 +93,8 @@ public class IntersectOperator extends AbstractLogicalOperator {
     }
 
     @Override
-    public void recomputeSchema() throws AlgebricksException {
-        schema = outputVars;
+    public void recomputeSchema() {
+        schema = concatOutputVariables();
     }
 
     @Override
@@ -103,52 +115,59 @@ public class IntersectOperator extends AbstractLogicalOperator {
 
     @Override
     public VariablePropagationPolicy getVariablePropagationPolicy() {
-        return new FilteredVariablePropagationPolicy(outputVars);
+        return new FilteredVariablePropagationPolicy(concatOutputVariables());
     }
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         IVariableTypeEnvironment typeEnv = ctx.getOutputTypeEnvironment(inputs.get(0).getValue());
 
-        List<LogicalVariable> compareVars0 = compareVars.get(0);
-        for (int i = 1; i < inputs.size(); i++) {
-            checkTypeConsistency(typeEnv, compareVars0, ctx.getOutputTypeEnvironment(inputs.get(i).getValue()),
-                    compareVars.get(i));
+        List<LogicalVariable> inputCompareVars0 = inputCompareVars.get(0);
+        for (int i = 1, n = inputs.size(); i < n; i++) {
+            checkTypeConsistency(typeEnv, inputCompareVars0, ctx.getOutputTypeEnvironment(inputs.get(i).getValue()),
+                    inputCompareVars.get(i));
         }
 
         IVariableTypeEnvironment env =
                 new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMetadataProvider());
-        int i = 0;
-        for (; i < compareVars0.size(); i++) {
-            env.setVarType(outputVars.get(i), typeEnv.getVarType(compareVars0.get(i)));
+        for (int i = 0, n = outputCompareVars.size(); i < n; i++) {
+            env.setVarType(outputCompareVars.get(i), typeEnv.getVarType(inputCompareVars0.get(i)));
         }
-        if (extraVars != null) {
-            List<LogicalVariable> extraVars0 = extraVars.get(0);
-            for (int k = 0; k < extraVars0.size(); k++) {
-                env.setVarType(outputVars.get(i + k), typeEnv.getVarType(extraVars0.get(k)));
+        if (hasExtraVariables()) {
+            List<LogicalVariable> inputExtraVars0 = inputExtraVars.get(0);
+            for (int i = 0, n = outputExtraVars.size(); i < n; i++) {
+                env.setVarType(outputExtraVars.get(i), typeEnv.getVarType(inputExtraVars0.get(i)));
             }
         }
         return env;
     }
 
-    public List<LogicalVariable> getOutputVars() {
-        return outputVars;
-    }
-
     public int getNumInput() {
-        return compareVars.size();
+        return inputCompareVars.size();
     }
 
-    public List<LogicalVariable> getCompareVariables(int inputIndex) {
-        return compareVars.get(inputIndex);
+    public boolean hasExtraVariables() {
+        return !outputExtraVars.isEmpty();
     }
 
-    public List<List<LogicalVariable>> getExtraVariables() {
-        return extraVars;
+    public List<LogicalVariable> getInputCompareVariables(int inputIndex) {
+        return inputCompareVars.get(inputIndex);
     }
 
-    public List<LogicalVariable> getInputVariables(int inputIndex) {
-        return this.inputVars.get(inputIndex);
+    public List<LogicalVariable> getInputExtraVariables(int inputIndex) {
+        return inputExtraVars.get(inputIndex);
+    }
+
+    public List<LogicalVariable> getOutputCompareVariables() {
+        return outputCompareVars;
+    }
+
+    public List<LogicalVariable> getOutputExtraVariables() {
+        return outputExtraVars;
+    }
+
+    private List<LogicalVariable> concatOutputVariables() {
+        return ListUtils.union(outputCompareVars, outputExtraVars);
     }
 
     private void checkTypeConsistency(IVariableTypeEnvironment expected, List<LogicalVariable> expectedVariables,
@@ -165,5 +184,4 @@ public class IntersectOperator extends AbstractLogicalOperator {
             }
         }
     }
-
 }

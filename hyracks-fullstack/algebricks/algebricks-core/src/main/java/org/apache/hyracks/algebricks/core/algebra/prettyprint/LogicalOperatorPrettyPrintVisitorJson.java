@@ -356,18 +356,39 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     public Void visitIntersectOperator(IntersectOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent).append("\"operator\": \"intersect\",\n");
 
-        addIndent(indent).append("\"output-variables\": [");
-        appendVars(op.getOutputVars());
-        buffer.append("],");
-        addIndent(indent).append("\"input_variables\": [");
-
-        for (int i = 0; i < op.getNumInput(); i++) {
-            if (i > 0) {
-                buffer.append(",\n");
-            }
-            appendVars(op.getInputVariables(i));
+        addIndent(indent).append("\"output-compare-variables\": [");
+        appendVars(op.getOutputCompareVariables());
+        buffer.append(']');
+        if (op.hasExtraVariables()) {
+            buffer.append(",\n");
+            addIndent(indent).append("\"output-extra-variables\": [");
+            appendVars(op.getOutputExtraVariables());
+            buffer.append(']');
         }
-        buffer.append("]");
+        buffer.append(",\n");
+        addIndent(indent).append("\"input-compare-variables\": [");
+        for (int i = 0, n = op.getNumInput(); i < n; i++) {
+            if (i > 0) {
+                buffer.append(", ");
+            }
+            buffer.append('[');
+            appendVars(op.getInputCompareVariables(i));
+            buffer.append(']');
+        }
+        buffer.append(']');
+        if (op.hasExtraVariables()) {
+            buffer.append(",\n");
+            addIndent(indent).append("\"input-extra-variables\": [");
+            for (int i = 0, n = op.getNumInput(); i < n; i++) {
+                if (i > 0) {
+                    buffer.append(", ");
+                }
+                buffer.append('[');
+                appendVars(op.getInputExtraVariables(i));
+                buffer.append(']');
+            }
+            buffer.append(']');
+        }
         return null;
     }
 

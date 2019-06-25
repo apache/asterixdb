@@ -221,7 +221,10 @@ public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Vo
 
     @Override
     public Void visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
-        producedVariables.addAll(op.getOutputVars());
+        producedVariables.addAll(op.getOutputCompareVariables());
+        if (op.hasExtraVariables()) {
+            producedVariables.addAll(op.getOutputExtraVariables());
+        }
         return null;
     }
 

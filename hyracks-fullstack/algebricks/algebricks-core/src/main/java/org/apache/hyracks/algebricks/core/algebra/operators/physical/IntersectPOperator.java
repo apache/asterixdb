@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -66,17 +67,18 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator iop,
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         IntersectOperator intersectOp = (IntersectOperator) iop;
-        StructuralPropertiesVector[] pv = new StructuralPropertiesVector[intersectOp.getNumInput()];
-        for (int i = 0; i < intersectOp.getNumInput(); i++) {
+        int numInput = intersectOp.getNumInput();
+        StructuralPropertiesVector[] pv = new StructuralPropertiesVector[numInput];
+        for (int i = 0; i < numInput; i++) {
             List<ILocalStructuralProperty> localProps = new ArrayList<>();
             List<OrderColumn> orderColumns = new ArrayList<>();
-            for (LogicalVariable column : intersectOp.getCompareVariables(i)) {
+            for (LogicalVariable column : intersectOp.getInputCompareVariables(i)) {
                 orderColumns.add(new OrderColumn(column, OrderOperator.IOrder.OrderKind.ASC));
             }
             localProps.add(new LocalOrderProperty(orderColumns));
             IPartitioningProperty pp = null;
             if (intersectOp.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
-                Set<LogicalVariable> partitioningVariables = new HashSet<>(intersectOp.getCompareVariables(i));
+                Set<LogicalVariable> partitioningVariables = new HashSet<>(intersectOp.getInputCompareVariables(i));
                 pp = new UnorderedPartitionedProperty(partitioningVariables, null);
             }
             pv[i] = new StructuralPropertiesVector(pp, localProps);
@@ -85,21 +87,22 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
     }
 
     @Override
-    public void computeDeliveredProperties(ILogicalOperator iop, IOptimizationContext context)
-            throws AlgebricksException {
+    public void computeDeliveredProperties(ILogicalOperator iop, IOptimizationContext context) {
         IntersectOperator op = (IntersectOperator) iop;
         IPartitioningProperty pp =
                 op.getInputs().get(0).getValue().getDeliveredPhysicalProperties().getPartitioningProperty();
 
-        HashMap<LogicalVariable, LogicalVariable> varMaps = new HashMap<>(op.getOutputVars().size());
-        for (int i = 0; i < op.getOutputVars().size(); i++) {
-            varMaps.put(op.getInputVariables(0).get(i), op.getOutputVars().get(i));
+        List<LogicalVariable> outputCompareVars = op.getOutputCompareVariables();
+        int numCompareVars = outputCompareVars.size();
+        Map<LogicalVariable, LogicalVariable> varMaps = new HashMap<>(numCompareVars);
+        for (int i = 0; i < numCompareVars; i++) {
+            varMaps.put(op.getInputCompareVariables(0).get(i), outputCompareVars.get(i));
         }
         pp.substituteColumnVars(varMaps);
 
         List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
         List<OrderColumn> orderColumns = new ArrayList<>();
-        for (LogicalVariable var : op.getOutputVars()) {
+        for (LogicalVariable var : outputCompareVars) {
             orderColumns.add(new OrderColumn(var, OrderOperator.IOrder.OrderKind.ASC));
         }
         propsLocal.add(new LocalOrderProperty(orderColumns));
@@ -115,30 +118,31 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
         int nInput = logicalOp.getNumInput();
         int[][] compareFields = new int[nInput][];
 
-        List<LogicalVariable> compareVars0 = logicalOp.getCompareVariables(0);
+        List<LogicalVariable> inputCompareVars0 = logicalOp.getInputCompareVariables(0);
         IVariableTypeEnvironment inputTypeEnv0 = context.getTypeEnvironment(logicalOp.getInputs().get(0).getValue());
         IBinaryComparatorFactory[] comparatorFactories =
-                JobGenHelper.variablesToAscBinaryComparatorFactories(compareVars0, inputTypeEnv0, context);
+                JobGenHelper.variablesToAscBinaryComparatorFactories(inputCompareVars0, inputTypeEnv0, context);
 
         INormalizedKeyComputerFactoryProvider nkcfProvider = context.getNormalizedKeyComputerFactoryProvider();
         INormalizedKeyComputerFactory nkcf = null;
         if (nkcfProvider != null) {
-            Object type = inputTypeEnv0.getVarType(compareVars0.get(0));
+            Object type = inputTypeEnv0.getVarType(inputCompareVars0.get(0));
             if (type != null) {
                 nkcf = nkcfProvider.getNormalizedKeyComputerFactory(type, true);
             }
         }
 
-        for (int i = 0; i < logicalOp.getNumInput(); i++) {
-            compareFields[i] = JobGenHelper.variablesToFieldIndexes(logicalOp.getCompareVariables(i), inputSchemas[i]);
+        for (int i = 0; i < nInput; i++) {
+            compareFields[i] =
+                    JobGenHelper.variablesToFieldIndexes(logicalOp.getInputCompareVariables(i), inputSchemas[i]);
         }
 
         int[][] extraFields = null;
-        if (logicalOp.getExtraVariables() != null) {
-            extraFields = new int[logicalOp.getNumInput()][];
-            for (int i = 0; i < logicalOp.getNumInput(); i++) {
+        if (logicalOp.hasExtraVariables()) {
+            extraFields = new int[nInput][];
+            for (int i = 0; i < nInput; i++) {
                 extraFields[i] =
-                        JobGenHelper.variablesToFieldIndexes(logicalOp.getExtraVariables().get(i), inputSchemas[i]);
+                        JobGenHelper.variablesToFieldIndexes(logicalOp.getInputExtraVariables(i), inputSchemas[i]);
             }
         }
 

@@ -320,16 +320,13 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
 
     private IntersectOperator createIntersectWithFilter(List<LogicalVariable> outputFilterVars,
             List<List<LogicalVariable>> filterVars, IntersectOperator intersect) throws AlgebricksException {
-        List<LogicalVariable> outputVars = new ArrayList<>();
-        outputVars.addAll(intersect.getOutputVars());
-        outputVars.addAll(outputFilterVars);
-
-        List<List<LogicalVariable>> compareVars = new ArrayList<>(intersect.getNumInput());
-        for (int i = 0; i < intersect.getNumInput(); i++) {
-            compareVars.add(new ArrayList<>(intersect.getCompareVariables(i)));
+        int nInput = intersect.getNumInput();
+        List<List<LogicalVariable>> inputCompareVars = new ArrayList<>(nInput);
+        for (int i = 0; i < nInput; i++) {
+            inputCompareVars.add(new ArrayList<>(intersect.getInputCompareVariables(i)));
         }
-
-        IntersectOperator intersectWithFilter = new IntersectOperator(outputVars, compareVars, filterVars);
+        IntersectOperator intersectWithFilter = new IntersectOperator(intersect.getOutputCompareVariables(),
+                outputFilterVars, inputCompareVars, filterVars);
         intersectWithFilter.setSourceLocation(intersect.getSourceLocation());
         intersectWithFilter.getInputs().addAll(intersect.getInputs());
         return intersectWithFilter;

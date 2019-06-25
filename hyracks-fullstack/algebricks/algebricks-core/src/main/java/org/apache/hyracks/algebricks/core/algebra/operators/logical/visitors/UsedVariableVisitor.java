@@ -288,10 +288,18 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
+        boolean hasExtraVars = op.hasExtraVariables();
         for (int i = 0; i < op.getNumInput(); i++) {
-            for (LogicalVariable var : op.getInputVariables(i)) {
+            for (LogicalVariable var : op.getInputCompareVariables(i)) {
                 if (!usedVariables.contains(var)) {
                     usedVariables.add(var);
+                }
+            }
+            if (hasExtraVars) {
+                for (LogicalVariable var : op.getInputExtraVariables(i)) {
+                    if (!usedVariables.contains(var)) {
+                        usedVariables.add(var);
+                    }
                 }
             }
         }

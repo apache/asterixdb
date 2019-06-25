@@ -271,16 +271,15 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitIntersectOperator(IntersectOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        for (int i = 0; i < op.getOutputVars().size(); i++) {
-            if (op.getOutputVars().get(i).equals(pair.first)) {
-                op.getOutputVars().set(i, pair.second);
-            }
+        boolean hasExtraVars = op.hasExtraVariables();
+        substInArray(op.getOutputCompareVariables(), pair.first, pair.second);
+        if (hasExtraVars) {
+            substInArray(op.getOutputExtraVariables(), pair.first, pair.second);
         }
-        for (int i = 0; i < op.getNumInput(); i++) {
-            for (int j = 0; j < op.getInputVariables(i).size(); j++) {
-                if (op.getInputVariables(i).get(j).equals(pair.first)) {
-                    op.getInputVariables(i).set(j, pair.second);
-                }
+        for (int i = 0, n = op.getNumInput(); i < n; i++) {
+            substInArray(op.getInputCompareVariables(i), pair.first, pair.second);
+            if (hasExtraVars) {
+                substInArray(op.getInputExtraVariables(i), pair.first, pair.second);
             }
         }
         return null;

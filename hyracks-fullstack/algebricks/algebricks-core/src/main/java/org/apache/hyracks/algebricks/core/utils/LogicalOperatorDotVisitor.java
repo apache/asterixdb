@@ -306,26 +306,21 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
     public String visitIntersectOperator(IntersectOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("intersect (");
-        stringBuilder.append('[');
-        for (int i = 0; i < op.getOutputVars().size(); i++) {
-            if (i > 0) {
-                stringBuilder.append(", ");
-            }
-            stringBuilder.append(str(op.getOutputVars().get(i)));
+        pprintVarList(op.getOutputCompareVariables());
+        if (op.hasExtraVariables()) {
+            stringBuilder.append(" extra ");
+            pprintVarList(op.getOutputExtraVariables());
         }
-        stringBuilder.append("] <- [");
-        for (int i = 0; i < op.getNumInput(); i++) {
+        stringBuilder.append(" <- [");
+        for (int i = 0, n = op.getNumInput(); i < n; i++) {
             if (i > 0) {
                 stringBuilder.append(", ");
             }
-            stringBuilder.append('[');
-            for (int j = 0; j < op.getInputVariables(i).size(); j++) {
-                if (j > 0) {
-                    stringBuilder.append(", ");
-                }
-                stringBuilder.append(str(op.getInputVariables(i).get(j)));
+            pprintVarList(op.getInputCompareVariables(i));
+            if (op.hasExtraVariables()) {
+                stringBuilder.append(" extra ");
+                pprintVarList(op.getInputExtraVariables(i));
             }
-            stringBuilder.append(']');
         }
         stringBuilder.append("])");
         appendSchema(op, showDetails);
@@ -657,6 +652,12 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
         appendAnnotations(op, showDetails);
         appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
+    }
+
+    protected void pprintVarList(List<LogicalVariable> variables) {
+        stringBuilder.append("[");
+        variables.forEach(var -> stringBuilder.append(str(var)).append(", "));
+        stringBuilder.append("]");
     }
 
     private void printExprList(List<Mutable<ILogicalExpression>> expressions) {

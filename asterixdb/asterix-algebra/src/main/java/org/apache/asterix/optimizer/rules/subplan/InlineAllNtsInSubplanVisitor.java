@@ -573,15 +573,17 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     @Override
     public ILogicalOperator visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
         visitMultiInputOperator(op);
-        List<LogicalVariable> outputVars = op.getOutputVars();
-        for (int i = 0; i < op.getNumInput(); i++) {
-            List<LogicalVariable> inputVars = op.getInputVariables(i);
-            if (inputVars.size() != outputVars.size()) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, op.getSourceLocation(),
-                        "The cardinality of input and output are not equal for Intersection");
-            }
-            for (int j = 0; j < inputVars.size(); j++) {
-                updateInputToOutputVarMapping(inputVars.get(j), outputVars.get(j), false);
+
+        int nInput = op.getNumInput();
+        boolean hasExtraVars = op.hasExtraVariables();
+        List<LogicalVariable> outputCompareVars = op.getOutputCompareVariables();
+        List<LogicalVariable> outputExtraVars = op.getOutputExtraVariables();
+        for (int i = 0; i < nInput; i++) {
+            updateInputToOutputVarMappings(op.getInputCompareVariables(i), outputCompareVars, false,
+                    op.getSourceLocation());
+            if (hasExtraVars) {
+                updateInputToOutputVarMappings(op.getInputExtraVariables(i), outputExtraVars, false,
+                        op.getSourceLocation());
             }
         }
         return op;
@@ -761,6 +763,18 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
             currentVarToSubplanInputVarMap.put(newVar, oldVar);
         } else {
             varMapIntroducedByRewriting.add(new Pair<>(oldVar, newVar));
+        }
+    }
+
+    private void updateInputToOutputVarMappings(List<LogicalVariable> oldVarList, List<LogicalVariable> newVarList,
+            boolean inNts, SourceLocation sourceLoc) throws CompilationException {
+        int oldVarCount = oldVarList.size();
+        if (oldVarCount != newVarList.size()) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                    "The cardinality of input and output are not equal");
+        }
+        for (int i = 0; i < oldVarCount; i++) {
+            updateInputToOutputVarMapping(oldVarList.get(i), newVarList.get(i), inNts);
         }
     }
 

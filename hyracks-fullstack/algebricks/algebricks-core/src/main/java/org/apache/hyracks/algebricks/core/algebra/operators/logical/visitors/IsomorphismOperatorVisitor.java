@@ -371,20 +371,35 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         IntersectOperator intersetOpArg = (IntersectOperator) copyAndSubstituteVar(op, arg);
-        List<LogicalVariable> variables = op.getOutputVars();
-        List<LogicalVariable> variablesArg = intersetOpArg.getOutputVars();
-        if (variables.size() != variablesArg.size()) {
+        List<LogicalVariable> outputCompareVars = op.getOutputCompareVariables();
+        List<LogicalVariable> outputCompareVarsArg = intersetOpArg.getOutputCompareVariables();
+        if (outputCompareVars.size() != outputCompareVarsArg.size()) {
             return Boolean.FALSE;
         }
-        if (!VariableUtilities.varListEqualUnordered(variables, variablesArg)) {
+        if (!VariableUtilities.varListEqualUnordered(outputCompareVars, outputCompareVarsArg)) {
+            return Boolean.FALSE;
+        }
+        boolean hasExtraVars = op.hasExtraVariables();
+        List<LogicalVariable> outputExtraVars = op.getOutputExtraVariables();
+        List<LogicalVariable> outputExtraVarsArg = intersetOpArg.getOutputExtraVariables();
+        if (outputExtraVars.size() != outputExtraVarsArg.size()) {
+            return Boolean.FALSE;
+        }
+        if (!VariableUtilities.varListEqualUnordered(outputExtraVars, outputExtraVarsArg)) {
             return Boolean.FALSE;
         }
 
-        if (op.getNumInput() != intersetOpArg.getNumInput()) {
+        int nInput = op.getNumInput();
+        if (nInput != intersetOpArg.getNumInput()) {
             return Boolean.FALSE;
         }
-        for (int i = 0; i < op.getNumInput(); i++) {
-            if (!VariableUtilities.varListEqualUnordered(op.getInputVariables(i), intersetOpArg.getInputVariables(i))) {
+        for (int i = 0; i < nInput; i++) {
+            if (!VariableUtilities.varListEqualUnordered(op.getInputCompareVariables(i),
+                    intersetOpArg.getInputCompareVariables(i))) {
+                return Boolean.FALSE;
+            }
+            if (hasExtraVars && !VariableUtilities.varListEqualUnordered(op.getInputExtraVariables(i),
+                    intersetOpArg.getInputExtraVariables(i))) {
                 return Boolean.FALSE;
             }
         }

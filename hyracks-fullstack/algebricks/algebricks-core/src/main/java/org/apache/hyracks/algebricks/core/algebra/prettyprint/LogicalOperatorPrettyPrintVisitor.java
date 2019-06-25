@@ -250,46 +250,24 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitIntersectOperator(IntersectOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("intersect (");
-
-        buffer.append('[');
-        for (int i = 0; i < op.getOutputVars().size(); i++) {
+        addIndent(indent).append("intersect ");
+        pprintVarList(op.getOutputCompareVariables());
+        if (op.hasExtraVariables()) {
+            buffer.append(" extra ");
+            pprintVarList(op.getOutputExtraVariables());
+        }
+        buffer.append(" <- [");
+        for (int i = 0, n = op.getNumInput(); i < n; i++) {
             if (i > 0) {
                 buffer.append(", ");
             }
-            buffer.append(str(op.getOutputVars().get(i)));
+            pprintVarList(op.getInputCompareVariables(i));
+            if (op.hasExtraVariables()) {
+                buffer.append(" extra ");
+                pprintVarList(op.getInputExtraVariables(i));
+            }
         }
-        buffer.append("] <- [");
-        for (int i = 0; i < op.getNumInput(); i++) {
-            if (i > 0) {
-                buffer.append(", ");
-            }
-            buffer.append('[');
-            for (int j = 0; j < op.getInputVariables(i).size(); j++) {
-                if (j > 0) {
-                    buffer.append(", ");
-                }
-                buffer.append(str(op.getInputVariables(i).get(j)));
-            }
-            buffer.append("] cmp [");
-            for (int j = 0; j < op.getCompareVariables(i).size(); j++) {
-                if (j > 0) {
-                    buffer.append(", ");
-                }
-                buffer.append(str(op.getCompareVariables(i).get(j)));
-            }
-            if (op.getExtraVariables() != null) {
-                buffer.append("] ext [");
-                for (int j = 0; j < op.getExtraVariables().get(i).size(); j++) {
-                    if (j > 0) {
-                        buffer.append(", ");
-                    }
-                    buffer.append(str(op.getExtraVariables().get(i).get(j)));
-                }
-            }
-            buffer.append(']');
-        }
-        buffer.append("])");
+        buffer.append(']');
         return null;
     }
 
@@ -591,6 +569,20 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
                 addIndent(indent).append("       }");
             }
         }
+    }
+
+    protected void pprintVarList(List<LogicalVariable> variables) throws AlgebricksException {
+        buffer.append('[');
+        boolean first = true;
+        for (LogicalVariable var : variables) {
+            if (first) {
+                first = false;
+            } else {
+                buffer.append(", ");
+            }
+            buffer.append(str(var));
+        }
+        buffer.append(']');
     }
 
     protected void pprintExprList(List<Mutable<ILogicalExpression>> expressions, Integer indent)

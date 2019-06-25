@@ -505,18 +505,37 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
             return;
         }
         IntersectOperator opArg = (IntersectOperator) arg;
-        if (op.getNumInput() != opArg.getNumInput()) {
+        int nInput = op.getNumInput();
+        if (nInput != opArg.getNumInput()) {
             return;
         }
-        for (int i = 0; i < op.getNumInput(); i++) {
-            for (int j = 0; j < op.getInputVariables(i).size(); j++) {
-                if (!varEquivalent(op.getInputVariables(i).get(j), opArg.getInputVariables(i).get(j))) {
+        boolean hasExtraVars = op.hasExtraVariables();
+        if (hasExtraVars && !opArg.hasExtraVariables()) {
+            return;
+        }
+        for (int i = 0; i < nInput; i++) {
+            List<LogicalVariable> inputCompareVars = op.getInputCompareVariables(i);
+            List<LogicalVariable> inputCompareVarsArg = opArg.getInputCompareVariables(i);
+            for (int j = 0, n = inputCompareVars.size(); j < n; j++) {
+                if (!varEquivalent(inputCompareVars.get(j), inputCompareVarsArg.get(j))) {
                     return;
                 }
             }
-
+            if (hasExtraVars) {
+                List<LogicalVariable> inputExtraVars = op.getInputExtraVariables(i);
+                List<LogicalVariable> inputExtraVarsArg = opArg.getInputExtraVariables(i);
+                for (int j = 0, n = inputExtraVars.size(); j < n; j++) {
+                    if (!varEquivalent(inputExtraVars.get(j), inputExtraVarsArg.get(j))) {
+                        return;
+                    }
+                }
+            }
         }
-        mapVariables(op.getOutputVars(), opArg.getOutputVars());
+
+        mapVariables(op.getOutputCompareVariables(), opArg.getOutputCompareVariables());
+        if (hasExtraVars) {
+            mapVariables(op.getOutputExtraVariables(), opArg.getOutputExtraVariables());
+        }
     }
 
     private boolean varEquivalent(LogicalVariable left, LogicalVariable right) {
