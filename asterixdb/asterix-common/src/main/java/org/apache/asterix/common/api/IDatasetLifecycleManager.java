@@ -135,4 +135,12 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
      * @throws HyracksDataException
      */
     void flushDataset(IReplicationStrategy replicationStrategy) throws HyracksDataException;
+
+    /**
+     * Waits for all ongoing IO operations on all open datasets that are matching {@code replicationStrategy}.
+     *
+     * @param replicationStrategy
+     * @throws HyracksDataException
+     */
+    void waitForIO(IReplicationStrategy replicationStrategy) throws HyracksDataException;
 }

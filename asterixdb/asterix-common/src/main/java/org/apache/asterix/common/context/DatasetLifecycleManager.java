@@ -594,6 +594,15 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         }
     }
 
+    @Override
+    public void waitForIO(IReplicationStrategy replicationStrategy) throws HyracksDataException {
+        for (DatasetResource dsr : datasets.values()) {
+            if (dsr.isOpen() && replicationStrategy.isMatch(dsr.getDatasetID())) {
+                dsr.getDatasetInfo().waitForIO();
+            }
+        }
+    }
+
     private void closeIndex(IndexInfo indexInfo) throws HyracksDataException {
         if (indexInfo.isOpen()) {
             ILSMOperationTracker opTracker = indexInfo.getIndex().getOperationTracker();
