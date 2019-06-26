@@ -17,4 +17,19 @@
  ! under the License.
  !-->
 
-# Builtin Functions #
+## <a id="toc">Table of Contents</a> ##
+
+* [Numeric Functions](#NumericFunctions)
+* [String Functions](#StringFunctions)
+* [Binary Functions](#BinaryFunctions)
+* [Spatial Functions](#SpatialFunctions)
+* [Similarity Functions](#SimilarityFunctions)
+* [Tokenizing Functions](#TokenizingFunctions)
+* [Temporal Functions](#TemporalFunctions)
+* [Object Functions](#ObjectFunctions)
+* [Aggregate Functions (Array Functions)](#AggregateFunctions)
+* [Comparison Functions](#ComparisonFunctions)
+* [Type Functions](#TypeFunctions)
+* [Conditional Functions](#ConditionalFunctions)
+* [Miscellaneous Functions](#MiscFunctions)
+* [Window Functions](#WindowFunctions)

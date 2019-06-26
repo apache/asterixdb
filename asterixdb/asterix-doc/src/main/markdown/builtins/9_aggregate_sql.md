@@ -33,7 +33,7 @@ It determines whether the function aggregates all values in the group, or distin
 Refer to [Aggregation Functions](manual.html#Aggregation_functions) for details.
 
 Aggregate functions may be used as window functions when they are used with an OVER clause.
-Refer to [OVER Clause](#OverClause) for details.
+Refer to [OVER Clauses](manual.html#Over_clauses) for details.
 
 ### array_count ###
  * Syntax:

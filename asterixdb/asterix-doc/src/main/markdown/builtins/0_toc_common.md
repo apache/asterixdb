@@ -17,4 +17,5 @@
  ! under the License.
  !-->
 
-# Builtin Functions #
+The system provides various classes of functions to support operations on numeric, string, spatial, and temporal data.
+This document explains how to use these functions.

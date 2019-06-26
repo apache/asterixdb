@@ -250,7 +250,7 @@ and also a composition thereof.
                   | CaseExpression
                   | Constructor
 
-The most basic building block for any expression in the query langauge is PrimaryExpression.
+The most basic building block for any expression in the query language is PrimaryExpression.
 This can be a simple literal (constant) value, a reference to a query variable that is in scope, a parenthesized
 expression, a function call, or a newly constructed instance of the data model (such as a newly constructed object,
 array, or multiset of data model instances).
@@ -386,13 +386,16 @@ The following expression evaluates to the value 2.
 
 ### <a id="Function_call_expressions">Function Call Expressions</a>
 
-    FunctionCallExpression ::= FunctionName "(" ( Expression ( "," Expression )* )? ")"
+    FunctionCallExpression ::= ( FunctionName "(" ( Expression ( "," Expression )* )? ")" ) | WindowFunctionCall
 
 Functions are included in the query language, like most languages, as a way to package useful functionality or to
 componentize complicated or reusable computations.
 A function call is a legal query expression that represents the value resulting from the evaluation of its body
 expression with the given parameter bindings; the parameter value bindings can themselves be any expressions in the
 query language.
+
+Note that Window functions, and aggregate functions used as window functions, have a more complex syntax.
+Window function calls are described in the section on [OVER Clauses](#Over_clauses).
 
 The following example is a (built-in) function call expression whose value is 8.
 

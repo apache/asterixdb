@@ -28,7 +28,7 @@ The tuples are not grouped into a single output tuple — each tuple remains
 separate in the query output.
 
 All window functions must be used with an OVER clause.
-Refer to [OVER Clause](#OverClause) for details.
+Refer to [OVER Clauses](manual.html#Over_clauses) for details.
 
 Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
@@ -52,9 +52,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Clauses:
 
-    * (Optional) [Window Partition Clause](#window-partition-clause).
+    * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](#window-order-clause).
+    * (Required) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
@@ -122,13 +122,13 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
   distinct tuples preceding this tuple in the current window partition, plus
   one.
 
-  The tuples are ordered by the window order clause.
-  If any tuples are tied, they will have the same rank.
+    The tuples are ordered by the window order clause.
+    If any tuples are tied, they will have the same rank.
 
-  For this function, when any tuples have the same rank, the rank of the next
-  tuple will be consecutive, so there will not be a gap in the sequence of
-  returned values.
-  For example, if there are three tuples ranked 2, the next dense rank is 3.
+    For this function, when any tuples have the same rank, the rank of the next
+    tuple will be consecutive, so there will not be a gap in the sequence of
+    returned values.
+    For example, if there are three tuples ranked 2, the next dense rank is 3.
 
 * Arguments:
 
@@ -136,9 +136,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Clauses:
 
-    * (Optional) [Window Partition Clause](#window-partition-clause).
+    * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](#window-order-clause).
+    * (Required) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
@@ -209,8 +209,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
         FIRST_VALUE(expr) [nulls-treatment] OVER (window-definition)
 
 * Returns the requested value from the first tuple in the current window
-  frame, where the window frame is specified by the [window
-  clause](#window-definition).
+  frame, where the window frame is specified by the window definition.
 
 * Arguments:
 
@@ -219,9 +218,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Modifiers:
 
-    * [Nulls Treatment](#nulls-treatment): (Optional) Determines how NULL or
-      MISSING values are treated when finding the first tuple in the window
-      frame.
+    * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
+      NULL or MISSING values are treated when finding the first tuple in the
+      window frame.
 
         - `IGNORE NULLS`: If the values for any tuples evaluate to NULL or
           MISSING, those tuples are ignored when finding the first tuple.
@@ -235,11 +234,11 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Clauses:
 
-    * (Optional) [Window Partition Clause](#window-partition-clause).
+    * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Optional) [Window Order Clause](#window-order-clause).
+    * (Optional) [Window Order Clause](manual.html#Window_order_clause).
 
-    * (Optional) [Window Frame Clause](#window-frame-clause).
+    * (Optional) [Window Frame Clause](manual.html#Window_frame_clause).
 
 * Return Value:
 
@@ -346,9 +345,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Modifiers:
 
-    * [Nulls Treatment](#nulls-treatment): (Optional) Determines how NULL or
-      MISSING values are treated when finding the first tuple in the window
-      frame.
+    * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
+      NULL or MISSING values are treated when finding the first tuple in the
+      window frame.
 
         - `IGNORE NULLS`: If the values for any tuples evaluate to NULL or
           MISSING, those tuples are ignored when finding the first tuple.
@@ -362,9 +361,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Clauses:
 
-    * (Optional) [Window Partition Clause](#window-partition-clause).
+    * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](#window-order-clause).
+    * (Required) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
@@ -449,9 +448,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Modifiers:
 
-    * [Nulls Treatment](#nulls-treatment): (Optional) Determines how NULL or
-      MISSING values are treated when finding the first tuple in the window
-      frame.
+    * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
+      NULL or MISSING values are treated when finding the first tuple in the
+      window frame.
 
         - `IGNORE NULLS`: If the values for any tuples evaluate to NULL or
           MISSING, those tuples are ignored when finding the first tuple.
@@ -465,11 +464,11 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Clauses:
 
-    * (Optional) [Window Partition Clause](#window-partition-clause).
+    * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Optional) [Window Order Clause](#window-order-clause).
+    * (Optional) [Window Order Clause](manual.html#Window_order_clause).
 
-    * (Optional) [Window Frame Clause](#window-frame-clause).
+    * (Optional) [Window Frame Clause](manual.html#Window_frame_clause).
 
 * Return Value:
 
@@ -586,9 +585,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Modifiers:
 
-    * [Nulls Treatment](#nulls-treatment): (Optional) Determines how NULL or
-      MISSING values are treated when finding the first tuple in the window
-      frame.
+    * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
+      NULL or MISSING values are treated when finding the first tuple in the
+      window frame.
 
         - `IGNORE NULLS`: If the values for any tuples evaluate to NULL or
           MISSING, those tuples are ignored when finding the first tuple.
@@ -602,9 +601,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Clauses:
 
-    * (Optional) [Window Partition Clause](#window-partition-clause).
+    * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](#window-order-clause).
+    * (Required) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
@@ -692,8 +691,8 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Modifiers:
 
-    * [Nth Val From](#nthval-from): (Optional) Determines where the function
-      starts counting the offset.
+    * [Nth Val From](manual.html#Nth_val_from): (Optional) Determines where the
+      function starts counting the offset.
 
         - `FROM FIRST`: Counting starts at the first tuple in the window frame.
           In this case, an offset of 1 is the first tuple in the window frame,
@@ -706,9 +705,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
         The order of the tuples is determined by the window order clause.
         If this modifier is omitted, the default is `FROM FIRST`.
 
-    * [Nulls Treatment](#nulls-treatment): (Optional) Determines how NULL or
-      MISSING values are treated when finding the first tuple in the window
-      frame.
+    * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
+      NULL or MISSING values are treated when finding the first tuple in the
+      window frame.
 
         - `IGNORE NULLS`: If the values for any tuples evaluate to NULL or
           MISSING, those tuples are ignored when finding the first tuple.
@@ -722,11 +721,11 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Clauses:
 
-    * (Optional) [Window Partition Clause](#window-partition-clause).
+    * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Optional) [Window Order Clause](#window-order-clause).
+    * (Optional) [Window Order Clause](manual.html#Window_order_clause).
 
-    * (Optional) [Window Frame Clause](#window-order-clause).
+    * (Optional) [Window Frame Clause](manual.html#Window_frame_clause).
 
 * Return Value:
 
@@ -915,9 +914,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Clauses:
 
-    * (Optional) [Window Partition Clause](#window-partition-clause).
+    * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](#window-order-clause).
+    * (Required) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
@@ -990,9 +989,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Clauses:
 
-    * (Optional) [Window Partition Clause](#window-partition-clause).
+    * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](#window-order-clause).
+    * (Required) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
@@ -1059,13 +1058,13 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 * Returns the rank of the current tuple – that is, the number of distinct
   tuples preceding this tuple in the current window partition, plus one.
 
-  The tuples are ordered by the window order clause.
-  If any tuples are tied, they will have the same rank.
+    The tuples are ordered by the window order clause.
+    If any tuples are tied, they will have the same rank.
 
-  When any tuples have the same rank, the rank of the next tuple will include
-  all preceding tuples, so there may be a gap in the sequence of returned
-  values.
-  For example, if there are three tuples ranked 2, the next rank is 5.
+    When any tuples have the same rank, the rank of the next tuple will include
+    all preceding tuples, so there may be a gap in the sequence of returned
+    values.
+    For example, if there are three tuples ranked 2, the next rank is 5.
 
 * Arguments:
 
@@ -1073,9 +1072,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Clauses:
 
-    * (Optional) [Window Partition Clause](#window-partition-clause).
+    * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](#window-order-clause).
+    * (Required) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
@@ -1155,11 +1154,11 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Clauses:
 
-    * (Optional) [Window Partition Clause](#window-partition-clause).
+    * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Optional) [Window Order Clause](#window-order-clause).
+    * (Optional) [Window Order Clause](manual.html#Window_order_clause).
 
-    * (Optional) [Window Frame Clause](#window-frame-clause).
+    * (Optional) [Window Frame Clause](manual.html#Window_frame_clause).
 
 * Return Value:
 
@@ -1231,8 +1230,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 * Returns a unique row number for every tuple in every window partition.
   In each window partition, the row numbering starts at 1.
 
-  The window order clause determines the sort order of the tuples.
-  If the window order clause is omitted, the return values may be unpredictable.
+    The window order clause determines the sort order of the tuples.
+    If the window order clause is omitted, the return values may be
+    unpredictable.
 
 * Arguments:
 
@@ -1240,9 +1240,9 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Clauses:
 
-    * (Optional) [Window Partition Clause](#window-partition-clause).
+    * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Optional) [Window Order Clause](#window-order-clause).
+    * (Optional) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
