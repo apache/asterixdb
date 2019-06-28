@@ -13,7 +13,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         Variable [ Name=$x ]
-        Field=id
+        Field=no-idx
       ]
       =
       LiteralExpr [STRING] [one]
@@ -22,7 +22,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         Variable [ Name=$x ]
-        Field=id
+        Field=no-idx
       ]
       =
       LiteralExpr [STRING] [two]
@@ -31,7 +31,7 @@ Where
     OperatorExpr [
       FieldAccessor [
         Variable [ Name=$x ]
-        Field=id
+        Field=no-idx
       ]
       =
       LiteralExpr [STRING] [two]

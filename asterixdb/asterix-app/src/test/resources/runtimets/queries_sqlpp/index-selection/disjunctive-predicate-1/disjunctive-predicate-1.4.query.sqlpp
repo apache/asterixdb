@@ -21,6 +21,6 @@ use test;
 
 select element x
 from  TestSet as x
-where ((x.id = 'one') or (x.id = 'two') or (x.id = 'two'))
+where ((x.idx = 'one') or (x.idx = 'two') or (x.idx = 'two'))
 order by x.id
 ;

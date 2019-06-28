@@ -54,11 +54,23 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
+    // Disable this rule if this option is set to 'false'
+    public static final String REWRITE_OR_AS_JOIN_OPTION = "rewrite_or_as_join";
+    private static final boolean REWRITE_OR_AS_JOIN_OPTION_DEFAULT = true;
+
+    private Boolean isRuleEnabled;
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
+        if (isRuleEnabled == null) {
+            isRuleEnabled =
+                    metadataProvider.getBooleanProperty(REWRITE_OR_AS_JOIN_OPTION, REWRITE_OR_AS_JOIN_OPTION_DEFAULT);
+        }
+        if (!isRuleEnabled) {
+            return false;
+        }
         if (metadataProvider.isBlockingOperatorDisabled()) {
             return false;
         }
@@ -207,5 +219,4 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
             FunctionIdentifier fi) {
         return asFunctionCallExpression(ex.getValue(), fi);
     }
-
 }
