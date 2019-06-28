@@ -58,4 +58,14 @@ public interface ICheckpointManager extends ILifeCycleComponent {
      * @param id
      */
     void completed(TxnId id);
+
+    /**
+     * Suspends checkpointing datasets
+     */
+    void suspend();
+
+    /**
+     * Resumes checkpointing datasets
+     */
+    void resume();
 }

@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.transaction.management.service.recovery;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.transactions.CheckpointProperties;
 import org.apache.asterix.common.transactions.ICheckpointManager;
@@ -26,10 +30,6 @@ import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * An implementation of {@link ICheckpointManager} that defines the logic
@@ -40,6 +40,7 @@ public class CheckpointManager extends AbstractCheckpointManager {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long NO_SECURED_LSN = -1L;
     private final Map<TxnId, Long> securedLSNs;
+    private boolean suspended = false;
 
     public CheckpointManager(ITransactionSubsystem txnSubsystem, CheckpointProperties checkpointProperties) {
         super(txnSubsystem, checkpointProperties);
@@ -76,7 +77,7 @@ public class CheckpointManager extends AbstractCheckpointManager {
         }
         final long minFirstLSN = txnSubsystem.getRecoveryManager().getMinFirstLSN();
         boolean checkpointSucceeded = minFirstLSN >= checkpointTargetLSN;
-        if (!checkpointSucceeded) {
+        if (!checkpointSucceeded && !suspended) {
             // Flush datasets with indexes behind target checkpoint LSN
             IDatasetLifecycleManager datasetLifecycleManager =
                     txnSubsystem.getApplicationContext().getDatasetLifecycleManager();
@@ -98,6 +99,16 @@ public class CheckpointManager extends AbstractCheckpointManager {
     @Override
     public synchronized void completed(TxnId id) {
         securedLSNs.remove(id);
+    }
+
+    @Override
+    public synchronized void suspend() {
+        suspended = true;
+    }
+
+    @Override
+    public synchronized void resume() {
+        suspended = false;
     }
 
     private synchronized long getMinSecuredLSN() {
