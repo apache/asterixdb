@@ -16,15 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.app.external;
-
-import java.io.IOException;
-
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.http.client.ClientProtocolException;
-
-public interface IExternalUDFLibrarian {
-    void install(String dataverse, String libName, String libPath) throws Exception;
-
-    void uninstall(String dataverse, String libName) throws IOException, ClientProtocolException, AsterixException;
-}
+DROP DATAVERSE externallibtest if exists;
+CREATE DATAVERSE  externallibtest;

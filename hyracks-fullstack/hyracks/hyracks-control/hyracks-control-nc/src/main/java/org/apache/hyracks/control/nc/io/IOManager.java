@@ -346,6 +346,10 @@ public class IOManager implements IIOManager {
         return dev.createFileRef(waPath + File.separator + waf.getName());
     }
 
+    public String getWorkspacePath(int index) {
+        return workspaces.get(index) != null ? workspaces.get(index).getWorkspace() : null;
+    }
+
     @Override
     public void sync(IFileHandle fileHandle, boolean metadata) throws HyracksDataException {
         try {

@@ -69,4 +69,6 @@ public interface IServiceContext {
     default IPersistedResourceRegistry getPersistedResourceRegistry() {
         throw new UnsupportedOperationException();
     }
+
+    IServerContext getServerCtx();
 }

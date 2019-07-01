@@ -57,7 +57,8 @@ public interface IHyracksClientInterface {
 
     public ClusterTopology getClusterTopology() throws Exception;
 
-    public void deployBinary(List<URL> binaryURLs, DeploymentId deploymentId) throws Exception;
+    public void deployBinary(List<URL> binaryURLs, DeploymentId deploymentId, boolean extractFromArchive)
+            throws Exception;
 
     public void unDeployBinary(DeploymentId deploymentId) throws Exception;
 

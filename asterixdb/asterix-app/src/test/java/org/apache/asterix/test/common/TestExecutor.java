@@ -1105,7 +1105,7 @@ public class TestExecutor {
                 lines = statement.split("\n");
                 String lastLine = lines[lines.length - 1];
                 String[] command = lastLine.trim().split(" ");
-                if (command.length < 3) {
+                if (command.length < 2) {
                     throw new Exception("invalid library format");
                 }
                 String dataverse = command[1];

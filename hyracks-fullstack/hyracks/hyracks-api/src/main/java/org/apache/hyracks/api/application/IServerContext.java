@@ -16,15 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.app.external;
+package org.apache.hyracks.api.application;
 
-import java.io.IOException;
+import java.io.File;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.http.client.ClientProtocolException;
+public interface IServerContext {
+    enum ServerType {
+        CLUSTER_CONTROLLER,
+        NODE_CONTROLLER,
+    }
 
-public interface IExternalUDFLibrarian {
-    void install(String dataverse, String libName, String libPath) throws Exception;
+    ServerType getServerType();
 
-    void uninstall(String dataverse, String libName) throws IOException, ClientProtocolException, AsterixException;
+    File getBaseDir();
+
+    File getAppDir();
 }

@@ -159,12 +159,22 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
     void waitForCompletion(JobId jobId) throws Exception;
 
     /**
-     * Deploy the user-defined jars to the cluster
+     * Deploy files to the cluster
      *
-     * @param jars
-     *            a list of user-defined jars
+     * @param files
+     *            a list of file paths
      */
-    DeploymentId deployBinary(List<String> jars) throws Exception;
+    DeploymentId deployBinary(List<String> files) throws Exception;
+
+    /**
+     * Deploy files to the cluster
+     *
+     * @param files
+     *            a list of file paths
+     * @param deploymentId
+     *            the id used to uniquely identify this set of files for management
+     */
+    void deployBinary(DeploymentId deploymentId, List<String> files, boolean extractFromArchive) throws Exception;
 
     /**
      * undeploy a certain deployment

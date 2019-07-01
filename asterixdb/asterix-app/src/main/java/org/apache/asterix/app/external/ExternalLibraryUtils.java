@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,8 +61,8 @@ public class ExternalLibraryUtils {
     private ExternalLibraryUtils() {
     }
 
-    public static void setUpExternaLibraries(ILibraryManager externalLibraryManager, boolean isMetadataNode)
-            throws Exception {
+    public static void setUpExternaLibrary(ILibraryManager externalLibraryManager, boolean isMetadataNode,
+            String libraryPath) throws Exception {
         // start by un-installing removed libraries (Metadata Node only)
         Map<String, List<String>> uninstalledLibs = null;
         if (isMetadataNode) {
@@ -69,18 +70,30 @@ public class ExternalLibraryUtils {
         }
 
         // get the directory of the to be installed libraries
-        File installLibDir = getLibraryInstallDir();
+        String[] pathSplit = libraryPath.split("\\.");
+        String[] dvSplit = pathSplit[pathSplit.length - 2].split("/");
+        String dataverse = dvSplit[dvSplit.length - 1];
+        String name = pathSplit[pathSplit.length - 1].trim();
+        File installLibDir = new File(libraryPath);
+
         // directory exists?
         if (installLibDir.exists()) {
-            // get the list of files in the directory
-            for (File dataverseDir : installLibDir.listFiles(File::isDirectory)) {
-                for (File libraryDir : dataverseDir.listFiles(File::isDirectory)) {
-                    // For each file (library), register classloader and configure its parameter.
-                    // If current node is Metadata Node, add the library to metadata.
-                    registerClassLoader(externalLibraryManager, dataverseDir.getName(), libraryDir.getName());
-                    configureLibrary(externalLibraryManager, dataverseDir.getName(), libraryDir, uninstalledLibs,
-                            isMetadataNode);
-                }
+            registerClassLoader(externalLibraryManager, dataverse, name, libraryPath);
+            configureLibrary(externalLibraryManager, dataverse, name, installLibDir, uninstalledLibs, isMetadataNode);
+        }
+    }
+
+    public static void setUpInstalledLibraries(ILibraryManager externalLibraryManager, boolean isMetadataNode,
+            File appDir) throws Exception {
+        File[] libs = appDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return dir.isDirectory();
+            }
+        });
+        if (libs != null) {
+            for (File lib : libs) {
+                setUpExternaLibrary(externalLibraryManager, isMetadataNode, lib.getAbsolutePath());
             }
         }
     }
@@ -134,7 +147,7 @@ public class ExternalLibraryUtils {
      * @throws RemoteException
      * @throws ACIDException
      */
-    protected static boolean uninstallLibrary(String dataverse, String libraryName)
+    public static boolean uninstallLibrary(String dataverse, String libraryName)
             throws AsterixException, RemoteException, ACIDException {
         MetadataTransactionContext mdTxnCtx = null;
         try {
@@ -270,10 +283,9 @@ public class ExternalLibraryUtils {
      * failure in installing an element does not effect installation of other
      * libraries.
      */
-    protected static void configureLibrary(ILibraryManager libraryManager, String dataverse, final File libraryDir,
-            Map<String, List<String>> uninstalledLibs, boolean isMetadataNode) throws Exception {
+    protected static void configureLibrary(ILibraryManager libraryManager, String dataverse, String libraryName,
+            final File libraryDir, Map<String, List<String>> uninstalledLibs, boolean isMetadataNode) throws Exception {
 
-        String libraryName = libraryDir.getName().trim();
         String[] libraryDescriptors = libraryDir.list((dir, name) -> name.endsWith(".xml"));
 
         if (libraryDescriptors == null) {
@@ -303,15 +315,15 @@ public class ExternalLibraryUtils {
      * register the library class loader with the external library manager
      *
      * @param dataverse
-     * @param libraryName
+     * @param libraryPath
      * @throws Exception
      */
-    protected static void registerClassLoader(ILibraryManager externalLibraryManager, String dataverse,
-            String libraryName) throws Exception {
+    protected static void registerClassLoader(ILibraryManager externalLibraryManager, String dataverse, String name,
+            String libraryPath) throws Exception {
         // get the class loader
-        ClassLoader classLoader = getLibraryClassLoader(dataverse, libraryName);
+        URLClassLoader classLoader = getLibraryClassLoader(dataverse, name, libraryPath);
         // register it with the external library manager
-        externalLibraryManager.registerLibraryClassLoader(dataverse, libraryName, classLoader);
+        externalLibraryManager.registerLibraryClassLoader(dataverse, name, classLoader);
     }
 
     /**
@@ -331,22 +343,23 @@ public class ExternalLibraryUtils {
     /**
      * Get the class loader for the library
      *
+     * @param libraryPath
      * @param dataverse
-     * @param libraryName
      * @return
      * @throws Exception
      */
-    private static ClassLoader getLibraryClassLoader(String dataverse, String libraryName) throws Exception {
+    private static URLClassLoader getLibraryClassLoader(String dataverse, String name, String libraryPath)
+            throws Exception {
         // Get a reference to the library directory
-        File installDir = getLibraryInstallDir();
+        File installDir = new File(libraryPath);
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Installing lirbary " + libraryName + " in dataverse " + dataverse + "."
-                    + " Install Directory: " + installDir.getAbsolutePath());
+            LOGGER.info("Installing lirbary " + name + " in dataverse " + dataverse + "." + " Install Directory: "
+                    + installDir.getAbsolutePath());
         }
 
         // get a reference to the specific library dir
-        File libDir =
-                new File(installDir.getAbsolutePath() + File.separator + dataverse + File.separator + libraryName);
+        File libDir = installDir;
+
         FilenameFilter jarFileFilter = new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -388,23 +401,15 @@ public class ExternalLibraryUtils {
         }
 
         if (LOGGER.isInfoEnabled()) {
-            StringBuilder logMesg = new StringBuilder("Classpath for library " + libraryName + "\n");
+            StringBuilder logMesg = new StringBuilder("Classpath for library " + dataverse + ": ");
             for (URL url : urls) {
-                logMesg.append(url.getFile() + "\n");
+                logMesg.append(url.getFile() + File.pathSeparatorChar);
             }
             LOGGER.info(logMesg.toString());
         }
 
         // create and return the class loader
         return new ExternalLibraryClassLoader(urls, parentClassLoader);
-    }
-
-    /**
-     * @return the directory "System.getProperty("app.home", System.getProperty("user.home")/lib/udfs"
-     */
-    protected static File getLibraryInstallDir() {
-        return new File(System.getProperty("app.home", System.getProperty("user.home")) + File.separator + "lib"
-                + File.separator + "udfs");
     }
 
     /**

@@ -47,6 +47,7 @@ import org.apache.asterix.api.http.server.QueryStatusApiServlet;
 import org.apache.asterix.api.http.server.RebalanceApiServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.api.http.server.ShutdownApiServlet;
+import org.apache.asterix.api.http.server.UdfApiServlet;
 import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.cc.CCExtensionManager;
@@ -150,7 +151,7 @@ public class CCApplication extends BaseCCApplication {
         ReplicationProperties repProp =
                 new ReplicationProperties(PropertiesAccessor.getInstance(ccServiceCtx.getAppConfig()));
         INcLifecycleCoordinator lifecycleCoordinator = createNcLifeCycleCoordinator(repProp.isReplicationEnabled());
-        ExternalLibraryUtils.setUpExternaLibraries(libraryManager, false);
+        ExternalLibraryUtils.setUpInstalledLibraries(libraryManager, false, ccServiceCtx.getServerCtx().getAppDir());
         componentProvider = new StorageComponentProvider();
 
         ccExtensionManager = new CCExtensionManager(new ArrayList<>(getExtensions()));
@@ -261,6 +262,7 @@ public class CCApplication extends BaseCCApplication {
         addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_CC_DETAIL); // must not precede add of CLUSTER_STATE
         addServlet(jsonAPIServer, Servlets.DIAGNOSTICS);
         addServlet(jsonAPIServer, Servlets.ACTIVE_STATS);
+        addServlet(jsonAPIServer, Servlets.UDF);
         return jsonAPIServer;
     }
 
@@ -313,6 +315,8 @@ public class CCApplication extends BaseCCApplication {
                 return new DiagnosticsApiServlet(appCtx, ctx, paths);
             case Servlets.ACTIVE_STATS:
                 return new ActiveStatsApiServlet(appCtx, ctx, paths);
+            case Servlets.UDF:
+                return new UdfApiServlet(appCtx, ctx, paths);
             default:
                 throw new IllegalStateException(String.valueOf(key));
         }

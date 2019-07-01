@@ -19,6 +19,7 @@
 
 package org.apache.asterix.common.library;
 
+import java.net.URLClassLoader;
 import java.util.List;
 
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -29,12 +30,10 @@ public interface ILibraryManager {
     /**
      * Registers the library class loader with the external library manager.
      * <code>dataverseName</code> and <code>libraryName</code> uniquely identifies a class loader.
-     *
-     * @param dataverseName
      * @param libraryName
      * @param classLoader
      */
-    void registerLibraryClassLoader(String dataverseName, String libraryName, ClassLoader classLoader)
+    void registerLibraryClassLoader(String dataverseName, String libraryName, URLClassLoader classLoader)
             throws HyracksDataException;
 
     /**

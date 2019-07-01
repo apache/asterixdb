@@ -36,6 +36,7 @@ public class Servlets {
     public static final String ACTIVE_STATS = "/admin/active/*";
     public static final String STORAGE = "/admin/storage/*";
     public static final String NET_DIAGNOSTICS = "/admin/net/*";
+    public static final String UDF = "/admin/udf/*";
 
     private Servlets() {
     }

@@ -20,18 +20,18 @@ package org.apache.hyracks.control.common.context;
 
 import java.io.File;
 
-public class ServerContext {
-    public enum ServerType {
-        CLUSTER_CONTROLLER,
-        NODE_CONTROLLER,
-    }
+import org.apache.hyracks.api.application.IServerContext;
+
+public class ServerContext implements IServerContext {
 
     private final ServerType type;
     private final File baseDir;
+    private final File appDir;
 
     public ServerContext(ServerType type, File baseDir) {
         this.type = type;
         this.baseDir = baseDir;
+        this.appDir = new File(baseDir, "applications");
     }
 
     public ServerType getServerType() {
@@ -40,5 +40,9 @@ public class ServerContext {
 
     public File getBaseDir() {
         return baseDir;
+    }
+
+    public File getAppDir() {
+        return appDir;
     }
 }

@@ -73,7 +73,7 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
         });
         try {
             if (classLoader == null) {
-                /** crate a new classloader */
+                /** create a new classloader */
                 URL[] urls = binaryURLs.toArray(new URL[binaryURLs.size()]);
                 classLoader = new MutableURLClassLoader(urls, this.getClass().getClassLoader());
             } else {

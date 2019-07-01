@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.application.IServerContext;
 import org.apache.hyracks.api.application.IStateDumpHandler;
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.config.IApplicationConfig;
@@ -151,5 +152,10 @@ public class TestNCServiceContext implements INCServiceContext {
     @Override
     public Object getApplicationContext() {
         return appCtx;
+    }
+
+    @Override
+    public IServerContext getServerCtx() {
+        return null;
     }
 }

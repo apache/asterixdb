@@ -33,7 +33,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.asterix.app.external.ExternalUDFLibrarian;
-import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -69,10 +68,8 @@ public class LangExecutionUtil {
         testExecutor = executor;
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
-        List<ILibraryManager> libraryManagers =
-                ExecutionTestUtil.setUp(cleanupOnStart, configFile, integrationUtil, startHdfs, null);
-        ExternalUDFLibrarian.removeLibraryDir();
-        librarian = new ExternalUDFLibrarian(libraryManagers);
+        ExecutionTestUtil.setUp(cleanupOnStart, configFile, integrationUtil, startHdfs, null);
+        librarian = new ExternalUDFLibrarian();
         testExecutor.setLibrarian(librarian);
         if (repeat != 1) {
             System.out.println("FYI: each test will be run " + repeat + " times.");
@@ -86,7 +83,6 @@ public class LangExecutionUtil {
             // Check whether there are leaked threads.
             checkThreadLeaks();
         } finally {
-            ExternalUDFLibrarian.removeLibraryDir();
             ExecutionTestUtil.tearDown(cleanupOnStop);
             integrationUtil.removeTestStorageFiles();
             if (!badTestCases.isEmpty()) {
@@ -125,9 +121,6 @@ public class LangExecutionUtil {
             for (int i = 1; i <= repeat; i++) {
                 if (repeat > 1) {
                     System.err.print("[" + i + "/" + repeat + "] ");
-                }
-                if (librarian != null) {
-                    librarian.cleanup();
                 }
                 testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false, ExecutionTestUtil.FailedGroup);
 

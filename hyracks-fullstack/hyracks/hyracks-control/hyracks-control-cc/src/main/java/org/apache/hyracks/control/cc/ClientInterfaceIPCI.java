@@ -165,7 +165,7 @@ class ClientInterfaceIPCI implements IIPCI {
                 HyracksClientInterfaceFunctions.CliDeployBinaryFunction dbf =
                         (HyracksClientInterfaceFunctions.CliDeployBinaryFunction) fn;
                 ccs.getWorkQueue().schedule(new CliDeployBinaryWork(ccs, dbf.getBinaryURLs(), dbf.getDeploymentId(),
-                        new IPCResponder<>(handle, mid)));
+                        dbf.isExtractFromArchive(), new IPCResponder<>(handle, mid)));
                 break;
             case CLI_UNDEPLOY_BINARY:
                 HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction udbf =

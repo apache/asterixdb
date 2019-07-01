@@ -47,13 +47,15 @@ public class CliDeployBinaryWork extends SynchronizableWork {
     private List<URL> binaryURLs;
     private DeploymentId deploymentId;
     private IPCResponder<DeploymentId> callback;
+    private boolean extractFromArchive;
 
     public CliDeployBinaryWork(ClusterControllerService ncs, List<URL> binaryURLs, DeploymentId deploymentId,
-            IPCResponder<DeploymentId> callback) {
+            boolean extractFromArchive, IPCResponder<DeploymentId> callback) {
         this.ccs = ncs;
         this.binaryURLs = binaryURLs;
         this.deploymentId = deploymentId;
         this.callback = callback;
+        this.extractFromArchive = extractFromArchive;
     }
 
     @Override
@@ -66,7 +68,7 @@ public class CliDeployBinaryWork extends SynchronizableWork {
              * Deploy for the cluster controller
              */
             DeploymentUtils.deploy(deploymentId, binaryURLs, ccs.getContext().getJobSerializerDeserializerContainer(),
-                    ccs.getServerContext(), false);
+                    ccs.getServerContext(), false, extractFromArchive);
 
             /**
              * Deploy for the node controllers
@@ -82,7 +84,7 @@ public class CliDeployBinaryWork extends SynchronizableWork {
              * deploy binaries to each node controller
              */
             for (NodeControllerState ncs : nodeManager.getAllNodeControllerStates()) {
-                ncs.getNodeController().deployBinary(deploymentId, binaryURLs);
+                ncs.getNodeController().deployBinary(deploymentId, binaryURLs, extractFromArchive);
             }
 
             ccs.getExecutor().execute(new Runnable() {

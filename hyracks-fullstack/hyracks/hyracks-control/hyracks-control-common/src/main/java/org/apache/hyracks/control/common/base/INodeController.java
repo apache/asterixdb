@@ -51,7 +51,7 @@ public interface INodeController {
 
     void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception;
 
-    void deployBinary(DeploymentId deploymentId, List<URL> url) throws Exception;
+    void deployBinary(DeploymentId deploymentId, List<URL> url, boolean extractFromArchive) throws Exception;
 
     void undeployBinary(DeploymentId deploymentId) throws Exception;
 

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.library;
 
+import java.io.IOException;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,14 +30,17 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ExternalLibraryManager implements ILibraryManager {
 
-    private final Map<String, ClassLoader> libraryClassLoaders = new HashMap<>();
+    private final Map<String, URLClassLoader> libraryClassLoaders = new HashMap<>();
     private final Map<String, List<String>> externalFunctionParameters = new HashMap<>();
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @Override
-    public void registerLibraryClassLoader(String dataverseName, String libraryName, ClassLoader classLoader)
+    public void registerLibraryClassLoader(String dataverseName, String libraryName, URLClassLoader classLoader)
             throws RuntimeDataException {
         String key = getKey(dataverseName, libraryName);
         synchronized (libraryClassLoaders) {
@@ -59,7 +64,13 @@ public class ExternalLibraryManager implements ILibraryManager {
     public void deregisterLibraryClassLoader(String dataverseName, String libraryName) {
         String key = getKey(dataverseName, libraryName);
         synchronized (libraryClassLoaders) {
-            if (libraryClassLoaders.get(key) != null) {
+            URLClassLoader cl = libraryClassLoaders.get(key);
+            if (cl != null) {
+                try {
+                    cl.close();
+                } catch (IOException e) {
+                    LOGGER.error("Unable to close UDF classloader!", e);
+                }
                 libraryClassLoaders.remove(key);
             }
         }

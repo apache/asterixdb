@@ -198,8 +198,7 @@ public class AsterixHyracksIntegrationUtil {
 
     public void init(boolean deleteOldInstanceData, String externalLibPath, String confDir) throws Exception {
         List<ILibraryManager> libraryManagers = new ArrayList<>();
-        ExternalUDFLibrarian librarian = new ExternalUDFLibrarian(libraryManagers);
-        librarian.cleanup();
+        ExternalUDFLibrarian librarian = new ExternalUDFLibrarian();
         init(deleteOldInstanceData, confDir);
         if (externalLibPath != null && externalLibPath.length() != 0) {
             libraryManagers.add(((ICcApplicationContext) cc.getApplicationContext()).getLibraryManager());

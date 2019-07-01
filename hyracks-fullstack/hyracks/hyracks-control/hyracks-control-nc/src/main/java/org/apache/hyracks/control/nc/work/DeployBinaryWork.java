@@ -42,12 +42,15 @@ public class DeployBinaryWork extends AbstractWork {
     private NodeControllerService ncs;
     private List<URL> binaryURLs;
     private final CcId ccId;
+    private final boolean extractFromArchive;
 
-    public DeployBinaryWork(NodeControllerService ncs, DeploymentId deploymentId, List<URL> binaryURLs, CcId ccId) {
+    public DeployBinaryWork(NodeControllerService ncs, DeploymentId deploymentId, List<URL> binaryURLs, CcId ccId,
+            boolean extractFromArchive) {
         this.deploymentId = deploymentId;
         this.ncs = ncs;
         this.binaryURLs = binaryURLs;
         this.ccId = ccId;
+        this.extractFromArchive = extractFromArchive;
     }
 
     @Override
@@ -55,7 +58,7 @@ public class DeployBinaryWork extends AbstractWork {
         DeploymentStatus status;
         try {
             DeploymentUtils.deploy(deploymentId, binaryURLs, ncs.getContext().getJobSerializerDeserializerContainer(),
-                    ncs.getServerContext(), true);
+                    ncs.getServerContext(), true, extractFromArchive);
             status = DeploymentStatus.SUCCEED;
         } catch (Exception e) {
             status = DeploymentStatus.FAIL;

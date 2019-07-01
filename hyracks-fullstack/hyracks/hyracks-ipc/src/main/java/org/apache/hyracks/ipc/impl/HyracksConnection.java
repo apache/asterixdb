@@ -214,21 +214,28 @@ public final class HyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
-    public DeploymentId deployBinary(List<String> jars) throws Exception {
+    public DeploymentId deployBinary(List<String> files) throws Exception {
         /** generate a deployment id */
         DeploymentId deploymentId = new DeploymentId(UUID.randomUUID().toString());
+        deployBinary(deploymentId, files, false);
+        return deploymentId;
+    }
+
+    @Override
+    public void deployBinary(DeploymentId deploymentId, List<String> files, boolean extractFromArchive)
+            throws Exception {
         List<URL> binaryURLs = new ArrayList<>();
-        if (jars != null && !jars.isEmpty()) {
+        if (files != null && !files.isEmpty()) {
             CloseableHttpClient hc = new DefaultHttpClient();
             try {
-                /** upload jars through a http client one-by-one to the CC server */
-                for (String jar : jars) {
-                    int slashIndex = jar.lastIndexOf('/');
-                    String fileName = jar.substring(slashIndex + 1);
+                /** upload files through a http client one-by-one to the CC server */
+                for (String file : files) {
+                    int slashIndex = file.lastIndexOf('/');
+                    String fileName = file.substring(slashIndex + 1);
                     String url = "http://" + ccHost + ":" + ccInfo.getWebPort() + "/applications/"
                             + deploymentId.toString() + "&" + fileName;
                     HttpPut put = new HttpPut(url);
-                    put.setEntity(new FileEntity(new File(jar), "application/octet-stream"));
+                    put.setEntity(new FileEntity(new File(file), "application/octet-stream"));
                     HttpResponse response = hc.execute(put);
                     response.getEntity().consumeContent();
                     if (response.getStatusLine().getStatusCode() != 200) {
@@ -243,8 +250,7 @@ public final class HyracksConnection implements IHyracksClientConnection {
             }
         }
         /** deploy the URLs to the CC and NCs */
-        hci.deployBinary(binaryURLs, deploymentId);
-        return deploymentId;
+        hci.deployBinary(binaryURLs, deploymentId, extractFromArchive);
     }
 
     @Override
