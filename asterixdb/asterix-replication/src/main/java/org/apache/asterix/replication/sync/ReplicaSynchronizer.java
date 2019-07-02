@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.replication.IReplicationStrategy;
+import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.asterix.replication.messaging.CheckpointPartitionIndexesTask;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
@@ -45,21 +46,25 @@ public class ReplicaSynchronizer {
     public void sync() throws IOException {
         final Object syncLock = appCtx.getReplicaManager().getReplicaSyncLock();
         synchronized (syncLock) {
-            syncFiles();
-            checkpointReplicaIndexes();
-            appCtx.getReplicationManager().register(replica);
+            final ICheckpointManager checkpointManager = appCtx.getTransactionSubsystem().getCheckpointManager();
+            try {
+                // suspend checkpointing datasets to prevent async IO operations while sync'ing replicas
+                checkpointManager.suspend();
+                syncFiles();
+                checkpointReplicaIndexes();
+                appCtx.getReplicationManager().register(replica);
+            } finally {
+                checkpointManager.resume();
+            }
         }
     }
 
     private void syncFiles() throws IOException {
         final ReplicaFilesSynchronizer fileSync = new ReplicaFilesSynchronizer(appCtx, replica);
-        waitForReplicatedDatasetsIO();
-        fileSync.sync();
         // flush replicated dataset to generate disk component for any remaining in-memory components
         final IReplicationStrategy replStrategy = appCtx.getReplicationManager().getReplicationStrategy();
         appCtx.getDatasetLifecycleManager().flushDataset(replStrategy);
         waitForReplicatedDatasetsIO();
-        // sync any newly generated files
         fileSync.sync();
     }
 

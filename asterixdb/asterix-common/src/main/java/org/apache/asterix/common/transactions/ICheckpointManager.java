@@ -65,4 +65,14 @@ public interface ICheckpointManager extends ILifeCycleComponent {
      * @throws HyracksDataException
      */
     void checkpointIdleDatasets() throws HyracksDataException;
+
+    /**
+     * Suspends checkpointing datasets
+     */
+    void suspend();
+
+    /**
+     * Resumes checkpointing datasets
+     */
+    void resume();
 }
