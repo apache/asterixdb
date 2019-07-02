@@ -435,16 +435,30 @@
 ### round ###
  * Syntax:
 
-        round(numeric_value)
+        round(numeric_value[, round_digit])
 
- * Computes the number with no fractional part that is closest (and also closest to positive infinity) to the argument.
+ * Rounds the value to the given number of integer digits to the right of the decimal point,
+   or to the left of the decimal point if the number of digits is negative.
+
  * Arguments:
-    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint`/`float`/`double` value.
+    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint`/`float`/`double` value
+      that represents the numeric value to be rounded.
+    * `round_digit`: (Optional) a `tinyint`/`smallint`/`integer`/`bigint`/`float`/`double` value
+      that specifies the digit to round to.
+      This argument may be positive or negative;
+      positive indicating that rounding needs to be to the right of the decimal point,
+      and negative indicating that rounding needs to be to the left of the decimal point.
+      Values such as 1.0 and 2.0 are acceptable, but values such as 1.3 and 1.5 result in a `null`.
+      If omitted, the default is 0.
  * Return Value:
-    * The rounded value for the given number in the same type as the input argument,
-    * `missing` if the argument is a `missing` value,
-    * `null` if the argument is a `null` value,
-    * any other non-numeric input value will cause a type error.
+    * The rounded value for the given number.
+      The returned value has the following type:
+        - `bigint` if the input value has type `tinyint`, `smallint`, `integer` or `bigint`,
+        - `float` if the input value has type `float`,
+        - `double` if the input value has type `double`;
+    * `missing` if the input value is a `missing` value,
+    * `null` if the input value is a `null` value,
+    * any other non-numeric input value will return a `null` value.
 
  * Example:
 
@@ -454,12 +468,15 @@
           "v3": round(0.8),
           "v4": round(float("-2013.256")),
           "v5": round(double("-2013.893823748327284"))
+          "v6": round(123456, -1),
+          "v7": round(456.456, 2),
+          "v8": round(456.456, -1),
+          "v9": round(-456.456, -2)
         };
-
 
  * The expected result is:
 
-        { "v1": 2013, "v2": -4036, "v3": 1.0, "v4": -2013.0, "v5": -2014.0 }
+        { "v1": 2013, "v2": -4036, "v3": 1.0, "v4": -2013.0, "v5": -2014.0, "v6": 123460, "v7": 456.46, "v8": 460, "v9": -500 }
 
 
 ### sign ###
