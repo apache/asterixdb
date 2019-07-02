@@ -32,4 +32,5 @@
 * [Type Functions](#TypeFunctions)
 * [Conditional Functions](#ConditionalFunctions)
 * [Miscellaneous Functions](#MiscFunctions)
+* [Bitwise Functions](#BitwiseFunctions)
 * [Window Functions](#WindowFunctions)
