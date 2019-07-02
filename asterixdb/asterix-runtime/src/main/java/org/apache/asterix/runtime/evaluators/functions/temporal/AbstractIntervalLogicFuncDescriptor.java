@@ -27,7 +27,6 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -40,6 +39,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -52,7 +52,7 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
 
                 return new IScalarEvaluator() {
 
-                    protected final IntervalLogic il = new IntervalLogic(sourceLoc);
+                    private final IntervalLogic il = new IntervalLogic();
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
                     private TaggedValuePointable argPtr0 = TaggedValuePointable.FACTORY.createPointable();
@@ -74,11 +74,9 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
-
                         if (PointableHelper.checkAndSetMissingOrNull(result, argPtr0, argPtr1)) {
                             return;
                         }
-
                         byte typeTag0 = argPtr0.getTag();
                         if (typeTag0 != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
                             throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, typeTag0,
@@ -89,14 +87,8 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
                             throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, typeTag1,
                                     ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
-
                         argPtr0.getValue(interval0);
                         argPtr1.getValue(interval1);
-
-                        if (typeTag0 != typeTag1) {
-                            throw new IncompatibleTypeException(sourceLoc, getIdentifier(), typeTag0, typeTag1);
-                        }
-
                         ABoolean res = compareIntervals(il, interval0, interval1) ? ABoolean.TRUE : ABoolean.FALSE;
                         booleanSerde.serialize(res, out);
                         result.set(resultStorage);

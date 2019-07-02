@@ -147,8 +147,6 @@
   <test-case FilePath="objects">
     <compilation-unit name="object_replace">
       <output-dir compare="Text">object_replace</output-dir>
-      <expected-error>function object-replace expects its 2nd input parameter to be of type primitive</expected-error>
-      <expected-error>function object-replace expects its 2nd input parameter to be of type primitive</expected-error>
       <source-location>false</source-location>
     </compilation-unit>
   </test-case>

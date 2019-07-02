@@ -19,9 +19,11 @@
 
 package org.apache.asterix.om.pointables.nonvisitor;
 
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
@@ -36,14 +38,16 @@ import org.apache.hyracks.data.std.primitive.VarLengthTypeTrait;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-/*
+/**
  * This class interprets the binary data representation of an interval.
  *
  * Interval {
  *   byte type;
- *   IPointable start;
- *   IPointable end;
+ *   T start;
+ *   T end;
  * }
+ *
+ * T can be of type date, time or datetime.
  */
 public class AIntervalPointable extends AbstractPointable {
 
@@ -73,82 +77,60 @@ public class AIntervalPointable extends AbstractPointable {
         }
     }
 
-    public static final IObjectFactory<IPointable, ATypeTag> ALLOCATOR = new IObjectFactory<IPointable, ATypeTag>() {
-        @Override
-        public IPointable create(ATypeTag type) {
-            return new AIntervalPointable();
-        }
-    };
-
     private static final int TAG_SIZE = 1;
 
     public byte getType() {
-        return BytePointable.getByte(bytes, getTypeOffset());
+        return BytePointable.getByte(bytes, start);
     }
 
     public ATypeTag getTypeTag() {
         return EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(getType());
     }
 
-    public int getTypeOffset() {
-        return start;
-    }
-
-    public int getTypeSize() {
-        return TAG_SIZE;
-    }
-
     public void getStart(IPointable start) throws HyracksDataException {
-        start.set(bytes, getStartOffset(), getStartSize());
+        start.set(bytes, getIntervalStartOffset(), getStartEndSize());
     }
 
-    @Override
-    public int getStartOffset() {
-        return getTypeOffset() + getTypeSize();
-    }
-
-    public int getStartSize() throws HyracksDataException {
-        switch (getTypeTag()) {
-            case DATE:
-            case TIME:
-                return Integer.BYTES;
-            case DATETIME:
-                return Long.BYTES;
-            default:
-                throw new HyracksDataException("Unsupported interval type: " + getTypeTag() + ".");
+    public void getTaggedStart(DataOutput output) throws HyracksDataException {
+        try {
+            output.writeByte(getType());
+            output.write(bytes, getIntervalStartOffset(), getStartEndSize());
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
         }
+    }
+
+    private int getIntervalStartOffset() {
+        return start + TAG_SIZE;
     }
 
     public long getStartValue() throws HyracksDataException {
         switch (getTypeTag()) {
             case DATE:
             case TIME:
-                return IntegerPointable.getInteger(bytes, getStartOffset());
+                return IntegerPointable.getInteger(bytes, getIntervalStartOffset());
             case DATETIME:
-                return LongPointable.getLong(bytes, getStartOffset());
+                return LongPointable.getLong(bytes, getIntervalStartOffset());
             default:
                 throw new HyracksDataException("Unsupported interval type: " + getTypeTag() + ".");
         }
     }
 
-    public void getEnd(IPointable start) throws HyracksDataException {
-        start.set(bytes, getEndOffset(), getEndSize());
+    public void getEnd(IPointable end) throws HyracksDataException {
+        end.set(bytes, getEndOffset(), getStartEndSize());
     }
 
-    public int getEndOffset() throws HyracksDataException {
-        return getStartOffset() + getStartSize();
-    }
-
-    public int getEndSize() throws HyracksDataException {
-        switch (getTypeTag()) {
-            case DATE:
-            case TIME:
-                return Integer.BYTES;
-            case DATETIME:
-                return Long.BYTES;
-            default:
-                throw new HyracksDataException("Unsupported interval type: " + getTypeTag() + ".");
+    public void getTaggedEnd(DataOutput output) throws HyracksDataException {
+        try {
+            output.writeByte(getType());
+            output.write(bytes, getEndOffset(), getStartEndSize());
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
         }
+    }
+
+    private int getEndOffset() throws HyracksDataException {
+        return getIntervalStartOffset() + getStartEndSize();
     }
 
     public long getEndValue() throws HyracksDataException {
@@ -163,4 +145,15 @@ public class AIntervalPointable extends AbstractPointable {
         }
     }
 
+    private int getStartEndSize() throws HyracksDataException {
+        switch (getTypeTag()) {
+            case DATE:
+            case TIME:
+                return Integer.BYTES;
+            case DATETIME:
+                return Long.BYTES;
+            default:
+                throw new HyracksDataException("Unsupported interval type: " + getTypeTag() + ".");
+        }
+    }
 }

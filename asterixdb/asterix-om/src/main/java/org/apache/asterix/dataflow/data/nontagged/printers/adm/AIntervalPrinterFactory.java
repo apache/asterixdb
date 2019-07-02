@@ -34,7 +34,7 @@ public class AIntervalPrinterFactory implements IPrinterFactory {
     public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
         ps.print("interval(");
         byte typetag = AIntervalSerializerDeserializer.getIntervalTimeType(b, s + 1);
-        int startOffset = AIntervalSerializerDeserializer.getIntervalStartOffset(b, s + 1) - 1;
+        int startOffset = AIntervalSerializerDeserializer.getIntervalStartOffset(s + 1) - 1;
         int startSize = AIntervalSerializerDeserializer.getStartSize(b, s + 1);
         int endOffset = AIntervalSerializerDeserializer.getIntervalEndOffset(b, s + 1) - 1;
         int endSize = AIntervalSerializerDeserializer.getEndSize(b, s + 1);

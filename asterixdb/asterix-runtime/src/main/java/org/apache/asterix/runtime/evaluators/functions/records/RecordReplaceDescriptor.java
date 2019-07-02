@@ -67,7 +67,7 @@ public class RecordReplaceDescriptor extends AbstractScalarFunctionDynamicDescri
                 for (int i = 0; i < args.length; i++) {
                     argEvals[i] = args[i].createScalarEvaluator(ctx);
                 }
-                return new RecordReplaceEvaluator(sourceLoc, argEvals[0], argEvals[1], argEvals[2], argTypes);
+                return new RecordReplaceEvaluator(argEvals[0], argEvals[1], argEvals[2], argTypes);
             }
         };
     }

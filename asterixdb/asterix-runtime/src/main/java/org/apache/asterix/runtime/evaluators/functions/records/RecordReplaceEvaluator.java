@@ -24,21 +24,18 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.runtime.evaluators.comparisons.ComparisonHelper;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeEvaluator;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -52,28 +49,24 @@ class RecordReplaceEvaluator implements IScalarEvaluator {
     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final DataOutput resultOutput = resultStorage.getDataOutput();
     private final RecordBuilder outRecordBuilder = new RecordBuilder();
-    private final VoidPointable existingValuePtr = new VoidPointable();
-    private final VoidPointable oldValuePtr = new VoidPointable();
     private final IScalarEvaluator eval0;
     private final IScalarEvaluator eval1;
     private final IScalarEvaluator eval2;
     private final ARecordVisitablePointable openRecordPointable;
     private final CastTypeEvaluator inputRecordCaster;
     private final CastTypeEvaluator newValueRecordCaster;
-    private final SourceLocation sourceLoc;
-    // TODO(ali): switch to ILogicalBinaryComparator
-    private final ComparisonHelper comparisonHelper;
+    private final IBinaryComparator comp;
 
-    RecordReplaceEvaluator(SourceLocation sourceLoc, IScalarEvaluator eval0, IScalarEvaluator eval1,
-            IScalarEvaluator eval2, IAType[] argTypes) {
-        this.sourceLoc = sourceLoc;
+    RecordReplaceEvaluator(IScalarEvaluator eval0, IScalarEvaluator eval1, IScalarEvaluator eval2, IAType[] argTypes) {
         this.eval0 = eval0;
         this.eval1 = eval1;
         this.eval2 = eval2;
         openRecordPointable = new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
         inputRecordCaster = new CastTypeEvaluator(BuiltinType.ANY, argTypes[0], eval0);
         newValueRecordCaster = new CastTypeEvaluator(BuiltinType.ANY, argTypes[2], eval2);
-        comparisonHelper = new ComparisonHelper(sourceLoc);
+        // comp compares a value existing in the input record with the provided value. the input record is casted open
+        comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.ANY, argTypes[1], true)
+                .createBinaryComparator();
     }
 
     @Override
@@ -94,21 +87,17 @@ class RecordReplaceEvaluator implements IScalarEvaluator {
             result.set(resultStorage);
             return;
         }
-        if (oldValueType.isDerivedType()) {
-            throw new TypeMismatchException(sourceLoc, BuiltinFunctions.RECORD_REPLACE, 1, oldValueType.serialize(),
-                    "primitive");
-        }
         inputRecordCaster.evaluate(tuple, inputRecordPointable);
         final ATypeTag newValueType = PointableHelper.getTypeTag(newValuePointable);
         if (newValueType.isDerivedType()) {
             newValueRecordCaster.evaluate(tuple, newValuePointable);
         }
         resultStorage.reset();
-        buildOutputRecord(oldValueType);
+        buildOutputRecord();
         result.set(resultStorage);
     }
 
-    private void buildOutputRecord(ATypeTag oldValueTypeTag) throws HyracksDataException {
+    private void buildOutputRecord() throws HyracksDataException {
         openRecordPointable.set(inputRecordPointable);
         outRecordBuilder.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
         outRecordBuilder.init();
@@ -117,8 +106,7 @@ class RecordReplaceEvaluator implements IScalarEvaluator {
         for (int i = 0, fieldCount = fieldNames.size(); i < fieldCount; i++) {
             final IVisitablePointable fieldName = fieldNames.get(i);
             final IVisitablePointable fieldValue = fieldValues.get(i);
-            final ATypeTag existingValueTypeTag = PointableHelper.getTypeTag(fieldValue);
-            if (isEqual(existingValueTypeTag, fieldValue, oldValueTypeTag, oldValuePointable)) {
+            if (isEqual(fieldValue, oldValuePointable)) {
                 outRecordBuilder.addField(fieldName, newValuePointable);
             } else {
                 outRecordBuilder.addField(fieldName, fieldValue);
@@ -144,17 +132,8 @@ class RecordReplaceEvaluator implements IScalarEvaluator {
         }
     }
 
-    private boolean isEqual(ATypeTag typeTag1, IPointable value1, ATypeTag typeTag2, IPointable value2)
-            throws HyracksDataException {
-        if (!ATypeHierarchy.isCompatible(typeTag1, typeTag2)) {
-            return false;
-        }
-        setValuePointer(value1, existingValuePtr);
-        setValuePointer(value2, oldValuePtr);
-        return comparisonHelper.compare(typeTag1, typeTag2, existingValuePtr, oldValuePtr) == 0;
-    }
-
-    private static void setValuePointer(IPointable src, IPointable value) {
-        value.set(src.getByteArray(), src.getStartOffset() + 1, src.getLength() - 1);
+    private boolean isEqual(IPointable value1, IPointable value2) throws HyracksDataException {
+        return comp.compare(value1.getByteArray(), value1.getStartOffset(), value1.getLength(), value2.getByteArray(),
+                value2.getStartOffset(), value2.getLength()) == 0;
     }
 }

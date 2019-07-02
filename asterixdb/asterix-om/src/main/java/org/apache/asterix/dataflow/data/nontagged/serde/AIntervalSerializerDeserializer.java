@@ -30,13 +30,14 @@ import org.apache.hyracks.data.std.primitive.BytePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 
-/*
+/**
  * This class serializes and de-serializes the binary data representation of an interval.
  *
  * Interval {
  *   byte type;
  *   T start;
  *   T end;
+ * }
  *
  * T can be of type date, time or datetime.
  */
@@ -53,7 +54,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
     public AInterval deserialize(DataInput in) throws HyracksDataException {
         try {
             byte tag = in.readByte();
-            long start = 0, end = 0;
+            long start, end;
             if (tag == ATypeTag.DATETIME.serialize()) {
                 start = in.readLong();
                 end = in.readLong();
@@ -85,28 +86,23 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
     }
 
     public static byte getIntervalTimeType(byte[] data, int start) {
-        return BytePointable.getByte(data, getIntervalTypeOffset(data, start));
+        return BytePointable.getByte(data, start);
     }
 
-    public static int getIntervalTypeOffset(byte[] data, int start) {
-        return start;
-    }
-
-    public static int getTypeSize() {
+    private static int getTypeSize() {
         return Byte.BYTES;
     }
 
     public static long getIntervalStart(byte[] data, int start) {
         if (getIntervalTimeType(data, start) == ATypeTag.DATETIME.serialize()) {
-            return LongPointable.getLong(data, getIntervalStartOffset(data, start));
+            return LongPointable.getLong(data, getIntervalStartOffset(start));
         } else {
-            return IntegerPointable.getInteger(data, getIntervalStartOffset(data, start));
+            return IntegerPointable.getInteger(data, getIntervalStartOffset(start));
         }
     }
 
-    public static int getIntervalStartOffset(byte[] data, int start) {
-        int offset = getIntervalTypeOffset(data, start) + getTypeSize();
-        return offset;
+    public static int getIntervalStartOffset(int start) {
+        return start + getTypeSize();
     }
 
     public static int getStartSize(byte[] data, int start) {
@@ -126,8 +122,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
     }
 
     public static int getIntervalEndOffset(byte[] data, int start) {
-        int offset = getIntervalStartOffset(data, start) + getStartSize(data, start);
-        return offset;
+        return getIntervalStartOffset(start) + getStartSize(data, start);
     }
 
     public static int getEndSize(byte[] data, int start) {

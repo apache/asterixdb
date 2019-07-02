@@ -65,7 +65,7 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
-                    protected final IntervalLogic il = new IntervalLogic(sourceLoc);
+                    private final IntervalLogic il = new IntervalLogic();
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
                     private TaggedValuePointable argPtr0 = TaggedValuePointable.FACTORY.createPointable();
@@ -120,7 +120,6 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
                                 nullSerde.serialize(ANull.NULL, out);
                             }
                             result.set(resultStorage);
-                            return;
                         } else if (type0 != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
                             throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, type0,
                                     ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);

@@ -19,9 +19,9 @@
 
 /*
  * Description  : Testing object_replace under different queries.
- * Expected Res : Failure
+ * Expected Res : Success
  */
 
 use TinySocial;
 
-select value object_replace({"a":1}, {"b":2}, "z");
+select value object_replace({"a":1, "a2": {"b":2}, "a3": {"b2":2}, "a4": {"b":2}}, {"b":2}, "z");
