@@ -16,21 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.lang.common.base;
+
+package org.apache.asterix.common.exceptions;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 
-public interface IParser {
+public final class WarningCollector implements IWarningCollector {
 
-    List<Statement> parse() throws CompilationException;
+    private final Set<Warning> warnings = new HashSet<>();
 
-    /**
-     * Gets the warnings generated during parsing
-     */
-    default void getWarnings(Collection<? super Warning> outWarnings) {
+    public void clear() {
+        warnings.clear();
+    }
+
+    @Override
+    public void warn(Warning warning) {
+        this.warnings.add(warning);
+    }
+
+    public void warn(Collection<Warning> warnings) {
+        this.warnings.addAll(warnings);
+    }
+
+    public void getWarnings(Collection<? super Warning> outWarnings) {
+        outWarnings.addAll(warnings);
     }
 }

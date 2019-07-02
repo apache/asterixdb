@@ -19,7 +19,7 @@
 
 package org.apache.asterix.app.message;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
@@ -45,7 +45,7 @@ public final class ExecuteStatementResponseMessage implements INcAddressedMessag
 
     private ExecutionPlans executionPlans;
 
-    private List<Warning> warnings;
+    private Collection<Warning> warnings;
 
     public ExecuteStatementResponseMessage(long requestMessageId) {
         this.requestMessageId = requestMessageId;
@@ -100,11 +100,11 @@ public final class ExecuteStatementResponseMessage implements INcAddressedMessag
         this.executionPlans = executionPlans;
     }
 
-    public List<Warning> getWarnings() {
+    public Collection<Warning> getWarnings() {
         return warnings;
     }
 
-    public void setWarnings(List<Warning> warnings) {
+    public void setWarnings(Collection<Warning> warnings) {
         this.warnings = warnings;
     }
 

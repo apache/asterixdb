@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
@@ -73,6 +74,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.exceptions.WarningCollector;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
@@ -231,7 +233,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected final EnumSet<JobFlag> jobFlags = EnumSet.noneOf(JobFlag.class);
     protected final IMetadataLockManager lockManager;
     protected final IResponsePrinter responsePrinter;
-    protected final List<Warning> warnings;
+    protected final WarningCollector warningCollector;
 
     public QueryTranslator(ICcApplicationContext appCtx, List<Statement> statements, SessionOutput output,
             ILangCompilationProvider compilationProvider, ExecutorService executorService,
@@ -248,7 +250,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         activeDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
         this.executorService = executorService;
         this.responsePrinter = responsePrinter;
-        warnings = new ArrayList<>();
+        this.warningCollector = new WarningCollector();
         if (appCtx.getServiceContext().getAppConfig().getBoolean(CCConfig.Option.ENFORCE_FRAME_WRITER_PROTOCOL)) {
             this.jobFlags.add(JobFlag.ENFORCE_CONTRACT);
         }
@@ -1746,7 +1748,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 paramVars.add(new VarIdentifier(v));
             }
             apiFramework.reWriteQuery(declaredFunctions, metadataProvider, wrappedQuery, sessionOutput, false,
-                    paramVars);
+                    paramVars, warningCollector);
 
             List<List<List<String>>> dependencies = FunctionUtil.getFunctionDependencies(
                     rewriterFactory.createQueryRewriter(), cfs.getFunctionBodyExpression(), metadataProvider);
@@ -1843,7 +1845,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             loadStmt.getAdapter(), loadStmt.getProperties(), loadStmt.dataIsAlreadySorted());
             cls.setSourceLocation(stmt.getSourceLocation());
             JobSpecification spec = apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionOutput, cls,
-                    null, responsePrinter);
+                    null, responsePrinter, warningCollector);
             afterCompile();
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -1970,12 +1972,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
         // Query Rewriting (happens under the same ongoing metadata transaction)
         Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions,
-                metadataProvider, query, sessionOutput, true, externalVars.keySet());
+                metadataProvider, query, sessionOutput, true, externalVars.keySet(), warningCollector);
 
         // Query Compilation (happens under the same ongoing metadata transaction)
         return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, (Query) rewrittenResult.first,
                 rewrittenResult.second, stmt == null ? null : stmt.getDatasetName(), sessionOutput, stmt, externalVars,
-                responsePrinter);
+                responsePrinter, warningCollector);
     }
 
     private JobSpecification rewriteCompileInsertUpsert(IClusterInfoCollector clusterInfoCollector,
@@ -1987,7 +1989,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
         // Insert/upsert statement rewriting (happens under the same ongoing metadata transaction)
         Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions,
-                metadataProvider, insertUpsert, sessionOutput, true, externalVars.keySet());
+                metadataProvider, insertUpsert, sessionOutput, true, externalVars.keySet(), warningCollector);
 
         InsertStatement rewrittenInsertUpsert = (InsertStatement) rewrittenResult.first;
         String dataverseName = getActiveDataverse(rewrittenInsertUpsert.getDataverseName());
@@ -2013,7 +2015,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         // Insert/upsert statement compilation (happens under the same ongoing metadata
         // transaction)
         return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, rewrittenInsertUpsert.getQuery(),
-                rewrittenResult.second, datasetName, sessionOutput, clfrqs, externalVars, responsePrinter);
+                rewrittenResult.second, datasetName, sessionOutput, clfrqs, externalVars, responsePrinter,
+                warningCollector);
     }
 
     protected void handleCreateFeedStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
@@ -2547,7 +2550,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 (org.apache.asterix.api.common.ResultMetadata) controllerService.getResultDirectoryService()
                         .getResultMetadata(jobId, rsId);
         stats.setProcessedObjects(resultMetadata.getProcessedObjects());
-        warnings.addAll(resultMetadata.getWarnings());
+        warningCollector.warn(resultMetadata.getWarnings());
     }
 
     private void asyncCreateAndRunJob(IHyracksClientConnection hcc, IStatementCompiler compiler, IMetadataLocker locker,
@@ -2922,8 +2925,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     @Override
-    public List<Warning> getWarnings() {
-        return warnings;
+    public void getWarnings(Collection<? super Warning> outWarnings) {
+        warningCollector.getWarnings(outWarnings);
     }
 
     /**

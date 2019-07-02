@@ -23,14 +23,17 @@ import java.util.Map;
 
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public final class LangRewritingContext {
+    private final IWarningCollector warningCollector;
     private Counter varCounter;
     private int systemVarCounter = 1;
     private Map<Integer, VarIdentifier> oldVarIdToNewVarId = new HashMap<>();
 
-    public LangRewritingContext(int varCounter) {
+    public LangRewritingContext(int varCounter, IWarningCollector warningCollector) {
         this.varCounter = new Counter(varCounter);
+        this.warningCollector = warningCollector;
     }
 
     public Counter getVarCounter() {
@@ -67,5 +70,9 @@ public final class LangRewritingContext {
     private int increaseAndGetCtr() {
         varCounter.inc();
         return varCounter.get();
+    }
+
+    public IWarningCollector getWarningCollector() {
+        return warningCollector;
     }
 }

@@ -109,6 +109,7 @@ import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -168,17 +169,18 @@ public class APIFramework {
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
                 IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer missableTypeComputer,
                 IConflictingTypeResolver conflictingTypeResolver, PhysicalOptimizationConfig physicalOptimizationConfig,
-                AlgebricksPartitionConstraint clusterLocations) {
+                AlgebricksPartitionConstraint clusterLocations, IWarningCollector warningCollector) {
             LogicalOperatorPrettyPrintVisitor prettyPrintVisitor = new LogicalOperatorPrettyPrintVisitor();
             return new AsterixOptimizationContext(varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
-                    conflictingTypeResolver, physicalOptimizationConfig, clusterLocations, prettyPrintVisitor);
+                    conflictingTypeResolver, physicalOptimizationConfig, clusterLocations, prettyPrintVisitor,
+                    warningCollector);
         }
     }
 
     public Pair<IReturningStatement, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
             MetadataProvider metadataProvider, IReturningStatement q, SessionOutput output, boolean inlineUdfs,
-            Collection<VarIdentifier> externalVars) throws CompilationException {
+            Collection<VarIdentifier> externalVars, IWarningCollector warningCollector) throws CompilationException {
         if (q == null) {
             return null;
         }
@@ -187,15 +189,15 @@ public class APIFramework {
             generateExpressionTree(q);
         }
         IQueryRewriter rw = rewriterFactory.createQueryRewriter();
-        rw.rewrite(declaredFunctions, q, metadataProvider, new LangRewritingContext(q.getVarCounter()), inlineUdfs,
-                externalVars);
+        rw.rewrite(declaredFunctions, q, metadataProvider,
+                new LangRewritingContext(q.getVarCounter(), warningCollector), inlineUdfs, externalVars);
         return new Pair<>(q, q.getVarCounter());
     }
 
     public JobSpecification compileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
             Query query, int varCounter, String outputDatasetName, SessionOutput output,
-            ICompiledDmlStatement statement, Map<VarIdentifier, IAObject> externalVars, IResponsePrinter printer)
-            throws AlgebricksException, ACIDException {
+            ICompiledDmlStatement statement, Map<VarIdentifier, IAObject> externalVars, IResponsePrinter printer,
+            IWarningCollector warningCollector) throws AlgebricksException, ACIDException {
 
         // establish facts
         final boolean isQuery = query != null;
@@ -240,6 +242,7 @@ public class APIFramework {
         builder.setExpressionTypeComputer(ExpressionTypeComputer.INSTANCE);
         builder.setMissableTypeComputer(MissableTypeComputer.INSTANCE);
         builder.setConflictingTypeResolver(ConflictingTypeResolver.INSTANCE);
+        builder.setWarningCollector(warningCollector);
 
         int parallelism = getParallelism((String) querySpecificConfig.get(CompilerProperties.COMPILER_PARALLELISM_KEY),
                 compilerProperties.getParallelism());

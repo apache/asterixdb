@@ -25,6 +25,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSiz
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public interface IOptimizationContextFactory {
     public IOptimizationContext createOptimizationContext(int varCounter,
@@ -32,5 +33,5 @@ public interface IOptimizationContextFactory {
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
             IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer missableTypeComputer,
             IConflictingTypeResolver conflictintTypeResolver, PhysicalOptimizationConfig physicalOptimizationConfig,
-            AlgebricksPartitionConstraint clusterLocations);
+            AlgebricksPartitionConstraint clusterLocations, IWarningCollector warningCollector);
 }

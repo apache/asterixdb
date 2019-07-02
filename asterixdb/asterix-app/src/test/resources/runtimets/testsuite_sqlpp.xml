@@ -12344,10 +12344,25 @@
   </test-group>
   <test-group name="warnings">
     <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="inapplicable-hint-warning">
+        <output-dir compare="Text">inapplicable-hint-warning</output-dir>
+        <expected-warn>HYR10006: Could not apply Group By hint: hash</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="warnings" check-warnings="true">
       <compilation-unit name="min-max-incompatible-types">
         <output-dir compare="Text">min-max-incompatible-types</output-dir>
         <expected-warn>ASX0003: Type incompatibility: function min/max gets incompatible input values: bigint and string</expected-warn>
         <expected-warn>ASX0004: Unsupported type: min/max cannot process input type object</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="unknown-hint-warning">
+        <output-dir compare="Text">unknown-hint-warning</output-dir>
+        <expected-warn>ASX1107: Unknown hint: unknown_hint_groupby. Supported hints are: hash</expected-warn>
+        <expected-warn>ASX1107: Unknown hint: unknown_hint_relexpr. Supported hints are: indexnl, skip-index, bcast</expected-warn>
+        <expected-warn>ASX1107: Unknown hint: unknown_hint_between. Supported hints are: indexnl, skip-index</expected-warn>
+        <expected-warn>ASX1107: Unknown hint: unknown_hint_funcall. Supported hints are: indexnl, skip-index</expected-warn>
       </compilation-unit>
     </test-case>
   </test-group>

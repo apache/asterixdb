@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDom
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 /**
  * The Algebricks default implementation for IOptimizationContext.
@@ -87,13 +88,14 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     private final INodeDomain defaultNodeDomain;
     private final AbstractLogicalOperatorPrettyPrintVisitor prettyPrintVisitor;
     private final IConflictingTypeResolver conflictingTypeResovler;
+    private final IWarningCollector warningCollector;
 
     public AlgebricksOptimizationContext(int varCounter, IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
             IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer nullableTypeComputer,
             IConflictingTypeResolver conflictingTypeResovler, PhysicalOptimizationConfig physicalOptimizationConfig,
             AlgebricksPartitionConstraint clusterLocations,
-            AbstractLogicalOperatorPrettyPrintVisitor prettyPrintVisitor) {
+            AbstractLogicalOperatorPrettyPrintVisitor prettyPrintVisitor, IWarningCollector warningCollector) {
         this.varCounter = varCounter;
         this.expressionEvalSizeComputer = expressionEvalSizeComputer;
         this.mergeAggregationExpressionFactory = mergeAggregationExpressionFactory;
@@ -103,6 +105,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
         this.defaultNodeDomain = new DefaultNodeGroupDomain(clusterLocations);
         this.prettyPrintVisitor = prettyPrintVisitor;
         this.conflictingTypeResovler = conflictingTypeResovler;
+        this.warningCollector = warningCollector;
     }
 
     @Override
@@ -328,5 +331,10 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     @Override
     public IConflictingTypeResolver getConflictingTypeResolver() {
         return conflictingTypeResovler;
+    }
+
+    @Override
+    public IWarningCollector getWarningCollector() {
+        return warningCollector;
     }
 }

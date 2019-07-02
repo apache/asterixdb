@@ -40,6 +40,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.text.MessageFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -963,7 +964,9 @@ public class TestExecutor {
                         variableCtx, ctx.getType(), testFile, expectedResultFile, actualResultFile, queryCount,
                         expectedResultFileCtxs.size(), cUnit.getParameter(), ComparisonEnum.TEXT);
                 if (testCaseCtx.getTestCase().isCheckWarnings()) {
-                    validateWarnings(extractedResult.getWarnings(), cUnit.getExpectedWarn(), actualWarnCount);
+                    boolean expectedSourceLoc = testCaseCtx.isSourceLocationExpected(cUnit);
+                    validateWarnings(extractedResult.getWarnings(), cUnit.getExpectedWarn(), actualWarnCount,
+                            expectedSourceLoc);
                 }
                 break;
             case "store":
@@ -2103,16 +2106,22 @@ public class TestExecutor {
         return extension.endsWith(AQL) ? getEndpoint(Servlets.QUERY_AQL) : getEndpoint(Servlets.QUERY_SERVICE);
     }
 
-    private void validateWarnings(List<String> actualWarnings, List<String> expectedWarn, MutableInt actualWarnCount)
-            throws Exception {
+    private void validateWarnings(List<String> actualWarnings, List<String> expectedWarn, MutableInt actualWarnCount,
+            boolean expectedSourceLoc) throws Exception {
         if (actualWarnCount.getValue() > expectedWarn.size()) {
-            throw new IllegalStateException("returned warnings exceeded expected warnings");
+            throw new Exception("returned warnings exceeded expected warnings");
         }
-        for (String actualWarn : actualWarnings) {
-            if (expectedWarn.stream().anyMatch(actualWarn::contains)) {
+        if (actualWarnings != null) {
+            for (String actualWarn : actualWarnings) {
+                if (expectedWarn.stream().noneMatch(actualWarn::contains)) {
+                    throw new Exception("unexpected warning was encountered (" + actualWarn + ")");
+                }
+                if (expectedSourceLoc && !containsSourceLocation(actualWarn)) {
+                    throw new Exception(MessageFormat.format(
+                            "Expected to find source location \"{}, {}\" in warning text: +++++{}+++++",
+                            ERR_MSG_SRC_LOC_LINE_REGEX, ERR_MSG_SRC_LOC_COLUMN_REGEX, actualWarn));
+                }
                 actualWarnCount.increment();
-            } else {
-                throw new Exception("unexpected warning was encountered (" + actualWarn + ")");
             }
         }
     }

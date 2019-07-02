@@ -33,6 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeCompu
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.rewriter.base.AlgebricksOptimizationContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -45,10 +46,11 @@ public final class AsterixOptimizationContext extends AlgebricksOptimizationCont
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
             IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer nullableTypeComputer,
             IConflictingTypeResolver conflictingTypeResovler, PhysicalOptimizationConfig physicalOptimizationConfig,
-            AlgebricksPartitionConstraint clusterLocations, LogicalOperatorPrettyPrintVisitor prettyPrintVisitor) {
+            AlgebricksPartitionConstraint clusterLocations, LogicalOperatorPrettyPrintVisitor prettyPrintVisitor,
+            IWarningCollector warningCollector) {
         super(varCounter, expressionEvalSizeComputer, mergeAggregationExpressionFactory, expressionTypeComputer,
                 nullableTypeComputer, conflictingTypeResovler, physicalOptimizationConfig, clusterLocations,
-                prettyPrintVisitor);
+                prettyPrintVisitor, warningCollector);
     }
 
     public void addDataSource(DataSource dataSource) {

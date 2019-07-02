@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public interface IOptimizationContext extends ITypingContext, IVariableContext {
 
@@ -84,4 +85,6 @@ public interface IOptimizationContext extends ITypingContext, IVariableContext {
     public AbstractLogicalOperatorPrettyPrintVisitor getPrettyPrintVisitor();
 
     public INodeDomain getComputationNodeDomain();
+
+    public IWarningCollector getWarningCollector();
 }

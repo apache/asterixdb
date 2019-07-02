@@ -150,7 +150,8 @@ public class ParserTestExecutor extends TestExecutor {
                     Query query = (Query) st;
                     IQueryRewriter rewriter = sqlppRewriterFactory.createQueryRewriter();
                     rewrite(rewriter, functions, query, metadataProvider,
-                            new LangRewritingContext(query.getVarCounter()));
+                            new LangRewritingContext(query.getVarCounter(), w -> {
+                            }));
 
                     // Tests deep copy and deep equality.
                     Query copiedQuery = (Query) SqlppRewriteUtil.deepCopy(query);

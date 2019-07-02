@@ -40,8 +40,11 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -65,6 +68,8 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.WarningCollector;
+import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.AbstractClause;
@@ -177,6 +182,7 @@ import org.apache.asterix.lang.sqlpp.util.ExpressionToVariableUtil;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -184,6 +190,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotat
 import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.util.LogRedactionUtil;
 
 class SQLPPParser extends ScopeChecker implements IParser {
@@ -236,6 +243,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
 
     private int externalVarCounter;
 
+    private final WarningCollector warningCollector = new WarningCollector();
+
     private static class IndexParams {
       public IndexType type;
       public int gramLength;
@@ -252,6 +261,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
        public String function;
        public String hint;
        public SourceLocation sourceLoc;
+       public SourceLocation hintSourceLoc;
     }
 
     private String getHint(Token t) {
@@ -331,6 +341,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     }
 
     public List<Statement> parse() throws CompilationException {
+        warningCollector.clear();
         try {
             return Statement();
         } catch (Error e) {
@@ -343,6 +354,11 @@ class SQLPPParser extends ScopeChecker implements IParser {
         } catch (ParseException e) {
             throw new CompilationException(ErrorCode.PARSE_ERROR, LogRedactionUtil.userData(getMessage(e)));
         }
+    }
+
+    @Override
+    public void getWarnings(Collection<? super Warning> outWarnings) {
+        warningCollector.getWarnings(outWarnings);
     }
 
     protected String getMessage(ParseException pe) {
@@ -420,6 +436,11 @@ class SQLPPParser extends ScopeChecker implements IParser {
 
     private boolean laIdentifier(String image) {
       return laIdentifier(1, image);
+    }
+
+    private void warnUnknownHint(String actualHint, SourceLocation sourceLoc, String... expectedHints) {
+        warningCollector.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.UNKNOWN_HINT, actualHint,
+          StringUtils.join(expectedHints, ", ")));
     }
 }
 
@@ -1647,6 +1668,7 @@ FunctionName FunctionName() throws ParseException:
     FunctionName result = new FunctionName();
     result.hint = getHint(token);
     result.sourceLoc = getSourceLocation(token);
+    result.hintSourceLoc = getSourceLocation(getHintToken(token));
   }
   ( <DOT> second = Identifier()
     {
@@ -2018,6 +2040,10 @@ Expression RelExpr() throws ParseException:
                 annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
             } else if (mhint.equals(BROADCAST_JOIN_HINT)) {
                 broadcast = true;
+            } else {
+                warnUnknownHint(mhint, getSourceLocation(getHintToken(token)),
+                    INDEXED_NESTED_LOOP_JOIN_HINT, SKIP_SECONDARY_INDEX_SEARCH_HINT, BROADCAST_JOIN_HINT
+                );
             }
           }
 
@@ -2074,6 +2100,10 @@ Expression BetweenExpr() throws ParseException:
                 annotation = IndexedNLJoinExpressionAnnotation.INSTANCE;
             } else if (mhint.equals(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
                 annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
+            } else {
+                warnUnknownHint(mhint, getSourceLocation(getHintToken(token)),
+                    INDEXED_NESTED_LOOP_JOIN_HINT, SKIP_SECONDARY_INDEX_SEARCH_HINT
+                );
             }
           }
           String operator = token.image.toLowerCase();
@@ -2716,15 +2746,11 @@ Expression FunctionCallExpr() throws ParseException:
   Expression tmp = null;
   int arity = 0;
   FunctionName funcName = null;
-  String hint = null;
   boolean star = false;
   boolean distinct = false;
 }
 {
   funcName = FunctionName()
-  {
-    hint = funcName.hint;
-  }
   <LEFTPAREN> (
     ( <DISTINCT> { distinct = true; } )?
     ( tmp = Expression() | <MUL> { star = true; } )
@@ -2758,11 +2784,16 @@ Expression FunctionCallExpr() throws ParseException:
         signature = new FunctionSignature(funcName.dataverse, fqFunctionName, arity);
       }
       callExpr = FunctionMapUtil.normalizedListInputFunctions(new CallExpr(signature,argList));
+      String hint = funcName.hint;
       if (hint != null) {
         if (hint.startsWith(INDEXED_NESTED_LOOP_JOIN_HINT)) {
           callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
         } else if (hint.startsWith(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
           callExpr.addHint(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE);
+        } else {
+          warnUnknownHint(hint, funcName.hintSourceLoc,
+            INDEXED_NESTED_LOOP_JOIN_HINT, SKIP_SECONDARY_INDEX_SEARCH_HINT
+          );
         }
       }
       callExpr.setSourceLocation(funcName.sourceLoc);
@@ -3429,8 +3460,7 @@ OrderbyClause OrderbyClause() throws ParseException :
             int numTuples = Integer.parseInt(splits[2]);
             oc.setNumFrames(numFrames);
             oc.setNumTuples(numTuples);
-          }
-          if (hint.startsWith(RANGE_HINT)) {
+          } else if (hint.startsWith(RANGE_HINT)) {
             try {
               oc.setRangeMap(RangeMapBuilder.parseHint(createNewParser(hint.substring(RANGE_HINT.length()))));
             } catch (CompilationException e) {
@@ -3491,8 +3521,12 @@ GroupbyClause GroupbyClause()throws ParseException :
       {
          startToken = token;
          String hint = getHint(token);
-         if (hint != null && hint.equals(HASH_GROUP_BY_HINT)) {
-           gbc.setHashGroupByHint(true);
+         if (hint != null) {
+            if (hint.equals(HASH_GROUP_BY_HINT)) {
+              gbc.setHashGroupByHint(true);
+            } else {
+              warnUnknownHint(hint, getSourceLocation(getHintToken(token)), HASH_GROUP_BY_HINT);
+            }
          }
       }
     <BY> (

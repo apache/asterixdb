@@ -16,11 +16,10 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package org.apache.asterix.common.utils;
+package org.apache.asterix.common.exceptions;
 
 import java.io.Serializable;
 
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.util.ErrorMessageUtil;

@@ -163,6 +163,7 @@ public class ErrorCode {
     public static final int DESCRIPTOR_GENERATION_ERROR = 10003;
     public static final int EXPR_NOT_NORMALIZED = 10004;
     public static final int OPERATOR_NOT_IMPLEMENTED = 10005;
+    public static final int INAPPLICABLE_HINT = 10006;
 
     private static class Holder {
         private static final Map<Integer, String> errorMessageMap;

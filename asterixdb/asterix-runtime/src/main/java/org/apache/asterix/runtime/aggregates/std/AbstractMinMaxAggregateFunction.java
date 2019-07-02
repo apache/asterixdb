@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.aggregates.std;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.utils.WarningUtil;
+import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ComparatorUtil;
 import org.apache.asterix.om.types.ATypeTag;

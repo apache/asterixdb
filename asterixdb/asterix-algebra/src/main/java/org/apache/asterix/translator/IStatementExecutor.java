@@ -21,6 +21,7 @@ package org.apache.asterix.translator;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -166,9 +167,7 @@ public interface IStatementExecutor {
     IResponsePrinter getResponsePrinter();
 
     /**
-     * Gets the warnings generated during compiling and exeucting a request
-     *
-     * @return the list of warnings
+     * Gets the warnings generated during compiling and executing a request
      */
-    List<Warning> getWarnings();
+    void getWarnings(Collection<? super Warning> outWarnings);
 }

@@ -44,6 +44,7 @@ import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public abstract class AbstractCompilerFactoryBuilder {
 
@@ -69,6 +70,7 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected IMergeAggregationExpressionFactory mergeAggregationExpressionFactory;
     protected PhysicalOptimizationConfig physicalOptimizationConfig = new PhysicalOptimizationConfig();
     protected AlgebricksAbsolutePartitionConstraint clusterLocations;
+    protected IWarningCollector warningCollector;
 
     public abstract ICompilerFactory create();
 
@@ -242,4 +244,11 @@ public abstract class AbstractCompilerFactoryBuilder {
         return conflictingTypeResolver;
     }
 
+    public void setWarningCollector(IWarningCollector warningCollector) {
+        this.warningCollector = warningCollector;
+    }
+
+    public IWarningCollector getWarningCollector() {
+        return warningCollector;
+    }
 }

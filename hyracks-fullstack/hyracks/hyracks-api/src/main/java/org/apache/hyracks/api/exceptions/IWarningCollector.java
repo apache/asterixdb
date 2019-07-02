@@ -16,21 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.lang.common.base;
 
-import java.util.Collection;
-import java.util.List;
+package org.apache.hyracks.api.exceptions;
 
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.hyracks.api.exceptions.Warning;
-
-public interface IParser {
-
-    List<Statement> parse() throws CompilationException;
-
-    /**
-     * Gets the warnings generated during parsing
-     */
-    default void getWarnings(Collection<? super Warning> outWarnings) {
-    }
+@FunctionalInterface
+public interface IWarningCollector {
+    void warn(Warning warning);
 }

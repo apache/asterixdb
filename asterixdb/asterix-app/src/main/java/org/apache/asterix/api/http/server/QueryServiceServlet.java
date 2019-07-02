@@ -594,6 +594,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
         IParser parser = compilationProvider.getParserFactory().createParser(statementsText);
         List<Statement> statements = parser.parse();
+        parser.getWarnings(warnings);
         MetadataManager.INSTANCE.init();
         IStatementExecutor translator = statementExecutorFactory.create((ICcApplicationContext) appCtx, statements,
                 sessionOutput, compilationProvider, componentProvider, responsePrinter);
@@ -605,7 +606,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 optionalParameters, stmtParams, param.isMultiStatement());
         translator.compileAndExecute(getHyracksClientConnection(), requestParameters);
         execution.end();
-        warnings.addAll(translator.getWarnings());
+        translator.getWarnings(warnings);
         buildResponseResults(responsePrinter, sessionOutput, translator.getExecutionPlans(), warnings);
     }
 

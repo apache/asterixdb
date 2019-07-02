@@ -21,8 +21,10 @@ package org.apache.asterix.app.message;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.algebra.base.ILangExtension;
@@ -57,6 +59,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.Level;
@@ -118,8 +121,10 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         IStatementExecutorFactory statementExecutorFactory = ccApp.getStatementExecutorFactory();
         ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
         try {
+            Set<Warning> warnings = new HashSet<>();
             IParser parser = compilationProvider.getParserFactory().createParser(statementsText);
             List<Statement> statements = parser.parse();
+            parser.getWarnings(warnings);
             StringWriter outWriter = new StringWriter(256);
             PrintWriter outPrinter = new PrintWriter(outWriter);
             SessionOutput.ResultDecorator resultPrefix = ResultUtil.createPreResultDecorator();
@@ -138,12 +143,13 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
                     new RequestParameters(requestReference, statementsText, null, resultProperties, stats, outMetadata,
                             clientContextID, optionalParameters, stmtParams, multiStatement);
             translator.compileAndExecute(ccApp.getHcc(), requestParameters);
+            translator.getWarnings(warnings);
             outPrinter.close();
             responseMsg.setResult(outWriter.toString());
             responseMsg.setMetadata(outMetadata);
             responseMsg.setStats(stats);
             responseMsg.setExecutionPlans(translator.getExecutionPlans());
-            responseMsg.setWarnings(translator.getWarnings());
+            responseMsg.setWarnings(warnings);
         } catch (AlgebricksException | HyracksException | TokenMgrError
                 | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             // we trust that "our" exceptions are serializable and have a comprehensible error message
