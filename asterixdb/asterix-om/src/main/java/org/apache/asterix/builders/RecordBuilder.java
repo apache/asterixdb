@@ -218,16 +218,25 @@ public class RecordBuilder implements IARecordBuilder {
                 openPartOffsetArray = new byte[openPartOffsetArraySize];
             }
 
+            // field names with the same hash code should be adjacent to each other after sorting
             Arrays.sort(this.openPartOffsets, 0, numberOfOpenFields);
             if (numberOfOpenFields > 1) {
                 byte[] openBytes = openPartOutputStream.getByteArray();
-                for (int i = 1; i < numberOfOpenFields; i++) {
-                    if (utf8Comparator.compare(openBytes, (int) openPartOffsets[i - 1], openFieldNameLengths[i - 1],
-                            openBytes, (int) openPartOffsets[i], openFieldNameLengths[i]) == 0) {
+                for (int i = 0, k = 1; i < numberOfOpenFields - 1;) {
+                    if (utf8Comparator.compare(openBytes, (int) openPartOffsets[i], openFieldNameLengths[i], openBytes,
+                            (int) openPartOffsets[k], openFieldNameLengths[k]) == 0) {
                         String field = utf8SerDer.deserialize(new DataInputStream(new ByteArrayInputStream(openBytes,
                                 (int) openPartOffsets[i], openFieldNameLengths[i])));
                         throw new HyracksDataException(
-                                "Open fields " + (i - 1) + " and " + i + " have the same field name \"" + field + "\"");
+                                "Open fields " + i + " and " + k + " have the same field name \"" + field + "\"");
+                    }
+                    if (sameHashes(openPartOffsets, i, k) && k < numberOfOpenFields - 1) {
+                        // keep comparing the current field i with the next field k
+                        k++;
+                    } else {
+                        // the current field i has no duplicates; move to the adjacent one
+                        i++;
+                        k = i + 1;
                     }
                 }
             }
@@ -247,6 +256,10 @@ public class RecordBuilder implements IARecordBuilder {
             recordLength = h + numberOfSchemaFields * 4 + closedPartOutputStream.size();
         }
         writeRecord(out, writeTypeTag, h, recordLength);
+    }
+
+    private static boolean sameHashes(long[] hashAndOffset, int fieldId1, int fieldId2) {
+        return (int) (hashAndOffset[fieldId1] >>> 32) == (int) (hashAndOffset[fieldId2] >>> 32);
     }
 
     private void writeRecord(DataOutput out, boolean writeTypeTag, int headerSize, int recordLength)
