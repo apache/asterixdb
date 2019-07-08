@@ -23,8 +23,8 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractScalarDistinctAggregateDescriptor extends AbstractScalarAggregateDescriptor {
@@ -44,7 +44,7 @@ public abstract class AbstractScalarDistinctAggregateDescriptor extends Abstract
     @Override
     protected IScalarEvaluator createScalarAggregateEvaluator(IAggregateEvaluator aggEval,
             ScanCollectionDescriptor.ScanCollectionUnnestingFunctionFactory scanCollectionFactory,
-            IHyracksTaskContext ctx) throws HyracksDataException {
+            IEvaluatorContext ctx) throws HyracksDataException {
         return new GenericScalarDistinctAggregateFunction(aggEval, scanCollectionFactory, ctx, sourceLoc, itemType);
     }
 }

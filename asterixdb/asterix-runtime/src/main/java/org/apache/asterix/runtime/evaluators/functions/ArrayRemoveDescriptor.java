@@ -34,9 +34,9 @@ import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -77,7 +77,7 @@ public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescript
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new ArrayRemoveEval(args, ctx, argTypes);
             }
         };
@@ -93,7 +93,7 @@ public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescript
         private final IPointable item;
         private final IBinaryComparator[] comp;
 
-        ArrayRemoveEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, IAType[] argTypes)
+        ArrayRemoveEval(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx, IAType[] argTypes)
                 throws HyracksDataException {
             super(args, ctx, 0, 1, args.length - 1, argTypes, false, false);
             storage = new ArrayBackedValueStorage();

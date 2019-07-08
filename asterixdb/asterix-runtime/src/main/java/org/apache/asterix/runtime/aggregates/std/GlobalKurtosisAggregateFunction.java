@@ -22,8 +22,8 @@ package org.apache.asterix.runtime.aggregates.std;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -31,7 +31,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class GlobalKurtosisAggregateFunction extends AbstractSingleVarStatisticsAggregateFunction {
 
-    public GlobalKurtosisAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+    public GlobalKurtosisAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context,
             SourceLocation sourceLoc) throws HyracksDataException {
         super(args, context, sourceLoc);
     }

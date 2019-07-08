@@ -28,9 +28,9 @@ import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -49,7 +49,7 @@ public abstract class AbstractArraySearchEval implements IScalarEvaluator {
     private final AMutableInt32 intValue;
     protected final ArrayBackedValueStorage storage;
 
-    AbstractArraySearchEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, IAType[] argTypes)
+    AbstractArraySearchEval(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx, IAType[] argTypes)
             throws HyracksDataException {
         storage = new ArrayBackedValueStorage();
         listArg = new VoidPointable();

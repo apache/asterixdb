@@ -25,9 +25,9 @@ import java.io.IOException;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -56,7 +56,7 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
     private final FunctionIdentifier funcID;
     private final SourceLocation sourceLoc;
 
-    public AbstractBinaryStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory evalLeftFactory,
+    public AbstractBinaryStringEval(IEvaluatorContext context, IScalarEvaluatorFactory evalLeftFactory,
             IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID, SourceLocation sourceLoc)
             throws HyracksDataException {
         this.sourceLoc = sourceLoc;

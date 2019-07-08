@@ -23,9 +23,9 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -48,7 +48,7 @@ public class SleepDescriptor extends AbstractScalarFunctionDynamicDescriptor {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private IPointable argTime = new VoidPointable();
@@ -65,14 +65,16 @@ public class SleepDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
                         try {
                             if (LOGGER.isInfoEnabled()) {
-                                LOGGER.log(Level.INFO, ctx.getTaskAttemptId() + " sleeping for " + time + " ms");
+                                LOGGER.log(Level.INFO,
+                                        ctx.getTaskContext().getTaskAttemptId() + " sleeping for " + time + " ms");
                             }
                             Thread.sleep(time);
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                         } finally {
                             if (LOGGER.isInfoEnabled()) {
-                                LOGGER.log(Level.INFO, ctx.getTaskAttemptId() + " done sleeping for " + time + " ms");
+                                LOGGER.log(Level.INFO,
+                                        ctx.getTaskContext().getTaskAttemptId() + " done sleeping for " + time + " ms");
                             }
                         }
 

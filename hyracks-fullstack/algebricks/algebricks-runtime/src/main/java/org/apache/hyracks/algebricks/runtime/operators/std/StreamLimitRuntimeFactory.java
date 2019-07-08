@@ -22,8 +22,10 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspector;
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -60,6 +62,7 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
 
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx) {
+        IEvaluatorContext evalCtx = new EvaluatorContext(ctx);
         final IBinaryIntegerInspector bii = binaryIntegerInspectorFactory.createBinaryIntegerInspector(ctx);
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
             private final IPointable p = VoidPointable.FACTORY.createPointable();
@@ -75,9 +78,9 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                 super.open();
                 if (evalMaxObjects == null) {
                     initAccessAppendRef(ctx);
-                    evalMaxObjects = maxObjectsEvalFactory.createScalarEvaluator(ctx);
+                    evalMaxObjects = maxObjectsEvalFactory.createScalarEvaluator(evalCtx);
                     if (offsetEvalFactory != null) {
-                        evalOffset = offsetEvalFactory.createScalarEvaluator(ctx);
+                        evalOffset = offsetEvalFactory.createScalarEvaluator(evalCtx);
                     }
                 }
                 afterLastTuple = false;

@@ -20,8 +20,8 @@
 package org.apache.asterix.runtime.evaluators.comparisons;
 
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -29,8 +29,8 @@ import org.apache.hyracks.data.std.api.IPointable;
 public abstract class AbstractIfEqualsEvaluator extends AbstractComparisonEvaluator {
 
     AbstractIfEqualsEvaluator(IScalarEvaluatorFactory evalLeftFactory, IAType leftType,
-            IScalarEvaluatorFactory evalRightFactory, IAType rightType, IHyracksTaskContext ctx,
-            SourceLocation sourceLoc) throws HyracksDataException {
+            IScalarEvaluatorFactory evalRightFactory, IAType rightType, IEvaluatorContext ctx, SourceLocation sourceLoc)
+            throws HyracksDataException {
         super(evalLeftFactory, leftType, evalRightFactory, rightType, ctx, sourceLoc, true);
     }
 

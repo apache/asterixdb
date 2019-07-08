@@ -26,8 +26,8 @@ import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynam
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class MinAggregateDescriptor extends AbstractMinMaxAggregateDescriptor {
@@ -47,7 +47,7 @@ public class MinAggregateDescriptor extends AbstractMinMaxAggregateDescriptor {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
+            public IAggregateEvaluator createAggregateEvaluator(final IEvaluatorContext ctx)
                     throws HyracksDataException {
                 return new MinMaxAggregateFunction(args, ctx, true, Type.ONE_STEP, sourceLoc, aggFieldType);
             }

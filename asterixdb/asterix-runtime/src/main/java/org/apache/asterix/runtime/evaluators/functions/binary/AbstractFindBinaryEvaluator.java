@@ -26,8 +26,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -47,7 +47,7 @@ public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEv
     protected ISerializerDeserializer<AInt64> intSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
-    public AbstractFindBinaryEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,
+    public AbstractFindBinaryEvaluator(IEvaluatorContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,
             int baseOffset, FunctionIdentifier funcId, SourceLocation sourceLoc) throws HyracksDataException {
         super(context, copyEvaluatorFactories, funcId, sourceLoc);
         this.baseOffset = baseOffset;

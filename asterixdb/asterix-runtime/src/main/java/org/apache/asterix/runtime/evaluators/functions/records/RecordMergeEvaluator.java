@@ -38,9 +38,9 @@ import org.apache.asterix.runtime.evaluators.comparisons.DeepEqualAssessor;
 import org.apache.asterix.runtime.evaluators.functions.AbstractScalarEval;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -86,7 +86,7 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private DataOutput out = resultStorage.getDataOutput();
 
-    RecordMergeEvaluator(IHyracksTaskContext ctx, IScalarEvaluatorFactory[] args, IAType[] argTypes,
+    RecordMergeEvaluator(IEvaluatorContext ctx, IScalarEvaluatorFactory[] args, IAType[] argTypes,
             SourceLocation sourceLocation, FunctionIdentifier identifier, boolean isIgnoreDuplicates)
             throws HyracksDataException {
         super(sourceLocation, identifier);

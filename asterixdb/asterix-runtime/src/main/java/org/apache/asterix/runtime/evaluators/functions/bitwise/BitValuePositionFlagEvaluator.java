@@ -32,9 +32,9 @@ import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.evaluators.functions.AbstractScalarEval;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -104,7 +104,7 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
     private final ISerializerDeserializer aBooleanSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
-    BitValuePositionFlagEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] argEvaluatorFactories,
+    BitValuePositionFlagEvaluator(IEvaluatorContext context, IScalarEvaluatorFactory[] argEvaluatorFactories,
             FunctionIdentifier functionIdentifier, SourceLocation sourceLocation) throws HyracksDataException {
         super(sourceLocation, functionIdentifier);
 

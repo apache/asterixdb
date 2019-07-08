@@ -25,9 +25,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -44,7 +44,7 @@ public final class IfMissingOrNullDescriptor extends AbstractScalarFunctionDynam
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new AbstractIfMissingOrNullEval(ctx, args) {
                     @Override
                     protected boolean skip(byte argTypeTag) {
@@ -67,8 +67,7 @@ public final class IfMissingOrNullDescriptor extends AbstractScalarFunctionDynam
 
         private final IPointable argPtr;
 
-        AbstractIfMissingOrNullEval(IHyracksTaskContext ctx, IScalarEvaluatorFactory[] args)
-                throws HyracksDataException {
+        AbstractIfMissingOrNullEval(IEvaluatorContext ctx, IScalarEvaluatorFactory[] args) throws HyracksDataException {
             argEvals = new IScalarEvaluator[args.length];
             for (int i = 0; i < argEvals.length; i++) {
                 argEvals[i] = args[i].createScalarEvaluator(ctx);

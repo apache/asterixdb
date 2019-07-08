@@ -32,9 +32,9 @@ import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicD
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -89,7 +89,7 @@ public class ArrayContainsDescriptor extends AbstractScalarFunctionDynamicDescri
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new ArrayContainsEval(args, ctx);
             }
         };
@@ -98,7 +98,7 @@ public class ArrayContainsDescriptor extends AbstractScalarFunctionDynamicDescri
     public class ArrayContainsEval extends AbstractArraySearchEval {
         private final ISerializerDeserializer booleanSerde;
 
-        ArrayContainsEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+        ArrayContainsEval(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx) throws HyracksDataException {
             super(args, ctx, argTypes);
             booleanSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
         }

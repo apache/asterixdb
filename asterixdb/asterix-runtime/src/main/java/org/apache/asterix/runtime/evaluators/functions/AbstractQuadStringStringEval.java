@@ -31,9 +31,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -69,7 +69,7 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
     private final UTF8StringPointable strPtr2 = new UTF8StringPointable();
     private final UTF8StringPointable strPtr3 = new UTF8StringPointable();
 
-    public AbstractQuadStringStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
+    public AbstractQuadStringStringEval(IEvaluatorContext context, IScalarEvaluatorFactory eval0,
             IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, IScalarEvaluatorFactory eval3,
             FunctionIdentifier funcID, SourceLocation sourceLoc) throws HyracksDataException {
         this.eval0 = eval0.createScalarEvaluator(context);

@@ -53,9 +53,9 @@ import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -121,7 +121,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new ArrayIntersectEval(args, ctx);
             }
         };
@@ -184,7 +184,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
         private IAsterixListBuilder orderedListBuilder;
         private IAsterixListBuilder unorderedListBuilder;
 
-        ArrayIntersectEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+        ArrayIntersectEval(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx) throws HyracksDataException {
             orderedListBuilder = null;
             unorderedListBuilder = null;
             pointableAllocator = new PointableAllocator();

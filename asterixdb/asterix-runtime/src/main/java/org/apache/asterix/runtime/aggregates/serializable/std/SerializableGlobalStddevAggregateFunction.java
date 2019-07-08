@@ -25,8 +25,8 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -37,7 +37,7 @@ public class SerializableGlobalStddevAggregateFunction
     private final boolean isPop;
     private final int delta;
 
-    public SerializableGlobalStddevAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+    public SerializableGlobalStddevAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context,
             boolean isPop, SourceLocation sourceLoc) throws HyracksDataException {
         super(args, context, sourceLoc);
         this.isPop = isPop;

@@ -80,6 +80,7 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -247,7 +248,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 IScalarEvaluatorFactory fact = jobGenCtx.getExpressionRuntimeProvider().createEvaluatorFactory(expr,
                         _emptyTypeEnv, _emptySchemas, jobGenCtx);
 
-                IScalarEvaluator eval = fact.createScalarEvaluator(null);
+                IScalarEvaluator eval = fact.createScalarEvaluator(new EvaluatorContext(null));
                 eval.evaluate(null, p);
                 IAType returnType = (IAType) _emptyTypeEnv.getType(expr);
                 ATypeTag runtimeType = PointableHelper.getTypeTag(p);

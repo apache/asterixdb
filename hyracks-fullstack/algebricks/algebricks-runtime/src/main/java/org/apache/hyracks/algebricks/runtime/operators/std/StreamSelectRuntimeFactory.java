@@ -23,8 +23,10 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFieldFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
@@ -101,21 +103,21 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
     public class StreamSelectRuntime extends AbstractOneInputOneOutputOneFieldFramePushRuntime {
 
         protected final IPointable p = VoidPointable.FACTORY.createPointable();
-        protected final IHyracksTaskContext ctx;
+        protected final IEvaluatorContext ctx;
         protected final IBinaryBooleanInspector bbi;
         protected IScalarEvaluator eval;
         protected IMissingWriter missingWriter;
         protected ArrayTupleBuilder missingTupleBuilder;
 
         public StreamSelectRuntime(IHyracksTaskContext ctx, IBinaryBooleanInspector bbi) {
-            this.ctx = ctx;
+            this.ctx = new EvaluatorContext(ctx);
             this.bbi = bbi;
         }
 
         @Override
         public void open() throws HyracksDataException {
             if (eval == null) {
-                initAccessAppendFieldRef(ctx);
+                initAccessAppendFieldRef(ctx.getTaskContext());
                 eval = cond.createScalarEvaluator(ctx);
             }
             super.open();

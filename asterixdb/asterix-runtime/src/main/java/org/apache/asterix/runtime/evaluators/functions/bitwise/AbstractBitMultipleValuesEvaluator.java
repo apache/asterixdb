@@ -27,9 +27,9 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.functions.AbstractScalarEval;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -65,7 +65,7 @@ abstract class AbstractBitMultipleValuesEvaluator extends AbstractScalarEval {
     private final ISerializerDeserializer aInt64Serde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
-    AbstractBitMultipleValuesEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] argEvaluatorFactories,
+    AbstractBitMultipleValuesEvaluator(IEvaluatorContext context, IScalarEvaluatorFactory[] argEvaluatorFactories,
             FunctionIdentifier functionIdentifier, SourceLocation sourceLocation) throws HyracksDataException {
         super(sourceLocation, functionIdentifier);
 

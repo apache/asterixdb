@@ -21,8 +21,8 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -32,7 +32,7 @@ public class LocalSqlStddevAggregateFunction extends AbstractSingleVarStatistics
 
     private final boolean isPop;
 
-    public LocalSqlStddevAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isPop,
+    public LocalSqlStddevAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context, boolean isPop,
             SourceLocation sourceLoc) throws HyracksDataException {
         super(args, context, sourceLoc);
         this.isPop = isPop;

@@ -35,9 +35,9 @@ import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.om.util.container.ObjectFactories;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
@@ -60,7 +60,7 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
     private OrderedListBuilder orderedListBuilder;
     private UnorderedListBuilder unorderedListBuilder;
 
-    AbstractArrayProcessArraysEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLoc,
+    AbstractArrayProcessArraysEval(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx, SourceLocation sourceLoc,
             IAType[] argTypes) throws HyracksDataException {
         orderedListBuilder = null;
         unorderedListBuilder = null;

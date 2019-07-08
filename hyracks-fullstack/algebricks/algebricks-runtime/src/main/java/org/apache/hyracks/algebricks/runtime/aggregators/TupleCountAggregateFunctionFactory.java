@@ -22,7 +22,7 @@ import java.io.IOException;
 
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -33,7 +33,7 @@ public class TupleCountAggregateFunctionFactory implements IAggregateEvaluatorFa
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
+    public IAggregateEvaluator createAggregateEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
         final ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
         return new IAggregateEvaluator() {
 

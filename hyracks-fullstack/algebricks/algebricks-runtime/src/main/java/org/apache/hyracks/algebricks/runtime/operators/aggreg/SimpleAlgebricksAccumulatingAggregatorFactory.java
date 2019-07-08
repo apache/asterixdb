@@ -20,6 +20,8 @@ package org.apache.hyracks.algebricks.runtime.operators.aggreg;
 
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -45,6 +47,7 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory extends AbstractAccum
     public IAggregatorDescriptor createAggregator(final IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
             RecordDescriptor outRecordDescriptor, int[] aggKeys, int[] partialKeys, long memoryBudget)
             throws HyracksDataException {
+        IEvaluatorContext evalCtx = new EvaluatorContext(ctx);
 
         return new IAggregatorDescriptor() {
 
@@ -92,7 +95,7 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory extends AbstractAccum
             public AggregateState createAggregateStates() throws HyracksDataException {
                 IAggregateEvaluator[] agg = new IAggregateEvaluator[aggFactories.length];
                 for (int i = 0; i < agg.length; i++) {
-                    agg[i] = aggFactories[i].createAggregateEvaluator(ctx);
+                    agg[i] = aggFactories[i].createAggregateEvaluator(evalCtx);
                 }
                 return new AggregateState(agg);
             }

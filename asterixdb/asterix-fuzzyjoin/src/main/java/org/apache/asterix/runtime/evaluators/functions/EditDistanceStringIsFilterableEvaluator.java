@@ -30,9 +30,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -61,7 +61,7 @@ public class EditDistanceStringIsFilterableEvaluator implements IScalarEvaluator
 
     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
-    public EditDistanceStringIsFilterableEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
+    public EditDistanceStringIsFilterableEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext context)
             throws HyracksDataException {
         stringEval = args[0].createScalarEvaluator(context);
         edThreshEval = args[1].createScalarEvaluator(context);

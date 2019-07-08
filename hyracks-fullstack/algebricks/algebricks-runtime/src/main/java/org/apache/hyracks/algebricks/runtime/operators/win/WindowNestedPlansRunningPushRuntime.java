@@ -125,7 +125,7 @@ final class WindowNestedPlansRunningPushRuntime extends AbstractWindowNestedPlan
             frameEndValidationEvals = createEvaluators(frameEndValidationEvalFactories, ctx);
             frameEndValidationPointables =
                     PointableTupleReference.create(frameEndValidationEvalFactories.length, VoidPointable.FACTORY);
-            booleanAccessor = booleanAccessorFactory.createBinaryBooleanInspector(ctx);
+            booleanAccessor = booleanAccessorFactory.createBinaryBooleanInspector(ctx.getTaskContext());
             nestedAggForInvalidFrame = nestedAggCreate();
         }
         tAccess2 = new FrameTupleAccessor(inputRecordDesc);

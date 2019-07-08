@@ -21,5 +21,9 @@ package org.apache.hyracks.api.exceptions;
 
 @FunctionalInterface
 public interface IWarningCollector {
+    /**
+     * Adds a warning
+     * @param warning
+     */
     void warn(Warning warning);
 }

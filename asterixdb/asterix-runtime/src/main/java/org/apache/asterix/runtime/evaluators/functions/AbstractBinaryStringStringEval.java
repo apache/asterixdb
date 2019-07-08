@@ -23,8 +23,8 @@ import java.io.IOException;
 
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -39,7 +39,7 @@ public abstract class AbstractBinaryStringStringEval extends AbstractBinaryStrin
     protected final GrowableArray resultArray = new GrowableArray();
     protected final UTF8StringBuilder resultBuilder = new UTF8StringBuilder();
 
-    public AbstractBinaryStringStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory evalLeftFactory,
+    public AbstractBinaryStringStringEval(IEvaluatorContext context, IScalarEvaluatorFactory evalLeftFactory,
             IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID, SourceLocation sourceLoc)
             throws HyracksDataException {
         super(context, evalLeftFactory, evalRightFactory, funcID, sourceLoc);

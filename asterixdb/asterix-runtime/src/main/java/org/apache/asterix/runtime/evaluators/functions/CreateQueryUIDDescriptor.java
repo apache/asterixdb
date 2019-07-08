@@ -24,9 +24,9 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -54,7 +54,7 @@ public class CreateQueryUIDDescriptor extends AbstractScalarFunctionDynamicDescr
             private static final int PAYLOAD_START = 2;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
                 // Format: |TypeTag | PayloadLength | Payload |
                 // TypeTag: 1 byte
                 // PayloadLength: 1 byte
@@ -65,7 +65,8 @@ public class CreateQueryUIDDescriptor extends AbstractScalarFunctionDynamicDescr
                 // Writes the payload size.
                 uidBytes[1] = BINARY_LENGTH - PAYLOAD_START;
                 // Writes the 4 byte partition id.
-                IntegerPointable.setInteger(uidBytes, PAYLOAD_START, ctx.getTaskAttemptId().getTaskId().getPartition());
+                IntegerPointable.setInteger(uidBytes, PAYLOAD_START,
+                        ctx.getTaskContext().getTaskAttemptId().getTaskId().getPartition());
 
                 return new IScalarEvaluator() {
 

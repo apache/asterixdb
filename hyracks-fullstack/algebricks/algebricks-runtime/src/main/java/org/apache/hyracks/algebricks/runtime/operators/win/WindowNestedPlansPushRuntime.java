@@ -233,10 +233,10 @@ class WindowNestedPlansPushRuntime extends AbstractWindowNestedPlansPushRuntime 
             tmpPointable = VoidPointable.FACTORY.createPointable();
         }
         if (frameStartValidationExists || frameEndValidationExists || frameExcludeUnaryExists) {
-            booleanAccessor = booleanAccessorFactory.createBinaryBooleanInspector(ctx);
+            booleanAccessor = booleanAccessorFactory.createBinaryBooleanInspector(ctx.getTaskContext());
         }
         if (frameOffsetExists) {
-            integerAccessor = integerAccessorFactory.createBinaryIntegerInspector(ctx);
+            integerAccessor = integerAccessorFactory.createBinaryIntegerInspector(ctx.getTaskContext());
         }
         tAccess2 = new FrameTupleAccessor(inputRecordDesc);
         tRef2 = new FrameTupleReference();

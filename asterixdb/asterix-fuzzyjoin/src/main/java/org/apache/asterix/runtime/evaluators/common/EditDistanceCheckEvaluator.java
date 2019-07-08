@@ -33,9 +33,9 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -55,7 +55,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
     protected final ISerializerDeserializer<ABoolean> booleanSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
-    public EditDistanceCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+    public EditDistanceCheckEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext context,
             SourceLocation sourceLoc) throws HyracksDataException {
         super(args, context, sourceLoc);
         edThreshEval = args[2].createScalarEvaluator(context);

@@ -23,8 +23,8 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -38,7 +38,7 @@ public abstract class AbstractTripleStringIntEval extends AbstractTripleStringEv
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     private final AMutableInt32 resultValue = new AMutableInt32(0);
 
-    public AbstractTripleStringIntEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
+    public AbstractTripleStringIntEval(IEvaluatorContext context, IScalarEvaluatorFactory eval0,
             IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, FunctionIdentifier funcID,
             SourceLocation sourceLoc) throws HyracksDataException {
         super(context, eval0, eval1, eval2, funcID, sourceLoc);

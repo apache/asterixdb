@@ -30,8 +30,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -51,7 +51,7 @@ public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
     private final IBinaryComparator comp;
     private final IntArrayList intHashes;
 
-    ArraySymDiffEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLocation,
+    ArraySymDiffEval(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx, SourceLocation sourceLocation,
             IAType[] argTypes) throws HyracksDataException {
         super(args, ctx, sourceLocation, argTypes);
         arrayListAllocator = new ListObjectPool<>(new ArrayListFactory<>());

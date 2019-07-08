@@ -40,9 +40,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -95,7 +95,7 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
     private final FunctionIdentifier funcID;
     private final SourceLocation sourceLoc;
 
-    public AbstractUnaryNumericFunctionEval(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory,
+    public AbstractUnaryNumericFunctionEval(IEvaluatorContext context, IScalarEvaluatorFactory argEvalFactory,
             FunctionIdentifier funcID, SourceLocation sourceLoc) throws HyracksDataException {
         this.argEval = argEvalFactory.createScalarEvaluator(context);
         this.funcID = funcID;

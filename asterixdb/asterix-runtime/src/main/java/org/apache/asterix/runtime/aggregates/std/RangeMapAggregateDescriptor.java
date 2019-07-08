@@ -41,9 +41,9 @@ import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -125,7 +125,7 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
+            public IAggregateEvaluator createAggregateEvaluator(final IEvaluatorContext ctx)
                     throws HyracksDataException {
                 return new RangeMapFunction(args, ctx, ascFlags, numPartitions, numOrderFields, sourceLoc, argsTypes);
             }
@@ -147,7 +147,7 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
         private final int numOrderByFields;
 
         @SuppressWarnings("unchecked")
-        private RangeMapFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean[] ascending,
+        private RangeMapFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context, boolean[] ascending,
                 int numOfPartitions, int numOrderByFields, SourceLocation sourceLocation, IAType[] argsTypes)
                 throws HyracksDataException {
             super(sourceLocation);

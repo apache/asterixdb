@@ -33,10 +33,10 @@ import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -77,7 +77,7 @@ public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFu
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
                 // Use ScanCollection to iterate over list items.
                 ScanCollectionUnnestingFunctionFactory scanCollectionFactory =
                         new ScanCollectionUnnestingFunctionFactory(args[0], sourceLoc);
@@ -88,7 +88,7 @@ public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFu
     }
 
     protected IScalarEvaluator createScalarAggregateEvaluator(IAggregateEvaluator aggEval,
-            ScanCollectionUnnestingFunctionFactory scanCollectionFactory, IHyracksTaskContext ctx)
+            ScanCollectionUnnestingFunctionFactory scanCollectionFactory, IEvaluatorContext ctx)
             throws HyracksDataException {
         return new GenericScalarAggregateFunction(aggEval, scanCollectionFactory, ctx, sourceLoc);
     }

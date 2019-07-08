@@ -23,10 +23,10 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.runningaggregates.base.AbstractRunningAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -43,7 +43,7 @@ public class NtileRunningAggregateDescriptor extends AbstractRunningAggregateFun
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IRunningAggregateEvaluator createRunningAggregateEvaluator(IHyracksTaskContext ctx)
+            public IRunningAggregateEvaluator createRunningAggregateEvaluator(IEvaluatorContext ctx)
                     throws HyracksDataException {
                 return new NtileRunningAggregateEvaluator(args[0].createScalarEvaluator(ctx), getIdentifier());
             }

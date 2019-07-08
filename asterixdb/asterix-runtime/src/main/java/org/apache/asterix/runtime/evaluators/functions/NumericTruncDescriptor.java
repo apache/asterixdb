@@ -48,9 +48,9 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -80,7 +80,7 @@ public class NumericTruncDescriptor extends AbstractScalarFunctionDynamicDescrip
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
                 return new NumericTruncEvaluator(args, ctx);
             }
         };
@@ -102,7 +102,7 @@ public class NumericTruncDescriptor extends AbstractScalarFunctionDynamicDescrip
         @SuppressWarnings("rawtypes")
         private ISerializerDeserializer serde;
 
-        NumericTruncEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+        NumericTruncEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx) throws HyracksDataException {
             eval = args[0].createScalarEvaluator(ctx);
             precision = args[1].createScalarEvaluator(ctx);
         }

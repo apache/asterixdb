@@ -34,9 +34,9 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -92,7 +92,7 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
 
     protected int hashTableSize = MIN_TABLE_SIZE;
 
-    public SimilarityJaccardEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
+    public SimilarityJaccardEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext context)
             throws HyracksDataException {
         firstOrdListEval = args[0].createScalarEvaluator(context);
         secondOrdListEval = args[1].createScalarEvaluator(context);

@@ -25,9 +25,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -60,7 +60,7 @@ public abstract class AbstractStringStringStringIntEval implements IScalarEvalua
     protected final FunctionIdentifier funcID;
     protected final SourceLocation sourceLoc;
 
-    AbstractStringStringStringIntEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
+    AbstractStringStringStringIntEval(IEvaluatorContext context, IScalarEvaluatorFactory eval0,
             IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, IScalarEvaluatorFactory eval3,
             FunctionIdentifier funcID, SourceLocation sourceLoc) throws HyracksDataException {
         this.sourceLoc = sourceLoc;

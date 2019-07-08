@@ -44,10 +44,10 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeLaxDescriptor;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.junit.Assert;
 import org.junit.Test;
@@ -85,7 +85,7 @@ public class CastTypeLaxTest {
         ConstantEvalFactory argEvalFactory = new ConstantEvalFactory(baos.toByteArray());
         IScalarEvaluatorFactory evalFactory =
                 funcDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { argEvalFactory });
-        IHyracksTaskContext ctx = mock(IHyracksTaskContext.class);
+        IEvaluatorContext ctx = mock(IEvaluatorContext.class);
         IScalarEvaluator evaluator = evalFactory.createScalarEvaluator(ctx);
         VoidPointable resultPointable = new VoidPointable();
         evaluator.evaluate(null, resultPointable);

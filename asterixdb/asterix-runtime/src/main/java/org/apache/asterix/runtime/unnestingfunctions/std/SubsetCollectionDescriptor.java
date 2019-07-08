@@ -33,11 +33,11 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -59,7 +59,7 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
+            public IUnnestingEvaluator createUnnestingEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
                 return new IUnnestingEvaluator() {
                     private IPointable inputVal = new VoidPointable();
                     private IScalarEvaluator evalList = args[0].createScalarEvaluator(ctx);

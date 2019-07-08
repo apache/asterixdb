@@ -24,10 +24,10 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractSerializableAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SerializableGlobalSqlSkewnessAggregateDescriptor
@@ -53,7 +53,7 @@ public class SerializableGlobalSqlSkewnessAggregateDescriptor
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx)
+            public ISerializedAggregateEvaluator createAggregateEvaluator(IEvaluatorContext ctx)
                     throws HyracksDataException {
                 return new SerializableGlobalSqlSkewnessAggregateFunction(args, ctx, sourceLoc);
             }

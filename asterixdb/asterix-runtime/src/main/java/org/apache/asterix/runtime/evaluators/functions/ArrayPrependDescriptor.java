@@ -27,9 +27,9 @@ import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -67,7 +67,7 @@ public class ArrayPrependDescriptor extends AbstractScalarFunctionDynamicDescrip
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new ArrayPrependEval(args, ctx);
             }
         };
@@ -80,7 +80,7 @@ public class ArrayPrependDescriptor extends AbstractScalarFunctionDynamicDescrip
 
     public class ArrayPrependEval extends AbstractArrayAddRemoveEval {
 
-        ArrayPrependEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+        ArrayPrependEval(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx) throws HyracksDataException {
             super(args, ctx, args.length - 1, 0, args.length - 1, argTypes, true, true);
         }
 

@@ -26,9 +26,9 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class RecordReplaceDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -62,7 +62,7 @@ public class RecordReplaceDescriptor extends AbstractScalarFunctionDynamicDescri
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
                 final IScalarEvaluator[] argEvals = new IScalarEvaluator[args.length];
                 for (int i = 0; i < args.length; i++) {
                     argEvals[i] = args[i].createScalarEvaluator(ctx);

@@ -27,11 +27,11 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -62,7 +62,7 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IUnnestingEvaluator createUnnestingEvaluator(final IHyracksTaskContext ctx)
+            public IUnnestingEvaluator createUnnestingEvaluator(final IEvaluatorContext ctx)
                     throws HyracksDataException {
                 return new IUnnestingEvaluator() {
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();

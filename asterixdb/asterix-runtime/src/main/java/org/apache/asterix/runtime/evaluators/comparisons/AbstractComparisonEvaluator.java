@@ -44,10 +44,10 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -76,8 +76,8 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
     private IAObject rightConstant;
 
     public AbstractComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory, IAType leftType,
-            IScalarEvaluatorFactory evalRightFactory, IAType rightType, IHyracksTaskContext ctx,
-            SourceLocation sourceLoc, boolean isEquality) throws HyracksDataException {
+            IScalarEvaluatorFactory evalRightFactory, IAType rightType, IEvaluatorContext ctx, SourceLocation sourceLoc,
+            boolean isEquality) throws HyracksDataException {
         this.evalLeft = evalLeftFactory.createScalarEvaluator(ctx);
         this.evalRight = evalRightFactory.createScalarEvaluator(ctx);
         this.sourceLoc = sourceLoc;

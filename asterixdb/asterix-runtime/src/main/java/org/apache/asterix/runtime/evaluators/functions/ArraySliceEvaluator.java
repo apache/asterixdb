@@ -42,9 +42,9 @@ import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -99,7 +99,7 @@ class ArraySliceEvaluator extends AbstractScalarEval {
     private final IAsterixListBuilder unorderedListBuilder = new UnorderedListBuilder();
 
     // Constructor
-    ArraySliceEvaluator(IScalarEvaluatorFactory[] argEvalFactories, IHyracksTaskContext ctx, SourceLocation sourceLoc,
+    ArraySliceEvaluator(IScalarEvaluatorFactory[] argEvalFactories, IEvaluatorContext ctx, SourceLocation sourceLoc,
             FunctionIdentifier functionIdentifier, IAType inputListType) throws HyracksDataException {
         // Source location
         super(sourceLoc, functionIdentifier);

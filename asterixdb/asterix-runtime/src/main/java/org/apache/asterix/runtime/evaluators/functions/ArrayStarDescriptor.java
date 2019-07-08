@@ -49,9 +49,9 @@ import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
@@ -126,7 +126,7 @@ public class ArrayStarDescriptor extends AbstractScalarFunctionDynamicDescriptor
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new ArrayStarEval(args, ctx);
             }
         };
@@ -192,7 +192,7 @@ public class ArrayStarDescriptor extends AbstractScalarFunctionDynamicDescriptor
         private final IObjectPool<List<IVisitablePointable>, ATypeTag> arrayListAllocator;
         private final IObjectPool<FieldNameToValues, ATypeTag> fieldNameToValuesAllocator;
 
-        public ArrayStarEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+        public ArrayStarEval(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx) throws HyracksDataException {
             storage = new ArrayBackedValueStorage();
             object = new VoidPointable();
             list = new VoidPointable();

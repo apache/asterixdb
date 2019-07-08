@@ -20,10 +20,10 @@ package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.runtime.aggregates.base.SingleFieldFrameTupleReference;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -47,7 +47,7 @@ public class GenericScalarAggregateFunction implements IScalarEvaluator {
     protected final SourceLocation sourceLoc;
 
     public GenericScalarAggregateFunction(IAggregateEvaluator aggFunc, IUnnestingEvaluatorFactory scanCollectionFactory,
-            IHyracksTaskContext context, SourceLocation sourceLoc) throws HyracksDataException {
+            IEvaluatorContext context, SourceLocation sourceLoc) throws HyracksDataException {
         this.aggFunc = aggFunc;
         this.scanCollection = scanCollectionFactory.createUnnestingEvaluator(context);
         this.sourceLoc = sourceLoc;

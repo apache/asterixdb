@@ -23,10 +23,10 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.runningaggregates.base.AbstractRunningAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 /**
  * Descriptor for {@code row_number()} window function
@@ -43,7 +43,7 @@ public class RowNumberRunningAggregateDescriptor extends AbstractRunningAggregat
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IRunningAggregateEvaluator createRunningAggregateEvaluator(IHyracksTaskContext ctx) {
+            public IRunningAggregateEvaluator createRunningAggregateEvaluator(IEvaluatorContext ctx) {
                 return new RowNumberRunningAggregateEvaluator();
             }
         };

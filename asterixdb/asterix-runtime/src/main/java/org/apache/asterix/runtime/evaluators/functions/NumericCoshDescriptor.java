@@ -25,9 +25,9 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
@@ -52,7 +52,7 @@ public class NumericCoshDescriptor extends AbstractScalarFunctionDynamicDescript
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
                 return new NumericCoshEvaluator(ctx, args[0]);
             }
         };
@@ -60,7 +60,7 @@ public class NumericCoshDescriptor extends AbstractScalarFunctionDynamicDescript
 
     public class NumericCoshEvaluator extends AbstractUnaryNumericDoubleFunctionEval {
 
-        public NumericCoshEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
+        public NumericCoshEvaluator(IEvaluatorContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws HyracksDataException {
             super(context, argEvalFactory, NumericCoshDescriptor.this.getIdentifier(), sourceLoc);
         }

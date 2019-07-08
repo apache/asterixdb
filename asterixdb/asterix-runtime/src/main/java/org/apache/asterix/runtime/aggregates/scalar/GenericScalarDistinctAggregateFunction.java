@@ -29,8 +29,8 @@ import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.aggregates.utils.PointableHashSet;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
@@ -50,7 +50,7 @@ public class GenericScalarDistinctAggregateFunction extends GenericScalarAggrega
     private final PointableHashSet itemSet;
 
     public GenericScalarDistinctAggregateFunction(IAggregateEvaluator aggFunc,
-            IUnnestingEvaluatorFactory scanCollectionFactory, IHyracksTaskContext context, SourceLocation sourceLoc,
+            IUnnestingEvaluatorFactory scanCollectionFactory, IEvaluatorContext context, SourceLocation sourceLoc,
             IAType itemType) throws HyracksDataException {
         super(aggFunc, scanCollectionFactory, context, sourceLoc);
         storageAllocator = new ListObjectPool<>(new AbvsBuilderFactory());

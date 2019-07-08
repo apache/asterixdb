@@ -25,9 +25,9 @@ import java.io.IOException;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -53,7 +53,7 @@ abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
     private final FunctionIdentifier funcID;
     protected final SourceLocation sourceLoc;
 
-    AbstractUnaryStringStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory,
+    AbstractUnaryStringStringEval(IEvaluatorContext context, IScalarEvaluatorFactory argEvalFactory,
             FunctionIdentifier funcID, SourceLocation sourceLoc) throws HyracksDataException {
         this.argEval = argEvalFactory.createScalarEvaluator(context);
         this.funcID = funcID;

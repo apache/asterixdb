@@ -34,9 +34,9 @@ import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicD
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -71,7 +71,7 @@ public class STGeomFromTextSRIDDescriptor extends AbstractScalarFunctionDynamicD
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
 
                 return new STGeomFromTextSRIDEvaluator(args, ctx);
             }
@@ -88,7 +88,7 @@ public class STGeomFromTextSRIDDescriptor extends AbstractScalarFunctionDynamicD
         private IScalarEvaluator eval0;
         private OperatorImportFromWkt wktImporter;
 
-        public STGeomFromTextSRIDEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
+        public STGeomFromTextSRIDEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx)
                 throws HyracksDataException {
             resultStorage = new ArrayBackedValueStorage();
             out = resultStorage.getDataOutput();

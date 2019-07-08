@@ -21,6 +21,7 @@ package org.apache.hyracks.algebricks.runtime.evaluators;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -50,8 +51,9 @@ public class TuplePairEvaluatorFactory implements ITuplePairComparatorFactory {
 
     @Override
     public ITuplePairComparator createTuplePairComparator(IHyracksTaskContext ctx) throws HyracksDataException {
-        return new TuplePairEvaluator(ctx, condition, booleanInspectorFactory.createBinaryBooleanInspector(ctx),
-                tuplesAreReversed);
+        IEvaluatorContext evalCtx = new EvaluatorContext(ctx);
+        IBinaryBooleanInspector bbi = booleanInspectorFactory.createBinaryBooleanInspector(ctx);
+        return new TuplePairEvaluator(evalCtx, condition, bbi, tuplesAreReversed);
     }
 
     private static class TuplePairEvaluator implements ITuplePairComparator {
@@ -62,7 +64,7 @@ public class TuplePairEvaluatorFactory implements ITuplePairComparatorFactory {
         private final IBinaryBooleanInspector booleanInspector;
         private final Reseter reseter;
 
-        TuplePairEvaluator(IHyracksTaskContext ctx, IScalarEvaluatorFactory conditionFactory,
+        TuplePairEvaluator(IEvaluatorContext ctx, IScalarEvaluatorFactory conditionFactory,
                 IBinaryBooleanInspector booleanInspector, boolean tuplesAreReversed) throws HyracksDataException {
             this.conditionEvaluator = conditionFactory.createScalarEvaluator(ctx);
             this.booleanInspector = booleanInspector;

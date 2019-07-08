@@ -21,8 +21,10 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -86,6 +88,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws HyracksDataException {
+        IEvaluatorContext evalCtx = new EvaluatorContext(ctx);
         final int[] projectionToOutColumns = new int[projectionList.length];
         for (int j = 0; j < projectionList.length; j++) {
             projectionToOutColumns[j] = Arrays.binarySearch(outColumns, projectionList[j]);
@@ -105,7 +108,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     first = false;
                     int n = evalFactories.length;
                     for (int i = 0; i < n; i++) {
-                        eval[i] = evalFactories[i].createScalarEvaluator(ctx);
+                        eval[i] = evalFactories[i].createScalarEvaluator(evalCtx);
                     }
                 }
                 super.open();

@@ -31,9 +31,9 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.functions.FullTextContainsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -109,7 +109,7 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
     protected ISerializerDeserializer<ANull> nullSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
-    public FullTextContainsEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
+    public FullTextContainsEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext context)
             throws HyracksDataException {
         evalLeft = args[0].createScalarEvaluator(context);
         evalRight = args[1].createScalarEvaluator(context);

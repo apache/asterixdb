@@ -27,10 +27,10 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.runningaggregates.base.AbstractRunningAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -54,7 +54,7 @@ public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunct
 
             @SuppressWarnings("unchecked")
             @Override
-            public IRunningAggregateEvaluator createRunningAggregateEvaluator(IHyracksTaskContext ctx)
+            public IRunningAggregateEvaluator createRunningAggregateEvaluator(IEvaluatorContext ctx)
                     throws HyracksDataException {
 
                 return new IRunningAggregateEvaluator() {

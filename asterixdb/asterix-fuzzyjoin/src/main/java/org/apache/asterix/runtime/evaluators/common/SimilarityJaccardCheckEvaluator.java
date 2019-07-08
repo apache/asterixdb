@@ -28,9 +28,9 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -53,7 +53,7 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
     protected final AOrderedListType listType = new AOrderedListType(BuiltinType.ANY, "list");
 
-    public SimilarityJaccardCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
+    public SimilarityJaccardCheckEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext context)
             throws HyracksDataException {
         super(args, context);
         jaccThreshEval = args[2].createScalarEvaluator(context);

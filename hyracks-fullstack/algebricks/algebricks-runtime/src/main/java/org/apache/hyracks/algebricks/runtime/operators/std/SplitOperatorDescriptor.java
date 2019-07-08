@@ -23,8 +23,10 @@ import java.nio.ByteBuffer;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspector;
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -103,7 +105,8 @@ public class SplitOperatorDescriptor extends AbstractReplicateOperatorDescriptor
             final FrameTupleAppender[] appenders = new FrameTupleAppender[numberOfNonMaterializedOutputs];
             final FrameTupleReference tRef = new FrameTupleReference();;
             final IBinaryIntegerInspector intInsepctor = intInsepctorFactory.createBinaryIntegerInspector(ctx);
-            final IScalarEvaluator eval = brachingExprEvalFactory.createScalarEvaluator(ctx);
+            final IEvaluatorContext evalCtx = new EvaluatorContext(ctx);
+            final IScalarEvaluator eval = brachingExprEvalFactory.createScalarEvaluator(evalCtx);
             final MutableBoolean hasFailed = new MutableBoolean(false);
             for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
                 appenders[i] = new FrameTupleAppender(new VSizeFrame(ctx), true);

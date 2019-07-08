@@ -23,8 +23,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -36,7 +38,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 
 public abstract class AbstractRunningAggregatePushRuntime<T extends IRunningAggregateEvaluator>
         extends AbstractOneInputOneOutputOneFramePushRuntime {
-    protected final IHyracksTaskContext ctx;
+    protected final IEvaluatorContext ctx;
     private final IRunningAggregateEvaluatorFactory[] runningAggFactories;
     private final Class<T> runningAggEvalClass;
     protected final List<T> runningAggEvals;
@@ -49,7 +51,7 @@ public abstract class AbstractRunningAggregatePushRuntime<T extends IRunningAggr
     public AbstractRunningAggregatePushRuntime(int[] projectionColumns, int[] runningAggOutColumns,
             IRunningAggregateEvaluatorFactory[] runningAggFactories, Class<T> runningAggEvalClass,
             IHyracksTaskContext ctx) {
-        this.ctx = ctx;
+        this.ctx = new EvaluatorContext(ctx);
         this.projectionColumns = projectionColumns;
         this.runningAggFactories = runningAggFactories;
         this.runningAggEvalClass = runningAggEvalClass;
@@ -75,7 +77,7 @@ public abstract class AbstractRunningAggregatePushRuntime<T extends IRunningAggr
 
     protected void init() throws HyracksDataException {
         tupleBuilder = createOutputTupleBuilder(projectionColumns);
-        initAccessAppendRef(ctx);
+        initAccessAppendRef(ctx.getTaskContext());
         for (IRunningAggregateEvaluatorFactory runningAggFactory : runningAggFactories) {
             IRunningAggregateEvaluator runningAggEval = runningAggFactory.createRunningAggregateEvaluator(ctx);
             runningAggEvals.add(runningAggEvalClass.cast(runningAggEval));

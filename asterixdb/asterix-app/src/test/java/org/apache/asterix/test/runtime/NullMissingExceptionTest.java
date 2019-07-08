@@ -33,10 +33,10 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionCollection;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -121,7 +121,7 @@ public class NullMissingExceptionTest {
 
             // Evaluate
             IScalarEvaluatorFactory evalFactory = funcDesc.createEvaluatorFactory(factories);
-            IHyracksTaskContext ctx = mock(IHyracksTaskContext.class);
+            IEvaluatorContext ctx = mock(IEvaluatorContext.class);
             try {
                 IScalarEvaluator evaluator = evalFactory.createScalarEvaluator(ctx);
                 IPointable resultPointable = new VoidPointable();

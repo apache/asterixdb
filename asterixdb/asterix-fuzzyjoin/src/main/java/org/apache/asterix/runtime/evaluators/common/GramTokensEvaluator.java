@@ -28,9 +28,9 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -57,7 +57,7 @@ public class GramTokensEvaluator implements IScalarEvaluator {
     private final OrderedListBuilder listBuilder = new OrderedListBuilder();
     private final AOrderedListType listType;
 
-    public GramTokensEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, IBinaryTokenizer tokenizer,
+    public GramTokensEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext context, IBinaryTokenizer tokenizer,
             BuiltinType itemType) throws HyracksDataException {
         stringEval = args[0].createScalarEvaluator(context);
         gramLengthEval = args[1].createScalarEvaluator(context);

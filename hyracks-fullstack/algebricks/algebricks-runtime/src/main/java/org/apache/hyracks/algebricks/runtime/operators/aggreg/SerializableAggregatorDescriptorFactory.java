@@ -20,8 +20,10 @@ package org.apache.hyracks.algebricks.runtime.operators.aggreg;
 
 import java.io.DataOutput;
 
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -44,6 +46,7 @@ public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatin
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, final int[] keyFieldsInPartialResults,
             long memoryBudget) throws HyracksDataException {
+        IEvaluatorContext evalCtx = new EvaluatorContext(ctx);
         final int[] keys = keyFields;
 
         /**
@@ -68,7 +71,7 @@ public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatin
                 for (int i = 0; i < aggs.length; i++) {
                     int begin = tb.getSize();
                     if (aggs[i] == null) {
-                        aggs[i] = aggFactories[i].createAggregateEvaluator(ctx);
+                        aggs[i] = aggFactories[i].createAggregateEvaluator(evalCtx);
                     }
                     aggs[i].init(output);
                     tb.addFieldEndOffset();

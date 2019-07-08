@@ -20,8 +20,8 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -34,7 +34,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  */
 public class MinMaxAggregateFunction extends AbstractMinMaxAggregateFunction {
 
-    MinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin, Type type,
+    MinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context, boolean isMin, Type type,
             SourceLocation sourceLoc, IAType aggFieldType) throws HyracksDataException {
         super(args, context, isMin, sourceLoc, type, aggFieldType);
     }

@@ -26,8 +26,8 @@ import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -48,7 +48,7 @@ public class NullWriterAggregateDescriptor extends AbstractAggregateFunctionDyna
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx) {
+            public IAggregateEvaluator createAggregateEvaluator(IEvaluatorContext ctx) {
                 return new AbstractAggregateFunction(sourceLoc) {
 
                     @Override

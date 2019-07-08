@@ -26,9 +26,9 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
@@ -57,7 +57,7 @@ public class IfNanOrInfDescriptor extends AbstractScalarFunctionDynamicDescripto
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new AbstractIfInfOrNanEval(ctx, args, true) {
                     @Override
                     protected boolean skipDouble(double d) {
@@ -90,7 +90,7 @@ public class IfNanOrInfDescriptor extends AbstractScalarFunctionDynamicDescripto
         private final IPointable argPtr;
         private final boolean skipMissing;
 
-        AbstractIfInfOrNanEval(IHyracksTaskContext ctx, IScalarEvaluatorFactory[] args, boolean skipMissing)
+        AbstractIfInfOrNanEval(IEvaluatorContext ctx, IScalarEvaluatorFactory[] args, boolean skipMissing)
                 throws HyracksDataException {
             argEvals = new IScalarEvaluator[args.length];
             for (int i = 0; i < argEvals.length; i++) {

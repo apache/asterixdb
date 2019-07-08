@@ -32,9 +32,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -61,9 +61,8 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
     private IAsterixListBuilder orderedListBuilder;
     private IAsterixListBuilder unorderedListBuilder;
 
-    AbstractArrayAddRemoveEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, int listOffset,
-            int valuesOffset, int numValues, IAType[] argTypes, boolean makeOpen, boolean acceptNullValues)
-            throws HyracksDataException {
+    AbstractArrayAddRemoveEval(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx, int listOffset, int valuesOffset,
+            int numValues, IAType[] argTypes, boolean makeOpen, boolean acceptNullValues) throws HyracksDataException {
         this.listOffset = listOffset;
         this.valuesOffset = valuesOffset;
         this.argTypes = argTypes;

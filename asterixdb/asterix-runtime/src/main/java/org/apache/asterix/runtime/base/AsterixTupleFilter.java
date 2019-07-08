@@ -20,9 +20,9 @@
 package org.apache.asterix.runtime.base;
 
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -34,7 +34,7 @@ public class AsterixTupleFilter implements ITupleFilter {
     private final IScalarEvaluator eval;
     private final IPointable p = VoidPointable.FACTORY.createPointable();
 
-    public AsterixTupleFilter(IHyracksTaskContext ctx, IScalarEvaluatorFactory evalFactory,
+    public AsterixTupleFilter(IEvaluatorContext ctx, IScalarEvaluatorFactory evalFactory,
             IBinaryBooleanInspector boolInspector) throws HyracksDataException {
         this.boolInspector = boolInspector;
         this.eval = evalFactory.createScalarEvaluator(ctx);

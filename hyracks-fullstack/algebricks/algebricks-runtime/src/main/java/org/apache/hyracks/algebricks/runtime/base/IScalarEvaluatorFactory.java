@@ -20,9 +20,8 @@ package org.apache.hyracks.algebricks.runtime.base;
 
 import java.io.Serializable;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IScalarEvaluatorFactory extends Serializable {
-    public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException;
+    public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException;
 }

@@ -34,9 +34,9 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -111,7 +111,7 @@ class NumericRoundEvaluator extends AbstractScalarEval {
     protected ISerializerDeserializer doubleSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
 
-    NumericRoundEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] argEvaluatorFactories,
+    NumericRoundEvaluator(IEvaluatorContext context, IScalarEvaluatorFactory[] argEvaluatorFactories,
             FunctionIdentifier functionIdentifier, SourceLocation sourceLocation) throws HyracksDataException {
         super(sourceLocation, functionIdentifier);
 

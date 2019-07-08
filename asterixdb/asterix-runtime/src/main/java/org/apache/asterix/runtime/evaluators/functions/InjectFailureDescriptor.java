@@ -28,9 +28,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -63,7 +63,7 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
 
                 final IPointable argPtr = new VoidPointable();
                 final IScalarEvaluator[] evals = new IScalarEvaluator[args.length];
@@ -81,7 +81,7 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
                             boolean argResult = ABooleanSerializerDeserializer.getBoolean(argPtr.getByteArray(),
                                     argPtr.getStartOffset() + 1);
                             if (argResult) {
-                                LOGGER.log(Level.ERROR, ctx.getTaskAttemptId() + " injecting failure");
+                                LOGGER.log(Level.ERROR, ctx.getTaskContext().getTaskAttemptId() + " injecting failure");
                                 throw new RuntimeDataException(ErrorCode.INJECTED_FAILURE, sourceLoc,
                                         getIdentifier().getName());
                             }

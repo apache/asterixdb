@@ -20,9 +20,9 @@ package org.apache.hyracks.algebricks.tests.pushruntime;
 
 import java.io.IOException;
 
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -43,7 +43,7 @@ public class IntegerAddEvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+    public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
         return new IScalarEvaluator() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
             private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();

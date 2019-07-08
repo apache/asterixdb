@@ -30,9 +30,9 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -49,11 +49,11 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
     private final boolean isMin;
     private final IAType aggFieldType;
     protected final Type type;
-    protected final IHyracksTaskContext context;
+    protected final IEvaluatorContext context;
     protected ATypeTag aggType;
     private ILogicalBinaryComparator cmp;
 
-    AbstractMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin,
+    AbstractMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context, boolean isMin,
             SourceLocation sourceLoc, Type type, IAType aggFieldType) throws HyracksDataException {
         super(sourceLoc);
         this.context = context;
@@ -156,12 +156,14 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
     }
 
     private void handleIncompatibleInput(ATypeTag typeTag) {
-        context.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_INCOMPATIBLE, "min/max", aggType, typeTag));
+        context.getTaskContext()
+                .warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_INCOMPATIBLE, "min/max", aggType, typeTag));
         this.aggType = ATypeTag.NULL;
     }
 
     private void handleUnsupportedInput(ATypeTag typeTag) {
-        context.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_UNSUPPORTED, "min/max", typeTag));
+        context.getTaskContext()
+                .warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_UNSUPPORTED, "min/max", typeTag));
         this.aggType = ATypeTag.NULL;
     }
 

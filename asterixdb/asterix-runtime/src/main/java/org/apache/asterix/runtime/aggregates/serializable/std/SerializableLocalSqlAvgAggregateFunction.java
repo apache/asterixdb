@@ -21,15 +21,15 @@ package org.apache.asterix.runtime.aggregates.serializable.std;
 
 import java.io.DataOutput;
 
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SerializableLocalSqlAvgAggregateFunction extends AbstractSerializableAvgAggregateFunction {
 
-    public SerializableLocalSqlAvgAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+    public SerializableLocalSqlAvgAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context,
             SourceLocation sourceLoc) throws HyracksDataException {
         super(args, context, sourceLoc);
     }

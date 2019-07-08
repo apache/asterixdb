@@ -60,8 +60,8 @@ class WindowMaterializingPushRuntime extends AbstractWindowPushRuntime {
     protected void init() throws HyracksDataException {
         super.init();
         String runFilePrefix = getClass().getName();
-        partitionWriter = new WindowPartitionWriter(ctx, memSizeInFrames - getReservedFrameCount(), runFilePrefix,
-                getPartitionReaderSlotCount(), sourceLoc);
+        partitionWriter = new WindowPartitionWriter(ctx.getTaskContext(), memSizeInFrames - getReservedFrameCount(),
+                runFilePrefix, getPartitionReaderSlotCount(), sourceLoc);
         partitionReader = partitionWriter.getReader();
         chunkEndIdx = new IntArrayList(128, 128);
     }

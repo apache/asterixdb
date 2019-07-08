@@ -24,9 +24,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingPositionWriter;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -87,10 +89,11 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
         }
         byte[] missingBytes = bos.toByteArray();
         int missingBytesLen = bos.size();
+        IEvaluatorContext evalCtx = new EvaluatorContext(ctx);
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
             private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
-            private IUnnestingEvaluator unnest = unnestingFactory.createUnnestingEvaluator(ctx);
+            private IUnnestingEvaluator unnest = unnestingFactory.createUnnestingEvaluator(evalCtx);
 
             @Override
             public void open() throws HyracksDataException {

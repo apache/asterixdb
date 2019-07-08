@@ -23,6 +23,8 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -38,7 +40,7 @@ public class AggregatePushRuntime extends AbstractOneInputOneOutputOneFramePushR
 
     private final IAggregateEvaluatorFactory[] aggFactories;
 
-    private final IHyracksTaskContext ctx;
+    private final IEvaluatorContext ctx;
 
     private IAggregateEvaluator[] aggEvals;
 
@@ -50,7 +52,7 @@ public class AggregatePushRuntime extends AbstractOneInputOneOutputOneFramePushR
 
     AggregatePushRuntime(IAggregateEvaluatorFactory[] aggFactories, IHyracksTaskContext ctx) {
         this.aggFactories = aggFactories;
-        this.ctx = ctx;
+        this.ctx = new EvaluatorContext(ctx);
         aggEvals = new IAggregateEvaluator[aggFactories.length];
         result = VoidPointable.FACTORY.createPointable();
         tupleBuilder = new ArrayTupleBuilder(aggEvals.length);
@@ -61,7 +63,7 @@ public class AggregatePushRuntime extends AbstractOneInputOneOutputOneFramePushR
     public void open() throws HyracksDataException {
         if (first) {
             first = false;
-            initAccessAppendRef(ctx);
+            initAccessAppendRef(ctx.getTaskContext());
             for (int i = 0; i < aggFactories.length; i++) {
                 aggEvals[i] = aggFactories[i].createAggregateEvaluator(ctx);
             }

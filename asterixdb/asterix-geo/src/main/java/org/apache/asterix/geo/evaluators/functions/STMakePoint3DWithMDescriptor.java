@@ -28,9 +28,9 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -57,7 +57,7 @@ public class STMakePoint3DWithMDescriptor extends AbstractGetValDescriptor {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new STMakePoint3DWithMEvaluator(args, ctx);
             }
         };
@@ -83,7 +83,7 @@ public class STMakePoint3DWithMDescriptor extends AbstractGetValDescriptor {
         private Point point;
         private AGeometry pointGeometry;
 
-        public STMakePoint3DWithMEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
+        public STMakePoint3DWithMEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx)
                 throws HyracksDataException {
             resultStorage = new ArrayBackedValueStorage();
             out = resultStorage.getDataOutput();

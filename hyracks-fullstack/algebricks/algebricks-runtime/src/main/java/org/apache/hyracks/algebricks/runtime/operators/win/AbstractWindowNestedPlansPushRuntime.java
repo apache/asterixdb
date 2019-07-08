@@ -20,6 +20,7 @@
 package org.apache.hyracks.algebricks.runtime.operators.win;
 
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -75,7 +76,7 @@ abstract class AbstractWindowNestedPlansPushRuntime extends WindowMaterializingP
     }
 
     final IWindowAggregatorDescriptor nestedAggCreate() throws HyracksDataException {
-        return nestedAggFactory.createAggregator(ctx, null, null, null, null, -1);
+        return nestedAggFactory.createAggregator(ctx.getTaskContext(), null, null, null, null, -1);
     }
 
     /**
@@ -127,7 +128,7 @@ abstract class AbstractWindowNestedPlansPushRuntime extends WindowMaterializingP
         nestedAgg.discardFinalResult();
     }
 
-    static IScalarEvaluator[] createEvaluators(IScalarEvaluatorFactory[] evalFactories, IHyracksTaskContext ctx)
+    static IScalarEvaluator[] createEvaluators(IScalarEvaluatorFactory[] evalFactories, IEvaluatorContext ctx)
             throws HyracksDataException {
         IScalarEvaluator[] evals = new IScalarEvaluator[evalFactories.length];
         for (int i = 0; i < evalFactories.length; i++) {

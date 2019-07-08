@@ -24,8 +24,8 @@ import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynam
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class GlobalSumAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
@@ -44,7 +44,7 @@ public class GlobalSumAggregateDescriptor extends AbstractAggregateFunctionDynam
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
+            public IAggregateEvaluator createAggregateEvaluator(final IEvaluatorContext ctx)
                     throws HyracksDataException {
                 return new GlobalSumAggregateFunction(args, ctx, sourceLoc);
             }

@@ -32,9 +32,9 @@ import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -62,7 +62,7 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
                 return new ABinaryConstructorEvaluator(args[0], ByteArrayHexParserFactory.INSTANCE, ctx, sourceLoc);
             }
         };
@@ -83,7 +83,7 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
         private UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
         public ABinaryConstructorEvaluator(IScalarEvaluatorFactory copyEvaluatorFactory,
-                IValueParserFactory valueParserFactory, IHyracksTaskContext context, SourceLocation sourceLoc)
+                IValueParserFactory valueParserFactory, IEvaluatorContext context, SourceLocation sourceLoc)
                 throws HyracksDataException {
             this.sourceLoc = sourceLoc;
             eval = copyEvaluatorFactory.createScalarEvaluator(context);
