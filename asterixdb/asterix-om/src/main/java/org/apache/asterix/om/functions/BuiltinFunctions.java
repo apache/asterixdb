@@ -239,12 +239,16 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-ifnull", 1);
     public static final FunctionIdentifier ARRAY_CONCAT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-concat", FunctionIdentifier.VARARGS);
-    public static final FunctionIdentifier ARRAY_RANGE =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-range", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_RANGE_WITHOUT_STEP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-range", 2);
+    public static final FunctionIdentifier ARRAY_RANGE_WITH_STEP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-range", 3);
     public static final FunctionIdentifier ARRAY_FLATTEN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-flatten", 2);
-    public static final FunctionIdentifier ARRAY_REPLACE =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-replace", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_REPLACE_WITHOUT_MAXIMUM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-replace", 3);
+    public static final FunctionIdentifier ARRAY_REPLACE_WITH_MAXIMUM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-replace", 4);
     public static final FunctionIdentifier ARRAY_SYMDIFF =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-symdiff", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier ARRAY_SYMDIFFN =
@@ -2170,9 +2174,11 @@ public class BuiltinFunctions {
         addFunction(ARRAY_INTERSECT, AListMultiListArgsTypeComputer.INSTANCE, true);
         addFunction(ARRAY_IFNULL, ArrayIfNullTypeComputer.INSTANCE, true);
         addFunction(ARRAY_CONCAT, AListMultiListArgsTypeComputer.INSTANCE, true);
-        addFunction(ARRAY_RANGE, ArrayRangeTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_RANGE_WITH_STEP, ArrayRangeTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_RANGE_WITHOUT_STEP, ArrayRangeTypeComputer.INSTANCE, true);
         addFunction(ARRAY_FLATTEN, AListFirstTypeComputer.INSTANCE_FLATTEN, true);
-        addFunction(ARRAY_REPLACE, AListTypeComputer.INSTANCE_REPLACE, true);
+        addFunction(ARRAY_REPLACE_WITH_MAXIMUM, AListTypeComputer.INSTANCE_REPLACE, true);
+        addFunction(ARRAY_REPLACE_WITHOUT_MAXIMUM, AListTypeComputer.INSTANCE_REPLACE, true);
         addFunction(ARRAY_SYMDIFF, AListMultiListArgsTypeComputer.INSTANCE, true);
         addFunction(ARRAY_SYMDIFFN, AListMultiListArgsTypeComputer.INSTANCE, true);
         addFunction(ARRAY_STAR, OpenARecordTypeComputer.INSTANCE, true);

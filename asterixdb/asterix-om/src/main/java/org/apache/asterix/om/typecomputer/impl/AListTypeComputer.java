@@ -34,42 +34,30 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
  * Returns a list that is missable/nullable. The list type is taken from one of the input args which is the input list.
  */
 public class AListTypeComputer extends AbstractResultTypeComputer {
-    public static final AListTypeComputer INSTANCE_REMOVE = new AListTypeComputer(2, -1, false, false, true);
-    public static final AListTypeComputer INSTANCE_PUT = new AListTypeComputer(2, -1, false, true, true);
-    public static final AListTypeComputer INSTANCE_PREPEND = new AListTypeComputer(2, -1, true, true, false);
-    public static final AListTypeComputer INSTANCE_APPEND = new AListTypeComputer(2, -1, false, true, false);
-    public static final AListTypeComputer INSTANCE_INSERT = new AListTypeComputer(3, -1, false, true, false);
-    public static final AListTypeComputer INSTANCE_REPLACE = new AListTypeComputer(3, 4, false, true, false);
-    public static final AListTypeComputer INSTANCE_SLICE = new AListTypeComputer(-1, -1, false, false, true, false);
+    public static final AListTypeComputer INSTANCE_REMOVE = new AListTypeComputer(2, false, false, true);
+    public static final AListTypeComputer INSTANCE_PUT = new AListTypeComputer(2, false, true, true);
+    public static final AListTypeComputer INSTANCE_PREPEND = new AListTypeComputer(2, true, true, false);
+    public static final AListTypeComputer INSTANCE_APPEND = new AListTypeComputer(2, false, true, false);
+    public static final AListTypeComputer INSTANCE_INSERT = new AListTypeComputer(3, false, true, false);
+    public static final AListTypeComputer INSTANCE_REPLACE = new AListTypeComputer(3, false, true, false);
+    public static final AListTypeComputer INSTANCE_SLICE = new AListTypeComputer(-1, false, false, true);
 
     private final int minNumArgs;
-    private final int maxNumArgs;
     private final boolean listIsLast;
     private final boolean makeOpen;
     private final boolean nullInNullOut;
-    private final boolean isCheckArgumentsCount;
-
-    // Maintain the old constructor
-    private AListTypeComputer(int minNumArgs, int maxNumArgs, boolean listIsLast, boolean makeOpen,
-            boolean nullInNullOut) {
-        this(minNumArgs, maxNumArgs, listIsLast, makeOpen, nullInNullOut, true);
-    }
 
     // Use this constructor to skip checking the arguments count
-    private AListTypeComputer(int minNumArgs, int maxNumArgs, boolean listIsLast, boolean makeOpen,
-            boolean nullInNullOut, boolean isCheckArgumentsCount) {
+    private AListTypeComputer(int minNumArgs, boolean listIsLast, boolean makeOpen, boolean nullInNullOut) {
         this.minNumArgs = minNumArgs;
-        this.maxNumArgs = maxNumArgs;
         this.listIsLast = listIsLast;
         this.makeOpen = makeOpen;
         this.nullInNullOut = nullInNullOut;
-        this.isCheckArgumentsCount = isCheckArgumentsCount;
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        if (isCheckArgumentsCount && (strippedInputTypes.length < minNumArgs
-                || (maxNumArgs > 0 && strippedInputTypes.length > maxNumArgs))) {
+        if (minNumArgs > -1 && strippedInputTypes.length < minNumArgs) {
             String functionName = ((AbstractFunctionCallExpression) expr).getFunctionIdentifier().getName();
             throw new CompilationException(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, expr.getSourceLocation(),
                     functionName);

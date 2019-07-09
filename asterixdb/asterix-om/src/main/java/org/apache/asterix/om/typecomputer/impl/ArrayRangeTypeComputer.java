@@ -19,8 +19,6 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -29,7 +27,6 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 public class ArrayRangeTypeComputer extends AbstractResultTypeComputer {
 
@@ -42,11 +39,6 @@ public class ArrayRangeTypeComputer extends AbstractResultTypeComputer {
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        if (strippedInputTypes.length != 2 && strippedInputTypes.length != 3) {
-            String functionName = ((AbstractFunctionCallExpression) expr).getFunctionIdentifier().getName();
-            throw new CompilationException(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, expr.getSourceLocation(),
-                    functionName);
-        }
         IAType startNum = strippedInputTypes[0];
         IAType endNum = strippedInputTypes[1];
         IAType step = strippedInputTypes.length == 3 ? strippedInputTypes[2] : null;

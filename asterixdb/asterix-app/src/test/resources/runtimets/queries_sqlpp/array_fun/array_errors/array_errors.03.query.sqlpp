@@ -18,8 +18,8 @@
  */
 
 /*
-* Description  : Testing correct number of arguments required
-* Expected Res : Error, 2 or 3 args are required
+* Description  : Testing different input list types
+* Expected Res : Error due to processing different list types
 */
 
-select array_range(2);
+select array_symdiff([3,5,1], [2,1], {{3, 1}});

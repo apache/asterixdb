@@ -26,12 +26,22 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.BooleanOnlyTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.BooleanOrMissingTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ClosedRecordConstructorResultType;
+import org.apache.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.LocalAvgTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.LocalSingleVarStatisticsTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.NullableDoubleTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.OpenRecordConstructorResultType;
+import org.apache.asterix.om.typecomputer.impl.RecordAddFieldsTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.RecordRemoveFieldsTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
@@ -62,11 +72,7 @@ import org.reflections.scanners.SubTypesScanner;
  *
  * Things to note:
  * - The function passes 6 "any" arguments because, as of now, no function that we have has more than 6 arguments.
- * two other lists are made (3 args and 4 args), those are needed by specific type computers for now, those should be
- * changed and then the lists can be removed from the test.
  * - Some functions have a different behavior with "any" value, those will be added to an exception list.
- * - Some functions check their arguments count, this will make passing 6 arguments fail,
- * those are added to exception list.
  */
 
 @RunWith(Parameterized.class)
@@ -74,12 +80,11 @@ public class TypeComputerTest {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    // Number of arguments to create and pass to each type computer
+    private static final int NUM_OF_ARGS = 6;
+
     // type computers that have a different behavior when handling "any" type
     private static Set<String> differentBehaviorFunctions = new HashSet<>();
-
-    // TODO(Hussain) Remove this after the type computers have been updated
-    // type computers that check the number of arguments
-    private static HashMap<Field, List<Mutable<ILogicalExpression>>> checkArgsCountFunctions = new HashMap<>();
 
     // Test parameters
     @Parameter
@@ -131,13 +136,7 @@ public class TypeComputerTest {
         IMetadataProvider metadataProvider = mock(IMetadataProvider.class);
 
         // Arguments all of type "any"
-        List<Mutable<ILogicalExpression>> threeArgs = createArgs(3, typeEnv);
-        List<Mutable<ILogicalExpression>> fourArgs = createArgs(4, typeEnv);
-        List<Mutable<ILogicalExpression>> sixArgs = createArgs(6, typeEnv);
-
-        // TODO(Hussain) Remove this after the type computers are updated
-        // Add to exception list for computers checking their arguments count
-        addComputersCheckingArgsCount(threeArgs, fourArgs);
+        List<Mutable<ILogicalExpression>> sixArgs = createArgs(typeEnv);
 
         // Mocks function identifier
         FunctionIdentifier functionIdentifier = mock(FunctionIdentifier.class);
@@ -154,7 +153,6 @@ public class TypeComputerTest {
         // Tests the return type. It should be either ANY or NULLABLE/MISSABLE.
         IResultTypeComputer instance;
         IAType resultType;
-        List<Mutable<ILogicalExpression>> args;
         Field[] fields = clazz.getFields();
 
         for (Field field : fields) {
@@ -163,17 +161,7 @@ public class TypeComputerTest {
             if (field.getType().equals(clazz)) {
                 LOGGER.log(Level.INFO, "Testing " + clazz.getSimpleName() + ": " + field.getName());
 
-                // Need to check if this is a special type computer that counts number of arguments
-                args = checkArgsCountFunctions.get(field);
-
-                // Yes, pass its specified arguments in the map
-                if (args != null) {
-                    when(functionCallExpression.getArguments()).thenReturn(args);
-                }
-                // No, pass six arguments
-                else {
-                    when(functionCallExpression.getArguments()).thenReturn(sixArgs);
-                }
+                when(functionCallExpression.getArguments()).thenReturn(sixArgs);
 
                 instance = (IResultTypeComputer) field.get(null);
                 resultType = instance.computeType(functionCallExpression, typeEnv, metadataProvider);
@@ -188,83 +176,41 @@ public class TypeComputerTest {
     }
 
     public static void prepare() {
-
         // Add to exception list for computers having a different behavior for "any" type
         addComputersBehavingDifferently();
     }
 
-    // TODO This is not a good practice, if the class name is changed, the test will fail and this needs to be updated
-    // Consider using annotation to avoid modifying the test and have a generic behavior
     /**
      * Adds the type computers that have a different behavior for "any" type.
      */
     private static void addComputersBehavingDifferently() {
-        differentBehaviorFunctions.add("InjectFailureTypeComputer");
-        differentBehaviorFunctions.add("RecordAddFieldsTypeComputer");
-        differentBehaviorFunctions.add("OpenRecordConstructorResultType");
-        differentBehaviorFunctions.add("RecordRemoveFieldsTypeComputer");
-        differentBehaviorFunctions.add("ClosedRecordConstructorResultType");
-        differentBehaviorFunctions.add("LocalAvgTypeComputer");
-        differentBehaviorFunctions.add("BooleanOnlyTypeComputer");
-        differentBehaviorFunctions.add("AMissingTypeComputer");
-        differentBehaviorFunctions.add("NullableDoubleTypeComputer");
-        differentBehaviorFunctions.add("RecordMergeTypeComputer");
-        differentBehaviorFunctions.add("BooleanOrMissingTypeComputer");
-        differentBehaviorFunctions.add("LocalSingleVarStatisticsTypeComputer");
-    }
-
-    // TODO(Hussain) Remove this after the type computers are updated
-    /**
-     * Adds the type computers that check the args count in their method body. If 6 arguments are passed to those
-     * computers, they're gonna throw an exception, so we manually specify how many arguments they should get.
-     *
-     * @throws Exception Exception
-     */
-    private static void addComputersCheckingArgsCount(List<Mutable<ILogicalExpression>> threeArgs,
-            List<Mutable<ILogicalExpression>> fourArgs) throws Exception {
-
-        // AListTypeComputer
-        Class<?> clazz = Class.forName("org.apache.asterix.om.typecomputer.impl.AListTypeComputer");
-        Field[] fields = clazz.getFields();
-
-        for (Field field : fields) {
-            if (field.getName().equalsIgnoreCase("INSTANCE_SLICE")) {
-                LOGGER.log(Level.INFO, field.getName() + " will use only 3 arguments");
-                checkArgsCountFunctions.put(field, threeArgs);
-            }
-
-            if (field.getName().equalsIgnoreCase("INSTANCE_REPLACE")) {
-                LOGGER.log(Level.INFO, field.getName() + " will use only 4 arguments");
-                checkArgsCountFunctions.put(field, fourArgs);
-            }
-        }
-
-        // ArrayRangeTypeComputer
-        clazz = Class.forName("org.apache.asterix.om.typecomputer.impl.ArrayRangeTypeComputer");
-        fields = clazz.getFields();
-
-        for (Field field : fields) {
-            if (field.getName().equalsIgnoreCase("INSTANCE")) {
-                LOGGER.log(Level.INFO, field.getName() + " will use only 3 arguments");
-                checkArgsCountFunctions.put(field, threeArgs);
-            }
-        }
+        differentBehaviorFunctions.add(InjectFailureTypeComputer.class.getSimpleName());
+        differentBehaviorFunctions.add(RecordAddFieldsTypeComputer.class.getSimpleName());
+        differentBehaviorFunctions.add(OpenRecordConstructorResultType.class.getSimpleName());
+        differentBehaviorFunctions.add(RecordRemoveFieldsTypeComputer.class.getSimpleName());
+        differentBehaviorFunctions.add(ClosedRecordConstructorResultType.class.getSimpleName());
+        differentBehaviorFunctions.add(LocalAvgTypeComputer.class.getSimpleName());
+        differentBehaviorFunctions.add(BooleanOnlyTypeComputer.class.getSimpleName());
+        //        differentBehaviorFunctions.add("AMissingTypeComputer"); // TODO What type computer is this?
+        differentBehaviorFunctions.add(NullableDoubleTypeComputer.class.getSimpleName());
+        differentBehaviorFunctions.add(RecordMergeTypeComputer.class.getSimpleName());
+        differentBehaviorFunctions.add(BooleanOrMissingTypeComputer.class.getSimpleName());
+        differentBehaviorFunctions.add(LocalSingleVarStatisticsTypeComputer.class.getSimpleName());
     }
 
     /**
      * Creates expressions matching the number passed as an argument. Variable type environment is set for all those
      * expressions to be of type "any".
      *
-     * @param numArgs number of arguments to create
+     * @param typeEnv Type environment
      * @return a list holding the created expressions
      * @throws Exception Exception
      */
-    private static List<Mutable<ILogicalExpression>> createArgs(int numArgs, IVariableTypeEnvironment typeEnv)
-            throws Exception {
+    private static List<Mutable<ILogicalExpression>> createArgs(IVariableTypeEnvironment typeEnv) throws Exception {
 
         List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
 
-        for (int i = 0; i < numArgs; ++i) {
+        for (int i = 0; i < NUM_OF_ARGS; ++i) {
             ILogicalExpression argument = mock(ILogicalExpression.class);
             arguments.add(new MutableObject<>(argument));
             when(typeEnv.getType(argument)).thenReturn(BuiltinType.ANY);

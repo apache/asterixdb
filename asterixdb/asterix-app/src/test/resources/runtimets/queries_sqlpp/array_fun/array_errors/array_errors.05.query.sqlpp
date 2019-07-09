@@ -18,8 +18,8 @@
  */
 
 /*
-* Description  : Testing correct number of arguments required
-* Expected Res : Error, 3 or 4 args are required
+* Description  : Testing different input list types
+* Expected Res : Error due to processing different list types
 */
 
-select array_replace([2,6],2);
+select array_union([3,5,1], [2,1], {{3, 1}});

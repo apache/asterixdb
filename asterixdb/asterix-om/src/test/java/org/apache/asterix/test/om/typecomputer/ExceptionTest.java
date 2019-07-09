@@ -65,6 +65,12 @@ import org.reflections.scanners.SubTypesScanner;
  * Example:
  * 2 arguments, 40 types = 1600 combinations per type computer
  * 3 arguments, 40 types = 64000 combinations per type computer
+ *
+ * TODO There are 2 functions that expect a minimum arguments of 3, so passing them 2 arguments will cause them
+ * to return an exception, so they're really not being tested properly now. Probably need to add an exception list
+ * for such functions.
+ * Ideally, making the arguments in the test to be 3 will solve the issue, but that would push the tests to 64000 each
+ * and that takes too long and times out the test apparently.
  */
 
 @RunWith(Parameterized.class)
@@ -109,8 +115,11 @@ public class ExceptionTest {
     public void test() throws Exception {
 
         // Arguments list
-        Object[] opaqueParameters = new Object[] { BuiltinType.ANY, BuiltinType.ANY };
+        Object[] opaqueParameters = new Object[numberOfArguments];
         List<Mutable<ILogicalExpression>> argumentsList = new ArrayList<>(numberOfArguments);
+        for (int i = 0; i < numberOfArguments; i++) {
+            opaqueParameters[i] = BuiltinType.ANY;
+        }
 
         // Sets arguments for the mocked function expression.
         for (int index = 0; index < numberOfCombinations; ++index) {
