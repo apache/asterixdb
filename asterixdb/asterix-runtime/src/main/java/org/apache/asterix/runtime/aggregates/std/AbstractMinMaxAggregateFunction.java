@@ -156,13 +156,13 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
     }
 
     private void handleIncompatibleInput(ATypeTag typeTag) {
-        context.getTaskContext()
+        context.getWarningCollector()
                 .warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_INCOMPATIBLE, "min/max", aggType, typeTag));
         this.aggType = ATypeTag.NULL;
     }
 
     private void handleUnsupportedInput(ATypeTag typeTag) {
-        context.getTaskContext()
+        context.getWarningCollector()
                 .warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_UNSUPPORTED, "min/max", typeTag));
         this.aggType = ATypeTag.NULL;
     }

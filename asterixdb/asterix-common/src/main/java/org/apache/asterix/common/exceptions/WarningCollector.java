@@ -46,4 +46,10 @@ public final class WarningCollector implements IWarningCollector {
     public void getWarnings(Collection<? super Warning> outWarnings) {
         outWarnings.addAll(warnings);
     }
+
+    public void getWarnings(IWarningCollector outWarningCollector) {
+        for (Warning warning : warnings) {
+            outWarningCollector.warn(warning);
+        }
+    }
 }

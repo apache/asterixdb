@@ -22,7 +22,6 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -33,7 +32,7 @@ import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataflow.state.IStateObject;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.JobFlag;
@@ -51,7 +50,6 @@ public class TestTaskContext implements IHyracksTaskContext {
     private Map<Object, IStateObject> stateObjectMap = new HashMap<>();
     private Object sharedObject;
     private final IStatsCollector statsCollector = new StatsCollector();
-    private final Set<Warning> warnings = new HashSet<>();
 
     public TestTaskContext(TestJobletContext jobletContext, TaskAttemptId taskId) {
         this.jobletContext = jobletContext;
@@ -180,7 +178,7 @@ public class TestTaskContext implements IHyracksTaskContext {
     }
 
     @Override
-    public void warn(Warning warning) {
-        warnings.add(warning);
+    public IWarningCollector getWarningCollector() {
+        return TestUtils.NOOP_WARNING_COLLECTOR;
     }
 }

@@ -48,7 +48,7 @@ import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.JobFlag;
@@ -106,6 +106,7 @@ import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.test.support.TestUtils;
 
 @SuppressWarnings("rawtypes")
 public class LSMInvertedIndexTestUtils {
@@ -767,8 +768,8 @@ public class LSMInvertedIndexTestUtils {
         }
 
         @Override
-        public void warn(Warning warning) {
-            // no-op
+        public IWarningCollector getWarningCollector() {
+            return TestUtils.NOOP_WARNING_COLLECTOR;
         }
     }
 

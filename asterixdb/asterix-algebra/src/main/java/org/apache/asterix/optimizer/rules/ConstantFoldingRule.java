@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.exceptions.WarningCollector;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
@@ -78,6 +79,7 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVis
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
@@ -172,7 +174,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         if (context.checkIfInDontApplySet(this, op)) {
             return false;
         }
-
+        cfv.reset(context);
         return op.acceptExpressionTransform(cfv);
     }
 
@@ -182,6 +184,13 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         private final IPointable p = VoidPointable.FACTORY.createPointable();
         private final ByteBufferInputStream bbis = new ByteBufferInputStream();
         private final DataInputStream dis = new DataInputStream(bbis);
+        private final WarningCollector warningCollector = new WarningCollector();
+        private final IEvaluatorContext evalContext = new EvaluatorContext(warningCollector);
+        private IOptimizationContext optContext;
+
+        private void reset(IOptimizationContext context) {
+            optContext = context;
+        }
 
         @Override
         public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
@@ -248,7 +257,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 IScalarEvaluatorFactory fact = jobGenCtx.getExpressionRuntimeProvider().createEvaluatorFactory(expr,
                         _emptyTypeEnv, _emptySchemas, jobGenCtx);
 
-                IScalarEvaluator eval = fact.createScalarEvaluator(new EvaluatorContext(null));
+                warningCollector.clear();
+                IScalarEvaluator eval = fact.createScalarEvaluator(evalContext);
                 eval.evaluate(null, p);
                 IAType returnType = (IAType) _emptyTypeEnv.getType(expr);
                 ATypeTag runtimeType = PointableHelper.getTypeTag(p);
@@ -262,6 +272,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                         jobGenCtx.getSerializerDeserializerProvider().getSerializerDeserializer(returnType);
                 bbis.setByteBuffer(ByteBuffer.wrap(p.getByteArray(), p.getStartOffset(), p.getLength()), 0);
                 IAObject o = (IAObject) serde.deserialize(dis);
+                warningCollector.getWarnings(optContext.getWarningCollector());
                 return new Pair<>(true, new ConstantExpression(new AsterixConstantValue(o)));
             } catch (HyracksDataException | AlgebricksException e) {
                 if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {

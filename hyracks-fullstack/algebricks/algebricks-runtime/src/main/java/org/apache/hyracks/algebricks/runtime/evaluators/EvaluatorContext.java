@@ -19,19 +19,36 @@
 
 package org.apache.hyracks.algebricks.runtime.evaluators;
 
+import java.util.Objects;
+
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public final class EvaluatorContext implements IEvaluatorContext {
 
     private final IHyracksTaskContext taskContext;
 
+    private final IWarningCollector warningCollector;
+
     public EvaluatorContext(IHyracksTaskContext taskContext) {
         this.taskContext = taskContext;
+        this.warningCollector = taskContext.getWarningCollector();
+    }
+
+    public EvaluatorContext(IWarningCollector warningCollector) {
+        Objects.requireNonNull(warningCollector);
+        this.taskContext = null;
+        this.warningCollector = warningCollector;
     }
 
     @Override
     public IHyracksTaskContext getTaskContext() {
         return taskContext;
+    }
+
+    @Override
+    public IWarningCollector getWarningCollector() {
+        return warningCollector;
     }
 }

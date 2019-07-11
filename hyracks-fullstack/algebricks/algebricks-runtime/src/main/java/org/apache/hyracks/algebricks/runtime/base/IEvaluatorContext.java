@@ -20,6 +20,7 @@
 package org.apache.hyracks.algebricks.runtime.base;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 /**
  * Context for runtime function evaluators
@@ -30,4 +31,9 @@ public interface IEvaluatorContext {
      * is being executed by the constant folding rule at compile time.
      */
     IHyracksTaskContext getTaskContext();
+
+    /**
+     * Returns a warning collector, never {@code null}
+     */
+    IWarningCollector getWarningCollector();
 }
