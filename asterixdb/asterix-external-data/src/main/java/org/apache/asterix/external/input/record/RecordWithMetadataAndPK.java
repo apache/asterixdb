@@ -100,6 +100,10 @@ public class RecordWithMetadataAndPK<T> extends RecordWithPK<T> {
         return record;
     }
 
+    public IAType[] getMetaTypes() {
+        return metaTypes;
+    }
+
     public ArrayBackedValueStorage getMetadata(final int index) {
         return fieldValueBuffers[index];
     }

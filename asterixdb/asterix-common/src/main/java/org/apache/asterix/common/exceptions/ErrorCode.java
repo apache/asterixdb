@@ -296,6 +296,11 @@ public class ErrorCode {
     public static final int FEED_FAILED_WHILE_GETTING_A_NEW_RECORD = 3110;
     public static final int FEED_START_FEED_WITHOUT_CONNECTION = 3111;
     public static final int PARSER_COLLECTION_ITEM_CANNOT_BE_NULL = 3112;
+    public static final int FAILED_TO_PARSE_RECORD = 3113;
+    public static final int FAILED_TO_PARSE_RECORD_CONTENT = 3114;
+    public static final int FAILED_TO_PARSE_METADATA = 3115;
+    public static final int INPUT_DECODE_FAILURE = 3116;
+    public static final int FAILED_TO_PARSE_MALFORMED_LOG_RECORD = 3117;
 
     // Lifecycle management errors
     public static final int DUPLICATE_PARTITION_ID = 4000;

@@ -229,6 +229,10 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         return this;
     }
 
+    public NodeControllerService getNodeControllerService() {
+        return ncs;
+    }
+
     public Joblet getJoblet() {
         return joblet;
     }
