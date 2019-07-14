@@ -18,14 +18,11 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
-import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
-
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
+import org.apache.asterix.dataflow.data.common.TaggedValueReference;
 import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
 
 public final class LogicalGenericBinaryComparator implements ILogicalBinaryComparator {
 
@@ -38,27 +35,23 @@ public final class LogicalGenericBinaryComparator implements ILogicalBinaryCompa
     }
 
     @Override
-    public Result compare(IPointable left, IPointable right) throws HyracksDataException {
-        ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
-        ATypeTag rightTag = VALUE_TYPE_MAPPING[right.getByteArray()[right.getStartOffset()]];
-        if (leftTag.isDerivedType() && rightTag.isDerivedType()) {
+    public Result compare(TaggedValueReference left, TaggedValueReference right) throws HyracksDataException {
+        if (left.getTag().isDerivedType() && right.getTag().isDerivedType()) {
             return complexComparator.compare(left, right);
         }
         return scalarComparator.compare(left, right);
     }
 
     @Override
-    public Result compare(IPointable left, IAObject rightConstant) {
-        ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
-        ATypeTag rightTag = rightConstant.getType().getTypeTag();
-        if (leftTag.isDerivedType() && rightTag.isDerivedType()) {
+    public Result compare(TaggedValueReference left, IAObject rightConstant) {
+        if (left.getTag().isDerivedType() && rightConstant.getType().getTypeTag().isDerivedType()) {
             return complexComparator.compare(left, rightConstant);
         }
         return scalarComparator.compare(left, rightConstant);
     }
 
     @Override
-    public Result compare(IAObject leftConstant, IPointable right) {
+    public Result compare(IAObject leftConstant, TaggedValueReference right) {
         Result result = compare(right, leftConstant);
         if (result == Result.LT) {
             return Result.GT;
@@ -69,12 +62,10 @@ public final class LogicalGenericBinaryComparator implements ILogicalBinaryCompa
     }
 
     @Override
-    public Result compare(IAObject leftConstant, IAObject rightConstant) {
-        ATypeTag leftTag = leftConstant.getType().getTypeTag();
-        ATypeTag rightTag = rightConstant.getType().getTypeTag();
-        if (leftTag.isDerivedType() && rightTag.isDerivedType()) {
-            return complexComparator.compare(leftConstant, rightConstant);
+    public Result compare(IAObject leftConst, IAObject rightConst) {
+        if (leftConst.getType().getTypeTag().isDerivedType() && rightConst.getType().getTypeTag().isDerivedType()) {
+            return complexComparator.compare(leftConst, rightConst);
         }
-        return scalarComparator.compare(leftConstant, rightConstant);
+        return scalarComparator.compare(leftConst, rightConst);
     }
 }

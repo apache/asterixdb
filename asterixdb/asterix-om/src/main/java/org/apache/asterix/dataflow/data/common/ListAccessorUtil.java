@@ -19,10 +19,13 @@
 
 package org.apache.asterix.dataflow.data.common;
 
+import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
+
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
@@ -52,6 +55,7 @@ public class ListAccessorUtil {
      */
     public static boolean getItem(byte[] listBytes, int start, int itemIndex, ATypeTag listTag, ATypeTag listItemTag,
             IPointable pointable, ArrayBackedValueStorage storage) throws IOException {
+        // TODO(ali): this method should be removed if hashing is fixed to avoid copying the tag
         int itemOffset;
         if (listTag == ATypeTag.MULTISET) {
             itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(listBytes, start, itemIndex);
@@ -78,13 +82,24 @@ public class ListAccessorUtil {
         }
     }
 
-    public static int numberOfItems(byte[] listBytes, int start) {
-        if (listBytes[start] == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-            return AUnorderedListSerializerDeserializer.getNumberOfItems(listBytes, start);
-        } else if (listBytes[start] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-            return AOrderedListSerializerDeserializer.getNumberOfItems(listBytes, start);
+    public static void getItemFromList(TaggedValueReference listValue, int itemIndex, TaggedValueReference item,
+            ATypeTag arrayItemTag, boolean itemHasTag) throws IOException {
+        int itemOffset = SerializerDeserializerUtil.getItemOffsetNonTagged(listValue, itemIndex);
+        getItem(listValue, itemOffset, item, arrayItemTag, itemHasTag);
+    }
+
+    private static void getItem(TaggedValueReference listValue, int itemOffset, TaggedValueReference item,
+            ATypeTag listItemTag, boolean itemHasTag) throws IOException {
+        byte[] listBytes = listValue.getByteArray();
+        ATypeTag itemTag;
+        int itemValueOffset = itemOffset;
+        if (itemHasTag) {
+            itemTag = VALUE_TYPE_MAPPING[listBytes[itemOffset]];
+            itemValueOffset = itemOffset + 1;
         } else {
-            throw new IllegalStateException();
+            itemTag = listItemTag;
         }
+        int itemValueLength = NonTaggedFormatUtil.getFieldValueLength(listBytes, itemOffset, itemTag, itemHasTag);
+        item.set(listBytes, itemValueOffset, itemValueLength, itemTag);
     }
 }

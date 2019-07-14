@@ -19,9 +19,9 @@
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
 import static org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.inequalityUndefined;
-import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
 
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
+import org.apache.asterix.dataflow.data.common.TaggedValueReference;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
@@ -31,7 +31,6 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
@@ -51,9 +50,9 @@ public final class LogicalScalarBinaryComparator implements ILogicalBinaryCompar
     }
 
     @Override
-    public Result compare(IPointable left, IPointable right) throws HyracksDataException {
-        ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
-        ATypeTag rightTag = VALUE_TYPE_MAPPING[right.getByteArray()[right.getStartOffset()]];
+    public Result compare(TaggedValueReference left, TaggedValueReference right) throws HyracksDataException {
+        ATypeTag leftTag = left.getTag();
+        ATypeTag rightTag = right.getTag();
         Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
         if (comparisonResult != null) {
             return comparisonResult;
@@ -61,9 +60,14 @@ public final class LogicalScalarBinaryComparator implements ILogicalBinaryCompar
         if (comparisonUndefined(leftTag, rightTag, isEquality)) {
             return Result.INCOMPARABLE;
         }
+        byte[] leftBytes = left.getByteArray();
+        byte[] rightBytes = right.getByteArray();
+        int leftStart = left.getStartOffset();
+        int rightStart = right.getStartOffset();
         // compare number if one of args is number since compatibility has already been checked above
         if (ATypeHierarchy.getTypeDomain(leftTag) == ATypeHierarchy.Domain.NUMERIC) {
-            return ComparatorUtil.compareNumbers(leftTag, left, rightTag, right);
+            return ILogicalBinaryComparator.asResult(
+                    ComparatorUtil.compareNumbers(leftTag, leftBytes, leftStart, rightTag, rightBytes, rightStart));
         }
 
         // comparing non-numeric
@@ -72,13 +76,8 @@ public final class LogicalScalarBinaryComparator implements ILogicalBinaryCompar
             throw new IllegalStateException("Two different non-numeric tags but they are compatible");
         }
 
-        byte[] leftBytes = left.getByteArray();
-        byte[] rightBytes = right.getByteArray();
-        int leftStart = left.getStartOffset() + 1;
-        int rightStart = right.getStartOffset() + 1;
-        int leftLen = left.getLength() - 1;
-        int rightLen = right.getLength() - 1;
-
+        int leftLen = left.getLength();
+        int rightLen = right.getLength();
         int result;
         switch (leftTag) {
             case BOOLEAN:
@@ -153,9 +152,9 @@ public final class LogicalScalarBinaryComparator implements ILogicalBinaryCompar
     }
 
     @Override
-    public Result compare(IPointable left, IAObject rightConstant) {
+    public Result compare(TaggedValueReference left, IAObject rightConstant) {
         // TODO(ali): currently defined for numbers only
-        ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
+        ATypeTag leftTag = left.getTag();
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
         Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
         if (comparisonResult != null) {
@@ -165,13 +164,13 @@ public final class LogicalScalarBinaryComparator implements ILogicalBinaryCompar
             return Result.NULL;
         }
         if (ATypeHierarchy.getTypeDomain(leftTag) == ATypeHierarchy.Domain.NUMERIC) {
-            return ComparatorUtil.compareNumWithConstant(leftTag, left, rightConstant);
+            return ComparatorUtil.compareNumWithConstant(left, rightConstant);
         }
         return Result.NULL;
     }
 
     @Override
-    public Result compare(IAObject leftConstant, IPointable right) {
+    public Result compare(IAObject leftConstant, TaggedValueReference right) {
         // TODO(ali): currently defined for numbers only
         Result result = compare(right, leftConstant);
         if (result == Result.LT) {

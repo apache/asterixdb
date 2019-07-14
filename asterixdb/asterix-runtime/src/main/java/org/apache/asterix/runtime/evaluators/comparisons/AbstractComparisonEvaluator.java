@@ -18,10 +18,13 @@
  */
 package org.apache.asterix.runtime.evaluators.comparisons;
 
+import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
+
 import java.io.DataOutput;
 
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.Result;
+import org.apache.asterix.dataflow.data.common.TaggedValueReference;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ComparatorUtil;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
@@ -68,6 +71,8 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
     protected final DataOutput out = resultStorage.getDataOutput();
     protected final TaggedValuePointable argLeft = TaggedValuePointable.FACTORY.createPointable();
     private final TaggedValuePointable argRight = TaggedValuePointable.FACTORY.createPointable();
+    private final TaggedValueReference leftVal = new TaggedValueReference();
+    private final TaggedValueReference rightVal = new TaggedValueReference();
     private final IScalarEvaluator evalLeft;
     private final IScalarEvaluator evalRight;
     protected final SourceLocation sourceLoc;
@@ -102,38 +107,41 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
         if (PointableHelper.checkAndSetMissingOrNull(result, argLeft, argRight)) {
             return;
         }
-
+        leftVal.set(argLeft.getByteArray(), argLeft.getStartOffset() + 1, argLeft.getLength() - 1,
+                VALUE_TYPE_MAPPING[argLeft.getTag()]);
+        rightVal.set(argRight.getByteArray(), argRight.getStartOffset() + 1, argRight.getLength() - 1,
+                VALUE_TYPE_MAPPING[argRight.getTag()]);
         evaluateImpl(result);
     }
 
     protected abstract void evaluateImpl(IPointable result) throws HyracksDataException;
 
-    Result compare() throws HyracksDataException {
+    final Result compare() throws HyracksDataException {
         if (leftConstant != null) {
             if (rightConstant != null) {
                 // both are constants
                 return logicalComparator.compare(leftConstant, rightConstant);
             } else {
                 // left is constant, right isn't
-                return logicalComparator.compare(leftConstant, argRight);
+                return logicalComparator.compare(leftConstant, rightVal);
             }
         } else {
             if (rightConstant != null) {
                 // right is constant, left isn't
-                return logicalComparator.compare(argLeft, rightConstant);
+                return logicalComparator.compare(leftVal, rightConstant);
             } else {
-                return logicalComparator.compare(argLeft, argRight);
+                return logicalComparator.compare(leftVal, rightVal);
             }
         }
     }
 
-    void writeMissing(IPointable result) throws HyracksDataException {
+    final void writeMissing(IPointable result) throws HyracksDataException {
         resultStorage.reset();
         missingSerde.serialize(AMissing.MISSING, out);
         result.set(resultStorage);
     }
 
-    void writeNull(IPointable result) throws HyracksDataException {
+    final void writeNull(IPointable result) throws HyracksDataException {
         resultStorage.reset();
         nullSerde.serialize(ANull.NULL, out);
         result.set(resultStorage);

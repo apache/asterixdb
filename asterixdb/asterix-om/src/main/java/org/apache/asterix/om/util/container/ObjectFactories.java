@@ -20,6 +20,7 @@ package org.apache.asterix.om.util.container;
 
 import java.util.BitSet;
 
+import org.apache.asterix.dataflow.data.common.TaggedValueReference;
 import org.apache.asterix.om.pointables.nonvisitor.SortedRecord;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
@@ -45,4 +46,5 @@ public class ObjectFactories {
     public static final IObjectFactory<BitSet, Void> BIT_SET_FACTORY = type -> new BitSet();
     public static final IObjectFactory<UTF8StringPointable, Void> UTF8_FACTORY = type -> new UTF8StringPointable();
     public static final IObjectFactory<SortedRecord, ARecordType> RECORD_FACTORY = SortedRecord::new;
+    public static final IObjectFactory<TaggedValueReference, Void> VALUE_FACTORY = type -> new TaggedValueReference();
 }

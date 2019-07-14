@@ -53,13 +53,13 @@ import com.fasterxml.jackson.databind.JsonNode;
  *   int length;
  *   byte isExpanded?;
  *   int openOffset?;
- *   int numberOfClosedFields;
- *   byte[ceil (numberOfFields / 4)] nullBitMap; // 2 bits per field, "1" means field is null, "2" field is missing
- *   int[numberOfClosedFields] closedFieldOffset;
- *   IPointable[numberOfClosedFields] fieldValue;
+ *   int numberOfClosedFields?;
+ *   byte[ceil (numberOfFields / 4)] nullBitMap?; // 2 bits per field, "1" means field is null, "2" field is missing
+ *   int[numberOfClosedFields] closedFieldOffset?;
+ *   IPointable[numberOfClosedFields] fieldValues?;
  *   int numberOfOpenFields?;
- *   OpenFieldLookup[numberOfOpenFields] lookup;
- *   OpenField[numberOfOpenFields] openFields;
+ *   OpenFieldLookup[numberOfOpenFields] lookup?;
+ *   OpenField[numberOfOpenFields] openFields?;
  * }
  *
  * OpenFieldLookup {

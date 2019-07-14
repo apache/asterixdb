@@ -26,6 +26,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.common.ListAccessorUtil;
+import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.om.pointables.nonvisitor.RecordField;
 import org.apache.asterix.om.pointables.nonvisitor.SortedRecord;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
@@ -138,7 +139,7 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
             IAType arrayType = TypeComputeUtils.getActualTypeOrOpen(type, ATypeTag.ARRAY);
             IAType itemType = ((AbstractCollectionType) arrayType).getItemType();
             ATypeTag itemTag = itemType.getTypeTag();
-            int numItems = ListAccessorUtil.numberOfItems(bytes, offset);
+            int numItems = AOrderedListSerializerDeserializer.getNumberOfItems(bytes, offset);
             int hash = seed;
             IPointable item = voidPointableAllocator.allocate(null);
             ArrayBackedValueStorage storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);

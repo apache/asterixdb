@@ -18,38 +18,27 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
-import static org.apache.asterix.om.types.ATypeTag.SERIALIZED_MISSING_TYPE_TAG;
-import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
-import static org.apache.asterix.om.util.container.ObjectFactories.BIT_SET_FACTORY;
-import static org.apache.asterix.om.util.container.ObjectFactories.STORAGE_FACTORY;
-import static org.apache.asterix.om.util.container.ObjectFactories.VOID_FACTORY;
+import static org.apache.asterix.om.util.container.ObjectFactories.RECORD_FACTORY;
+import static org.apache.asterix.om.util.container.ObjectFactories.VALUE_FACTORY;
 
 import java.io.IOException;
-import java.util.BitSet;
-import java.util.List;
 
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.dataflow.data.common.ListAccessorUtil;
+import org.apache.asterix.dataflow.data.common.TaggedValueReference;
+import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
 import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.pointables.ARecordVisitablePointable;
-import org.apache.asterix.om.pointables.PointableAllocator;
-import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.pointables.nonvisitor.RecordField;
+import org.apache.asterix.om.pointables.nonvisitor.SortedRecord;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.RawBinaryComparatorFactory;
-import org.apache.hyracks.data.std.api.IMutableValueStorage;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public final class LogicalComplexBinaryComparator implements ILogicalBinaryComparator {
 
@@ -57,26 +46,20 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
     private final IAType rightType;
     private final boolean isEquality;
     private final LogicalScalarBinaryComparator scalarComparator;
-    private final IObjectPool<IMutableValueStorage, Void> storageAllocator;
-    private final IObjectPool<IPointable, Void> voidPointableAllocator;
-    private final IObjectPool<BitSet, Void> bitSetAllocator;
-    private final PointableAllocator pointableAllocator;
+    private final ListObjectPool<TaggedValueReference, Void> taggedValuePool = new ListObjectPool<>(VALUE_FACTORY);
+    private final ListObjectPool<SortedRecord, ARecordType> recordPool = new ListObjectPool<>(RECORD_FACTORY);
 
     LogicalComplexBinaryComparator(IAType leftType, IAType rightType, boolean isEquality) {
         this.leftType = leftType;
         this.rightType = rightType;
         this.isEquality = isEquality;
         this.scalarComparator = LogicalScalarBinaryComparator.of(isEquality);
-        storageAllocator = new ListObjectPool<>(STORAGE_FACTORY);
-        voidPointableAllocator = new ListObjectPool<>(VOID_FACTORY);
-        bitSetAllocator = new ListObjectPool<>(BIT_SET_FACTORY);
-        pointableAllocator = new PointableAllocator();
     }
 
     @Override
-    public Result compare(IPointable left, IPointable right) throws HyracksDataException {
-        ATypeTag leftRuntimeTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
-        ATypeTag rightRuntimeTag = VALUE_TYPE_MAPPING[right.getByteArray()[right.getStartOffset()]];
+    public Result compare(TaggedValueReference left, TaggedValueReference right) throws HyracksDataException {
+        ATypeTag leftRuntimeTag = left.getTag();
+        ATypeTag rightRuntimeTag = right.getTag();
         Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftRuntimeTag, rightRuntimeTag);
         if (comparisonResult != null) {
             return comparisonResult;
@@ -89,9 +72,9 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
     }
 
     @Override
-    public Result compare(IPointable left, IAObject rightConstant) {
+    public Result compare(TaggedValueReference left, IAObject rightConstant) {
         // TODO(ali): not defined currently for constant complex types
-        ATypeTag leftTag = VALUE_TYPE_MAPPING[left.getByteArray()[left.getStartOffset()]];
+        ATypeTag leftTag = left.getTag();
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
         Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
         if (comparisonResult != null) {
@@ -102,7 +85,7 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
     }
 
     @Override
-    public Result compare(IAObject leftConstant, IPointable right) {
+    public Result compare(IAObject leftConstant, TaggedValueReference right) {
         // TODO(ali): not defined currently for constant complex types
         Result result = compare(right, leftConstant);
         switch (result) {
@@ -128,18 +111,19 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
         return Result.NULL;
     }
 
-    private Result compareComplex(IAType leftType, ATypeTag leftTag, IPointable left, IAType rightType,
-            ATypeTag rightTag, IPointable right) throws HyracksDataException {
-        if (leftTag != rightTag) {
+    private Result compareComplex(IAType leftType, ATypeTag leftRuntimeTag, TaggedValueReference left, IAType rightType,
+            ATypeTag rightRuntimeTag, TaggedValueReference right) throws HyracksDataException {
+        if (leftRuntimeTag != rightRuntimeTag) {
             return Result.INCOMPARABLE;
         }
-        IAType leftCompileType = TypeComputeUtils.getActualTypeOrOpen(leftType, leftTag);
-        IAType rightCompileType = TypeComputeUtils.getActualTypeOrOpen(rightType, rightTag);
-        switch (leftTag) {
+        IAType leftCompileType = TypeComputeUtils.getActualTypeOrOpen(leftType, leftRuntimeTag);
+        IAType rightCompileType = TypeComputeUtils.getActualTypeOrOpen(rightType, rightRuntimeTag);
+        switch (leftRuntimeTag) {
             case MULTISET:
-                return compareMultisets(leftCompileType, leftTag, left, rightCompileType, rightTag, right);
+                return compareMultisets(leftCompileType, leftRuntimeTag, left, rightCompileType, rightRuntimeTag,
+                        right);
             case ARRAY:
-                return compareArrays(leftCompileType, leftTag, left, rightCompileType, rightTag, right);
+                return compareArrays(leftCompileType, left, rightCompileType, right);
             case OBJECT:
                 return compareRecords(leftCompileType, left, rightCompileType, right);
             default:
@@ -147,41 +131,28 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
         }
     }
 
-    private Result compareArrays(IAType leftType, ATypeTag leftListTag, IPointable left, IAType rightType,
-            ATypeTag rightListTag, IPointable right) throws HyracksDataException {
-        // reaching here, both left and right have to be arrays (should be enforced)
-        byte[] leftBytes = left.getByteArray();
-        byte[] rightBytes = right.getByteArray();
-        int leftStart = left.getStartOffset();
-        int rightStart = right.getStartOffset();
-        int leftNumItems = ListAccessorUtil.numberOfItems(leftBytes, leftStart);
-        int rightNumItems = ListAccessorUtil.numberOfItems(rightBytes, rightStart);
+    private Result compareArrays(IAType leftType, TaggedValueReference leftArray, IAType rightType,
+            TaggedValueReference rightArray) throws HyracksDataException {
+        // reaching here, both leftArray and rightArray have to be arrays (should be enforced)
+        int leftNumItems = SerializerDeserializerUtil.getNumberOfItemsNonTagged(leftArray);
+        int rightNumItems = SerializerDeserializerUtil.getNumberOfItemsNonTagged(rightArray);
         IAType leftItemCompileType = ((AbstractCollectionType) leftType).getItemType();
         IAType rightItemCompileType = ((AbstractCollectionType) rightType).getItemType();
-        ATypeTag leftItemTag = leftItemCompileType.getTypeTag();
-        ATypeTag rightItemTag = rightItemCompileType.getTypeTag();
-
-        // TODO(ali): could be optimized to not need pointable when changing comparator to be non-tagged & no visitable
-        IPointable leftItem = voidPointableAllocator.allocate(null);
-        IPointable rightItem = voidPointableAllocator.allocate(null);
-        // TODO(ali): optimize to not need this storage, will require optimizing records comparison to not use visitable
-        ArrayBackedValueStorage leftStorage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
-        ArrayBackedValueStorage rightStorage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
+        ATypeTag leftArrayItemTag = leftItemCompileType.getTypeTag();
+        ATypeTag rightArrayItemTag = rightItemCompileType.getTypeTag();
+        boolean leftItemHasTag = leftArrayItemTag == ATypeTag.ANY;
+        boolean rightItemHasTag = rightArrayItemTag == ATypeTag.ANY;
+        TaggedValueReference leftItem = taggedValuePool.allocate(null);
+        TaggedValueReference rightItem = taggedValuePool.allocate(null);
         Result determiningResult = null;
         Result tempResult;
-        byte leftItemTagByte, rightItemTagByte;
-        ATypeTag leftItemRuntimeTag, rightItemRuntimeTag;
         try {
             for (int i = 0; i < leftNumItems && i < rightNumItems; i++) {
-                ListAccessorUtil.getItem(leftBytes, leftStart, i, leftListTag, leftItemTag, leftItem, leftStorage);
-                ListAccessorUtil.getItem(rightBytes, rightStart, i, rightListTag, rightItemTag, rightItem,
-                        rightStorage);
-                leftItemTagByte = leftItem.getByteArray()[leftItem.getStartOffset()];
-                rightItemTagByte = rightItem.getByteArray()[rightItem.getStartOffset()];
-
+                ListAccessorUtil.getItemFromList(leftArray, i, leftItem, leftArrayItemTag, leftItemHasTag);
+                ListAccessorUtil.getItemFromList(rightArray, i, rightItem, rightArrayItemTag, rightItemHasTag);
                 // if both tags are derived, get item type or default to open item if array is open, then call complex
-                leftItemRuntimeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(leftItemTagByte);
-                rightItemRuntimeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(rightItemTagByte);
+                ATypeTag leftItemRuntimeTag = leftItem.getTag();
+                ATypeTag rightItemRuntimeTag = rightItem.getTag();
                 if (leftItemRuntimeTag.isDerivedType() && rightItemRuntimeTag.isDerivedType()) {
                     tempResult = compareComplex(leftItemCompileType, leftItemRuntimeTag, leftItem, rightItemCompileType,
                             rightItemRuntimeTag, rightItem);
@@ -206,15 +177,13 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         } finally {
-            storageAllocator.free(rightStorage);
-            storageAllocator.free(leftStorage);
-            voidPointableAllocator.free(rightItem);
-            voidPointableAllocator.free(leftItem);
+            taggedValuePool.free(rightItem);
+            taggedValuePool.free(leftItem);
         }
     }
 
-    private Result compareMultisets(IAType leftType, ATypeTag leftListTag, IPointable left, IAType rightType,
-            ATypeTag rightListTag, IPointable right) throws HyracksDataException {
+    private Result compareMultisets(IAType leftType, ATypeTag leftListTag, TaggedValueReference left, IAType rightType,
+            ATypeTag rightListTag, TaggedValueReference right) throws HyracksDataException {
         // TODO(ali): multiset comparison logic here
         // equality is the only operation defined for multiset
         if (!isEquality) {
@@ -225,107 +194,78 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
                         left.getLength(), right.getByteArray(), right.getStartOffset(), right.getLength()));
     }
 
-    private Result compareRecords(IAType leftType, IPointable left, IAType rightType, IPointable right)
-            throws HyracksDataException {
+    private Result compareRecords(IAType leftType, TaggedValueReference left, IAType rightType,
+            TaggedValueReference right) throws HyracksDataException {
         // equality is the only operation defined for records
         if (!isEquality) {
             return Result.INCOMPARABLE;
         }
-        ARecordType leftRecordType = (ARecordType) leftType;
-        ARecordType rightRecordType = (ARecordType) rightType;
-        ARecordVisitablePointable leftRecord = pointableAllocator.allocateRecordValue(leftRecordType);
-        ARecordVisitablePointable rightRecord = pointableAllocator.allocateRecordValue(rightRecordType);
-        // keeps track of the fields in the right record that have not been matched
-        BitSet notMatched = bitSetAllocator.allocate(null);
+        ARecordType leftRecordType = (ARecordType) TypeComputeUtils.getActualTypeOrOpen(leftType, ATypeTag.OBJECT);
+        ARecordType rightRecordType = (ARecordType) TypeComputeUtils.getActualTypeOrOpen(rightType, ATypeTag.OBJECT);
+        SortedRecord leftRecord = recordPool.allocate(leftRecordType);
+        SortedRecord rightRecord = recordPool.allocate(rightRecordType);
+        TaggedValueReference leftFieldValue = taggedValuePool.allocate(null);
+        TaggedValueReference rightFieldValue = taggedValuePool.allocate(null);
         try {
-            leftRecord.set(left);
-            rightRecord.set(right);
-            List<IVisitablePointable> leftFieldValues = leftRecord.getFieldValues();
-            List<IVisitablePointable> leftFieldNames = leftRecord.getFieldNames();
-            List<IVisitablePointable> rightFieldValues = rightRecord.getFieldValues();
-            List<IVisitablePointable> rightFieldNames = rightRecord.getFieldNames();
-            IVisitablePointable leftFieldValue, leftFieldName, rightFieldValue, rightFieldName;
-            int leftNumFields = leftFieldNames.size();
-            int rightNumFields = rightFieldNames.size();
-            IAType leftFieldType, rightFieldType;
-            ATypeTag leftFTag, rightFTag;
-            Result tempCompResult;
-            boolean foundFieldInRight;
+            leftRecord.resetNonTagged(left.getByteArray(), left.getStartOffset());
+            rightRecord.resetNonTagged(right.getByteArray(), right.getStartOffset());
             boolean notEqual = false;
-            notMatched.set(0, rightNumFields);
-            for (int i = 0; i < leftNumFields; i++) {
-                leftFieldValue = leftFieldValues.get(i);
-                leftFTag = VALUE_TYPE_MAPPING[leftFieldValue.getByteArray()[leftFieldValue.getStartOffset()]];
-
-                // ignore if the field value is missing
-                if (leftFTag != ATypeTag.MISSING) {
-                    // start looking for the field in the right record
-                    foundFieldInRight = false;
-                    leftFieldName = leftFieldNames.get(i);
-                    for (int k = 0; k < rightNumFields; k++) {
-                        rightFieldName = rightFieldNames.get(k);
-                        if (notMatched.get(k) && equalNames(leftFieldName, rightFieldName)) {
-                            notMatched.clear(k);
-                            rightFieldValue = rightFieldValues.get(k);
-                            rightFTag = VALUE_TYPE_MAPPING[rightFieldValue.getByteArray()[rightFieldValue
-                                    .getStartOffset()]];
-                            // if right field has a missing value, ignore and flag the two records as not equal
-                            if (rightFTag != ATypeTag.MISSING) {
-                                foundFieldInRight = true;
-                                if (leftFTag == ATypeTag.NULL || rightFTag == ATypeTag.NULL) {
-                                    tempCompResult = Result.NULL;
-                                } else if (leftFTag.isDerivedType() && rightFTag.isDerivedType()) {
-                                    leftFieldType = RecordUtil.getType(leftRecordType, i, leftFTag);
-                                    rightFieldType = RecordUtil.getType(rightRecordType, k, rightFTag);
-                                    tempCompResult = compareComplex(leftFieldType, leftFTag, leftFieldValue,
-                                            rightFieldType, rightFTag, rightFieldValue);
-                                } else {
-                                    tempCompResult = scalarComparator.compare(leftFieldValue, rightFieldValue);
-                                }
-
-                                if (tempCompResult == Result.INCOMPARABLE || tempCompResult == Result.MISSING
-                                        || tempCompResult == Result.NULL) {
-                                    return Result.INCOMPARABLE;
-                                }
-                                if (tempCompResult != Result.EQ) {
-                                    notEqual = true;
-                                }
-                            }
-                            break;
-                        }
+            RecordField leftField = null, rightField = null;
+            int previousNamesComparisonResult = 0;
+            while (!leftRecord.isEmpty() && !rightRecord.isEmpty()) {
+                if (previousNamesComparisonResult == 0) {
+                    // previous field names were equal or first time to enter the loop
+                    leftField = leftRecord.poll();
+                    rightField = rightRecord.poll();
+                } else if (previousNamesComparisonResult > 0) {
+                    // right field name was less than left field name. get next field from right
+                    rightField = rightRecord.poll();
+                } else {
+                    leftField = leftRecord.poll();
+                }
+                Result tempCompResult;
+                previousNamesComparisonResult = RecordField.FIELD_NAME_COMP.compare(leftField, rightField);
+                if (previousNamesComparisonResult == 0) {
+                    // filed names are equal
+                    leftRecord.getFieldValue(leftField, leftFieldValue);
+                    rightRecord.getFieldValue(rightField, rightFieldValue);
+                    ATypeTag leftFTag = leftFieldValue.getTag();
+                    ATypeTag rightFTag = rightFieldValue.getTag();
+                    if (leftFTag == ATypeTag.NULL || rightFTag == ATypeTag.NULL) {
+                        tempCompResult = Result.NULL;
+                    } else if (leftFTag.isDerivedType() && rightFTag.isDerivedType()) {
+                        IAType leftFieldType = RecordUtil.getType(leftRecordType, leftField.getIndex(), leftFTag);
+                        IAType rightFieldType = RecordUtil.getType(rightRecordType, rightField.getIndex(), rightFTag);
+                        tempCompResult = compareComplex(leftFieldType, leftFTag, leftFieldValue, rightFieldType,
+                                rightFTag, rightFieldValue);
+                    } else {
+                        tempCompResult = scalarComparator.compare(leftFieldValue, rightFieldValue);
                     }
-                    if (!foundFieldInRight) {
+
+                    if (tempCompResult == Result.INCOMPARABLE || tempCompResult == Result.MISSING
+                            || tempCompResult == Result.NULL) {
+                        return Result.INCOMPARABLE;
+                    }
+                    if (tempCompResult != Result.EQ) {
                         notEqual = true;
                     }
+                } else {
+                    notEqual = true;
                 }
             }
-
-            if (notEqual) {
+            if (notEqual || leftRecord.size() != rightRecord.size()) {
                 // LT or GT does not make a difference since this is an answer to equality
                 return Result.LT;
             }
-            // check if there is a field in the right record that does not exist in left record
-            byte rightFieldTag;
-            for (int i = notMatched.nextSetBit(0); i >= 0 && i < rightNumFields; i = notMatched.nextSetBit(i + 1)) {
-                rightFieldValue = rightFieldValues.get(i);
-                rightFieldTag = rightFieldValue.getByteArray()[rightFieldValue.getStartOffset()];
-                if (rightFieldTag != SERIALIZED_MISSING_TYPE_TAG) {
-                    // LT or GT does not make a difference since this is an answer to equality
-                    return Result.LT;
-                }
-            }
-
             // reaching here means every field in the left record exists in the right and vice versa
             return Result.EQ;
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
         } finally {
-            pointableAllocator.freeRecord(rightRecord);
-            pointableAllocator.freeRecord(leftRecord);
-            bitSetAllocator.free(notMatched);
+            recordPool.free(rightRecord);
+            recordPool.free(leftRecord);
+            taggedValuePool.free(rightFieldValue);
+            taggedValuePool.free(leftFieldValue);
         }
-    }
-
-    private boolean equalNames(IValueReference fieldName1, IValueReference fieldName2) {
-        return UTF8StringUtil.compareTo(fieldName1.getByteArray(), fieldName1.getStartOffset() + 1,
-                fieldName2.getByteArray(), fieldName2.getStartOffset() + 1) == 0;
     }
 }

@@ -30,6 +30,7 @@ import static org.apache.asterix.om.types.ATypeTag.TINYINT;
 
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.Result;
+import org.apache.asterix.dataflow.data.common.TaggedValueReference;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -47,7 +48,6 @@ import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.hyracks.data.std.api.IPointable;
 
 // TODO(ali): refactor some functionality with ATypeHierarchy and others
 public class ComparatorUtil {
@@ -81,13 +81,7 @@ public class ComparatorUtil {
         return null;
     }
 
-    // checking that left and right are compatible and are numbers has to be done before calling this
-    static Result compareNumbers(ATypeTag leftTag, IPointable left, ATypeTag rightTag, IPointable right) {
-        return asResult(compareNumbers(leftTag, left.getByteArray(), left.getStartOffset() + 1, rightTag,
-                right.getByteArray(), right.getStartOffset() + 1));
-    }
-
-    // start args point to the value
+    // start points to the value; checking left and right are compatible and numbers has to be done before calling this
     static int compareNumbers(ATypeTag lTag, byte[] l, int lStart, ATypeTag rTag, byte[] r, int rStart) {
         if (lTag == DOUBLE || rTag == DOUBLE) {
             return Double.compare(getDoubleValue(lTag, l, lStart), getDoubleValue(rTag, r, rStart));
@@ -103,10 +97,11 @@ public class ComparatorUtil {
     }
 
     // checking that left and right are compatible has to be done before calling this
-    static Result compareNumWithConstant(ATypeTag leftTag, IPointable left, IAObject right) {
+    static Result compareNumWithConstant(TaggedValueReference left, IAObject right) {
+        ATypeTag leftTag = left.getTag();
         ATypeTag rightTag = right.getType().getTypeTag();
         byte[] leftBytes = left.getByteArray();
-        int start = left.getStartOffset() + 1;
+        int start = left.getStartOffset();
         if (leftTag == DOUBLE || rightTag == DOUBLE) {
             return asResult(Double.compare(getDoubleValue(leftTag, leftBytes, start), getConstantDouble(right)));
         } else if (leftTag == FLOAT || rightTag == FLOAT) {

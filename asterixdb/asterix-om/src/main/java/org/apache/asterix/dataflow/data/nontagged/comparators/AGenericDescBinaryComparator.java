@@ -18,10 +18,16 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
+import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
+
+import org.apache.asterix.dataflow.data.common.TaggedValueReference;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 final class AGenericDescBinaryComparator extends AbstractAGenericBinaryComparator {
+
+    private final TaggedValueReference leftValue = new TaggedValueReference();
+    private final TaggedValueReference rightValue = new TaggedValueReference();
 
     // interval asc and desc comparators are not the inverse of each other.
     // thus, we need to specify the interval desc comparator factory for descending comparisons.
@@ -31,11 +37,13 @@ final class AGenericDescBinaryComparator extends AbstractAGenericBinaryComparato
 
     @Override
     public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
-        return -compare(leftType, b1, s1, l1, rightType, b2, s2, l2);
+        leftValue.set(b1, s1 + 1, l1 - 1, VALUE_TYPE_MAPPING[b1[s1]]);
+        rightValue.set(b2, s2 + 1, l2 - 1, VALUE_TYPE_MAPPING[b2[s2]]);
+        return -compare(leftType, leftValue, rightType, rightValue);
     }
 
     @Override
     protected int compareInterval(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-        return -AIntervalDescPartialBinaryComparatorFactory.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+        return -AIntervalDescPartialBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
     }
 }

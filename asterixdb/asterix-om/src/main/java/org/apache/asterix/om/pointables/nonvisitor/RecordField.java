@@ -59,7 +59,7 @@ public final class RecordField {
         return namePointable;
     }
 
-    final int getIndex() {
+    public final int getIndex() {
         return index;
     }
 

@@ -21,7 +21,6 @@ package org.apache.asterix.dataflow.data.common;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
 
 public interface ILogicalBinaryComparator {
 
@@ -58,11 +57,11 @@ public interface ILogicalBinaryComparator {
         }
     }
 
-    Result compare(IPointable left, IPointable right) throws HyracksDataException;
+    Result compare(TaggedValueReference left, TaggedValueReference right) throws HyracksDataException;
 
-    Result compare(IPointable left, IAObject rightConstant);
+    Result compare(TaggedValueReference left, IAObject rightConstant);
 
-    Result compare(IAObject leftConstant, IPointable right);
+    Result compare(IAObject leftConstant, TaggedValueReference right);
 
     Result compare(IAObject leftConstant, IAObject rightConstant);
 }

@@ -118,31 +118,16 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
         listBuilder.write(out, false);
     }
 
-    public static final int getUnorderedListLength(byte[] serOrderedList, int offset) {
+    public static int getUnorderedListLength(byte[] serOrderedList, int offset) {
         return AInt32SerializerDeserializer.getInt(serOrderedList, offset + 1);
     }
 
     public static int getNumberOfItems(byte[] serOrderedList, int offset) {
-        if (serOrderedList[offset] == ATypeTag.MULTISET.serialize()) {
-            // 6 = tag (1) + itemTag (1) + list size (4)
-            return AInt32SerializerDeserializer.getInt(serOrderedList, offset + 6);
-        } else {
-            return -1;
-        }
+        // 6 = tag (1) + itemTag (1) + list size (4)
+        return AInt32SerializerDeserializer.getInt(serOrderedList, offset + 6);
     }
 
     public static int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws HyracksDataException {
-        if (serOrderedList[offset] == ATypeTag.MULTISET.serialize()) {
-            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[offset + 1]);
-            if (NonTaggedFormatUtil.isFixedSizedCollection(typeTag)) {
-                int length = NonTaggedFormatUtil.getFieldValueLength(serOrderedList, offset + 1, typeTag, true);
-                return offset + 10 + (length * itemIndex);
-            } else {
-                return offset + AInt32SerializerDeserializer.getInt(serOrderedList, offset + 10 + (4 * itemIndex));
-            }
-            // 10 = tag (1) + itemTag (1) + list size (4) + number of items (4)
-        } else {
-            return -1;
-        }
+        return SerializerDeserializerUtil.getItemOffset(serOrderedList, offset, itemIndex);
     }
 }

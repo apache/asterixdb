@@ -18,11 +18,14 @@
  */
 package org.apache.asterix.runtime.aggregates.std;
 
+import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
+
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
+import org.apache.asterix.dataflow.data.common.TaggedValueReference;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ComparatorUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -45,6 +48,8 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
     private final IPointable inputVal = new VoidPointable();
     private final ArrayBackedValueStorage outputVal = new ArrayBackedValueStorage();
     private final ArrayBackedValueStorage tempValForCasting = new ArrayBackedValueStorage();
+    private final TaggedValueReference value1 = new TaggedValueReference();
+    private final TaggedValueReference value2 = new TaggedValueReference();
     private final IScalarEvaluator eval;
     private final boolean isMin;
     private final IAType aggFieldType;
@@ -170,7 +175,15 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
     private void compareAndUpdate(ILogicalBinaryComparator c, IPointable newVal, ArrayBackedValueStorage currentVal,
             ATypeTag typeTag) throws HyracksDataException {
         // newVal is never NULL/MISSING here. it's already checked up. current value is the first encountered non-null.
-        ILogicalBinaryComparator.Result result = c.compare(newVal, currentVal);
+        byte[] newValByteArray = newVal.getByteArray();
+        int newValStartOffset = newVal.getStartOffset();
+        byte[] currentValByteArray = currentVal.getByteArray();
+        int currentValStartOffset = currentVal.getStartOffset();
+        value1.set(newValByteArray, newValStartOffset + 1, newVal.getLength() - 1,
+                VALUE_TYPE_MAPPING[newValByteArray[newValStartOffset]]);
+        value2.set(currentValByteArray, currentValStartOffset + 1, currentVal.getLength() - 1,
+                VALUE_TYPE_MAPPING[newValByteArray[newValStartOffset]]);
+        ILogicalBinaryComparator.Result result = c.compare(value1, value2);
         switch (result) {
             case LT:
                 if (isMin) {

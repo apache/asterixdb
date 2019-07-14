@@ -22,6 +22,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.PriorityQueue;
 
+import org.apache.asterix.dataflow.data.common.TaggedValueReference;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
@@ -97,48 +98,58 @@ public final class SortedRecord {
      * closed and open. It populates the utf8 filed names for open.
      */
     public final void reset(byte[] data, int start) throws HyracksDataException {
+        resetRecord(data, start, ARecordPointable.TAG_SIZE, 0);
+    }
+
+    public final void resetNonTagged(byte[] data, int start) throws HyracksDataException {
+        resetRecord(data, start, 0, 1);
+    }
+
+    private void resetRecord(byte[] data, int start, int skipTag, int fixOffset) throws HyracksDataException {
         bytes = data;
         reset();
         boolean isExpanded = false;
         // advance to expanded byte if present
-        int cursor = start + ARecordPointable.TAG_SIZE + ARecordPointable.RECORD_LENGTH_SIZE;
+        int pointer = start + skipTag + ARecordPointable.RECORD_LENGTH_SIZE;
         if (recordType.isOpen()) {
-            isExpanded = bytes[cursor] == 1;
+            isExpanded = bytes[pointer] == 1;
             // advance to either open part offset or number of closed fields
-            cursor += ARecordPointable.EXPANDED_SIZE;
+            pointer += ARecordPointable.EXPANDED_SIZE;
         }
         int openPartOffset = 0;
         if (isExpanded) {
-            openPartOffset = start + AInt32SerializerDeserializer.getInt(bytes, cursor);
+            openPartOffset = start + AInt32SerializerDeserializer.getInt(bytes, pointer) - fixOffset;
             // advance to number of closed fields
-            cursor += ARecordPointable.OPEN_OFFSET_SIZE;
+            pointer += ARecordPointable.OPEN_OFFSET_SIZE;
         }
         int fieldOffset;
         int length;
         int fieldIndex = 0;
         ATypeTag tag;
         // advance to where fields offsets are (or to null bit map if the schema has optional fields)
-        cursor += ARecordPointable.CLOSED_COUNT_SIZE;
-        int nullBitMapOffset = cursor;
-        int fieldsOffsets = cursor + nullBitMapSize;
-        // compute the offsets of each closed field value and whether it's missing or null
-        for (int i = 0; i < numSchemaFields; i++, fieldIndex++) {
-            fieldOffset = AInt32SerializerDeserializer.getInt(bytes, fieldsOffsets) + start;
-            tag = TypeComputeUtils.getActualType(fieldTypes[i]).getTypeTag();
-            if (hasOptionalFields) {
-                byte nullBits = bytes[nullBitMapOffset + i / 4];
-                if (RecordUtil.isNull(nullBits, i)) {
-                    tag = ATypeTag.NULL;
-                } else if (RecordUtil.isMissing(nullBits, i)) {
-                    tag = ATypeTag.MISSING;
+        if (numSchemaFields > 0) {
+            pointer += ARecordPointable.CLOSED_COUNT_SIZE;
+            int nullBitMapOffset = pointer;
+            int fieldsOffsets = nullBitMapOffset + nullBitMapSize;
+            // compute the offsets of each closed field value and whether it's missing or null
+            for (int i = 0; i < numSchemaFields; i++, fieldIndex++) {
+                fieldOffset = AInt32SerializerDeserializer.getInt(bytes, fieldsOffsets) + start - fixOffset;
+                tag = TypeComputeUtils.getActualType(fieldTypes[i]).getTypeTag();
+                if (hasOptionalFields) {
+                    byte nullBits = bytes[nullBitMapOffset + i / 4];
+                    if (RecordUtil.isNull(nullBits, i)) {
+                        tag = ATypeTag.NULL;
+                    } else if (RecordUtil.isMissing(nullBits, i)) {
+                        tag = ATypeTag.MISSING;
+                    }
                 }
+                length = NonTaggedFormatUtil.getFieldValueLength(bytes, fieldOffset, tag, false);
+                closedFields[i].set(fieldIndex, fieldOffset, length, tag);
+                if (tag != ATypeTag.MISSING) {
+                    sortedFields.add(closedFields[i]);
+                }
+                fieldsOffsets += ARecordPointable.FIELD_OFFSET_SIZE;
             }
-            length = NonTaggedFormatUtil.getFieldValueLength(bytes, fieldOffset, tag, false);
-            closedFields[i].set(fieldIndex, fieldOffset, length, tag);
-            if (tag != ATypeTag.MISSING) {
-                sortedFields.add(closedFields[i]);
-            }
-            fieldsOffsets += ARecordPointable.FIELD_OFFSET_SIZE;
         }
         // then populate open fields info second, an open field has name + value (tagged)
         if (isExpanded) {
@@ -185,6 +196,21 @@ public final class SortedRecord {
         return RecordUtil.getType(recordType, field.getIndex(), field.getValueTag());
     }
 
+    public final void getFieldValue(RecordField field, TaggedValueReference fieldValueRef) {
+        if (field.getIndex() >= numSchemaFields) {
+            fieldValueRef.set(bytes, field.getValueOffset() + 1, field.getValueLength() - 1, field.getValueTag());
+        } else {
+            if (field.getValueTag() == ATypeTag.MISSING) {
+                fieldValueRef.set(MISSING_BYTES, 0, 0, ATypeTag.MISSING);
+            } else if (field.getValueTag() == ATypeTag.NULL) {
+                fieldValueRef.set(NULL_BYTES, 0, 0, ATypeTag.NULL);
+            } else {
+                fieldValueRef.set(bytes, field.getValueOffset(), field.getValueLength(), field.getValueTag());
+            }
+        }
+    }
+
+    // TODO(ali): remove this method once hashing does not need the tag to be adjacent to the value
     public final void getFieldValue(RecordField field, IPointable pointable, ArrayBackedValueStorage storage)
             throws IOException {
         int fieldIdx = field.getIndex();

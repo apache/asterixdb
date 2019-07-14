@@ -24,11 +24,13 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.dataflow.data.common.TaggedValueReference;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -98,4 +100,33 @@ public final class SerializerDeserializerUtil {
         return castBuffer.getByteArray();
     }
 
+    public static int getNumberOfItemsNonTagged(TaggedValueReference list) {
+        // 5 = itemTag (1) + list size (4)
+        return AInt32SerializerDeserializer.getInt(list.getByteArray(), list.getStartOffset() + 5);
+    }
+
+    public static int getItemOffset(byte[] listBytes, int offset, int itemIndex) throws HyracksDataException {
+        ATypeTag itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[offset + 1]);
+        // 10 = tag (1) + itemTag (1) + list size (4) + number of items (4)
+        if (NonTaggedFormatUtil.isFixedSizedCollection(itemTag)) {
+            int valueLength = NonTaggedFormatUtil.getFieldValueLength(listBytes, offset + 1, itemTag, true);
+            return offset + 10 + (valueLength * itemIndex);
+        } else {
+            return offset + AInt32SerializerDeserializer.getInt(listBytes, offset + 10 + (4 * itemIndex));
+        }
+    }
+
+    public static int getItemOffsetNonTagged(TaggedValueReference list, int itemIndex) throws HyracksDataException {
+        byte[] listValueBytes = list.getByteArray();
+        int offset = list.getStartOffset();
+        ATypeTag itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listValueBytes[offset]);
+        // 9 = itemTag (1) + list size (4) + number of items (4)
+        if (NonTaggedFormatUtil.isFixedSizedCollection(itemTag)) {
+            int valueLength = NonTaggedFormatUtil.getFieldValueLength(listValueBytes, offset, itemTag, true);
+            return offset + 9 + (valueLength * itemIndex);
+        } else {
+            // the -1 is due to the fact that the item encoded offset is measured from a tagged list
+            return offset + AInt32SerializerDeserializer.getInt(listValueBytes, offset + 9 + (4 * itemIndex)) - 1;
+        }
+    }
 }
