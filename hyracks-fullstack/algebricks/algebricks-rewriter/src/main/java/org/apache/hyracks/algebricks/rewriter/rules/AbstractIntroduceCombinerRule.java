@@ -31,7 +31,6 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
@@ -125,13 +124,13 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
             if (newGbyOp != null) {
                 // Cut and paste nested input pipelines of initAgg to pushedAgg's input
                 Mutable<ILogicalOperator> inputRef = initAgg.getInputs().get(0);
-                if (!isPushableInput(inputRef.getValue())) {
+                if (!isPushableInputInGroupBySubplan(inputRef.getValue())) {
                     return new Pair<>(false, null);
                 }
                 Mutable<ILogicalOperator> bottomRef = inputRef;
                 while (!bottomRef.getValue().getInputs().isEmpty()) {
                     bottomRef = bottomRef.getValue().getInputs().get(0);
-                    if (!isPushableInput(bottomRef.getValue())) {
+                    if (!isPushableInputInGroupBySubplan(bottomRef.getValue())) {
                         return new Pair<>(false, null);
                     }
                 }
@@ -160,8 +159,17 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
         }
     }
 
-    protected boolean isPushableInput(ILogicalOperator op) {
-        return op.getOperatorTag() != LogicalOperatorTag.DISTINCT;
+    protected boolean isPushableInputInGroupBySubplan(ILogicalOperator op) {
+        switch (op.getOperatorTag()) {
+            case ASSIGN:
+            case NESTEDTUPLESOURCE:
+            case ORDER:
+            case PROJECT:
+            case SELECT:
+                return true;
+            default:
+                return false;
+        }
     }
 
     protected class SimilarAggregatesInfo {

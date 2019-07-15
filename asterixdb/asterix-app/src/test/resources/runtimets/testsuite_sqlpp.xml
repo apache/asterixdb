@@ -5018,6 +5018,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
+      <compilation-unit name="two-step-agg-01">
+        <output-dir compare="Text">two-step-agg-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
       <compilation-unit name="null">
         <output-dir compare="Text">null</output-dir>
       </compilation-unit>
