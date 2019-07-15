@@ -94,8 +94,8 @@ public class CheckpointThread extends Thread {
                     if (currentCheckpointAttemptMinLSN >= targetCheckpointLSN) {
                         lastCheckpointLSN = currentCheckpointAttemptMinLSN;
                     }
-                } catch (HyracksDataException e) {
-                    LOGGER.log(Level.ERROR, "Error during checkpoint", e);
+                } catch (Exception e) {
+                    LOGGER.log(Level.ERROR, "checkpoint attempt failed", e);
                 }
             }
         }

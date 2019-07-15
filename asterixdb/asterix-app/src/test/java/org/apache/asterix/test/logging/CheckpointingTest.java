@@ -306,8 +306,8 @@ public class CheckpointingTest {
                 Checkpoint cpAfterCorruption = checkpointManager.getLatest();
                 // Make sure the valid checkpoint was returned
                 Assert.assertEquals(validCheckpoint.getId(), cpAfterCorruption.getId());
-                // Make sure the corrupted checkpoint file was deleted
-                Assert.assertFalse(corruptedCheckpoint.exists());
+                // Make sure the corrupted checkpoint file was not deleted
+                Assert.assertTrue(corruptedCheckpoint.exists());
                 // Corrupt the valid checkpoint by replacing its content
                 final Path validCheckpointPath = checkpointManager.getCheckpointPath(validCheckpoint.getId());
                 File validCheckpointFile = validCheckpointPath.toFile();
@@ -321,6 +321,13 @@ public class CheckpointingTest {
                 // Make sure the forged checkpoint recovery will start from the first available log
                 final long readableSmallestLSN = txnSubsystem.getLogManager().getReadableSmallestLSN();
                 Assert.assertTrue(forgedCheckpoint.getMinMCTFirstLsn() <= readableSmallestLSN);
+                // another call should still give us the forged checkpoint and the corrupted one should still be there
+                forgedCheckpoint = checkpointManager.getLatest();
+                Assert.assertTrue(forgedCheckpoint.getMinMCTFirstLsn() < minFirstLSN);
+                Assert.assertTrue(corruptedCheckpoint.exists());
+                // do a succesful checkpoint and ensure now the corrupted file was deleted
+                checkpointManager.doSharpCheckpoint();
+                Assert.assertFalse(corruptedCheckpoint.exists());
             } finally {
                 nc.deInit();
             }
