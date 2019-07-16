@@ -183,7 +183,6 @@ public class AsterixHyracksIntegrationUtil {
         hcc = new HyracksConnection(cc.getConfig().getClientListenAddress(), cc.getConfig().getClientListenPort(),
                 cc.getNetworkSecurityManager().getSocketChannelFactory());
         this.ncs = nodeControllers.toArray(new NodeControllerService[nodeControllers.size()]);
-        setTestPersistedResourceRegistry();
     }
 
     private void configureExternalLibDir() {
@@ -247,14 +246,12 @@ public class AsterixHyracksIntegrationUtil {
         return ncConfig;
     }
 
-    protected INCApplication createNCApplication()
-            throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+    protected INCApplication createNCApplication() {
         // Instead of using this flag, RecoveryManagerTest should set the desired class in its config file
         if (!gracefulShutdown) {
             return new UngracefulShutdownNCApplication();
         }
-        String ncAppClass = (String) configManager.get(NCConfig.Option.APP_CLASS);
-        return (INCApplication) Class.forName(ncAppClass).newInstance();
+        return new TestNCApplication();
     }
 
     private NCConfig fixupPaths(NCConfig ncConfig) throws IOException, AsterixException, CmdLineException {
@@ -394,14 +391,6 @@ public class AsterixHyracksIntegrationUtil {
         opts.clear();
     }
 
-    public void setTestPersistedResourceRegistry() {
-        for (NodeControllerService nc : ncs) {
-            INcApplicationContext runtimeCtx = (INcApplicationContext) nc.getApplicationContext();
-            runtimeCtx.getServiceContext()
-                    .setPersistedResourceRegistry(new AsterixHyracksIntegrationUtil.TestPersistedResourceRegistry());
-        }
-    }
-
     /**
      * @return the asterix-app absolute path if found, otherwise the default user path.
      */
@@ -425,7 +414,14 @@ public class AsterixHyracksIntegrationUtil {
         }
     }
 
-    private class UngracefulShutdownNCApplication extends NCApplication {
+    private class TestNCApplication extends NCApplication {
+        @Override
+        protected void configurePersistedResourceRegistry() {
+            ncServiceCtx.setPersistedResourceRegistry(new TestPersistedResourceRegistry());
+        }
+    }
+
+    private class UngracefulShutdownNCApplication extends TestNCApplication {
         @Override
         public void stop() throws Exception {
             // ungraceful shutdown
@@ -437,11 +433,10 @@ public class AsterixHyracksIntegrationUtil {
         @Override
         protected void registerClasses() {
             super.registerClasses();
-            REGISTERED_CLASSES.put("TestLsmBtreeLocalResource", TestLsmBtreeLocalResource.class);
-            REGISTERED_CLASSES.put("TestLsmIoOpCallbackFactory", TestLsmIoOpCallbackFactory.class);
-            REGISTERED_CLASSES.put("TestPrimaryIndexOperationTrackerFactory",
+            registeredClasses.put("TestLsmBtreeLocalResource", TestLsmBtreeLocalResource.class);
+            registeredClasses.put("TestLsmIoOpCallbackFactory", TestLsmIoOpCallbackFactory.class);
+            registeredClasses.put("TestPrimaryIndexOperationTrackerFactory",
                     TestPrimaryIndexOperationTrackerFactory.class);
         }
     }
-
 }

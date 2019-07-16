@@ -133,7 +133,7 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
 
     private static final String DESERIALIZATION_METHOD = "fromJson";
     private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
-    protected static final Map<String, Class<? extends IJsonSerializable>> REGISTERED_CLASSES = new HashMap<>();
+    protected final Map<String, Class<? extends IJsonSerializable>> registeredClasses = new HashMap<>();
 
     public PersistedResourceRegistry() {
         registerClasses();
@@ -142,148 +142,147 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
 
     protected void registerClasses() {
         /* WARNING: Changing a resource id will break storage format backward compatibility.*/
-        REGISTERED_CLASSES.put("Checkpoint", Checkpoint.class);
+        registeredClasses.put("Checkpoint", Checkpoint.class);
 
         // IResource
-        REGISTERED_CLASSES.put("LocalResource", LocalResource.class);
-        REGISTERED_CLASSES.put("DatasetLocalResource", DatasetLocalResource.class);
-        REGISTERED_CLASSES.put("LSMBTreeLocalResource", LSMBTreeLocalResource.class);
-        REGISTERED_CLASSES.put("LSMRTreeLocalResource", LSMRTreeLocalResource.class);
-        REGISTERED_CLASSES.put("LSMRTreeWithAntiMatterLocalResource", LSMRTreeWithAntiMatterLocalResource.class);
-        REGISTERED_CLASSES.put("LSMInvertedIndexLocalResource", LSMInvertedIndexLocalResource.class);
-        REGISTERED_CLASSES.put("ExternalBTreeLocalResource", ExternalBTreeLocalResource.class);
-        REGISTERED_CLASSES.put("ExternalBTreeWithBuddyLocalResource", ExternalBTreeWithBuddyLocalResource.class);
-        REGISTERED_CLASSES.put("ExternalRTreeLocalResource", ExternalRTreeLocalResource.class);
+        registeredClasses.put("LocalResource", LocalResource.class);
+        registeredClasses.put("DatasetLocalResource", DatasetLocalResource.class);
+        registeredClasses.put("LSMBTreeLocalResource", LSMBTreeLocalResource.class);
+        registeredClasses.put("LSMRTreeLocalResource", LSMRTreeLocalResource.class);
+        registeredClasses.put("LSMRTreeWithAntiMatterLocalResource", LSMRTreeWithAntiMatterLocalResource.class);
+        registeredClasses.put("LSMInvertedIndexLocalResource", LSMInvertedIndexLocalResource.class);
+        registeredClasses.put("ExternalBTreeLocalResource", ExternalBTreeLocalResource.class);
+        registeredClasses.put("ExternalBTreeWithBuddyLocalResource", ExternalBTreeWithBuddyLocalResource.class);
+        registeredClasses.put("ExternalRTreeLocalResource", ExternalRTreeLocalResource.class);
 
         // ILSMMergePolicyFactory
-        REGISTERED_CLASSES.put("NoMergePolicyFactory", NoMergePolicyFactory.class);
-        REGISTERED_CLASSES.put("PrefixMergePolicyFactory", PrefixMergePolicyFactory.class);
-        REGISTERED_CLASSES.put("ConstantMergePolicyFactory", ConstantMergePolicyFactory.class);
-        REGISTERED_CLASSES.put("CorrelatedPrefixMergePolicyFactory", CorrelatedPrefixMergePolicyFactory.class);
+        registeredClasses.put("NoMergePolicyFactory", NoMergePolicyFactory.class);
+        registeredClasses.put("PrefixMergePolicyFactory", PrefixMergePolicyFactory.class);
+        registeredClasses.put("ConstantMergePolicyFactory", ConstantMergePolicyFactory.class);
+        registeredClasses.put("CorrelatedPrefixMergePolicyFactory", CorrelatedPrefixMergePolicyFactory.class);
 
         // ILSMIOOperationSchedulerProvider
-        REGISTERED_CLASSES.put("RuntimeComponentsProvider", RuntimeComponentsProvider.class);
+        registeredClasses.put("RuntimeComponentsProvider", RuntimeComponentsProvider.class);
 
         // ITypeTraits
-        REGISTERED_CLASSES.put("FixedLengthTypeTrait", FixedLengthTypeTrait.class);
-        REGISTERED_CLASSES.put("VarLengthTypeTrait", VarLengthTypeTrait.class);
+        registeredClasses.put("FixedLengthTypeTrait", FixedLengthTypeTrait.class);
+        registeredClasses.put("VarLengthTypeTrait", VarLengthTypeTrait.class);
 
         // ILSMOperationTrackerFactory
-        REGISTERED_CLASSES.put("PrimaryIndexOperationTrackerFactory", PrimaryIndexOperationTrackerFactory.class);
-        REGISTERED_CLASSES.put("SecondaryIndexOperationTrackerFactory", SecondaryIndexOperationTrackerFactory.class);
+        registeredClasses.put("PrimaryIndexOperationTrackerFactory", PrimaryIndexOperationTrackerFactory.class);
+        registeredClasses.put("SecondaryIndexOperationTrackerFactory", SecondaryIndexOperationTrackerFactory.class);
 
         // ILSMComponentIdGeneratorFactory
-        REGISTERED_CLASSES.put("DatasetLSMComponentIdGeneratorFactory", DatasetLSMComponentIdGeneratorFactory.class);
+        registeredClasses.put("DatasetLSMComponentIdGeneratorFactory", DatasetLSMComponentIdGeneratorFactory.class);
 
         // IDatasetInfoProvider
-        REGISTERED_CLASSES.put("DatasetInfoProvider", DatasetInfoProvider.class);
+        registeredClasses.put("DatasetInfoProvider", DatasetInfoProvider.class);
 
         // ILSMOperationTrackerFactory
-        REGISTERED_CLASSES.put("NoOpIOOperationCallbackFactory", NoOpIOOperationCallbackFactory.class);
-        REGISTERED_CLASSES.put("LSMBTreeIOOperationCallbackFactory", LSMIndexIOOperationCallbackFactory.class);
+        registeredClasses.put("NoOpIOOperationCallbackFactory", NoOpIOOperationCallbackFactory.class);
+        registeredClasses.put("LSMBTreeIOOperationCallbackFactory", LSMIndexIOOperationCallbackFactory.class);
 
         // ILSMIOOperationSchedulerProvider
-        REGISTERED_CLASSES.put("AppendOnlyLinkedMetadataPageManagerFactory",
+        registeredClasses.put("AppendOnlyLinkedMetadataPageManagerFactory",
                 AppendOnlyLinkedMetadataPageManagerFactory.class);
 
         // ILSMIOOperationSchedulerProvider
-        REGISTERED_CLASSES.put("AsterixVirtualBufferCacheProvider", AsterixVirtualBufferCacheProvider.class);
+        registeredClasses.put("AsterixVirtualBufferCacheProvider", AsterixVirtualBufferCacheProvider.class);
 
         // IBinaryComparatorFactory
-        REGISTERED_CLASSES.put("ACirclePartialBinaryComparatorFactory", ACirclePartialBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("ADurationPartialBinaryComparatorFactory",
-                ADurationPartialBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("AIntervalAscPartialBinaryComparatorFactory",
+        registeredClasses.put("ACirclePartialBinaryComparatorFactory", ACirclePartialBinaryComparatorFactory.class);
+        registeredClasses.put("ADurationPartialBinaryComparatorFactory", ADurationPartialBinaryComparatorFactory.class);
+        registeredClasses.put("AIntervalAscPartialBinaryComparatorFactory",
                 AIntervalAscPartialBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("AIntervalDescPartialBinaryComparatorFactory",
+        registeredClasses.put("AIntervalDescPartialBinaryComparatorFactory",
                 AIntervalDescPartialBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("ALinePartialBinaryComparatorFactory", ALinePartialBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("AObjectAscBinaryComparatorFactory", AGenericAscBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("AObjectDescBinaryComparatorFactory", AGenericDescBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("APoint3DPartialBinaryComparatorFactory", APoint3DPartialBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("APointPartialBinaryComparatorFactory", APointPartialBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("APolygonPartialBinaryComparatorFactory", APolygonPartialBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("ARectanglePartialBinaryComparatorFactory",
+        registeredClasses.put("ALinePartialBinaryComparatorFactory", ALinePartialBinaryComparatorFactory.class);
+        registeredClasses.put("AObjectAscBinaryComparatorFactory", AGenericAscBinaryComparatorFactory.class);
+        registeredClasses.put("AObjectDescBinaryComparatorFactory", AGenericDescBinaryComparatorFactory.class);
+        registeredClasses.put("APoint3DPartialBinaryComparatorFactory", APoint3DPartialBinaryComparatorFactory.class);
+        registeredClasses.put("APointPartialBinaryComparatorFactory", APointPartialBinaryComparatorFactory.class);
+        registeredClasses.put("APolygonPartialBinaryComparatorFactory", APolygonPartialBinaryComparatorFactory.class);
+        registeredClasses.put("ARectanglePartialBinaryComparatorFactory",
                 ARectanglePartialBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("AUUIDPartialBinaryComparatorFactory", AUUIDPartialBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("BooleanBinaryComparatorFactory", BooleanBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("ListItemBinaryComparatorFactory", ListItemBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("LongBinaryComparatorFactory", LongBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("RawBinaryComparatorFactory", RawBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("PointableBinaryComparatorFactory", PointableBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("HilbertDoubleComparatorFactory", HilbertDoubleComparatorFactory.class);
-        REGISTERED_CLASSES.put("ZCurveDoubleComparatorFactory", ZCurveDoubleComparatorFactory.class);
-        REGISTERED_CLASSES.put("ZCurveIntComparatorFactory", ZCurveIntComparatorFactory.class);
-        REGISTERED_CLASSES.put("ComponentPosComparatorFactory",
+        registeredClasses.put("AUUIDPartialBinaryComparatorFactory", AUUIDPartialBinaryComparatorFactory.class);
+        registeredClasses.put("BooleanBinaryComparatorFactory", BooleanBinaryComparatorFactory.class);
+        registeredClasses.put("ListItemBinaryComparatorFactory", ListItemBinaryComparatorFactory.class);
+        registeredClasses.put("LongBinaryComparatorFactory", LongBinaryComparatorFactory.class);
+        registeredClasses.put("RawBinaryComparatorFactory", RawBinaryComparatorFactory.class);
+        registeredClasses.put("PointableBinaryComparatorFactory", PointableBinaryComparatorFactory.class);
+        registeredClasses.put("HilbertDoubleComparatorFactory", HilbertDoubleComparatorFactory.class);
+        registeredClasses.put("ZCurveDoubleComparatorFactory", ZCurveDoubleComparatorFactory.class);
+        registeredClasses.put("ZCurveIntComparatorFactory", ZCurveIntComparatorFactory.class);
+        registeredClasses.put("ComponentPosComparatorFactory",
                 SecondaryCorrelatedTreeIndexOperationsHelper.ComponentPosComparatorFactory.class);
-        REGISTERED_CLASSES.put("AnyBinaryComparatorFactory", AnyBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("OrderedBinaryComparatorFactory", OrderedBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("OrderedLinearizeComparatorFactory", OrderedLinearizeComparatorFactory.class);
-        REGISTERED_CLASSES.put("ByteBinaryComparatorFactory", ByteBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("ShortBinaryComparatorFactory", ShortBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("IntegerBinaryComparatorFactory", IntegerBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("FloatBinaryComparatorFactory", FloatBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("DoubleBinaryComparatorFactory", DoubleBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("UTF8StringBinaryComparatorFactory", UTF8StringBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("UTF8StringLowercaseBinaryComparatorFactory",
+        registeredClasses.put("AnyBinaryComparatorFactory", AnyBinaryComparatorFactory.class);
+        registeredClasses.put("OrderedBinaryComparatorFactory", OrderedBinaryComparatorFactory.class);
+        registeredClasses.put("OrderedLinearizeComparatorFactory", OrderedLinearizeComparatorFactory.class);
+        registeredClasses.put("ByteBinaryComparatorFactory", ByteBinaryComparatorFactory.class);
+        registeredClasses.put("ShortBinaryComparatorFactory", ShortBinaryComparatorFactory.class);
+        registeredClasses.put("IntegerBinaryComparatorFactory", IntegerBinaryComparatorFactory.class);
+        registeredClasses.put("FloatBinaryComparatorFactory", FloatBinaryComparatorFactory.class);
+        registeredClasses.put("DoubleBinaryComparatorFactory", DoubleBinaryComparatorFactory.class);
+        registeredClasses.put("UTF8StringBinaryComparatorFactory", UTF8StringBinaryComparatorFactory.class);
+        registeredClasses.put("UTF8StringLowercaseBinaryComparatorFactory",
                 UTF8StringLowercaseBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("UTF8StringLowercaseTokenBinaryComparatorFactory",
+        registeredClasses.put("UTF8StringLowercaseTokenBinaryComparatorFactory",
                 UTF8StringLowercaseTokenBinaryComparatorFactory.class);
-        REGISTERED_CLASSES.put("ByteArrayBinaryComparatorFactory", ByteArrayBinaryComparatorFactory.class);
+        registeredClasses.put("ByteArrayBinaryComparatorFactory", ByteArrayBinaryComparatorFactory.class);
 
         // IPointableFactory
-        REGISTERED_CLASSES.put("AIntervalPointableFactory", AIntervalPointable.AIntervalPointableFactory.class);
-        REGISTERED_CLASSES.put("AListPointableFactory", AListPointable.AListPointableFactory.class);
-        REGISTERED_CLASSES.put("ARecordPointableFactory", ARecordPointable.ARecordPointableFactory.class);
-        REGISTERED_CLASSES.put("BooleanPointableFactory", BooleanPointable.BooleanPointableFactory.class);
-        REGISTERED_CLASSES.put("ByteArrayPointableFactory", ByteArrayPointable.ByteArrayPointableFactory.class);
-        REGISTERED_CLASSES.put("BytePointableFactory", BytePointable.BytePointableFactory.class);
-        REGISTERED_CLASSES.put("DoublePointableFactory", DoublePointable.DoublePointableFactory.class);
-        REGISTERED_CLASSES.put("FloatPointableFactory", FloatPointable.FloatPointableFactory.class);
-        REGISTERED_CLASSES.put("IntegerPointableFactory", IntegerPointable.IntegerPointableFactory.class);
-        REGISTERED_CLASSES.put("LongPointableFactory", LongPointable.LongPointableFactory.class);
-        REGISTERED_CLASSES.put("RawUTF8StringPointableFactory",
+        registeredClasses.put("AIntervalPointableFactory", AIntervalPointable.AIntervalPointableFactory.class);
+        registeredClasses.put("AListPointableFactory", AListPointable.AListPointableFactory.class);
+        registeredClasses.put("ARecordPointableFactory", ARecordPointable.ARecordPointableFactory.class);
+        registeredClasses.put("BooleanPointableFactory", BooleanPointable.BooleanPointableFactory.class);
+        registeredClasses.put("ByteArrayPointableFactory", ByteArrayPointable.ByteArrayPointableFactory.class);
+        registeredClasses.put("BytePointableFactory", BytePointable.BytePointableFactory.class);
+        registeredClasses.put("DoublePointableFactory", DoublePointable.DoublePointableFactory.class);
+        registeredClasses.put("FloatPointableFactory", FloatPointable.FloatPointableFactory.class);
+        registeredClasses.put("IntegerPointableFactory", IntegerPointable.IntegerPointableFactory.class);
+        registeredClasses.put("LongPointableFactory", LongPointable.LongPointableFactory.class);
+        registeredClasses.put("RawUTF8StringPointableFactory",
                 RawUTF8StringPointable.RawUTF8StringPointableFactory.class);
-        REGISTERED_CLASSES.put("ShortPointableFactory", ShortPointable.ShortPointableFactory.class);
-        REGISTERED_CLASSES.put("TaggedValuePointableFactory", TaggedValuePointable.TaggedValuePointableFactory.class);
-        REGISTERED_CLASSES.put("UTF8StringLowercasePointableFactory",
+        registeredClasses.put("ShortPointableFactory", ShortPointable.ShortPointableFactory.class);
+        registeredClasses.put("TaggedValuePointableFactory", TaggedValuePointable.TaggedValuePointableFactory.class);
+        registeredClasses.put("UTF8StringLowercasePointableFactory",
                 UTF8StringLowercasePointable.UTF8StringLowercasePointableFactory.class);
-        REGISTERED_CLASSES.put("UTF8StringLowercaseTokenPointableFactory",
+        registeredClasses.put("UTF8StringLowercaseTokenPointableFactory",
                 UTF8StringLowercaseTokenPointable.UTF8StringLowercaseTokenPointableFactory.class);
-        REGISTERED_CLASSES.put("UTF8StringPointableFactory", UTF8StringPointable.UTF8StringPointableFactory.class);
-        REGISTERED_CLASSES.put("VoidPointableFactory", VoidPointable.VoidPointableFactory.class);
+        registeredClasses.put("UTF8StringPointableFactory", UTF8StringPointable.UTF8StringPointableFactory.class);
+        registeredClasses.put("VoidPointableFactory", VoidPointable.VoidPointableFactory.class);
 
         // IPrimitiveValueProviderFactory
-        REGISTERED_CLASSES.put("DoublePrimitiveValueProviderFactory", DoublePrimitiveValueProviderFactory.class);
-        REGISTERED_CLASSES.put("FloatPrimitiveValueProviderFactory", FloatPrimitiveValueProviderFactory.class);
-        REGISTERED_CLASSES.put("IntegerPrimitiveValueProviderFactory", IntegerPrimitiveValueProviderFactory.class);
-        REGISTERED_CLASSES.put("PointablePrimitiveValueProviderFactory", PointablePrimitiveValueProviderFactory.class);
-        REGISTERED_CLASSES.put("PrimitiveValueProviderFactory", PrimitiveValueProviderFactory.class);
+        registeredClasses.put("DoublePrimitiveValueProviderFactory", DoublePrimitiveValueProviderFactory.class);
+        registeredClasses.put("FloatPrimitiveValueProviderFactory", FloatPrimitiveValueProviderFactory.class);
+        registeredClasses.put("IntegerPrimitiveValueProviderFactory", IntegerPrimitiveValueProviderFactory.class);
+        registeredClasses.put("PointablePrimitiveValueProviderFactory", PointablePrimitiveValueProviderFactory.class);
+        registeredClasses.put("PrimitiveValueProviderFactory", PrimitiveValueProviderFactory.class);
 
         // IBinaryTokenizerFactory
-        REGISTERED_CLASSES.put("AOrderedListBinaryTokenizerFactory", AOrderedListBinaryTokenizerFactory.class);
-        REGISTERED_CLASSES.put("AUnorderedListBinaryTokenizerFactory", AUnorderedListBinaryTokenizerFactory.class);
-        REGISTERED_CLASSES.put("NGramUTF8StringBinaryTokenizerFactory", NGramUTF8StringBinaryTokenizerFactory.class);
-        REGISTERED_CLASSES.put("DelimitedUTF8StringBinaryTokenizerFactory",
+        registeredClasses.put("AOrderedListBinaryTokenizerFactory", AOrderedListBinaryTokenizerFactory.class);
+        registeredClasses.put("AUnorderedListBinaryTokenizerFactory", AUnorderedListBinaryTokenizerFactory.class);
+        registeredClasses.put("NGramUTF8StringBinaryTokenizerFactory", NGramUTF8StringBinaryTokenizerFactory.class);
+        registeredClasses.put("DelimitedUTF8StringBinaryTokenizerFactory",
                 DelimitedUTF8StringBinaryTokenizerFactory.class);
 
         // ITokenFactory
-        REGISTERED_CLASSES.put("AListElementTokenFactory", AListElementTokenFactory.class);
-        REGISTERED_CLASSES.put("HashedUTF8NGramTokenFactory", HashedUTF8NGramTokenFactory.class);
-        REGISTERED_CLASSES.put("HashedUTF8WordTokenFactory", HashedUTF8WordTokenFactory.class);
-        REGISTERED_CLASSES.put("UTF8NGramTokenFactory", UTF8NGramTokenFactory.class);
-        REGISTERED_CLASSES.put("UTF8WordTokenFactory", UTF8WordTokenFactory.class);
-        REGISTERED_CLASSES.put("RTreePolicyType", RTreePolicyType.class);
+        registeredClasses.put("AListElementTokenFactory", AListElementTokenFactory.class);
+        registeredClasses.put("HashedUTF8NGramTokenFactory", HashedUTF8NGramTokenFactory.class);
+        registeredClasses.put("HashedUTF8WordTokenFactory", HashedUTF8WordTokenFactory.class);
+        registeredClasses.put("UTF8NGramTokenFactory", UTF8NGramTokenFactory.class);
+        registeredClasses.put("UTF8WordTokenFactory", UTF8WordTokenFactory.class);
+        registeredClasses.put("RTreePolicyType", RTreePolicyType.class);
 
         // IAType
-        REGISTERED_CLASSES.put("BuiltinType", BuiltinType.class);
-        REGISTERED_CLASSES.put("AOrderedListType", AOrderedListType.class);
-        REGISTERED_CLASSES.put("ARecordType", ARecordType.class);
-        REGISTERED_CLASSES.put("AUnionType", AUnionType.class);
-        REGISTERED_CLASSES.put("AUnorderedListType", AUnorderedListType.class);
+        registeredClasses.put("BuiltinType", BuiltinType.class);
+        registeredClasses.put("AOrderedListType", AOrderedListType.class);
+        registeredClasses.put("ARecordType", ARecordType.class);
+        registeredClasses.put("AUnionType", AUnionType.class);
+        registeredClasses.put("AUnorderedListType", AUnorderedListType.class);
 
         //ICompressorDecompressorFactory
-        CompressionManager.registerCompressorDecompressorsFactoryClasses(REGISTERED_CLASSES);
+        CompressionManager.registerCompressorDecompressorsFactoryClasses(registeredClasses);
     }
 
     @Override
@@ -334,7 +333,7 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
     }
 
     private String getResourceId(Class<? extends IJsonSerializable> clazz) {
-        Optional<String> classId = REGISTERED_CLASSES.entrySet().stream()
+        Optional<String> classId = registeredClasses.entrySet().stream()
                 .filter(entry -> Objects.equals(entry.getValue(), clazz)).map(Map.Entry::getKey).findAny();
         if (classId.isPresent()) {
             return classId.get();
@@ -343,13 +342,13 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
     }
 
     private Class<? extends IJsonSerializable> getResourceClass(String id) {
-        return REGISTERED_CLASSES.computeIfAbsent(id, key -> {
+        return registeredClasses.computeIfAbsent(id, key -> {
             throw new IllegalStateException(String.format("No class with id %s was registered.", key));
         });
     }
 
-    protected static void ensureFromJsonMethod() {
-        for (Class<?> clazz : REGISTERED_CLASSES.values()) {
+    private void ensureFromJsonMethod() {
+        for (Class<?> clazz : registeredClasses.values()) {
             try {
                 // Ensure fromJson method exists with expected parameters
                 clazz.getMethod(DESERIALIZATION_METHOD, IPersistedResourceRegistry.class, JsonNode.class);
