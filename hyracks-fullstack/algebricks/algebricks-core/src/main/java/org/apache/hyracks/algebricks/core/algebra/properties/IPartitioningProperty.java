@@ -76,7 +76,7 @@ public interface IPartitioningProperty extends IStructuralProperty {
 
     void setNodeDomain(INodeDomain domain);
 
-    void substituteColumnVars(Map<LogicalVariable, LogicalVariable> varMap);
+    IPartitioningProperty substituteColumnVars(Map<LogicalVariable, LogicalVariable> varMap);
 
     IPartitioningProperty clonePartitioningProperty();
 }
@@ -115,12 +115,13 @@ class UnpartitionedProperty implements IPartitioningProperty {
     }
 
     @Override
-    public void substituteColumnVars(Map<LogicalVariable, LogicalVariable> variableMap) {
+    public IPartitioningProperty substituteColumnVars(Map<LogicalVariable, LogicalVariable> variableMap) {
         // No partition columns are maintained for UNPARTITIONED.
+        return UNPARTITIONED;
     }
 
     @Override
     public IPartitioningProperty clonePartitioningProperty() {
-        return new UnpartitionedProperty();
+        return UNPARTITIONED;
     }
 }

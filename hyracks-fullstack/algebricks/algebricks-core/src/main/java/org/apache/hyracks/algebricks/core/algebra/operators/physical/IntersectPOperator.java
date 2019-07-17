@@ -89,7 +89,7 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
     @Override
     public void computeDeliveredProperties(ILogicalOperator iop, IOptimizationContext context) {
         IntersectOperator op = (IntersectOperator) iop;
-        IPartitioningProperty pp =
+        IPartitioningProperty childpp =
                 op.getInputs().get(0).getValue().getDeliveredPhysicalProperties().getPartitioningProperty();
 
         List<LogicalVariable> outputCompareVars = op.getOutputCompareVariables();
@@ -98,7 +98,7 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
         for (int i = 0; i < numCompareVars; i++) {
             varMaps.put(op.getInputCompareVariables(0).get(i), outputCompareVars.get(i));
         }
-        pp.substituteColumnVars(varMaps);
+        IPartitioningProperty pp = childpp.substituteColumnVars(varMaps);
 
         List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
         List<OrderColumn> orderColumns = new ArrayList<>();

@@ -63,35 +63,37 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractGroup
         super(columnList);
     }
 
-    // Obs: We don't propagate properties corresponding to decors, since they
-    // are func. dep. on the group-by variables.
+    // Obs: We don't propagate properties corresponding to decors, since they are func. dep. on the group-by variables.
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
         GroupByOperator gby = (GroupByOperator) op;
-        ILogicalOperator op2 = gby.getInputs().get(0).getValue();
-        IPhysicalPropertiesVector childProp = op2.getDeliveredPhysicalProperties();
-        IPartitioningProperty pp = childProp.getPartitioningProperty();
-        Map<LogicalVariable, LogicalVariable> ppSubstMap = computePartitioningPropertySubstitutionMap(gby, pp);
-        if (ppSubstMap != null) {
-            // We cannot modify pp directly, since it is owned by the input operator.
-            // Otherwise, the partitioning property would be modified even before this group by operator,
-            // which will be undesirable.
-            pp = pp.clonePartitioningProperty();
-            pp.substituteColumnVars(ppSubstMap);
-        }
-        List<ILocalStructuralProperty> childLocals = childProp.getLocalProperties();
-        if (childLocals == null) {
-            deliveredProperties = new StructuralPropertiesVector(pp, propsLocal);
-            return;
-        }
-        for (ILocalStructuralProperty lsp : childLocals) {
-            ILocalStructuralProperty propagatedLsp = getPropagatedProperty(lsp, gby);
-            if (propagatedLsp != null) {
-                propsLocal.add(propagatedLsp);
+        ILogicalOperator childOp = gby.getInputs().get(0).getValue();
+        IPhysicalPropertiesVector childProperties = childOp.getDeliveredPhysicalProperties();
+        IPartitioningProperty partitioning =
+                computePartitioningProperty(gby, childProperties.getPartitioningProperty());
+        List<ILocalStructuralProperty> local = computeLocalProperties(gby, childProperties.getLocalProperties());
+        deliveredProperties = new StructuralPropertiesVector(partitioning, local);
+    }
+
+    private IPartitioningProperty computePartitioningProperty(GroupByOperator gby,
+            IPartitioningProperty childPartitioning) {
+        Map<LogicalVariable, LogicalVariable> substMap =
+                computePartitioningPropertySubstitutionMap(gby, childPartitioning);
+        return substMap != null ? childPartitioning.substituteColumnVars(substMap) : childPartitioning;
+    }
+
+    private List<ILocalStructuralProperty> computeLocalProperties(GroupByOperator gby,
+            List<ILocalStructuralProperty> childLocals) {
+        List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
+        if (childLocals != null) {
+            for (ILocalStructuralProperty lsp : childLocals) {
+                ILocalStructuralProperty propagatedLsp = getPropagatedProperty(lsp, gby);
+                if (propagatedLsp != null) {
+                    propsLocal.add(propagatedLsp);
+                }
             }
         }
-        deliveredProperties = new StructuralPropertiesVector(pp, propsLocal);
+        return propsLocal;
     }
 
     // If we have "gby var1 as var3, var2 as var4"

@@ -64,8 +64,8 @@ public class RandomPartitioningProperty implements IPartitioningProperty {
     }
 
     @Override
-    public void substituteColumnVars(Map<LogicalVariable, LogicalVariable> varMap) {
-
+    public IPartitioningProperty substituteColumnVars(Map<LogicalVariable, LogicalVariable> varMap) {
+        return this;
     }
 
     @Override
