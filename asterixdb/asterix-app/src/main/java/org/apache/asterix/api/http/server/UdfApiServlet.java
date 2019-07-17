@@ -130,10 +130,11 @@ public class UdfApiServlet extends AbstractServlet {
     }
 
     private void deleteUdf(String dataverse, String resourceName) throws Exception {
-        DeleteUdfMessage msg = new DeleteUdfMessage(dataverse, resourceName);
-        for (String nc : appCtx.getClusterStateManager().getParticipantNodes()) {
-            broker.sendApplicationMessageToNC(msg, nc);
-        }
+        long reqId = broker.newRequestId();
+        List<INcAddressedMessage> requests = new ArrayList<>();
+        List<String> ncs = new ArrayList<>(appCtx.getClusterStateManager().getParticipantNodes());
+        ncs.forEach(s -> requests.add(new DeleteUdfMessage(dataverse, resourceName, reqId)));
+        broker.sendSyncRequestToNCs(reqId, ncs, requests, UDF_RESPONSE_TIMEOUT);
         appCtx.getLibraryManager().deregisterLibraryClassLoader(dataverse, resourceName);
         appCtx.getHcc().unDeployBinary(new DeploymentId(resourceName));
     }
