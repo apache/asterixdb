@@ -5691,6 +5691,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="record-serialization-ASTERIXDB-2613">
+        <output-dir compare="Text">record-serialization-ASTERIXDB-2613</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="field_access-ASTERIXDB-2289">
         <output-dir compare="Text">field_access-ASTERIXDB-2289</output-dir>
       </compilation-unit>

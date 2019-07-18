@@ -21,12 +21,12 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
+import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
@@ -38,7 +38,6 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.RecordUtil;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -168,19 +167,15 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         return schemaFields;
     }
 
-    @Override
-    public void serialize(ARecord instance, DataOutput out) throws HyracksDataException {
-        this.serialize(instance, out, false);
-    }
-
     // This serialize method will NOT work if <code>recordType</code> is not equal to the type of the instance.
     @SuppressWarnings("unchecked")
-    public void serialize(ARecord instance, DataOutput out, boolean writeTypeTag) throws HyracksDataException {
-        IARecordBuilder recordBuilder = new RecordBuilder();
-        ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
-        recordBuilder.reset(recordType);
-        recordBuilder.init();
+    @Override
+    public void serialize(ARecord instance, DataOutput out) throws HyracksDataException {
         if (recordType != null) {
+            IARecordBuilder recordBuilder = new RecordBuilder();
+            ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
+            recordBuilder.reset(recordType);
+            recordBuilder.init();
             IAType[] fieldTypes = recordType.getFieldTypes();
             for (int fieldIndex = 0; fieldIndex < recordType.getFieldNames().length; ++fieldIndex) {
                 fieldValue.reset();
@@ -196,51 +191,31 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 }
                 recordBuilder.addField(fieldIndex, fieldValue);
             }
-            recordBuilder.write(out, writeTypeTag);
+            recordBuilder.write(out, false);
         } else {
-            serializeSchemalessRecord(instance, out, writeTypeTag);
+            serializeSchemalessRecord(instance, out);
         }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static void serializeSchemalessRecord(ARecord record, DataOutput dataOutput, boolean writeTypeTag)
-            throws HyracksDataException {
+    private static void serializeSchemalessRecord(ARecord record, DataOutput dataOutput) throws HyracksDataException {
         ISerializerDeserializer<AString> stringSerde =
                 SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
         RecordBuilder confRecordBuilder = new RecordBuilder();
         confRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
         ArrayBackedValueStorage fieldNameBytes = new ArrayBackedValueStorage();
         ArrayBackedValueStorage fieldValueBytes = new ArrayBackedValueStorage();
+        AMutableString mutableString = new AMutableString(null);
         for (int i = 0; i < record.getType().getFieldNames().length; i++) {
             String fieldName = record.getType().getFieldNames()[i];
             fieldValueBytes.reset();
             fieldNameBytes.reset();
-            stringSerde.serialize(new AString(fieldName), fieldNameBytes.getDataOutput());
-            ISerializerDeserializer valueSerde = SerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(record.getType().getFieldTypes()[i]);
-            valueSerde.serialize(record.getValueByPos(i), fieldValueBytes.getDataOutput());
+            mutableString.setValue(fieldName);
+            stringSerde.serialize(mutableString, fieldNameBytes.getDataOutput());
+            AObjectSerializerDeserializer.INSTANCE.serialize(record.getValueByPos(i), fieldValueBytes.getDataOutput());
             confRecordBuilder.addField(fieldNameBytes, fieldValueBytes);
         }
-        confRecordBuilder.write(dataOutput, writeTypeTag);
-    }
-
-    @SuppressWarnings("unchecked")
-    public static void serializeSimpleSchemalessRecord(List<Pair<String, String>> record, DataOutput dataOutput,
-            boolean writeTypeTag) throws HyracksDataException {
-        ISerializerDeserializer<AString> stringSerde =
-                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
-        RecordBuilder confRecordBuilder = new RecordBuilder();
-        confRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
-        ArrayBackedValueStorage fieldNameBytes = new ArrayBackedValueStorage();
-        ArrayBackedValueStorage fieldValueBytes = new ArrayBackedValueStorage();
-        for (int i = 0; i < record.size(); i++) {
-            fieldValueBytes.reset();
-            fieldNameBytes.reset();
-            stringSerde.serialize(new AString(record.get(i).first), fieldNameBytes.getDataOutput());
-            stringSerde.serialize(new AString(record.get(i).second), fieldValueBytes.getDataOutput());
-            confRecordBuilder.addField(fieldNameBytes, fieldValueBytes);
-        }
-        confRecordBuilder.write(dataOutput, writeTypeTag);
+        confRecordBuilder.write(dataOutput, false);
     }
 
     public static IAObject[] mergeFields(IAObject[] closedFields, IAObject[] openFields) {
@@ -374,6 +349,6 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
 
     @Override
     public String toString() {
-        return " ";
+        return recordType != null ? recordType.toString() : "";
     }
 }
