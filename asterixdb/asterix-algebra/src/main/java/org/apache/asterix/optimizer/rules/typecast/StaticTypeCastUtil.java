@@ -458,7 +458,8 @@ public class StaticTypeCastUtil {
         for (int i = openFields.nextSetBit(0); i >= 0; i = openFields.nextSetBit(i + 1)) {
             newArguments.add(arguments.get(i * 2));
             Mutable<ILogicalExpression> expRef = arguments.get(i * 2 + 1);
-            injectCastToRelaxType(expRef, inputFieldTypes[i], env);
+            IAType expType = (IAType) env.getType(expRef.getValue());
+            injectCastToRelaxType(expRef, expType, env);
             newArguments.add(expRef);
         }
 
