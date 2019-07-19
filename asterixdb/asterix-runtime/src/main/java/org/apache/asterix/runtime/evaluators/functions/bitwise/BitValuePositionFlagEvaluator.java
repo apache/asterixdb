@@ -21,6 +21,8 @@ package org.apache.asterix.runtime.evaluators.functions.bitwise;
 
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
@@ -31,6 +33,7 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.evaluators.functions.AbstractScalarEval;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
+import org.apache.asterix.runtime.exceptions.ExceptionUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -104,9 +107,15 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
     private final ISerializerDeserializer aBooleanSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
+    private final IEvaluatorContext context;
+    private static final byte[] secondArgumentExpectedTypes =
+            new byte[] { ATypeTag.SERIALIZED_INT64_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG };
+
     BitValuePositionFlagEvaluator(IEvaluatorContext context, IScalarEvaluatorFactory[] argEvaluatorFactories,
             FunctionIdentifier functionIdentifier, SourceLocation sourceLocation) throws HyracksDataException {
         super(sourceLocation, functionIdentifier);
+
+        this.context = context;
 
         // Evaluators
         valueEvaluator = argEvaluatorFactories[0].createScalarEvaluator(context);
@@ -121,7 +130,6 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
     @SuppressWarnings("unchecked")
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-
         valueEvaluator.evaluate(tuple, valuePointable);
         positionEvaluator.evaluate(tuple, positionPointable);
 
@@ -139,6 +147,7 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
 
         // Type and value validity check
         if (!PointableHelper.isValidLongValue(valueBytes, valueStartOffset, true)) {
+            handleTypeMismatchInput(0, ATypeTag.BIGINT, valueBytes, valueStartOffset);
             PointableHelper.setNull(result);
             return;
         }
@@ -151,6 +160,7 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
 
         // Type validity check (for position argument, array is a valid type as well)
         if (!ATypeHierarchy.canPromote(positionTypeTag, ATypeTag.DOUBLE) && positionTypeTag != ATypeTag.ARRAY) {
+            handleTypeMismatchInput(1, secondArgumentExpectedTypes, positionBytes, positionStartOffset);
             PointableHelper.setNull(result);
             return;
         }
@@ -163,6 +173,7 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
             ATypeTag flagTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(flagBytes[flagStartOffset]);
 
             if (flagTypeTag != ATypeTag.BOOLEAN) {
+                handleTypeMismatchInput(2, ATypeTag.BOOLEAN, flagBytes, flagStartOffset);
                 PointableHelper.setNull(result);
                 return;
             }
@@ -255,6 +266,7 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
 
         // Value validity check
         if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
+            handleTypeMismatchInput(1, ATypeTag.BIGINT, bytes, startOffset);
             return false;
         }
 
@@ -262,6 +274,7 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
 
         // Ensure the position is between 1 and 64 (int64 has 64 bits)
         if (position < 1 || position > 64) {
+            handleOutOfRangeInput(1, 1, 64, position);
             return false;
         }
 
@@ -271,5 +284,25 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
         }
 
         return true;
+    }
+
+    private void handleTypeMismatchInput(int inputPosition, ATypeTag expected, byte[] actualBytes,
+            int actualStartOffset) {
+        ATypeTag actual = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualBytes[actualStartOffset]);
+        context.getWarningCollector().warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_MISMATCH_FUNCTION,
+                functionIdentifier, ExceptionUtil.indexToPosition(inputPosition), expected, actual));
+    }
+
+    private void handleTypeMismatchInput(int inputPosition, byte[] expected, byte[] bytes, int actualStartOffset) {
+        ATypeTag actual = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[actualStartOffset]);
+        context.getWarningCollector()
+                .warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_MISMATCH_FUNCTION, functionIdentifier,
+                        ExceptionUtil.indexToPosition(inputPosition), ExceptionUtil.toExpectedTypeString(expected),
+                        actual));
+    }
+
+    private void handleOutOfRangeInput(int inputPosition, int startLimit, int endLimit, long actual) {
+        context.getWarningCollector().warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.VALUE_OUT_OF_RANGE,
+                functionIdentifier, ExceptionUtil.indexToPosition(inputPosition), startLimit, endLimit, actual));
     }
 }
