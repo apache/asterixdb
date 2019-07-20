@@ -189,7 +189,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
             if (groundTruth.contains(cmpFileName.getSequence())) {
                 validFiles.add(cmpFileName);
             } else {
-                delete(bufferCache, cmpFileName.getFullPath());
+                delete(bufferCache, cmpFileName.getFileRef());
             }
         }
     }
@@ -256,7 +256,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
                 // The current file is completely contained in the interval of the
                 // last file. Thus the last file must contain at least as much information
                 // as the current file, so delete the current file.
-                delete(treeFactory.getBufferCache(), current.getFullPath());
+                delete(treeFactory.getBufferCache(), current.getFileRef());
             } else {
                 // This scenario should not be possible since timestamps are monotonically increasing.
                 throw HyracksDataException.create(ErrorCode.FOUND_OVERLAPPING_LSM_FILES, baseDir);
@@ -363,8 +363,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
     }
 
-    protected void delete(IBufferCache bufferCache, String fullPath) throws HyracksDataException {
-        FileReference fileRef = ioManager.resolveAbsolutePath(fullPath);
+    protected void delete(IBufferCache bufferCache, FileReference fileRef) throws HyracksDataException {
         bufferCache.deleteFile(fileRef);
     }
 

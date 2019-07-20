@@ -42,58 +42,141 @@ public class CompressedFileManager {
     protected static final int ENTRY_LENGTH = 16; //<offset(8-bytes),size(8-bytes)>
     protected static final int EOF = -1;
     private static final EnumSet<State> CLOSED = EnumSet.of(State.CLOSED);
-    private static final EnumSet<State> READABLE_WRITABLE = EnumSet.of(State.READABLE, State.WRITABLE);
+    private static final EnumSet<State> CLOSED_OR_INVALID = EnumSet.of(State.CLOSED, State.INVALID);
+    private static final EnumSet<State> OPEN = EnumSet.of(State.READABLE, State.WRITABLE);
+    private static final EnumSet<State> OPEN_OR_INVALID = EnumSet.of(State.READABLE, State.WRITABLE, State.INVALID);
     private static final EnumSet<State> READABLE = EnumSet.of(State.READABLE);
     private static final EnumSet<State> WRITABLE = EnumSet.of(State.WRITABLE);
 
     private enum State {
         READABLE,
         WRITABLE,
+        /*
+         * INVALID state means that the LAF does not exists.
+         * This could happened after deleting the LAF file but not the index file (e.g., non-graceful shutdown).
+         * To account for this case, we should indicate the index is not valid and the index should be deleted by the
+         * recovery manager.
+         */
+        INVALID,
         CLOSED
     }
 
     private final IBufferCache bufferCache;
-    private final int fileId;
     private final ICompressorDecompressor compressorDecompressor;
+    private final CompressedFileReference fileRef;
 
+    private int fileId;
     private State state;
     private int totalNumOfPages;
 
     private LAFWriter lafWriter;
 
-    public CompressedFileManager(IBufferCache bufferCache, int fileId, CompressedFileReference fileRef) {
+    public CompressedFileManager(IBufferCache bufferCache, CompressedFileReference fileRef) {
         state = State.CLOSED;
         totalNumOfPages = 0;
         this.bufferCache = bufferCache;
-        this.fileId = fileId;
+        this.fileRef = fileRef;
         this.compressorDecompressor = fileRef.getCompressorDecompressor();
     }
 
+    /* ************************
+     * File handling methods
+     * ************************
+     */
+
     /**
+     * Open LAF file
      * If the file is empty (i.e. the number of pages is zero)
      * Then the state will be WRITABLE.
      *
-     * @throws HyracksDataException
+     * @return
+     *         true if the file exists and was closed
+     *         false otherwise
+     * @throws IllegalStateException
+     *             if the the file is not in CLOSED state
      */
-    public void open() throws HyracksDataException {
+    public boolean open() throws HyracksDataException {
         ensureState(CLOSED);
+
+        boolean open = false;
+        if (fileRef.getLAFFileReference().getFile().exists()) {
+            fileId = bufferCache.openFile(fileRef.getLAFFileReference());
+            open = true;
+        } else {
+            fileId = -1;
+        }
         changeToFunctionalState();
+        return open;
     }
 
     /**
-     * Close the LAF file.
+     * Close LAF file
      *
-     * @throws HyracksDataException
+     * @return
+     *         true if the LAF file exists and was OPEN
+     *         false otherwise
+     * @throws IllegalStateException
+     *             if the the file is not in OPEN state
      */
-    public void close() {
-        ensureState(READABLE_WRITABLE);
-        state = State.CLOSED;
+    public boolean close() throws HyracksDataException {
+        ensureState(OPEN_OR_INVALID);
+
+        boolean closed = false;
+        if (state != State.INVALID) {
+            bufferCache.closeFile(fileId);
+            state = State.CLOSED;
+            closed = true;
+        }
+        return closed;
+    }
+
+    /**
+     * Close and purge LAF file
+     *
+     * @throws IllegalStateException
+     *             if the the file is not in OPEN state
+     */
+    public void purge() throws HyracksDataException {
+        if (close()) {
+            bufferCache.purgeHandle(fileId);
+        }
+    }
+
+    /**
+     * Delete LAF file
+     *
+     * @throws IllegalStateException
+     *             if the the file is not in CLOSED state
+     */
+    public void delete() throws HyracksDataException {
+        ensureState(CLOSED_OR_INVALID);
+        if (state != State.INVALID) {
+            bufferCache.deleteFile(fileId);
+        }
+    }
+
+    /**
+     * Force LAF file content to disk
+     *
+     * @throws IllegalStateException
+     *             if the the file is not in CLOSED state
+     */
+    public void force(boolean metadata) throws HyracksDataException {
+        ensureState(OPEN);
+        bufferCache.force(fileId, metadata);
     }
 
     /* ************************
      * LAF writing methods
      * ************************
      */
+
+    /*
+     * Should be only visible to LAFWriter
+     */
+    int getFileId() {
+        return fileId;
+    }
 
     public ICompressedPageWriter getCompressedPageWriter() {
         ensureState(WRITABLE);
@@ -124,7 +207,8 @@ public class CompressedFileManager {
      * @param extraPageIndex
      *            the index of the extra page (starting from 0)
      * @return offset for the compressed page.
-     * @throws HyracksDataException
+     * @throws IllegalStateException
+     *             If the file is not in WRITABLE state
      */
     public long writeExtraPageInfo(int extraPageId, long size, int extraPageIndex) throws HyracksDataException {
         ensureState(WRITABLE);
@@ -146,7 +230,8 @@ public class CompressedFileManager {
      *
      * @param totalNumOfPages
      *            The total number of pages of the index
-     * @throws HyracksDataException
+     * @throws IllegalStateException
+     *             If the file is not in WRITABLE state
      */
     void endWriting(int totalNumOfPages) {
         ensureState(WRITABLE);
@@ -164,7 +249,6 @@ public class CompressedFileManager {
      * Set the compressed page offset and size
      *
      * @param compressedPage
-     * @throws HyracksDataException
      */
     public void setCompressedPageInfo(ICachedPageInternal compressedPage) throws HyracksDataException {
         setCompressedPageInfo(BufferedFileHandle.getPageId(compressedPage.getDiskPageId()), compressedPage);
@@ -175,7 +259,6 @@ public class CompressedFileManager {
      *
      * @param compressedPage
      * @param extraPageIndex
-     * @throws HyracksDataException
      */
     public void setExtraCompressedPageInfo(ICachedPageInternal compressedPage, int extraPageIndex)
             throws HyracksDataException {
@@ -189,15 +272,9 @@ public class CompressedFileManager {
 
     /**
      * Get the number of compressed pages
-     *
-     * @return
      */
     public int getNumberOfPages() {
         return totalNumOfPages;
-    }
-
-    public int getFileId() {
-        return fileId;
     }
 
     public ICompressorDecompressor getCompressorDecompressor() {
@@ -217,7 +294,9 @@ public class CompressedFileManager {
     }
 
     private void changeToFunctionalState() throws HyracksDataException {
-        if (bufferCache.getNumPagesOfFile(fileId) == 0) {
+        if (fileId == -1) {
+            state = State.INVALID;
+        } else if (bufferCache.getNumPagesOfFile(fileId) == 0) {
             state = State.WRITABLE;
             lafWriter = new LAFWriter(this, bufferCache);
         } else {
@@ -281,5 +360,4 @@ public class CompressedFileManager {
             bufferCache.unpin(page);
         }
     }
-
 }

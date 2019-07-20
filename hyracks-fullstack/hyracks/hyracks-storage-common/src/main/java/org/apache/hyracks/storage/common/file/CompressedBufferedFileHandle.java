@@ -157,9 +157,7 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
     @Override
     public void open(FileReference fileRef) throws HyracksDataException {
         final CompressedFileReference cFileRef = (CompressedFileReference) fileRef;
-        final int lafFileId = bufferCache.openFile(cFileRef.getLAFFileReference());
-
-        compressedFileManager = new CompressedFileManager(bufferCache, lafFileId, cFileRef);
+        compressedFileManager = new CompressedFileManager(bufferCache, cFileRef);
         compressedFileManager.open();
         super.open(fileRef);
     }
@@ -173,23 +171,20 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
     public void close() throws HyracksDataException {
         if (hasBeenOpened()) {
             compressedFileManager.close();
-            bufferCache.closeFile(compressedFileManager.getFileId());
         }
         super.close();
     }
 
     @Override
     public void purge() throws HyracksDataException {
+        compressedFileManager.purge();
         super.purge();
-        compressedFileManager.close();
-        bufferCache.closeFile(compressedFileManager.getFileId());
-        bufferCache.purgeHandle(compressedFileManager.getFileId());
     }
 
     @Override
     public void markAsDeleted() throws HyracksDataException {
         if (hasBeenOpened()) {
-            bufferCache.deleteFile(compressedFileManager.getFileId());
+            compressedFileManager.delete();
             compressedFileManager = null;
         } else {
             bufferCache.deleteFile(lafFileRef);
@@ -199,8 +194,8 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
 
     @Override
     public void force(boolean metadata) throws HyracksDataException {
+        compressedFileManager.force(metadata);
         super.force(metadata);
-        bufferCache.force(compressedFileManager.getFileId(), metadata);
     }
 
     @Override

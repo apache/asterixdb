@@ -149,9 +149,9 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
             } else if (currentDeletedKeysBTree.isWithin(lastDeletedKeysBTree)
                     && currentDictBTree.isWithin(lastDictBTree) && currentBloomFilter.isWithin(lastBloomFilter)) {
                 // Invalid files are completely contained in last sequence.
-                delete(treeFactory.getBufferCache(), currentDeletedKeysBTree.getFullPath());
-                delete(treeFactory.getBufferCache(), currentDictBTree.getFullPath());
-                delete(treeFactory.getBufferCache(), currentBloomFilter.getFullPath());
+                delete(treeFactory.getBufferCache(), currentDeletedKeysBTree.getFileRef());
+                delete(treeFactory.getBufferCache(), currentDictBTree.getFileRef());
+                delete(treeFactory.getBufferCache(), currentBloomFilter.getFileRef());
             } else {
                 // This scenario should not be possible.
                 throw HyracksDataException.create(ErrorCode.FOUND_OVERLAPPING_LSM_FILES, baseDir);

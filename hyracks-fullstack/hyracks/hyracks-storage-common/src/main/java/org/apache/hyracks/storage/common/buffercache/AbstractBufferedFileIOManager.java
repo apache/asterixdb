@@ -168,7 +168,7 @@ public abstract class AbstractBufferedFileIOManager {
      * Check whether the file has ever been opened
      *
      * @return
-     *         true if has ever been open, false o.w
+     *         true if has ever been opened, false otherwise
      */
     public final boolean hasBeenOpened() {
         return hasOpen;
@@ -185,7 +185,7 @@ public abstract class AbstractBufferedFileIOManager {
             try {
                 bufferCache.createFile(cFileRef.getLAFFileReference());
             } catch (HyracksDataException e) {
-                //In case of creating the LAF file failed, delete fileRef
+                //In case of creating the LAF file failed, delete index file reference
                 IoUtil.delete(fileRef);
                 throw e;
             }
@@ -193,12 +193,37 @@ public abstract class AbstractBufferedFileIOManager {
     }
 
     public static void deleteFile(FileReference fileRef) throws HyracksDataException {
-        IoUtil.delete(fileRef);
-        if (fileRef.isCompressed()) {
-            final CompressedFileReference cFileRef = (CompressedFileReference) fileRef;
-            if (cFileRef.getFile().exists()) {
-                IoUtil.delete(cFileRef.getLAFFileReference());
+        HyracksDataException savedEx = null;
+
+        /*
+         * LAF file has to be deleted before the index file.
+         * If the index file deleted first and a non-graceful shutdown happened before the deletion of
+         * the LAF file, the LAF file will not be deleted during the next recovery.
+         */
+        try {
+            if (fileRef.isCompressed()) {
+                final CompressedFileReference cFileRef = (CompressedFileReference) fileRef;
+                final FileReference lafFileRef = cFileRef.getLAFFileReference();
+                if (lafFileRef.getFile().exists()) {
+                    IoUtil.delete(lafFileRef);
+                }
             }
+        } catch (HyracksDataException e) {
+            savedEx = e;
+        }
+
+        try {
+            IoUtil.delete(fileRef);
+        } catch (HyracksDataException e) {
+            if (savedEx != null) {
+                savedEx.addSuppressed(e);
+            } else {
+                savedEx = e;
+            }
+        }
+
+        if (savedEx != null) {
+            throw savedEx;
         }
     }
 

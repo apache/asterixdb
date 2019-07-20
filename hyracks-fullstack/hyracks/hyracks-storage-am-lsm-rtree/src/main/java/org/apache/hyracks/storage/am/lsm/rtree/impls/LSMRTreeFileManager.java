@@ -144,9 +144,9 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
             } else if (currentRTree.isWithin(lastRTree) && currentBTree.isWithin(lastBTree)
                     && currentBloomFilter.isWithin(lastBloomFilter)) {
                 // Invalid files are completely contained in last sequence.
-                delete(treeFactory.getBufferCache(), currentRTree.getFullPath());
-                delete(treeFactory.getBufferCache(), currentBTree.getFullPath());
-                delete(treeFactory.getBufferCache(), currentBloomFilter.getFullPath());
+                delete(treeFactory.getBufferCache(), currentRTree.getFileRef());
+                delete(treeFactory.getBufferCache(), currentBTree.getFileRef());
+                delete(treeFactory.getBufferCache(), currentBloomFilter.getFileRef());
             } else {
                 // This scenario should not be possible.
                 throw HyracksDataException.create(ErrorCode.FOUND_OVERLAPPING_LSM_FILES, baseDir);

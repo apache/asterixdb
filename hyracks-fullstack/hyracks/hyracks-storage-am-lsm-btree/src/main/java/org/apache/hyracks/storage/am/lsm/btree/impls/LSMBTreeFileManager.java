@@ -148,9 +148,9 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
             } else if (currentBTree.isWithin(lastBTree)
                     && (!hasBloomFilter || currentBloomFilter.isWithin(lastBloomFilter))) {
                 // Invalid files are completely contained in last interval.
-                delete(btreeFactory.getBufferCache(), currentBTree.getFullPath());
+                delete(btreeFactory.getBufferCache(), currentBTree.getFileRef());
                 if (hasBloomFilter) {
-                    delete(btreeFactory.getBufferCache(), currentBloomFilter.getFullPath());
+                    delete(btreeFactory.getBufferCache(), currentBloomFilter.getFileRef());
                 }
             } else {
                 // This scenario should not be possible.
