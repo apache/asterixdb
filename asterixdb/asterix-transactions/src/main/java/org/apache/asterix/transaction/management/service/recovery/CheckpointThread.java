@@ -85,13 +85,12 @@ public class CheckpointThread extends Thread {
                     if (currentCheckpointAttemptMinLSN >= targetCheckpointLSN) {
                         lastCheckpointLSN = currentCheckpointAttemptMinLSN;
                     }
-
                 }
             } catch (InterruptedException e) {
                 LOGGER.info("Checkpoint thread interrupted", e);
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
-                LOGGER.error("Error during checkpoint", e);
+                LOGGER.error("checkpoint attempt failed", e);
             }
         }
     }

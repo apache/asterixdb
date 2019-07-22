@@ -47,7 +47,7 @@
     "txn\.lock\.timeout\.waitthreshold" : 60000,
     "txn\.log\.buffer\.numpages" : 8,
     "txn\.log\.buffer\.pagesize" : 4194304,
-    "txn\.log\.checkpoint\.history" : 0,
+    "txn\.log\.checkpoint\.history" : 2,
     "txn\.log\.checkpoint\.lsnthreshold" : 67108864,
     "txn\.log\.checkpoint\.pollfrequency" : 120,
     "txn\.log\.partitionsize" : 268435456

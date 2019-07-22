@@ -59,7 +59,7 @@ public class TransactionProperties extends AbstractProperties {
                 120,
                 "The frequency (in seconds) the checkpoint thread should check to see if a checkpoint should be "
                         + "written"),
-        TXN_LOG_CHECKPOINT_HISTORY(UNSIGNED_INTEGER, 0, "The number of checkpoints to keep in the transaction log"),
+        TXN_LOG_CHECKPOINT_HISTORY(UNSIGNED_INTEGER, 2, "The number of checkpoints to keep in the transaction log"),
         TXN_LOCK_ESCALATIONTHRESHOLD(
                 UNSIGNED_INTEGER,
                 1000,

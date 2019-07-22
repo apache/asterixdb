@@ -26,6 +26,7 @@ import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -100,7 +101,7 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         if (checkpointFiles.isEmpty()) {
             return null;
         }
-        final List<Checkpoint> orderedCheckpoints = getOrderedCheckpoints(checkpointFiles);
+        final List<Checkpoint> orderedCheckpoints = getOrderedValidCheckpoints(checkpointFiles, false);
         if (orderedCheckpoints.isEmpty()) {
             /*
              * If all checkpoint files are corrupted, we have no option but to try to perform recovery.
@@ -136,8 +137,7 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
     }
 
     public Path getCheckpointPath(long checkpointId) {
-        return Paths.get(checkpointDir.getAbsolutePath() + File.separator + CHECKPOINT_FILENAME_PREFIX
-                + Long.toString(checkpointId));
+        return Paths.get(checkpointDir.getAbsolutePath() + File.separator + CHECKPOINT_FILENAME_PREFIX + checkpointId);
     }
 
     protected void capture(long minMCTFirstLSN, boolean sharp) throws HyracksDataException {
@@ -173,7 +173,8 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         // Write checkpoint file to disk
         try {
             byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(checkpoint.toJson(persistedResourceRegistry));
-            Files.write(path, bytes);
+            Files.write(path, bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            readCheckpoint(path);
         } catch (IOException e) {
             LOGGER.log(Level.ERROR, "Failed to write checkpoint to disk", e);
             throw HyracksDataException.create(e);
@@ -200,16 +201,14 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         return Arrays.asList(checkpoints);
     }
 
-    private List<Checkpoint> getOrderedCheckpoints(List<File> checkpoints) {
+    private List<Checkpoint> getOrderedValidCheckpoints(List<File> checkpoints, boolean deleteCorrupted) {
         List<Checkpoint> checkpointObjectList = new ArrayList<>();
         for (File file : checkpoints) {
             try {
                 if (LOGGER.isWarnEnabled()) {
                     LOGGER.log(Level.WARN, "Reading checkpoint file: " + file.getAbsolutePath());
                 }
-                final JsonNode jsonNode =
-                        OBJECT_MAPPER.readValue(Files.readAllBytes(Paths.get(file.getAbsolutePath())), JsonNode.class);
-                Checkpoint cp = (Checkpoint) persistedResourceRegistry.deserialize(jsonNode);
+                Checkpoint cp = readCheckpoint(Paths.get(file.getAbsolutePath()));
                 checkpointObjectList.add(cp);
             } catch (ClosedByInterruptException e) {
                 Thread.currentThread().interrupt();
@@ -222,9 +221,8 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
                 if (LOGGER.isWarnEnabled()) {
                     LOGGER.log(Level.WARN, "Failed to read checkpoint file: " + file.getAbsolutePath(), e);
                 }
-                file.delete();
-                if (LOGGER.isWarnEnabled()) {
-                    LOGGER.log(Level.WARN, "Deleted corrupted checkpoint file: " + file.getAbsolutePath());
+                if (deleteCorrupted && file.delete()) {
+                    LOGGER.warn("Deleted corrupted checkpoint file: {}", file::getAbsolutePath);
                 }
             }
         }
@@ -234,7 +232,7 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
 
     private void cleanup() {
         final List<File> checkpointFiles = getCheckpointFiles();
-        final List<Checkpoint> orderedCheckpoints = getOrderedCheckpoints(checkpointFiles);
+        final List<Checkpoint> orderedCheckpoints = getOrderedValidCheckpoints(checkpointFiles, true);
         final int deleteCount = orderedCheckpoints.size() - historyToKeep;
         for (int i = 0; i < deleteCount; i++) {
             final Checkpoint checkpoint = orderedCheckpoints.get(i);
@@ -247,11 +245,20 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
     }
 
     private long getNextCheckpointId() {
-        final Checkpoint latest = getLatest();
-        if (latest == null) {
+        final List<File> checkpointFiles = getCheckpointFiles();
+        if (checkpointFiles.isEmpty()) {
             return FIRST_CHECKPOINT_ID;
         }
-        return latest.getId() + 1;
+        long maxOnDiskId = -1;
+        for (File checkpointFile : checkpointFiles) {
+            long fileId = Long.parseLong(checkpointFile.getName().substring(CHECKPOINT_FILENAME_PREFIX.length()));
+            maxOnDiskId = Math.max(maxOnDiskId, fileId);
+        }
+        return maxOnDiskId + 1;
     }
 
+    private Checkpoint readCheckpoint(Path checkpointPath) throws IOException {
+        final JsonNode jsonNode = OBJECT_MAPPER.readValue(Files.readAllBytes(checkpointPath), JsonNode.class);
+        return (Checkpoint) persistedResourceRegistry.deserialize(jsonNode);
+    }
 }

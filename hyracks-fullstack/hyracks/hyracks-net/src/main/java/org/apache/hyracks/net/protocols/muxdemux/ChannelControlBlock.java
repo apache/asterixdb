@@ -128,7 +128,6 @@ public class ChannelControlBlock implements IChannelControlBlock {
     }
 
     void reportRemoteError(int ecode) {
-        ri.flush();
         ri.getFullBufferAcceptor().error(ecode);
         remoteClose.set(true);
     }
