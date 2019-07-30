@@ -17,18 +17,20 @@
  * under the License.
  */
 
-use TinySocial;
+USE TinySocial;
 
-{
-  "t1": (select array_distinct(array_append(t.`referred-topics`, "verizon", "platform")) from TweetMessages t order by t.tweetid),
-  "t2": (array_distinct([19, 5, 7, 7, 5, 2])),
-  "t3": (array_distinct([19, 5, 7, 7, 5.1, 5.0, 2, 7])),
-  "t4": (array_distinct([19, 5, "a", 7.5, "A", "a", "John", "a"])),
-  "t5": (array_distinct([19, missing, 7, null, 5, null])),
-  "t6": (array_distinct([3])),
-  "t7": (array_distinct("non_array")),
-  "t8": (array_distinct([])),
-  "t9": (array_distinct(missing)),
-  "t10": (array_distinct(null)),
-  "t11": (select array_distinct(d.followers) from d1 d)
-};
+FROM [
+  {"id": 1, "t1": (select array_distinct(array_append(t.`referred-topics`, "verizon", "platform")) from TweetMessages t order by t.tweetid)},
+  {"id": 2, "t2": (array_distinct([19, 5, 7, 7, 5, 2]))},
+  {"id": 3, "t3": (array_distinct([19, 5, 7, 7, 5.1, 5.0, 2, 7]))},
+  {"id": 4, "t4": (array_distinct([19, 5, "a", 7.5, "A", "a", "John", "a"]))},
+  {"id": 5, "t5": (array_distinct([19, missing, 7, null, 5, null]))},
+  {"id": 6, "t6": (array_distinct([3]))},
+  {"id": 7, "t7": (array_distinct("non_array"))},
+  {"id": 8, "t8": (array_distinct([]))},
+  {"id": 9, "t9": (array_distinct(missing))},
+  {"id": 10, "t10": (array_distinct(null))},
+  {"id": 10, "t11": (select array_distinct(d.followers) from d1 d)}
+] AS d
+SELECT VALUE d
+ORDER BY d.id;

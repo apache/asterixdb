@@ -17,20 +17,22 @@
  * under the License.
  */
 
-use TinySocial;
+USE TinySocial;
 
-{
-  "t1": (select array_ifnull(t.`referred-topics`) from TweetMessages t order by t.tweetid),
-  "t2": (select array_ifnull((select value v.compType from d1 v))),
-  "t3": (array_ifnull([null, null, 3, 4.9, null])),
-  "t4": (array_ifnull([missing, 2, "a"])),
-  "t5": (array_ifnull([4, 2, "a"])),
-  "t6": (array_ifnull([4, 2, null, missing])),
-  "t7": (array_ifnull([null, null, null])),           // null
-  "t8": (array_ifnull([missing, missing, missing])),  // null
-  "t9": (array_ifnull([missing, null, missing])),   // null
-  "t10": (array_ifnull("non_array")),               // null
-  "t11": (array_ifnull([])),                        // null
-  "t12": (array_ifnull(missing)),                   // missing
-  "t13": (array_ifnull(null))                       // null
-};
+FROM [
+  {"id": 1, "t1": (select array_ifnull(t.`referred-topics`) from TweetMessages t order by t.tweetid)},
+  {"id": 2, "t2": (select array_ifnull((select value v.compType from d1 v)))},
+  {"id": 3, "t3": (array_ifnull([null, null, 3, 4.9, null]))},
+  {"id": 4, "t4": (array_ifnull([missing, 2, "a"]))},
+  {"id": 5, "t5": (array_ifnull([4, 2, "a"]))},
+  {"id": 6, "t6": (array_ifnull([4, 2, null, missing]))},
+  {"id": 7, "t7": (array_ifnull([null, null, null]))},           // null
+  {"id": 8, "t8": (array_ifnull([missing, missing, missing]))},  // null
+  {"id": 9, "t9": (array_ifnull([missing, null, missing]))},   // null
+  {"id": 10, "t10": (array_ifnull("non_array"))},               // null
+  {"id": 11, "t11": (array_ifnull([]))},                        // null
+  {"id": 12, "t12": (array_ifnull(missing))},                   // missing
+  {"id": 13, "t13": (array_ifnull(null))}                       // null
+] AS d
+SELECT VALUE d
+ORDER BY d.id;

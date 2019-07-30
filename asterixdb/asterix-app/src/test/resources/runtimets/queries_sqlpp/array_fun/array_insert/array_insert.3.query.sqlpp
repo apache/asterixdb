@@ -17,31 +17,33 @@
  * under the License.
  */
 
-use TinySocial;
+USE TinySocial;
 
-{
-  "t1": (array_insert([1,2,3], 0, "a", "b")),          // OK
-  "t2": (array_insert([1,2,3], 3, "a", "b")),          // OK
-  "t3": (array_insert([1,1,2,4], 3, "a", "b")),        // OK
-  "t4": (array_insert([1,1,2,4], 3, 7, "a", 7, "one more")),  // OK
-  "t5": (array_insert([1,2,3], 4, "a")),          // null, out of bound
-  "t6": (array_insert([1,2,3], -1, "a", "b")),    // OK
-  "t7": (array_insert([1,2,3], -4, "a", "b")),    // null, out of bound
-  "t8": (array_insert("non_array", 5, "val")),    // null
-  "t9": (array_insert("non_array", 5, missing)),  // missing
-  "t10": (array_insert([], 5, 10, 12.0, "sth")),  // null, out of bound
-  "t11": (array_insert([], 0, 10, 12.0, "sth")),  // OK
-  "t12": (array_insert([6], "a", 9)),             // null, position non-numeric
-  "t13": (array_insert([6], 1.0, 9)),             // OK
-  "t14": (array_insert([6], 1.5, 9)),             // null, position with decimals
-  "t15": (array_insert(null, 3, 9)),              // null
-  "t16": (array_insert(missing, 3, 9)),           // missing
-  "t17": (array_insert([6], 1, null, 9, null)),   // OK to insert nulls
-  "t18": (array_insert([6], null, 5, 9, null)),   // null
-  "t19": (array_insert([6], 3, null, missing, 9, null)),  // missing
-  "t20": (select array_insert(t.`referred-topics`, 0, 5) from TweetMessages t order by t.tweetid),
-  "t21": (select array_insert(d.followers, 0, 5, 3) from d1 d),
-  "t22": (array_insert([1,2,3], float("NaN"), "a", "b")),
-  "t23": (array_insert([1,2,3], float("INF"), "a", "b")),
-  "t24": (array_insert([1,2,3], float("-INF"), "a", "b"))
-};
+FROM [
+  {"id": 1, "t1": (array_insert([1,2,3], 0, "a", "b"))},          // OK
+  {"id": 2, "t2": (array_insert([1,2,3], 3, "a", "b"))},          // OK
+  {"id": 3, "t3": (array_insert([1,1,2,4], 3, "a", "b"))},        // OK
+  {"id": 4, "t4": (array_insert([1,1,2,4], 3, 7, "a", 7, "one more"))},  // OK
+  {"id": 5, "t5": (array_insert([1,2,3], 4, "a"))},          // null, out of bound
+  {"id": 6, "t6": (array_insert([1,2,3], -1, "a", "b"))},    // OK
+  {"id": 7, "t7": (array_insert([1,2,3], -4, "a", "b"))},    // null, out of bound
+  {"id": 8, "t8": (array_insert("non_array", 5, "val"))},    // null
+  {"id": 9, "t9": (array_insert("non_array", 5, missing))},  // missing
+  {"id": 10, "t10": (array_insert([], 5, 10, 12.0, "sth"))},  // null, out of bound
+  {"id": 11, "t11": (array_insert([], 0, 10, 12.0, "sth"))},  // OK
+  {"id": 12, "t12": (array_insert([6], "a", 9))},             // null, position non-numeric
+  {"id": 13, "t13": (array_insert([6], 1.0, 9))},             // OK
+  {"id": 14, "t14": (array_insert([6], 1.5, 9))},             // null, position with decimals
+  {"id": 15, "t15": (array_insert(null, 3, 9))},              // null
+  {"id": 16, "t16": (array_insert(missing, 3, 9))},           // missing
+  {"id": 17, "t17": (array_insert([6], 1, null, 9, null))},   // OK to insert nulls
+  {"id": 18, "t18": (array_insert([6], null, 5, 9, null))},   // null
+  {"id": 19, "t19": (array_insert([6], 3, null, missing, 9, null))},  // missing
+  {"id": 20, "t20": (select array_insert(t.`referred-topics`, 0, 5) from TweetMessages t order by t.tweetid)},
+  {"id": 21, "t21": (select array_insert(d.followers, 0, 5, 3) from d1 d)},
+  {"id": 22, "t22": (array_insert([1,2,3], float("NaN"), "a", "b"))},
+  {"id": 23, "t23": (array_insert([1,2,3], float("INF"), "a", "b"))},
+  {"id": 24, "t24": (array_insert([1,2,3], float("-INF"), "a", "b"))}
+] AS d
+SELECT VALUE d
+ORDER BY d.id;

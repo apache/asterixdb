@@ -17,17 +17,19 @@
  * under the License.
  */
 
-use TinySocial;
+USE TinySocial;
 
-{
-  "t1": (select array_concat(t.`referred-topics`, {{"sth", 5}}, {{3,2}}) from TweetMessages t order by t.tweetid),
-  "t2": (select array_concat([3, "John"], (select value v.compType from d1 v))),
-  "t3": (array_concat([3,5,1], null, missing)),   // missing
-  "t4": (array_concat([3,1,6], "non_array")),     // null
-  "t5": (array_concat(null, [3, 9])),             // null
-  "t6": (array_concat("non_array", [5], missing)),// missing
-  "t7": (array_concat([], [5, 10], [12.0], [])),  // OK
-  "t8": (array_concat(missing, 3, 9)),            // missing
-  "t9": (array_concat([3, missing], [3, [9], null, missing, null])),  // OK with nulls
-  "t10": (select array_concat(d.followers, ["sth", 5], [3,2]) from d1 d)
-};
+FROM [
+  {"id": 1, "t1": (select array_concat(t.`referred-topics`, {{"sth", 5}}, {{3,2}}) from TweetMessages t order by t.tweetid)},
+  {"id": 2, "t2": (select array_concat([3, "John"], (select value v.compType from d1 v)))},
+  {"id": 3, "t3": (array_concat([3,5,1], null, missing))},   // missing
+  {"id": 4, "t4": (array_concat([3,1,6], "non_array"))},     // null
+  {"id": 5, "t5": (array_concat(null, [3, 9]))},             // null
+  {"id": 6, "t6": (array_concat("non_array", [5], missing))},// missing
+  {"id": 7, "t7": (array_concat([], [5, 10], [12.0], []))},  // OK
+  {"id": 8, "t8": (array_concat(missing, 3, 9))},            // missing
+  {"id": 9, "t9": (array_concat([3, missing], [3, [9], null, missing, null]))},  // OK with nulls
+  {"id": 10, "t10": (select array_concat(d.followers, ["sth", 5], [3,2]) from d1 d)}
+] AS d
+SELECT VALUE d
+ORDER BY d.id;

@@ -17,24 +17,26 @@
  * under the License.
  */
 
-use TinySocial;
+USE TinySocial;
 
-{
-  "t1": (array_flatten([2, 3, [7,1,2], [8, [12, 13, 14]]], 1)),
-  "t2": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], 1)),
-  "t3": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], 2)),
-  "t4": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], 4)),
-  "t5": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], 0)),
-  "t6": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], -1)),
-  "t7": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], 2.0)),  // OK
-  "t8": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], 2.1)),  // null
-  "t9": (array_flatten([2, 3, null, [7,1, missing, "a"], [8, [12, null, "b", 14, missing]]], 2)),
-  "t10": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], missing)),
-  "t11": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], null)),
-  "t12": (array_flatten(missing, 2)),
-  "t13": (array_flatten(null, 2)),
-  "t14": (array_flatten(null, missing)),
-  "t15": (array_flatten("non_array", 2)),
-  "t16": (array_flatten([1,2,3, [5,6,7]], "non-numeric")),
-  "t17": (select array_flatten(d.followers, 1) from d1 d)
-};
+FROM [
+  {"id": 1, "t1": (array_flatten([2, 3, [7,1,2], [8, [12, 13, 14]]], 1))},
+  {"id": 2, "t2": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], 1))},
+  {"id": 3, "t3": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], 2))},
+  {"id": 4, "t4": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], 4))},
+  {"id": 5, "t5": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], 0))},
+  {"id": 6, "t6": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], -1))},
+  {"id": 7, "t7": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], 2.0))},  // OK
+  {"id": 8, "t8": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], 2.1))},  // null
+  {"id": 9, "t9": (array_flatten([2, 3, null, [7,1, missing, "a"], [8, [12, null, "b", 14, missing]]], 2))},
+  {"id": 10, "t10": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], missing))},
+  {"id": 11, "t11": (array_flatten([2, 3, [7,1,"a"], [8, [12, "b", 14]]], null))},
+  {"id": 12, "t12": (array_flatten(missing, 2))},
+  {"id": 13, "t13": (array_flatten(null, 2))},
+  {"id": 14, "t14": (array_flatten(null, missing))},
+  {"id": 15, "t15": (array_flatten("non_array", 2))},
+  {"id": 16, "t16": (array_flatten([1,2,3, [5,6,7]], "non-numeric"))},
+  {"id": 17, "t17": (select array_flatten(d.followers, 1) from d1 d)}
+] AS d
+SELECT VALUE d
+ORDER BY d.id;

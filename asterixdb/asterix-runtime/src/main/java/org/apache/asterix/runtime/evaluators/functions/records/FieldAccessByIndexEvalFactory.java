@@ -45,44 +45,37 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
-
-    private IScalarEvaluatorFactory recordEvalFactory;
-    private IScalarEvaluatorFactory fieldIndexEvalFactory;
-    private int nullBitmapSize;
-    private ARecordType recordType;
+    private final IScalarEvaluatorFactory recordEvalFactory;
+    private final IScalarEvaluatorFactory fieldIndexEvalFactory;
+    private final int nullBitmapSize;
+    private final ARecordType recordType;
     private final SourceLocation sourceLoc;
 
-    public FieldAccessByIndexEvalFactory(IScalarEvaluatorFactory recordEvalFactory,
+    FieldAccessByIndexEvalFactory(IScalarEvaluatorFactory recordEvalFactory,
             IScalarEvaluatorFactory fieldIndexEvalFactory, ARecordType recordType, SourceLocation sourceLoc) {
         this.recordEvalFactory = recordEvalFactory;
         this.fieldIndexEvalFactory = fieldIndexEvalFactory;
         this.recordType = recordType;
-        this.nullBitmapSize = RecordUtil.computeNullBitmapSize(recordType);
+        this.nullBitmapSize = recordType != null ? RecordUtil.computeNullBitmapSize(recordType) : 0;
         this.sourceLoc = sourceLoc;
     }
 
     @Override
     public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
         return new IScalarEvaluator() {
-            private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-            private DataOutput out = resultStorage.getDataOutput();
-
-            private IPointable inputArg0 = new VoidPointable();
-            private IPointable inputArg1 = new VoidPointable();
-            private IScalarEvaluator eval0 = recordEvalFactory.createScalarEvaluator(ctx);
-            private IScalarEvaluator eval1 = fieldIndexEvalFactory.createScalarEvaluator(ctx);
+            private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+            private final DataOutput out = resultStorage.getDataOutput();
+            private final IPointable inputArg0 = new VoidPointable();
+            private final IPointable inputArg1 = new VoidPointable();
+            private final IScalarEvaluator eval0 = recordEvalFactory.createScalarEvaluator(ctx);
+            private final IScalarEvaluator eval1 = fieldIndexEvalFactory.createScalarEvaluator(ctx);
             private int fieldIndex;
             private int fieldValueOffset;
             private int fieldValueLength;
             private IAType fieldValueType;
             private ATypeTag fieldValueTypeTag;
 
-            /*
-             * inputArg0: the record
-             * inputArg1: the index
-             *
-             * This method outputs into IHyracksTaskContext context [field type tag (1 byte)][the field data]
-             */
+            // inputArg0: the record, inputArg1: the index
             @Override
             public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 try {
@@ -99,7 +92,8 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
                     byte[] indexBytes = inputArg1.getByteArray();
                     int indexOffset = inputArg1.getStartOffset();
 
-                    if (serRecord[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                    if (serRecord[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG || recordType == null) {
+                        // recordType = null should only mean first arg was not a record and compiler couldn't set it
                         throw new TypeMismatchException(sourceLoc, serRecord[offset],
                                 ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     }

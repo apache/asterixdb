@@ -17,17 +17,19 @@
  * under the License.
  */
 
-use TinySocial;
+USE TinySocial;
 
-{
-  "t1": (select array_prepend("sth", 5, t.`referred-topics`) from TweetMessages t order by t.tweetid),
-  "t2": (select array_prepend((select value v.compType from d1 v), [3, "John"])),
-  "t3": (array_prepend(7, null, missing, [3])),     // missing
-  "t4": (array_prepend(5, "non_array")),            // null
-  "t5": (array_prepend(3, 9, null)),                // null
-  "t6": (array_prepend(5, missing, "non_array")),   // missing
-  "t7": (array_prepend(5, 10, 12.0, "sth",[77, "val"])),   // OK
-  "t8": (array_prepend(5, 10, null, "sth",[77, "val"])),   // OK to insert nulls
-  "t9": (array_prepend(3, 9, missing)),              // missing
-  "t10": (select array_prepend("sth1", "sth2", d.followers) from d1 d)
-};
+FROM [
+  {"id": 1, "t1": (select array_prepend("sth", 5, t.`referred-topics`) from TweetMessages t order by t.tweetid)},
+  {"id": 2, "t2": (select array_prepend((select value v.compType from d1 v), [3, "John"]))},
+  {"id": 3, "t3": (array_prepend(7, null, missing, [3]))},     // missing
+  {"id": 4, "t4": (array_prepend(5, "non_array"))},            // null
+  {"id": 5, "t5": (array_prepend(3, 9, null))},                // null
+  {"id": 6, "t6": (array_prepend(5, missing, "non_array"))},   // missing
+  {"id": 7, "t7": (array_prepend(5, 10, 12.0, "sth",[77, "val"]))},   // OK
+  {"id": 8, "t8": (array_prepend(5, 10, null, "sth",[77, "val"]))},   // OK to insert nulls
+  {"id": 9, "t9": (array_prepend(3, 9, missing))},              // missing
+  {"id": 10, "t10": (select array_prepend("sth1", "sth2", d.followers) from d1 d)}
+] AS d
+SELECT VALUE d
+ORDER BY d.id;

@@ -159,12 +159,9 @@ public final class FunctionTypeInferers {
                         IAType t2 = unionT.getActualType();
                         if (t2.getTypeTag() == ATypeTag.OBJECT) {
                             fd.setImmutableStates(t2);
-                            break;
                         }
                     }
-                    throw new NotImplementedException("field-access-by-index for data of type " + t);
-                default:
-                    throw new NotImplementedException("field-access-by-index for data of type " + t);
+                    break;
             }
         }
     }
@@ -191,7 +188,8 @@ public final class FunctionTypeInferers {
                     fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE, listFieldPath);
                     break;
                 default:
-                    throw new NotImplementedException("field-access-nested for data of type " + t);
+                    fd.setImmutableStates(null, listFieldPath);
+                    break;
             }
         }
     }

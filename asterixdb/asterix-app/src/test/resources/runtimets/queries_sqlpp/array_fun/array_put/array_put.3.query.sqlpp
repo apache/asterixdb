@@ -17,18 +17,20 @@
  * under the License.
  */
 
-use TinySocial;
+USE TinySocial;
 
-{
-  "t1": (select array_put(t.`referred-topics`, "t-mobile", 5) from TweetMessages t order by t.tweetid),
-  "t2": (array_put([3], 7, null, missing)),    // missing
-  "t3": (array_put("non_array", 5)),           // null
-  "t4": (array_put("non_array", 5, missing)),  // missing
-  "t5": (array_put([], 5, 10, 12.0, "sth")),   // OK
-  "t6": (array_put(missing, 3, 9)),            // missing
-  "t7": (array_put(null, 3, 9)),               // null
-  "t8": (array_put([3,2,"sth"], 3, 9, 9, 3, "sth")), // OK
-  "t9": (array_put([3,2,"sth"], 1, 5)),     // OK
-  "t10": (array_put([3,2,"sth"], null, 5)),   // null
-  "t11": (select array_put(d.followers, "sth1", "John Green", "sth2") from d1 d)
-};
+FROM [
+  {"id": 1, "t1": (select array_put(t.`referred-topics`, "t-mobile", 5) from TweetMessages t order by t.tweetid)},
+  {"id": 2, "t2": (array_put([3], 7, null, missing))},    // missing
+  {"id": 3, "t3": (array_put("non_array", 5))},           // null
+  {"id": 4, "t4": (array_put("non_array", 5, missing))},  // missing
+  {"id": 5, "t5": (array_put([], 5, 10, 12.0, "sth"))},   // OK
+  {"id": 6, "t6": (array_put(missing, 3, 9))},            // missing
+  {"id": 7, "t7": (array_put(null, 3, 9))},               // null
+  {"id": 8, "t8": (array_put([3,2,"sth"], 3, 9, 9, 3, "sth"))}, // OK
+  {"id": 9, "t9": (array_put([3,2,"sth"], 1, 5))},     // OK
+  {"id": 10, "t10": (array_put([3,2,"sth"], null, 5))},   // null
+  {"id": 11, "t11": (select array_put(d.followers, "sth1", "John Green", "sth2") from d1 d)}
+] AS d
+SELECT VALUE d
+ORDER BY d.id;

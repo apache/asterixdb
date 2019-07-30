@@ -21,10 +21,8 @@ package org.apache.asterix.optimizer.rules;
 
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -45,10 +43,10 @@ import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeTagUtil;
@@ -90,31 +88,17 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
     private final ConstantFoldingVisitor cfv = new ConstantFoldingVisitor();
     private final JobGenContext jobGenCtx;
 
-    // Function Identifier sets that the ConstantFolding rule should skip to apply.
-    // Most of them are record-related functions.
-
-    private static final Set<FunctionIdentifier> FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED =
-            new HashSet<>(ImmutableSet.of(BuiltinFunctions.RECORD_MERGE, BuiltinFunctions.ADD_FIELDS,
-                    BuiltinFunctions.REMOVE_FIELDS, BuiltinFunctions.GET_RECORD_FIELDS,
-                    BuiltinFunctions.GET_RECORD_FIELD_VALUE, BuiltinFunctions.FIELD_ACCESS_NESTED,
-                    BuiltinFunctions.GET_ITEM, BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
-                    BuiltinFunctions.FIELD_ACCESS_BY_INDEX, BuiltinFunctions.CAST_TYPE, BuiltinFunctions.META,
-                    BuiltinFunctions.META_KEY, BuiltinFunctions.RECORD_CONCAT, BuiltinFunctions.RECORD_CONCAT_STRICT,
-                    BuiltinFunctions.RECORD_PAIRS, BuiltinFunctions.PAIRS, BuiltinFunctions.TO_ATOMIC,
-                    BuiltinFunctions.TO_ARRAY)); //Initialize with BUILTIN FUNC ID SET THAT SHOULD NOT BE APPLIED
-
     private static final Map<FunctionIdentifier, IAObject> FUNC_ID_TO_CONSTANT = ImmutableMap
             .of(BuiltinFunctions.NUMERIC_E, new ADouble(Math.E), BuiltinFunctions.NUMERIC_PI, new ADouble(Math.PI));
 
     /**
-     * Throws exceptions in substituiteProducedVariable, setVarType, and one getVarType method.
+     * Throws exceptions in substituteProducedVariable, setVarType, and one getVarType method.
      */
     private static final IVariableTypeEnvironment _emptyTypeEnv = new IVariableTypeEnvironment() {
 
@@ -157,10 +141,6 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
     }
 
-    public static void addNonFoldableFunction(FunctionIdentifier fid) {
-        FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED.add(fid);
-    }
-
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
@@ -195,11 +175,11 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         @Override
         public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
             AbstractLogicalExpression expr = (AbstractLogicalExpression) exprRef.getValue();
-            Pair<Boolean, ILogicalExpression> p = expr.accept(this, null);
-            if (p.first) {
-                exprRef.setValue(p.second);
+            Pair<Boolean, ILogicalExpression> newExpression = expr.accept(this, null);
+            if (newExpression.first) {
+                exprRef.setValue(newExpression.second);
             }
-            return p.first;
+            return newExpression.first;
         }
 
         @Override
@@ -216,30 +196,12 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         @Override
         public Pair<Boolean, ILogicalExpression> visitScalarFunctionCallExpression(ScalarFunctionCallExpression expr,
                 Void arg) throws AlgebricksException {
-            boolean changed = changeRec(expr, arg);
-            if (!checkArgs(expr) || !expr.isFunctional()) {
+            boolean changed = constantFoldArgs(expr, arg);
+            if (!allArgsConstant(expr) || !expr.isFunctional() || !canConstantFold(expr)) {
                 return new Pair<>(changed, expr);
             }
 
-            // Skip Constant Folding for the record-related functions.
-            if (FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED.contains(expr.getFunctionIdentifier())) {
-                return new Pair<>(false, null);
-            }
-
             try {
-                // Current List SerDe assumes a strongly typed list, so we do not constant fold the list constructors
-                // if they are not strongly typed
-                if (expr.getFunctionIdentifier().equals(BuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR)
-                        || expr.getFunctionIdentifier().equals(BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)) {
-                    AbstractCollectionType listType = (AbstractCollectionType) TypeCastUtils.getRequiredType(expr);
-                    if (listType != null && (listType.getItemType().getTypeTag() == ATypeTag.ANY
-                            || listType.getItemType() instanceof AbstractCollectionType)) {
-                        //case1: listType == null,  could be a nested list inside a list<ANY>
-                        //case2: itemType = ANY
-                        //case3: itemType = a nested list
-                        return new Pair<>(false, null);
-                    }
-                }
                 if (expr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
                     ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
                     String str = ConstantExpressionUtil.getStringConstant(expr.getArguments().get(1).getValue());
@@ -285,25 +247,25 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         @Override
         public Pair<Boolean, ILogicalExpression> visitAggregateFunctionCallExpression(
                 AggregateFunctionCallExpression expr, Void arg) throws AlgebricksException {
-            boolean changed = changeRec(expr, arg);
+            boolean changed = constantFoldArgs(expr, arg);
             return new Pair<>(changed, expr);
         }
 
         @Override
         public Pair<Boolean, ILogicalExpression> visitStatefulFunctionCallExpression(
                 StatefulFunctionCallExpression expr, Void arg) throws AlgebricksException {
-            boolean changed = changeRec(expr, arg);
+            boolean changed = constantFoldArgs(expr, arg);
             return new Pair<>(changed, expr);
         }
 
         @Override
         public Pair<Boolean, ILogicalExpression> visitUnnestingFunctionCallExpression(
                 UnnestingFunctionCallExpression expr, Void arg) throws AlgebricksException {
-            boolean changed = changeRec(expr, arg);
+            boolean changed = constantFoldArgs(expr, arg);
             return new Pair<>(changed, expr);
         }
 
-        private boolean changeRec(AbstractFunctionCallExpression expr, Void arg) throws AlgebricksException {
+        private boolean constantFoldArgs(AbstractFunctionCallExpression expr, Void arg) throws AlgebricksException {
             boolean changed = false;
             for (Mutable<ILogicalExpression> r : expr.getArguments()) {
                 Pair<Boolean, ILogicalExpression> p2 = r.getValue().accept(this, arg);
@@ -315,11 +277,46 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             return changed;
         }
 
-        private boolean checkArgs(AbstractFunctionCallExpression expr) {
+        private boolean allArgsConstant(AbstractFunctionCallExpression expr) {
             for (Mutable<ILogicalExpression> r : expr.getArguments()) {
                 if (r.getValue().getExpressionTag() != LogicalExpressionTag.CONSTANT) {
                     return false;
                 }
+            }
+            return true;
+        }
+
+        private boolean canConstantFold(ScalarFunctionCallExpression function) throws AlgebricksException {
+            // skip all functions that would produce records/arrays/multisets (derived types) in their open format
+            // this is because constant folding them will make them closed (currently)
+            if (function.getFunctionIdentifier().equals(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
+                return false;
+            }
+            IAType returnType = (IAType) _emptyTypeEnv.getType(function);
+            return canConstantFoldType(returnType);
+        }
+
+        private boolean canConstantFoldType(IAType returnType) {
+            ATypeTag tag = returnType.getTypeTag();
+            if (tag == ATypeTag.ANY) {
+                // if the function is to return a record (or derived data), that record would (should) be an open record
+                return false;
+            } else if (tag == ATypeTag.OBJECT) {
+                ARecordType recordType = (ARecordType) returnType;
+                if (recordType.isOpen()) {
+                    return false;
+                }
+                IAType[] fieldTypes = recordType.getFieldTypes();
+                for (int i = 0; i < fieldTypes.length; i++) {
+                    if (!canConstantFoldType(fieldTypes[i])) {
+                        return false;
+                    }
+                }
+            } else if (tag.isListType()) {
+                AbstractCollectionType listType = (AbstractCollectionType) returnType;
+                return canConstantFoldType(listType.getItemType());
+            } else if (tag == ATypeTag.UNION) {
+                return canConstantFoldType(((AUnionType) returnType).getActualType());
             }
             return true;
         }

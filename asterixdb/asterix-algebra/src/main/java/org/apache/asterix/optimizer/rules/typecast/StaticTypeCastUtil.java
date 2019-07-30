@@ -42,6 +42,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeHelper;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -54,6 +55,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 /**
@@ -62,17 +64,22 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
  * 1. public static boolean rewriteListExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
  * IVariableTypeEnvironment env) throws AlgebricksException, which only enforces the list type recursively.
  * 2. public static boolean rewriteFuncExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
- * IVariableTypeEnvironment env) throws AlgebricksException, which enforces the list type and the record type recursively.
+ * IVariableTypeEnvironment env) throws AlgebricksException, which enforces the list type and the record type
+ * recursively.
  *
  * @author yingyib
  */
 public class StaticTypeCastUtil {
 
+    private StaticTypeCastUtil() {
+    }
+
     /**
      * This method is only called when funcExpr contains list constructor function calls.
      * The List constructor is very special because a nested list is of type List<ANY>.
-     * However, the bottom-up type inference (InferTypeRule in algebricks) did not infer that so we need this method to enforce the type.
-     * We do not want to break the generality of algebricks so this method is called in an ASTERIX rule: @ IntroduceEnforcedListTypeRule} .
+     * However, the bottom-up type inference (InferTypeRule in algebricks) did not infer that so we need this method to
+     * enforce the type. We do not want to break the generality of algebricks so this method is called in an ASTERIX
+     * rule: @ IntroduceEnforcedListTypeRule.
      *
      * @param funcExpr
      *            record constructor function expression
@@ -120,8 +127,9 @@ public class StaticTypeCastUtil {
      * The open record constructor is very special because
      * 1. a nested list in the open part is of type List<ANY>;
      * 2. a nested record in the open part is of type Open_Record{}.
-     * However, the bottom-up type inference (InferTypeRule in algebricks) did not infer that so we need this method to enforce the type.
-     * We do not want to break the generality of algebricks so this method is called in an ASTERIX rule: @ IntroduceStaticTypeCastRule} .
+     * However, the bottom-up type inference (InferTypeRule in algebricks) did not infer that so we need this method
+     * to enforce the type. We do not want to break the generality of algebricks so this method is called in an
+     * ASTERIX rule: @ IntroduceStaticTypeCastRule
      *
      * @param funcExpr
      *            the function expression whose type needs to be top-down enforced
@@ -137,8 +145,8 @@ public class StaticTypeCastUtil {
     public static boolean rewriteFuncExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
             IVariableTypeEnvironment env) throws AlgebricksException {
         /**
-         * sanity check: if there are list(ordered or unordered)/record variable expressions in the funcExpr, we will not do STATIC type casting
-         * because they are not "statically cast-able".
+         * sanity check: if there are list(ordered or unordered)/record variable expressions in the funcExpr, we will
+         * not do STATIC type casting because they are not "statically cast-able".
          * instead, the record will be dynamically casted at the runtime
          */
         if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
@@ -166,7 +174,7 @@ public class StaticTypeCastUtil {
                 if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) argExpr;
                     IAType exprType = (IAType) env.getType(argFuncExpr);
-                    changed = changed || rewriteFuncExpr(argFuncExpr, exprType, exprType, env);
+                    changed = rewriteFuncExpr(argFuncExpr, exprType, exprType, env) || changed;
                 }
             }
             if (!compatible(reqType, inputType)) {
@@ -225,40 +233,44 @@ public class StaticTypeCastUtil {
 
         TypeCastUtils.setRequiredAndInputTypes(funcExpr, requiredListType, inputListType);
         List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
-
+        // TODO: if required type = [bigint], input type = [small_int], how is this method enforcing that?
+        // TODO: it seems it's only concerned with dealing with complex types items (records,lists)
         IAType requiredItemType = requiredListType.getItemType();
         IAType inputItemType = inputListType.getItemType();
         boolean changed = false;
         for (int j = 0; j < args.size(); j++) {
-            ILogicalExpression arg = args.get(j).getValue();
+            Mutable<ILogicalExpression> argRef = args.get(j);
+            ILogicalExpression arg = argRef.getValue();
             IAType currentItemType = (inputItemType == null || inputItemType == BuiltinType.ANY)
                     ? (IAType) env.getType(arg) : inputItemType;
             switch (arg.getExpressionTag()) {
                 case FUNCTION_CALL:
                     ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) arg;
                     changed |= rewriteFuncExpr(argFunc, requiredItemType, currentItemType, env);
-                    changed |= castItem(requiredItemType, currentItemType, argFunc, args.get(j));
+                    changed |= castItem(argRef, argFunc, requiredItemType, env);
                     break;
                 case VARIABLE:
-                    changed |= injectCastToRelaxType(args.get(j), currentItemType, env);
+                    // TODO(ali): why are we always casting to an open type without considering "requiredItemType"?
+                    changed |= injectCastToRelaxType(argRef, currentItemType, env);
                     break;
             }
         }
         return changed;
     }
 
-    private static boolean castItem(IAType requiredItemType, IAType currentItemType,
-            ScalarFunctionCallExpression itemExpr, Mutable<ILogicalExpression> itemExprRef) throws AlgebricksException {
-        if (TypeResolverUtil.needsCast(requiredItemType, currentItemType) && shouldCast(itemExpr)) {
-            injectCastFunction(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE), requiredItemType,
-                    currentItemType, itemExprRef, itemExpr);
+    private static boolean castItem(Mutable<ILogicalExpression> itemExprRef, ScalarFunctionCallExpression itemExpr,
+            IAType requiredItemType, IVariableTypeEnvironment env) throws AlgebricksException {
+        IAType itemType = (IAType) env.getType(itemExpr);
+        if (TypeResolverUtil.needsCast(requiredItemType, itemType) && !satisfied(requiredItemType, itemType)) {
+            injectCastFunction(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE), requiredItemType, itemType,
+                    itemExprRef, itemExpr);
             return true;
         }
         return false;
     }
 
-    private static boolean shouldCast(ScalarFunctionCallExpression itemExpr) {
-        return TypeCastUtils.getRequiredType(itemExpr) == null;
+    private static boolean satisfied(IAType required, IAType actual) {
+        return required.getTypeTag() == ATypeTag.ANY && TypeHelper.isFullyOpen(actual);
     }
 
     /**
@@ -481,56 +493,66 @@ public class StaticTypeCastUtil {
         return -1;
     }
 
-    private static boolean injectCastToRelaxType(Mutable<ILogicalExpression> expRef, IAType inputFieldType,
+    // casts exprRef (which is either a function call or a variable) to fully open if it is not already fully open
+    private static boolean injectCastToRelaxType(Mutable<ILogicalExpression> expRef, IAType expType,
             IVariableTypeEnvironment env) throws AlgebricksException {
         ILogicalExpression argExpr = expRef.getValue();
-        List<LogicalVariable> parameterVars = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> parameterVars = new ArrayList<>();
         argExpr.getUsedVariables(parameterVars);
-        // we need to handle open fields recursively by their default
-        // types
-        // for list, their item type is any
-        // for record, their
         boolean castInjected = false;
         if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL
                 || argExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-            IAType reqFieldType = inputFieldType;
+            IAType exprActualType = expType;
+            if (expType.getTypeTag() == ATypeTag.UNION) {
+                exprActualType = ((AUnionType) expType).getActualType();
+            }
+            IAType requiredType = exprActualType;
             // do not enforce nested type in the case of no-used variables
-            switch (inputFieldType.getTypeTag()) {
+            switch (exprActualType.getTypeTag()) {
                 case OBJECT:
-                    reqFieldType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+                    requiredType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
                     break;
                 case ARRAY:
-                    reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
+                    requiredType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
                     break;
                 case MULTISET:
-                    reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
+                    requiredType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
                     break;
                 default:
                     break;
             }
-            // do not enforce nested type in the case of no-used variables
-            if (!inputFieldType.equals(reqFieldType) && !parameterVars.isEmpty()) {
-                //inject dynamic type casting
-                injectCastFunction(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE), reqFieldType,
-                        inputFieldType, expRef, argExpr);
+            // add cast(expr) if the expr is a variable or using a variable or non constructor function call expr.
+            // skip if expr is a constructor with values where you can traverse and cast fields/items individually
+            if (!exprActualType.equals(requiredType) && (!parameterVars.isEmpty() || !isComplexConstructor(argExpr))) {
+                injectCastFunction(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE), requiredType, expType,
+                        expRef, argExpr);
                 castInjected = true;
             }
             //recursively rewrite function arguments
             if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL
-                    && TypeCastUtils.getRequiredType((AbstractFunctionCallExpression) argExpr) == null
-                    && reqFieldType != null) {
+                    && TypeCastUtils.getRequiredType((AbstractFunctionCallExpression) argExpr) == null) {
+                AbstractFunctionCallExpression argFunc = (AbstractFunctionCallExpression) argExpr;
                 if (castInjected) {
                     //rewrite the arg expression inside the dynamic cast
-                    ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
-                    rewriteFuncExpr(argFunc, inputFieldType, inputFieldType, env);
+                    rewriteFuncExpr(argFunc, exprActualType, exprActualType, env);
                 } else {
                     //rewrite arg
-                    ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
-                    rewriteFuncExpr(argFunc, reqFieldType, inputFieldType, env);
+                    rewriteFuncExpr(argFunc, requiredType, exprActualType, env);
                 }
             }
         }
         return castInjected;
+    }
+
+    private static boolean isComplexConstructor(ILogicalExpression expression) {
+        if (expression.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            FunctionIdentifier funIdentifier = ((AbstractFunctionCallExpression) expression).getFunctionIdentifier();
+            return funIdentifier.equals(BuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR)
+                    || funIdentifier.equals(BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)
+                    || funIdentifier.equals(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)
+                    || funIdentifier.equals(BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR);
+        }
+        return false;
     }
 
     /**
@@ -546,12 +568,13 @@ public class StaticTypeCastUtil {
      *            the expression reference
      * @param argExpr
      *            the original expression
-     * @throws AlgebricksException
+     * @throws AlgebricksException if types are incompatible (tag-wise)
      */
     private static void injectCastFunction(IFunctionInfo funcInfo, IAType reqType, IAType inputType,
             Mutable<ILogicalExpression> exprRef, ILogicalExpression argExpr) throws AlgebricksException {
         ScalarFunctionCallExpression cast = new ScalarFunctionCallExpression(funcInfo);
-        cast.getArguments().add(new MutableObject<ILogicalExpression>(argExpr));
+        cast.getArguments().add(new MutableObject<>(argExpr));
+        cast.setSourceLocation(argExpr.getSourceLocation());
         exprRef.setValue(cast);
         TypeCastUtils.setRequiredAndInputTypes(cast, reqType, inputType);
     }
@@ -576,8 +599,8 @@ public class StaticTypeCastUtil {
                 return false;
             }
         }
-        Set<IAType> reqTypePossible = new HashSet<IAType>();
-        Set<IAType> inputTypePossible = new HashSet<IAType>();
+        Set<IAType> reqTypePossible = new HashSet<>();
+        Set<IAType> inputTypePossible = new HashSet<>();
         if (reqType.getTypeTag() == ATypeTag.UNION) {
             AUnionType unionType = (AUnionType) reqType;
             reqTypePossible.addAll(unionType.getUnionList());

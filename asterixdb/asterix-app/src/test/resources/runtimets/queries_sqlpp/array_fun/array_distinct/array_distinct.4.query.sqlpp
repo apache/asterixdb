@@ -22,11 +22,13 @@
 * Expected Res : Success
 */
 
-use TinySocial;
+USE TinySocial;
 
-{
-  "t1": (array_distinct([ [5,1], [6,2], [9,7], [6,2], [10,11], [6,2], [0,0] ])),
-  "t2": (array_distinct([ {"id": 1, "age": 34}, {"id": 2, "age": 29}, {"id": 3, "age": 90}, {"id": 2, "age": 29}, {"id": 1, "age": 34}])),
-  "t3": (from openDs select array_distinct(list_f) order by id),
-  "t4": (from closedDs select array_distinct(list_f) order by id)
-};
+FROM [
+  {"id": 1, "t1": (array_distinct([ [5,1], [6,2], [9,7], [6,2], [10,11], [6,2], [0,0] ]))},
+  {"id": 2, "t2": (array_distinct([ {"id": 1, "age": 34}, {"id": 2, "age": 29}, {"id": 3, "age": 90}, {"id": 2, "age": 29}, {"id": 1, "age": 34}]))},
+  {"id": 3, "t3": (from openDs select array_distinct(list_f) order by id)},
+  {"id": 4, "t4": (from closedDs select array_distinct(list_f) order by id)}
+] AS d
+SELECT VALUE d
+ORDER BY d.id;

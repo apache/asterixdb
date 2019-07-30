@@ -1,1 +1,1 @@
-{ "t1": [ true, true, true, true, true ], "t2": "1", "t3": { "b": "1" }, "t4": [ 1, 2 ], "t5": [ { "$1": "en" } ] }
+{ "t1": [ true, true, true, true, true ], "t2": "1", "t3": { "b": "1" }, "t4": [ 1, 2 ] }

@@ -17,32 +17,34 @@
  * under the License.
  */
 
-use TinySocial;
+USE TinySocial;
 
-{
-  "t1": (select array_replace(t.`referred-topics`, "t-mobile", "coffee-mobile") from TweetMessages t order by t.tweetid),
-  "t2": (array_replace([3,-2,1,5,2,9,2,3,2,1,2], 2, -2)),
-  "t3": (array_replace([3,-2,1,5,2,9,2,3,2,1,2], 2.0, -4)),
-  "t4": (array_replace([3,-2,1,5,"2",9,2,3,2,1,2], 2.0, -4)),
-  "t5": (array_replace([3,-2,"a",5,"2",9,"a",3,"A",1,2], "a", -2)),
-  "t6": (array_replace([3,-2,"a",5,"2",9,[2,3,"A"],1,2], 2, -2)),
-  "t7": (array_replace([3,-2,"a",5,"2",9,[2,3,"A"],1,2], 2, [-2])),
-  "t8": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 3)),
-  "t9": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 0)),
-  "t10": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 4)),
-  "t11": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 5)),
-  "t12": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 10)),
-  "t13": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, -3)),
-  "t14": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 1.0)),
-  "t15": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 1.2)),
-  "t16": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, "4")),
-  "t17": (array_replace("non_array", 1, -5, 3)),
-  "t18": (array_replace([], 1, -5, 3)),
-  "t19": (array_replace([3,2], 1, -5, 3)),
-  "t20": (array_replace([3,2,3], 3, missing, 8)),
-  "t21": (array_replace([3,2,3], 3, null, 8)),
-  "t22": (array_replace([3,2], null, 3, 3)),
-  "t23": (array_replace([3,null,2], null, 3, 3)),
-  "t24": (array_replace(missing, null, 3, 3)),
-  "t25": (select array_replace(d.followers, "Emily Jones", "sth") from d1 d)
-};
+FROM [
+  {"id": 1, "t1": (select array_replace(t.`referred-topics`, "t-mobile", "coffee-mobile") from TweetMessages t order by t.tweetid)},
+  {"id": 2, "t2": (array_replace([3,-2,1,5,2,9,2,3,2,1,2], 2, -2))},
+  {"id": 3, "t3": (array_replace([3,-2,1,5,2,9,2,3,2,1,2], 2.0, -4))},
+  {"id": 4, "t4": (array_replace([3,-2,1,5,"2",9,2,3,2,1,2], 2.0, -4))},
+  {"id": 5, "t5": (array_replace([3,-2,"a",5,"2",9,"a",3,"A",1,2], "a", -2))},
+  {"id": 6, "t6": (array_replace([3,-2,"a",5,"2",9,[2,3,"A"],1,2], 2, -2))},
+  {"id": 7, "t7": (array_replace([3,-2,"a",5,"2",9,[2,3,"A"],1,2], 2, [-2]))},
+  {"id": 8, "t8": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 3))},
+  {"id": 9, "t9": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 0))},
+  {"id": 10, "t10": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 4))},
+  {"id": 11, "t11": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 5))},
+  {"id": 12, "t12": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 10))},
+  {"id": 13, "t13": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, -3))},
+  {"id": 14, "t14": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 1.0))},
+  {"id": 15, "t15": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, 1.2))},
+  {"id": 16, "t16": (array_replace([3,1,1,2,2,1,2,1,1], 1, -5, "4"))},
+  {"id": 17, "t17": (array_replace("non_array", 1, -5, 3))},
+  {"id": 18, "t18": (array_replace([], 1, -5, 3))},
+  {"id": 19, "t19": (array_replace([3,2], 1, -5, 3))},
+  {"id": 20, "t20": (array_replace([3,2,3], 3, missing, 8))},
+  {"id": 21, "t21": (array_replace([3,2,3], 3, null, 8))},
+  {"id": 22, "t22": (array_replace([3,2], null, 3, 3))},
+  {"id": 23, "t23": (array_replace([3,null,2], null, 3, 3))},
+  {"id": 24, "t24": (array_replace(missing, null, 3, 3))},
+  {"id": 25, "t25": (select array_replace(d.followers, "Emily Jones", "sth") from d1 d)}
+] AS d
+SELECT VALUE d
+ORDER BY d.id;

@@ -17,20 +17,16 @@
  * under the License.
  */
 
-USE TinySocial;
+/*
+ * Description  : Testing object_unwrap under different queries.
+ * Expected Res : Success
+ */
 
-FROM [
-  {"id": 1, "t1": (select array_sort(t.`referred-topics`) from TweetMessages t order by t.tweetid)},
-  {"id": 2, "t2": (array_sort([19, 5, 7, 7, 5, 2]))},
-  {"id": 3, "t3": (array_sort([19, 5, 7, 7, 5.1, 5.0, 2]))},
-  {"id": 4, "t4": (array_sort([19, 5, "a", 7.5, "A", "John", "a"]))},
-  {"id": 5, "t5": (array_sort([19, missing, 7, null, 5, null]))},
-  {"id": 6, "t6": (array_sort([3]))},
-  {"id": 7, "t7": (array_sort("non_array"))},
-  {"id": 8, "t8": (array_sort([]))},
-  {"id": 9, "t9": (array_sort(missing))},
-  {"id": 10, "t10": (array_sort(null))},
-  {"id": 11, "t11": (select array_sort(d.followers) from d1 d)}
-] AS d
-SELECT VALUE d
-ORDER BY d.id;
+use TinySocial;
+
+select object_unwrap(o) from (
+    select lang
+    from TwitterUsers u
+    order by lang
+    limit 1
+) o;

@@ -1,1 +1,4 @@
-{ "t1": [ [ 5, 1 ], [ 6, 2 ], [ 9, 7 ], [ 10, 11 ], [ 0, 0 ] ], "t2": [ { "id": 1, "age": 34 }, { "id": 2, "age": 29 }, { "id": 3, "age": 90 } ], "t3": [ { "$1": [ [ 1, 2, 1 ], [ 9999, 3 ], [ 5, 1 ], [ 4, 2 ], [ 1, 2 ] ] }, { "$1": [ [ "white", "blue", "magenta" ], [ "red", "black" ], [ "blue", "orange" ] ] }, { "$1": [ { "state": "OH", "country": "US" }, { "state": "CA", "country": "US", "zip_code": 92863 } ] }, { "$1": null }, {  } ], "t4": [ { "$2": [ { "state": "OH", "country": "US" }, { "state": "CA", "country": "US", "zip_code": 92863 } ] } ] }
+{ "id": 1, "t1": [ [ 5, 1 ], [ 6, 2 ], [ 9, 7 ], [ 10, 11 ], [ 0, 0 ] ] }
+{ "id": 2, "t2": [ { "id": 1, "age": 34 }, { "id": 2, "age": 29 }, { "id": 3, "age": 90 } ] }
+{ "id": 3, "t3": [ { "$1": [ [ 1, 2, 1 ], [ 9999, 3 ], [ 5, 1 ], [ 4, 2 ], [ 1, 2 ] ] }, { "$1": [ [ "white", "blue", "magenta" ], [ "red", "black" ], [ "blue", "orange" ] ] }, { "$1": [ { "state": "OH", "country": "US" }, { "state": "CA", "country": "US", "zip_code": 92863 } ] }, { "$1": null }, {  } ] }
+{ "id": 4, "t4": [ { "$2": [ { "state": "OH", "country": "US" }, { "state": "CA", "country": "US", "zip_code": 92863 } ] } ] }

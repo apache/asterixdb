@@ -17,27 +17,29 @@
  * under the License.
  */
 
-use TinySocial;
+USE TinySocial;
 
-{
-  "t1": (array_range(1,6)),
-  "t2": (array_range(0,25,5)),
-  "t3": (array_range(0.1,2)),
-  "t4": (array_range(10, 3, -3)),
-  "t5": (array_range(-1, -8, -3)),
-  "t6": (array_range(1, 8, -3)),
-  "t7": (array_range(10, 2, 3)),
-  "t8": (array_range(1, 13, 0)),
-  "t9": (array_range(2, 2, 1)),
-  "t10": (array_range(2, 3, 1)),
-  "t11": (array_range(2, 9, 1.1)),
-  "t12": (array_range(2, 9, null)),
-  "t13": (array_range(2, missing, 1)),
-  "t14": (array_range(2, missing)),
-  "t15": (array_range(2, 7, "a")),
-  "t16": (array_range(2, "a", 1)),
-  "t17": (array_range("a", 7, 1)),
-  "t18": (array_range(5, 10, float("NaN"))),
-  "t19": (array_range(5, float("INF"), 1)),
-  "t20": (array_range(5, float("-INF"), -2))
-};
+FROM [
+  {"id": 1, "t1": (array_range(1,6))},
+  {"id": 2, "t2": (array_range(0,25,5))},
+  {"id": 3, "t3": (array_range(0.1,2))},
+  {"id": 4, "t4": (array_range(10, 3, -3))},
+  {"id": 5, "t5": (array_range(-1, -8, -3))},
+  {"id": 6, "t6": (array_range(1, 8, -3))},
+  {"id": 7, "t7": (array_range(10, 2, 3))},
+  {"id": 8, "t8": (array_range(1, 13, 0))},
+  {"id": 9, "t9": (array_range(2, 2, 1))},
+  {"id": 10, "t10": (array_range(2, 3, 1))},
+  {"id": 11, "t11": (array_range(2, 9, 1.1))},
+  {"id": 12, "t12": (array_range(2, 9, null))},
+  {"id": 13, "t13": (array_range(2, missing, 1))},
+  {"id": 14, "t14": (array_range(2, missing))},
+  {"id": 15, "t15": (array_range(2, 7, "a"))},
+  {"id": 16, "t16": (array_range(2, "a", 1))},
+  {"id": 17, "t17": (array_range("a", 7, 1))},
+  {"id": 18, "t18": (array_range(5, 10, float("NaN")))},
+  {"id": 19, "t19": (array_range(5, float("INF"), 1))},
+  {"id": 20, "t20": (array_range(5, float("-INF"), -2))}
+] AS d
+SELECT VALUE d
+ORDER BY d.id;

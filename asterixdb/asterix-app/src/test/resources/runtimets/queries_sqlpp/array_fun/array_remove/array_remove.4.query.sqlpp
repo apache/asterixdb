@@ -22,12 +22,14 @@
 * Expected Res : Success
 */
 
-use TinySocial;
+USE TinySocial;
 
-{
-  "t1": (array_remove([1,2,3, [9,8], ["str1", "str2"], [90,100]], [9,8], [90,100])),
-  "t2": (array_remove([ [5,1,2] , [3,2] , [90,100] ], [3,2], [80,100])),
-  "t3": (array_remove([ {"id": 1, "age": 34}, {"id": 2, "age": 29}, {"id": 3, "age": 90}], {"id": 4, "age": 90}, {"id": 2, "age": 29})),
-  "t4": (from openDs select array_remove(list_f, [9999,3], {"state": "OH", "country": "US"}) order by id),
-  "t5": (from closedDs select array_remove(list_f, [9999,3], {"state": "OH", "country": "US"}) order by id)
-};
+FROM [
+  {"id": 1, "t1": (array_remove([1,2,3, [9,8], ["str1", "str2"], [90,100]], [9,8], [90,100]))},
+  {"id": 2, "t2": (array_remove([ [5,1,2] , [3,2] , [90,100] ], [3,2], [80,100]))},
+  {"id": 3, "t3": (array_remove([ {"id": 1, "age": 34}, {"id": 2, "age": 29}, {"id": 3, "age": 90}], {"id": 4, "age": 90}, {"id": 2, "age": 29}))},
+  {"id": 4, "t4": (from openDs select array_remove(list_f, [9999,3], {"state": "OH", "country": "US"}) order by id)},
+  {"id": 5, "t5": (from closedDs select array_remove(list_f, [9999,3], {"state": "OH", "country": "US"}) order by id)}
+] AS d
+SELECT VALUE d
+ORDER BY d.id;

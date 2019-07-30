@@ -35,14 +35,5 @@ use TinySocial;
 
   "t2": object_unwrap({"a":"1"}),
   "t3": object_unwrap({"a":{"b":"1"}}),
-  "t4": object_unwrap({"a":[1, 2]}),
-
-  "t5": (
-    select object_unwrap(o) from (
-      select lang
-      from TwitterUsers u
-      order by lang
-      limit 1
-    ) o
-  )
+  "t4": object_unwrap({"a":[1, 2]})
 };
