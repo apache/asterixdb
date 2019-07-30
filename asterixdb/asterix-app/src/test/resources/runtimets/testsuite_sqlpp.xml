@@ -12363,6 +12363,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="plan-warning">
+        <output-dir compare="Text">plan-warning</output-dir>
+        <expected-warn>HYR10007: Encountered a cross product join</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="warnings" check-warnings="true">
       <compilation-unit name="unknown-hint-warning">
         <output-dir compare="Text">unknown-hint-warning</output-dir>
         <expected-warn>ASX1107: Unknown hint: unknown_hint_groupby. Supported hints are: hash</expected-warn>

@@ -361,6 +361,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         }
 
         SelectExpression copy = new SelectExpression(lets, select, orderby, limit, selectExpression.isSubquery());
+        copy.setSourceLocation(select.getSourceLocation());
         copy.addHints(selectExpression.getHints());
 
         return copy;
