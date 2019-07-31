@@ -52,7 +52,7 @@
             <configuration>
               <target>
                 <concat destfile="${project.build.directory}/generated-site/markdown/sqlpp/manual.md">
-                  <filelist dir="${project.basedir}/src/main/markdown/sqlpp" files="0_toc.md,1_intro.md,2_expr_title.md,2_expr.md,3_query_title.md,3_declare_dataverse.md,3_declare_function.md,3_query.md,4_error_title.md,4_error.md,5_ddl_head.md,5_ddl_dataset_index.md,5_ddl_function_removal.md,5_ddl_dml.md,appendix_1_title.md,appendix_1_keywords.md,appendix_2_title.md,appendix_2_parameters.md,appendix_2_index_only.md,appendix_3_title.md,appendix_3_resolution.md" />
+                  <filelist dir="${project.basedir}/src/main/markdown/sqlpp" files="0_toc.md,1_intro.md,2_expr_title.md,2_expr.md,3_query_title.md,3_declare_dataverse.md,3_declare_function.md,3_query.md,4_error_title.md,4_error.md,5_ddl_head.md,5_ddl_dataset_index.md,5_ddl_function_removal.md,5_ddl_dml.md,appendix_1_title.md,appendix_1_keywords.md,appendix_2_title.md,appendix_2_parameters.md,appendix_2_parallel_sort.md,appendix_2_index_only.md,appendix_3_title.md,appendix_3_resolution.md" />
                 </concat>
                 <concat destfile="${project.build.directory}/generated-site/markdown/sqlpp/builtins.md">
                   <filelist dir="${project.basedir}/src/main/markdown/builtins" files="0_toc.md,0_toc_sqlpp.md,0_toc_common.md,1_numeric_common.md,1_numeric_delta.md,2_string_common.md,2_string_delta.md,3_binary.md,4_spatial.md,5_similarity.md,6_tokenizing.md,7_temporal.md,7_allens.md,8_record.md,9_aggregate_sql.md,10_comparison.md,11_type.md,13_conditional.md,12_misc.md,15_bitwise.md,14_window.md" />

@@ -91,3 +91,4 @@ If there is no user-provided suffix, "B" is the default suffix. See the followin
 
     SELECT u.name AS uname, m.message AS message
     FROM GleambookUsers u JOIN GleambookMessages m ON m.authorId = u.id;
+
