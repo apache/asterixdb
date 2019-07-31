@@ -168,7 +168,7 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         numTuples[partition]--;
     }
 
-    private static int calculateActualSize(int[] fieldEndOffsets, int size) {
+    public static int calculateActualSize(int[] fieldEndOffsets, int size) {
         if (fieldEndOffsets != null) {
             return FrameHelper.calcRequiredSpace(fieldEndOffsets.length, size);
         }
@@ -204,7 +204,7 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
 
     private int appendTupleToBuffer(BufferInfo bufferInfo, int[] fieldEndOffsets, byte[] byteArray, int start, int size)
             throws HyracksDataException {
-        assert (bufferInfo.getStartOffset() == 0) : "Haven't supported yet in FrameTupleAppender";
+        assert bufferInfo.getStartOffset() == 0 : "Haven't supported yet in FrameTupleAppender";
         if (bufferInfo.getBuffer() != appendFrame.getBuffer()) {
             appendFrame.reset(bufferInfo.getBuffer());
             appender.reset(appendFrame, false);

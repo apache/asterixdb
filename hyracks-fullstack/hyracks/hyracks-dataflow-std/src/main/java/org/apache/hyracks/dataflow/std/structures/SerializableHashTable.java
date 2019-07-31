@@ -48,15 +48,16 @@ public class SerializableHashTable extends SimpleSerializableHashTable {
             ISimpleFrameBufferManager bufferManager, double garbageCollectionThreshold) throws HyracksDataException {
         super(tableSize, ctx, false);
         this.bufferManager = bufferManager;
-
-        ByteBuffer newFrame = getFrame(frameSize);
-        if (newFrame == null) {
-            throw new HyracksDataException("Can't allocate a frame for Hash Table. Please allocate more budget.");
+        if (tableSize > 0) {
+            ByteBuffer newFrame = getFrame(frameSize);
+            if (newFrame == null) {
+                throw new HyracksDataException("Can't allocate a frame for Hash Table. Please allocate more budget.");
+            }
+            IntSerDeBuffer frame = new IntSerDeBuffer(newFrame);
+            frameCapacity = frame.capacity();
+            contents.add(frame);
+            currentOffsetInEachFrameList.add(0);
         }
-        IntSerDeBuffer frame = new IntSerDeBuffer(newFrame);
-        frameCapacity = frame.capacity();
-        contents.add(frame);
-        currentOffsetInEachFrameList.add(0);
         this.garbageCollectionThreshold = garbageCollectionThreshold;
     }
 
