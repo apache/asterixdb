@@ -28,9 +28,7 @@ import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
-import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Literal;
-import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.literal.DoubleLiteral;
@@ -38,7 +36,6 @@ import org.apache.asterix.lang.common.literal.FloatLiteral;
 import org.apache.asterix.lang.common.literal.IntegerLiteral;
 import org.apache.asterix.lang.common.literal.LongIntegerLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
-import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableFloat;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -60,34 +57,25 @@ public class RangeMapBuilder {
     private RangeMapBuilder() {
     }
 
-    public static RangeMap parseHint(IParser parser) throws CompilationException {
-        ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
-        DataOutput out = abvs.getDataOutput();
-        abvs.reset();
-
-        List<Statement> hintStatements = parser.parse();
-        if (hintStatements.size() != 1) {
-            throw new CompilationException("Only one range statement is allowed for the range hint.");
-        }
-
-        // Translate the query into a Range Map
-        if (hintStatements.get(0).getKind() != Statement.Kind.QUERY) {
-            throw new CompilationException("Not a proper query for the range hint.");
-        }
-        Query q = (Query) hintStatements.get(0);
-
-        if (q.getBody().getKind() != Kind.LIST_CONSTRUCTOR_EXPRESSION) {
+    public static RangeMap parseHint(Expression expression) throws CompilationException {
+        if (expression.getKind() != Kind.LIST_CONSTRUCTOR_EXPRESSION) {
             throw new CompilationException("The range hint must be a list.");
         }
-        List<Expression> el = ((ListConstructor) q.getBody()).getExprList();
+
+        ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
+        DataOutput out = abvs.getDataOutput();
+
+        List<Expression> el = ((ListConstructor) expression).getExprList();
         int[] offsets = new int[el.size()];
 
         // Loop over list of literals
         for (int i = 0; i < el.size(); ++i) {
             Expression item = el.get(i);
             if (item.getKind() == Kind.LITERAL_EXPRESSION) {
-                parseLiteralToBytes(item, out);
+                parseLiteralToBytes((LiteralExpr) item, out);
                 offsets[i] = abvs.getLength();
+            } else {
+                throw new CompilationException("Expected literal in the range hint");
             }
             // TODO Add support for composite fields.
         }
@@ -96,7 +84,7 @@ public class RangeMapBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    private static void parseLiteralToBytes(Expression item, DataOutput out) throws CompilationException {
+    private static void parseLiteralToBytes(LiteralExpr item, DataOutput out) throws CompilationException {
         AMutableDouble aDouble = new AMutableDouble(0);
         AMutableFloat aFloat = new AMutableFloat(0);
         AMutableInt64 aInt64 = new AMutableInt64(0);
@@ -105,7 +93,7 @@ public class RangeMapBuilder {
         @SuppressWarnings("rawtypes")
         ISerializerDeserializer serde;
 
-        Literal l = ((LiteralExpr) item).getValue();
+        Literal l = item.getValue();
         try {
             switch (l.getLiteralType()) {
                 case DOUBLE:

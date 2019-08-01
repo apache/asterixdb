@@ -213,10 +213,6 @@ class AQLParser extends ScopeChecker implements IParser {
         return s.substring(1).trim();
     }
 
-    private static IParser createNewParser(String statement) {
-        return new AQLParser(statement);
-    }
-
     private static void checkBindingVariable(Expression returnExpression, VariableExpr var,
                                              ILangExpression bodyExpression) throws ParseException {
        if (returnExpression != null && var == null) {
@@ -286,8 +282,30 @@ class AQLParser extends ScopeChecker implements IParser {
     }
 
     public List<Statement> parse() throws CompilationException {
+        return parseImpl(new ParseFunction<List<Statement>>() {
+            @Override
+            public List<Statement> parse() throws ParseException {
+                return AQLParser.this.Statement();
+            }
+        });
+    }
+
+    private Expression parseExpression() throws CompilationException {
+        return parseImpl(new ParseFunction<Expression>() {
+            @Override
+            public Expression parse() throws ParseException {
+                return AQLParser.this.Expression();
+            }
+        });
+    }
+
+    private static Expression parseExpression(String text) throws CompilationException {
+        return new AQLParser(text).parseExpression();
+    }
+
+    private <T> T parseImpl(ParseFunction<T> parseFunction) throws CompilationException {
         try {
-            return Statement();
+            return parseFunction.parse();
         } catch (Error e) {
             // this is here as the JavaCharStream that's below the lexer somtimes throws Errors that are not handled
             // by the ANTLR-generated lexer or parser (e.g it does this for invalid backslash u + 4 hex digits escapes)
@@ -295,6 +313,11 @@ class AQLParser extends ScopeChecker implements IParser {
         } catch (ParseException e){
             throw new CompilationException(e.getMessage());
         }
+    }
+
+    @FunctionalInterface
+    private interface ParseFunction<T> {
+        T parse() throws ParseException;
     }
 }
 
@@ -2421,10 +2444,9 @@ Clause OrderbyClause()throws ParseException :
             int numTuples = Integer.parseInt(splits[2]);
             oc.setNumFrames(numFrames);
             oc.setNumTuples(numTuples);
-          }
-          if (hint.startsWith(RANGE_HINT)) {
-            try{
-              oc.setRangeMap(RangeMapBuilder.parseHint(createNewParser(hint.substring(RANGE_HINT.length()))));
+          } else if (hint.startsWith(RANGE_HINT)) {
+            try {
+              oc.setRangeMap(RangeMapBuilder.parseHint(parseExpression(hint.substring(RANGE_HINT.length()))));
             } catch (CompilationException e) {
               throw new ParseException(e.getMessage());
             }

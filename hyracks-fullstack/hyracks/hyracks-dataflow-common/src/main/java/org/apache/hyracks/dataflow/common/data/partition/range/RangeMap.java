@@ -126,4 +126,9 @@ public class RangeMap implements Serializable {
         return fields == other.fields && Arrays.equals(endOffsets, other.endOffsets)
                 && Arrays.equals(bytes, other.bytes);
     }
+
+    @Override
+    public String toString() {
+        return "{SPLIT:" + getSplitCount() + '}';
+    }
 }

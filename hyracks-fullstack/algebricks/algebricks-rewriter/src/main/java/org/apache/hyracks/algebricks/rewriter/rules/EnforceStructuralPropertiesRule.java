@@ -71,7 +71,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExc
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionExchangePOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SequentialMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SortForwardPOperator;
@@ -450,7 +449,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             return false;
         }
         AbstractStableSortPOperator sortOp = (AbstractStableSortPOperator) op.getPhysicalOperator();
-        sortOp.computeLocalProperties(op);
+        sortOp.computeLocalProperties((OrderOperator) op);
         ILocalStructuralProperty orderProp = sortOp.getOrderProperty();
         return PropertiesUtil.matchLocalProperties(Collections.singletonList(orderProp), delivered.getLocalProperties(),
                 context.getEquivalenceClassMap(op), context.getFDList(op));
@@ -581,7 +580,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             IPhysicalOperator pop;
             switch (pp.getPartitioningType()) {
                 case UNPARTITIONED: {
-                    pop = createMergingConnector(op, domain, deliveredByChild);
+                    pop = createMergingConnector(deliveredByChild);
                     break;
                 }
                 case UNORDERED_PARTITIONED: {
@@ -622,28 +621,18 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private IPhysicalOperator createMergingConnector(ILogicalOperator parentOp, INodeDomain domain,
-            IPhysicalPropertiesVector deliveredByChild) {
-        IPhysicalOperator mergingConnector;
+    private IPhysicalOperator createMergingConnector(IPhysicalPropertiesVector deliveredByChild) {
         List<OrderColumn> ordCols = computeOrderColumns(deliveredByChild);
         if (ordCols.isEmpty()) {
             IPartitioningProperty partitioningDeliveredByChild = deliveredByChild.getPartitioningProperty();
             if (partitioningDeliveredByChild.getPartitioningType() == PartitioningType.ORDERED_PARTITIONED) {
-                mergingConnector = new SequentialMergeExchangePOperator();
+                return new SequentialMergeExchangePOperator();
             } else {
-                mergingConnector = new RandomMergeExchangePOperator();
+                return new RandomMergeExchangePOperator();
             }
         } else {
-            if (parentOp.getAnnotations().containsKey(OperatorAnnotations.USE_STATIC_RANGE)) {
-                RangeMap rangeMap = (RangeMap) parentOp.getAnnotations().get(OperatorAnnotations.USE_STATIC_RANGE);
-                mergingConnector = new RangePartitionMergeExchangePOperator(ordCols, domain, rangeMap);
-            } else {
-                OrderColumn[] sortColumns = new OrderColumn[ordCols.size()];
-                sortColumns = ordCols.toArray(sortColumns);
-                mergingConnector = new SortMergeExchangePOperator(sortColumns);
-            }
+            return new SortMergeExchangePOperator(ordCols.toArray(new OrderColumn[ordCols.size()]));
         }
-        return mergingConnector;
     }
 
     private IPhysicalOperator createHashConnector(IOptimizationContext ctx, IPhysicalPropertiesVector deliveredByChild,
@@ -692,7 +681,6 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         // options for range partitioning: 1. static range map, 2. dynamic range map computed at run time
         List<OrderColumn> partitioningColumns = ((OrderedPartitionedProperty) requiredPartitioning).getOrderColumns();
         if (parentOp.getAnnotations().containsKey(OperatorAnnotations.USE_STATIC_RANGE)) {
-            // TODO(ali): static range map implementation should be fixed to require ORDERED_PARTITION and come here.
             RangeMap rangeMap = (RangeMap) parentOp.getAnnotations().get(OperatorAnnotations.USE_STATIC_RANGE);
             return new RangePartitionExchangePOperator(partitioningColumns, domain, rangeMap);
         } else {

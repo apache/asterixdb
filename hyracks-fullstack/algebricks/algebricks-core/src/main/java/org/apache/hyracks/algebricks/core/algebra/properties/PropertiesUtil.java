@@ -163,6 +163,10 @@ public class PropertiesUtil {
                     case ORDERED_PARTITIONED: {
                         OrderedPartitionedProperty or = (OrderedPartitionedProperty) reqd;
                         OrderedPartitionedProperty od = (OrderedPartitionedProperty) dlvd;
+                        //TODO: support non-null range maps
+                        if (or.getRangeMap() != null || od.getRangeMap() != null) {
+                            return false;
+                        }
                         if (mayExpandProperties) {
                             return isPrefixOf(od.getOrderColumns().iterator(), or.getOrderColumns().iterator());
                         } else {

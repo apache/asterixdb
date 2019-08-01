@@ -6019,6 +6019,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="p_sort_static_range_map">
+        <output-dir compare="Text">p_sort_static_range_map</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="active_requests">
         <output-dir compare="Text">active_requests</output-dir>
       </compilation-unit>

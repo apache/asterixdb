@@ -18,6 +18,8 @@
  */
 use dataverse TinySocial;
 
+set "compiler.sort.parallel" "true"
+
 for $user in dataset TwitterUsers
 /*+ range ["Ci", "Nb", "F"] */
 order by $user.screen-name

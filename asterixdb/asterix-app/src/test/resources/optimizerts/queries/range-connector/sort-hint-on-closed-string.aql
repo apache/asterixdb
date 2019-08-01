@@ -39,6 +39,8 @@ create type TwitterUserType as open {
 create dataset TwitterUsers(TwitterUserType)
 primary key screen-name;
 
+set "compiler.sort.parallel" "true"
+
 for $user in dataset TwitterUsers
 /*+ range ["Ci", "F", "Nb"] */
 order by $user.screen-name

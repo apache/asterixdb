@@ -47,6 +47,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderedPartitionedProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
+import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 
 public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperator {
 
@@ -65,30 +66,30 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        // if (orderProps == null) { // to do caching, we need some mechanism to
-        // invalidate cache
-        computeLocalProperties(op);
-        // }
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-        StructuralPropertiesVector childProp = (StructuralPropertiesVector) op2.getDeliveredPhysicalProperties();
+        OrderOperator sortOp = (OrderOperator) op;
+        computeLocalProperties(sortOp);
+        AbstractLogicalOperator childOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
+        StructuralPropertiesVector childProp = (StructuralPropertiesVector) childOp.getDeliveredPhysicalProperties();
         deliveredProperties = new StructuralPropertiesVector(childProp.getPartitioningProperty(),
                 Collections.singletonList(orderProp));
     }
 
     @Override
-    public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator sortOp,
+    public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext ctx) {
-        if (sortOp.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
+        if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
+            OrderOperator sortOp = (OrderOperator) op;
             if (orderProp == null) {
                 computeLocalProperties(sortOp);
             }
             StructuralPropertiesVector[] requiredProp = new StructuralPropertiesVector[1];
             IPartitioningProperty partitioning;
             INodeDomain targetNodeDomain = ctx.getComputationNodeDomain();
-            if (isFullParallel((AbstractLogicalOperator) sortOp, targetNodeDomain, ctx)) {
+            String fullParallelAnnotation = getFullParallelAnnotation(sortOp, targetNodeDomain, ctx);
+            if (fullParallelAnnotation != null) {
                 // partitioning requirement: input data is re-partitioned on sort columns (global ordering)
-                // TODO(ali): static range map implementation should be fixed to require ORDERED_PARTITION and come here
-                partitioning = new OrderedPartitionedProperty(Arrays.asList(sortColumns), targetNodeDomain);
+                RangeMap rangeMap = getRangeMap(sortOp, fullParallelAnnotation);
+                partitioning = new OrderedPartitionedProperty(Arrays.asList(sortColumns), targetNodeDomain, rangeMap);
             } else {
                 // partitioning requirement: input data is unpartitioned (i.e. must be merged at one site)
                 partitioning = IPartitioningProperty.UNPARTITIONED;
@@ -101,9 +102,8 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
         }
     }
 
-    public void computeLocalProperties(ILogicalOperator op) {
-        OrderOperator ord = (OrderOperator) op;
-        List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
+    public void computeLocalProperties(OrderOperator ord) {
+        List<OrderColumn> orderColumns = new ArrayList<>();
         for (Pair<IOrder, Mutable<ILogicalExpression>> p : ord.getOrderExpressions()) {
             ILogicalExpression expr = p.second.getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
@@ -144,10 +144,11 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
     }
 
     /**
-     * When true, the sort operator requires ORDERED_PARTITION (only applicable to dynamic version for now).
+     * When a non-null value is returned, the sort operator requires ORDERED_PARTITION (applicable to both static and
+     *  dynamic range versions).
      * Conditions:
      * 1. Execution mode == partitioned
-     * 2. Dynamic range map was not disabled by some checks
+     * 2. Dynamic range map that was not disabled by some checks, or a static range map
      * 3. User didn't disable it
      * 4. User didn't provide static range map
      * 5. Physical sort operator is not in-memory
@@ -155,15 +156,31 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
      * @param sortOp the sort operator
      * @param clusterDomain the partitions specification of the cluster
      * @param ctx optimization context
-     * @return true if the sort operator should be full parallel sort, false otherwise.
+     * @return annotation name (non-null) if the sort operator should be full parallel sort, {@code null} otherwise.
      */
-    private boolean isFullParallel(AbstractLogicalOperator sortOp, INodeDomain clusterDomain,
+    private String getFullParallelAnnotation(AbstractLogicalOperator sortOp, INodeDomain clusterDomain,
             IOptimizationContext ctx) {
-        return sortOp.getAnnotations().get(OperatorAnnotations.USE_DYNAMIC_RANGE) != Boolean.FALSE
-                && !sortOp.getAnnotations().containsKey(OperatorAnnotations.USE_STATIC_RANGE)
-                && sortOp.getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.STABLE_SORT
+        if (sortOp.getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.STABLE_SORT
                 && clusterDomain.cardinality() != null && clusterDomain.cardinality() > 1
-                && ctx.getPhysicalOptimizationConfig().getSortParallel();
+                && ctx.getPhysicalOptimizationConfig().getSortParallel()) {
+            if (sortOp.getAnnotations().containsKey(OperatorAnnotations.USE_STATIC_RANGE)) {
+                return OperatorAnnotations.USE_STATIC_RANGE;
+            } else if (sortOp.getAnnotations().get(OperatorAnnotations.USE_DYNAMIC_RANGE) != Boolean.FALSE) {
+                return OperatorAnnotations.USE_DYNAMIC_RANGE;
+            }
+        }
+        return null;
+    }
+
+    private RangeMap getRangeMap(ILogicalOperator sortOp, String fullParallelAnnotation) {
+        switch (fullParallelAnnotation) {
+            case OperatorAnnotations.USE_STATIC_RANGE:
+                return (RangeMap) sortOp.getAnnotations().get(fullParallelAnnotation);
+            case OperatorAnnotations.USE_DYNAMIC_RANGE:
+                return null;
+            default:
+                throw new IllegalStateException(fullParallelAnnotation);
+        }
     }
 
     @Override

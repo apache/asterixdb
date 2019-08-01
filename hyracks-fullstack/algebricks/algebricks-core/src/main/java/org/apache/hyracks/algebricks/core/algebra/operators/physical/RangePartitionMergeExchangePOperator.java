@@ -84,7 +84,7 @@ public class RangePartitionMergeExchangePOperator extends AbstractExchangePOpera
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        IPartitioningProperty p = new OrderedPartitionedProperty(partitioningFields, domain);
+        IPartitioningProperty p = new OrderedPartitionedProperty(partitioningFields, domain, rangeMap);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         List<ILocalStructuralProperty> op2Locals = op2.getDeliveredPhysicalProperties().getLocalProperties();
         List<ILocalStructuralProperty> locals = new ArrayList<ILocalStructuralProperty>();
@@ -145,7 +145,8 @@ public class RangePartitionMergeExchangePOperator extends AbstractExchangePOpera
 
     @Override
     public String toString() {
-        return getOperatorTag().toString() + " " + partitioningFields + " SPLIT COUNT:" + rangeMap.getSplitCount();
+        return getOperatorTag().toString() + " " + partitioningFields
+                + (rangeMap != null ? " RANGE_MAP:" + rangeMap : "");
     }
 
 }

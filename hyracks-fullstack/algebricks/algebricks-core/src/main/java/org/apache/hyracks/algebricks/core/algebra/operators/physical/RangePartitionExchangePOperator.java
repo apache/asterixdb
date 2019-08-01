@@ -93,7 +93,7 @@ public class RangePartitionExchangePOperator extends AbstractExchangePOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        IPartitioningProperty p = new OrderedPartitionedProperty(new ArrayList<>(partitioningFields), domain);
+        IPartitioningProperty p = new OrderedPartitionedProperty(new ArrayList<>(partitioningFields), domain, rangeMap);
         this.deliveredProperties = new StructuralPropertiesVector(p, new LinkedList<ILocalStructuralProperty>());
     }
 
@@ -133,7 +133,7 @@ public class RangePartitionExchangePOperator extends AbstractExchangePOperator {
 
     @Override
     public String toString() {
-        final String splitCount = rangeMap == null ? "" : " SPLIT COUNT:" + Integer.toString(rangeMap.getSplitCount());
-        return getOperatorTag().toString() + " " + partitioningFields + splitCount;
+        return getOperatorTag().toString() + " " + partitioningFields
+                + (rangeMap != null ? " RANGE_MAP:" + rangeMap : "");
     }
 }

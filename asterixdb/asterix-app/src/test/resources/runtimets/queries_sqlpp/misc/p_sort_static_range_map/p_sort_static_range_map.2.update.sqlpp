@@ -16,32 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- *  Description     : The hint is to use the range connector
- *                  : This test is intended to verify that the range connector is used instead of single node merge.
- *  Expected Result : Success
- *  Date            : 1th May 2015
- */
 
-drop dataverse TinySocial if exists;
-create dataverse TinySocial;
-use dataverse TinySocial;
+use test;
 
-create type TwitterUserType as open {
-        screen-name: string,
-        lang: string,
-        friends_count: int64,
-        statuses_count: int64,
-        name: string,
-        followers_count: int64
-}
-
-create dataset TwitterUsers(TwitterUserType)
-primary key screen-name;
-
-set "compiler.sort.parallel" "true"
-
-for $user in dataset TwitterUsers
-/*+ range [400, 150, 100] */
-order by $user.friends_count desc
-return $user;
+INSERT INTO TestDS
+([
+{"id":1, "f1":40},
+{"id":2, "f1":40},
+{"id":3, "f1":40},
+{"id":4, "f1":41},
+{"id":5, "f1":42},
+{"id":6, "f1":42},
+{"id":7, "f1":40},
+{"id":8, "f1":41},
+{"id":9, "f1":41},
+{"id":10, "f1":42},
+{"id":11, "f1":40},
+{"id":12, "f1":41},
+{"id":13, "f1":42},
+{"id":14, "f1":41},
+{"id":15, "f1":40},
+{"id":16, "f1":42},
+{"id":17, "f1":42},
+{"id":18, "f1":41}
+]);
