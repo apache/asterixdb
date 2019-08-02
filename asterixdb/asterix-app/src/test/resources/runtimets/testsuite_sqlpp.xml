@@ -2758,6 +2758,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="bitwise">
+      <compilation-unit name="bit_and_04">
+        <output-dir compare="Text">bit_and_04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="bitwise">
       <compilation-unit name="bit_or_01">
         <output-dir compare="Text">bit_or_01</output-dir>
       </compilation-unit>
@@ -2771,6 +2776,11 @@
       <compilation-unit name="bit_or_03">
         <output-dir compare="Text">bit_or_03</output-dir>
         <expected-error>Invalid number of arguments for function</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="bitwise">
+      <compilation-unit name="bit_or_04">
+        <output-dir compare="Text">bit_or_04</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="bitwise">
@@ -2790,6 +2800,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="bitwise">
+      <compilation-unit name="bit_xor_04">
+        <output-dir compare="Text">bit_xor_04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="bitwise">
       <compilation-unit name="bit_not_01">
         <output-dir compare="Text">bit_not_01</output-dir>
       </compilation-unit>
@@ -2797,6 +2812,11 @@
     <test-case FilePath="bitwise">
       <compilation-unit name="bit_not_02">
         <output-dir compare="Text">bit_not_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="bitwise">
+      <compilation-unit name="bit_not_03">
+        <output-dir compare="Text">bit_not_03</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="bitwise">
@@ -2810,6 +2830,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="bitwise">
+      <compilation-unit name="bit_count_03">
+        <output-dir compare="Text">bit_count_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="bitwise">
       <compilation-unit name="bit_set_01">
         <output-dir compare="Text">bit_set_01</output-dir>
       </compilation-unit>
@@ -2817,6 +2842,11 @@
     <test-case FilePath="bitwise">
       <compilation-unit name="bit_set_02">
         <output-dir compare="Text">bit_set_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="bitwise">
+      <compilation-unit name="bit_set_03">
+        <output-dir compare="Text">bit_set_03</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="bitwise">
@@ -2830,6 +2860,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="bitwise">
+      <compilation-unit name="bit_clear_03">
+        <output-dir compare="Text">bit_clear_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="bitwise">
       <compilation-unit name="bit_shift_01">
         <output-dir compare="Text">bit_shift_01</output-dir>
       </compilation-unit>
@@ -2837,6 +2872,16 @@
     <test-case FilePath="bitwise">
       <compilation-unit name="bit_shift_02">
         <output-dir compare="Text">bit_shift_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="bitwise">
+      <compilation-unit name="bit_shift_03">
+        <output-dir compare="Text">bit_shift_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="bitwise">
+      <compilation-unit name="bit_shift_04">
+        <output-dir compare="Text">bit_shift_04</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="bitwise">
@@ -2850,6 +2895,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="bitwise">
+      <compilation-unit name="bit_test_03">
+        <output-dir compare="Text">bit_test_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="bitwise">
+      <compilation-unit name="bit_test_04">
+        <output-dir compare="Text">bit_test_04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="bitwise">
       <compilation-unit name="is_bit_set_01">
         <output-dir compare="Text">is_bit_set_01</output-dir>
       </compilation-unit>
@@ -2857,6 +2912,11 @@
     <test-case FilePath="bitwise">
       <compilation-unit name="is_bit_set_02">
         <output-dir compare="Text">is_bit_set_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="bitwise">
+      <compilation-unit name="is_bit_set_03">
+        <output-dir compare="Text">is_bit_set_03</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

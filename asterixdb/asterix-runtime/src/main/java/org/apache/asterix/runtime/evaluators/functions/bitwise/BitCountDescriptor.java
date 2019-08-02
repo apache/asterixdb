@@ -49,13 +49,13 @@ public class BitCountDescriptor extends AbstractScalarFunctionDynamicDescriptor 
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
-            private final AMutableInt32 resultMutableInt32 = new AMutableInt32(0);
-            private final ISerializerDeserializer aInt32Serde =
-                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
-
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new AbstractBitSingleValueEvaluator(ctx, args, getIdentifier(), sourceLoc) {
+
+                    private final AMutableInt32 resultMutableInt32 = new AMutableInt32(0);
+                    private final ISerializerDeserializer aInt32Serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
 
                     @Override
                     void applyBitwiseOperation(long value) {

@@ -85,7 +85,7 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
 
     // This flag has a special purpose. In some cases, when an array of positions is passed, checking
     // some arguments might be enough to return the final result, but, instead of stopping, we need to
-    // continue looping because if any value in array is invalid, we should return a null instead of
+    // continue looping because if any value in the positions array is invalid, we should return a null instead of
     // the boolean result, this flag will keep the loop going just for checking the values, while the
     // final result is already set previously.
     private boolean isStopUpdatingResultBoolean = false;
@@ -167,6 +167,7 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
 
         // Third argument
         boolean isAllSet = false;
+        isStopUpdatingResultBoolean = false; // Reset the flag to false for each new tuple
         if (flagEvaluator != null) {
             byte[] flagBytes = flagPointable.getByteArray();
             int flagStartOffset = flagPointable.getStartOffset();
