@@ -18,18 +18,11 @@
  */
 
 /*
- * Description  : Warning when a GROUP BY hint is the expected one,
- *              : but cannot be applied for a given aggregate function
- * Expected     : SUCCESS (with HYR10006 warning)
+ * Description  : Warning when a hint at BETWEEN is recognized
+ *              : but not applicable for BETWEEN
+ * Expected     : SUCCESS (with ASX1107 warning)
  */
 
-with ds as (
-  from range(1, 4) r
-  select r % 2 as x, r as y
-)
-
-from ds
-where y < 3
-/*+ hash */ group by x
-select x, array_agg(y) as y
-order by x
+from range(1, 4) r
+where r /*+ auto */ between 0 and 1
+select value r

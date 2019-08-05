@@ -17,19 +17,29 @@
  * under the License.
  */
 
-/*
- * Description  : Warning when a GROUP BY hint is the expected one,
- *              : but cannot be applied for a given aggregate function
- * Expected     : SUCCESS (with HYR10006 warning)
- */
+package org.apache.asterix.lang.sqlpp.parser;
 
-with ds as (
-  from range(1, 4) r
-  select r % 2 as x, r as y
-)
+import java.io.Serializable;
 
-from ds
-where y < 3
-/*+ hash */ group by x
-select x, array_agg(y) as y
-order by x
+import org.apache.hyracks.api.exceptions.SourceLocation;
+
+public abstract class SqlppToken implements Serializable {
+
+    public SourceLocation sourceLocation;
+
+    public SqlppHint hint;
+    public String hintParams;
+
+    public boolean parseHint(String text) {
+        int paramStart = SqlppHint.findParamStart(text);
+        String id = paramStart >= 0 ? text.substring(0, paramStart) : text;
+        hint = SqlppHint.findByIdentifier(id);
+        if (hint != null) {
+            hintParams = paramStart >= 0 ? text.substring(paramStart).trim() : null;
+            return true;
+        } else {
+            hintParams = text;
+            return false;
+        }
+    }
+}

@@ -36,4 +36,18 @@ public class StringUtil {
         return CAMEL_CACHE.computeIfAbsent(input, s -> SEPARATORS_PATTERN
                 .matcher(WordUtils.capitalize("z" + s.toLowerCase(), '_', '-', ' ').substring(1)).replaceAll(""));
     }
+
+    public static String join(Object[] objects, String separator, String quote) {
+        if (objects == null || objects.length == 0) {
+            return "";
+        }
+        int length = objects.length;
+        String str0 = String.valueOf(objects[0]);
+        StringBuilder sb = new StringBuilder((str0.length() + 3) * length);
+        sb.append(quote).append(str0).append(quote);
+        for (int i = 1; i < length; i++) {
+            sb.append(separator).append(quote).append(objects[i]).append(quote);
+        }
+        return sb.toString();
+    }
 }

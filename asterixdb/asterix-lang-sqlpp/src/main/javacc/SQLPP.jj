@@ -17,12 +17,10 @@
 // under the License.
 //
 options {
-
-
-       STATIC = false;
-
+  COMMON_TOKEN_ACTION = true;
+  STATIC = false;
+  TOKEN_EXTENDS = "org.apache.asterix.lang.sqlpp.parser.SqlppToken";
 }
-
 
 PARSER_BEGIN(SQLPPParser)
 
@@ -176,12 +174,14 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
+import org.apache.asterix.lang.sqlpp.parser.SqlppHint;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.ExpressionToVariableUtil;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -192,6 +192,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.util.LogRedactionUtil;
+import org.apache.hyracks.util.StringUtil;
 
 class SQLPPParser extends ScopeChecker implements IParser {
 
@@ -215,35 +216,14 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String TIES = "TIES";
     private static final String UNBOUNDED = "UNBOUNDED";
 
-    // optimizer hints
-    private static final String AUTO_HINT = "auto";
-    private static final String BROADCAST_JOIN_HINT = "bcast";
-    private static final String COMPOSE_VAL_FILES_HINT = "compose-val-files";
-    private static final String DATE_BETWEEN_YEARS_HINT = "date-between-years";
-    private static final String DATETIME_ADD_RAND_HOURS_HINT = "datetime-add-rand-hours";
-    private static final String DATETIME_BETWEEN_YEARS_HINT = "datetime-between-years";
-    private static final String HASH_GROUP_BY_HINT = "hash";
-    private static final String INDEXED_NESTED_LOOP_JOIN_HINT = "indexnl";
-    private static final String INMEMORY_HINT = "inmem";
-    private static final String INSERT_RAND_INT_HINT = "insert-rand-int";
-    private static final String INTERVAL_HINT = "interval";
-    private static final String LIST_HINT = "list";
-    private static final String LIST_VAL_FILE_HINT = "list-val-file";
-    private static final String RANGE_HINT = "range";
-    private static final String SKIP_SECONDARY_INDEX_SEARCH_HINT = "skip-index";
-    private static final String VAL_FILE_HINT = "val-files";
-    private static final String VAL_FILE_SAME_INDEX_HINT = "val-file-same-idx";
-    private static final String GEN_FIELDS_HINT = "gen-fields";
-
-    // data generator hints
-    private static final String DGEN_HINT = "dgen";
-
     // error configuration
     protected static final boolean REPORT_EXPECTED_TOKENS = false;
 
     private int externalVarCounter;
 
     private final WarningCollector warningCollector = new WarningCollector();
+
+    private final Map<SourceLocation, String> hintCollector = new HashMap<SourceLocation, String>();
 
     private static class IndexParams {
       public IndexType type;
@@ -259,73 +239,64 @@ class SQLPPParser extends ScopeChecker implements IParser {
        public String dataverse;
        public String library;
        public String function;
-       public String hint;
+       public SqlppHint hint;
        public SourceLocation sourceLoc;
-       public SourceLocation hintSourceLoc;
     }
 
-    private String getHint(Token t) {
-        if (t.specialToken == null) {
-            return null;
-        }
-        String s = t.specialToken.image;
-        int n = s.length();
-        if (n < 2) {
-            return null;
-        }
-        return s.substring(1).trim();
-    }
-
-    private Token getHintToken(Token t) {
-        return t.specialToken;
-    }
-
-    private IRecordFieldDataGen parseFieldDataGen(String hint, Token hintToken) throws ParseException {
-      IRecordFieldDataGen rfdg = null;
-      String splits[] = hint.split(" +");
-      if (splits[0].equals(VAL_FILE_HINT)) {
-        File[] valFiles = new File[splits.length - 1];
-        for (int k=1; k<splits.length; k++) {
-          valFiles[k-1] = new File(splits[k]);
-        }
-        rfdg = new FieldValFileDataGen(valFiles);
-      } else if (splits[0].equals(VAL_FILE_SAME_INDEX_HINT)) {
-        rfdg = new FieldValFileSameIndexDataGen(new File(splits[1]), splits[2]);
-      } else if (splits[0].equals(LIST_VAL_FILE_HINT)) {
-        rfdg = new ListValFileDataGen(new File(splits[1]), Integer.parseInt(splits[2]), Integer.parseInt(splits[3]));
-      } else if (splits[0].equals(LIST_HINT)) {
-        rfdg = new ListDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
-      } else if (splits[0].equals(INTERVAL_HINT)) {
-        FieldIntervalDataGen.ValueType vt;
-        if (splits[1].equals("int")) {
-          vt = FieldIntervalDataGen.ValueType.INT;
-        } else if (splits[1].equals("long")) {
-          vt = FieldIntervalDataGen.ValueType.LONG;
-        } else if (splits[1].equals("float")) {
-          vt = FieldIntervalDataGen.ValueType.FLOAT;
-        } else if (splits[1].equals("double")) {
-          vt = FieldIntervalDataGen.ValueType.DOUBLE;
-        } else {
-          throw new SqlppParseException(getSourceLocation(hintToken), "Unknown type for interval data gen: " + splits[1]);
-        }
-        rfdg = new FieldIntervalDataGen(vt, splits[2], splits[3]);
-      } else if (splits[0].equals(INSERT_RAND_INT_HINT)) {
-        rfdg = new InsertRandIntDataGen(splits[1], splits[2]);
-      } else if (splits[0].equals(DATE_BETWEEN_YEARS_HINT)) {
-        rfdg = new DateBetweenYearsDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
-      } else if (splits[0].equals(DATETIME_BETWEEN_YEARS_HINT)) {
-        rfdg = new DatetimeBetweenYearsDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
-      } else if (splits[0].equals(DATETIME_ADD_RAND_HOURS_HINT)) {
-        rfdg = new DatetimeAddRandHoursDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]), splits[3]);
-      } else if (splits[0].equals(AUTO_HINT)) {
-        rfdg = new AutoDataGen(splits[1]);
+    private IRecordFieldDataGen parseFieldDataGen(Token hintToken) throws ParseException {
+      String[] splits = hintToken.hintParams != null ? hintToken.hintParams.split("\\s+") : null;
+      switch (hintToken.hint) {
+        case VAL_FILE_HINT:
+          File[] valFiles = new File[splits.length];
+          for (int k=0; k<splits.length; k++) {
+            valFiles[k] = new File(splits[k]);
+          }
+          return new FieldValFileDataGen(valFiles);
+        case VAL_FILE_SAME_INDEX_HINT:
+          return new FieldValFileSameIndexDataGen(new File(splits[0]), splits[1]);
+        case LIST_VAL_FILE_HINT:
+          return new ListValFileDataGen(new File(splits[0]), Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
+        case LIST_HINT:
+          return new ListDataGen(Integer.parseInt(splits[0]), Integer.parseInt(splits[1]));
+        case INTERVAL_HINT:
+          FieldIntervalDataGen.ValueType vt;
+          switch (splits[0]) {
+            case "int":
+              vt = FieldIntervalDataGen.ValueType.INT;
+              break;
+            case "long":
+              vt = FieldIntervalDataGen.ValueType.LONG;
+              break;
+            case "float":
+              vt = FieldIntervalDataGen.ValueType.FLOAT;
+              break;
+            case "double":
+              vt = FieldIntervalDataGen.ValueType.DOUBLE;
+              break;
+            default:
+              throw new SqlppParseException(getSourceLocation(hintToken),
+                "Unknown type for interval data gen: " + splits[0]);
+          }
+          return new FieldIntervalDataGen(vt, splits[1], splits[2]);
+        case INSERT_RAND_INT_HINT:
+          return new InsertRandIntDataGen(splits[0], splits[1]);
+        case DATE_BETWEEN_YEARS_HINT:
+          return new DateBetweenYearsDataGen(Integer.parseInt(splits[0]), Integer.parseInt(splits[1]));
+        case DATETIME_BETWEEN_YEARS_HINT:
+          return new DatetimeBetweenYearsDataGen(Integer.parseInt(splits[0]), Integer.parseInt(splits[1]));
+        case DATETIME_ADD_RAND_HOURS_HINT:
+          return new DatetimeAddRandHoursDataGen(Integer.parseInt(splits[0]), Integer.parseInt(splits[1]), splits[2]);
+        case AUTO_HINT:
+          return new AutoDataGen(splits[0]);
+        default:
+          return null;
       }
-      return rfdg;
     }
 
     public SQLPPParser(String s) {
         this(new StringReader(s));
         super.setInput(s);
+        token_source.hintCollector = hintCollector;
     }
 
     public static void main(String args[]) throws ParseException, TokenMgrError, IOException, FileNotFoundException, CompilationException {
@@ -360,6 +331,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
 
     private <T> T parseImpl(ParseFunction<T> parseFunction) throws CompilationException {
         warningCollector.clear();
+        hintCollector.clear();
         try {
             return parseFunction.parse();
         } catch (Error e) {
@@ -371,6 +343,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
             throw new CompilationException(ErrorCode.PARSE_ERROR, e.getSourceLocation(), LogRedactionUtil.userData(getMessage(e)));
         } catch (ParseException e) {
             throw new CompilationException(ErrorCode.PARSE_ERROR, LogRedactionUtil.userData(getMessage(e)));
+        } finally {
+            reportUnclaimedHints();
         }
     }
 
@@ -426,7 +400,10 @@ class SQLPPParser extends ScopeChecker implements IParser {
     }
 
     protected static SourceLocation getSourceLocation(Token token) {
-        return token != null ? new SourceLocation(token.beginLine, token.beginColumn) : null;
+        return
+          token == null ? null :
+          token.sourceLocation != null ? token.sourceLocation :
+          new SourceLocation(token.beginLine, token.beginColumn);
     }
 
     protected static <T extends AbstractLangExpression> T addSourceLocation(T expr, Token token) {
@@ -461,14 +438,40 @@ class SQLPPParser extends ScopeChecker implements IParser {
       return laIdentifier(1, image);
     }
 
-    private void warnUnknownHint(String actualHint, SourceLocation sourceLoc, String... expectedHints) {
-        warningCollector.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.UNKNOWN_HINT, actualHint,
-          StringUtils.join(expectedHints, ", ")));
+    private Token fetchHint(Token token, SqlppHint... expectedHints) {
+      Token hintToken = token.specialToken;
+      if (hintToken == null) {
+        return null;
+      }
+      SourceLocation sourceLoc = getSourceLocation(hintToken);
+      hintCollector.remove(sourceLoc);
+      if (hintToken.hint == null) {
+        warnUnexpectedHint(hintToken.hintParams, sourceLoc, expectedHints);
+        return null;
+      } else if (!ArrayUtils.contains(expectedHints, hintToken.hint)) {
+        warnUnexpectedHint(hintToken.hint.getIdentifier(), sourceLoc, expectedHints);
+        return null;
+      } else {
+        return hintToken;
+      }
+    }
+
+    private void reportUnclaimedHints() {
+        for (Map.Entry<SourceLocation, String> me : hintCollector.entrySet()) {
+            warnUnexpectedHint(me.getValue(), me.getKey(), "None");
+        }
+    }
+
+    private void warnUnexpectedHint(String actualHint, SourceLocation sourceLoc, SqlppHint... expectedHints) {
+        warnUnexpectedHint(actualHint, sourceLoc, StringUtil.join(expectedHints, ", ", "\""));
+    }
+
+    private void warnUnexpectedHint(String actualHint, SourceLocation sourceLoc, String expectedHints) {
+        warningCollector.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.UNEXPECTED_HINT, actualHint, expectedHints));
     }
 }
 
 PARSER_END(SQLPPParser)
-
 
 List<Statement> Statement() throws ParseException:
 {
@@ -556,22 +559,12 @@ DataverseDecl DataverseDeclaration() throws ParseException:
 Statement CreateStatement() throws ParseException:
 {
   Token startToken = null;
-  String hint = null;
-  Token hintToken = null;
-  boolean hintDGen = false;
   Statement stmt = null;
 }
 {
   <CREATE> { startToken = token; }
   (
-    {
-      hint = getHint(token);
-      if (hint != null) {
-        hintToken = getHintToken(token);
-        hintDGen = hint.startsWith(DGEN_HINT);
-      }
-    }
-    stmt = TypeSpecification(startToken, hint, hintDGen, hintToken)
+    stmt = TypeSpecification(startToken)
     | stmt = NodegroupSpecification(startToken)
     | stmt = DatasetSpecification(startToken)
     | stmt = IndexSpecification(startToken)
@@ -585,7 +578,7 @@ Statement CreateStatement() throws ParseException:
   }
 }
 
-TypeDecl TypeSpecification(Token startStmtToken, String hint, boolean dgen, Token hintToken) throws ParseException:
+TypeDecl TypeSpecification(Token startStmtToken) throws ParseException:
 {
   Pair<Identifier,Identifier> nameComponents = null;
   boolean ifNotExists = false;
@@ -595,15 +588,20 @@ TypeDecl TypeSpecification(Token startStmtToken, String hint, boolean dgen, Toke
   <TYPE> nameComponents = TypeName() ifNotExists = IfNotExists()
   <AS> typeExpr = RecordTypeDef()
     {
+      boolean dgen = false;
       long numValues = -1;
       String filename = null;
-      if (dgen) {
-        String splits[] = hint.split(" +");
-        if (splits.length != 3) {
-          throw new SqlppParseException(getSourceLocation(hintToken), "Expecting /*+ dgen <filename> <numberOfItems> */");
-        }
-        filename = splits[1];
-        numValues = Long.parseLong(splits[2]);
+      Token hintToken = fetchHint(startStmtToken, SqlppHint.DGEN_HINT);
+      if (hintToken != null) {
+          String hintParams = hintToken.hintParams;
+          String[] splits = hintParams != null ? hintParams.split("\\s+") : null;
+          if (splits == null || splits.length != 2) {
+            throw new SqlppParseException(getSourceLocation(hintToken),
+              "Expecting /*+ dgen <filename> <numberOfItems> */");
+          }
+          dgen = true;
+          filename = splits[0];
+          numValues = Long.parseLong(splits[1]);
       }
       TypeDataGen tddg = new TypeDataGen(dgen, filename, numValues);
       TypeDecl stmt = new TypeDecl(nameComponents.first, nameComponents.second, typeExpr, tddg, ifNotExists);
@@ -1581,29 +1579,27 @@ RecordTypeDefinition RecordTypeDef() throws ParseException:
    <LEFTBRACE>
     {
       startToken = token;
-      String hint = getHint(token);
-      if (hint != null) {
-        String splits[] = hint.split(" +");
-        if (splits[0].equals(GEN_FIELDS_HINT)) {
-          if (splits.length != 5) {
-            throw new SqlppParseException(getSourceLocation(getHintToken(token)),
-                "Expecting: /*+ gen-fields <type> <min> <max> <prefix>*/");
-          }
-          if (!splits[1].equals("int")) {
-            throw new SqlppParseException(getSourceLocation(getHintToken(token)),
-                "The only supported type for gen-fields is int.");
-          }
-          UndeclaredFieldsDataGen ufdg = new UndeclaredFieldsDataGen(UndeclaredFieldsDataGen.Type.INT,
-             Integer.parseInt(splits[2]), Integer.parseInt(splits[3]), splits[4]);
-          recType.setUndeclaredFieldsDataGen(ufdg);
+      Token hintToken = fetchHint(token, SqlppHint.GEN_FIELDS_HINT);
+      if (hintToken != null) {
+        String hintParams = hintToken.hintParams;
+        String[] splits = hintParams != null ? hintParams.split("\\s+") : null;
+        if (splits == null || splits.length != 4) {
+          throw new SqlppParseException(getSourceLocation(hintToken),
+            "Expecting: /*+ gen-fields <type> <min> <max> <prefix>*/");
         }
+        if (!splits[0].equals("int")) {
+          throw new SqlppParseException(getSourceLocation(hintToken),
+            "The only supported type for gen-fields is int.");
+        }
+        UndeclaredFieldsDataGen ufdg = new UndeclaredFieldsDataGen(UndeclaredFieldsDataGen.Type.INT,
+          Integer.parseInt(splits[1]), Integer.parseInt(splits[2]), splits[3]);
+          recType.setUndeclaredFieldsDataGen(ufdg);
       }
-
     }
-        (
-          RecordField(recType)
-          ( <COMMA>  RecordField(recType) )*
-        )?
+    (
+      RecordField(recType)
+      ( <COMMA>  RecordField(recType) )*
+    )?
    <RIGHTBRACE>
    {
       if (recordKind == null) {
@@ -1623,8 +1619,10 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
 {
   fieldName = Identifier()
     {
-      String hint = getHint(token);
-      IRecordFieldDataGen rfdg = hint != null ? parseFieldDataGen(hint, token.specialToken) : null;
+      Token hintToken = fetchHint(token, SqlppHint.VAL_FILE_HINT, SqlppHint.VAL_FILE_SAME_INDEX_HINT,
+        SqlppHint.LIST_VAL_FILE_HINT, SqlppHint.LIST_HINT, SqlppHint.INTERVAL_HINT, SqlppHint.INSERT_RAND_INT_HINT,
+        SqlppHint.DATE_BETWEEN_YEARS_HINT, SqlppHint.DATETIME_ADD_RAND_HOURS_HINT, SqlppHint.AUTO_HINT);
+      IRecordFieldDataGen rfdg = hintToken != null ? parseFieldDataGen(hintToken) : null;
     }
   <COLON> type =  TypeExpr() (<QUES> { nullable = true; } )?
     {
@@ -1689,9 +1687,12 @@ FunctionName FunctionName() throws ParseException:
   first = Identifier()
   {
     FunctionName result = new FunctionName();
-    result.hint = getHint(token);
     result.sourceLoc = getSourceLocation(token);
-    result.hintSourceLoc = getSourceLocation(getHintToken(token));
+    Token hintToken = fetchHint(token, SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
+      SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT);
+    if (hintToken != null) {
+      result.hint = hintToken.hint;
+    }
   }
   ( <DOT> second = Identifier()
     {
@@ -2055,18 +2056,19 @@ Expression RelExpr() throws ParseException:
     (
       LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> | <LG> |<SIMILAR> | (<NOT> { not = true; })? <IN>)
         {
-          String mhint = getHint(token);
-          if (mhint != null) {
-            if (mhint.equals(INDEXED_NESTED_LOOP_JOIN_HINT)) {
+          Token hintToken = fetchHint(token, SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
+            SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.BROADCAST_JOIN_HINT);
+          if (hintToken != null) {
+            switch (hintToken.hint) {
+              case INDEXED_NESTED_LOOP_JOIN_HINT:
                 annotation = IndexedNLJoinExpressionAnnotation.INSTANCE;
-            } else if (mhint.equals(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
+                break;
+              case SKIP_SECONDARY_INDEX_SEARCH_HINT:
                 annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
-            } else if (mhint.equals(BROADCAST_JOIN_HINT)) {
+                break;
+              case BROADCAST_JOIN_HINT:
                 broadcast = true;
-            } else {
-                warnUnknownHint(mhint, getSourceLocation(getHintToken(token)),
-                    INDEXED_NESTED_LOOP_JOIN_HINT, SKIP_SECONDARY_INDEX_SEARCH_HINT, BROADCAST_JOIN_HINT
-                );
+                break;
             }
           }
 
@@ -2117,16 +2119,16 @@ Expression BetweenExpr() throws ParseException:
       LOOKAHEAD(2)
       (<NOT> { not = true; })? <BETWEEN>
         {
-          String mhint = getHint(token);
-          if (mhint != null) {
-            if (mhint.equals(INDEXED_NESTED_LOOP_JOIN_HINT)) {
+          Token hintToken = fetchHint(token, SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
+            SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT);
+          if (hintToken != null) {
+            switch (hintToken.hint) {
+              case INDEXED_NESTED_LOOP_JOIN_HINT:
                 annotation = IndexedNLJoinExpressionAnnotation.INSTANCE;
-            } else if (mhint.equals(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
+                break;
+              case SKIP_SECONDARY_INDEX_SEARCH_HINT:
                 annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
-            } else {
-                warnUnknownHint(mhint, getSourceLocation(getHintToken(token)),
-                    INDEXED_NESTED_LOOP_JOIN_HINT, SKIP_SECONDARY_INDEX_SEARCH_HINT
-                );
+                break;
             }
           }
           String operator = token.image.toLowerCase();
@@ -2807,16 +2809,14 @@ Expression FunctionCallExpr() throws ParseException:
         signature = new FunctionSignature(funcName.dataverse, fqFunctionName, arity);
       }
       callExpr = FunctionMapUtil.normalizedListInputFunctions(new CallExpr(signature,argList));
-      String hint = funcName.hint;
-      if (hint != null) {
-        if (hint.startsWith(INDEXED_NESTED_LOOP_JOIN_HINT)) {
-          callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
-        } else if (hint.startsWith(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
-          callExpr.addHint(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE);
-        } else {
-          warnUnknownHint(hint, funcName.hintSourceLoc,
-            INDEXED_NESTED_LOOP_JOIN_HINT, SKIP_SECONDARY_INDEX_SEARCH_HINT
-          );
+      if (funcName.hint != null) {
+        switch (funcName.hint) {
+          case INDEXED_NESTED_LOOP_JOIN_HINT:
+            callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
+            break;
+          case SKIP_SECONDARY_INDEX_SEARCH_HINT:
+            callExpr.addHint(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE);
+            break;
         }
       }
       callExpr.setSourceLocation(funcName.sourceLoc);
@@ -3475,20 +3475,23 @@ OrderbyClause OrderbyClause() throws ParseException :
     <ORDER>
       {
         startToken = token;
-        String hint = getHint(token);
-        if (hint != null) {
-          if (hint.startsWith(INMEMORY_HINT)) {
-            String splits[] = hint.split(" +");
-            int numFrames = Integer.parseInt(splits[1]);
-            int numTuples = Integer.parseInt(splits[2]);
-            oc.setNumFrames(numFrames);
-            oc.setNumTuples(numTuples);
-          } else if (hint.startsWith(RANGE_HINT)) {
-            try {
-              oc.setRangeMap(RangeMapBuilder.parseHint(parseExpression(hint.substring(RANGE_HINT.length()))));
-            } catch (CompilationException e) {
-              throw new SqlppParseException(getSourceLocation(getHintToken(token)), e.getMessage());
-            }
+        Token hintToken = fetchHint(token, SqlppHint.INMEMORY_HINT, SqlppHint.RANGE_HINT);
+        if (hintToken != null) {
+          switch (hintToken.hint) {
+            case INMEMORY_HINT:
+              String[] splits = hintToken.hintParams.split("\\s+");
+              int numFrames = Integer.parseInt(splits[0]);
+              int numTuples = Integer.parseInt(splits[1]);
+              oc.setNumFrames(numFrames);
+              oc.setNumTuples(numTuples);
+              break;
+            case RANGE_HINT:
+              try {
+                oc.setRangeMap(RangeMapBuilder.parseHint(parseExpression(hintToken.hintParams)));
+              } catch (CompilationException e) {
+                throw new SqlppParseException(getSourceLocation(hintToken), e.getMessage());
+              }
+              break;
           }
         }
       }
@@ -3543,13 +3546,9 @@ GroupbyClause GroupbyClause()throws ParseException :
     <GROUP>
       {
          startToken = token;
-         String hint = getHint(token);
-         if (hint != null) {
-            if (hint.equals(HASH_GROUP_BY_HINT)) {
-              gbc.setHashGroupByHint(true);
-            } else {
-              warnUnknownHint(hint, getSourceLocation(getHintToken(token)), HASH_GROUP_BY_HINT);
-            }
+         Token hintToken = fetchHint(token, SqlppHint.HASH_GROUP_BY_HINT);
+         if (hintToken != null) {
+            gbc.setHashGroupByHint(true);
          }
       }
     <BY> (
@@ -3694,6 +3693,7 @@ TOKEN_MGR_DECLS:
 {
     public int commentDepth = 0;
     public ArrayDeque<Integer> lexerStateStack = new ArrayDeque<Integer>();
+    public Map<SourceLocation, String> hintCollector;
 
     public void pushState() {
       lexerStateStack.push( curLexState );
@@ -3708,6 +3708,16 @@ TOKEN_MGR_DECLS:
          String msg = "Lexical error at line " + errorLine + ", column " + errorColumn + ". Encountered \"" + token
              + "\" but state stack is empty.";
          throw new TokenMgrError(msg, -1);
+      }
+    }
+
+    void CommonTokenAction(Token token) {
+      Token hintToken = token.specialToken;
+      if (hintToken != null) {
+        hintToken.sourceLocation = new SourceLocation(hintToken.beginLine, hintToken.beginColumn);
+        String text = hintToken.image.substring(1).trim();
+        boolean hintFound = hintToken.parseHint(text);
+        hintCollector.put(hintToken.sourceLocation, hintFound ? hintToken.hint.getIdentifier() : hintToken.hintParams);
       }
     }
 }
