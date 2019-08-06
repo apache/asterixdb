@@ -20,8 +20,8 @@ package org.apache.hyracks.net.protocols.muxdemux;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 import org.apache.hyracks.api.comm.IBufferFactory;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
@@ -33,65 +33,70 @@ import org.apache.logging.log4j.Logger;
 public class FullFrameChannelReadInterface extends AbstractChannelReadInterface {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final BlockingDeque<ByteBuffer> riEmptyStack;
+    private final Deque<ByteBuffer> riEmptyStack;
     private final IChannelControlBlock ccb;
+    private final Object bufferRecycleLock = new Object();
 
     public FullFrameChannelReadInterface(IChannelControlBlock ccb) {
         this.ccb = ccb;
-        riEmptyStack = new LinkedBlockingDeque<>();
+        riEmptyStack = new ArrayDeque<>();
         credits = 0;
 
         emptyBufferAcceptor = buffer -> {
-            if (ccb.isRemotelyClosed()) {
-                return;
-            }
             final int delta = buffer.remaining();
-            riEmptyStack.push(buffer);
-            ccb.addPendingCredits(delta);
+            synchronized (bufferRecycleLock) {
+                if (ccb.isRemotelyClosed()) {
+                    return;
+                }
+                riEmptyStack.push(buffer);
+                ccb.addPendingCredits(delta);
+            }
         };
     }
 
     @Override
     public int read(ISocketChannel sc, int size) throws IOException, NetException {
-        while (true) {
-            if (size <= 0) {
-                return size;
-            }
-            if (currentReadBuffer == null) {
-                currentReadBuffer = riEmptyStack.poll();
-                //if current buffer == null and limit not reached
-                // factory.createBuffer factory
-                if (currentReadBuffer == null) {
-                    currentReadBuffer = bufferFactory.createBuffer();
-                }
-            }
-            if (currentReadBuffer == null) {
-                if (LOGGER.isWarnEnabled()) {
-                    LOGGER.warn("{} read buffers exceeded. Current empty buffers: {}", ccb, riEmptyStack.size());
-                }
-                throw new IllegalStateException(ccb + " read buffers exceeded");
-            }
-            int rSize = Math.min(size, currentReadBuffer.remaining());
-            if (rSize > 0) {
-                currentReadBuffer.limit(currentReadBuffer.position() + rSize);
-                int len;
-                try {
-                    len = sc.read(currentReadBuffer);
-                    if (len < 0) {
-                        throw new NetException("Socket Closed");
-                    }
-                } finally {
-                    currentReadBuffer.limit(currentReadBuffer.capacity());
-                }
-                size -= len;
-                if (len < rSize) {
+        synchronized (bufferRecycleLock) {
+            while (true) {
+                if (size <= 0) {
                     return size;
                 }
-            } else {
-                return size;
-            }
-            if (currentReadBuffer.remaining() <= 0) {
-                flush();
+                if (currentReadBuffer == null) {
+                    currentReadBuffer = riEmptyStack.poll();
+                    //if current buffer == null and limit not reached
+                    // factory.createBuffer factory
+                    if (currentReadBuffer == null) {
+                        currentReadBuffer = bufferFactory.createBuffer();
+                    }
+                }
+                if (currentReadBuffer == null) {
+                    if (LOGGER.isWarnEnabled()) {
+                        LOGGER.warn("{} read buffers exceeded. Current empty buffers: {}", ccb, riEmptyStack.size());
+                    }
+                    throw new IllegalStateException(ccb + " read buffers exceeded");
+                }
+                int rSize = Math.min(size, currentReadBuffer.remaining());
+                if (rSize > 0) {
+                    currentReadBuffer.limit(currentReadBuffer.position() + rSize);
+                    int len;
+                    try {
+                        len = sc.read(currentReadBuffer);
+                        if (len < 0) {
+                            throw new NetException("Socket Closed");
+                        }
+                    } finally {
+                        currentReadBuffer.limit(currentReadBuffer.capacity());
+                    }
+                    size -= len;
+                    if (len < rSize) {
+                        return size;
+                    }
+                } else {
+                    return size;
+                }
+                if (currentReadBuffer.remaining() <= 0) {
+                    flush();
+                }
             }
         }
     }
