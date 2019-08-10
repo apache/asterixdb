@@ -176,11 +176,13 @@ public class TCPEndpoint {
                         }
                         workingIncomingConnections.clear();
                     }
-                    if (!handshakeCompletedConnections.isEmpty()) {
-                        for (final PendingHandshakeConnection conn : handshakeCompletedConnections) {
-                            handshakeCompleted(conn);
+                    synchronized (handshakeCompletedConnections) {
+                        if (!handshakeCompletedConnections.isEmpty()) {
+                            for (final PendingHandshakeConnection conn : handshakeCompletedConnections) {
+                                handshakeCompleted(conn);
+                            }
+                            handshakeCompletedConnections.clear();
                         }
-                        handshakeCompletedConnections.clear();
                     }
                     if (n > 0) {
                         Iterator<SelectionKey> i = selector.selectedKeys().iterator();
@@ -297,8 +299,7 @@ public class TCPEndpoint {
             if (socketChannel.requiresHandshake()) {
                 asyncHandshake(conn);
             } else {
-                conn.handshakeSuccess = true;
-                handshakeCompletedConnections.add(conn);
+                handshakeCompleted(true, conn);
             }
         }
 
@@ -308,8 +309,7 @@ public class TCPEndpoint {
             if (socketChannel.requiresHandshake()) {
                 asyncHandshake(conn);
             } else {
-                conn.handshakeSuccess = true;
-                handshakeCompletedConnections.add(conn);
+                handshakeCompleted(true, conn);
             }
         }
 
@@ -319,9 +319,15 @@ public class TCPEndpoint {
         }
 
         private void handleHandshakeCompletion(Boolean handshakeSuccess, PendingHandshakeConnection conn) {
-            conn.handshakeSuccess = handshakeSuccess;
-            handshakeCompletedConnections.add(conn);
+            handshakeCompleted(handshakeSuccess, conn);
             selector.wakeup();
+        }
+
+        private void handshakeCompleted(Boolean handshakeSuccess, PendingHandshakeConnection conn) {
+            conn.handshakeSuccess = handshakeSuccess;
+            synchronized (handshakeCompletedConnections) {
+                handshakeCompletedConnections.add(conn);
+            }
         }
 
         private void connectionEstablished(TCPConnection connection) {
