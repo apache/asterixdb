@@ -63,8 +63,9 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
-        int keys[] = JobGenHelper.variablesToFieldIndexes(columnList, inputSchemas[0]);
         GroupByOperator gby = (GroupByOperator) op;
+        checkGroupAll(gby);
+        int keys[] = JobGenHelper.variablesToFieldIndexes(columnList, inputSchemas[0]);
         int fdColumns[] = getFdColumns(gby, inputSchemas[0]);
         // compile subplans and set the gby op. schema accordingly
         AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], gby, opSchema, context);

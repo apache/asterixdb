@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -75,9 +76,10 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisitor<Void, ILogicalOperator> {
 
-    private Map<LogicalVariable, LogicalVariable> variableMapping;
+    private final Map<ILogicalOperator, Set<ILogicalOperator>> alreadyMapped = new HashMap<>();
+    private final Map<LogicalVariable, LogicalVariable> variableMapping;
 
-    public IsomorphismVariableMappingVisitor(Map<LogicalVariable, LogicalVariable> variableMapping) {
+    IsomorphismVariableMappingVisitor(Map<LogicalVariable, LogicalVariable> variableMapping) {
         this.variableMapping = variableMapping;
     }
 
@@ -143,6 +145,15 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
         if (op.getOperatorTag() != arg.getOperatorTag()) {
             return null;
         }
+        Set<ILogicalOperator> mappedOps = alreadyMapped.get(op);
+        if (mappedOps != null && mappedOps.contains(arg)) {
+            return null;
+        }
+        if (mappedOps == null) {
+            mappedOps = new HashSet<>();
+            alreadyMapped.put(op, mappedOps);
+        }
+        mappedOps.add(arg);
         ILogicalOperator inputToCreator1 = op.getSourceOperator();
         NestedTupleSourceOperator nts = (NestedTupleSourceOperator) arg;
         ILogicalOperator inputToCreator2 = nts.getSourceOperator();
@@ -308,6 +319,19 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
         return null;
     }
 
+    @Override
+    public Void visitDelegateOperator(DelegateOperator op, ILogicalOperator arg) throws AlgebricksException {
+        mapVariablesStandard(op, arg);
+        return null;
+    }
+
+    @Override
+    public Void visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
+        mapVariablesStandard(op, arg);
+        return null;
+    }
+
     private void mapChildren(ILogicalOperator op, ILogicalOperator opArg) throws AlgebricksException {
         if (op.getOperatorTag() != opArg.getOperatorTag()) {
             return;
@@ -354,8 +378,8 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
         }
         AbstractAssignOperator leftOp = (AbstractAssignOperator) left;
         AbstractAssignOperator rightOp = (AbstractAssignOperator) right;
-        List<LogicalVariable> producedVarLeft = new ArrayList<LogicalVariable>();
-        List<LogicalVariable> producedVarRight = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> producedVarLeft = new ArrayList<>();
+        List<LogicalVariable> producedVarRight = new ArrayList<>();
         VariableUtilities.getProducedVariables(left, producedVarLeft);
         VariableUtilities.getProducedVariables(right, producedVarRight);
         mapVariablesForAbstractAssign(producedVarLeft, leftOp.getExpressions(), producedVarRight,
@@ -544,18 +568,4 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
         }
         return variableMapping.get(right).equals(left);
     }
-
-    @Override
-    public Void visitDelegateOperator(DelegateOperator op, ILogicalOperator arg) throws AlgebricksException {
-        mapVariablesStandard(op, arg);
-        return null;
-    }
-
-    @Override
-    public Void visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, ILogicalOperator arg)
-            throws AlgebricksException {
-        mapVariablesStandard(op, arg);
-        return null;
-    }
-
 }

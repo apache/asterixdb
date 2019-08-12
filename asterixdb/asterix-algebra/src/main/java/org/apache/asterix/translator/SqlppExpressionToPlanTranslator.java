@@ -253,6 +253,31 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     public Pair<ILogicalOperator, LogicalVariable> visit(SelectBlock selectBlock, Mutable<ILogicalOperator> tupSource)
             throws CompilationException {
         Mutable<ILogicalOperator> currentOpRef = tupSource;
+        if (selectBlock.hasGroupbyClause() && selectBlock.getGroupbyClause().isGroupAll()) {
+            // Creates a subplan operator.
+            SourceLocation sourceLoc = selectBlock.getSourceLocation();
+            SubplanOperator subplanOp = new SubplanOperator();
+            subplanOp.getInputs().add(currentOpRef);
+            subplanOp.setSourceLocation(sourceLoc);
+            NestedTupleSourceOperator ntsOp = new NestedTupleSourceOperator(new MutableObject<>(subplanOp));
+            ntsOp.setSourceLocation(sourceLoc);
+            Mutable<ILogicalOperator> subplanCurrentOpRef = new MutableObject<>(ntsOp);
+            subplanCurrentOpRef = translateFromLetWhereGroupBy(selectBlock, subplanCurrentOpRef);
+            subplanOp.getNestedPlans().add(new ALogicalPlanImpl(subplanCurrentOpRef));
+            currentOpRef = new MutableObject<>(subplanOp);
+        } else {
+            currentOpRef = translateFromLetWhereGroupBy(selectBlock, currentOpRef);
+        }
+        if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+            for (AbstractClause letHavingClause : selectBlock.getLetHavingListAfterGroupby()) {
+                currentOpRef = new MutableObject<>(letHavingClause.accept(this, currentOpRef).first);
+            }
+        }
+        return processSelectClause(selectBlock, currentOpRef);
+    }
+
+    private Mutable<ILogicalOperator> translateFromLetWhereGroupBy(SelectBlock selectBlock,
+            Mutable<ILogicalOperator> currentOpRef) throws CompilationException {
         if (selectBlock.hasFromClause()) {
             currentOpRef = new MutableObject<>(selectBlock.getFromClause().accept(this, currentOpRef).first);
         }
@@ -264,12 +289,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         if (selectBlock.hasGroupbyClause()) {
             currentOpRef = new MutableObject<>(selectBlock.getGroupbyClause().accept(this, currentOpRef).first);
         }
-        if (selectBlock.hasLetHavingClausesAfterGroupby()) {
-            for (AbstractClause letHavingClause : selectBlock.getLetHavingListAfterGroupby()) {
-                currentOpRef = new MutableObject<>(letHavingClause.accept(this, currentOpRef).first);
-            }
-        }
-        return processSelectClause(selectBlock, currentOpRef);
+        return currentOpRef;
     }
 
     @Override

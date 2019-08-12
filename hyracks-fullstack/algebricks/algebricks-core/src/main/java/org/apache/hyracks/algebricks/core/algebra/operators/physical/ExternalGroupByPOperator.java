@@ -32,14 +32,12 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IPartialAggregationTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -122,21 +120,11 @@ public class ExternalGroupByPOperator extends AbstractGroupByPOperator {
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
+        GroupByOperator gby = (GroupByOperator) op;
+        checkGroupAll(gby);
         List<LogicalVariable> gbyCols = getGroupByColumns();
         int keys[] = JobGenHelper.variablesToFieldIndexes(gbyCols, inputSchemas[0]);
-        GroupByOperator gby = (GroupByOperator) op;
-        int numFds = gby.getDecorList().size();
-        int fdColumns[] = new int[numFds];
-        int j = 0;
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList()) {
-            ILogicalExpression expr = p.second.getValue();
-            if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                throw new AlgebricksException("pre-sorted group-by expects variable references.");
-            }
-            VariableReferenceExpression v = (VariableReferenceExpression) expr;
-            LogicalVariable decor = v.getVariableReference();
-            fdColumns[j++] = inputSchemas[0].findVariable(decor);
-        }
+        int fdColumns[] = getFdColumns(gby, inputSchemas[0]);
 
         if (gby.getNestedPlans().size() != 1) {
             throw new AlgebricksException(
@@ -237,6 +225,7 @@ public class ExternalGroupByPOperator extends AbstractGroupByPOperator {
         // Calculates the hash table size (# of unique hash values) based on the budget and a tuple size.
         int frameSize = context.getFrameSize();
         long memoryBudgetInBytes = localMemoryRequirements.getMemoryBudgetInBytes(frameSize);
+        int numFds = gby.getDecorList().size();
         int groupByColumnsCount = gby.getGroupByList().size() + numFds;
         int hashTableSize = ExternalGroupOperatorDescriptor.calculateGroupByTableCardinality(memoryBudgetInBytes,
                 groupByColumnsCount, frameSize);

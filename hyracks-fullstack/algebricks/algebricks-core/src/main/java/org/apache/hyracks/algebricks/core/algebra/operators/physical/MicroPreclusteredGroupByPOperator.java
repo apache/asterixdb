@@ -57,19 +57,19 @@ public class MicroPreclusteredGroupByPOperator extends AbstractPreclusteredGroup
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
-        int keys[] = JobGenHelper.variablesToFieldIndexes(columnList, inputSchemas[0]);
         GroupByOperator gby = (GroupByOperator) op;
-        IVariableTypeEnvironment env = context.getTypeEnvironment(op);
+        checkGroupAll(gby);
+        int keys[] = JobGenHelper.variablesToFieldIndexes(columnList, inputSchemas[0]);
         int fdColumns[] = getFdColumns(gby, inputSchemas[0]);
         // compile subplans and set the gby op. schema accordingly
         AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], gby, opSchema, context);
         IAggregatorDescriptorFactory aggregatorFactory =
                 new NestedPlansAccumulatingAggregatorFactory(subplans, keys, fdColumns);
 
+        IVariableTypeEnvironment env = context.getTypeEnvironment(op);
         IBinaryComparatorFactory[] comparatorFactories =
                 JobGenHelper.variablesToAscBinaryComparatorFactories(columnList, env, context);
-        RecordDescriptor recordDescriptor =
-                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
+        RecordDescriptor recordDescriptor = JobGenHelper.mkRecordDescriptor(env, opSchema, context);
         RecordDescriptor inputRecordDesc = JobGenHelper.mkRecordDescriptor(
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
         int framesLimit = localMemoryRequirements.getMemoryBudgetInFrames();

@@ -179,32 +179,33 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
             freeVariables.addAll(freeVariablesInGbyLets);
             freeVariables.removeIf(SqlppVariableUtil::isExternalVariableReference);
 
-            // Gets outer scope variables.
-            Collection<VariableExpr> decorVars = scopeChecker.getCurrentScope().getLiveVariables().keySet();
-            decorVars.removeAll(groupByBindingVars);
-
-            // Only retains used free variables.
-            if (!decorVars.containsAll(freeVariables)) {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, groupbyClause.getSourceLocation(),
-                        decorVars + ":" + freeVariables);
-            }
-            decorVars.retainAll(freeVariables);
-
-            if (!decorVars.isEmpty()) {
-                // Adds necessary decoration variables for the GROUP BY.
-                // NOTE: we need to include outer binding variables so as they can be evaluated before
-                // the GROUP BY instead of being inlined as part of nested pipepline. The current optimzier
-                // is not able to optimize the latter case. The following query is such an example:
-                // asterixdb/asterix-app/src/test/resources/runtimets/queries_sqlpp/dapd/q2-11
-                List<GbyVariableExpressionPair> decorList = new ArrayList<>();
-                if (groupbyClause.hasDecorList()) {
-                    decorList.addAll(groupbyClause.getDecorPairList());
+            if (!groupbyClause.isGroupAll()) {
+                // Gets outer scope variables.
+                Collection<VariableExpr> decorVars = scopeChecker.getCurrentScope().getLiveVariables().keySet();
+                decorVars.removeAll(groupByBindingVars);
+                // Only retains used free variables.
+                if (!decorVars.containsAll(freeVariables)) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                            groupbyClause.getSourceLocation(), decorVars + ":" + freeVariables);
                 }
-                for (VariableExpr var : decorVars) {
-                    decorList.add(new GbyVariableExpressionPair((VariableExpr) SqlppRewriteUtil.deepCopy(var),
-                            (Expression) SqlppRewriteUtil.deepCopy(var)));
+                decorVars.retainAll(freeVariables);
+
+                if (!decorVars.isEmpty()) {
+                    // Adds necessary decoration variables for the GROUP BY.
+                    // NOTE: we need to include outer binding variables so as they can be evaluated before
+                    // the GROUP BY instead of being inlined as part of nested pipepline. The current optimzier
+                    // is not able to optimize the latter case. The following query is such an example:
+                    // asterixdb/asterix-app/src/test/resources/runtimets/queries_sqlpp/dapd/q2-11
+                    List<GbyVariableExpressionPair> decorList = new ArrayList<>();
+                    if (groupbyClause.hasDecorList()) {
+                        decorList.addAll(groupbyClause.getDecorPairList());
+                    }
+                    for (VariableExpr var : decorVars) {
+                        decorList.add(new GbyVariableExpressionPair((VariableExpr) SqlppRewriteUtil.deepCopy(var),
+                                (Expression) SqlppRewriteUtil.deepCopy(var)));
+                    }
+                    groupbyClause.setDecorPairList(decorList);
                 }
-                groupbyClause.setDecorPairList(decorList);
             }
         } else {
             selectBlock.getSelectClause().accept(this, arg);
