@@ -16,20 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.dataflow.std.connectors;
+
+import java.util.BitSet;
 
 import org.apache.hyracks.api.comm.IPartitionWriterFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
+import org.apache.hyracks.api.dataflow.value.ITupleMultiPartitionComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class PartitionDataWriter extends AbstractPartitionDataWriter {
+public class MultiPartitionDataWriter extends AbstractPartitionDataWriter {
 
-    private final ITuplePartitionComputer tpc;
+    private final ITupleMultiPartitionComputer tpc;
 
-    public PartitionDataWriter(IHyracksTaskContext ctx, int consumerPartitionCount, IPartitionWriterFactory pwFactory,
-            RecordDescriptor recordDescriptor, ITuplePartitionComputer tpc) throws HyracksDataException {
+    public MultiPartitionDataWriter(IHyracksTaskContext ctx, int consumerPartitionCount,
+            IPartitionWriterFactory pwFactory, RecordDescriptor recordDescriptor, ITupleMultiPartitionComputer tpc)
+            throws HyracksDataException {
         super(ctx, consumerPartitionCount, pwFactory, recordDescriptor);
         this.tpc = tpc;
     }
@@ -42,7 +46,9 @@ public class PartitionDataWriter extends AbstractPartitionDataWriter {
 
     @Override
     protected void processTuple(int tupleIndex) throws HyracksDataException {
-        int p = tpc.partition(tupleAccessor, tupleIndex, consumerPartitionCount);
-        appendToPartitionWriter(tupleIndex, p);
+        BitSet partitionSet = tpc.partition(tupleAccessor, tupleIndex, consumerPartitionCount);
+        for (int p = partitionSet.nextSetBit(0); p >= 0; p = partitionSet.nextSetBit(p + 1)) {
+            appendToPartitionWriter(tupleIndex, p);
+        }
     }
 }

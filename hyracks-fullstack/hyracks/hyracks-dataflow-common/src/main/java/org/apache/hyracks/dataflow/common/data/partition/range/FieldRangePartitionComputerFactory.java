@@ -24,22 +24,27 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public abstract class FieldRangePartitionComputerFactory implements ITuplePartitionComputerFactory {
+public final class FieldRangePartitionComputerFactory implements ITuplePartitionComputerFactory {
     private static final long serialVersionUID = 1L;
     private final int[] rangeFields;
-    private IBinaryComparatorFactory[] comparatorFactories;
+    private final IBinaryComparatorFactory[] comparatorFactories;
+    private final RangeMapSupplier rangeMapSupplier;
+    private final SourceLocation sourceLocation;
 
-    protected FieldRangePartitionComputerFactory(int[] rangeFields, IBinaryComparatorFactory[] comparatorFactories) {
+    public FieldRangePartitionComputerFactory(int[] rangeFields, IBinaryComparatorFactory[] comparatorFactories,
+            RangeMapSupplier rangeMapSupplier, SourceLocation sourceLocation) {
         this.rangeFields = rangeFields;
+        this.rangeMapSupplier = rangeMapSupplier;
         this.comparatorFactories = comparatorFactories;
+        this.sourceLocation = sourceLocation;
     }
 
-    protected abstract RangeMap getRangeMap(IHyracksTaskContext hyracksTaskContext) throws HyracksDataException;
-
     @Override
-    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext hyracksTaskContext) {
+    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext taskContext) {
         final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();
@@ -50,7 +55,10 @@ public abstract class FieldRangePartitionComputerFactory implements ITuplePartit
 
             @Override
             public void initialize() throws HyracksDataException {
-                rangeMap = getRangeMap(hyracksTaskContext);
+                rangeMap = rangeMapSupplier.getRangeMap(taskContext);
+                if (rangeMap == null) {
+                    throw HyracksDataException.create(ErrorCode.RANGEMAP_NOT_FOUND, sourceLocation);
+                }
             }
 
             @Override

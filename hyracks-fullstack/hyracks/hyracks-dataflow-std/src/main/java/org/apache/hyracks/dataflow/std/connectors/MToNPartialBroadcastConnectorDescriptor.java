@@ -16,33 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.dataflow.std.connectors;
 
+import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.IPartitionWriterFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
+import org.apache.hyracks.api.dataflow.value.ITupleMultiPartitionComputerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
+import org.apache.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
 
-public class PartitionDataWriter extends AbstractPartitionDataWriter {
+public class MToNPartialBroadcastConnectorDescriptor extends AbstractMToNConnectorDescriptor {
 
-    private final ITuplePartitionComputer tpc;
+    private static final long serialVersionUID = 1L;
 
-    public PartitionDataWriter(IHyracksTaskContext ctx, int consumerPartitionCount, IPartitionWriterFactory pwFactory,
-            RecordDescriptor recordDescriptor, ITuplePartitionComputer tpc) throws HyracksDataException {
-        super(ctx, consumerPartitionCount, pwFactory, recordDescriptor);
-        this.tpc = tpc;
+    protected ITupleMultiPartitionComputerFactory tpcf;
+
+    public MToNPartialBroadcastConnectorDescriptor(IConnectorDescriptorRegistry spec,
+            ITupleMultiPartitionComputerFactory tpcf) {
+        super(spec);
+        this.tpcf = tpcf;
     }
 
     @Override
-    public void open() throws HyracksDataException {
-        super.open();
-        tpc.initialize();
-    }
-
-    @Override
-    protected void processTuple(int tupleIndex) throws HyracksDataException {
-        int p = tpc.partition(tupleAccessor, tupleIndex, consumerPartitionCount);
-        appendToPartitionWriter(tupleIndex, p);
+    public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
+            IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
+            throws HyracksDataException {
+        return new MultiPartitionDataWriter(ctx, nConsumerPartitions, edwFactory, recordDesc,
+                tpcf.createPartitioner(ctx));
     }
 }

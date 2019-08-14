@@ -16,23 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.dataflow.common.data.partition.range;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 
-public class StaticFieldRangePartitionComputerFactory extends FieldRangePartitionComputerFactory {
+public final class StaticRangeMapSupplier implements RangeMapSupplier {
+
     private static final long serialVersionUID = 1L;
-    private RangeMap rangeMap;
 
-    public StaticFieldRangePartitionComputerFactory(int[] rangeFields, IBinaryComparatorFactory[] comparatorFactories,
-            RangeMap rangeMap) {
-        super(rangeFields, comparatorFactories);
+    private final RangeMap rangeMap;
+
+    public StaticRangeMapSupplier(RangeMap rangeMap) {
         this.rangeMap = rangeMap;
     }
 
     @Override
-    protected RangeMap getRangeMap(IHyracksTaskContext hyracksTaskContext) {
+    public RangeMap getRangeMap(IHyracksTaskContext taskContext) {
         return rangeMap;
     }
 }

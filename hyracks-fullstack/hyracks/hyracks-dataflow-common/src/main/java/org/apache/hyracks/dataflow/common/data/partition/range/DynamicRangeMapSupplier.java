@@ -16,33 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.dataflow.common.data.partition.range;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.exceptions.ErrorCode;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 
-public class DynamicFieldRangePartitionComputerFactory extends FieldRangePartitionComputerFactory {
-    private static final long serialVersionUID = 1L;
-    private final String rangeMapKeyInContext;
-    private final SourceLocation sourceLocation;
+public final class DynamicRangeMapSupplier implements RangeMapSupplier {
 
-    public DynamicFieldRangePartitionComputerFactory(int[] rangeFields, IBinaryComparatorFactory[] comparatorFactories,
-            String rangeMapKeyInContext, SourceLocation sourceLocation) {
-        super(rangeFields, comparatorFactories);
+    private static final long serialVersionUID = 1L;
+
+    private final String rangeMapKeyInContext;
+
+    public DynamicRangeMapSupplier(String rangeMapKeyInContext) {
         this.rangeMapKeyInContext = rangeMapKeyInContext;
-        this.sourceLocation = sourceLocation;
     }
 
-    @Override
-    protected RangeMap getRangeMap(IHyracksTaskContext hyracksTaskContext) throws HyracksDataException {
-        RangeMap rangeMap = TaskUtil.get(rangeMapKeyInContext, hyracksTaskContext);
-        if (rangeMap == null) {
-            throw HyracksDataException.create(ErrorCode.RANGEMAP_NOT_FOUND, sourceLocation);
-        }
-        return rangeMap;
+    public RangeMap getRangeMap(IHyracksTaskContext taskContext) {
+        return TaskUtil.get(rangeMapKeyInContext, taskContext);
     }
 }
