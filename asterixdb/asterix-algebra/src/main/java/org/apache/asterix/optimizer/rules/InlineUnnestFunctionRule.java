@@ -67,22 +67,22 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
         UnnestOperator unnestOperator = (UnnestOperator) op1;
         AbstractFunctionCallExpression expr =
                 (AbstractFunctionCallExpression) unnestOperator.getExpressionRef().getValue();
-        //we only inline for the scan-collection function
+        // we only inline for the scan-collection function
         if (expr.getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
             return false;
         }
 
         // inline all variables from an unnesting function call
-        AbstractFunctionCallExpression funcExpr = expr;
-        List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
+        List<Mutable<ILogicalExpression>> args = expr.getArguments();
+        boolean changed = false;
         for (int i = 0; i < args.size(); i++) {
             ILogicalExpression argExpr = args.get(i).getValue();
             if (argExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression varExpr = (VariableReferenceExpression) argExpr;
-                inlineVariable(varExpr.getVariableReference(), unnestOperator);
+                changed |= inlineVariable(varExpr.getVariableReference(), unnestOperator);
             }
         }
-        return true;
+        return changed;
     }
 
     /**
@@ -94,38 +94,38 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
      *            The unnest operator.
      * @throws AlgebricksException
      */
-    private void inlineVariable(LogicalVariable usedVar, UnnestOperator unnestOp) throws AlgebricksException {
+    private boolean inlineVariable(LogicalVariable usedVar, UnnestOperator unnestOp) throws AlgebricksException {
         AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) unnestOp.getExpressionRef().getValue();
-        List<Pair<AbstractFunctionCallExpression, Integer>> parentAndIndexList =
-                new ArrayList<Pair<AbstractFunctionCallExpression, Integer>>();
+        List<Pair<AbstractFunctionCallExpression, Integer>> parentAndIndexList = new ArrayList<>();
         getParentFunctionExpression(usedVar, expr, parentAndIndexList);
         ILogicalExpression usedVarOrginExpr =
                 findUsedVarOrigin(usedVar, unnestOp, (AbstractLogicalOperator) unnestOp.getInputs().get(0).getValue());
         if (usedVarOrginExpr != null) {
             for (Pair<AbstractFunctionCallExpression, Integer> parentAndIndex : parentAndIndexList) {
-                //we only rewrite the top scan-collection function
+                // we only rewrite the top scan-collection function
                 if (parentAndIndex.first.getFunctionIdentifier() == BuiltinFunctions.SCAN_COLLECTION
                         && parentAndIndex.first == expr) {
                     unnestOp.getExpressionRef().setValue(usedVarOrginExpr);
                 }
             }
+            return true;
         }
+        return false;
     }
 
-    private void getParentFunctionExpression(LogicalVariable usedVar, ILogicalExpression expr,
+    private void getParentFunctionExpression(LogicalVariable usedVar, AbstractFunctionCallExpression funcExpr,
             List<Pair<AbstractFunctionCallExpression, Integer>> parentAndIndexList) {
-        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
         for (int i = 0; i < args.size(); i++) {
             ILogicalExpression argExpr = args.get(i).getValue();
             if (argExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression varExpr = (VariableReferenceExpression) argExpr;
                 if (varExpr.getVariableReference().equals(usedVar)) {
-                    parentAndIndexList.add(new Pair<AbstractFunctionCallExpression, Integer>(funcExpr, i));
+                    parentAndIndexList.add(new Pair<>(funcExpr, i));
                 }
             }
             if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                getParentFunctionExpression(usedVar, argExpr, parentAndIndexList);
+                getParentFunctionExpression(usedVar, (AbstractFunctionCallExpression) argExpr, parentAndIndexList);
             }
         }
     }
@@ -134,7 +134,7 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
             AbstractLogicalOperator currentOp) throws AlgebricksException {
         ILogicalExpression ret = null;
         if (currentOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-            List<LogicalVariable> producedVars = new ArrayList<LogicalVariable>();
+            List<LogicalVariable> producedVars = new ArrayList<>();
             VariableUtilities.getProducedVariables(currentOp, producedVars);
             if (producedVars.contains(usedVar)) {
                 AssignOperator assignOp = (AssignOperator) currentOp;
@@ -148,7 +148,7 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
                         ret = returnedExpr;
                     }
                 } else if (returnedExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                    //recusively inline
+                    // recursively inline
                     VariableReferenceExpression varExpr = (VariableReferenceExpression) returnedExpr;
                     LogicalVariable var = varExpr.getVariableReference();
                     ILogicalExpression finalExpr = findUsedVarOrigin(var, currentOp,
@@ -173,6 +173,7 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
 
     private void removeUnecessaryAssign(AbstractLogicalOperator parentOp, AbstractLogicalOperator currentOp,
             AssignOperator assignOp, int index) {
+        // TODO: how come the assign variable is removed before checking that other operators might be using it?
         assignOp.getVariables().remove(index);
         assignOp.getExpressions().remove(index);
         if (assignOp.getVariables().size() == 0) {
