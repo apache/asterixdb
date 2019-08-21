@@ -112,7 +112,7 @@ public class CCMessageBroker implements ICCMessageBroker {
                         throw HyracksDataException.create(e);
                     }
                     if (System.currentTimeMillis() - time > timeout && pair.getLeft().getValue() > 0) {
-                        throw new RuntimeDataException(ErrorCode.NC_REQUEST_TIMEOUT, timeout / 1000.0);
+                        throw new RuntimeDataException(ErrorCode.NC_REQUEST_TIMEOUT, timeout / 1000);
                     }
                 }
             }
