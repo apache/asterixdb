@@ -192,7 +192,7 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
         IScalarEvaluatorFactory[] castEvalFact =
                 new IScalarEvaluatorFactory[] { new ColumnAccessEvalFactory(recordIdx) };
         IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[1];
-        sefs[0] = createCastFunction(strictCast).createEvaluatorFactory(castEvalFact);
+        sefs[0] = createCastFunction(strictCast, sourceLoc).createEvaluatorFactory(castEvalFact);
         AssignRuntimeFactory castAssign = new AssignRuntimeFactory(outColumns, sefs, projectionList);
         castAssign.setSourceLocation(sourceLoc);
         return new AlgebricksMetaOperatorDescriptor(spec, 1, 1, new IPushRuntimeFactory[] { castAssign },

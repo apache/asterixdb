@@ -52,6 +52,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
 
@@ -197,8 +198,9 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
     private IFunctionDescriptor resolveFunction(AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
             JobGenContext context) throws AlgebricksException {
         FunctionIdentifier fnId = expr.getFunctionIdentifier();
-        IFunctionDescriptor fd = functionManager.lookupFunction(fnId);
-        fd.setSourceLocation(expr.getSourceLocation());
+        SourceLocation sourceLocation = expr.getSourceLocation();
+        IFunctionDescriptor fd = functionManager.lookupFunction(fnId, sourceLocation);
+        fd.setSourceLocation(sourceLocation);
         IFunctionTypeInferer fnTypeInfer = functionManager.lookupFunctionTypeInferer(fnId);
         if (fnTypeInfer != null) {
             CompilerProperties compilerProps = ((IApplicationContext) context.getAppContext()).getCompilerProperties();

@@ -16,20 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.functions;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.api.exceptions.SourceLocation;
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-/**
- * A registry of {@link IFunctionDescriptor} and {@link IFunctionTypeInferer}
- * for built-in functions
- */
-public interface IFunctionManager {
+create type DataType as open {
+id:int,
+name:string,
+age:int,
+hobby:string
+};
 
-    IFunctionDescriptor lookupFunction(FunctionIdentifier fid, SourceLocation sourceLocation)
-            throws AlgebricksException;
+create type MetaType as closed {
+id:int
+};
 
-    IFunctionTypeInferer lookupFunctionTypeInferer(FunctionIdentifier fid);
-}
+create dataset DS(DataType) with meta(MetaType) primary key meta().id;
+
+create feed DsStream with {
+ "adapter-name" : "localfs",
+ "reader" : "localfs",
+ "parser" : "record-with-metadata",
+ "type-name" : "DataType",
+ "meta-type-name" : "MetaType",
+ "path" : "asterix_nc1://data/csv/people.csv",
+ "format" : "csv",
+ "delimiter" : ",",
+ "record-format" : "adm",
+ "record-index" : "1",
+ "key-indexes" : "0",
+ "key-indicators" : "1",
+ "header" : "false"
+};

@@ -11358,6 +11358,12 @@
         <output-dir compare="Text">resolving_pk_with_meta</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="meta">
+      <compilation-unit name="meta_after_gby">
+        <output-dir compare="Text">meta_after_gby</output-dir>
+        <expected-error>Compilation error: Inappropriate use of function 'meta'. For example, after GROUP BY (in line 29, at column 21)</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="big-object">
     <test-case FilePath="big-object">

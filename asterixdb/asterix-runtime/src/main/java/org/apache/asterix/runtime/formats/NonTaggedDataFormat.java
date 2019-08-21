@@ -141,7 +141,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                     }
                     IScalarEvaluatorFactory fldIndexEvalFactory =
                             new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
-                    IFunctionDescriptor fDesc = functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+                    IFunctionDescriptor fDesc =
+                            functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_BY_INDEX, sourceLoc);
                     fDesc.setSourceLocation(sourceLoc);
                     fDesc.setImmutableStates(recType);
                     return fDesc.createEvaluatorFactory(
@@ -158,7 +159,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                 }
                 IScalarEvaluatorFactory fldNameEvalFactory =
                         new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
-                IFunctionDescriptor fDesc = functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_BY_NAME);
+                IFunctionDescriptor fDesc =
+                        functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_BY_NAME, sourceLoc);
                 fDesc.setSourceLocation(sourceLoc);
                 return fDesc.createEvaluatorFactory(
                         new IScalarEvaluatorFactory[] { recordEvalFactory, fldNameEvalFactory });
@@ -166,7 +168,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         }
 
         if (fldName.size() > 1) {
-            IFunctionDescriptor fDesc = functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_NESTED);
+            IFunctionDescriptor fDesc = functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_NESTED, sourceLoc);
             fDesc.setSourceLocation(sourceLoc);
             fDesc.setImmutableStates(recType, fldName);
             return fDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { recordEvalFactory });
@@ -241,7 +243,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                     }
                     IScalarEvaluatorFactory fldIndexEvalFactory =
                             new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
-                    IFunctionDescriptor fDesc = functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+                    IFunctionDescriptor fDesc =
+                            functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_BY_INDEX, sourceLoc);
                     fDesc.setSourceLocation(sourceLoc);
                     fDesc.setImmutableStates(recType);
                     IScalarEvaluatorFactory evalFactory = fDesc.createEvaluatorFactory(
@@ -267,7 +270,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }
-            IFunctionDescriptor fDesc = functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_NESTED);
+            IFunctionDescriptor fDesc = functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_NESTED, sourceLoc);
             fDesc.setSourceLocation(sourceLoc);
             fDesc.setImmutableStates(recType, fldName);
             IScalarEvaluatorFactory evalFactory =

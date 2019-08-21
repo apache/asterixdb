@@ -327,16 +327,16 @@ public abstract class SecondaryIndexOperationsHelper {
         IScalarEvaluatorFactory[] castEvalFact =
                 new IScalarEvaluatorFactory[] { new ColumnAccessEvalFactory(recordIdx) };
         IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[1];
-        sefs[0] = createCastFunction(strictCast).createEvaluatorFactory(castEvalFact);
+        sefs[0] = createCastFunction(strictCast, sourceLoc).createEvaluatorFactory(castEvalFact);
         AssignRuntimeFactory castAssign = new AssignRuntimeFactory(outColumns, sefs, projectionList);
         castAssign.setSourceLocation(sourceLoc);
         return new AlgebricksMetaOperatorDescriptor(spec, 1, 1, new IPushRuntimeFactory[] { castAssign },
                 new RecordDescriptor[] { enforcedRecDesc });
     }
 
-    protected IFunctionDescriptor createCastFunction(boolean strictCast) throws AlgebricksException {
+    IFunctionDescriptor createCastFunction(boolean strictCast, SourceLocation sourceLoc) throws AlgebricksException {
         IFunctionDescriptor castFuncDesc = metadataProvider.getFunctionManager()
-                .lookupFunction(strictCast ? BuiltinFunctions.CAST_TYPE : BuiltinFunctions.CAST_TYPE_LAX);
+                .lookupFunction(strictCast ? BuiltinFunctions.CAST_TYPE : BuiltinFunctions.CAST_TYPE_LAX, sourceLoc);
         castFuncDesc.setSourceLocation(sourceLoc);
         castFuncDesc.setImmutableStates(enforcedItemType, itemType);
         return castFuncDesc;

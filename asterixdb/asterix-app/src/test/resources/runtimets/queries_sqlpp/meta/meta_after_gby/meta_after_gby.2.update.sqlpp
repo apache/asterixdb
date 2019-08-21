@@ -16,20 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.functions;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.api.exceptions.SourceLocation;
+use test;
 
-/**
- * A registry of {@link IFunctionDescriptor} and {@link IFunctionTypeInferer}
- * for built-in functions
- */
-public interface IFunctionManager {
-
-    IFunctionDescriptor lookupFunction(FunctionIdentifier fid, SourceLocation sourceLocation)
-            throws AlgebricksException;
-
-    IFunctionTypeInferer lookupFunctionTypeInferer(FunctionIdentifier fid);
-}
+set `wait-for-completion-feed` "true";
+connect feed DsStream to dataset DS;
+start feed DsStream;

@@ -16,20 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.functions;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.api.exceptions.SourceLocation;
-
-/**
- * A registry of {@link IFunctionDescriptor} and {@link IFunctionTypeInferer}
- * for built-in functions
+/*
+ * Description: use of meta() after group by requires meta() be assigned to a variable in a LET clause
+ * Result     : failure
  */
-public interface IFunctionManager {
 
-    IFunctionDescriptor lookupFunction(FunctionIdentifier fid, SourceLocation sourceLocation)
-            throws AlgebricksException;
+USE test;
 
-    IFunctionTypeInferer lookupFunctionTypeInferer(FunctionIdentifier fid);
-}
+FROM DS AS d
+GROUP BY d.hobby AS hobby
+SELECT hobby, COUNT(meta().id)
+ORDER BY hobby;

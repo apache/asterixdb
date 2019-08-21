@@ -22,6 +22,9 @@ package org.apache.asterix.runtime.functions;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionManager;
@@ -29,6 +32,7 @@ import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * Default implementation of {@link IFunctionManager}.
@@ -57,11 +61,15 @@ public final class FunctionManager implements IFunctionManager {
     }
 
     @Override
-    public IFunctionDescriptor lookupFunction(FunctionIdentifier fid) throws AlgebricksException {
+    public IFunctionDescriptor lookupFunction(FunctionIdentifier fid, SourceLocation src) throws AlgebricksException {
         Pair<FunctionIdentifier, Integer> key = new Pair<>(fid, fid.getArity());
         IFunctionDescriptorFactory factory = functions.get(key);
         if (factory == null) {
-            throw new AlgebricksException("Inappropriate use of function " + "'" + fid.getName() + "'");
+            String msg = "Inappropriate use of function '" + fid.getName() + "'";
+            if (fid.equals(BuiltinFunctions.META)) {
+                msg = msg + ". For example, after GROUP BY";
+            }
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, src, msg);
         }
         return factory.createFunctionDescriptor();
     }
