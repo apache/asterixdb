@@ -27,7 +27,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AString;
@@ -76,12 +75,13 @@ public class AdmObjectNode implements IAdmNode {
         return children.entrySet();
     }
 
-    public AdmObjectNode set(String fieldName, IAdmNode value) throws CompilationException {
+    public AdmObjectNode set(String fieldName, IAdmNode value) {
         if (value == null) {
             value = AdmNullNode.INSTANCE; // NOSONAR
         }
         if (children.containsKey(fieldName)) {
-            throw new CompilationException(ErrorCode.DUPLICATE_FIELD_NAME, fieldName);
+            // TODO(ali): find a way to issue a warning
+            return this;
         }
         children.put(fieldName, value);
         return this;

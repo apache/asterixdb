@@ -16,19 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 /*
- * Description    : Tests whether a conflict between an open and closed field name are detected
- * Expected Result: An error reporting that there is a duplicate field name "name"
- * Author: zheilbron
+ * Description  : Testing object constructor without field names
+ * Expected Res : Success with a warning reporting that there is a duplicate field name
  */
- 
-drop dataverse test if exists;
-create dataverse test;
-use dataverse test;
 
-create type opentype as open {
-id:int32,
-fname:string
-}
-
-create dataset testds(opentype) primary key id; 
+from (
+  from range(1, 2) x
+  select value { "a": x, "b": { "a": x + 1 } }
+) x
+select value { x.a, x.b.a }

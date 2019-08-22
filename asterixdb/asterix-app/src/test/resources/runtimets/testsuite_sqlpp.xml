@@ -23,7 +23,9 @@
   <!ENTITY TemporalQueries SYSTEM "queries_sqlpp/temporal/TemporalQueries.xml">
 ]>
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp" SourceLocation="true">
+  &ObjectsQueries;
   &AsyncDeferredQueries;
+  &GeoQueries;
   &TemporalQueries;
   <test-group name="flwor">
     <test-case FilePath="flwor">
@@ -99,12 +101,12 @@
         <expected-error>Duplicate alias definitions: s1</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="flwor">
+    <test-case FilePath="flwor" check-warnings="true">
       <compilation-unit name="query-ASTERIXDB-2446">
-        <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
+        <output-dir compare="Text">query-ASTERIXDB-2446</output-dir>
         <expected-error>ASX0013: Duplicate field name "a"</expected-error>
-        <expected-error>ASX0013: Duplicate field name "c"</expected-error>
-        <expected-error>ASX0013: Duplicate field name "e"</expected-error>
+        <expected-warn>Duplicate field name "c" (in line 26, at column 84)</expected-warn>
+        <expected-warn>Duplicate field name "e" (in line 26, at column 116)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="flwor">
@@ -122,6 +124,11 @@
     <test-case FilePath="flwor">
       <compilation-unit name="select-let">
         <output-dir compare="Text">select-let</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="let33">
+        <output-dir compare="Text">let33</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -188,11 +195,6 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-case FilePath="flwor">
-    <compilation-unit name="let33">
-      <output-dir compare="Text">let33</output-dir>
-    </compilation-unit>
-  </test-case>
   <test-group name="aggregate">
     <test-case FilePath="aggregate">
       <compilation-unit name="issue531_string_min_max">
@@ -7899,7 +7901,6 @@
             </compilation-unit>
         </test-case> -->
   </test-group>
-  &ObjectsQueries;
   <test-group name="resolution">
     <test-case FilePath="resolution">
       <compilation-unit name="conflict-field-dataset">
@@ -12357,7 +12358,6 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  &GeoQueries;
   <test-group name="compression">
     <test-case FilePath="compression">
       <compilation-unit name="incompressible-pages/large-page">

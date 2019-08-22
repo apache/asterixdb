@@ -17,13 +17,4 @@
  * under the License.
  */
 
-/*
- * Description  : Testing object constructor without field names
- * Expected Res : Failure: Duplicate field name
- */
-
-from (
-  from range(1, 2) x
-  select value { "a": x, "b": { "a": x + 1 } }
-) x
-select value { x.a, x.b.a }
+select value {"name": "Sam", "f1": {"id": 3, "id2": 7, "id": 8}};

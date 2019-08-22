@@ -18,7 +18,7 @@
  */
 /*
  * Description    : Tests whether a conflict between two open field names are detected
- * Expected Result: An error reporting that there is a duplicate field name "name"
+ * Expected Result: Success (ignoring duplicates) with a warning reporting that there is a duplicate field name "name"
  * Author: zheilbron
  */
 

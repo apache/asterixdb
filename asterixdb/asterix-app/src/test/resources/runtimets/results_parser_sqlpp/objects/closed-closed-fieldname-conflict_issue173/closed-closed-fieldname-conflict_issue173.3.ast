@@ -6,9 +6,4 @@ RecordConstructor [
     :
     LiteralExpr [STRING] [john]
   )
-  (
-    LiteralExpr [STRING] [name]
-    :
-    LiteralExpr [STRING] [smith]
-  )
 ]

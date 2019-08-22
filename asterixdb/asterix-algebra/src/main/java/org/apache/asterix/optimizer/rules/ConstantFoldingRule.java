@@ -21,12 +21,16 @@ package org.apache.asterix.optimizer.rules;
 
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.WarningCollector;
+import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
@@ -213,7 +217,9 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 }
                 IAObject c = FUNC_ID_TO_CONSTANT.get(expr.getFunctionIdentifier());
                 if (c != null) {
-                    return new Pair<>(true, new ConstantExpression(new AsterixConstantValue(c)));
+                    ConstantExpression constantExpression = new ConstantExpression(new AsterixConstantValue(c));
+                    constantExpression.setSourceLocation(expr.getSourceLocation());
+                    return new Pair<>(true, constantExpression);
                 }
 
                 IScalarEvaluatorFactory fact = jobGenCtx.getExpressionRuntimeProvider().createEvaluatorFactory(expr,
@@ -235,7 +241,9 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 bbis.setByteBuffer(ByteBuffer.wrap(p.getByteArray(), p.getStartOffset(), p.getLength()), 0);
                 IAObject o = (IAObject) serde.deserialize(dis);
                 warningCollector.getWarnings(optContext.getWarningCollector());
-                return new Pair<>(true, new ConstantExpression(new AsterixConstantValue(o)));
+                ConstantExpression constantExpression = new ConstantExpression(new AsterixConstantValue(o));
+                constantExpression.setSourceLocation(expr.getSourceLocation());
+                return new Pair<>(true, constantExpression);
             } catch (HyracksDataException | AlgebricksException e) {
                 if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
                     AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Exception caught at constant folding: " + e, e);
@@ -266,15 +274,73 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         }
 
         private boolean constantFoldArgs(AbstractFunctionCallExpression expr, Void arg) throws AlgebricksException {
+            return expr.getFunctionIdentifier().equals(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)
+                    ? foldRecordArgs(expr, arg) : foldFunctionArgs(expr, arg);
+        }
+
+        private boolean foldFunctionArgs(AbstractFunctionCallExpression expr, Void arg) throws AlgebricksException {
             boolean changed = false;
-            for (Mutable<ILogicalExpression> r : expr.getArguments()) {
-                Pair<Boolean, ILogicalExpression> p2 = r.getValue().accept(this, arg);
-                if (p2.first) {
-                    r.setValue(p2.second);
+            for (Mutable<ILogicalExpression> exprArgRef : expr.getArguments()) {
+                changed |= foldArg(exprArgRef, arg);
+            }
+            return changed;
+        }
+
+        private boolean foldRecordArgs(AbstractFunctionCallExpression expr, Void arg) throws AlgebricksException {
+            if (expr.getArguments().size() % 2 != 0) {
+                String functionName = expr.getFunctionIdentifier().getName();
+                throw CompilationException.create(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, expr.getSourceLocation(),
+                        functionName);
+            }
+            boolean changed = false;
+            Iterator<Mutable<ILogicalExpression>> iterator = expr.getArguments().iterator();
+            int fieldNameIdx = 0;
+            while (iterator.hasNext()) {
+                Mutable<ILogicalExpression> fieldNameExprRef = iterator.next();
+                Pair<Boolean, ILogicalExpression> fieldNameExpr = fieldNameExprRef.getValue().accept(this, arg);
+                boolean isDuplicate = false;
+                if (fieldNameExpr.first) {
+                    String fieldName = ConstantExpressionUtil.getStringConstant(fieldNameExpr.second);
+                    if (fieldName != null) {
+                        isDuplicate = isDuplicateField(fieldName, fieldNameIdx, expr.getArguments());
+                    }
+                    if (isDuplicate) {
+                        optContext.getWarningCollector()
+                                .warn(WarningUtil.forAsterix(fieldNameExpr.second.getSourceLocation(),
+                                        ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldName));
+                        iterator.remove();
+                        iterator.next();
+                        iterator.remove();
+                    } else {
+                        fieldNameExprRef.setValue(fieldNameExpr.second);
+                    }
                     changed = true;
+                }
+                if (!isDuplicate) {
+                    Mutable<ILogicalExpression> fieldValue = iterator.next();
+                    changed |= foldArg(fieldValue, arg);
+                    fieldNameIdx += 2;
                 }
             }
             return changed;
+        }
+
+        private boolean isDuplicateField(String fName, int fIdx, List<Mutable<ILogicalExpression>> args) {
+            for (int i = 0, size = args.size(); i < size; i += 2) {
+                if (i != fIdx && fName.equals(ConstantExpressionUtil.getStringConstant(args.get(i).getValue()))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private boolean foldArg(Mutable<ILogicalExpression> exprArgRef, Void arg) throws AlgebricksException {
+            Pair<Boolean, ILogicalExpression> newExpr = exprArgRef.getValue().accept(this, arg);
+            if (newExpr.first) {
+                exprArgRef.setValue(newExpr.second);
+                return true;
+            }
+            return false;
         }
 
         private boolean allArgsConstant(AbstractFunctionCallExpression expr) {

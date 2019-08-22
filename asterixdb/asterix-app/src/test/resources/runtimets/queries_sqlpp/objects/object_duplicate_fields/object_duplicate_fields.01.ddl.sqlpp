@@ -16,10 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 /*
- * Description    : Tests whether a conflict between two closed field names are detected
- * Expected Result: An error reporting that there is a duplicate field name "name"
- * Author: zheilbron
+ * Description    : Tests that duplicate fields are ignored and only one field is picked
+ * Expected Result: Success with a warning reporting that there is a duplicate field name
  */
 
-// no inserts, deletes
+DROP dataverse test if exists;
+CREATE dataverse test;
+
+use test;
+
+create type opentype as {
+  fname1 : string,
+  fname2 : string
+};
+
+create dataset testds(opentype) primary key fname1;
+
+create dataset ds(opentype) primary key fname1 with {
+"merge-policy": {"name":"no-merge"},
+"merge-policy": {
+    "name": "prefix",
+    "parameters": { "max-mergable-component-size": 32768, "max-tolerance-component-count": 32 }
+  }
+};

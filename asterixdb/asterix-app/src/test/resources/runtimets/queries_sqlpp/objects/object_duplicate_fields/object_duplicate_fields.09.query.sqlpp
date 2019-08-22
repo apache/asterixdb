@@ -16,12 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description    : Tests whether a conflict between two open field names are detected
- * Expected Result: An error reporting that there is a duplicate field name "name"
- * Author: zheilbron
- */
- 
-use dataverse test;
 
-insert into dataset testds({'fname1': "name", 'fname2': "name"});
+select value {"name": "Sam", "f1": {"id": 3, "id2": 5, "id": "sth"}, "f2": "str", "f1": 8};

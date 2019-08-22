@@ -102,16 +102,17 @@
       <output-dir compare="Text">tiny-social-example</output-dir>
     </compilation-unit>
   </test-case>
-  <test-case FilePath="objects">
+  <test-case FilePath="objects" check-warnings="true">
     <compilation-unit name="no_fieldname_constr">
       <output-dir compare="Text">no_fieldname_constr</output-dir>
+      <expected-warn>Encountered a cross product join (in line 25, at column 22)</expected-warn>
+      <expected-warn>Duplicate field name "a" (in line 29, at column 24)</expected-warn>
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">
     <compilation-unit name="no_fieldname_constr_negative">
       <output-dir compare="Text">no_fieldname_constr</output-dir>
       <expected-error>ASX1001: Syntax error: Cannot infer field name</expected-error>
-      <expected-error>ASX0013: Duplicate field name "a"</expected-error>
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">
@@ -150,7 +151,7 @@
       <source-location>false</source-location>
     </compilation-unit>
   </test-case>
-  <test-case FilePath="objects">>
+  <test-case FilePath="objects">
     <compilation-unit name="object_add">
       <output-dir compare="Text">object_add</output-dir>
     </compilation-unit>
@@ -185,24 +186,21 @@
       <output-dir compare="Text">open-object-constructor_02</output-dir>
     </compilation-unit>
   </test-case>
-  <test-case FilePath="objects">
+  <test-case FilePath="objects" check-warnings="true">
     <compilation-unit name="closed-closed-fieldname-conflict_issue173">
       <output-dir compare="Text">closed-closed-fieldname-conflict_issue173</output-dir>
-      <expected-error>Duplicate field name "name"</expected-error>
-      <source-location>false</source-location>
+      <expected-warn>Duplicate field name "name" (in line 28, at column 16)</expected-warn>
     </compilation-unit>
   </test-case>
-  <test-case FilePath="objects">
+  <test-case FilePath="objects" check-warnings="true">
     <compilation-unit name="open-closed-fieldname-conflict_issue173">
       <output-dir compare="Text">open-closed-fieldname-conflict_issue173</output-dir>
-      <expected-error>Open field "name" has the same field name as closed field at index 0</expected-error>
       <source-location>false</source-location>
     </compilation-unit>
   </test-case>
-  <test-case FilePath="objects">
+  <test-case FilePath="objects" check-warnings="true">
     <compilation-unit name="open-open-fieldname-conflict_issue173">
       <output-dir compare="Text">open-open-fieldname-conflict_issue173</output-dir>
-      <expected-error>Open fields 0 and 1 have the same field name "name"</expected-error>
       <source-location>false</source-location>
     </compilation-unit>
   </test-case>
@@ -214,6 +212,20 @@
   <test-case FilePath="objects">
     <compilation-unit name="query-ASTERIXDB-2529">
       <output-dir compare="Text">query-ASTERIXDB-2529</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects" check-warnings="true">
+    <compilation-unit name="object_duplicate_fields">
+      <output-dir compare="Text">object_duplicate_fields</output-dir>
+      <expected-warn>Duplicate field name "name" (in line 25, at column 1)</expected-warn>
+      <expected-warn>Duplicate field name "Name" (in line 27, at column 1)</expected-warn>
+      <expected-warn>Duplicate field name "name" (in line 29, at column 1)</expected-warn>
+      <expected-warn>Duplicate field name "name" (in line 20, at column 30)</expected-warn>
+      <expected-warn>Duplicate field name "id" (in line 20, at column 56)</expected-warn>
+      <expected-warn>Duplicate field name "f1" (in line 20, at column 70)</expected-warn>
+      <expected-warn>Duplicate field name "id" (in line 20, at column 36)</expected-warn>
+      <expected-warn>Duplicate field name "f1" (in line 20, at column 83)</expected-warn>
+      <expected-warn>Duplicate field name "fname1" (in line 23, at column 45)</expected-warn>
     </compilation-unit>
   </test-case>
 </test-group>

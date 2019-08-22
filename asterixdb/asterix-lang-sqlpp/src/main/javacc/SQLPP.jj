@@ -2756,7 +2756,9 @@ FieldBinding FieldBinding() throws ParseException:
           throw new SqlppParseException(getSourceLocation(token), "Cannot infer field name");
         }
         String generatedName = SqlppVariableUtil.toUserDefinedName(generatedIdentifier);
-        return new FieldBinding(new LiteralExpr(new StringLiteral(generatedName)), left);
+        LiteralExpr generatedNameExpr = new LiteralExpr(new StringLiteral(generatedName));
+        generatedNameExpr.setSourceLocation(left.getSourceLocation());
+        return new FieldBinding(generatedNameExpr, left);
     } else {
       return new FieldBinding(left, right);
     }

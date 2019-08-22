@@ -18,9 +18,9 @@
  */
 
 /*
- * Description    : Ensure error if there's a duplicate field name in the closed-object-constructor() function
+ * Description    : Warn and ignore duplicates if there's a duplicate field name in the closed-object-constructor() function
  */
 
 set `import-private-functions` `true`;
 
-`closed-object-constructor`('b',get_year(current_date()),'c',[20],'c',[30]);
+`closed-object-constructor`('b',tobigint(get_year(current_date()) / 1000),'c',[20],'c',[30]);

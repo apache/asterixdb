@@ -18,9 +18,9 @@
  */
 
 /*
- * Description    : Ensure error if there's a duplicate field name in the open-object-constructor() function
+ * Description    : Warn and ignore duplicates if there's a duplicate field name in the open-object-constructor() function
  */
 
 set `import-private-functions` `true`;
 
-`open-object-constructor`('d' || to_string(get_year(current_date())),10,'e',[20],'e',[30]);
+`open-object-constructor`('d' || to_string((get_year(current_date()) + 1) - get_year(current_date())), 10,'e',[20],'e',[30]);

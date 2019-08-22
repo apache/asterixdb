@@ -19,8 +19,6 @@
 
 package org.apache.asterix.builders;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
@@ -39,6 +37,8 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 public class RecordBuilder implements IARecordBuilder {
     private final static int DEFAULT_NUM_OPEN_FIELDS = 10;
@@ -64,6 +64,7 @@ public class RecordBuilder implements IARecordBuilder {
     private int[] openFieldNameLengths;
     private int numberOfOpenFields;
     private final RuntimeRecordTypeInfo recTypeInfo;
+    private final IntOpenHashSet fieldNamesHashes;
 
     public RecordBuilder() {
         this.closedPartOutputStream = new ByteArrayAccessibleOutputStream();
@@ -79,6 +80,7 @@ public class RecordBuilder implements IARecordBuilder {
         this.openPartOffsetArraySize = 0;
         this.offsetPosition = 0;
         this.recTypeInfo = new RuntimeRecordTypeInfo();
+        this.fieldNamesHashes = new IntOpenHashSet();
     }
 
     @Override
@@ -88,6 +90,7 @@ public class RecordBuilder implements IARecordBuilder {
         this.openPartOutputStream.reset();
         this.numberOfOpenFields = 0;
         this.offsetPosition = 0;
+        this.fieldNamesHashes.clear();
         if (nullBitMap != null) {
             // A default null byte is 10101010 (0xAA):
             // the null bit is 1, which means the field is not a null,
@@ -105,6 +108,7 @@ public class RecordBuilder implements IARecordBuilder {
         this.numberOfClosedFields = 0;
         this.numberOfOpenFields = 0;
         this.offsetPosition = 0;
+        this.fieldNamesHashes.clear();
         if (recType != null) {
             this.isOpen = recType.isOpen();
             this.containsOptionalField = NonTaggedFormatUtil.hasOptionalField(recType);
@@ -182,27 +186,34 @@ public class RecordBuilder implements IARecordBuilder {
         if (data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
             return;
         }
+        // ignore adding duplicate fields
+        byte[] nameBytes = name.getByteArray();
+        int nameStart = name.getStartOffset() + 1;
+        int nameLength = name.getLength() - 1;
+        if (recType != null && recTypeInfo.getFieldIndex(nameBytes, nameStart, nameLength) >= 0) {
+            // TODO(ali): issue a warning
+            return;
+        }
+        int fieldNameHashCode = utf8HashFunction.hash(nameBytes, nameStart, nameLength);
+        if (!fieldNamesHashes.add(fieldNameHashCode)) {
+            for (int i = 0; i < numberOfOpenFields; i++) {
+                if (isDuplicate(nameBytes, nameStart, nameLength, fieldNameHashCode, i)) {
+                    // TODO(ali): issue a warning
+                    return;
+                }
+            }
+        }
         if (numberOfOpenFields == openPartOffsets.length) {
             openPartOffsets = Arrays.copyOf(openPartOffsets, openPartOffsets.length + DEFAULT_NUM_OPEN_FIELDS);
             openFieldNameLengths =
                     Arrays.copyOf(openFieldNameLengths, openFieldNameLengths.length + DEFAULT_NUM_OPEN_FIELDS);
         }
-        int fieldNameHashCode =
-                utf8HashFunction.hash(name.getByteArray(), name.getStartOffset() + 1, name.getLength() - 1);
-        if (recType != null) {
-            int cFieldPos;
-            cFieldPos = recTypeInfo.getFieldIndex(name.getByteArray(), name.getStartOffset() + 1, name.getLength() - 1);
-            if (cFieldPos >= 0) {
-                throw new HyracksDataException("Open field \"" + recType.getFieldNames()[cFieldPos]
-                        + "\" has the same field name as closed field at index " + cFieldPos);
-            }
-        }
         openPartOffsets[this.numberOfOpenFields] = fieldNameHashCode;
         openPartOffsets[this.numberOfOpenFields] = openPartOffsets[numberOfOpenFields] << 32;
         openPartOffsets[numberOfOpenFields] += openPartOutputStream.size();
-        openFieldNameLengths[numberOfOpenFields++] = name.getLength() - 1;
-        openPartOutputStream.write(name.getByteArray(), name.getStartOffset() + 1, name.getLength() - 1);
-        openPartOutputStream.write(value.getByteArray(), value.getStartOffset(), value.getLength());
+        openFieldNameLengths[numberOfOpenFields++] = nameLength;
+        openPartOutputStream.write(nameBytes, nameStart, nameLength);
+        openPartOutputStream.write(data, offset, value.getLength());
     }
 
     @Override
@@ -220,27 +231,6 @@ public class RecordBuilder implements IARecordBuilder {
 
             // field names with the same hash code should be adjacent to each other after sorting
             Arrays.sort(this.openPartOffsets, 0, numberOfOpenFields);
-            if (numberOfOpenFields > 1) {
-                byte[] openBytes = openPartOutputStream.getByteArray();
-                for (int i = 0, k = 1; i < numberOfOpenFields - 1;) {
-                    if (utf8Comparator.compare(openBytes, (int) openPartOffsets[i], openFieldNameLengths[i], openBytes,
-                            (int) openPartOffsets[k], openFieldNameLengths[k]) == 0) {
-                        String field = utf8SerDer.deserialize(new DataInputStream(new ByteArrayInputStream(openBytes,
-                                (int) openPartOffsets[i], openFieldNameLengths[i])));
-                        throw new HyracksDataException(
-                                "Open fields " + i + " and " + k + " have the same field name \"" + field + "\"");
-                    }
-                    if (sameHashes(openPartOffsets, i, k) && k < numberOfOpenFields - 1) {
-                        // keep comparing the current field i with the next field k
-                        k++;
-                    } else {
-                        // the current field i has no duplicates; move to the adjacent one
-                        i++;
-                        k = i + 1;
-                    }
-                }
-            }
-
             openPartOffset = h + numberOfSchemaFields * 4 + closedPartOutputStream.size();
             int fieldNameHashCode;
             for (int i = 0; i < numberOfOpenFields; i++) {
@@ -256,10 +246,6 @@ public class RecordBuilder implements IARecordBuilder {
             recordLength = h + numberOfSchemaFields * 4 + closedPartOutputStream.size();
         }
         writeRecord(out, writeTypeTag, h, recordLength);
-    }
-
-    private static boolean sameHashes(long[] hashAndOffset, int fieldId1, int fieldId2) {
-        return (int) (hashAndOffset[fieldId1] >>> 32) == (int) (hashAndOffset[fieldId2] >>> 32);
     }
 
     private void writeRecord(DataOutput out, boolean writeTypeTag, int headerSize, int recordLength)
@@ -313,5 +299,12 @@ public class RecordBuilder implements IARecordBuilder {
 
     public IBinaryComparator getFieldNameComparator() {
         return utf8Comparator;
+    }
+
+    private boolean isDuplicate(byte[] fName, int fStart, int fLen, int fNameHash, int otherFieldIdx)
+            throws HyracksDataException {
+        return ((int) (openPartOffsets[otherFieldIdx] >>> 32) == fNameHash)
+                && (utf8Comparator.compare(openPartOutputStream.getByteArray(), (int) openPartOffsets[otherFieldIdx],
+                        openFieldNameLengths[otherFieldIdx], fName, fStart, fLen) == 0);
     }
 }

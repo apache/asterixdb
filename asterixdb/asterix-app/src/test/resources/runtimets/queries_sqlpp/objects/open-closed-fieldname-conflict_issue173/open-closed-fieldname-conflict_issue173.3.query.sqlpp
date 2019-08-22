@@ -18,13 +18,11 @@
  */
 /*
  * Description    : Tests whether a conflict between an open and closed field name are detected
- * Expected Result: An error reporting that there is a duplicate field name "name"
+ * Expected Result: Success (ignoring duplicates) with a warning reporting that there is a duplicate field name "name"
  * Author: zheilbron
  */
 
 use test;
 
-
 select element {x.fname:'smith',test.lowercase('NAME'):'john'}
-from  testds as x
-;
+from  testds as x;

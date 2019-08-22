@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.lang.common.util;
 
-import java.io.Serializable;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -44,7 +42,6 @@ import org.apache.asterix.object.base.IAdmNode;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt64;
-import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
@@ -55,6 +52,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+// TODO(ali): all the functionality here is the same as the ones in ExpressionUtils
 public class LangRecordParseUtil {
     private static final String NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE =
             "JSON record can only have expressions [%1$s, %2$s, %3$s]";
@@ -72,35 +70,26 @@ public class LangRecordParseUtil {
                 return parseList((ListConstructor) expr);
             default:
                 throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR,
-                        NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE,
-                        new Serializable[] { Expression.Kind.LITERAL_EXPRESSION.toString(),
-                                Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION.toString(),
-                                Expression.Kind.LIST_CONSTRUCTOR_EXPRESSION.toString() });
+                        NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE, Expression.Kind.LITERAL_EXPRESSION.toString(),
+                        Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION.toString(),
+                        Expression.Kind.LIST_CONSTRUCTOR_EXPRESSION.toString());
         }
     }
 
     public static AdmObjectNode parseRecord(RecordConstructor recordValue, List<Pair<String, String>> defaults)
             throws HyracksDataException, CompilationException {
         AdmObjectNode record = new AdmObjectNode();
-        AMutableString fieldNameString = new AMutableString(null);
         List<FieldBinding> fbList = recordValue.getFbList();
-        HashSet<String> fieldNames = new HashSet<>();
         for (FieldBinding fb : fbList) {
             // get key
-            fieldNameString.setValue(exprToStringLiteral(fb.getLeftExpr()).getStringValue());
-            if (!fieldNames.add(fieldNameString.getStringValue())) {
-                throw new HyracksDataException(
-                        "Field " + fieldNameString.getStringValue() + " was specified multiple times");
-            }
+            String key = exprToStringLiteral(fb.getLeftExpr()).getStringValue();
             // get value
             IAdmNode value = parseExpression(fb.getRightExpr());
-            record.set(fieldNameString.getStringValue(), value);
+            record.set(key, value);
         }
         // defaults
         for (Pair<String, String> kv : defaults) {
-            if (!fieldNames.contains(kv.first)) {
-                record.set(kv.first, new AdmStringNode(kv.second));
-            }
+            record.set(kv.first, new AdmStringNode(kv.second));
         }
         return record;
     }
@@ -180,7 +169,7 @@ public class LangRecordParseUtil {
         }
     }
 
-    public static String aObjToString(IAObject aObj) throws AlgebricksException {
+    private static String aObjToString(IAObject aObj) throws AlgebricksException {
         switch (aObj.getType().getTypeTag()) {
             case DOUBLE:
                 return Double.toString(((ADouble) aObj).getDoubleValue());
