@@ -6066,6 +6066,11 @@
         <output-dir compare="Text">cast-ASTERIXDB-2458</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="insert_nulls_with_secondary_idx">
+        <output-dir compare="Text">insert_nulls_with_secondary_idx</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index">
     <test-group name="index/validations">
