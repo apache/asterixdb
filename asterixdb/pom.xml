@@ -547,7 +547,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-plugin-plugin</artifactId>
-          <version>3.5.2</version>
+          <version>3.6.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -808,38 +808,10 @@
     <profile>
       <id>java8</id>
       <activation>
-        <jdk>1.8</jdk>
+        <jdk>[1.8,)</jdk>
       </activation>
       <properties>
         <target.jdk.version>8</target.jdk.version>
-      </properties>
-    </profile>
-    <profile>
-      <id>java9</id>
-      <activation>
-        <jdk>9</jdk>
-      </activation>
-      <properties>
-        <target.jdk.version>9</target.jdk.version>
-      </properties>
-    </profile>
-    <profile>
-      <id>java10</id>
-      <activation>
-        <jdk>10</jdk>
-      </activation>
-      <properties>
-        <target.jdk.version>10</target.jdk.version>
-      </properties>
-    </profile>
-    <profile>
-      <id>java11</id>
-      <activation>
-        <jdk>11</jdk>
-      </activation>
-      <properties>
-        <!-- several plugins do not yet support Java 11 classes (maven-plugin-plugin, maven-dependency-plugin) -->
-        <target.jdk.version>10</target.jdk.version>
       </properties>
     </profile>
     <profile>
