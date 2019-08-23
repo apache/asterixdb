@@ -1,0 +1,50 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Description: Test structural property matching when a parent operator
+ *              requires UNORDERED_PARTITIONED and its child operators
+ *              deliver ORDERED_PARTITIONED
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use test;
+
+create type TestType as
+{
+  id:   int,
+  id2:  int,
+  f1:   int
+};
+
+create  dataset TestDS1(TestType) primary key id;
+
+create  dataset TestDS2(TestType) primary key id;
+
+set `compiler.sort.parallel` "true";
+
+select t1.id2 from
+  ( select id, id2 from TestDS1 /*+ range [5] */ order by id2 ) t1
+  join
+  ( select id, id2 from TestDS2 /*+ range [15] */ order by id2 ) t2
+  on t1.id2 = t2.id2
+group by t1.id2
+order by t1.id2;

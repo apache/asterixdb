@@ -6016,6 +6016,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="p_sort_join">
+        <output-dir compare="Text">p_sort_join</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="p_sort_seq_merge">
         <output-dir compare="Text">p_sort_seq_merge</output-dir>
       </compilation-unit>

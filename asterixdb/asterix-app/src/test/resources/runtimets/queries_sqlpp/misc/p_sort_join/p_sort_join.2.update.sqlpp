@@ -1,0 +1,68 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+INSERT INTO TestDS1
+([
+{"id":1, "id2":1, "f1":40},
+{"id":2, "id2":2, "f1":40},
+{"id":3, "id2":3, "f1":40},
+{"id":4, "id2":4, "f1":41},
+{"id":5, "id2":5, "f1":42},
+{"id":6, "id2":6, "f1":42},
+{"id":7, "id2":7, "f1":40},
+{"id":8, "id2":8, "f1":41},
+{"id":9, "id2":9, "f1":41},
+{"id":10, "id2":10, "f1":42},
+{"id":11, "id2":11, "f1":40},
+{"id":12, "id2":12, "f1":41},
+{"id":13, "id2":13, "f1":42},
+{"id":14, "id2":14, "f1":41},
+{"id":15, "id2":15, "f1":40},
+{"id":16, "id2":16, "f1":42},
+{"id":17, "id2":17, "f1":42},
+{"id":18, "id2":18, "f1":41},
+{"id":19, "id2":19, "f1":42},
+{"id":20, "id2":20, "f1":41}
+]);
+
+INSERT INTO TestDS2
+([
+{"id":1, "id2":1, "f1":40},
+{"id":2, "id2":2, "f1":40},
+{"id":3, "id2":3, "f1":40},
+{"id":4, "id2":4, "f1":41},
+{"id":5, "id2":5, "f1":42},
+{"id":6, "id2":6, "f1":42},
+{"id":7, "id2":7, "f1":40},
+{"id":8, "id2":8, "f1":41},
+{"id":9, "id2":9, "f1":41},
+{"id":10, "id2":10, "f1":42},
+{"id":11, "id2":11, "f1":40},
+{"id":12, "id2":12, "f1":41},
+{"id":13, "id2":13, "f1":42},
+{"id":14, "id2":14, "f1":41},
+{"id":15, "id2":15, "f1":40},
+{"id":16, "id2":16, "f1":42},
+{"id":17, "id2":17, "f1":42},
+{"id":18, "id2":18, "f1":41},
+{"id":19, "id2":19, "f1":42},
+{"id":20, "id2":20, "f1":41}
+]);
