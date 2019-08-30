@@ -29,7 +29,7 @@ public class ReplicaIdentifier {
     private ReplicaIdentifier(int partition, InetSocketAddress location) {
         this.partition = partition;
         this.location = location;
-        id = partition + "@" + location.toString();
+        id = partition + "@" + location.getHostString() + ":" + location.getPort();
     }
 
     public static ReplicaIdentifier of(int partition, InetSocketAddress location) {
