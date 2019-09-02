@@ -119,13 +119,7 @@ public class RecoveryTask {
             }
             IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
             try {
-                lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(),
-                        listener.getEntityId().getDataverse() + '.' + listener.getEntityId().getEntityName());
-                for (Dataset dataset : listener.getDatasets()) {
-                    lockManager.acquireDataverseReadLock(metadataProvider.getLocks(), dataset.getDataverseName());
-                    lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(),
-                            DatasetUtil.getFullyQualifiedName(dataset));
-                }
+                acquireRecoveryLocks(lockManager);
                 synchronized (listener) {
                     try {
                         if (!cancelRecovery && listener.getState() == ActivityState.TEMPORARILY_FAILED) {
@@ -143,7 +137,7 @@ public class RecoveryTask {
                 listener.setState(ActivityState.TEMPORARILY_FAILED);
                 failure = e;
             } finally {
-                metadataProvider.getLocks().reset();
+                releaseRecoveryLocks(metadataProvider);
             }
         }
         // Recovery task is essntially over now either through failure or through cancellation(stop)
@@ -163,12 +157,7 @@ public class RecoveryTask {
         }
         IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
         try {
-            lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(),
-                    listener.getEntityId().getDataverse() + '.' + listener.getEntityId().getEntityName());
-            for (Dataset dataset : listener.getDatasets()) {
-                MetadataLockUtil.modifyDatasetBegin(lockManager, metadataProvider.getLocks(), dataset.getDatasetName(),
-                        DatasetUtil.getFullyQualifiedName(dataset));
-            }
+            acquirePostRecoveryLocks(lockManager);
             synchronized (listener) {
                 if (!cancelRecovery && listener.getState() == ActivityState.TEMPORARILY_FAILED) {
                     LOGGER.warn("Recovery for {} permanently failed", listener.getEntityId());
@@ -178,8 +167,35 @@ public class RecoveryTask {
                 listener.notifyAll();
             }
         } finally {
-            metadataProvider.getLocks().reset();
+            releasePostRecoveryLocks();
         }
         return null;
+    }
+
+    protected void acquireRecoveryLocks(IMetadataLockManager lockManager) throws AlgebricksException {
+        lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(),
+                listener.getEntityId().getDataverse() + '.' + listener.getEntityId().getEntityName());
+        for (Dataset dataset : listener.getDatasets()) {
+            lockManager.acquireDataverseReadLock(metadataProvider.getLocks(), dataset.getDataverseName());
+            lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(),
+                    DatasetUtil.getFullyQualifiedName(dataset));
+        }
+    }
+
+    protected void releaseRecoveryLocks(MetadataProvider metadataProvider) {
+        metadataProvider.getLocks().reset();
+    }
+
+    protected void acquirePostRecoveryLocks(IMetadataLockManager lockManager) throws AlgebricksException {
+        lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(),
+                listener.getEntityId().getDataverse() + '.' + listener.getEntityId().getEntityName());
+        for (Dataset dataset : listener.getDatasets()) {
+            MetadataLockUtil.modifyDatasetBegin(lockManager, metadataProvider.getLocks(), dataset.getDatasetName(),
+                    DatasetUtil.getFullyQualifiedName(dataset));
+        }
+    }
+
+    protected void releasePostRecoveryLocks() {
+        metadataProvider.getLocks().reset();
     }
 }

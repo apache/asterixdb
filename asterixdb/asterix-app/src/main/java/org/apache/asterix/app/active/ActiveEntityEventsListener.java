@@ -366,7 +366,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             ExecutorService executor = appCtx.getServiceContext().getControllerService().getExecutor();
             setState(ActivityState.TEMPORARILY_FAILED);
             LOGGER.log(level, "Recovery task has been submitted");
-            rt = new RecoveryTask(appCtx, this, retryPolicyFactory);
+            rt = createRecoveryTask();
             executor.submit(rt.recover());
         }
     }
@@ -683,6 +683,10 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     @Override
     public synchronized boolean isSuspended() {
         return suspended;
+    }
+
+    protected RecoveryTask createRecoveryTask() {
+        return new RecoveryTask(appCtx, this, retryPolicyFactory);
     }
 
     @Override
