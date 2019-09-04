@@ -54,7 +54,7 @@ Thus, "Voice" or "voice" will be evaluated as the same word.
         from ChirpMessages msg
         where ftcontains(msg.messageText, "voice", {"mode":"any"});
 
-The DDL and DML of TinySocial can be found in [ADM: Modeling Semistructed Data in AsterixDB](../sqlpp/primer-sqlpp.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB).
+The DDL and DML of TinySocial can be found in [ADM: Modeling Semistructured Data in AsterixDB](../sqlpp/primer-sqlpp.html#ADM:_Modeling_Semistructured_Data_in_AsterixDB).
 
 The `Expression1` is an expression that should be evaluable as a string at runtime as in the above example
 where `msg.messageText` is a string field. The `Expression2` can be a string, an (un)ordered list

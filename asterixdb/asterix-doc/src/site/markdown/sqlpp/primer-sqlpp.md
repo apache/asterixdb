@@ -45,7 +45,7 @@ You will use the AsterixDB web interface to do this, and for SQL++ you will need
 Once you have reached the end of this tutorial, you will be fully armed and dangerous, with all the basic AsterixDB knowledge
 that you'll need to start down the path of modeling, storing, and querying your own semistructured data.
 
-## ADM: Modeling Semistructed Data in AsterixDB ##
+## ADM: Modeling Semistructured Data in AsterixDB ##
 In this section you will learn all about modeling Big Data using
 ADM, the data model of the AsterixDB BDMS.
 

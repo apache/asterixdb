@@ -45,7 +45,7 @@ supports similarity queries using efficient indexes and algorithms.
 AsterixDB supports [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) (on strings) and
 [Jaccard](http://en.wikipedia.org/wiki/Jaccard_index) (on sets).  For
 instance, in our
-[TinySocial](../sqlpp/primer-sqlpp.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB)
+[TinySocial](../sqlpp/primer-sqlpp.html#ADM:_Modeling_Semistructured_Data_in_AsterixDB)
 example, the `friendIds` of a Gleambook user forms a set
 of friends, and we can define a similarity between the sets of
 friends of two users. We can also convert a string to a set of grams of a length "n"

@@ -44,7 +44,7 @@ As you read through this document, you should try each step for yourself on your
 Once you have reached the end, you will be fully armed and dangerous, with all the basic AsterixDB knowledge
 that you'll need to start down the path of modeling, storing, and querying your own semistructured data.
 
-## ADM: Modeling Semistructed Data in AsterixDB ##
+## ADM: Modeling Semistructured Data in AsterixDB ##
 In this section you will learn all about modeling Big Data using
 ADM, the data model of the AsterixDB BDMS.
 

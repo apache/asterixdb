@@ -63,7 +63,7 @@ components, it is possible, when answering certain queries, to exploit
 partitioning to only access some components and safely filter out the
 remaining components, thus reducing query times. For instance,
 referring to our
-[TinySocial](primer.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB)
+[TinySocial](primer.html#ADM:_Modeling_Semistructured_Data_in_AsterixDB)
 example, suppose a user always retrieves tweets from the
 `TweetMessages` dataset based on the `send-time` field (e.g., tweets
 posted in the last 24 hours). Since there is not a secondary index on
