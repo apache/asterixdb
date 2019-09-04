@@ -21,6 +21,7 @@ package org.apache.asterix.transaction.management.service.recovery;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
@@ -43,13 +44,13 @@ public class CheckpointManager extends AbstractCheckpointManager {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long NO_SECURED_LSN = -1L;
-    private final long datasetCheckpointInterval;
+    private final long datasetCheckpointIntervalNanos;
     private final Map<TxnId, Long> securedLSNs;
     private boolean suspended = false;
 
     public CheckpointManager(ITransactionSubsystem txnSubsystem, CheckpointProperties checkpointProperties) {
         super(txnSubsystem, checkpointProperties);
-        datasetCheckpointInterval = checkpointProperties.getDatasetCheckpointInterval();
+        datasetCheckpointIntervalNanos = TimeUnit.SECONDS.toNanos(checkpointProperties.getDatasetCheckpointInterval());
         securedLSNs = new HashMap<>();
     }
 
@@ -134,7 +135,7 @@ public class CheckpointManager extends AbstractCheckpointManager {
         return lsmIndex -> {
             if (lsmIndex.isPrimaryIndex()) {
                 PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) lsmIndex.getOperationTracker();
-                return currentTime - opTracker.getLastFlushTime() >= datasetCheckpointInterval;
+                return currentTime - opTracker.getLastFlushTime() >= datasetCheckpointIntervalNanos;
             }
             return false;
         };
