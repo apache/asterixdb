@@ -3344,9 +3344,21 @@
         <output-dir compare="Text">time_01</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="constructor">
+    <test-case FilePath="constructor/uuid">
       <compilation-unit name="uuid_01">
         <output-dir compare="Text">uuid_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor/uuid">
+      <compilation-unit name="uuid_02">
+        <output-dir compare="Text">uuid_02</output-dir>
+        <expected-error>Invalid format for uuid in 02a199ca-bf58-412e-bd9f-60a0c975a8a-</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor/uuid">
+      <compilation-unit name="uuid_03">
+        <output-dir compare="Text">uuid_03</output-dir>
+        <expected-error>Invalid format for uuid in 12345</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

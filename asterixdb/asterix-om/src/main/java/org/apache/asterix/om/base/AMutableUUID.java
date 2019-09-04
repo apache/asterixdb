@@ -19,7 +19,10 @@
 
 package org.apache.asterix.om.base;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class AMutableUUID extends AUUID {
 
@@ -71,9 +74,14 @@ public class AMutableUUID extends AUUID {
     // Calculate a long value from a hex string.
     private static void decodeBytesFromHex(byte[] hexArray, int hexArrayOffset, byte[] outputArray, int outputOffset,
             int length) throws HyracksDataException {
-        for (int i = hexArrayOffset; i < hexArrayOffset + length;) {
-            int hi = transformHexCharToInt(hexArray[i++]);
-            outputArray[outputOffset++] = (byte) (hi << 4 | transformHexCharToInt(hexArray[i++]));
+        try {
+            for (int i = hexArrayOffset; i < hexArrayOffset + length;) {
+                int hi = transformHexCharToInt(hexArray[i++]);
+                outputArray[outputOffset++] = (byte) (hi << 4 | transformHexCharToInt(hexArray[i++]));
+            }
+        } catch (Exception ex) {
+            // Can also happen in case of invalid length, out of bound exception
+            throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, "uuid", UTF8StringUtil.toString(hexArray, 1));
         }
     }
 
@@ -119,8 +127,7 @@ public class AMutableUUID extends AUUID {
             case 'F':
                 return 15;
             default:
-                throw new HyracksDataException("This is not a correct UUID value.");
+                throw new RuntimeDataException(ErrorCode.INVALID_FORMAT);
         }
     }
-
 }

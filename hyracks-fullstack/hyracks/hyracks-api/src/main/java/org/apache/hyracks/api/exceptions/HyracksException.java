@@ -32,7 +32,7 @@ public class HyracksException extends IOException implements IFormattedException
     private final int errorCode;
     private final Serializable[] params;
     private final String nodeId;
-    private final SourceLocation sourceLoc;
+    private SourceLocation sourceLoc;
     private transient volatile String msgCache;
 
     public static HyracksException create(Throwable cause) {
@@ -140,6 +140,10 @@ public class HyracksException extends IOException implements IFormattedException
 
     public SourceLocation getSourceLocation() {
         return sourceLoc;
+    }
+
+    public void setSourceLocation(SourceLocation sourceLocation) {
+        this.sourceLoc = sourceLocation;
     }
 
     @Override
