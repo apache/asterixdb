@@ -39,7 +39,7 @@
     "storage.max.active.writable.datasets" : 8,
     "txn\.commitprofiler\.enabled" : false,
     "txn\.commitprofiler\.reportinterval" : 5,
-    "txn\.dataset\.checkpoint\.interval" : 600,
+    "txn\.dataset\.checkpoint\.interval" : 3600,
     "txn\.job\.recovery\.memorysize" : 67108864,
     "txn\.lock\.escalationthreshold" : 1000,
     "txn\.lock\.shrinktimer" : 5000,

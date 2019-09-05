@@ -38,7 +38,7 @@ public class TransactionProperties extends AbstractProperties {
     public enum Option implements IOption {
         TXN_DATASET_CHECKPOINT_INTERVAL(
                 POSITIVE_INTEGER,
-                (int) TimeUnit.MINUTES.toSeconds(10),
+                (int) TimeUnit.MINUTES.toSeconds(60),
                 "The interval (in seconds) after which a dataset is considered idle and persisted to disk"),
         TXN_LOG_BUFFER_NUMPAGES(POSITIVE_INTEGER, 8, "The number of pages in the transaction log tail"),
         TXN_LOG_BUFFER_PAGESIZE(
