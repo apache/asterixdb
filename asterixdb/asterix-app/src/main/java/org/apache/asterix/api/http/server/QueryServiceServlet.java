@@ -58,6 +58,7 @@ import org.apache.asterix.app.result.fields.StatusPrinter;
 import org.apache.asterix.app.result.fields.TypePrinter;
 import org.apache.asterix.app.result.fields.WarningsPrinter;
 import org.apache.asterix.app.translator.QueryTranslator;
+import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.ICodedMessage;
@@ -168,6 +169,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         LOGICAL_PLAN("logical-plan"),
         OPTIMIZED_LOGICAL_PLAN("optimized-logical-plan"),
         PARSE_ONLY("parse-only"),
+        READ_ONLY("readonly"),
         JOB("job"),
         SIGNATURE("signature"),
         MULTI_STATEMENT("multi-statement");
@@ -378,6 +380,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         param.setRewrittenExpressionTree(getOptBoolean(jsonRequest, Parameter.REWRITTEN_EXPRESSION_TREE, false));
         param.setLogicalPlan(getOptBoolean(jsonRequest, Parameter.LOGICAL_PLAN, false));
         param.setParseOnly(getOptBoolean(jsonRequest, Parameter.PARSE_ONLY, false));
+        param.setReadOnly(getOptBoolean(jsonRequest, Parameter.READ_ONLY, false));
         param.setOptimizedLogicalPlan(getOptBoolean(jsonRequest, Parameter.OPTIMIZED_LOGICAL_PLAN, false));
         param.setJob(getOptBoolean(jsonRequest, Parameter.JOB, false));
         param.setSignature(getOptBoolean(jsonRequest, Parameter.SIGNATURE, true));
@@ -403,6 +406,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         param.setMaxResultReads(getParameter(request, Parameter.MAX_RESULT_READS));
         param.setPlanFormat(getParameter(request, Parameter.PLAN_FORMAT));
         param.setParseOnly(getOptBoolean(request, Parameter.PARSE_ONLY, false));
+        param.setReadOnly(getOptBoolean(request, Parameter.READ_ONLY, false));
         param.setMultiStatement(getOptBoolean(request, Parameter.MULTI_STATEMENT, true));
         try {
             param.setStatementParams(getOptStatementParameters(request, request.getParameterNames().iterator(),
@@ -573,7 +577,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         IParserFactory factory = compilationProvider.getParserFactory();
         IParser parser = factory.createParser(statementsText);
         List<Statement> stmts = parser.parse();
-        QueryTranslator.validateStatements(stmts);
+        QueryTranslator.validateStatements(stmts, true, RequestParameters.NO_CATEGORY_RESTRICTION_MASK);
         Query query = (Query) stmts.get(stmts.size() - 1);
         Set<VariableExpr> extVars =
                 compilationProvider.getRewriterFactory().createQueryRewriter().getExternalVariables(query.getBody());
@@ -601,9 +605,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         execution.start();
         Map<String, IAObject> stmtParams =
                 org.apache.asterix.app.translator.RequestParameters.deserializeParameterValues(statementParameters);
+        int stmtCategoryRestriction = org.apache.asterix.app.translator.RequestParameters
+                .getStatementCategoryRestrictionMask(param.isReadOnly());
         IRequestParameters requestParameters = new org.apache.asterix.app.translator.RequestParameters(requestReference,
                 statementsText, getResultSet(), resultProperties, stats, null, param.getClientContextID(),
-                optionalParameters, stmtParams, param.isMultiStatement());
+                optionalParameters, stmtParams, param.isMultiStatement(), stmtCategoryRestriction);
         translator.compileAndExecute(getHyracksClientConnection(), requestParameters);
         execution.end();
         translator.getWarnings(warnings);

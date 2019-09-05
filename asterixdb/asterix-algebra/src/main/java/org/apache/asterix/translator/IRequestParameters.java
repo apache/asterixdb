@@ -53,4 +53,11 @@ public interface IRequestParameters extends ICommonRequestParameters {
      * @return Statement parameters
      */
     Map<String, IAObject> getStatementParameters();
+
+    /**
+     * @return a bitmask that restricts which statement
+     *   {@link org.apache.asterix.lang.common.base.Statement.Category categories} are permitted for this request,
+     *   {@code 0} if all categories are allowed
+     */
+    int getStatementCategoryRestrictionMask();
 }

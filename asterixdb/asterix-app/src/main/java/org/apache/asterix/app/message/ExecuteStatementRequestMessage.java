@@ -84,12 +84,14 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
     private final Map<String, String> optionalParameters;
     private final Map<String, byte[]> statementParameters;
     private final boolean multiStatement;
+    private final int statementCategoryRestrictionMask;
     private final IRequestReference requestReference;
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
             String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
             String clientContextID, String handleUrl, Map<String, String> optionalParameters,
-            Map<String, byte[]> statementParameters, boolean multiStatement, IRequestReference requestReference) {
+            Map<String, byte[]> statementParameters, boolean multiStatement, int statementCategoryRestrictionMask,
+            IRequestReference requestReference) {
         this.requestNodeId = requestNodeId;
         this.requestMessageId = requestMessageId;
         this.lang = lang;
@@ -101,6 +103,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         this.optionalParameters = optionalParameters;
         this.statementParameters = statementParameters;
         this.multiStatement = multiStatement;
+        this.statementCategoryRestrictionMask = statementCategoryRestrictionMask;
         this.requestReference = requestReference;
     }
 
@@ -139,9 +142,9 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
                     compilationProvider, storageComponentProvider, new ResponsePrinter(sessionOutput));
             final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
-            final IRequestParameters requestParameters =
-                    new RequestParameters(requestReference, statementsText, null, resultProperties, stats, outMetadata,
-                            clientContextID, optionalParameters, stmtParams, multiStatement);
+            final IRequestParameters requestParameters = new RequestParameters(requestReference, statementsText, null,
+                    resultProperties, stats, outMetadata, clientContextID, optionalParameters, stmtParams,
+                    multiStatement, statementCategoryRestrictionMask);
             translator.compileAndExecute(ccApp.getHcc(), requestParameters);
             translator.getWarnings(warnings);
             outPrinter.close();

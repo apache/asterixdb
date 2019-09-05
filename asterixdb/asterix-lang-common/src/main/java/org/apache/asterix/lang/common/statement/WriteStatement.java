@@ -60,7 +60,7 @@ public class WriteStatement extends AbstractStatement {
 
     @Override
     public byte getCategory() {
-        return Category.QUERY;
+        return Category.PROCEDURE;
     }
 
 }

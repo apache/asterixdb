@@ -141,10 +141,6 @@ public class InsertStatement extends AbstractStatement implements IReturningStat
 
     @Override
     public byte getCategory() {
-        if (var == null) {
-            return Category.UPDATE;
-        }
-        return Category.QUERY;
+        return Category.UPDATE;
     }
-
 }

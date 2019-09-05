@@ -272,9 +272,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     @Override
     public void compileAndExecute(IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
-        if (!requestParameters.isMultiStatement()) {
-            validateStatements(statements);
-        }
+        validateStatements(statements, requestParameters.isMultiStatement(),
+                requestParameters.getStatementCategoryRestrictionMask());
         trackRequest(requestParameters);
         int resultSetIdCounter = 0;
         FileSplit outputFile = null;
@@ -2977,9 +2976,20 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         appCtx.getRequestTracker().track(clientRequest);
     }
 
-    public static void validateStatements(List<Statement> statements) throws CompilationException {
-        if (statements.stream().filter(QueryTranslator::isNotAllowedMultiStatement).count() > 1) {
-            throw new CompilationException(ErrorCode.UNSUPPORTED_MULTIPLE_STATEMENTS);
+    public static void validateStatements(List<Statement> statements, boolean allowMultiStatement,
+            int stmtCategoryRestrictionMask) throws CompilationException {
+        if (!allowMultiStatement) {
+            if (statements.stream().filter(QueryTranslator::isNotAllowedMultiStatement).count() > 1) {
+                throw new CompilationException(ErrorCode.UNSUPPORTED_MULTIPLE_STATEMENTS);
+            }
+        }
+        if (stmtCategoryRestrictionMask != RequestParameters.NO_CATEGORY_RESTRICTION_MASK) {
+            for (Statement stmt : statements) {
+                if (isNotAllowedStatementCategory(stmt, stmtCategoryRestrictionMask)) {
+                    throw new CompilationException(ErrorCode.PROHIBITED_STATEMENT_CATEGORY, stmt.getSourceLocation(),
+                            stmt.getKind());
+                }
+            }
         }
     }
 
@@ -2993,6 +3003,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             default:
                 return true;
         }
+    }
+
+    private static boolean isNotAllowedStatementCategory(Statement statement, int categoryRestrictionMask) {
+        int category = statement.getCategory();
+        if (category <= 0) {
+            throw new IllegalArgumentException(String.valueOf(category));
+        }
+        int i = category & categoryRestrictionMask;
+        return i == 0;
     }
 
     private Map<VarIdentifier, IAObject> createExternalVariables(Map<String, IAObject> stmtParams,

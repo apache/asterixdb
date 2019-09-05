@@ -43,6 +43,9 @@ __Parameters__
   If the delivery mode is `immediate` the query result is returned with the response.
   If the delivery mode is `deferred` the response contains a handle to the <a href="#queryresult">result</a>.
   If the delivery mode is `async` the response contains a handle to the query's <a href="#querystatus">status</a>.
+* `readonly` - Reject DDL and DML statements, only accept the following kinds:
+  [SELECT](sqlpp/manual.html#SELECT_statements), [USE](sqlpp/manual.html#Declarations),
+  [DECLARE FUNCTION](sqlpp/manual.html#Declarations), and [SET](sqlpp/manual.html#Performance_tuning)
 * `args` - (SQL++ only) A JSON array where each item is a value of a [positional query parameter](sqlpp/manual.html#Parameter_references)
 * `$parameter_name` - (SQL++ only) a JSON value of a [named query parameter](sqlpp/manual.html#Parameter_references).
 

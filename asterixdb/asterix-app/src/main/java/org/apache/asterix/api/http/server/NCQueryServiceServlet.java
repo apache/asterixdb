@@ -86,10 +86,13 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             if (param.getTimeout() != null && !param.getTimeout().trim().isEmpty()) {
                 timeout = TimeUnit.NANOSECONDS.toMillis(Duration.parseDurationStringToNanos(param.getTimeout()));
             }
-            ExecuteStatementRequestMessage requestMsg = new ExecuteStatementRequestMessage(ncCtx.getNodeId(),
-                    responseFuture.getFutureId(), queryLanguage, statementsText, sessionOutput.config(),
-                    resultProperties.getNcToCcResultProperties(), param.getClientContextID(), handleUrl,
-                    optionalParameters, statementParameters, param.isMultiStatement(), requestReference);
+            int stmtCategoryRestrictionMask = org.apache.asterix.app.translator.RequestParameters
+                    .getStatementCategoryRestrictionMask(param.isReadOnly());
+            ExecuteStatementRequestMessage requestMsg =
+                    new ExecuteStatementRequestMessage(ncCtx.getNodeId(), responseFuture.getFutureId(), queryLanguage,
+                            statementsText, sessionOutput.config(), resultProperties.getNcToCcResultProperties(),
+                            param.getClientContextID(), handleUrl, optionalParameters, statementParameters,
+                            param.isMultiStatement(), stmtCategoryRestrictionMask, requestReference);
             execution.start();
             ncMb.sendMessageToPrimaryCC(requestMsg);
             try {

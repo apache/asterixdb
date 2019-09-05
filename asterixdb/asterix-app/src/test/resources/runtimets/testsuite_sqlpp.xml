@@ -28,6 +28,22 @@
   &GeoQueries;
   &TemporalQueries;
   <test-group name="flwor">
+    <test-case FilePath="api">
+      <compilation-unit name="readonly-request">
+        <output-dir compare="Text">readonly-request</output-dir>
+        <expected-error>ASX0044: CREATE_DATAVERSE statement is prohibited by this request</expected-error>
+        <expected-error>ASX0044: DATAVERSE_DROP statement is prohibited by this request</expected-error>
+        <expected-error>ASX0044: DATASET_DECL statement is prohibited by this request</expected-error>
+        <expected-error>ASX0044: DATASET_DROP statement is prohibited by this request</expected-error>
+        <expected-error>ASX0044: CREATE_INDEX statement is prohibited by this request</expected-error>
+        <expected-error>ASX0044: INDEX_DROP statement is prohibited by this request</expected-error>
+        <expected-error>ASX0044: INSERT statement is prohibited by this request</expected-error>
+        <expected-error>ASX0044: UPSERT statement is prohibited by this request</expected-error>
+        <expected-error>ASX0044: DELETE statement is prohibited by this request</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="flwor">
     <test-case FilePath="flwor">
       <compilation-unit name="at00">
         <output-dir compare="Text">at00</output-dir>
@@ -5867,8 +5883,8 @@
     <test-case FilePath="misc">
       <compilation-unit name="ensure_result_numeric_type">
         <output-dir compare="Text">ensure_result_numeric_type</output-dir>
-        <source-location>false</source-location>
         <expected-error>expected &lt; 3.0</expected-error>
+        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
@@ -10744,8 +10760,8 @@
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-ASTERIXDB-1652">
-        <expected-error>In function call "test.length(...)", the dataverse "test" cannot be found!</expected-error>
         <output-dir compare="Text">query-ASTERIXDB-1652-2</output-dir>
+        <expected-error>In function call "test.length(...)", the dataverse "test" cannot be found!</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">

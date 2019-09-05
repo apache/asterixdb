@@ -45,6 +45,7 @@ public class QueryServiceRequestParameters {
     private Map<String, JsonNode> statementParams;
     private boolean expressionTree;
     private boolean parseOnly; //don't execute; simply check for syntax correctness and named parameters.
+    private boolean readOnly; // only allow statements that belong to QUERY category, fail for all other categories.
     private boolean rewrittenExpressionTree;
     private boolean logicalPlan;
     private boolean optimizedLogicalPlan;
@@ -180,6 +181,14 @@ public class QueryServiceRequestParameters {
         return parseOnly;
     }
 
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+    }
+
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
     public boolean isJob() {
         return job;
     }
@@ -223,6 +232,8 @@ public class QueryServiceRequestParameters {
         object.put("job", job);
         object.put("signature", signature);
         object.put("multiStatement", multiStatement);
+        object.put("parseOnly", parseOnly);
+        object.put("readOnly", readOnly);
         if (statementParams != null) {
             for (Map.Entry<String, JsonNode> statementParam : statementParams.entrySet()) {
                 object.set('$' + statementParam.getKey(), statementParam.getValue());

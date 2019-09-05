@@ -76,6 +76,7 @@ public class ErrorCode {
     public static final int REQUEST_CANCELLED = 41;
     public static final int TPCDS_INVALID_TABLE_NAME = 42;
     public static final int VALUE_OUT_OF_RANGE = 43;
+    public static final int PROHIBITED_STATEMENT_CATEGORY = 44;
 
     public static final int UNSUPPORTED_JRE = 100;
 
