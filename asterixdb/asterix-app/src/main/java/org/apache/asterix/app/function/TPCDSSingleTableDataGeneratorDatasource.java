@@ -58,8 +58,7 @@ public class TPCDSSingleTableDataGeneratorDatasource extends FunctionDataSource 
      * @return A DataSourceId that's based on the function details and its parameters
      */
     private static DataSourceId createDataSourceId(String tableName, double scalingFactor) {
-        return new DataSourceId(TPCDSSingleTableDataGeneratorRewriter.TPCDS_SINGLE_TABLE_DATA_GENERATOR.getNamespace(),
-                TPCDSSingleTableDataGeneratorRewriter.TPCDS_SINGLE_TABLE_DATA_GENERATOR.getName(), tableName,
+        return createDataSourceId(TPCDSSingleTableDataGeneratorRewriter.TPCDS_SINGLE_TABLE_DATA_GENERATOR, tableName,
                 Double.toString(scalingFactor));
     }
 

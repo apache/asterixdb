@@ -20,12 +20,15 @@
 package org.apache.asterix.optimizer.rules;
 
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.base.AsterixOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import org.apache.hyracks.algebricks.rewriter.rules.SetMemoryRequirementsRule;
 
@@ -34,7 +37,9 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 /**
  * This rule extends {@link SetMemoryRequirementsRule} and modifies its functionality as follows:
  * <ul>
- * <li>It skips memory requirements configuration if the query operates only on metadata datasets.
+ * <li>It skips memory requirements configuration if the query operates only on metadata datasets and/or
+ * datasource functions annotated with
+ * {@link BuiltinFunctions.DataSourceFunctionProperty#MIN_MEMORY_BUDGET MIN_MEMORY_BUDGET} property.
  * In this case operators will retain their default (minimal) memory requirements.
  * </li>
  * </ul>
@@ -49,11 +54,36 @@ public final class SetAsterixMemoryRequirementsRule extends SetMemoryRequirement
 
     private boolean forceMinMemoryBudget(AsterixOptimizationContext context) {
         Int2ObjectMap<Set<DataSourceId>> dataSourceMap = context.getDataSourceMap();
-        if (dataSourceMap.size() == 1) {
-            Set<DataSourceId> dataSources = dataSourceMap.get(DataSource.Type.INTERNAL_DATASET);
-            return dataSources != null && dataSources.stream()
-                    .allMatch(dsId -> MetadataConstants.METADATA_DATAVERSE_NAME.equals(dsId.getDataverseName()));
+        if (dataSourceMap.isEmpty()) {
+            return false;
         }
-        return false;
+        for (Int2ObjectMap.Entry<Set<DataSourceId>> me : dataSourceMap.int2ObjectEntrySet()) {
+            int dataSourceType = me.getIntKey();
+            Predicate<DataSourceId> dataSourceTest;
+            switch (dataSourceType) {
+                case DataSource.Type.INTERNAL_DATASET:
+                    dataSourceTest = SetAsterixMemoryRequirementsRule::isMinMemoryBudgetDataset;
+                    break;
+                case DataSource.Type.FUNCTION:
+                    dataSourceTest = SetAsterixMemoryRequirementsRule::isMinMemoryBudgetFunction;
+                    break;
+                default:
+                    return false;
+            }
+            if (!me.getValue().stream().allMatch(dataSourceTest)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isMinMemoryBudgetDataset(DataSourceId dsId) {
+        return MetadataConstants.METADATA_DATAVERSE_NAME.equals(dsId.getDataverseName());
+    }
+
+    private static boolean isMinMemoryBudgetFunction(DataSourceId dsId) {
+        return BuiltinFunctions.builtinFunctionHasProperty(
+                new FunctionIdentifier(dsId.getDataverseName(), dsId.getDatasourceName()),
+                BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
     }
 }

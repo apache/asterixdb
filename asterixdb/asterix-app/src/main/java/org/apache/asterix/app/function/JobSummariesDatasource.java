@@ -28,8 +28,8 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
 public class JobSummariesDatasource extends FunctionDataSource {
 
-    private static final DataSourceId JOB_SUMMARIES_DATASOURCE_ID = new DataSourceId(
-            JobSummariesRewriter.JOBSUMMARIES.getNamespace(), JobSummariesRewriter.JOBSUMMARIES.getName());
+    private static final DataSourceId JOB_SUMMARIES_DATASOURCE_ID =
+            createDataSourceId(JobSummariesRewriter.JOBSUMMARIES);
 
     public JobSummariesDatasource(INodeDomain domain) throws AlgebricksException {
         super(JOB_SUMMARIES_DATASOURCE_ID, domain);

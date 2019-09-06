@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
@@ -95,5 +96,16 @@ public abstract class FunctionDataSource extends DataSource {
         String[] allPartitions = csm.getClusterLocations().getLocations();
         Set<String> ncs = new HashSet<>(Arrays.asList(allPartitions));
         return new AlgebricksAbsolutePartitionConstraint(ncs.toArray(new String[ncs.size()]));
+    }
+
+    protected static DataSourceId createDataSourceId(FunctionIdentifier fid, String... parameters) {
+        int paramCount = parameters != null ? parameters.length : 0;
+        String[] components = new String[paramCount + 2];
+        components[0] = fid.getNamespace();
+        components[1] = fid.getName();
+        if (paramCount > 0) {
+            System.arraycopy(parameters, 0, components, 2, paramCount);
+        }
+        return new DataSourceId(components);
     }
 }

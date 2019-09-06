@@ -31,14 +31,15 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 
 public class DumpIndexDatasource extends FunctionDataSource {
 
+    public static final DataSourceId DUMP_INDEX_DATASOURCE_ID = createDataSourceId(DumpIndexRewriter.DUMP_INDEX);
+
     private final IndexDataflowHelperFactory indexDataflowHelperFactory;
     private final RecordDescriptor recDesc;
     private final IBinaryComparatorFactory[] comparatorFactories;
 
     public DumpIndexDatasource(INodeDomain domain, IndexDataflowHelperFactory indexDataflowHelperFactory,
             RecordDescriptor recDesc, IBinaryComparatorFactory[] comparatorFactories) throws AlgebricksException {
-        super(new DataSourceId(DumpIndexRewriter.DUMP_INDEX.getNamespace(), DumpIndexRewriter.DUMP_INDEX.getName()),
-                domain);
+        super(DUMP_INDEX_DATASOURCE_ID, domain);
         this.indexDataflowHelperFactory = indexDataflowHelperFactory;
         this.recDesc = recDesc;
         this.comparatorFactories = comparatorFactories;

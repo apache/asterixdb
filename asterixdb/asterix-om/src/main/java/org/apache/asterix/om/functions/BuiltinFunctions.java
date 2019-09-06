@@ -2984,8 +2984,16 @@ public class BuiltinFunctions {
         addUnnestFun(SUBSET_COLLECTION, false);
     }
 
-    public static void addDatasourceFunction(FunctionIdentifier fi, IFunctionToDataSourceRewriter transformer) {
-        datasourceFunctions.put(getAsterixFunctionInfo(fi), transformer);
+    public enum DataSourceFunctionProperty implements BuiltinFunctionProperty {
+        /** Force minimum memory budget if a query only uses this function */
+        MIN_MEMORY_BUDGET
+    }
+
+    public static void addDatasourceFunction(FunctionIdentifier fi, IFunctionToDataSourceRewriter transformer,
+            DataSourceFunctionProperty... properties) {
+        IFunctionInfo finfo = getAsterixFunctionInfo(fi);
+        datasourceFunctions.put(finfo, transformer);
+        registerFunctionProperties(finfo, DataSourceFunctionProperty.class, properties);
     }
 
     public static IFunctionToDataSourceRewriter getDatasourceTransformer(FunctionIdentifier fi) {

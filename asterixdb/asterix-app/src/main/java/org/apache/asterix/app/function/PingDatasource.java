@@ -28,8 +28,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
 public class PingDatasource extends FunctionDataSource {
 
-    private static final DataSourceId PING_DATASOURCE_ID =
-            new DataSourceId(PingRewriter.PING.getNamespace(), PingRewriter.PING.getName());
+    private static final DataSourceId PING_DATASOURCE_ID = createDataSourceId(PingRewriter.PING);
 
     public PingDatasource(INodeDomain domain) throws AlgebricksException {
         super(PING_DATASOURCE_ID, domain);

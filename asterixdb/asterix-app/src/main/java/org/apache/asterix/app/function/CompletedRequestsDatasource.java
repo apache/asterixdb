@@ -30,8 +30,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 public class CompletedRequestsDatasource extends FunctionDataSource {
 
     private static final DataSourceId COMPLETED_REQUESTS_DATASOURCE_ID =
-            new DataSourceId(ActiveRequestsRewriter.ACTIVE_REQUESTS.getNamespace(),
-                    CompletedRequestsRewriter.COMPLETED_REQUESTS.getName());
+            createDataSourceId(CompletedRequestsRewriter.COMPLETED_REQUESTS);
 
     public CompletedRequestsDatasource(INodeDomain domain) throws AlgebricksException {
         super(COMPLETED_REQUESTS_DATASOURCE_ID, domain);

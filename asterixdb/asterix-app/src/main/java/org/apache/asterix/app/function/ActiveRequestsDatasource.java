@@ -29,8 +29,8 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
 public class ActiveRequestsDatasource extends FunctionDataSource {
 
-    private static final DataSourceId ACTIVE_REQUESTS_DATASOURCE_ID = new DataSourceId(
-            ActiveRequestsRewriter.ACTIVE_REQUESTS.getNamespace(), ActiveRequestsRewriter.ACTIVE_REQUESTS.getName());
+    private static final DataSourceId ACTIVE_REQUESTS_DATASOURCE_ID =
+            createDataSourceId(ActiveRequestsRewriter.ACTIVE_REQUESTS);
 
     public ActiveRequestsDatasource(INodeDomain domain) throws AlgebricksException {
         super(ACTIVE_REQUESTS_DATASOURCE_ID, domain);

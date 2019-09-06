@@ -27,11 +27,14 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
 public class DatasetResourcesDatasource extends FunctionDataSource {
+
+    private static final DataSourceId DATASET_RESOURCES_DATASOURCE_ID =
+            createDataSourceId(DatasetResourcesRewriter.DATASET_RESOURCES);
+
     private final int datasetId;
 
     public DatasetResourcesDatasource(INodeDomain domain, int datasetId) throws AlgebricksException {
-        super(new DataSourceId(DatasetResourcesRewriter.DATASET_RESOURCES.getNamespace(),
-                DatasetResourcesRewriter.DATASET_RESOURCES.getName()), domain);
+        super(DATASET_RESOURCES_DATASOURCE_ID, domain);
         this.datasetId = datasetId;
     }
 

@@ -54,8 +54,7 @@ public class TPCDSAllTablesDataGeneratorDatasource extends FunctionDataSource {
      * @return A DataSourceId that's based on the function details and its parameters
      */
     private static DataSourceId createDataSourceId(double scalingFactor) {
-        return new DataSourceId(TPCDSAllTablesDataGeneratorRewriter.TPCDS_ALL_TABLES_DATA_GENERATOR.getNamespace(),
-                TPCDSAllTablesDataGeneratorRewriter.TPCDS_ALL_TABLES_DATA_GENERATOR.getName(),
+        return createDataSourceId(TPCDSAllTablesDataGeneratorRewriter.TPCDS_ALL_TABLES_DATA_GENERATOR,
                 Double.toString(scalingFactor));
     }
 

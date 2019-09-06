@@ -17,17 +17,15 @@
  * under the License.
  */
 
-/* Test that a metadata-only query gets assigned a minimal memory budget */
+/*
+ * Test that a query that only uses completed_requests()
+ * gets assigned a minimal memory budget
+ */
 
 -- param job:string=true
 
 SET `compiler.parallelism` "1";
 
-from Metadata.`Dataset` ds
-join Metadata.`Index` idx
-on ds.DataverseName = idx.DataverseName and ds.DatasetName = idx.DatasetName
-where contains(ds.DataverseName, "Metadata")
-  and ds.DatasetName in ["Dataverse", "Dataset", "Index"]
-  and idx.IsPrimary
-group by ds.DataverseName
-select value count(*)
+from completed_requests() t
+select value t
+order by t

@@ -48,18 +48,19 @@ public class MetadataBuiltinFunctions {
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
         BuiltinFunctions.addUnnestFun(DatasetResourcesRewriter.DATASET_RESOURCES, false);
         BuiltinFunctions.addDatasourceFunction(DatasetResourcesRewriter.DATASET_RESOURCES,
-                DatasetResourcesRewriter.INSTANCE);
+                DatasetResourcesRewriter.INSTANCE, BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
         // Dataset components function
         BuiltinFunctions.addPrivateFunction(StorageComponentsRewriter.STORAGE_COMPONENTS,
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
         BuiltinFunctions.addUnnestFun(StorageComponentsRewriter.STORAGE_COMPONENTS, false);
         BuiltinFunctions.addDatasourceFunction(StorageComponentsRewriter.STORAGE_COMPONENTS,
-                StorageComponentsRewriter.INSTANCE);
+                StorageComponentsRewriter.INSTANCE, BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
         // Ping function
         BuiltinFunctions.addPrivateFunction(PingRewriter.PING,
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
         BuiltinFunctions.addUnnestFun(PingRewriter.PING, true);
-        BuiltinFunctions.addDatasourceFunction(PingRewriter.PING, PingRewriter.INSTANCE);
+        BuiltinFunctions.addDatasourceFunction(PingRewriter.PING, PingRewriter.INSTANCE,
+                BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
         // TPC-DS data generation function
         BuiltinFunctions.addPrivateFunction(TPCDSSingleTableDataGeneratorRewriter.TPCDS_SINGLE_TABLE_DATA_GENERATOR,
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
@@ -75,18 +76,20 @@ public class MetadataBuiltinFunctions {
         BuiltinFunctions.addFunction(ActiveRequestsRewriter.ACTIVE_REQUESTS,
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
         BuiltinFunctions.addUnnestFun(ActiveRequestsRewriter.ACTIVE_REQUESTS, true);
-        BuiltinFunctions.addDatasourceFunction(ActiveRequestsRewriter.ACTIVE_REQUESTS, ActiveRequestsRewriter.INSTANCE);
+        BuiltinFunctions.addDatasourceFunction(ActiveRequestsRewriter.ACTIVE_REQUESTS, ActiveRequestsRewriter.INSTANCE,
+                BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
         // job-summaries function
         BuiltinFunctions.addPrivateFunction(JobSummariesRewriter.JOBSUMMARIES,
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
         BuiltinFunctions.addUnnestFun(JobSummariesRewriter.JOBSUMMARIES, true);
-        BuiltinFunctions.addDatasourceFunction(JobSummariesRewriter.JOBSUMMARIES, JobSummariesRewriter.INSTANCE);
+        BuiltinFunctions.addDatasourceFunction(JobSummariesRewriter.JOBSUMMARIES, JobSummariesRewriter.INSTANCE,
+                BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
         // completed requests function
         BuiltinFunctions.addFunction(CompletedRequestsRewriter.COMPLETED_REQUESTS,
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
         BuiltinFunctions.addUnnestFun(CompletedRequestsRewriter.COMPLETED_REQUESTS, true);
         BuiltinFunctions.addDatasourceFunction(CompletedRequestsRewriter.COMPLETED_REQUESTS,
-                CompletedRequestsRewriter.INSTANCE);
+                CompletedRequestsRewriter.INSTANCE, BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
         // Dump index function
         BuiltinFunctions.addPrivateFunction(DumpIndexRewriter.DUMP_INDEX,
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
