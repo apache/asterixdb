@@ -117,7 +117,9 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
             for (int i = 0; i < analysisCtx.getMatchedFuncExprs().size(); i++) {
                 IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(i);
                 boolean found = findMacthedExprFieldName(optFuncExpr, op, dataset, recType, datasetIndexes, context);
-                if (found && optFuncExpr.getFieldName(0).equals(filterFieldName)) {
+                // the field name source should be from the dataset record, i.e. source should be == 0
+                if (found && optFuncExpr.getFieldName(0).equals(filterFieldName)
+                        && optFuncExpr.getFieldSource(0) == 0) {
                     optFuncExprs.add(optFuncExpr);
                 }
             }
@@ -500,12 +502,13 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     if (funcVarIndex == -1) {
                         continue;
                     }
+                    // TODO(ali): this SQ NPE should be investigated
                     List<String> fieldName =
                             getFieldNameFromSubAssignTree(optFuncExpr, descendantOp, varIndex, recType).second;
                     if (fieldName == null) {
                         return false;
                     }
-                    optFuncExpr.setFieldName(funcVarIndex, fieldName);
+                    optFuncExpr.setFieldName(funcVarIndex, fieldName, 0);
                     return true;
                 }
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
@@ -522,7 +525,9 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     if (fieldName == null) {
                         return false;
                     }
-                    optFuncExpr.setFieldName(funcVarIndex, fieldName);
+                    List<Integer> keySourceIndicators = DatasetUtil.getKeySourceIndicators(dataset);
+                    int keySource = getKeySource(keySourceIndicators, varIndex);
+                    optFuncExpr.setFieldName(funcVarIndex, fieldName, keySource);
                     return true;
                 }
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
@@ -560,15 +565,19 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     ARecordType metaRecType = (ARecordType) metaItemType;
                     int numSecondaryKeys = KeyFieldTypeUtil.getNumSecondaryKeys(index, recType, metaRecType);
                     List<String> fieldName;
+                    int keySource;
                     if (varIndex >= numSecondaryKeys) {
-                        fieldName = dataset.getPrimaryKeys().get(varIndex - numSecondaryKeys);
+                        int idx = varIndex - numSecondaryKeys;
+                        fieldName = dataset.getPrimaryKeys().get(idx);
+                        keySource = getKeySource(DatasetUtil.getKeySourceIndicators(dataset), idx);
                     } else {
                         fieldName = index.getKeyFieldNames().get(varIndex);
+                        keySource = getKeySource(index.getKeyFieldSourceIndicators(), varIndex);
                     }
                     if (fieldName == null) {
                         return false;
                     }
-                    optFuncExpr.setFieldName(funcVarIndex, fieldName);
+                    optFuncExpr.setFieldName(funcVarIndex, fieldName, keySource);
                     return true;
                 }
             }
@@ -579,6 +588,10 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
             descendantOp = (AbstractLogicalOperator) descendantOp.getInputs().get(0).getValue();
         }
         return false;
+    }
+
+    private static int getKeySource(List<Integer> keySourceIndicators, int keyIdx) {
+        return keySourceIndicators == null ? 0 : keySourceIndicators.get(keyIdx);
     }
 
     private Pair<ARecordType, List<String>> getFieldNameFromSubAssignTree(IOptimizableFuncExpr optFuncExpr,

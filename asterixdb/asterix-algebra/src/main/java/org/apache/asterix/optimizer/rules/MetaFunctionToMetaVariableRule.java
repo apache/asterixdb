@@ -34,6 +34,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -44,6 +45,8 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCall
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -148,6 +151,15 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
             }
             currentTransformer = new CompositeExpressionReferenceTransform(transformers);
         }
+
+        if (((AbstractLogicalOperator) op).hasNestedPlans()) {
+            AbstractOperatorWithNestedPlans opWithNestedPlans = (AbstractOperatorWithNestedPlans) op;
+            for (ILogicalPlan nestedPlan : opWithNestedPlans.getNestedPlans()) {
+                for (Mutable<ILogicalOperator> root : nestedPlan.getRoots()) {
+                    visit(root);
+                }
+            }
+        }
         rewritten |= op.acceptExpressionTransform(currentTransformer);
         return currentTransformer;
     }
@@ -197,13 +209,14 @@ class LogicalExpressionReferenceTransform implements ILogicalExpressionReference
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         List<Mutable<ILogicalExpression>> argRefs = funcExpr.getArguments();
 
+        boolean changed = false;
         // Recursively transform argument expressions.
         for (Mutable<ILogicalExpression> argRef : argRefs) {
-            transform(argRef);
+            changed |= transform(argRef);
         }
 
         if (!funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.META)) {
-            return false;
+            return changed;
         }
         // The user query provides more than one parameter for the meta function.
         if (argRefs.size() > 1) {
@@ -215,12 +228,12 @@ class LogicalExpressionReferenceTransform implements ILogicalExpressionReference
         if (argRefs.size() == 1) {
             ILogicalExpression argExpr = argRefs.get(0).getValue();
             if (argExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                return false;
+                return changed;
             }
             VariableReferenceExpression argVarExpr = (VariableReferenceExpression) argExpr;
             LogicalVariable argVar = argVarExpr.getVariableReference();
             if (!dataVar.equals(argVar)) {
-                return false;
+                return changed;
             }
             VariableReferenceExpression metaVarRef = new VariableReferenceExpression(metaVar);
             metaVarRef.setSourceLocation(expr.getSourceLocation());

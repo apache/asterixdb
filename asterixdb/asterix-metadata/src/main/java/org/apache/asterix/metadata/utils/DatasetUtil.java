@@ -41,6 +41,7 @@ import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
+import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -173,15 +174,51 @@ public class DatasetUtil {
         return btreeFields;
     }
 
-    public static int getPositionOfPartitioningKeyField(Dataset dataset, List<String> fieldExpr) {
+    /**
+     * Returns the primary key source indicators of the {@code dataset} or {@code null} if the dataset does not have
+     * primary key source indicators (e.g. external datasets)
+     */
+    public static List<Integer> getKeySourceIndicators(Dataset dataset) {
+        IDatasetDetails datasetDetails = dataset.getDatasetDetails();
+        if (datasetDetails.getDatasetType() == DatasetType.INTERNAL) {
+            return ((InternalDatasetDetails) datasetDetails).getKeySourceIndicator();
+        }
+        return null;
+    }
+
+    public static int getPositionOfPartitioningKeyField(Dataset dataset, List<String> fieldExpr,
+            boolean fieldFromMeta) {
+        List<Integer> keySourceIndicator = null;
+        IDatasetDetails datasetDetails = dataset.getDatasetDetails();
+        if (datasetDetails.getDatasetType() == DatasetType.INTERNAL) {
+            keySourceIndicator = ((InternalDatasetDetails) datasetDetails).getKeySourceIndicator();
+        }
         List<List<String>> partitioningKeys = dataset.getPrimaryKeys();
         for (int i = 0; i < partitioningKeys.size(); i++) {
             List<String> partitioningKey = partitioningKeys.get(i);
-            if (partitioningKey.equals(fieldExpr)) {
+            if (partitioningKey.equals(fieldExpr) && keySourceMatches(keySourceIndicator, i, fieldFromMeta)) {
                 return i;
             }
         }
         return -1;
+    }
+
+    /**
+     * Once it's determined that a field name is a key (by just comparing the names), this method checks whether the
+     * field is actually a key by making sure the field is coming from the right record (data record or meta record),
+     * e.g. if the field name happens to be equal to the key name but the field is coming from the data record while
+     * the key is coming from the meta record.
+     * @param keySourceIndicator indicates where the key is coming from, 1 from meta record, 0 from data record
+     * @param keyIndex the key index we're checking the field against
+     * @param fieldFromMeta whether the field is coming from the meta record or the data record
+     * @return true if the key source matches the field source. Otherwise, false.
+     */
+    private static boolean keySourceMatches(List<Integer> keySourceIndicator, int keyIndex, boolean fieldFromMeta) {
+        if (keySourceIndicator != null) {
+            return (fieldFromMeta && keySourceIndicator.get(keyIndex) == 1)
+                    || (!fieldFromMeta && keySourceIndicator.get(keyIndex) == 0);
+        }
+        return true;
     }
 
     public static Pair<ILSMMergePolicyFactory, Map<String, String>> getMergePolicyFactory(Dataset dataset,

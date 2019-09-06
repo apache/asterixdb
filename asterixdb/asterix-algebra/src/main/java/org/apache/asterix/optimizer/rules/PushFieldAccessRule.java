@@ -288,8 +288,6 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             // fields. If yes, we can equate the two variables.
             if (op2.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator scan = (DataSourceScanOperator) op2;
-                int n = scan.getVariables().size();
-                LogicalVariable scanRecordVar = scan.getVariables().get(n - 1);
 
                 IDataSource<DataSourceId> dataSource = (IDataSource<DataSourceId>) scan.getDataSource();
                 byte dsType = ((DataSource) dataSource).getDatasourceType();
@@ -308,6 +306,10 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                     return false;
                 }
 
+                List<LogicalVariable> allVars = scan.getVariables();
+                LogicalVariable dataRecVarInScan = ((DataSource) dataSource).getDataRecordVariable(allVars);
+                LogicalVariable metaRecVarInScan = ((DataSource) dataSource).getMetaVariable(allVars);
+
                 String tName = dataset.getItemTypeName();
                 IAType t = mp.findType(dataset.getItemTypeDataverseName(), tName);
                 if (t.getTypeTag() != ATypeTag.OBJECT) {
@@ -315,28 +317,52 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                 }
                 ARecordType rt = (ARecordType) t;
                 Pair<ILogicalExpression, List<String>> fieldPathAndVar = getFieldExpression(access, rt);
-                ILogicalExpression e0 = fieldPathAndVar.first;
-                LogicalExpressionTag tag = e0.getExpressionTag();
-                if (tag == LogicalExpressionTag.VARIABLE) {
-                    VariableReferenceExpression varRef = (VariableReferenceExpression) e0;
-                    if (varRef.getVariableReference() == scanRecordVar) {
-                        int p = DatasetUtil.getPositionOfPartitioningKeyField(dataset, fieldPathAndVar.second);
-                        if (p < 0) { // not one of the partitioning fields
-                            setAsFinal(access, context, finalAnnot);
-                            return false;
+                ILogicalExpression targetRecVar = fieldPathAndVar.first;
+                List<String> targetFieldPath = fieldPathAndVar.second;
+                boolean rewrite = false;
+                boolean fieldFromMeta = false;
+                if (sameRecords(targetRecVar, dataRecVarInScan)) {
+                    rewrite = true;
+                } else {
+                    // check meta part
+                    IAType metaType = mp.findMetaType(dataset); // could be null
+                    if (metaType != null && metaType.getTypeTag() == ATypeTag.OBJECT) {
+                        fieldPathAndVar = getFieldExpression(access, (ARecordType) metaType);
+                        targetRecVar = fieldPathAndVar.first;
+                        targetFieldPath = fieldPathAndVar.second;
+                        if (sameRecords(targetRecVar, metaRecVarInScan)) {
+                            rewrite = true;
+                            fieldFromMeta = true;
                         }
-                        LogicalVariable keyVar = scan.getVariables().get(p);
-                        VariableReferenceExpression keyVarRef = new VariableReferenceExpression(keyVar);
-                        keyVarRef.setSourceLocation(varRef.getSourceLocation());
-                        access.getExpressions().get(0).setValue(keyVarRef);
-                        return true;
-
                     }
+                }
+
+                if (rewrite) {
+                    int p = DatasetUtil.getPositionOfPartitioningKeyField(dataset, targetFieldPath, fieldFromMeta);
+                    if (p < 0) { // not one of the partitioning fields
+                        setAsFinal(access, context, finalAnnot);
+                        return false;
+                    }
+                    LogicalVariable keyVar = scan.getVariables().get(p);
+                    VariableReferenceExpression keyVarRef = new VariableReferenceExpression(keyVar);
+                    keyVarRef.setSourceLocation(targetRecVar.getSourceLocation());
+                    access.getExpressions().get(0).setValue(keyVarRef);
+                    return true;
                 }
             }
             setAsFinal(access, context, finalAnnot);
             return false;
         }
+    }
+
+    /**
+     * @param recordInAssign the variable reference expression in assign op
+     * @param recordInScan the record (payload) variable in scan op
+     * @return true if the expression in the assign op is a variable and that variable = record variable in scan op
+     */
+    private boolean sameRecords(ILogicalExpression recordInAssign, LogicalVariable recordInScan) {
+        return recordInAssign != null && recordInAssign.getExpressionTag() == LogicalExpressionTag.VARIABLE
+                && ((VariableReferenceExpression) recordInAssign).getVariableReference().equals(recordInScan);
     }
 
     private Pair<ILogicalExpression, List<String>> getFieldExpression(AssignOperator access, ARecordType rt)

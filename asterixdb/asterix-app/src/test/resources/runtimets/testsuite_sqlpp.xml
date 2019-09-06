@@ -3536,6 +3536,11 @@
         <output-dir compare="Text">disjunctive-predicate-1</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="dataset-with-meta">
+        <output-dir compare="Text">dataset-with-meta</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="inverted-index-join">
     <test-case FilePath="inverted-index-join">
@@ -9049,6 +9054,18 @@
       <compilation-unit name="drop-dataverse-with-function-used-by-feed">
         <output-dir compare="Text">drop-dataverse-with-function-used-by-feed</output-dir>
         <expected-error>Function fundv.test_func0@1 is being used. It cannot be dropped</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="meta">
+    <test-case FilePath="meta">
+      <compilation-unit name="meta_in_with_clause">
+        <output-dir compare="Text">meta_in_with_clause</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="meta">
+      <compilation-unit name="resolving_pk_with_meta">
+        <output-dir compare="Text">resolving_pk_with_meta</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
