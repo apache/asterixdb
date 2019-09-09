@@ -45,7 +45,7 @@ public class CompilerProperties extends AbstractProperties {
                 "The memory budget (in bytes) for a group by operator instance in a partition"),
         COMPILER_WINDOWMEMORY(
                 LONG_BYTE_UNIT,
-                StorageUtil.getLongSizeInBytes(4L, MEGABYTE),
+                StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for a window operator instance in a partition"),
         COMPILER_TEXTSEARCHMEMORY(
                 LONG_BYTE_UNIT,

@@ -65,6 +65,9 @@ The supported configurable memory parameters are:
 *  **compiler.joinmemory**: the memory budget that each parallel hash join operator instance can use;
    32MB is the default budget.
 
+*  **compiler.windowmemory**: the memory budget that each parallel window aggregate operator instance can use;
+   32MB is the default budget.
+
 For each memory budget value, you can use a 64-bit integer value
 with a 1024-based binary unit suffix (for example, B, KB, MB, GB).
 If there is no user-provided suffix, "B" is the default suffix. See the following examples.
