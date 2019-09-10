@@ -2549,6 +2549,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 (org.apache.asterix.api.common.ResultMetadata) controllerService.getResultDirectoryService()
                         .getResultMetadata(jobId, rsId);
         stats.setProcessedObjects(resultMetadata.getProcessedObjects());
+        stats.setDiskIoCount(resultMetadata.getDiskIoCount());
         warningCollector.warn(resultMetadata.getWarnings());
     }
 

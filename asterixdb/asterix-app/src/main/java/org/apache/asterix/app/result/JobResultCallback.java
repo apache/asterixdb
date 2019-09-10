@@ -68,6 +68,7 @@ public class JobResultCallback implements IJobResultCallback {
 
     private void aggregateJobStats(JobId jobId, ResultMetadata metadata) {
         long processedObjects = 0;
+        long diskIoCount = 0;
         Set<Warning> warnings = new HashSet<>();
         IJobManager jobManager =
                 ((ClusterControllerService) appCtx.getServiceContext().getControllerService()).getJobManager();
@@ -79,11 +80,13 @@ public class JobResultCallback implements IJobResultCallback {
                 final Collection<TaskProfile> jobletTasksProfile = jp.getTaskProfiles().values();
                 for (TaskProfile tp : jobletTasksProfile) {
                     processedObjects += tp.getStatsCollector().getAggregatedStats().getTupleCounter().get();
+                    diskIoCount += tp.getStatsCollector().getAggregatedStats().getDiskIoCounter().get();
                     warnings.addAll(tp.getWarnings());
                 }
             }
         }
         metadata.setProcessedObjects(processedObjects);
         metadata.setWarnings(warnings);
+        metadata.setDiskIoCount(diskIoCount);
     }
 }

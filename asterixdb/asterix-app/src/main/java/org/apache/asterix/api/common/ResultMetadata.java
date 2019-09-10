@@ -29,6 +29,7 @@ public class ResultMetadata implements IResultMetadata {
     private final SessionConfig.OutputFormat format;
     private long jobDuration;
     private long processedObjects;
+    private long diskIoCount;
     private Set<Warning> warnings;
 
     public ResultMetadata(SessionConfig.OutputFormat format) {
@@ -63,9 +64,17 @@ public class ResultMetadata implements IResultMetadata {
         return warnings;
     }
 
+    public void setDiskIoCount(long diskIoCount) {
+        this.diskIoCount = diskIoCount;
+    }
+
+    public long getDiskIoCount() {
+        return diskIoCount;
+    }
+
     @Override
     public String toString() {
         return "ResultMetadata{" + "format=" + format + ", jobDuration=" + jobDuration + ", processedObjects="
-                + processedObjects + '}';
+                + processedObjects + ", diskIoCount=" + diskIoCount + '}';
     }
 }

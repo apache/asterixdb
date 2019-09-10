@@ -16,34 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job.profiling;
+/*
+ * Description  : Disk io count metrics on full scan
+ * Expected Res : Success
+ * Date         : 10 Sep 2019
+ */
 
-import java.io.Serializable;
-
-import org.apache.hyracks.api.io.IWritable;
-import org.apache.hyracks.api.job.profiling.counters.ICounter;
-
-public interface IOperatorStats extends IWritable, Serializable {
-
-    /**
-     * @return The name of the operator
-     */
-    String getName();
-
-    /**
-     * @return A counter used to track the number of tuples
-     * accessed by an operator
-     */
-    ICounter getTupleCounter();
-
-    /**
-     * @return A counter used to track the execution time
-     * of an operator
-     */
-    ICounter getTimeCounter();
-
-    /**
-     * @return A counter used to track the number of pages pinned by an opeartor
-     */
-    ICounter getDiskIoCounter();
-}
+drop dataverse test;

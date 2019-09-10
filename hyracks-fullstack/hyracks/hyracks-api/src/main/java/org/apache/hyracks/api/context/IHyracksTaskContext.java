@@ -33,6 +33,8 @@ import org.apache.hyracks.api.job.profiling.IStatsCollector;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.resources.IDeallocatableRegistry;
 import org.apache.hyracks.api.result.IResultPartitionManager;
+import org.apache.hyracks.util.IThreadStats;
+import org.apache.hyracks.util.IThreadStatsCollector;
 
 public interface IHyracksTaskContext
         extends IHyracksCommonContext, IWorkspaceFileFactory, IDeallocatableRegistry, IOperatorEnvironment {
@@ -61,4 +63,23 @@ public interface IHyracksTaskContext
     IStatsCollector getStatsCollector();
 
     IWarningCollector getWarningCollector();
+
+    /**
+     * Subscribes the caller thread to {@code threadStatsCollector}
+     *
+     * @param threadStatsCollector
+     */
+    void subscribeThreadToStats(IThreadStatsCollector threadStatsCollector);
+
+    /**
+     * Unsubscribes the caller thread from all thread stats collectors known to this task
+     */
+    void unsubscribeThreadFromStats();
+
+    /**
+     * Gets the caller thread's stats
+     *
+     * @return the thread stats
+     */
+    IThreadStats getThreadStats();
 }

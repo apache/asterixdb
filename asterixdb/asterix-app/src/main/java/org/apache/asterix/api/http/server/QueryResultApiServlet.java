@@ -98,9 +98,9 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
                 printer.begin();
                 printer.addResultPrinter(new ResultsPrinter(appCtx, resultReader, null, stats, sessionOutput));
                 printer.printResults();
-                ResponseMertics mertics =
-                        ResponseMertics.of(System.nanoTime() - elapsedStart, metadata.getJobDuration(),
-                                stats.getCount(), stats.getSize(), metadata.getProcessedObjects(), 0, 0);
+                ResponseMertics mertics = ResponseMertics.of(System.nanoTime() - elapsedStart,
+                        metadata.getJobDuration(), stats.getCount(), stats.getSize(), metadata.getProcessedObjects(), 0,
+                        0, metadata.getDiskIoCount());
                 printer.addFooterPrinter(new MetricsPrinter(mertics, HttpUtil.getPreferredCharset(request)));
                 printer.printFooters();
                 printer.end();

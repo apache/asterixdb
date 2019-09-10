@@ -107,6 +107,9 @@ import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.test.support.TestUtils;
+import org.apache.hyracks.util.IThreadStats;
+import org.apache.hyracks.util.IThreadStatsCollector;
+import org.apache.hyracks.util.ThreadStats;
 
 @SuppressWarnings("rawtypes")
 public class LSMInvertedIndexTestUtils {
@@ -649,6 +652,7 @@ public class LSMInvertedIndexTestUtils {
     // results during inverted index searches for the test purposes only.
     public static class HyracksTaskTestContext implements IHyracksTaskContext {
         private final int FRAME_SIZE = AccessMethodTestsConfig.LSM_INVINDEX_HYRACKS_FRAME_SIZE;
+        private final ThreadStats threadStats = new ThreadStats();
         private Object sharedObject;
 
         @Override
@@ -770,6 +774,21 @@ public class LSMInvertedIndexTestUtils {
         @Override
         public IWarningCollector getWarningCollector() {
             return TestUtils.NOOP_WARNING_COLLECTOR;
+        }
+
+        @Override
+        public void subscribeThreadToStats(IThreadStatsCollector threadStatsCollector) {
+            // no op
+        }
+
+        @Override
+        public void unsubscribeThreadFromStats() {
+            // no op
+        }
+
+        @Override
+        public IThreadStats getThreadStats() {
+            return threadStats;
         }
     }
 

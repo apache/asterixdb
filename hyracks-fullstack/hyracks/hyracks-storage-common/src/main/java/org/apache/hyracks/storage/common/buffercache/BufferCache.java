@@ -47,11 +47,13 @@ import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
+import org.apache.hyracks.util.IThreadStats;
+import org.apache.hyracks.util.IThreadStatsCollector;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
+public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, IThreadStatsCollector {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int MAP_FACTOR = 3;
@@ -79,6 +81,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private IIOReplicationManager ioReplicationManager;
     private final List<ICachedPageInternal> cachedPages = new ArrayList<>();
     private final AtomicLong masterPinCount = new AtomicLong();
+    private final Map<Long, IThreadStats> statsSubscribers = new ConcurrentHashMap<>();
 
     private boolean closed;
 
@@ -169,6 +172,10 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         // the synchronized block over the fileInfoMap is a hot spot.
         if (DEBUG) {
             pinSanityCheck(dpid);
+        }
+        final IThreadStats threadStats = statsSubscribers.get(Thread.currentThread().getId());
+        if (threadStats != null) {
+            threadStats.pagePinned();
         }
         CachedPage cPage = findPage(dpid);
         if (!newPage) {
@@ -576,6 +583,16 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         if (DEBUG && pinCount == 0) {
             pinnedPageOwner.remove(page);
         }
+    }
+
+    @Override
+    public void subscribe(IThreadStats stats) {
+        statsSubscribers.put(Thread.currentThread().getId(), stats);
+    }
+
+    @Override
+    public void unsubscribe() {
+        statsSubscribers.remove(Thread.currentThread().getId());
     }
 
     private int hash(long dpid) {

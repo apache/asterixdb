@@ -56,6 +56,7 @@ import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.util.IThreadStatsCollector;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -123,16 +124,6 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, IIndexDataflowHelperFactory indexHelperFactory,
             boolean retainInput, boolean retainMissing, IMissingWriterFactory missingWriterFactory,
             ISearchOperationCallbackFactory searchCallbackFactory, boolean appendIndexFilter,
-            ITupleFilterFactory tupleFilterFactory, long outputLimit) throws HyracksDataException {
-        this(ctx, inputRecDesc, partition, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
-                retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, appendIndexFilter,
-                tupleFilterFactory, outputLimit, false, null, null);
-    }
-
-    public IndexSearchOperatorNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc, int partition,
-            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, IIndexDataflowHelperFactory indexHelperFactory,
-            boolean retainInput, boolean retainMissing, IMissingWriterFactory missingWriterFactory,
-            ISearchOperationCallbackFactory searchCallbackFactory, boolean appendIndexFilter,
             ITupleFilterFactory tupleFactoryFactory, long outputLimit, boolean appendSearchCallbackProceedResult,
             byte[] searchCallbackProceedResultFalseValue, byte[] searchCallbackProceedResultTrueValue)
             throws HyracksDataException {
@@ -189,6 +180,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         writer.open();
         indexHelper.open();
         index = indexHelper.getIndexInstance();
+        subscribeForStats(index);
         accessor = new FrameTupleAccessor(inputRecDesc);
         if (retainMissing) {
             int fieldCount = getFieldCount();
@@ -317,6 +309,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                     if (appender.getTupleCount() > 0) {
                         appender.write(writer, true);
                     }
+                    stats.getDiskIoCounter().update(ctx.getThreadStats().getPinnedPagesCount());
                 } catch (Throwable th) { // NOSONAR Must ensure writer.fail is called.
                     // subsequently, the failure will be thrown
                     failure = th;
@@ -341,6 +334,12 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     public void fail() throws HyracksDataException {
         failed = true;
         writer.fail();
+    }
+
+    private void subscribeForStats(IIndex index) {
+        if (index.getBufferCache() instanceof IThreadStatsCollector) {
+            ctx.subscribeThreadToStats((IThreadStatsCollector) index.getBufferCache());
+        }
     }
 
     private void writeTupleToOutput(ITupleReference tuple) throws IOException {

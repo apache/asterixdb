@@ -62,6 +62,7 @@ public class NcResultPrinter implements IResponseFieldPrinter {
         List<Triple<JobId, ResultSetId, ARecordType>> resultSets = resultMetadata.getResultSets();
         if (delivery == IStatementExecutor.ResultDelivery.IMMEDIATE && !resultSets.isEmpty()) {
             stats.setProcessedObjects(responseMsg.getStats().getProcessedObjects());
+            stats.setDiskIoCount(responseMsg.getStats().getDiskIoCount());
             for (int i = 0; i < resultSets.size(); i++) {
                 Triple<JobId, ResultSetId, ARecordType> rsmd = resultSets.get(i);
                 ResultReader resultReader = new ResultReader(resultSet, rsmd.getLeft(), rsmd.getMiddle());

@@ -24,6 +24,7 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -71,6 +72,9 @@ import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 import org.apache.hyracks.control.nc.work.NotifyTaskCompleteWork;
 import org.apache.hyracks.control.nc.work.NotifyTaskFailureWork;
+import org.apache.hyracks.util.IThreadStats;
+import org.apache.hyracks.util.IThreadStatsCollector;
+import org.apache.hyracks.util.ThreadStats;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -121,6 +125,10 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     private final Set<Warning> warnings;
 
     private final IWarningCollector warningCollector;
+
+    private final Set<IThreadStatsCollector> threadStatsCollectors = new HashSet<>();
+
+    private final Map<Long, IThreadStats> perThreadStats = new HashMap<>();
 
     public Task(Joblet joblet, Set<JobFlag> jobFlags, TaskAttemptId taskId, String displayName,
             ExecutorService executor, NodeControllerService ncs,
@@ -202,6 +210,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     public void close() {
         deallocatableRegistry.close();
+        threadStatsCollectors.forEach(IThreadStatsCollector::unsubscribe);
     }
 
     @Override
@@ -335,6 +344,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                                     removePendingThread(thread);
                                 }
                             } finally {
+                                unsubscribeThreadFromStats();
                                 sem.release();
                             }
                         });
@@ -342,6 +352,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                     try {
                         pushFrames(collectors[0], inputChannelsFromConnectors.get(0), operator.getInputFrameWriter(0));
                     } finally {
+                        unsubscribeThreadFromStats();
                         sem.acquireUninterruptibly(collectors.length - 1);
                     }
                 }
@@ -484,6 +495,31 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     @Override
     public IWarningCollector getWarningCollector() {
         return warningCollector;
+    }
+
+    @Override
+    public IThreadStats getThreadStats() {
+        synchronized (threadStatsCollectors) {
+            return perThreadStats.computeIfAbsent(Thread.currentThread().getId(), threadId -> new ThreadStats());
+        }
+    }
+
+    @Override
+    public synchronized void subscribeThreadToStats(IThreadStatsCollector threadStatsCollector) {
+        //TODO do this only when profiling is enabled
+        synchronized (threadStatsCollectors) {
+            threadStatsCollectors.add(threadStatsCollector);
+            final long threadId = Thread.currentThread().getId();
+            IThreadStats threadStat = perThreadStats.computeIfAbsent(threadId, id -> new ThreadStats());
+            threadStatsCollector.subscribe(threadStat);
+        }
+    }
+
+    @Override
+    public synchronized void unsubscribeThreadFromStats() {
+        synchronized (threadStatsCollectors) {
+            threadStatsCollectors.forEach(IThreadStatsCollector::unsubscribe);
+        }
     }
 
     public boolean isCompleted() {

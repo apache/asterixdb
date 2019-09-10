@@ -83,6 +83,7 @@ public interface IStatementExecutor {
         private long count;
         private long size;
         private long processedObjects;
+        private long diskIoCount;
 
         public long getCount() {
             return count;
@@ -106,6 +107,14 @@ public interface IStatementExecutor {
 
         public void setProcessedObjects(long processedObjects) {
             this.processedObjects = processedObjects;
+        }
+
+        public long getDiskIoCount() {
+            return diskIoCount;
+        }
+
+        public void setDiskIoCount(long diskIoCount) {
+            this.diskIoCount = diskIoCount;
         }
     }
 

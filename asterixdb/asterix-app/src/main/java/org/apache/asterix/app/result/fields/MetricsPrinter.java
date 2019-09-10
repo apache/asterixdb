@@ -36,6 +36,7 @@ public class MetricsPrinter implements IResponseFieldPrinter {
         RESULT_SIZE("resultSize"),
         ERROR_COUNT("errorCount"),
         PROCESSED_OBJECTS_COUNT("processedObjects"),
+        DISK_IO_COUNT("diskIoCount"),
         WARNING_COUNT("warningCount");
 
         private final String str;
@@ -77,9 +78,16 @@ public class MetricsPrinter implements IResponseFieldPrinter {
         pw.print("\n\t");
         final boolean hasErrors = mertics.getErrorCount() > 0;
         final boolean hasWarnings = mertics.getWarnCount() > 0;
+        final boolean hasDiskIoStats = mertics.getDiskIoCount() > 0;
         ResultUtil.printField(pw, Metrics.PROCESSED_OBJECTS_COUNT.str(), mertics.getProcessedObjects(),
-                hasWarnings || hasErrors);
+                hasWarnings || hasErrors || hasDiskIoStats);
         pw.print("\n");
+        //TODO move diskIoCount to the profile printer when it is introduced
+        if (hasDiskIoStats) {
+            pw.print("\t");
+            ResultUtil.printField(pw, Metrics.DISK_IO_COUNT.str(), mertics.getDiskIoCount(), hasWarnings || hasErrors);
+            pw.print("\n");
+        }
         if (hasWarnings) {
             pw.print("\t");
             ResultUtil.printField(pw, Metrics.WARNING_COUNT.str(), mertics.getWarnCount(), hasErrors);

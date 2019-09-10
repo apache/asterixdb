@@ -214,6 +214,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
                         failures.offer(th);
                         throw th;
                     } finally {
+                        ctx.unsubscribeThreadFromStats();
                         completeSemaphore.release();
                     }
                     return null;

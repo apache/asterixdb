@@ -16,34 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job.profiling;
+package org.apache.hyracks.util;
 
-import java.io.Serializable;
-
-import org.apache.hyracks.api.io.IWritable;
-import org.apache.hyracks.api.job.profiling.counters.ICounter;
-
-public interface IOperatorStats extends IWritable, Serializable {
+public interface IThreadStatsCollector {
 
     /**
-     * @return The name of the operator
+     * Subscribes this thread with this stats collector
+     *
+     * @param stats
      */
-    String getName();
+    void subscribe(IThreadStats stats);
 
     /**
-     * @return A counter used to track the number of tuples
-     * accessed by an operator
+     * Unsubscribes this thread from this stats collector
      */
-    ICounter getTupleCounter();
-
-    /**
-     * @return A counter used to track the execution time
-     * of an operator
-     */
-    ICounter getTimeCounter();
-
-    /**
-     * @return A counter used to track the number of pages pinned by an opeartor
-     */
-    ICounter getDiskIoCounter();
+    void unsubscribe();
 }

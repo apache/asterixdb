@@ -27,12 +27,13 @@ public class ResponseMertics {
     private long processedObjects;
     private long errorCount;
     private long warnCount;
+    private long diskIoCount;
 
     private ResponseMertics() {
     }
 
     public static ResponseMertics of(long elapsedTime, long executionTime, long resultCount, long resultSize,
-            long processedObjects, long errorCount, long warnCount) {
+            long processedObjects, long errorCount, long warnCount, long diskIoCount) {
         ResponseMertics mertics = new ResponseMertics();
         mertics.elapsedTime = elapsedTime;
         mertics.executionTime = executionTime;
@@ -41,6 +42,7 @@ public class ResponseMertics {
         mertics.processedObjects = processedObjects;
         mertics.errorCount = errorCount;
         mertics.warnCount = warnCount;
+        mertics.diskIoCount = diskIoCount;
         return mertics;
     }
 
@@ -70,5 +72,9 @@ public class ResponseMertics {
 
     public long getWarnCount() {
         return warnCount;
+    }
+
+    public long getDiskIoCount() {
+        return diskIoCount;
     }
 }

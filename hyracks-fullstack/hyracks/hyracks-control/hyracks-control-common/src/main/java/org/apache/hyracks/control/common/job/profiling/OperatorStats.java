@@ -32,6 +32,7 @@ public class OperatorStats implements IOperatorStats {
     public final String operatorName;
     public final ICounter tupleCounter;
     public final ICounter timeCounter;
+    public final ICounter diskIoCounter;
 
     public OperatorStats(String operatorName) {
         if (operatorName == null || operatorName.isEmpty()) {
@@ -40,6 +41,7 @@ public class OperatorStats implements IOperatorStats {
         this.operatorName = operatorName;
         tupleCounter = new Counter("tupleCounter");
         timeCounter = new Counter("timeCounter");
+        diskIoCounter = new Counter("diskIoCounter");
     }
 
     public static IOperatorStats create(DataInput input) throws IOException {
@@ -65,15 +67,22 @@ public class OperatorStats implements IOperatorStats {
     }
 
     @Override
+    public ICounter getDiskIoCounter() {
+        return diskIoCounter;
+    }
+
+    @Override
     public void writeFields(DataOutput output) throws IOException {
         output.writeUTF(operatorName);
         output.writeLong(tupleCounter.get());
         output.writeLong(timeCounter.get());
+        output.writeLong(diskIoCounter.get());
     }
 
     @Override
     public void readFields(DataInput input) throws IOException {
         tupleCounter.set(input.readLong());
         timeCounter.set(input.readLong());
+        diskIoCounter.set(input.readLong());
     }
 }

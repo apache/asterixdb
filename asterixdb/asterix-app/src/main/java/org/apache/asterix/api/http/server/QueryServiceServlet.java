@@ -563,7 +563,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             responsePrinter.addFooterPrinter(new StatusPrinter(execution.getResultStatus()));
         }
         final ResponseMertics mertics = ResponseMertics.of(System.nanoTime() - elapsedStart, execution.duration(),
-                stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount, warnings.size());
+                stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount, warnings.size(),
+                stats.getDiskIoCount());
         responsePrinter.addFooterPrinter(new MetricsPrinter(mertics, resultCharset));
     }
 

@@ -57,7 +57,8 @@ public class StatsCollector implements IStatsCollector {
         IOperatorStats aggregatedStats = new OperatorStats("aggregated");
         for (IOperatorStats stats : operatorStatsMap.values()) {
             aggregatedStats.getTupleCounter().update(stats.getTupleCounter().get());
-            aggregatedStats.getTimeCounter().update(stats.getTupleCounter().get());
+            aggregatedStats.getTimeCounter().update(stats.getTimeCounter().get());
+            aggregatedStats.getDiskIoCounter().update(stats.getDiskIoCounter().get());
         }
         return aggregatedStats;
     }

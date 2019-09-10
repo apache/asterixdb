@@ -16,34 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job.profiling;
+package org.apache.hyracks.util;
 
-import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.hyracks.api.io.IWritable;
-import org.apache.hyracks.api.job.profiling.counters.ICounter;
+import org.apache.hyracks.util.annotations.ThreadSafe;
 
-public interface IOperatorStats extends IWritable, Serializable {
+@ThreadSafe
+public class ThreadStats implements IThreadStats {
 
-    /**
-     * @return The name of the operator
-     */
-    String getName();
+    private AtomicLong pinnedPagesCount = new AtomicLong();
 
-    /**
-     * @return A counter used to track the number of tuples
-     * accessed by an operator
-     */
-    ICounter getTupleCounter();
+    @Override
+    public void pagePinned() {
+        pinnedPagesCount.incrementAndGet();
+    }
 
-    /**
-     * @return A counter used to track the execution time
-     * of an operator
-     */
-    ICounter getTimeCounter();
-
-    /**
-     * @return A counter used to track the number of pages pinned by an opeartor
-     */
-    ICounter getDiskIoCounter();
+    @Override
+    public long getPinnedPagesCount() {
+        return pinnedPagesCount.get();
+    }
 }
