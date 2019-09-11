@@ -82,17 +82,17 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
         LogicalVariable v = context.newVarFromExpression(fc.getVarExpr());
         Expression inExpr = fc.getInExpr();
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(inExpr, tupSource);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> pUnnestExpr = makeUnnestExpression(eo.first, eo.second);
         ILogicalOperator returnedOp;
-
         if (fc.getPosVarExpr() == null) {
-            returnedOp = new UnnestOperator(v, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)));
+            returnedOp = new UnnestOperator(v, new MutableObject<>(pUnnestExpr.first));
         } else {
             LogicalVariable pVar = context.newVarFromExpression(fc.getPosVarExpr());
             // We set the positional variable type as INT64 type.
-            returnedOp = new UnnestOperator(v, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)),
-                    pVar, BuiltinType.AINT64, new PositionWriter());
+            returnedOp = new UnnestOperator(v, new MutableObject<>(pUnnestExpr.first), pVar, BuiltinType.AINT64,
+                    new PositionWriter());
         }
-        returnedOp.getInputs().add(eo.second);
+        returnedOp.getInputs().add(pUnnestExpr.second);
         return new Pair<>(returnedOp, v);
     }
 

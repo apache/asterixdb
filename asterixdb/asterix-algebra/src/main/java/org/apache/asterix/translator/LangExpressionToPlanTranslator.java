@@ -1274,9 +1274,11 @@ class LangExpressionToPlanTranslator
         for (QuantifiedPair qt : qe.getQuantifiedList()) {
             Expression expr = qt.getExpr();
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo1 = langExprToAlgExpression(expr, topOp);
-            topOp = eo1.second;
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> pUnnestExpr =
+                    makeUnnestExpression(eo1.first, eo1.second);
+            topOp = pUnnestExpr.second;
             LogicalVariable uVar = context.newVarFromExpression(qt.getVarExpr());
-            UnnestOperator u = new UnnestOperator(uVar, new MutableObject<>(makeUnnestExpression(eo1.first)));
+            UnnestOperator u = new UnnestOperator(uVar, new MutableObject<>(pUnnestExpr.first));
             u.setSourceLocation(expr.getSourceLocation());
 
             if (firstOp == null) {
@@ -1692,30 +1694,50 @@ class LangExpressionToPlanTranslator
         return array;
     }
 
-    protected ILogicalExpression makeUnnestExpression(ILogicalExpression expr) {
+    protected Pair<ILogicalExpression, Mutable<ILogicalOperator>> makeUnnestExpression(ILogicalExpression expr,
+            Mutable<ILogicalOperator> topOpRef) throws CompilationException {
         SourceLocation sourceLoc = expr.getSourceLocation();
-        List<Mutable<ILogicalExpression>> argRefs = new ArrayList<>();
-        argRefs.add(new MutableObject<>(expr));
         switch (expr.getExpressionTag()) {
             case CONSTANT:
             case VARIABLE:
                 UnnestingFunctionCallExpression scanCollExpr1 = new UnnestingFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION), argRefs);
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION),
+                        mkSingletonArrayList(new MutableObject<>(expr)));
                 scanCollExpr1.setSourceLocation(sourceLoc);
-                return scanCollExpr1;
+                return new Pair<>(scanCollExpr1, topOpRef);
             case FUNCTION_CALL:
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
                 if (fce.getKind() == FunctionKind.UNNEST) {
-                    return expr;
-                } else {
+                    return new Pair<>(expr, topOpRef);
+                } else if (fce.getKind() == FunctionKind.SCALAR && unnestNeedsAssign(fce)) {
+                    LogicalVariable var = context.newVar();
+                    AssignOperator assignOp = new AssignOperator(var, new MutableObject<>(expr));
+                    assignOp.setSourceLocation(sourceLoc);
+                    assignOp.getInputs().add(topOpRef);
+                    VariableReferenceExpression varRef = new VariableReferenceExpression(var);
+                    varRef.setSourceLocation(sourceLoc);
                     UnnestingFunctionCallExpression scanCollExpr2 = new UnnestingFunctionCallExpression(
-                            FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION), argRefs);
+                            FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION),
+                            mkSingletonArrayList(new MutableObject<>(varRef)));
                     scanCollExpr2.setSourceLocation(sourceLoc);
-                    return scanCollExpr2;
+                    return new Pair<>(scanCollExpr2, new MutableObject<>(assignOp));
+                } else {
+                    UnnestingFunctionCallExpression scanCollExpr3 = new UnnestingFunctionCallExpression(
+                            FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION),
+                            mkSingletonArrayList(new MutableObject<>(expr)));
+                    scanCollExpr3.setSourceLocation(sourceLoc);
+                    return new Pair<>(scanCollExpr3, topOpRef);
                 }
             default:
-                return expr;
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc);
         }
+    }
+
+    /**
+     * Whether an Assign operator needs to be introduced when unnesting this function call expression.
+     */
+    private boolean unnestNeedsAssign(AbstractFunctionCallExpression fce) {
+        return BuiltinFunctions.getAggregateFunction(fce.getFunctionIdentifier()) != null;
     }
 
     private boolean rebindBottomOpRef(ILogicalOperator currentOp, Mutable<ILogicalOperator> opRef,
