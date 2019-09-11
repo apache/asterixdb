@@ -19,14 +19,10 @@
 
 package org.apache.asterix.runtime.evaluators.functions.bitwise;
 
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.functions.AbstractScalarEval;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.asterix.runtime.exceptions.ExceptionUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -88,7 +84,7 @@ abstract class AbstractBitSingleValueEvaluator extends AbstractScalarEval {
 
         // Validity check
         if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
-            handleTypeMismatchInput(0, ATypeTag.BIGINT, bytes, startOffset);
+            handleTypeMismatchInput(context, 0, ATypeTag.BIGINT, bytes, startOffset);
             PointableHelper.setNull(result);
             return;
         }
@@ -97,11 +93,5 @@ abstract class AbstractBitSingleValueEvaluator extends AbstractScalarEval {
         applyBitwiseOperation(longValue);
 
         writeResult(result);
-    }
-
-    private void handleTypeMismatchInput(int inputPosition, ATypeTag expected, byte[] bytes, int startOffset) {
-        ATypeTag actual = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[startOffset]);
-        context.getWarningCollector().warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_MISMATCH_FUNCTION,
-                functionIdentifier, ExceptionUtil.indexToPosition(inputPosition), expected, actual));
     }
 }

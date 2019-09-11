@@ -72,6 +72,7 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
         final ActivityClusterGraph acg = acgb.inferActivityClusters(jag);
         acg.setFrameSize(spec.getFrameSize());
         acg.setMaxReattempts(spec.getMaxReattempts());
+        acg.setRuntimeWarningsLimit(spec.getRuntimeWarningsLimit());
         acg.setJobletEventListenerFactory(spec.getJobletEventListenerFactory());
         acg.setGlobalJobDataFactory(spec.getGlobalJobDataFactory());
         acg.setConnectorPolicyAssignmentPolicy(spec.getConnectorPolicyAssignmentPolicy());

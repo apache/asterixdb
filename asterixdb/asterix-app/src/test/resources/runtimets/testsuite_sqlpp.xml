@@ -12497,5 +12497,10 @@
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_elsewhere. None expected at this location</expected-warn>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="warnings">
+      <compilation-unit name="warnings_limit">
+        <output-dir compare="Clean-JSON">warnings_limit</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

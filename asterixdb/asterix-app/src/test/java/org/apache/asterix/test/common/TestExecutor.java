@@ -152,6 +152,7 @@ public class TestExecutor {
     public static final Set<String> NON_CANCELLABLE =
             Collections.unmodifiableSet(new HashSet<>(Arrays.asList("store", "validate")));
     private static final int MAX_NON_UTF_8_STATEMENT_SIZE = 64 * 1024;
+    private static final ContentType TEXT_PLAIN_UTF8 = ContentType.create(HttpUtil.ContentType.APPLICATION_JSON, UTF_8);
 
     private final IPollTask plainExecutor = (testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
             queryCount, expectedResultFileCtxs, testFile, actualPath, actualWarnCount) -> executeTestFile(testCaseCtx,
@@ -721,20 +722,21 @@ public class TestExecutor {
         return builder.build();
     }
 
-    private HttpUriRequest buildRequest(String method, URI uri, List<Parameter> params, Optional<String> body) {
+    private HttpUriRequest buildRequest(String method, URI uri, List<Parameter> params, Optional<String> body,
+            ContentType contentType) {
         RequestBuilder builder = RequestBuilder.create(method);
         builder.setUri(uri);
         for (Parameter param : params) {
             builder.addParameter(param.getName(), param.getValue());
         }
         builder.setCharset(UTF_8);
-        body.ifPresent(s -> builder.setEntity(new StringEntity(s, UTF_8)));
+        body.ifPresent(s -> builder.setEntity(new StringEntity(s, contentType)));
         return builder.build();
     }
 
     private HttpUriRequest buildRequest(String method, URI uri, OutputFormat fmt, List<Parameter> params,
-            Optional<String> body) {
-        HttpUriRequest request = buildRequest(method, uri, params, body);
+            Optional<String> body, ContentType contentType) {
+        HttpUriRequest request = buildRequest(method, uri, params, body, contentType);
         // Set accepted output response type
         request.setHeader("Accept", fmt.mimeType());
         return request;
@@ -807,21 +809,23 @@ public class TestExecutor {
 
     public InputStream executeJSONGet(OutputFormat fmt, URI uri, List<Parameter> params,
             Predicate<Integer> responseCodeValidator) throws Exception {
-        return executeJSON(fmt, "GET", uri, params, responseCodeValidator, Optional.empty());
+        return executeJSON(fmt, "GET", uri, params, responseCodeValidator, Optional.empty(), TEXT_PLAIN_UTF8);
     }
 
     public InputStream executeJSON(OutputFormat fmt, String method, URI uri, List<Parameter> params) throws Exception {
-        return executeJSON(fmt, method, uri, params, code -> code == HttpStatus.SC_OK, Optional.empty());
+        return executeJSON(fmt, method, uri, params, code -> code == HttpStatus.SC_OK, Optional.empty(),
+                TEXT_PLAIN_UTF8);
     }
 
     public InputStream executeJSON(OutputFormat fmt, String method, URI uri, Predicate<Integer> responseCodeValidator)
             throws Exception {
-        return executeJSON(fmt, method, uri, Collections.emptyList(), responseCodeValidator, Optional.empty());
+        return executeJSON(fmt, method, uri, Collections.emptyList(), responseCodeValidator, Optional.empty(),
+                TEXT_PLAIN_UTF8);
     }
 
-    public InputStream executeJSON(OutputFormat fmt, String method, URI uri, List<Parameter> params,
-            Predicate<Integer> responseCodeValidator, Optional<String> body) throws Exception {
-        HttpUriRequest request = buildRequest(method, uri, fmt, params, body);
+    private InputStream executeJSON(OutputFormat fmt, String method, URI uri, List<Parameter> params,
+            Predicate<Integer> responseCodeValidator, Optional<String> body, ContentType contentType) throws Exception {
+        HttpUriRequest request = buildRequest(method, uri, fmt, params, body, contentType);
         HttpResponse response = executeAndCheckHttpRequest(request, responseCodeValidator);
         return response.getEntity().getContent();
     }
@@ -1234,11 +1238,14 @@ public class TestExecutor {
         final Optional<String> body = extractBody(statement);
         final Predicate<Integer> statusCodePredicate = extractStatusCodePredicate(statement);
         final boolean extracResult = isExtracResult(statement);
+        final String mimeReqType = extractHttpRequestType(statement);
+        ContentType contentType = mimeReqType != null ? ContentType.create(mimeReqType, UTF_8) : TEXT_PLAIN_UTF8;
         InputStream resultStream;
         if ("http".equals(extension)) {
-            resultStream = executeHttp(reqType, variablesReplaced, fmt, params, statusCodePredicate, body);
+            resultStream = executeHttp(reqType, variablesReplaced, fmt, params, statusCodePredicate, body, contentType);
         } else if ("uri".equals(extension)) {
-            resultStream = executeURI(reqType, URI.create(variablesReplaced), fmt, params, statusCodePredicate, body);
+            resultStream = executeURI(reqType, URI.create(variablesReplaced), fmt, params, statusCodePredicate, body,
+                    contentType);
             if (extracResult) {
                 resultStream = ResultExtractor.extract(resultStream, UTF_8).getResult();
             }
@@ -1624,10 +1631,10 @@ public class TestExecutor {
     }
 
     protected InputStream executeHttp(String ctxType, String endpoint, OutputFormat fmt, List<Parameter> params,
-            Predicate<Integer> statusCodePredicate, Optional<String> body) throws Exception {
+            Predicate<Integer> statusCodePredicate, Optional<String> body, ContentType contentType) throws Exception {
         String[] split = endpoint.split("\\?");
         URI uri = createEndpointURI(split[0], split.length > 1 ? split[1] : null);
-        return executeURI(ctxType, uri, fmt, params, statusCodePredicate, body);
+        return executeURI(ctxType, uri, fmt, params, statusCodePredicate, body, contentType);
     }
 
     private InputStream executeURI(String ctxType, URI uri, OutputFormat fmt, List<Parameter> params) throws Exception {
@@ -1635,8 +1642,8 @@ public class TestExecutor {
     }
 
     private InputStream executeURI(String ctxType, URI uri, OutputFormat fmt, List<Parameter> params,
-            Predicate<Integer> responseCodeValidator, Optional<String> body) throws Exception {
-        return executeJSON(fmt, ctxType.toUpperCase(), uri, params, responseCodeValidator, body);
+            Predicate<Integer> responseCodeValidator, Optional<String> body, ContentType contentType) throws Exception {
+        return executeJSON(fmt, ctxType.toUpperCase(), uri, params, responseCodeValidator, body, contentType);
     }
 
     public void killNC(String nodeId, CompilationUnit cUnit) throws Exception {

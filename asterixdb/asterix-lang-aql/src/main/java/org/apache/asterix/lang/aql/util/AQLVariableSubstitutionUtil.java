@@ -27,13 +27,32 @@ import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 
 public class AQLVariableSubstitutionUtil {
+
+    private AQLVariableSubstitutionUtil() {
+    }
 
     public static ILangExpression substituteVariable(ILangExpression expression,
             Map<VariableExpr, Expression> varExprMap) throws CompilationException {
         AQLCloneAndSubstituteVariablesVisitor visitor =
-                new AQLCloneAndSubstituteVariablesVisitor(new LangRewritingContext(0, w -> {
+                new AQLCloneAndSubstituteVariablesVisitor(new LangRewritingContext(0, new IWarningCollector() {
+                    @Override
+                    public void warn(Warning warning) {
+                        // no-op
+                    }
+
+                    @Override
+                    public boolean shouldWarn() {
+                        return false;
+                    }
+
+                    @Override
+                    public long getTotalWarningsCount() {
+                        return 0;
+                    }
                 }));
         VariableSubstitutionEnvironment env = new VariableSubstitutionEnvironment(varExprMap);
         return expression.accept(visitor, env).first;

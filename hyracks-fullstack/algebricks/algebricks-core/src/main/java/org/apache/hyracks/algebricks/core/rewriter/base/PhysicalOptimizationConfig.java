@@ -39,6 +39,7 @@ public class PhysicalOptimizationConfig {
     private static final String DEFAULT_IN_MEM_HASH_JOIN_TABLE_SIZE = "DEFAULT_IN_MEM_HASH_JOIN_TABLE_SIZE";
     private static final String SORT_PARALLEL = "SORT_PARALLEL";
     private static final String SORT_SAMPLES = "SORT_SAMPLES";
+    private static final String RUNTIME_WARNINGS_LIMIT = "RUNTIME_WARNINGS_LIMIT";
 
     private Properties properties = new Properties();
 
@@ -172,16 +173,30 @@ public class PhysicalOptimizationConfig {
         setInt(SORT_SAMPLES, sortSamples);
     }
 
+    public long getRuntimeWarningsLimit() {
+        return getLong(RUNTIME_WARNINGS_LIMIT, 0);
+    }
+
+    public void setRuntimeWarningsLimit(long runtimeWarningsLimit) {
+        setLong(RUNTIME_WARNINGS_LIMIT, runtimeWarningsLimit);
+    }
+
     private void setInt(String property, int value) {
         properties.setProperty(property, Integer.toString(value));
     }
 
     private int getInt(String property, int defaultValue) {
         String value = properties.getProperty(property);
-        if (value == null)
-            return defaultValue;
-        else
-            return Integer.parseInt(value);
+        return value == null ? defaultValue : Integer.parseInt(value);
+    }
+
+    private void setLong(String property, long value) {
+        properties.setProperty(property, Long.toString(value));
+    }
+
+    private long getLong(String property, long defaultValue) {
+        String value = properties.getProperty(property);
+        return value == null ? defaultValue : Long.parseLong(value);
     }
 
     private void setDouble(String property, double value) {
@@ -190,10 +205,7 @@ public class PhysicalOptimizationConfig {
 
     private double getDouble(String property, double defaultValue) {
         String value = properties.getProperty(property);
-        if (value == null)
-            return defaultValue;
-        else
-            return Double.parseDouble(value);
+        return value == null ? defaultValue : Double.parseDouble(value);
     }
 
     private void setBoolean(String property, boolean value) {
@@ -202,10 +214,6 @@ public class PhysicalOptimizationConfig {
 
     private boolean getBoolean(String property, boolean defaultValue) {
         String value = properties.getProperty(property);
-        if (value == null) {
-            return defaultValue;
-        } else {
-            return Boolean.parseBoolean(value);
-        }
+        return value == null ? defaultValue : Boolean.parseBoolean(value);
     }
 }

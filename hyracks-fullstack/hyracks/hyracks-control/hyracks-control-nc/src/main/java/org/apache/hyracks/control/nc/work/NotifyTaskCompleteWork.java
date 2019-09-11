@@ -39,7 +39,7 @@ public class NotifyTaskCompleteWork extends AbstractWork {
     @Override
     public void run() {
         TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(), task.getPartitionSendProfile(),
-                task.getStatsCollector(), task.getWarnings());
+                task.getStatsCollector(), task.getWarnings(), task.getWarningCollector().getTotalWarningsCount());
         try {
             ncs.getClusterController(task.getJobletContext().getJobId().getCcId()).notifyTaskComplete(
                     task.getJobletContext().getJobId(), task.getTaskAttemptId(), ncs.getId(), taskProfile);

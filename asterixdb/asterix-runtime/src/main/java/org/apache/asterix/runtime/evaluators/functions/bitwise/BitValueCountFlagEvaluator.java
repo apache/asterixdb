@@ -19,8 +19,6 @@
 
 package org.apache.asterix.runtime.evaluators.functions.bitwise;
 
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt64;
@@ -30,7 +28,6 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.functions.AbstractScalarEval;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.asterix.runtime.exceptions.ExceptionUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -118,7 +115,7 @@ class BitValueCountFlagEvaluator extends AbstractScalarEval {
 
         // Type and value validity check
         if (!PointableHelper.isValidLongValue(valueBytes, valueStartOffset, true)) {
-            handleTypeMismatchInput(0, ATypeTag.BIGINT, valueBytes, valueStartOffset);
+            handleTypeMismatchInput(context, 0, ATypeTag.BIGINT, valueBytes, valueStartOffset);
             PointableHelper.setNull(result);
             return;
         }
@@ -129,7 +126,7 @@ class BitValueCountFlagEvaluator extends AbstractScalarEval {
 
         // Type and Value validity check
         if (!PointableHelper.isValidLongValue(countBytes, countStartOffset, true)) {
-            handleTypeMismatchInput(1, ATypeTag.BIGINT, countBytes, countStartOffset);
+            handleTypeMismatchInput(context, 1, ATypeTag.BIGINT, countBytes, countStartOffset);
             PointableHelper.setNull(result);
             return;
         }
@@ -142,7 +139,7 @@ class BitValueCountFlagEvaluator extends AbstractScalarEval {
             ATypeTag flagTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(flagBytes[flagStartOffset]);
 
             if (flagTypeTag != ATypeTag.BOOLEAN) {
-                handleTypeMismatchInput(2, ATypeTag.BOOLEAN, flagBytes, flagStartOffset);
+                handleTypeMismatchInput(context, 2, ATypeTag.BOOLEAN, flagBytes, flagStartOffset);
                 PointableHelper.setNull(result);
                 return;
             }
@@ -177,11 +174,5 @@ class BitValueCountFlagEvaluator extends AbstractScalarEval {
         resultMutableInt64.setValue(longValue);
         aInt64Serde.serialize(resultMutableInt64, resultStorage.getDataOutput());
         result.set(resultStorage);
-    }
-
-    private void handleTypeMismatchInput(int inputPosition, ATypeTag expected, byte[] bytes, int startOffset) {
-        ATypeTag actual = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[startOffset]);
-        context.getWarningCollector().warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_MISMATCH_FUNCTION,
-                functionIdentifier, ExceptionUtil.indexToPosition(inputPosition), expected, actual));
     }
 }

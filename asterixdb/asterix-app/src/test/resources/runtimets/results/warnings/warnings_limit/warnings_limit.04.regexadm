@@ -1,0 +1,32 @@
+\Q{\E
+\s*\Q"requestID": "\E[a-zA-Z0-9-]+\Q",\E
+\s*\Q"signature": {\E
+\s*\Q"*": "*"\E
+\s*\Q},\E
+\s*\Q"results": [ { "F1": { "a": 1 }, "F2": false }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": false }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": false }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": false }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
+\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
+\s*\Q]\E
+\s*\Q,\E
+\s*\Q"plans":{},\E
+\s*\Q"status": "success",\E
+\s*\Q"metrics": {\E
+\s*\Q"elapsedTime": "\E[^"]+\Q",\E
+\s*\Q"executionTime": "\E[^"]+\Q",\E
+\s*\Q"resultCount": \E[0-9]+\Q,\E
+\s*\Q"resultSize": \E[0-9]+\Q,\E
+\s*\Q"processedObjects": \E[0-9]+\Q,\E
+\s*\Q"warningCount": 10\E
+\s*\Q}\E
+\s*\Q}\E\s*

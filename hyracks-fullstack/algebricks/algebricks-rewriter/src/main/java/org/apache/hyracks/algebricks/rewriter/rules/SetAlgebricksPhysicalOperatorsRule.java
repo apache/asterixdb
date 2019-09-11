@@ -122,6 +122,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.rewriter.util.JoinUtils;
 import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 
 public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule {
@@ -220,8 +221,11 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     if (extGby != null) {
                         return extGby;
                     } else if (gby.getSourceLocation() != null) {
-                        context.getWarningCollector().warn(Warning.forHyracks(gby.getSourceLocation(),
-                                ErrorCode.INAPPLICABLE_HINT, "Group By", "hash"));
+                        IWarningCollector warningCollector = context.getWarningCollector();
+                        if (warningCollector.shouldWarn()) {
+                            warningCollector.warn(Warning.forHyracks(gby.getSourceLocation(),
+                                    ErrorCode.INAPPLICABLE_HINT, "Group By", "hash"));
+                        }
                     }
                 }
             }

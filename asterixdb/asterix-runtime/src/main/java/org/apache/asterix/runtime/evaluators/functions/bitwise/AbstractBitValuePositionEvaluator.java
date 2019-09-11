@@ -39,6 +39,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -125,7 +126,7 @@ abstract class AbstractBitValuePositionEvaluator extends AbstractScalarEval {
 
         // Type and value validity check
         if (!PointableHelper.isValidLongValue(valueBytes, valueStartOffset, true)) {
-            handleTypeMismatchInput(0, ATypeTag.BIGINT, valueBytes, valueStartOffset);
+            handleTypeMismatchInput(context, 0, ATypeTag.BIGINT, valueBytes, valueStartOffset);
             PointableHelper.setNull(result);
             return;
         }
@@ -138,7 +139,7 @@ abstract class AbstractBitValuePositionEvaluator extends AbstractScalarEval {
 
         // Type validity check (for position argument, array is a valid type as well)
         if (!ATypeHierarchy.canPromote(positionTypeTag, ATypeTag.DOUBLE) && positionTypeTag != ATypeTag.ARRAY) {
-            handleTypeMismatchInput(1, secondArgumentExpectedTypes, positionBytes, positionStartOffset);
+            handleTypeMismatchInput(context, 1, secondArgumentExpectedTypes, positionBytes, positionStartOffset);
             PointableHelper.setNull(result);
             return;
         }
@@ -219,7 +220,7 @@ abstract class AbstractBitValuePositionEvaluator extends AbstractScalarEval {
 
         // Value validity check
         if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
-            handleTypeMismatchInput(1, ATypeTag.BIGINT, bytes, startOffset);
+            handleTypeMismatchInput(context, 1, ATypeTag.BIGINT, bytes, startOffset);
             return false;
         }
 
@@ -236,23 +237,11 @@ abstract class AbstractBitValuePositionEvaluator extends AbstractScalarEval {
         return true;
     }
 
-    private void handleTypeMismatchInput(int inputPosition, ATypeTag expected, byte[] actualBytes,
-            int actualStartOffset) {
-        ATypeTag actual = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualBytes[actualStartOffset]);
-        context.getWarningCollector().warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_MISMATCH_FUNCTION,
-                functionIdentifier, ExceptionUtil.indexToPosition(inputPosition), expected, actual));
-    }
-
-    private void handleTypeMismatchInput(int inputPosition, byte[] expected, byte[] bytes, int actualStartOffset) {
-        ATypeTag actual = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[actualStartOffset]);
-        context.getWarningCollector()
-                .warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_MISMATCH_FUNCTION, functionIdentifier,
-                        ExceptionUtil.indexToPosition(inputPosition), ExceptionUtil.toExpectedTypeString(expected),
-                        actual));
-    }
-
     private void handleOutOfRangeInput(int inputPosition, int startLimit, int endLimit, long actual) {
-        context.getWarningCollector().warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.VALUE_OUT_OF_RANGE,
-                functionIdentifier, ExceptionUtil.indexToPosition(inputPosition), startLimit, endLimit, actual));
+        IWarningCollector warningCollector = context.getWarningCollector();
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.VALUE_OUT_OF_RANGE, functionIdentifier,
+                    ExceptionUtil.indexToPosition(inputPosition), startLimit, endLimit, actual));
+        }
     }
 }

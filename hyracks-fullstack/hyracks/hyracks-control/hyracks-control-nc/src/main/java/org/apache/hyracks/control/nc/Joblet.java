@@ -105,6 +105,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final long jobStartTime;
 
+    private final long runtimeWarningsLimit;
+
     public Joblet(NodeControllerService nodeController, DeploymentId deploymentId, JobId jobId,
             INCServiceContext serviceCtx, ActivityClusterGraph acg,
             IJobletEventListenerFactory jobletEventListenerFactory, long jobStartTime) {
@@ -134,6 +136,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         IGlobalJobDataFactory gjdf = acg.getGlobalJobDataFactory();
         globalJobData = gjdf != null ? gjdf.createGlobalJobData(this) : null;
         this.jobStartTime = jobStartTime;
+        this.runtimeWarningsLimit = acg.getRuntimeWarningsLimit();
     }
 
     @Override
@@ -206,7 +209,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         counterMap.forEach((key, value) -> counters.put(key, value.get()));
         for (Task task : taskMap.values()) {
             TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(),
-                    new Hashtable<>(task.getPartitionSendProfile()), new StatsCollector(), task.getWarnings());
+                    new Hashtable<>(task.getPartitionSendProfile()), new StatsCollector(), task.getWarnings(),
+                    task.getWarningCollector().getTotalWarningsCount());
             task.dumpProfile(taskProfile);
             jProfile.getTaskProfiles().put(task.getTaskAttemptId(), taskProfile);
         }
@@ -261,6 +265,10 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     public final int getFrameSize() {
         return frameManager.getInitialFrameSize();
+    }
+
+    public final long getRuntimeWarningsLimit() {
+        return runtimeWarningsLimit;
     }
 
     public IIOManager getIOManager() {
@@ -320,6 +328,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         }
     }
 
+    @SuppressWarnings("squid:S1166") // Either log or rethrow this exception
     private void performCleanup() {
         nodeController.getJobletMap().remove(jobId);
         IJobletEventListener listener = getJobletEventListener();
@@ -331,7 +340,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         try {
             nodeController.getClusterController(jobId.getCcId()).notifyJobletCleanup(jobId, nodeController.getId());
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.info(e);
         }
     }
 

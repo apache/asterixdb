@@ -16,23 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.hyracks.api.exceptions;
-
-public interface IWarningCollector {
-    /**
-     * Adds a warning
-     * @param warning
-     */
-    void warn(Warning warning);
-
-    /**
-     * @return {@code true} to indicate that the user can issue a warning through {@link #warn(Warning)} method.
-     */
-    boolean shouldWarn();
-
-    /**
-     * @return Total warnings count (reported and unreported ones).
-     */
-    long getTotalWarningsCount();
-}
+/*
+ * Description     : test limiting number of reported runtime warnings
+ * Expected Result : success with 10 runtime warnings count
+ */
+-- requesttype=application/json
+/query/service
+--body={"statement":"USE test; SET `compiler.runtime.warnings` \"0\"; SELECT {\"a\":1 } as F1, isbitset(6, ds.f) AS F2 FROM ds order by ds.id;"}

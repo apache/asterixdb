@@ -17,4 +17,6 @@
  * under the License.
  */
 
+SET `compiler.runtime.warnings` "1000";
+
 SELECT VALUE MIN(ds.InternalDetails) FROM Metadata.`Dataset` ds;

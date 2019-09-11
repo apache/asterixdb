@@ -2550,6 +2550,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         .getResultMetadata(jobId, rsId);
         stats.setProcessedObjects(resultMetadata.getProcessedObjects());
         stats.setDiskIoCount(resultMetadata.getDiskIoCount());
+        stats.setTotalWarningsCount(resultMetadata.getTotalWarningsCount());
         warningCollector.warn(resultMetadata.getWarnings());
     }
 

@@ -20,6 +20,7 @@ package org.apache.asterix.app.result;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.asterix.api.common.ResultMetadata;
@@ -69,24 +70,34 @@ public class JobResultCallback implements IJobResultCallback {
     private void aggregateJobStats(JobId jobId, ResultMetadata metadata) {
         long processedObjects = 0;
         long diskIoCount = 0;
-        Set<Warning> warnings = new HashSet<>();
+        long aggregateTotalWarningsCount = 0;
+        Set<Warning> AggregateWarnings = new HashSet<>();
         IJobManager jobManager =
                 ((ClusterControllerService) appCtx.getServiceContext().getControllerService()).getJobManager();
         final JobRun run = jobManager.get(jobId);
         if (run != null) {
             final JobProfile jobProfile = run.getJobProfile();
             final Collection<JobletProfile> jobletProfiles = jobProfile.getJobletProfiles().values();
+            final long runtimeWarningsLimit = run.getJobSpecification().getRuntimeWarningsLimit();
             for (JobletProfile jp : jobletProfiles) {
                 final Collection<TaskProfile> jobletTasksProfile = jp.getTaskProfiles().values();
                 for (TaskProfile tp : jobletTasksProfile) {
                     processedObjects += tp.getStatsCollector().getAggregatedStats().getTupleCounter().get();
                     diskIoCount += tp.getStatsCollector().getAggregatedStats().getDiskIoCounter().get();
-                    warnings.addAll(tp.getWarnings());
+                    aggregateTotalWarningsCount += tp.getTotalWarningsCount();
+                    Set<Warning> taskWarnings = tp.getWarnings();
+                    if (AggregateWarnings.size() < runtimeWarningsLimit && !taskWarnings.isEmpty()) {
+                        Iterator<Warning> taskWarningsIt = taskWarnings.iterator();
+                        while (AggregateWarnings.size() < runtimeWarningsLimit && taskWarningsIt.hasNext()) {
+                            AggregateWarnings.add(taskWarningsIt.next());
+                        }
+                    }
                 }
             }
         }
         metadata.setProcessedObjects(processedObjects);
-        metadata.setWarnings(warnings);
+        metadata.setWarnings(AggregateWarnings);
         metadata.setDiskIoCount(diskIoCount);
+        metadata.setTotalWarningsCount(aggregateTotalWarningsCount);
     }
 }

@@ -87,6 +87,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
@@ -142,7 +143,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 BinaryComparatorFactoryProvider.INSTANCE, TypeTraitProvider.INSTANCE, BinaryBooleanInspector.FACTORY,
                 BinaryIntegerInspector.FACTORY, ADMPrinterFactoryProvider.INSTANCE, MissingWriterFactory.INSTANCE, null,
                 new ExpressionRuntimeProvider(new QueryLogicalExpressionJobGen(metadataProvider.getFunctionManager())),
-                ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
+                ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null,
+                appCtx.getCompilerProperties().getNumRuntimeWarnings());
     }
 
     @Override
@@ -305,9 +307,11 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                         isDuplicate = isDuplicateField(fieldName, fieldNameIdx, expr.getArguments());
                     }
                     if (isDuplicate) {
-                        optContext.getWarningCollector()
-                                .warn(WarningUtil.forAsterix(fieldNameExpr.second.getSourceLocation(),
-                                        ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldName));
+                        IWarningCollector warningCollector = optContext.getWarningCollector();
+                        if (warningCollector.shouldWarn()) {
+                            warningCollector.warn(WarningUtil.forAsterix(fieldNameExpr.second.getSourceLocation(),
+                                    ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldName));
+                        }
                         iterator.remove();
                         iterator.next();
                         iterator.remove();

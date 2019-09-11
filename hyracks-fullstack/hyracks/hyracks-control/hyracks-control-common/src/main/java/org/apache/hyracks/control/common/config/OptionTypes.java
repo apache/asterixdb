@@ -362,6 +362,28 @@ public class OptionTypes {
         }
     };
 
+    public static final IOptionType<Long> UNSIGNED_LONG = new IOptionType<Long>() {
+        @Override
+        public Long parse(String s) {
+            return Long.parseUnsignedLong(s);
+        }
+
+        @Override
+        public Long parse(JsonNode node) {
+            return node.isNull() ? null : parse(node.asText());
+        }
+
+        @Override
+        public Class<Long> targetType() {
+            return Long.class;
+        }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (long) value);
+        }
+    };
+
     public static final IOptionType<Integer> POSITIVE_INTEGER = new IOptionType<Integer>() {
         @Override
         public Integer parse(String s) {

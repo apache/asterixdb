@@ -39,6 +39,17 @@ public final class WarningCollector implements IWarningCollector {
         this.warnings.add(warning);
     }
 
+    @Override
+    public boolean shouldWarn() {
+        // this warning collector currently always collects warnings
+        return true;
+    }
+
+    @Override
+    public long getTotalWarningsCount() {
+        return warnings.size();
+    }
+
     public void warn(Collection<Warning> warnings) {
         this.warnings.addAll(warnings);
     }
@@ -49,7 +60,9 @@ public final class WarningCollector implements IWarningCollector {
 
     public void getWarnings(IWarningCollector outWarningCollector) {
         for (Warning warning : warnings) {
-            outWarningCollector.warn(warning);
+            if (outWarningCollector.shouldWarn()) {
+                outWarningCollector.warn(warning);
+            }
         }
     }
 }

@@ -17,22 +17,23 @@
  * under the License.
  */
 
-package org.apache.hyracks.api.exceptions;
+// 10 runtime warnings
 
-public interface IWarningCollector {
-    /**
-     * Adds a warning
-     * @param warning
-     */
-    void warn(Warning warning);
+use test;
 
-    /**
-     * @return {@code true} to indicate that the user can issue a warning through {@link #warn(Warning)} method.
-     */
-    boolean shouldWarn();
-
-    /**
-     * @return Total warnings count (reported and unreported ones).
-     */
-    long getTotalWarningsCount();
-}
+insert into ds([
+{"id": 1,  "f": 1},
+{"id": 2,  "f": "str1"},
+{"id": 3,  "f": 1},
+{"id": 4,  "f": "str2"},
+{"id": 5,  "f": 1},
+{"id": 6,  "f": "str3"},
+{"id": 7,  "f": "str4"},
+{"id": 8,  "f": "str5"},
+{"id": 9,  "f": "str6"},
+{"id": 10, "f": "str7"},
+{"id": 11, "f": 1},
+{"id": 12, "f": "str8"},
+{"id": 13, "f": "str9"},
+{"id": 14, "f": "str10"}
+]);

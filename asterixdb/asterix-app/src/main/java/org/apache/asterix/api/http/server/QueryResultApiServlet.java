@@ -100,7 +100,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
                 printer.printResults();
                 ResponseMertics mertics = ResponseMertics.of(System.nanoTime() - elapsedStart,
                         metadata.getJobDuration(), stats.getCount(), stats.getSize(), metadata.getProcessedObjects(), 0,
-                        0, metadata.getDiskIoCount());
+                        metadata.getTotalWarningsCount(), metadata.getDiskIoCount());
                 printer.addFooterPrinter(new MetricsPrinter(mertics, HttpUtil.getPreferredCharset(request)));
                 printer.printFooters();
                 printer.end();

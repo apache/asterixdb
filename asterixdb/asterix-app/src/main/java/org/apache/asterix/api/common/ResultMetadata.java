@@ -31,6 +31,7 @@ public class ResultMetadata implements IResultMetadata {
     private long processedObjects;
     private long diskIoCount;
     private Set<Warning> warnings;
+    private long totalWarningsCount;
 
     public ResultMetadata(SessionConfig.OutputFormat format) {
         this.format = format;
@@ -56,10 +57,20 @@ public class ResultMetadata implements IResultMetadata {
         this.warnings = warnings;
     }
 
+    /**
+     * Sets the count of all warnings generated including unreported ones.
+     */
+    public void setTotalWarningsCount(long totalWarningsCount) {
+        this.totalWarningsCount = totalWarningsCount;
+    }
+
     public long getJobDuration() {
         return jobDuration;
     }
 
+    /**
+     * @return The reported warnings.
+     */
     public Set<Warning> getWarnings() {
         return warnings;
     }
@@ -70,6 +81,13 @@ public class ResultMetadata implements IResultMetadata {
 
     public long getDiskIoCount() {
         return diskIoCount;
+    }
+
+    /**
+     * @return Total count of all warnings generated including unreported ones.
+     */
+    public long getTotalWarningsCount() {
+        return totalWarningsCount;
     }
 
     @Override

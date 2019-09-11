@@ -84,6 +84,7 @@ public interface IStatementExecutor {
         private long size;
         private long processedObjects;
         private long diskIoCount;
+        private long totalWarningsCount;
 
         public long getCount() {
             return count;
@@ -115,6 +116,14 @@ public interface IStatementExecutor {
 
         public void setDiskIoCount(long diskIoCount) {
             this.diskIoCount = diskIoCount;
+        }
+
+        public long getTotalWarningsCount() {
+            return totalWarningsCount;
+        }
+
+        public void setTotalWarningsCount(long totalWarningsCount) {
+            this.totalWarningsCount = totalWarningsCount;
         }
     }
 

@@ -37,8 +37,7 @@ import org.apache.hyracks.api.job.JobSpecification;
 
 public class PlanCompiler {
     private JobGenContext context;
-    private Map<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> operatorVisitedToParents =
-            new HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>>();
+    private Map<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> operatorVisitedToParents = new HashMap<>();
 
     public PlanCompiler(JobGenContext context) {
         this.context = context;
@@ -61,6 +60,7 @@ public class PlanCompiler {
     private JobSpecification compilePlanImpl(ILogicalPlan plan, boolean isNestedPlan, IOperatorSchema outerPlanSchema,
             IJobletEventListenerFactory jobEventListenerFactory) throws AlgebricksException {
         JobSpecification spec = new JobSpecification(context.getFrameSize());
+        spec.setRuntimeWarningsLimit(context.getRuntimeWarningsLimit());
         if (jobEventListenerFactory != null) {
             spec.setJobletEventListenerFactory(jobEventListenerFactory);
         }
@@ -97,8 +97,9 @@ public class PlanCompiler {
                 compileOpRef(opChild, spec, builder, outerPlanSchema);
                 schemas[i++] = context.getSchema(opChild.getValue());
             } else {
-                if (!parents.contains(opRef))
+                if (!parents.contains(opRef)) {
                     parents.add(opRef);
+                }
                 schemas[i++] = context.getSchema(opChild.getValue());
                 continue;
             }

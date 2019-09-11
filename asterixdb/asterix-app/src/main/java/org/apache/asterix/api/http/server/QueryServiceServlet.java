@@ -521,8 +521,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             execution.finish();
         }
         responsePrinter.printResults();
-        buildResponseFooters(elapsedStart, errorCount, stats, execution, warnings, resultCharset, responsePrinter,
-                delivery);
+        buildResponseFooters(elapsedStart, errorCount, stats, execution, resultCharset, responsePrinter, delivery);
         responsePrinter.printFooters();
         responsePrinter.end();
         if (sessionOutput.out().checkError()) {
@@ -556,15 +555,15 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     protected void buildResponseFooters(long elapsedStart, long errorCount, Stats stats,
-            RequestExecutionState execution, List<Warning> warnings, Charset resultCharset,
-            ResponsePrinter responsePrinter, ResultDelivery delivery) {
+            RequestExecutionState execution, Charset resultCharset, ResponsePrinter responsePrinter,
+            ResultDelivery delivery) {
         if (ResultDelivery.ASYNC != delivery) {
             // in case of ASYNC delivery, the status is printed by query translator
             responsePrinter.addFooterPrinter(new StatusPrinter(execution.getResultStatus()));
         }
         final ResponseMertics mertics = ResponseMertics.of(System.nanoTime() - elapsedStart, execution.duration(),
-                stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount, warnings.size(),
-                stats.getDiskIoCount());
+                stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount,
+                stats.getTotalWarningsCount(), stats.getDiskIoCount());
         responsePrinter.addFooterPrinter(new MetricsPrinter(mertics, resultCharset));
     }
 

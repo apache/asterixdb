@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 /**
  * <pre>
@@ -112,8 +113,11 @@ public class RemoveDuplicateFieldsRule implements IAlgebraicRewriteRule {
                 ILogicalExpression fieldNameExpr = iterator.next().getValue();
                 String fieldName = ConstantExpressionUtil.getStringConstant(fieldNameExpr);
                 if (fieldName != null && !fieldNames.add(fieldName)) {
-                    context.getWarningCollector().warn(WarningUtil.forAsterix(fieldNameExpr.getSourceLocation(),
-                            ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldName));
+                    IWarningCollector warningCollector = context.getWarningCollector();
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(WarningUtil.forAsterix(fieldNameExpr.getSourceLocation(),
+                                ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldName));
+                    }
                     iterator.remove();
                     iterator.next();
                     iterator.remove();

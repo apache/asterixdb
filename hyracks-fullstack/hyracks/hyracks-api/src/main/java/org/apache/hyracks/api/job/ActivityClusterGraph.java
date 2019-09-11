@@ -46,6 +46,8 @@ public class ActivityClusterGraph implements Serializable {
 
     private int frameSize;
 
+    private long runtimeWarningsLimit;
+
     private int maxReattempts;
 
     private IJobletEventListenerFactory jobletEventListenerFactory;
@@ -102,6 +104,14 @@ public class ActivityClusterGraph implements Serializable {
 
     public int getFrameSize() {
         return frameSize;
+    }
+
+    public void setRuntimeWarningsLimit(long runtimeWarningsLimit) {
+        this.runtimeWarningsLimit = runtimeWarningsLimit;
+    }
+
+    public long getRuntimeWarningsLimit() {
+        return runtimeWarningsLimit;
     }
 
     public void setMaxReattempts(int maxReattempts) {

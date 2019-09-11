@@ -17,4 +17,6 @@
  * under the License.
  */
 
+SET `compiler.runtime.warnings` "10";
+
 SELECT VALUE ARRAY_MIN([1, '2']);

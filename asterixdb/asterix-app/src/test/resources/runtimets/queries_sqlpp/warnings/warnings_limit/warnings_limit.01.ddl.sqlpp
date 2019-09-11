@@ -17,22 +17,9 @@
  * under the License.
  */
 
-package org.apache.hyracks.api.exceptions;
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-public interface IWarningCollector {
-    /**
-     * Adds a warning
-     * @param warning
-     */
-    void warn(Warning warning);
-
-    /**
-     * @return {@code true} to indicate that the user can issue a warning through {@link #warn(Warning)} method.
-     */
-    boolean shouldWarn();
-
-    /**
-     * @return Total warnings count (reported and unreported ones).
-     */
-    long getTotalWarningsCount();
-}
+create type t1 AS {id:int};
+create dataset ds(t1) primary key id;

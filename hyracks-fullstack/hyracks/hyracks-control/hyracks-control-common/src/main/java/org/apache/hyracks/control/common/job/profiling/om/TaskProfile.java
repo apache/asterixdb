@@ -49,6 +49,8 @@ public class TaskProfile extends AbstractProfile {
 
     private Set<Warning> warnings;
 
+    private long totalWarningsCount;
+
     public static TaskProfile create(DataInput dis) throws IOException {
         TaskProfile taskProfile = new TaskProfile();
         taskProfile.readFields(dis);
@@ -60,11 +62,12 @@ public class TaskProfile extends AbstractProfile {
     }
 
     public TaskProfile(TaskAttemptId taskAttemptId, Map<PartitionId, PartitionProfile> partitionSendProfile,
-            IStatsCollector statsCollector, Set<Warning> warnings) {
+            IStatsCollector statsCollector, Set<Warning> warnings, long totalWarningsCount) {
         this.taskAttemptId = taskAttemptId;
         this.partitionSendProfile = new HashMap<>(partitionSendProfile);
         this.statsCollector = statsCollector;
         this.warnings = warnings;
+        this.totalWarningsCount = totalWarningsCount;
     }
 
     public TaskAttemptId getTaskId() {
@@ -125,6 +128,10 @@ public class TaskProfile extends AbstractProfile {
         return warnings;
     }
 
+    public long getTotalWarningsCount() {
+        return totalWarningsCount;
+    }
+
     @Override
     public void readFields(DataInput input) throws IOException {
         super.readFields(input);
@@ -139,6 +146,7 @@ public class TaskProfile extends AbstractProfile {
         statsCollector = StatsCollector.create(input);
         warnings = new HashSet<>();
         deserializeWarnings(input, warnings);
+        totalWarningsCount = input.readLong();
     }
 
     @Override
@@ -152,6 +160,7 @@ public class TaskProfile extends AbstractProfile {
         }
         statsCollector.writeFields(output);
         serializeWarnings(output);
+        output.writeLong(totalWarningsCount);
     }
 
     private void serializeWarnings(DataOutput output) throws IOException {

@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.hyracks.api.comm.IFrameReader;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -149,7 +150,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         this.inputChannelsFromConnectors = inputChannelsFromConnectors;
         statsCollector = new StatsCollector();
         warnings = ConcurrentHashMap.newKeySet();
-        warningCollector = warnings::add;
+        warningCollector = createWarningCollector(joblet.getRuntimeWarningsLimit());
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -528,6 +529,29 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     public Set<Warning> getWarnings() {
         return warnings;
+    }
+
+    private IWarningCollector createWarningCollector(long warningsLimit) {
+        return new IWarningCollector() {
+
+            private final AtomicLong warningsCount = new AtomicLong();
+
+            @Override
+            public void warn(Warning warning) {
+                warnings.add(warning);
+            }
+
+            @Override
+            public boolean shouldWarn() {
+                long currentCount = warningsCount.getAndUpdate(count -> count < Long.MAX_VALUE ? count + 1 : count);
+                return currentCount < warningsLimit;
+            }
+
+            @Override
+            public long getTotalWarningsCount() {
+                return warningsCount.get();
+            }
+        };
     }
 
     @Override

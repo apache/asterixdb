@@ -48,6 +48,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesV
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 
@@ -243,7 +244,10 @@ public class JoinUtils {
     private static void warnIfCrossProduct(ILogicalExpression conditionExpr, SourceLocation sourceLoc,
             IOptimizationContext context) {
         if (OperatorPropertiesUtil.isAlwaysTrueCond(conditionExpr) && sourceLoc != null) {
-            context.getWarningCollector().warn(Warning.forHyracks(sourceLoc, ErrorCode.CROSS_PRODUCT_JOIN));
+            IWarningCollector warningCollector = context.getWarningCollector();
+            if (warningCollector.shouldWarn()) {
+                warningCollector.warn(Warning.forHyracks(sourceLoc, ErrorCode.CROSS_PRODUCT_JOIN));
+            }
         }
     }
 }
