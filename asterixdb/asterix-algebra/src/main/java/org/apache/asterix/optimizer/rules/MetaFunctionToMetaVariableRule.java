@@ -77,13 +77,13 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
         ILogicalOperator op = opRef.getValue();
 
         // Reaches NTS or ETS.
-        if (op.getInputs().size() == 0) {
+        if (op.getInputs().isEmpty()) {
             return NoOpExpressionReferenceTransform.INSTANCE;
         }
         // Datascan returns an useful transform if the meta part presents in the dataset.
         if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
             DataSourceScanOperator scanOp = (DataSourceScanOperator) op;
-            ILogicalExpressionReferenceTransformWithCondition inputTransfomer = visit(op.getInputs().get(0));
+            ILogicalExpressionReferenceTransformWithCondition inputTransformer = visit(op.getInputs().get(0));
             DataSource dataSource = (DataSource) scanOp.getDataSource();
             List<ILogicalExpressionReferenceTransformWithCondition> transformers = null;
             List<LogicalVariable> allVars = scanOp.getVariables();
@@ -106,26 +106,26 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
                 }
             }
             if (!dataSource.hasMeta() && transformers == null) {
-                return inputTransfomer;
+                return inputTransformer;
             }
             if (metaVar != null) {
                 currentTransformer = new LogicalExpressionReferenceTransform(dataVar, metaVar);
             }
-            if (inputTransfomer.equals(NoOpExpressionReferenceTransform.INSTANCE) && transformers == null) {
+            if (inputTransformer.equals(NoOpExpressionReferenceTransform.INSTANCE) && transformers == null) {
                 return currentTransformer;
-            } else if (inputTransfomer.equals(NoOpExpressionReferenceTransform.INSTANCE)
+            } else if (inputTransformer.equals(NoOpExpressionReferenceTransform.INSTANCE)
                     && currentTransformer == null) {
                 return transformers.get(0);
             } else {
-                // Requires an argument variable to resolve ambiguity.
                 if (transformers == null) {
                     transformers = new ArrayList<>();
                 }
-                if (!inputTransfomer.equals(NoOpExpressionReferenceTransform.INSTANCE)) {
-                    inputTransfomer.setVariableRequired();
-                    transformers.add(inputTransfomer);
+                if (!inputTransformer.equals(NoOpExpressionReferenceTransform.INSTANCE)) {
+                    // require an argument variable to resolve ambiguity when there are 2 or more distinct data sources
+                    inputTransformer.setVariableRequired();
+                    currentTransformer.setVariableRequired();
+                    transformers.add(inputTransformer);
                 }
-                currentTransformer.setVariableRequired();
                 transformers.add(currentTransformer);
                 return new CompositeExpressionReferenceTransform(transformers);
             }
@@ -185,6 +185,17 @@ class NoOpExpressionReferenceTransform implements ILogicalExpressionReferenceTra
 
 }
 
+/**
+ * <pre>
+ * This class replaces meta() references with their corresponding meta record variables. It maintains the data record
+ * variable and meta record variable. The data variable is used to match the data variable inside meta() if supplied.
+ * For example:
+ * If the data source produces 2 records, the data record as $$ds and the meta record as $$7, then any reference to
+ * meta($$ds) will be rewritten as $$7.
+ *
+ * meta($$ds) means "get the meta record of the data source ds".
+ * </pre>
+ */
 class LogicalExpressionReferenceTransform implements ILogicalExpressionReferenceTransformWithCondition {
     private final LogicalVariable dataVar;
     private final LogicalVariable metaVar;
@@ -273,6 +284,15 @@ class CompositeExpressionReferenceTransform implements ILogicalExpressionReferen
     }
 }
 
+/**
+ * <pre>
+ * This class replaces meta-key() references with their corresponding field accessors. It maintains the meta
+ * variable that will replace the meta-key(). Meta-key() acts as a field access of the meta record. For example:
+ * If the meta record variable is $$7, meta-key($$ds, "address.zip") will be rewritten as $$7.address.zip.
+ *
+ * meta-key($$ds, "address.zip") means "access the field address.zip of the meta record of data source ds".
+ * </pre>
+ */
 class MetaKeyToFieldAccessTransform implements ILogicalExpressionReferenceTransformWithCondition {
     private final LogicalVariable metaVar;
 
@@ -291,9 +311,8 @@ class MetaKeyToFieldAccessTransform implements ILogicalExpressionReferenceTransf
             return false;
         }
         SourceLocation sourceLoc = expr.getSourceLocation();
-        // Get arguments
-        // first argument : Resource key
-        // second argument: field
+        // get arguments. First argument : Resource key, second argument: field
+        // TODO: how come arg 1 (the data source) is not checked?
         List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
         ConstantExpression fieldNameExpression = (ConstantExpression) args.get(1).getValue();
         AsterixConstantValue fieldNameValue = (AsterixConstantValue) fieldNameExpression.getValue();
@@ -325,6 +344,21 @@ class MetaKeyToFieldAccessTransform implements ILogicalExpressionReferenceTransf
     }
 }
 
+/**
+ * <pre>
+ * This class replaces meta-key() references with their corresponding logical variables. It maintains a list of
+ * meta-key() references together with their logical variables (the logical variables being the primary key variables
+ * of the data source). For example:
+ * primary key variable (i.e. keyVars): $$1, $$2
+ * meta-key() references (i.e. metaKeyAccessExpressions): meta-key($$ds, "id1"), meta-key($$ds, "id2")
+ *
+ * Any reference to meta-key($$ds, "id1") will be rewritten as $$1.
+ *
+ * meta-key($$ds, "id1") means "access the field id1 of the meta record of data source ds which is also a primary key".
+ *
+ * "id1" and "id2" are the primary keys of the data source "ds". They are fields of the meta record (not $$ds record).
+ * </pre>
+ */
 class MetaKeyExpressionReferenceTransform implements ILogicalExpressionReferenceTransformWithCondition {
     private final List<LogicalVariable> keyVars;
     private final List<ScalarFunctionCallExpression> metaKeyAccessExpressions;

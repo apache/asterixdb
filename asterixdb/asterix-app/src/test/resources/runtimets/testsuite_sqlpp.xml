@@ -9056,6 +9056,11 @@
         <expected-error>Function fundv.test_func0@1 is being used. It cannot be dropped</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="change-feed-with-filter-on-meta">
+        <output-dir compare="Text">change-feed-with-filter-on-meta</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="meta">
     <test-case FilePath="meta">
