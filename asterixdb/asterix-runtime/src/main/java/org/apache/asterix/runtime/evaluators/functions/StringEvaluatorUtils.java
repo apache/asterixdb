@@ -57,7 +57,8 @@ public class StringEvaluatorUtils {
         return destString;
     }
 
-    static char[] reservedRegexChars = new char[] { '\\', '(', ')', '[', ']', '{', '}', '.', '^', '$', '*', '|' };
+    static char[] reservedRegexChars =
+            new char[] { '\\', '(', ')', '[', ']', '{', '}', '.', '^', '$', '*', '|', '+', '?' };
 
     static {
         Arrays.sort(reservedRegexChars);
