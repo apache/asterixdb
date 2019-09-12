@@ -255,7 +255,6 @@ public final class RuleCollections {
         // The following rule should be fired after PushAggregateIntoNestedSubplanRule because
         // pulling invariants out of a subplan will make PushAggregateIntoGroupby harder.
         condPushDownAndJoinInference.add(new AsterixMoveFreeVariableOperatorOutOfSubplanRule());
-        // once meta() is replaced before logical plan generation, this can be removed
         condPushDownAndJoinInference.add(new MetaFunctionToMetaVariableRule());
         return condPushDownAndJoinInference;
     }

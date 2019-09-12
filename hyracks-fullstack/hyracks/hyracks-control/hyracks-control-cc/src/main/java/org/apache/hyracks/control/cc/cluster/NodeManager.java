@@ -206,8 +206,19 @@ public class NodeManager implements INodeManager {
         nodeRegistry.forEach(nodeFunction::apply);
     }
 
-    private void removeNodeFromIpAddressMap(String nodeId, NodeControllerState ncState) throws HyracksException {
-        InetAddress ipAddress = getIpAddress(ncState);
+    private void removeNodeFromIpAddressMap(String nodeId, NodeControllerState ncState) {
+        InetAddress ipAddress;
+        try {
+            ipAddress = getIpAddress(ncState);
+        } catch (Exception e) {
+            LOGGER.warn("failed to get ip address of node {}; attempting to find it on existing nodes lists", nodeId,
+                    e);
+            ipAddress = findNodeIpById(nodeId);
+        }
+        if (ipAddress == null) {
+            LOGGER.warn("failed to get ip address of node {}", nodeId);
+            return;
+        }
         Set<String> nodes = ipAddressNodeNameMap.get(ipAddress);
         if (nodes != null) {
             nodes.remove(nodeId);
@@ -242,5 +253,14 @@ public class NodeManager implements INodeManager {
                 LOGGER.debug(() -> "Ignoring failure on ensuring node " + nodeId + " has failed", ex);
             }
         });
+    }
+
+    private InetAddress findNodeIpById(String nodeId) {
+        for (Map.Entry<InetAddress, Set<String>> ipToNodesEntry : ipAddressNodeNameMap.entrySet()) {
+            if (ipToNodesEntry.getValue().contains(nodeId)) {
+                return ipToNodesEntry.getKey();
+            }
+        }
+        return null;
     }
 }

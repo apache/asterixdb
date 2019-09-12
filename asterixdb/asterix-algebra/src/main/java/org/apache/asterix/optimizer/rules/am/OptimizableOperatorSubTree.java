@@ -80,6 +80,7 @@ public class OptimizableOperatorSubTree {
     private ARecordType metaRecordType = null;
     // Contains the field names for all assign operations in this sub-tree.
     // This will be used for the index-only plan check.
+    // TODO(ali): this map should be fixed to include the source of the field (dataset record or meta record)
     private Map<LogicalVariable, List<String>> varsToFieldNameMap = new HashMap<>();
 
     // Additional datasources can exist if IntroduceJoinAccessMethodRule has been applied.

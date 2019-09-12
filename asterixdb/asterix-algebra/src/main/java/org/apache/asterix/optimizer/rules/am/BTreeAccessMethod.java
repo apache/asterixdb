@@ -351,10 +351,12 @@ public class BTreeAccessMethod implements IAccessMethod {
         for (Pair<Integer, Integer> exprIndex : exprAndVarList) {
             // Position of the field of matchedFuncExprs.get(exprIndex) in the chosen index's indexed exprs.
             IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprIndex.first);
-            int keyPos = indexOf(optFuncExpr.getFieldName(0), chosenIndex.getKeyFieldNames());
+            int keyPos = indexOf(optFuncExpr.getFieldName(0), optFuncExpr.getFieldSource(0),
+                    chosenIndex.getKeyFieldNames(), chosenIndex.getKeyFieldSourceIndicators());
             if (keyPos < 0 && optFuncExpr.getNumLogicalVars() > 1) {
                 // If we are optimizing a join, the matching field may be the second field name.
-                keyPos = indexOf(optFuncExpr.getFieldName(1), chosenIndex.getKeyFieldNames());
+                keyPos = indexOf(optFuncExpr.getFieldName(1), optFuncExpr.getFieldSource(1),
+                        chosenIndex.getKeyFieldNames(), chosenIndex.getKeyFieldSourceIndicators());
             }
             if (keyPos < 0) {
                 throw CompilationException.create(ErrorCode.NO_INDEX_FIELD_NAME_FOR_GIVEN_FUNC_EXPR,
@@ -818,15 +820,20 @@ public class BTreeAccessMethod implements IAccessMethod {
         }
     }
 
-    private <T> int indexOf(T value, List<T> coll) {
+    private static int indexOf(List<String> fieldName, int fieldSource, List<List<String>> keyNames,
+            List<Integer> keySources) {
         int i = 0;
-        for (T member : coll) {
-            if (member.equals(value)) {
+        for (List<String> keyName : keyNames) {
+            if (keyName.equals(fieldName) && keyMatches(keySources, i, fieldSource)) {
                 return i;
             }
             i++;
         }
         return -1;
+    }
+
+    private static boolean keyMatches(List<Integer> keySources, int keyIndex, int fieldSource) {
+        return keySources == null ? fieldSource == 0 : keySources.get(keyIndex) == fieldSource;
     }
 
     private LimitType getLimitType(IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree probeSubTree) {

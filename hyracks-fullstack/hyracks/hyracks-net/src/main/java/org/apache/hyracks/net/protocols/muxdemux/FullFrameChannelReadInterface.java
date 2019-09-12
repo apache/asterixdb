@@ -41,7 +41,6 @@ public class FullFrameChannelReadInterface extends AbstractChannelReadInterface 
         this.ccb = ccb;
         riEmptyStack = new ArrayDeque<>();
         credits = 0;
-
         emptyBufferAcceptor = buffer -> {
             final int delta = buffer.remaining();
             synchronized (bufferRecycleLock) {

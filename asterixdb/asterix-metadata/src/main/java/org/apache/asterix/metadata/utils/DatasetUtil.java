@@ -173,6 +173,18 @@ public class DatasetUtil {
         return btreeFields;
     }
 
+    /**
+     * Returns the primary key source indicators of the {@code dataset} or {@code null} if the dataset does not have
+     * primary key source indicators (e.g. external datasets)
+     */
+    public static List<Integer> getKeySourceIndicators(Dataset dataset) {
+        IDatasetDetails datasetDetails = dataset.getDatasetDetails();
+        if (datasetDetails.getDatasetType() == DatasetType.INTERNAL) {
+            return ((InternalDatasetDetails) datasetDetails).getKeySourceIndicator();
+        }
+        return null;
+    }
+
     public static int getPositionOfPartitioningKeyField(Dataset dataset, List<String> fieldExpr,
             boolean fieldFromMeta) {
         List<Integer> keySourceIndicator = null;

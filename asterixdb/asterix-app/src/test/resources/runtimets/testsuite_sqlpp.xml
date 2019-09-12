@@ -5499,6 +5499,11 @@
         <output-dir compare="Text">disjunctive-predicate-1</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="dataset-with-meta">
+        <output-dir compare="Text">dataset-with-meta</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="inverted-index-join">
     <test-case FilePath="inverted-index-join">

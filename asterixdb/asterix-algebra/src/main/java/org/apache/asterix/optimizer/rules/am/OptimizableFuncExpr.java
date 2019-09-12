@@ -37,6 +37,7 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     protected final LogicalVariable[] sourceVars;
     protected final ILogicalExpression[] logicalExprs;
     protected final List<List<String>> fieldNames;
+    protected final int[] fieldSources;
     protected final IAType[] fieldTypes;
     protected final OptimizableOperatorSubTree[] subTrees;
     protected final ILogicalExpression[] constantExpressions;
@@ -51,6 +52,7 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
         this.logicalExprs = new ILogicalExpression[logicalVars.length];
         this.constantExpressionTypes = constantExpressionTypes;
         this.constantExpressions = constantExpressions;
+        this.fieldSources = new int[logicalVars.length];
         this.fieldNames = new ArrayList<List<String>>();
         for (int i = 0; i < logicalVars.length; i++) {
             fieldNames.add(new ArrayList<String>());
@@ -74,6 +76,7 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
         this.logicalExprs = new ILogicalExpression[1];
         this.constantExpressions = new ILogicalExpression[] { constantExpression };
         this.constantExpressionTypes = new IAType[] { constantExpressionType };
+        this.fieldSources = new int[logicalVars.length];
         this.fieldNames = new ArrayList<List<String>>();
         for (int i = 0; i < logicalVars.length; i++) {
             fieldNames.add(new ArrayList<String>());
@@ -118,13 +121,19 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     }
 
     @Override
-    public void setFieldName(int index, List<String> fieldName) {
+    public void setFieldName(int index, List<String> fieldName, int fieldSource) {
         fieldNames.set(index, fieldName);
+        fieldSources[index] = fieldSource;
     }
 
     @Override
     public List<String> getFieldName(int index) {
         return fieldNames.get(index);
+    }
+
+    @Override
+    public int getFieldSource(int index) {
+        return fieldSources[index];
     }
 
     @Override

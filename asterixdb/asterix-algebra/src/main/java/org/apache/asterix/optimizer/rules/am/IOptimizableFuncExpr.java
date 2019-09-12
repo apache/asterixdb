@@ -43,9 +43,11 @@ public interface IOptimizableFuncExpr {
 
     public ILogicalExpression getLogicalExpr(int index);
 
-    public void setFieldName(int index, List<String> fieldName);
+    public void setFieldName(int index, List<String> fieldName, int fieldSource);
 
     public List<String> getFieldName(int index);
+
+    public int getFieldSource(int index);
 
     public void setFieldType(int index, IAType fieldName);
 
