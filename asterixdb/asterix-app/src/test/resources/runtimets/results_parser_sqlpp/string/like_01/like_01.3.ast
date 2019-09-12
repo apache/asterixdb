@@ -12,5 +12,15 @@ OrderedListConstructor [
     like
     LiteralExpr [STRING] [_6%]
   ]
+  OperatorExpr [
+    LiteralExpr [STRING] [+0300]
+    like
+    LiteralExpr [STRING] [+03%]
+  ]
+  OperatorExpr [
+    LiteralExpr [STRING] [?0300]
+    like
+    LiteralExpr [STRING] [?03%]
+  ]
 ]
 ]

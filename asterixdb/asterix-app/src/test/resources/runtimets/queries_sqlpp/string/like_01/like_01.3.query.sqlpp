@@ -19,5 +19,9 @@
 
 use test;
 
-
-select element ['A6BBB' LIKE '_6%', 'A8BBB' LIKE '_6%' ];
+select element [
+  'A6BBB' LIKE '_6%',
+  'A8BBB' LIKE '_6%',
+  '+0300' like "+03%",
+  "?0300" like '?03%'
+];
