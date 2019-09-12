@@ -218,4 +218,16 @@ public final class TestHelper {
         objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
         return objectMapper;
     }
+
+    public static void main(String[] args) throws Exception {
+        ObjectMapper om = createObjectMapper();
+        String patternFile = args[0];
+        String instanceFile = args[1];
+        if (equalJson(om.readTree(new File(patternFile)), om.readTree(new File(instanceFile)))) {
+            System.out.println(instanceFile + " matches " + patternFile);
+        } else {
+            System.out.println(instanceFile + " does not match " + patternFile);
+            System.exit(1);
+        }
+    }
 }

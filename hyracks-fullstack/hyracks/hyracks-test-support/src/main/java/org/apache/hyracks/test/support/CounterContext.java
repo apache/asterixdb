@@ -21,9 +21,9 @@ package org.apache.hyracks.test.support;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.hyracks.api.com.job.profiling.counters.Counter;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
-import org.apache.hyracks.control.common.job.profiling.counters.Counter;
 
 public class CounterContext implements ICounterContext {
     private final String contextName;

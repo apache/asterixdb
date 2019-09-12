@@ -22,11 +22,12 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.api.common.ResultMetadata;
-import org.apache.asterix.app.result.ResponseMertics;
+import org.apache.asterix.app.result.ResponseMetrics;
 import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.fields.MetricsPrinter;
+import org.apache.asterix.app.result.fields.ProfilePrinter;
 import org.apache.asterix.app.result.fields.ResultsPrinter;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
@@ -98,10 +99,13 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
                 printer.begin();
                 printer.addResultPrinter(new ResultsPrinter(appCtx, resultReader, null, stats, sessionOutput));
                 printer.printResults();
-                ResponseMertics mertics = ResponseMertics.of(System.nanoTime() - elapsedStart,
+                ResponseMetrics metrics = ResponseMetrics.of(System.nanoTime() - elapsedStart,
                         metadata.getJobDuration(), stats.getCount(), stats.getSize(), metadata.getProcessedObjects(), 0,
                         metadata.getTotalWarningsCount(), metadata.getDiskIoCount());
-                printer.addFooterPrinter(new MetricsPrinter(mertics, HttpUtil.getPreferredCharset(request)));
+                printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request)));
+                if (metadata.getJobProfile() != null) {
+                    printer.addFooterPrinter(new ProfilePrinter(metadata.getJobProfile()));
+                }
                 printer.printFooters();
                 printer.end();
             } else {

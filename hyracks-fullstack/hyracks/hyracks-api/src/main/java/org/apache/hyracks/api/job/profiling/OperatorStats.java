@@ -16,15 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.common.job.profiling;
+package org.apache.hyracks.api.job.profiling;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hyracks.api.job.profiling.IOperatorStats;
+import org.apache.hyracks.api.com.job.profiling.counters.Counter;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
-import org.apache.hyracks.control.common.job.profiling.counters.Counter;
 
 public class OperatorStats implements IOperatorStats {
     private static final long serialVersionUID = 6401830963367567167L;
@@ -84,5 +83,11 @@ public class OperatorStats implements IOperatorStats {
         tupleCounter.set(input.readLong());
         timeCounter.set(input.readLong());
         diskIoCounter.set(input.readLong());
+    }
+
+    @Override
+    public String toString() {
+        return "{ " + "\"operatorName\": \"" + operatorName + "\", " + "\"" + tupleCounter.getName() + "\": "
+                + tupleCounter.get() + ", \"" + timeCounter.getName() + "\": " + timeCounter.get() + " }";
     }
 }

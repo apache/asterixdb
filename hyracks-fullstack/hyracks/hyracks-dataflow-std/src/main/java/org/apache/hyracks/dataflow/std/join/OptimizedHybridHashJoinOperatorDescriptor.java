@@ -320,6 +320,11 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     isFailed = true;
                 }
 
+                @Override
+                public String getDisplayName() {
+                    return "Hybrid Hash Join: Build";
+                }
+
             };
         }
     }
@@ -799,6 +804,11 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     } finally {
                         outerReader.close();
                     }
+                }
+
+                @Override
+                public String getDisplayName() {
+                    return "Hybrid Hash Join: Probe & Join";
                 }
             };
             return op;

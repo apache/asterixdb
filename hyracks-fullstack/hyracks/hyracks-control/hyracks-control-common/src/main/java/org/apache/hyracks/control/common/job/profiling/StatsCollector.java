@@ -21,20 +21,25 @@ package org.apache.hyracks.control.common.job.profiling;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.dataflow.IPassableTimer;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
+import org.apache.hyracks.api.job.profiling.OperatorStats;
 
 public class StatsCollector implements IStatsCollector {
-    private static final long serialVersionUID = 6858817639895434577L;
+    private static final long serialVersionUID = 6858817639895434578L;
 
-    private final Map<String, IOperatorStats> operatorStatsMap = new HashMap<>();
+    private final Map<String, IOperatorStats> operatorStatsMap = new LinkedHashMap<>();
+    private transient Deque<IPassableTimer> clockHolder = new ArrayDeque<>();
 
     @Override
-    public void add(IOperatorStats operatorStats) throws HyracksDataException {
+    public void add(IOperatorStats operatorStats) {
         if (operatorStatsMap.containsKey(operatorStats.getName())) {
             throw new IllegalArgumentException("Operator with the same name already exists");
         }
@@ -42,8 +47,13 @@ public class StatsCollector implements IStatsCollector {
     }
 
     @Override
-    public IOperatorStats getOperatorStats(String operatorName) {
-        return operatorStatsMap.get(operatorName);
+    public IOperatorStats getOrAddOperatorStats(String operatorName) {
+        return operatorStatsMap.computeIfAbsent(operatorName, OperatorStats::new);
+    }
+
+    @Override
+    public Map<String, IOperatorStats> getAllOperatorStats() {
+        return Collections.unmodifiableMap(operatorStatsMap);
     }
 
     public static StatsCollector create(DataInput input) throws IOException {
@@ -79,4 +89,24 @@ public class StatsCollector implements IStatsCollector {
             operatorStatsMap.put(opStats.getName(), opStats);
         }
     }
+
+    @Override
+    public long takeClock(IPassableTimer newHolder) {
+        if (newHolder != null) {
+            if (clockHolder.peek() != null) {
+                clockHolder.peek().pause();
+            }
+            clockHolder.push(newHolder);
+        }
+        return System.nanoTime();
+    }
+
+    @Override
+    public void giveClock(IPassableTimer currHolder) {
+        clockHolder.removeLastOccurrence(currHolder);
+        if (clockHolder.peek() != null) {
+            clockHolder.peek().resume();
+        }
+    }
+
 }

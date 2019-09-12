@@ -28,6 +28,7 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.EnforceFrameWriter;
+import org.apache.hyracks.api.dataflow.TimedFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobFlag;
@@ -60,15 +61,19 @@ public class NestedPlansRunningAggregatorFactory extends AbstractAggregatorDescr
     public IAggregatorDescriptor createAggregator(final IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults,
             final IFrameWriter writer, long memoryBudget) throws HyracksDataException {
+        final boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
+        final boolean profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
         final RunningAggregatorOutput outputWriter =
                 new RunningAggregatorOutput(ctx, subplans, keyFieldIdx.length + decorFieldIdx.length, writer);
-        // should enforce protocol
-        boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
-        IFrameWriter enforcedWriter = enforce ? EnforceFrameWriter.enforce(outputWriter) : outputWriter;
+        IFrameWriter fw = outputWriter;
+        if (profile) {
+            fw = TimedFrameWriter.time(outputWriter, ctx, "Aggregate Writer");
+        } else if (enforce) {
+            fw = EnforceFrameWriter.enforce(outputWriter);
+        }
         final NestedTupleSourceRuntime[] pipelines = new NestedTupleSourceRuntime[subplans.length];
         for (int i = 0; i < subplans.length; i++) {
-            pipelines[i] = (NestedTupleSourceRuntime) PipelineAssembler.assemblePipeline(subplans[i], enforcedWriter,
-                    ctx, null);
+            pipelines[i] = (NestedTupleSourceRuntime) PipelineAssembler.assemblePipeline(subplans[i], fw, ctx, null);
         }
 
         final ArrayTupleBuilder gbyTb = outputWriter.getGroupByTupleBuilder();

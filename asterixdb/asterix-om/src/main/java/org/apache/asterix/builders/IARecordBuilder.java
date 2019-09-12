@@ -20,9 +20,7 @@
 package org.apache.asterix.builders;
 
 import java.io.DataOutput;
-import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -55,7 +53,7 @@ public interface IARecordBuilder {
      *            The field name.
      * @param value
      *            The field value.
-     * @throws AsterixException
+     * @throws HyracksDataException
      *             if the field name conflicts with a closed field name
      */
     public void addField(IValueReference name, IValueReference value) throws HyracksDataException;
@@ -66,8 +64,7 @@ public interface IARecordBuilder {
      * @param writeTypeTag
      *            Whether to write a typetag as part of the record's serialized
      *            representation.
-     * @throws IOException
-     * @throws AsterixException
+     * @throws HyracksDataException
      *             if any open field names conflict with each other
      */
     public void write(DataOutput out, boolean writeTypeTag) throws HyracksDataException;

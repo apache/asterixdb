@@ -30,6 +30,7 @@ import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 
 public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescriptor {
@@ -59,10 +60,12 @@ public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescript
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected AbstractSortRunGenerator getRunGenerator(IHyracksTaskContext ctx,
+            protected IRunGenerator getRunGenerator(IHyracksTaskContext ctx,
                     IRecordDescriptorProvider recordDescProvider) {
-                return new HybridTopKSortRunGenerator(ctx, framesLimit, topK, sortFields, keyNormalizerFactories,
-                        comparatorFactories, outRecDescs[0]);
+                final boolean profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
+                IRunGenerator runGen = new HybridTopKSortRunGenerator(ctx, framesLimit, topK, sortFields,
+                        keyNormalizerFactories, comparatorFactories, outRecDescs[0]);
+                return profile ? TimedRunGenerator.time(runGen, ctx, "TopKSort (Sort)") : runGen;
 
             }
         };
@@ -82,4 +85,10 @@ public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescript
             }
         };
     }
+
+    @Override
+    public String getDisplayName() {
+        return "Top K Sort";
+    }
+
 }

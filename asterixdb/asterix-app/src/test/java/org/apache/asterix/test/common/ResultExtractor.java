@@ -51,6 +51,7 @@ public class ResultExtractor {
         RESULTS("results"),
         REQUEST_ID("requestID"),
         METRICS("metrics"),
+        PROFILE("profile"),
         CLIENT_CONTEXT_ID("clientContextID"),
         SIGNATURE("signature"),
         STATUS("status"),
@@ -91,6 +92,10 @@ public class ResultExtractor {
 
     public static InputStream extractMetrics(InputStream resultStream, Charset resultCharset) throws Exception {
         return extract(resultStream, EnumSet.of(ResultField.METRICS), resultCharset).getResult();
+    }
+
+    public static InputStream extractProfile(InputStream resultStream, Charset resultCharset) throws Exception {
+        return extract(resultStream, EnumSet.of(ResultField.PROFILE), resultCharset).getResult();
     }
 
     public static InputStream extractPlans(InputStream resultStream, Charset resultCharset) throws Exception {
@@ -167,6 +172,7 @@ public class ResultExtractor {
                     break;
                 case REQUEST_ID:
                 case METRICS:
+                case PROFILE:
                 case CLIENT_CONTEXT_ID:
                 case SIGNATURE:
                 case STATUS:

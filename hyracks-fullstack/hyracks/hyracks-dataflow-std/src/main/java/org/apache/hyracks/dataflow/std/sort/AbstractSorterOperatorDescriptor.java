@@ -102,14 +102,14 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
             super(id);
         }
 
-        protected abstract AbstractSortRunGenerator getRunGenerator(IHyracksTaskContext ctx,
+        protected abstract IRunGenerator getRunGenerator(IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider) throws HyracksDataException;
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             return new AbstractUnaryInputSinkOperatorNodePushable() {
-                private AbstractSortRunGenerator runGen;
+                private IRunGenerator runGen;
 
                 @Override
                 public void open() throws HyracksDataException {
@@ -139,6 +139,11 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
                 public void fail() throws HyracksDataException {
                     runGen.fail();
                 }
+
+                @Override
+                public String getDisplayName() {
+                    return "Sort (Run Generation)";
+                }
             };
         }
     }
@@ -155,6 +160,7 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
                 IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer, int necessaryFrames);
 
         @Override
+        @SuppressWarnings("squid:S1188")
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             return new AbstractUnaryOutputSourceOperatorNodePushable() {
@@ -202,6 +208,11 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
                             wrappingWriter.close();
                         }
                     }
+                }
+
+                @Override
+                public String getDisplayName() {
+                    return "Sort (Run Merge)";
                 }
             };
         }

@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.client.stats;
 
-import org.apache.hyracks.control.common.job.profiling.counters.Counter;
+import org.apache.hyracks.api.com.job.profiling.counters.Counter;
 
 public class AggregateCounter extends Counter {
     private static final long serialVersionUID = 9140555872026977436L;

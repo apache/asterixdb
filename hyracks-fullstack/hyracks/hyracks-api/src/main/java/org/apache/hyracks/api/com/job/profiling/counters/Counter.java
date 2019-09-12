@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.common.job.profiling.counters;
+package org.apache.hyracks.api.com.job.profiling.counters;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 
+@SuppressWarnings("squid:S1700")
 public class Counter implements ICounter {
     private static final long serialVersionUID = -3935601595055562080L;
 

@@ -24,11 +24,14 @@ import org.apache.asterix.translator.SessionConfig;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.result.IResultMetadata;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class ResultMetadata implements IResultMetadata {
 
     private final SessionConfig.OutputFormat format;
     private long jobDuration;
     private long processedObjects;
+    private ObjectNode profile;
     private long diskIoCount;
     private Set<Warning> warnings;
     private long totalWarningsCount;
@@ -66,6 +69,14 @@ public class ResultMetadata implements IResultMetadata {
 
     public long getJobDuration() {
         return jobDuration;
+    }
+
+    public void setJobProfile(ObjectNode profile) {
+        this.profile = profile;
+    }
+
+    public ObjectNode getJobProfile() {
+        return profile;
     }
 
     /**

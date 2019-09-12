@@ -101,4 +101,9 @@ public class BTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
                 searchCallbackProceedResultTrueValue);
     }
 
+    @Override
+    public String getDisplayName() {
+        return "BTree Search";
+    }
+
 }

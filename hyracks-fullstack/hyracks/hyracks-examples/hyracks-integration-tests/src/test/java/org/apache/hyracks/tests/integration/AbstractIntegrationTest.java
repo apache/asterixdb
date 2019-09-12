@@ -27,7 +27,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -38,7 +37,6 @@ import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.ManagedFileSplit;
-import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.result.IResultSet;
@@ -138,7 +136,7 @@ public abstract class AbstractIntegrationTest {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(spec.toJSON().asText());
         }
-        JobId jobId = hcc.startJob(spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
+        JobId jobId = hcc.startJob(spec);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(jobId.toString());
         }

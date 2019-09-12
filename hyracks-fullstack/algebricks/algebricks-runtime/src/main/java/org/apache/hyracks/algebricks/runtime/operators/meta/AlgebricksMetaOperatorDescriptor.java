@@ -121,6 +121,11 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
                 throw exception;
             }
         }
+
+        @Override
+        public String getDisplayName() {
+            return "Empty Tuple Source";
+        }
     }
 
     private IOperatorNodePushable createOneInputOneOutputPushRuntime(final IHyracksTaskContext ctx,

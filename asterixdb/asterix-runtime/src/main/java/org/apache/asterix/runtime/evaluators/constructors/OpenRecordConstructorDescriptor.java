@@ -118,4 +118,9 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
             }
         };
     }
+
+    @Override
+    public String toString() {
+        return "Open Record Constructor";
+    }
 }

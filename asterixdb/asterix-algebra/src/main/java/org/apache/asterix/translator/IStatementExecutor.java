@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.translator;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -42,6 +45,10 @@ import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.result.ResultSetId;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * An interface that takes care of executing a list of statements that are submitted through an Asterix API
@@ -78,11 +85,18 @@ public interface IStatementExecutor {
     }
 
     class Stats implements Serializable {
-        private static final long serialVersionUID = 5885273238208454610L;
+        private static final long serialVersionUID = 5885273238208454611L;
+
+        public enum ProfileType {
+            COUNTS,
+            FULL
+        }
 
         private long count;
         private long size;
         private long processedObjects;
+        private Profile profile;
+        private ProfileType type;
         private long diskIoCount;
         private long totalWarningsCount;
 
@@ -124,6 +138,48 @@ public interface IStatementExecutor {
 
         public void setTotalWarningsCount(long totalWarningsCount) {
             this.totalWarningsCount = totalWarningsCount;
+        }
+
+        public void setJobProfile(ObjectNode profile) {
+            this.profile = new Profile(profile);
+        }
+
+        public ObjectNode getJobProfile() {
+            return profile != null ? profile.getProfile() : null;
+        }
+
+        public ProfileType getType() {
+            return type;
+        }
+
+        public void setType(ProfileType type) {
+            this.type = type;
+        }
+    }
+
+    class Profile implements Serializable {
+        private transient ObjectNode profile;
+
+        public Profile(ObjectNode profile) {
+            this.profile = profile;
+        }
+
+        private void writeObject(ObjectOutputStream out) throws IOException {
+            ObjectMapper om = new ObjectMapper();
+            out.writeUTF(om.writeValueAsString(profile));
+        }
+
+        private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+            ObjectMapper om = new ObjectMapper();
+            JsonNode inNode = om.readTree(in.readUTF());
+            if (!inNode.isObject()) {
+                throw new IOException("Deserialization error");
+            }
+            profile = (ObjectNode) inNode;
+        }
+
+        public ObjectNode getProfile() {
+            return profile;
         }
     }
 

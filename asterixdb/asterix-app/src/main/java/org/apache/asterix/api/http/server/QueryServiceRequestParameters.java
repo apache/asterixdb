@@ -50,6 +50,7 @@ public class QueryServiceRequestParameters {
     private boolean logicalPlan;
     private boolean optimizedLogicalPlan;
     private boolean job;
+    private boolean profile;
     private boolean signature;
     private boolean multiStatement;
 
@@ -197,6 +198,14 @@ public class QueryServiceRequestParameters {
         this.job = job;
     }
 
+    public void setProfile(boolean profile) {
+        this.profile = profile;
+    }
+
+    public boolean isProfile() {
+        return profile;
+    }
+
     public boolean isSignature() {
         return signature;
     }
@@ -230,6 +239,7 @@ public class QueryServiceRequestParameters {
         object.put("logicalPlan", logicalPlan);
         object.put("optimizedLogicalPlan", optimizedLogicalPlan);
         object.put("job", job);
+        object.put("profile", profile);
         object.put("signature", signature);
         object.put("multiStatement", multiStatement);
         object.put("parseOnly", parseOnly);

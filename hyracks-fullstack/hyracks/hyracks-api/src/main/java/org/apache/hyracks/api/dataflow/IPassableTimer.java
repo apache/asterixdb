@@ -16,23 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.dataflow.std.sort;
+package org.apache.hyracks.api.dataflow;
 
-import java.util.List;
-
-import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
-
-/**
- * @author pouria
- *         Interface for the Run Generator
- */
-public interface IRunGenerator extends IFrameWriter {
-
-    /**
-     * @return the list of generated (sorted) runs
+public interface IPassableTimer {
+    /*
+    A timer intended to be used for timing the individual components of a
+    pipelined process. An instance of IPassableTimer is held by each method
+    in the pipeline, and is paused() when that method passes off control to
+    a component above it, and is resume()d when the component above it returns.
      */
-    List<GeneratedRunFileReader> getRuns();
 
-    ISorter getSorter();
+    void pause();
+
+    void resume();
 }

@@ -146,6 +146,11 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
                 sb.append("\"maxReads\": ").append(maxReads).append(" }");
                 return sb.toString();
             }
+
+            @Override
+            public String getDisplayName() {
+                return "Result Writer";
+            }
         };
     }
 }

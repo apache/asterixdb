@@ -19,6 +19,9 @@
 
 package org.apache.asterix.app.message;
 
+import static org.apache.asterix.translator.IStatementExecutor.Stats.ProfileType.COUNTS;
+import static org.apache.asterix.translator.IStatementExecutor.Stats.ProfileType.FULL;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashSet;
@@ -85,13 +88,14 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
     private final Map<String, byte[]> statementParameters;
     private final boolean multiStatement;
     private final int statementCategoryRestrictionMask;
+    private final boolean profile;
     private final IRequestReference requestReference;
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
             String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
             String clientContextID, String handleUrl, Map<String, String> optionalParameters,
-            Map<String, byte[]> statementParameters, boolean multiStatement, int statementCategoryRestrictionMask,
-            IRequestReference requestReference) {
+            Map<String, byte[]> statementParameters, boolean multiStatement, boolean profile,
+            int statementCategoryRestrictionMask, IRequestReference requestReference) {
         this.requestNodeId = requestNodeId;
         this.requestMessageId = requestMessageId;
         this.lang = lang;
@@ -104,6 +108,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         this.statementParameters = statementParameters;
         this.multiStatement = multiStatement;
         this.statementCategoryRestrictionMask = statementCategoryRestrictionMask;
+        this.profile = profile;
         this.requestReference = requestReference;
     }
 
@@ -141,6 +146,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             IStatementExecutor translator = statementExecutorFactory.create(ccAppCtx, statements, sessionOutput,
                     compilationProvider, storageComponentProvider, new ResponsePrinter(sessionOutput));
             final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
+            stats.setType(profile ? FULL : COUNTS);
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
             final IRequestParameters requestParameters = new RequestParameters(requestReference, statementsText, null,
                     resultProperties, stats, outMetadata, clientContextID, optionalParameters, stmtParams,

@@ -391,6 +391,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         metadataProvider.setResultAsyncMode(
                                 resultDelivery == ResultDelivery.ASYNC || resultDelivery == ResultDelivery.DEFERRED);
                         metadataProvider.setMaxResultReads(maxResultReads);
+                        if (stats.getType() == Stats.ProfileType.FULL) {
+                            this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
+                        }
                         handleQuery(metadataProvider, (Query) stmt, hcc, resultSet, resultDelivery, outMetadata, stats,
                                 requestParameters, stmtParams, stmtRewriter);
                         break;
@@ -2549,6 +2552,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 (org.apache.asterix.api.common.ResultMetadata) controllerService.getResultDirectoryService()
                         .getResultMetadata(jobId, rsId);
         stats.setProcessedObjects(resultMetadata.getProcessedObjects());
+        if (jobFlags.contains(JobFlag.PROFILE_RUNTIME)) {
+            stats.setJobProfile(resultMetadata.getJobProfile());
+        }
         stats.setDiskIoCount(resultMetadata.getDiskIoCount());
         stats.setTotalWarningsCount(resultMetadata.getTotalWarningsCount());
         warningCollector.warn(resultMetadata.getWarnings());

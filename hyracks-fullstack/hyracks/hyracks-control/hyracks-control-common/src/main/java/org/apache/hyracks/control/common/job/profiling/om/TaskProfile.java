@@ -21,6 +21,7 @@ package org.apache.hyracks.control.common.job.profiling.om;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,6 +30,7 @@ import java.util.Set;
 
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.job.profiling.StatsCollector;
@@ -116,8 +118,22 @@ public class TaskProfile extends AbstractProfile {
             json.set("partition-send-profile", pspArray);
         }
         populateCounters(json);
-
         return json;
+    }
+
+    @Override
+    protected void populateCounters(ObjectNode json) {
+        ObjectMapper om = new ObjectMapper();
+        Map<String, IOperatorStats> opTimes = statsCollector.getAllOperatorStats();
+        ArrayNode countersObj = om.createArrayNode();
+        opTimes.forEach((key, value) -> {
+            ObjectNode jpe = om.createObjectNode();
+            jpe.put("name", key);
+            jpe.put("time", Double
+                    .parseDouble(new DecimalFormat("#.####").format((double) value.getTimeCounter().get() / 1000000)));
+            countersObj.add(jpe);
+        });
+        json.set("counters", countersObj);
     }
 
     public IStatsCollector getStatsCollector() {

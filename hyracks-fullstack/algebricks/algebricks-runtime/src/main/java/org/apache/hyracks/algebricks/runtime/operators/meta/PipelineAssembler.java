@@ -56,13 +56,13 @@ public class PipelineAssembler {
     public IFrameWriter assemblePipeline(IFrameWriter writer, IHyracksTaskContext ctx) throws HyracksDataException {
         // should enforce protocol
         boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
+        boolean profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
         // plug the operators
         IFrameWriter start = writer;// this.writer;
         IPushRuntimeFactory[] runtimeFactories = pipeline.getRuntimeFactories();
         RecordDescriptor[] recordDescriptors = pipeline.getRecordDescriptors();
         for (int i = runtimeFactories.length - 1; i >= 0; i--) {
-            start = enforce ? EnforceFrameWriter.enforce(start) : start;
-
+            start = (enforce && !profile) ? EnforceFrameWriter.enforce(start) : start;
             IPushRuntimeFactory runtimeFactory = runtimeFactories[i];
             IPushRuntime[] newRuntimes = runtimeFactory.createPushRuntime(ctx);
             for (int j = 0; j < newRuntimes.length; j++) {
@@ -99,12 +99,13 @@ public class PipelineAssembler {
             IHyracksTaskContext ctx, Map<IPushRuntimeFactory, IPushRuntime> outRuntimeMap) throws HyracksDataException {
         // should enforce protocol
         boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
+        boolean profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
         // plug the operators
         IFrameWriter start = writer;
         IPushRuntimeFactory[] runtimeFactories = subplan.getRuntimeFactories();
         RecordDescriptor[] recordDescriptors = subplan.getRecordDescriptors();
         for (int i = runtimeFactories.length - 1; i >= 0; i--) {
-            start = enforce ? EnforceFrameWriter.enforce(start) : start;
+            start = (enforce && !profile) ? EnforceFrameWriter.enforce(start) : start;
             IPushRuntimeFactory runtimeFactory = runtimeFactories[i];
             IPushRuntime[] newRuntimes = runtimeFactory.createPushRuntime(ctx);
             IPushRuntime newRuntime = enforce ? EnforcePushRuntime.enforce(newRuntimes[0]) : newRuntimes[0];

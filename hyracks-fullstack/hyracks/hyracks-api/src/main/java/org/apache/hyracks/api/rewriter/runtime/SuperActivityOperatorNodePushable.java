@@ -22,11 +22,13 @@ package org.apache.hyracks.api.rewriter.runtime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -41,6 +43,7 @@ import org.apache.hyracks.api.dataflow.EnforceFrameWriter;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
+import org.apache.hyracks.api.dataflow.TimedOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -94,15 +97,22 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     }
 
     private void init() throws HyracksDataException {
-        Queue<Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> childQueue = new LinkedList<>();
+        LinkedList<Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> childQueue = new LinkedList<>();
         List<IConnectorDescriptor> outputConnectors;
         final boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
+        final boolean profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
         /*
          * Set up the source operators
          */
+        Set<Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> sources = new HashSet<>();
         for (Entry<ActivityId, IActivity> entry : startActivities.entrySet()) {
-            IOperatorNodePushable opPushable =
-                    entry.getValue().createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
+            IOperatorNodePushable opPushable = null;
+            if (profile) {
+                opPushable = TimedOperatorNodePushable
+                        .time(entry.getValue().createPushRuntime(ctx, recordDescProvider, partition, nPartitions), ctx);
+            } else {
+                opPushable = entry.getValue().createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
+            }
             operatorNodePushablesBFSOrder.add(opPushable);
             operatorNodePushables.put(entry.getKey(), opPushable);
             inputArity += opPushable.getInputArity();
@@ -110,6 +120,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
                     MapUtils.getObject(parent.getActivityOutputMap(), entry.getKey(), Collections.emptyList());
             for (IConnectorDescriptor conn : outputConnectors) {
                 childQueue.add(parent.getConnectorActivityMap().get(conn.getConnectorId()));
+                sources.add(childQueue.peekLast());
             }
         }
 
@@ -128,8 +139,13 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
             IOperatorNodePushable sourceOp = operatorNodePushables.get(sourceId);
             IOperatorNodePushable destOp = operatorNodePushables.get(destId);
             if (destOp == null) {
-                destOp = channel.getRight().getLeft().createPushRuntime(ctx, recordDescProvider, partition,
-                        nPartitions);
+                if (profile) {
+                    destOp = TimedOperatorNodePushable.time(channel.getRight().getLeft().createPushRuntime(ctx,
+                            recordDescProvider, partition, nPartitions), ctx);
+                } else {
+                    destOp = channel.getRight().getLeft().createPushRuntime(ctx, recordDescProvider, partition,
+                            nPartitions);
+                }
                 operatorNodePushablesBFSOrder.add(destOp);
                 operatorNodePushables.put(destId, destOp);
             }
@@ -138,7 +154,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
              * construct the dataflow connection from a producer to a consumer
              */
             IFrameWriter writer = destOp.getInputFrameWriter(inputChannel);
-            writer = enforce ? EnforceFrameWriter.enforce(writer) : writer;
+            writer = (enforce && !profile) ? EnforceFrameWriter.enforce(writer) : writer;
             sourceOp.setOutputFrameWriter(outputChannel, writer,
                     recordDescProvider.getInputRecordDescriptor(destId, inputChannel));
 

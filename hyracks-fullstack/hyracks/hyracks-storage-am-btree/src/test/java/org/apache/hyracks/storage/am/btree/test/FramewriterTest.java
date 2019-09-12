@@ -36,6 +36,7 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.profiling.IStatsCollector;
 import org.apache.hyracks.api.test.CountAndThrowError;
 import org.apache.hyracks.api.test.CountAndThrowException;
 import org.apache.hyracks.api.test.CountAnswer;
@@ -307,6 +308,7 @@ public class FramewriterTest {
         IHyracksTaskContext ctx = Mockito.mock(IHyracksTaskContext.class);
         IHyracksJobletContext jobletCtx = Mockito.mock(IHyracksJobletContext.class);
         INCServiceContext serviceCtx = Mockito.mock(INCServiceContext.class);
+        IStatsCollector collector = Mockito.mock(IStatsCollector.class);
         Mockito.when(ctx.allocateFrame()).thenReturn(mockByteBuffer());
         Mockito.when(ctx.allocateFrame(Mockito.anyInt())).thenReturn(mockByteBuffer());
         Mockito.when(ctx.getInitialFrameSize()).thenReturn(BUFFER_SIZE);
@@ -314,6 +316,7 @@ public class FramewriterTest {
                 .thenReturn(mockByteBuffer());
         Mockito.when(ctx.getJobletContext()).thenReturn(jobletCtx);
         Mockito.when(jobletCtx.getServiceContext()).thenReturn(serviceCtx);
+        Mockito.when(ctx.getStatsCollector()).thenReturn(collector);
         return new IHyracksTaskContext[] { ctx };
     }
 

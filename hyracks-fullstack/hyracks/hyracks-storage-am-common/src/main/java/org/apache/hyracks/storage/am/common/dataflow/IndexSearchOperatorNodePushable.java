@@ -32,7 +32,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.ExceptionUtils;
-import org.apache.hyracks.control.common.job.profiling.OperatorStats;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -93,7 +92,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected ArrayTupleBuilder nonFilterTupleBuild;
     protected final ISearchOperationCallbackFactory searchCallbackFactory;
     protected boolean failed = false;
-    private final IOperatorStats stats;
+    private IOperatorStats stats;
 
     // Used when the result of the search operation callback needs to be passed.
     protected boolean appendSearchCallbackProceedResult;
@@ -150,12 +149,12 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         this.appendSearchCallbackProceedResult = appendSearchCallbackProceedResult;
         this.searchCallbackProceedResultFalseValue = searchCallbackProceedResultFalseValue;
         this.searchCallbackProceedResultTrueValue = searchCallbackProceedResultTrueValue;
-        stats = new OperatorStats(getDisplayName());
-        if (ctx.getStatsCollector() != null) {
-            ctx.getStatsCollector().add(stats);
-        }
         this.tupleFilterFactory = tupleFactoryFactory;
         this.outputLimit = outputLimit;
+
+        if (ctx != null && ctx.getStatsCollector() != null) {
+            stats = ctx.getStatsCollector().getOrAddOperatorStats(getDisplayName());
+        }
 
         if (this.tupleFilterFactory != null && this.retainMissing) {
             throw new IllegalStateException("RetainMissing with tuple filter is not supported");
@@ -433,6 +432,11 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             throw new UnsupportedOperationException("getTupleIndex is not supported by ReferenceFrameTupleReference");
         }
 
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "Index Search";
     }
 
 }

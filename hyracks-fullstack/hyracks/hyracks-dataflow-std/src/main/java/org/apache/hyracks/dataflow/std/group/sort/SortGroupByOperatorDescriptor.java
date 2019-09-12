@@ -30,12 +30,14 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.sort.AbstractExternalSortRunMerger;
-import org.apache.hyracks.dataflow.std.sort.AbstractSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.AbstractSorterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.Algorithm;
+import org.apache.hyracks.dataflow.std.sort.IRunGenerator;
+import org.apache.hyracks.dataflow.std.sort.TimedRunGenerator;
 
 /**
  * This Operator pushes group-by aggregation into the external sort.
@@ -122,7 +124,7 @@ public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescrip
             RecordDescriptor outRecordDesc, boolean finalStage) {
         super(spec, framesLimit, sortFields, keyNormalizerFactories, comparatorFactories, outRecordDesc);
         if (framesLimit <= 1) {
-            throw new IllegalStateException();// minimum of 2 fames (1 in,1 out)
+            throw new IllegalStateException(); // minimum of 2 frames (1 in,1 out)
         }
 
         this.groupFields = groupFields;
@@ -139,12 +141,14 @@ public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescrip
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected AbstractSortRunGenerator getRunGenerator(IHyracksTaskContext ctx,
+            protected IRunGenerator getRunGenerator(IHyracksTaskContext ctx,
                     IRecordDescriptorProvider recordDescriptorProvider) throws HyracksDataException {
-                return new ExternalSortGroupByRunGenerator(ctx, sortFields,
+                final boolean profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
+                IRunGenerator runGen = new ExternalSortGroupByRunGenerator(ctx, sortFields,
                         recordDescriptorProvider.getInputRecordDescriptor(this.getActivityId(), 0), framesLimit,
                         groupFields, keyNormalizerFactories, comparatorFactories, partialAggregatorFactory,
                         partialAggRecordDesc, ALG);
+                return profile ? TimedRunGenerator.time(runGen, ctx, "GroupBy (Sort Runs)") : runGen;
             }
         };
     }
@@ -164,5 +168,15 @@ public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescrip
                         partialAggregatorFactory, mergeAggregatorFactory, !finalStage);
             }
         };
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "GroupBy (Sort)";
+    }
+
+    @Override
+    public String toString() {
+        return getDisplayName();
     }
 }

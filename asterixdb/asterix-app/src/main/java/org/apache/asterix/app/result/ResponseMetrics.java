@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.app.result;
 
-public class ResponseMertics {
+public class ResponseMetrics {
 
     private long elapsedTime;
     private long executionTime;
@@ -29,21 +29,21 @@ public class ResponseMertics {
     private long warnCount;
     private long diskIoCount;
 
-    private ResponseMertics() {
+    private ResponseMetrics() {
     }
 
-    public static ResponseMertics of(long elapsedTime, long executionTime, long resultCount, long resultSize,
+    public static ResponseMetrics of(long elapsedTime, long executionTime, long resultCount, long resultSize,
             long processedObjects, long errorCount, long warnCount, long diskIoCount) {
-        ResponseMertics mertics = new ResponseMertics();
-        mertics.elapsedTime = elapsedTime;
-        mertics.executionTime = executionTime;
-        mertics.resultCount = resultCount;
-        mertics.resultSize = resultSize;
-        mertics.processedObjects = processedObjects;
-        mertics.errorCount = errorCount;
-        mertics.warnCount = warnCount;
-        mertics.diskIoCount = diskIoCount;
-        return mertics;
+        ResponseMetrics metrics = new ResponseMetrics();
+        metrics.elapsedTime = elapsedTime;
+        metrics.executionTime = executionTime;
+        metrics.resultCount = resultCount;
+        metrics.resultSize = resultSize;
+        metrics.processedObjects = processedObjects;
+        metrics.errorCount = errorCount;
+        metrics.warnCount = warnCount;
+        metrics.diskIoCount = diskIoCount;
+        return metrics;
     }
 
     public long getElapsedTime() {

@@ -92,7 +92,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                     new ExecuteStatementRequestMessage(ncCtx.getNodeId(), responseFuture.getFutureId(), queryLanguage,
                             statementsText, sessionOutput.config(), resultProperties.getNcToCcResultProperties(),
                             param.getClientContextID(), handleUrl, optionalParameters, statementParameters,
-                            param.isMultiStatement(), stmtCategoryRestrictionMask, requestReference);
+                            param.isMultiStatement(), param.isProfile(), stmtCategoryRestrictionMask, requestReference);
             execution.start();
             ncMb.sendMessageToPrimaryCC(requestMsg);
             try {

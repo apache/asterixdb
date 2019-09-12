@@ -45,13 +45,14 @@ import java.util.function.Function;
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.app.result.ExecutionError;
 import org.apache.asterix.app.result.ExecutionWarning;
-import org.apache.asterix.app.result.ResponseMertics;
+import org.apache.asterix.app.result.ResponseMetrics;
 import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.result.fields.ClientContextIdPrinter;
 import org.apache.asterix.app.result.fields.ErrorsPrinter;
 import org.apache.asterix.app.result.fields.MetricsPrinter;
 import org.apache.asterix.app.result.fields.ParseOnlyResultPrinter;
 import org.apache.asterix.app.result.fields.PlansPrinter;
+import org.apache.asterix.app.result.fields.ProfilePrinter;
 import org.apache.asterix.app.result.fields.RequestIdPrinter;
 import org.apache.asterix.app.result.fields.SignaturePrinter;
 import org.apache.asterix.app.result.fields.StatusPrinter;
@@ -68,7 +69,6 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.aql.parser.TokenMgrError;
@@ -171,6 +171,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         PARSE_ONLY("parse-only"),
         READ_ONLY("readonly"),
         JOB("job"),
+        PROFILE("profile"),
         SIGNATURE("signature"),
         MULTI_STATEMENT("multi-statement");
 
@@ -383,6 +384,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         param.setReadOnly(getOptBoolean(jsonRequest, Parameter.READ_ONLY, false));
         param.setOptimizedLogicalPlan(getOptBoolean(jsonRequest, Parameter.OPTIMIZED_LOGICAL_PLAN, false));
         param.setJob(getOptBoolean(jsonRequest, Parameter.JOB, false));
+        param.setProfile(getOptBoolean(jsonRequest, Parameter.PROFILE, false));
         param.setSignature(getOptBoolean(jsonRequest, Parameter.SIGNATURE, true));
         param.setStatementParams(
                 getOptStatementParameters(jsonRequest, jsonRequest.fieldNames(), JsonNode::get, v -> v));
@@ -405,8 +407,15 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         param.setTimeout(getParameter(request, Parameter.TIMEOUT));
         param.setMaxResultReads(getParameter(request, Parameter.MAX_RESULT_READS));
         param.setPlanFormat(getParameter(request, Parameter.PLAN_FORMAT));
+        param.setExpressionTree(getOptBoolean(request, Parameter.EXPRESSION_TREE, false));
+        param.setRewrittenExpressionTree(getOptBoolean(request, Parameter.REWRITTEN_EXPRESSION_TREE, false));
+        param.setLogicalPlan(getOptBoolean(request, Parameter.LOGICAL_PLAN, false));
         param.setParseOnly(getOptBoolean(request, Parameter.PARSE_ONLY, false));
         param.setReadOnly(getOptBoolean(request, Parameter.READ_ONLY, false));
+        param.setOptimizedLogicalPlan(getOptBoolean(request, Parameter.OPTIMIZED_LOGICAL_PLAN, false));
+        param.setJob(getOptBoolean(request, Parameter.JOB, false));
+        param.setProfile(getOptBoolean(request, Parameter.PROFILE, false));
+        param.setSignature(getOptBoolean(request, Parameter.SIGNATURE, true));
         param.setMultiStatement(getOptBoolean(request, Parameter.MULTI_STATEMENT, true));
         try {
             param.setStatementParams(getOptStatementParameters(request, request.getParameterNames().iterator(),
@@ -509,6 +518,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                         .serializeParameterValues(param.getStatementParams());
                 setAccessControlHeaders(request, response);
                 response.setStatus(execution.getHttpStatus());
+                stats.setType(param.isProfile() ? Stats.ProfileType.FULL : Stats.ProfileType.COUNTS);
                 executeStatement(requestRef, statementsText, sessionOutput, resultProperties, stats, param, execution,
                         optionalParams, statementParams, responsePrinter, warnings);
             }
@@ -561,15 +571,18 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             // in case of ASYNC delivery, the status is printed by query translator
             responsePrinter.addFooterPrinter(new StatusPrinter(execution.getResultStatus()));
         }
-        final ResponseMertics mertics = ResponseMertics.of(System.nanoTime() - elapsedStart, execution.duration(),
+        final ResponseMetrics metrics = ResponseMetrics.of(System.nanoTime() - elapsedStart, execution.duration(),
                 stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount,
                 stats.getTotalWarningsCount(), stats.getDiskIoCount());
-        responsePrinter.addFooterPrinter(new MetricsPrinter(mertics, resultCharset));
+        responsePrinter.addFooterPrinter(new MetricsPrinter(metrics, resultCharset));
+        if (stats.getType() == Stats.ProfileType.FULL) {
+            responsePrinter.addFooterPrinter(new ProfilePrinter(stats.getJobProfile()));
+        }
     }
 
     protected void validateStatement(String statement) throws RuntimeDataException {
         if (statement == null || statement.isEmpty()) {
-            throw new RuntimeDataException(ErrorCode.NO_STATEMENT_PROVIDED);
+            throw new RuntimeDataException(NO_STATEMENT_PROVIDED);
         }
     }
 
@@ -581,8 +594,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         Query query = (Query) stmts.get(stmts.size() - 1);
         Set<VariableExpr> extVars =
                 compilationProvider.getRewriterFactory().createQueryRewriter().getExternalVariables(query.getBody());
-        ResultUtil.ParseOnlyResult parseOnlyResult = new ResultUtil.ParseOnlyResult(extVars);
-        return parseOnlyResult;
+        return new ResultUtil.ParseOnlyResult(extVars);
     }
 
     protected void executeStatement(IRequestReference requestReference, String statementsText,
@@ -697,10 +709,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
     public static String extractStatementParameterName(String name) {
         int ln = name.length();
-        if (ln > 1 && name.charAt(0) == '$' && Character.isLetter(name.charAt(1))) {
-            if (ln == 2 || isStatementParameterNameRest(name, 2)) {
-                return name.substring(1);
-            }
+        if ((ln == 2 || isStatementParameterNameRest(name, 2)) && name.charAt(0) == '$'
+                && Character.isLetter(name.charAt(1))) {
+            return name.substring(1);
         }
         return null;
     }

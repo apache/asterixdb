@@ -23,7 +23,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.asterix.api.http.server.ResultUtil;
-import org.apache.asterix.app.result.ResponseMertics;
+import org.apache.asterix.app.result.ResponseMetrics;
 import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.api.IResponseFieldPrinter;
 
@@ -51,11 +51,11 @@ public class MetricsPrinter implements IResponseFieldPrinter {
     }
 
     public static final String FIELD_NAME = "metrics";
-    private final ResponseMertics mertics;
+    private final ResponseMetrics metrics;
     private final Charset resultCharset;
 
-    public MetricsPrinter(ResponseMertics mertics, Charset resultCharset) {
-        this.mertics = mertics;
+    public MetricsPrinter(ResponseMetrics metrics, Charset resultCharset) {
+        this.metrics = metrics;
         this.resultCharset = resultCharset;
     }
 
@@ -67,35 +67,35 @@ public class MetricsPrinter implements IResponseFieldPrinter {
         pw.print(FIELD_NAME);
         pw.print("\": {\n");
         pw.print("\t");
-        ResultUtil.printField(pw, Metrics.ELAPSED_TIME.str(), Duration.formatNanos(mertics.getElapsedTime(), useAscii));
+        ResultUtil.printField(pw, Metrics.ELAPSED_TIME.str(), Duration.formatNanos(metrics.getElapsedTime(), useAscii));
         pw.print("\n\t");
         ResultUtil.printField(pw, Metrics.EXECUTION_TIME.str(),
-                Duration.formatNanos(mertics.getExecutionTime(), useAscii));
+                Duration.formatNanos(metrics.getExecutionTime(), useAscii));
         pw.print("\n\t");
-        ResultUtil.printField(pw, Metrics.RESULT_COUNT.str(), mertics.getResultCount(), true);
+        ResultUtil.printField(pw, Metrics.RESULT_COUNT.str(), metrics.getResultCount(), true);
         pw.print("\n\t");
-        ResultUtil.printField(pw, Metrics.RESULT_SIZE.str(), mertics.getResultSize(), true);
+        ResultUtil.printField(pw, Metrics.RESULT_SIZE.str(), metrics.getResultSize(), true);
         pw.print("\n\t");
-        final boolean hasErrors = mertics.getErrorCount() > 0;
-        final boolean hasWarnings = mertics.getWarnCount() > 0;
-        final boolean hasDiskIoStats = mertics.getDiskIoCount() > 0;
-        ResultUtil.printField(pw, Metrics.PROCESSED_OBJECTS_COUNT.str(), mertics.getProcessedObjects(),
+        final boolean hasErrors = metrics.getErrorCount() > 0;
+        final boolean hasWarnings = metrics.getWarnCount() > 0;
+        final boolean hasDiskIoStats = metrics.getDiskIoCount() > 0;
+        ResultUtil.printField(pw, Metrics.PROCESSED_OBJECTS_COUNT.str(), metrics.getProcessedObjects(),
                 hasWarnings || hasErrors || hasDiskIoStats);
         pw.print("\n");
         //TODO move diskIoCount to the profile printer when it is introduced
         if (hasDiskIoStats) {
             pw.print("\t");
-            ResultUtil.printField(pw, Metrics.DISK_IO_COUNT.str(), mertics.getDiskIoCount(), hasWarnings || hasErrors);
+            ResultUtil.printField(pw, Metrics.DISK_IO_COUNT.str(), metrics.getDiskIoCount(), hasWarnings || hasErrors);
             pw.print("\n");
         }
         if (hasWarnings) {
             pw.print("\t");
-            ResultUtil.printField(pw, Metrics.WARNING_COUNT.str(), mertics.getWarnCount(), hasErrors);
+            ResultUtil.printField(pw, Metrics.WARNING_COUNT.str(), metrics.getWarnCount(), hasErrors);
             pw.print("\n");
         }
         if (hasErrors) {
             pw.print("\t");
-            ResultUtil.printField(pw, Metrics.ERROR_COUNT.str(), mertics.getErrorCount(), false);
+            ResultUtil.printField(pw, Metrics.ERROR_COUNT.str(), metrics.getErrorCount(), false);
             pw.print("\n");
         }
         pw.print("\t}");

@@ -16,23 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.dataflow.std.sort;
-
-import java.util.List;
-
-import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
-
-/**
- * @author pouria
- *         Interface for the Run Generator
+/*
+ * Description  : Processed objects metrics on full scan
+ * Expected Res : Success
+ * Date         : 28 Sep 2017
  */
-public interface IRunGenerator extends IFrameWriter {
 
-    /**
-     * @return the list of generated (sorted) runs
-     */
-    List<GeneratedRunFileReader> getRuns();
+drop dataverse test if exists;
+create dataverse test;
 
-    ISorter getSorter();
-}
+use test;
+
+create type test.AddressType as
+{
+  number : bigint,
+  street : string,
+  city : string
+};
+
+create type test.CustomerType as
+ closed {
+  cid : bigint,
+  name : string,
+  age : bigint?,
+  address : AddressType?,
+  lastorder : {
+      oid : bigint,
+      total : float
+  }
+};
+
+create dataset Customers(CustomerType) primary key cid;

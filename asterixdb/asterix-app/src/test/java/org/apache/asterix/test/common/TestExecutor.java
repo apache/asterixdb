@@ -164,6 +164,7 @@ public class TestExecutor {
     public static final String DELIVERY_IMMEDIATE = "immediate";
     public static final String DIAGNOSE = "diagnose";
     private static final String METRICS_QUERY_TYPE = "metrics";
+    private static final String PROFILE_QUERY_TYPE = "profile";
     private static final String PLANS_QUERY_TYPE = "plans";
 
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
@@ -951,6 +952,7 @@ public class TestExecutor {
             case "parse":
             case "deferred":
             case "metrics":
+            case "profile":
             case "plans":
                 // isDmlRecoveryTest: insert Crash and Recovery
                 if (isDmlRecoveryTest) {
@@ -1297,6 +1299,9 @@ public class TestExecutor {
             switch (reqType) {
                 case METRICS_QUERY_TYPE:
                     resultStream = ResultExtractor.extractMetrics(resultStream, responseCharset);
+                    break;
+                case PROFILE_QUERY_TYPE:
+                    resultStream = ResultExtractor.extractProfile(resultStream, responseCharset);
                     break;
                 case PLANS_QUERY_TYPE:
                     resultStream = ResultExtractor.extractPlans(resultStream, responseCharset);

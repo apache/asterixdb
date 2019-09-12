@@ -1,0 +1,64 @@
+{
+    "job-id": "R{[A-Z0-9.:]+}",
+    "counters": [],
+    "joblets": [
+        {
+            "node-id": "R{.+}",
+            "counters": [],
+            "tasks": [
+                {
+                    "activity-id": "R{[A-Z0-9.:]+}",
+                    "partition": "R{[0-9]+}",
+                    "attempt": "R{[0-9]+}",
+                    "partition-send-profile": [
+                        {
+                            "partition-id": {
+                                "job-id": "R{[A-Z0-9.:]+}",
+                                "connector-id": "R{[A-Z0-9.:]+}",
+                                "sender-index": "R{[0-9]+}",
+                                "receiver-index": "R{[0-9]+}"
+                            },
+                            "open-time": "R{[0-9]+}",
+                            "close-time": "R{[0-9]+}",
+                            "offset": "R{[0-9]+}",
+                            "frame-times": [
+                                0
+                            ],
+                            "resolution": 1
+                        }
+                    ],
+                    "counters": [
+                        {
+                            "name": "Empty Tuple Source",
+                            "time": "R{[0-9.]+}"
+                        },
+                        {
+                            "name": "Index Search",
+                            "time": "R{[0-9.]+}"
+                        },
+                        {
+                            "name": "R{.+}",
+                            "time": "R{[0-9.]+}"
+                        }
+                    ]
+                },
+                {
+                  "activity-id": "R{[A-Z0-9.:]+}",
+                  "partition": "R{[0-9]+}",
+                  "attempt": "R{[0-9]+}",
+                  "partition-send-profile": [],
+                  "counters": [
+                    {
+                      "name": "R{.+}",
+                      "time": "R{[0-9.]+}"
+                    },
+                    {
+                      "name": "Result Writer",
+                      "time": "R{[0-9.]+}"
+                    }
+                  ]
+                }
+            ]
+        }
+    ]
+}

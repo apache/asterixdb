@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.asterix.api.common.ResultMetadata;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.IJobResultCallback;
 import org.apache.hyracks.api.result.ResultJobRecord;
@@ -38,6 +39,8 @@ import org.apache.hyracks.control.common.job.profiling.om.JobletProfile;
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JobResultCallback implements IJobResultCallback {
 
@@ -65,6 +68,16 @@ public class JobResultCallback implements IJobResultCallback {
         final ResultMetadata metadata = (ResultMetadata) resultSetMetaData.getMetadata();
         metadata.setJobDuration(resultJobRecord.getJobDuration());
         aggregateJobStats(jobId, metadata);
+    }
+
+    ObjectNode getProfile(JobId jobId) {
+        IJobManager jobManager =
+                ((ClusterControllerService) appCtx.getServiceContext().getControllerService()).getJobManager();
+        final JobRun run = jobManager.get(jobId);
+        if (run != null) {
+            return run.getJobProfile().toJSON();
+        }
+        return null;
     }
 
     private void aggregateJobStats(JobId jobId, ResultMetadata metadata) {
@@ -99,5 +112,9 @@ public class JobResultCallback implements IJobResultCallback {
         metadata.setWarnings(AggregateWarnings);
         metadata.setDiskIoCount(diskIoCount);
         metadata.setTotalWarningsCount(aggregateTotalWarningsCount);
+        if (run.getFlags() != null && run.getFlags().contains(JobFlag.PROFILE_RUNTIME)) {
+            metadata.setJobProfile(getProfile(jobId));
+        }
     }
+
 }

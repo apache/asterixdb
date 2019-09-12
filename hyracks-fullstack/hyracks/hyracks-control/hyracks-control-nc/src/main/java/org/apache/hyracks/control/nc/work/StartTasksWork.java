@@ -169,6 +169,7 @@ public class StartTasksWork extends AbstractWork {
                 List<IConnectorDescriptor> outputs = ac.getActivityOutputMap().get(aid);
                 if (outputs != null) {
                     final boolean enforce = flags.contains(JobFlag.ENFORCE_CONTRACT);
+                    final boolean profile = flags.contains(JobFlag.PROFILE_RUNTIME);
                     for (int i = 0; i < outputs.size(); ++i) {
                         final IConnectorDescriptor conn = outputs.get(i);
                         RecordDescriptor recordDesc = ac.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
@@ -179,7 +180,7 @@ public class StartTasksWork extends AbstractWork {
                         LOGGER.trace("input: {}: {}", i, conn.getConnectorId());
                         IFrameWriter writer = conn.createPartitioner(task, recordDesc, pwFactory, partition,
                                 td.getPartitionCount(), td.getOutputPartitionCounts()[i]);
-                        writer = enforce ? EnforceFrameWriter.enforce(writer) : writer;
+                        writer = (enforce && !profile) ? EnforceFrameWriter.enforce(writer) : writer;
                         operator.setOutputFrameWriter(i, writer, recordDesc);
                     }
                 }
