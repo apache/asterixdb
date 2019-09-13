@@ -22,6 +22,7 @@ package org.apache.asterix.runtime.evaluators.functions.bitwise;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -115,7 +116,8 @@ class BitValueCountFlagEvaluator extends AbstractScalarEval {
 
         // Type and value validity check
         if (!PointableHelper.isValidLongValue(valueBytes, valueStartOffset, true)) {
-            handleTypeMismatchInput(context, 0, ATypeTag.BIGINT, valueBytes, valueStartOffset);
+            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, 0, valueBytes[valueStartOffset],
+                    ATypeTag.BIGINT);
             PointableHelper.setNull(result);
             return;
         }
@@ -126,7 +128,8 @@ class BitValueCountFlagEvaluator extends AbstractScalarEval {
 
         // Type and Value validity check
         if (!PointableHelper.isValidLongValue(countBytes, countStartOffset, true)) {
-            handleTypeMismatchInput(context, 1, ATypeTag.BIGINT, countBytes, countStartOffset);
+            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, 1, countBytes[countStartOffset],
+                    ATypeTag.BIGINT);
             PointableHelper.setNull(result);
             return;
         }
@@ -139,7 +142,8 @@ class BitValueCountFlagEvaluator extends AbstractScalarEval {
             ATypeTag flagTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(flagBytes[flagStartOffset]);
 
             if (flagTypeTag != ATypeTag.BOOLEAN) {
-                handleTypeMismatchInput(context, 2, ATypeTag.BOOLEAN, flagBytes, flagStartOffset);
+                ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, 2, flagBytes[flagStartOffset],
+                        ATypeTag.BOOLEAN);
                 PointableHelper.setNull(result);
                 return;
             }

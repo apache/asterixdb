@@ -18,27 +18,27 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
 abstract public class AbstractStringTypeComputer extends AbstractResultTypeComputer {
 
-    @Override
-    protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
-            throws AlgebricksException {
-        ATypeTag actualTypeTag = type.getTypeTag();
-        if (actualTypeTag != ATypeTag.STRING) {
-            throw new TypeMismatchException(sourceLoc, funcId, argIndex, actualTypeTag, ATypeTag.STRING);
+    protected IAType getType(IAType returnType, IAType... argsTypes) {
+        // all args are expected to be strings. If any arg is not string (ANY or mismatched-type), return nullable
+        for (IAType actualType : argsTypes) {
+            if (actualType.getTypeTag() != ATypeTag.STRING) {
+                return AUnionType.createNullableType(returnType);
+            }
         }
+        return returnType;
     }
 
-    @Override
-    protected abstract IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes)
-            throws AlgebricksException;
+    protected IAType getType(IAType returnType, IAType argType) {
+        if (argType.getTypeTag() != ATypeTag.STRING) {
+            return AUnionType.createNullableType(returnType);
+        }
+        return returnType;
+    }
 }

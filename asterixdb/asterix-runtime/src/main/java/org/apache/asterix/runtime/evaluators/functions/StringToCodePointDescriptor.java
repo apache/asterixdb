@@ -26,6 +26,7 @@ import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -33,7 +34,6 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -93,26 +93,27 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                             byte[] serString = argPtr.getByteArray();
                             int offset = argPtr.getStartOffset();
 
-                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                int len = UTF8StringUtil.getUTFLength(serString, offset + 1);
-
-                                int start = offset + 1 + UTF8StringUtil.getNumBytesToStoreLength(len);
-                                int pos = 0;
-                                listBuilder.reset(intListType);
-                                while (pos < len) {
-                                    int codePoint = UTF8StringUtil.UTF8ToCodePoint(serString, start + pos);
-                                    pos += UTF8StringUtil.charSize(serString, start + pos);
-
-                                    inputVal.reset();
-                                    aInt64.setValue(codePoint);
-                                    int64Serde.serialize(aInt64, inputVal.getDataOutput());
-                                    listBuilder.addItem(inputVal);
-                                }
-                                listBuilder.write(out, true);
-                            } else {
-                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, serString[offset],
-                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                            if (serString[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                PointableHelper.setNull(result);
+                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), 0, serString[offset],
+                                        ATypeTag.STRING);
+                                return;
                             }
+                            int len = UTF8StringUtil.getUTFLength(serString, offset + 1);
+
+                            int start = offset + 1 + UTF8StringUtil.getNumBytesToStoreLength(len);
+                            int pos = 0;
+                            listBuilder.reset(intListType);
+                            while (pos < len) {
+                                int codePoint = UTF8StringUtil.UTF8ToCodePoint(serString, start + pos);
+                                pos += UTF8StringUtil.charSize(serString, start + pos);
+
+                                inputVal.reset();
+                                aInt64.setValue(codePoint);
+                                int64Serde.serialize(aInt64, inputVal.getDataOutput());
+                                listBuilder.addItem(inputVal);
+                            }
+                            listBuilder.write(out, true);
                             result.set(resultStorage);
                         } catch (IOException e1) {
                             throw HyracksDataException.create(e1);
@@ -127,5 +128,4 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.STRING_TO_CODEPOINT;
     }
-
 }

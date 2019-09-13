@@ -16,24 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-
-/**
- * For function signature: nullable_boolean fun(string...)
+/*
+ *  Description: tests reporting type mismatch for string functions
  */
-public class StringBooleanTypeComputer extends AbstractStringTypeComputer {
-    public static final StringBooleanTypeComputer INSTANCE = new StringBooleanTypeComputer();
 
-    private StringBooleanTypeComputer() {
-    }
+use test;
 
-    @Override
-    public IAType getResultType(ILogicalExpression expr, IAType... types) throws AlgebricksException {
-        return getType(BuiltinType.ABOOLEAN, types);
-    }
-}
+set `import-private-functions` "true";
+set `compiler.runtime.warnings` "10000";
+
+from openDS as ds
+select
+`LIKE`(ds.mixed, ds.str1),
+`LIKE`(ds.str1, ds.mixed),
+contains(ds.mixed, ds.str1),
+string_to_codepoint(ds.mixed),
+length(ds.mixed),
+lowercase(ds.mixed),
+uppercase(ds.mixed),
+initcap(ds.mixed),
+trim(ds.mixed),
+trim(ds.mixed, ds.str1),
+ltrim(ds.mixed),
+ltrim(ds.str1, ds.mixed),
+rtrim(ds.mixed),
+rtrim(ds.mixed, ds.str1),
+position(ds.mixed, ds.str1)
+order by ds.id;

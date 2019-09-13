@@ -21,8 +21,8 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
 
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -37,6 +37,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 abstract class AbstractTripleStringEval implements IScalarEvaluator {
 
+    private final IEvaluatorContext ctx;
     // Argument evaluators.
     private IScalarEvaluator eval0;
     private IScalarEvaluator eval1;
@@ -66,6 +67,7 @@ abstract class AbstractTripleStringEval implements IScalarEvaluator {
         this.eval2 = eval2.createScalarEvaluator(context);
         this.funcID = funcID;
         this.sourceLoc = sourceLoc;
+        this.ctx = context;
     }
 
     @SuppressWarnings("unchecked")
@@ -93,13 +95,19 @@ abstract class AbstractTripleStringEval implements IScalarEvaluator {
 
         // Type check.
         if (bytes0[start0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, 0, bytes0[start0], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            PointableHelper.setNull(result);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, 0, bytes0[start0], ATypeTag.STRING);
+            return;
         }
         if (bytes1[start1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, 1, bytes1[start1], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            PointableHelper.setNull(result);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, 1, bytes1[start1], ATypeTag.STRING);
+            return;
         }
         if (bytes2[start2] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, 2, bytes2[start2], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            PointableHelper.setNull(result);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, 2, bytes2[start2], ATypeTag.STRING);
+            return;
         }
 
         // Sets argument UTF8Pointables.

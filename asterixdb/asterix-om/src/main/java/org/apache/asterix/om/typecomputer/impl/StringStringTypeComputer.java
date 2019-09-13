@@ -23,6 +23,9 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
+/**
+ * For function signature: nullable_string fun(string...)
+ */
 public class StringStringTypeComputer extends AbstractStringTypeComputer {
     public static final StringStringTypeComputer INSTANCE = new StringStringTypeComputer();
 
@@ -31,7 +34,6 @@ public class StringStringTypeComputer extends AbstractStringTypeComputer {
 
     @Override
     public IAType getResultType(ILogicalExpression expr, IAType... inputTypes) throws AlgebricksException {
-        return BuiltinType.ASTRING;
+        return getType(BuiltinType.ASTRING, inputTypes);
     }
-
 }

@@ -25,6 +25,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -32,7 +33,6 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.evaluators.functions.AbstractScalarEval;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.asterix.runtime.exceptions.ExceptionUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -126,7 +126,8 @@ abstract class AbstractBitValuePositionEvaluator extends AbstractScalarEval {
 
         // Type and value validity check
         if (!PointableHelper.isValidLongValue(valueBytes, valueStartOffset, true)) {
-            handleTypeMismatchInput(context, 0, ATypeTag.BIGINT, valueBytes, valueStartOffset);
+            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, 0, valueBytes[valueStartOffset],
+                    ATypeTag.BIGINT);
             PointableHelper.setNull(result);
             return;
         }
@@ -139,7 +140,8 @@ abstract class AbstractBitValuePositionEvaluator extends AbstractScalarEval {
 
         // Type validity check (for position argument, array is a valid type as well)
         if (!ATypeHierarchy.canPromote(positionTypeTag, ATypeTag.DOUBLE) && positionTypeTag != ATypeTag.ARRAY) {
-            handleTypeMismatchInput(context, 1, secondArgumentExpectedTypes, positionBytes, positionStartOffset);
+            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, positionBytes[positionStartOffset],
+                    1, secondArgumentExpectedTypes);
             PointableHelper.setNull(result);
             return;
         }
@@ -220,7 +222,8 @@ abstract class AbstractBitValuePositionEvaluator extends AbstractScalarEval {
 
         // Value validity check
         if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
-            handleTypeMismatchInput(context, 1, ATypeTag.BIGINT, bytes, startOffset);
+            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, 1, bytes[startOffset],
+                    ATypeTag.BIGINT);
             return false;
         }
 

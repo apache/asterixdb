@@ -22,12 +22,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -89,12 +89,16 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
                         int patternLen = array1.getLength();
 
                         if (src[srcOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, src[srcOffset],
-                                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                            PointableHelper.setNull(result);
+                            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), 0, src[srcOffset],
+                                    ATypeTag.STRING);
+                            return;
                         }
                         if (pattern[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, pattern[patternOffset],
-                                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                            PointableHelper.setNull(result);
+                            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), 1, pattern[patternOffset],
+                                    ATypeTag.STRING);
+                            return;
                         }
 
                         try {
@@ -118,5 +122,4 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.SUBSTRING_BEFORE;
     }
-
 }

@@ -19,6 +19,15 @@
 
 package org.apache.asterix.om.exceptions;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.WarningUtil;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.SourceLocation;
+
 public class ExceptionUtil {
 
     private ExceptionUtil() {
@@ -36,6 +45,22 @@ public class ExceptionUtil {
                 }
             }
             expectedTypes.append(expectedItems[index]);
+        }
+        return expectedTypes.toString();
+    }
+
+    public static String toExpectedTypeString(byte... expectedTypeTags) {
+        StringBuilder expectedTypes = new StringBuilder();
+        int numCandidateTypes = expectedTypeTags.length;
+        for (int index = 0; index < numCandidateTypes; ++index) {
+            if (index > 0) {
+                if (index == numCandidateTypes - 1) {
+                    expectedTypes.append(" or ");
+                } else {
+                    expectedTypes.append(", ");
+                }
+            }
+            expectedTypes.append(EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(expectedTypeTags[index]));
         }
         return expectedTypes.toString();
     }
@@ -58,6 +83,42 @@ public class ExceptionUtil {
                     default:
                         return i + "th";
                 }
+        }
+    }
+
+    public static void warnTypeMismatch(IEvaluatorContext ctx, SourceLocation srcLoc, FunctionIdentifier fid,
+            int argIdx, byte actualType, ATypeTag expectedType) {
+        IWarningCollector warningCollector = ctx.getWarningCollector();
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(srcLoc, ErrorCode.TYPE_MISMATCH_FUNCTION, fid.getName(),
+                    indexToPosition(argIdx), expectedType,
+                    EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualType)));
+        }
+    }
+
+    public static void warnTypeMismatch(IEvaluatorContext ctx, SourceLocation srcLoc, FunctionIdentifier fid,
+            byte actualType, int argIdx, byte... expectedTypes) {
+        IWarningCollector warningCollector = ctx.getWarningCollector();
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(srcLoc, ErrorCode.TYPE_MISMATCH_FUNCTION, fid.getName(),
+                    indexToPosition(argIdx), toExpectedTypeString(expectedTypes),
+                    EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualType)));
+        }
+    }
+
+    public static void warnIncompatibleType(IEvaluatorContext ctx, SourceLocation srcLoc, String funName,
+            ATypeTag type1, ATypeTag type2) {
+        IWarningCollector warningCollector = ctx.getWarningCollector();
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(srcLoc, ErrorCode.TYPE_INCOMPATIBLE, funName, type1, type2));
+        }
+    }
+
+    public static void warnUnsupportedType(IEvaluatorContext ctx, SourceLocation srcLoc, String funName,
+            ATypeTag unsupportedType) {
+        IWarningCollector warningCollector = ctx.getWarningCollector();
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(srcLoc, ErrorCode.TYPE_UNSUPPORTED, funName, unsupportedType));
         }
     }
 }

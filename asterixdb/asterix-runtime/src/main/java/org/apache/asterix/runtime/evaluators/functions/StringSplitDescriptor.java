@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -31,7 +32,6 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -103,8 +103,10 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
                             int srcLen = argString.getLength();
                             // Type check for the first argument.
                             if (srcString[srcOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, srcString[srcOffset],
-                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                                PointableHelper.setNull(result);
+                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), 0, srcString[srcOffset],
+                                        ATypeTag.STRING);
+                                return;
                             }
 
                             // Gets the bytes of the pattern string.
@@ -113,8 +115,10 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
                             int patternLen = argPattern.getLength();
                             // Type check for the second argument.
                             if (patternString[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 1,
-                                        patternString[patternOffset], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                                PointableHelper.setNull(result);
+                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), 1,
+                                        patternString[patternOffset], ATypeTag.STRING);
+                                return;
                             }
 
                             // Sets the UTF8 String pointables.
@@ -172,5 +176,4 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.STRING_SPLIT;
     }
-
 }

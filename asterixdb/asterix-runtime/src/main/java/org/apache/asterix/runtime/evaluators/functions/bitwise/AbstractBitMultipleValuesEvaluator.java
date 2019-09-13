@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions.bitwise;
 
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -115,7 +116,8 @@ abstract class AbstractBitMultipleValuesEvaluator extends AbstractScalarEval {
 
         // Type and value validity check
         if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
-            handleTypeMismatchInput(context, 0, ATypeTag.BIGINT, bytes, startOffset);
+            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, 0, bytes[startOffset],
+                    ATypeTag.BIGINT);
             PointableHelper.setNull(result);
             return;
         }
@@ -130,7 +132,8 @@ abstract class AbstractBitMultipleValuesEvaluator extends AbstractScalarEval {
 
             // Type and value validity check
             if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
-                handleTypeMismatchInput(context, i, ATypeTag.BIGINT, bytes, startOffset);
+                ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, i, bytes[startOffset],
+                        ATypeTag.BIGINT);
                 PointableHelper.setNull(result);
                 return;
             }

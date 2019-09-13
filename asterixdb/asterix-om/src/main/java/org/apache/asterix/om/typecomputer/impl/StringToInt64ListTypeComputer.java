@@ -25,6 +25,9 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
+/**
+ * For function signature: nullable[int64] fun(string...)
+ */
 public class StringToInt64ListTypeComputer extends AbstractStringTypeComputer {
 
     public static final StringToInt64ListTypeComputer INSTANCE = new StringToInt64ListTypeComputer();
@@ -34,6 +37,6 @@ public class StringToInt64ListTypeComputer extends AbstractStringTypeComputer {
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return new AOrderedListType(BuiltinType.AINT64, null);
+        return getType(new AOrderedListType(BuiltinType.AINT64, null), strippedInputTypes);
     }
 }

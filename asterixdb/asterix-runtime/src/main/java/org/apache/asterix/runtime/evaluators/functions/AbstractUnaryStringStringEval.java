@@ -22,8 +22,8 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -40,6 +40,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
 
+    private final IEvaluatorContext ctx;
     // For the argument.
     private final IScalarEvaluator argEval;
     private final VoidPointable argPtr = new VoidPointable();
@@ -58,6 +59,7 @@ abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
         this.argEval = argEvalFactory.createScalarEvaluator(context);
         this.funcID = funcID;
         this.sourceLoc = sourceLoc;
+        this.ctx = context;
     }
 
     @Override
@@ -73,8 +75,9 @@ abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
         int offset = argPtr.getStartOffset();
         byte inputTypeTag = argBytes[offset];
         if (inputTypeTag != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, 0, argBytes[offset],
-                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            PointableHelper.setNull(resultPointable);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, 0, argBytes[offset], ATypeTag.STRING);
+            return;
         }
         stringPtr.set(argBytes, offset + 1, argPtr.getLength() - 1);
         resultArray.reset();

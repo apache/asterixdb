@@ -18,17 +18,15 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.exceptions.TypeMismatchException;
-import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public class UnaryStringInt64TypeComputer extends AbstractResultTypeComputer {
+/**
+ * For function signature: nullable_int64 fun(string)
+ */
+public class UnaryStringInt64TypeComputer extends AbstractStringTypeComputer {
 
     public static final UnaryStringInt64TypeComputer INSTANCE = new UnaryStringInt64TypeComputer();
 
@@ -36,16 +34,7 @@ public class UnaryStringInt64TypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    public void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
-            throws AlgebricksException {
-        ATypeTag tag = type.getTypeTag();
-        if (tag != ATypeTag.STRING) {
-            throw new TypeMismatchException(sourceLoc, funcId, argIndex, tag, ATypeTag.STRING);
-        }
-    }
-
-    @Override
     public IAType getResultType(ILogicalExpression expr, IAType... types) throws AlgebricksException {
-        return BuiltinType.AINT64;
+        return getType(BuiltinType.AINT64, types[0]);
     }
 }

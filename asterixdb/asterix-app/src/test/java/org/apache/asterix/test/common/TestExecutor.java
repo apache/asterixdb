@@ -2120,9 +2120,6 @@ public class TestExecutor {
 
     private void validateWarnings(List<String> actualWarnings, List<String> expectedWarn, MutableInt actualWarnCount,
             boolean expectedSourceLoc) throws Exception {
-        if (actualWarnCount.getValue() > expectedWarn.size()) {
-            throw new Exception("returned warnings exceeded expected warnings");
-        }
         if (actualWarnings != null) {
             for (String actualWarn : actualWarnings) {
                 if (expectedWarn.stream().noneMatch(actualWarn::contains)) {
@@ -2134,6 +2131,9 @@ public class TestExecutor {
                             ERR_MSG_SRC_LOC_LINE_REGEX, ERR_MSG_SRC_LOC_COLUMN_REGEX, actualWarn));
                 }
                 actualWarnCount.increment();
+                if (actualWarnCount.getValue() > expectedWarn.size()) {
+                    throw new Exception("returned warnings exceeded expected warnings");
+                }
             }
         }
     }

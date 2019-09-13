@@ -16,24 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-
-/**
- * For function signature: nullable_boolean fun(string...)
+/*
+ *  Description: tests reporting type mismatch for string functions
  */
-public class StringBooleanTypeComputer extends AbstractStringTypeComputer {
-    public static final StringBooleanTypeComputer INSTANCE = new StringBooleanTypeComputer();
 
-    private StringBooleanTypeComputer() {
-    }
+use test;
 
-    @Override
-    public IAType getResultType(ILogicalExpression expr, IAType... types) throws AlgebricksException {
-        return getType(BuiltinType.ABOOLEAN, types);
-    }
-}
+set `import-private-functions` "true";
+set `compiler.runtime.warnings` "10000";
+
+from openDS as ds
+select
+starts_with(ds.str1, ds.i64),
+ends_with(ds.i16, ds.str1),
+matches(ds.str1, ds.i32),
+matches(ds.str1, ds.str1, ds.i8),
+regexp_like(ds.i64, ds.str1),
+regexp_like(ds.str1, ds.str1, ds.i8),
+regexp_position(ds.i32, ds.str1),
+regexp_position(ds.str1, ds.str1, ds.i8),
+regexp_replace(ds.str1, ds.i64, ds.str1),
+`string-equal`(ds.str1, ds.i8),
+replace(ds.i16, ds.str1, ds.str1),
+reverse(ds.i32),
+`substring-after`(ds.str1, ds.i64),
+`substring-before`(ds.i8, ds.str1),
+split(ds.str1, ds.i8)
+order by ds.id;

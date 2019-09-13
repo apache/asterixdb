@@ -22,11 +22,10 @@ import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
 
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.dataflow.data.common.TaggedValueReference;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ComparatorUtil;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
@@ -37,7 +36,6 @@ import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -45,6 +43,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateFunction {
+    private final String FUN_NAME = "min/max";
     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final IPointable inputVal = new VoidPointable();
     private final ArrayBackedValueStorage outputVal = new ArrayBackedValueStorage();
@@ -88,7 +87,7 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
         } else if (typeTag == ATypeTag.SYSTEM_NULL) {
             // if a system_null is encountered locally, it would be an error; otherwise it is ignored
             if (type == Type.LOCAL) {
-                throw new UnsupportedItemTypeException(sourceLoc, "min/max", ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
+                throw new UnsupportedItemTypeException(sourceLoc, FUN_NAME, ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
             }
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             // First value encountered. Set type, comparator, and initial value.
@@ -162,19 +161,12 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
     }
 
     private void handleIncompatibleInput(ATypeTag typeTag) {
-        IWarningCollector warningCollector = context.getWarningCollector();
-        if (warningCollector.shouldWarn()) {
-            warningCollector
-                    .warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_INCOMPATIBLE, "min/max", aggType, typeTag));
-        }
+        ExceptionUtil.warnIncompatibleType(context, sourceLoc, FUN_NAME, aggType, typeTag);
         this.aggType = ATypeTag.NULL;
     }
 
     private void handleUnsupportedInput(ATypeTag typeTag) {
-        IWarningCollector warningCollector = context.getWarningCollector();
-        if (warningCollector.shouldWarn()) {
-            warningCollector.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.TYPE_UNSUPPORTED, "min/max", typeTag));
-        }
+        ExceptionUtil.warnUnsupportedType(context, sourceLoc, FUN_NAME, typeTag);
         this.aggType = ATypeTag.NULL;
     }
 

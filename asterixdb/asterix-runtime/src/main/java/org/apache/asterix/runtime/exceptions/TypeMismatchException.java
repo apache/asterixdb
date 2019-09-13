@@ -19,8 +19,8 @@
 
 package org.apache.asterix.runtime.exceptions;
 
-import static org.apache.asterix.runtime.exceptions.ExceptionUtil.indexToPosition;
-import static org.apache.asterix.runtime.exceptions.ExceptionUtil.toExpectedTypeString;
+import static org.apache.asterix.om.exceptions.ExceptionUtil.indexToPosition;
+import static org.apache.asterix.om.exceptions.ExceptionUtil.toExpectedTypeString;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;

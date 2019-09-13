@@ -1,0 +1,59 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ *  Description: tests reporting type mismatch for string functions
+ */
+
+set `import-private-functions` "true";
+set `compiler.runtime.warnings` "10000";
+
+FROM[
+`LIKE`("aa", int8("8")),
+`LIKE`(int8("8"), "aa"),
+contains("aa", int8("8")),
+string_to_codepoint(int64("64")),
+length(int32("32")),
+lowercase(int16("16")),
+uppercase(int16("16")),
+initcap(int64("64")),
+trim(int32("32")),
+trim(int64("64"), "aa"),
+ltrim(int16("16")),
+ltrim("aa", int8("8")),
+rtrim(int32("32")),
+rtrim(int64("64"), "aa"),
+position(int8("8"), "aa"),
+starts_with("aa", int64("64")),
+ends_with(int16("16"), "aa"),
+matches("aa", int32("32")),
+matches("aa", "aa", int8("8")),
+regexp_like(int64("64"), "aa"),
+regexp_like("aa", "aa", int8("8")),
+regexp_position(int32("32"), "aa"),
+regexp_position("aa", "aa", int8("8")),
+regexp_replace("aa", int64("64"), "aa"),
+`string-equal`("aa", int8("8")),
+replace(int16("16"), "aa", "aa"),
+reverse(int32("32")),
+`substring-after`("aa", int64("64")),
+`substring-before`(int8("8"), "aa"),
+split("aa", int8("8"))] AS t
+SELECT t
+;
