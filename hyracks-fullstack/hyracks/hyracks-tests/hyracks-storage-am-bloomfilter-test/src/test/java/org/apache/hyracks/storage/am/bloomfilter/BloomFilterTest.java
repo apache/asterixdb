@@ -36,6 +36,7 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
 import org.apache.hyracks.storage.am.bloomfilter.util.AbstractBloomFilterTest;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,7 +72,7 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
         bf.create();
         bf.activate();
         IIndexBulkLoader builder = bf.createBuilder(numElements, bloomFilterSpec.getNumHashes(),
-                bloomFilterSpec.getNumBucketsPerElements());
+                bloomFilterSpec.getNumBucketsPerElements(), NoOpPageWriteCallback.INSTANCE);
 
         int fieldCount = 2;
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
@@ -130,7 +131,7 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
         bf.create();
         bf.activate();
         IIndexBulkLoader builder = bf.createBuilder(numElements, bloomFilterSpec.getNumHashes(),
-                bloomFilterSpec.getNumBucketsPerElements());
+                bloomFilterSpec.getNumBucketsPerElements(), NoOpPageWriteCallback.INSTANCE);
 
         int fieldCount = 5;
         ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),

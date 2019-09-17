@@ -26,6 +26,7 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.common.compression.file.CompressedFileReference;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
@@ -42,7 +43,7 @@ public abstract class AbstractBufferedFileIOManager {
     protected final BufferCache bufferCache;
     protected final IPageReplacementStrategy pageReplacementStrategy;
     private final BlockingQueue<BufferCacheHeaderHelper> headerPageCache;
-    private final IIOManager ioManager;
+    private final IOManager ioManager;
 
     private IFileHandle fileHandle;
     private volatile boolean hasOpen;
@@ -50,7 +51,7 @@ public abstract class AbstractBufferedFileIOManager {
     protected AbstractBufferedFileIOManager(BufferCache bufferCache, IIOManager ioManager,
             BlockingQueue<BufferCacheHeaderHelper> headerPageCache, IPageReplacementStrategy pageReplacementStrategy) {
         this.bufferCache = bufferCache;
-        this.ioManager = ioManager;
+        this.ioManager = (IOManager) ioManager;
         this.headerPageCache = headerPageCache;
         this.pageReplacementStrategy = pageReplacementStrategy;
         hasOpen = false;
@@ -276,11 +277,11 @@ public abstract class AbstractBufferedFileIOManager {
     }
 
     protected final long writeToFile(ByteBuffer buf, long offset) throws HyracksDataException {
-        return ioManager.syncWrite(fileHandle, offset, buf);
+        return ioManager.doSyncWrite(fileHandle, offset, buf);
     }
 
     protected final long writeToFile(ByteBuffer[] buf, long offset) throws HyracksDataException {
-        return ioManager.syncWrite(fileHandle, offset, buf);
+        return ioManager.doSyncWrite(fileHandle, offset, buf);
     }
 
     protected final long getFileSize() {

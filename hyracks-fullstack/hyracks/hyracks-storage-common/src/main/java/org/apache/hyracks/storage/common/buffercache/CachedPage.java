@@ -23,14 +23,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 /**
  * @author yingyib
  */
 public class CachedPage implements ICachedPageInternal {
-    private static final Logger LOGGER = LogManager.getLogger();
     final int cpid;
     ByteBuffer buffer;
     public final AtomicInteger pinCount;
@@ -42,7 +38,6 @@ public class CachedPage implements ICachedPageInternal {
     CachedPage next;
     volatile boolean valid;
     final AtomicBoolean confiscated;
-    private IQueueInfo queueInfo;
     private int multiplier;
     private int extraBlockPageId;
     private long compressedOffset;
@@ -50,7 +45,6 @@ public class CachedPage implements ICachedPageInternal {
     // DEBUG
     private static final boolean DEBUG = false;
     private final StackTraceElement[] ctorStack;
-    private IPageWriteFailureCallback failureCallback;
 
     //Constructor for making dummy entry for FIFO queue
     public CachedPage() {
@@ -60,7 +54,6 @@ public class CachedPage implements ICachedPageInternal {
         this.dirty = new AtomicBoolean(false);
         this.confiscated = new AtomicBoolean(true);
         pinCount = null;
-        queueInfo = null;
         replacementStrategyObject = null;
         latch = null;
         ctorStack = DEBUG ? new Throwable().getStackTrace() : null;
@@ -81,7 +74,6 @@ public class CachedPage implements ICachedPageInternal {
         dpid = -1;
         valid = false;
         confiscated = new AtomicBoolean(false);
-        queueInfo = null;
         ctorStack = DEBUG ? new Throwable().getStackTrace() : null;
     }
 
@@ -91,8 +83,6 @@ public class CachedPage implements ICachedPageInternal {
         valid = false;
         confiscated.set(false);
         pageReplacementStrategy.notifyCachePageReset(this);
-        queueInfo = null;
-        failureCallback = null;
     }
 
     public void invalidate() {
@@ -153,16 +143,6 @@ public class CachedPage implements ICachedPageInternal {
     }
 
     @Override
-    public IQueueInfo getQueueInfo() {
-        return queueInfo;
-    }
-
-    @Override
-    public void setQueueInfo(IQueueInfo queueInfo) {
-        this.queueInfo = queueInfo;
-    }
-
-    @Override
     public long getDiskPageId() {
         return dpid;
     }
@@ -208,23 +188,6 @@ public class CachedPage implements ICachedPageInternal {
     @Override
     public boolean isLargePage() {
         return multiplier > 1;
-    }
-
-    @Override
-    public void setFailureCallback(IPageWriteFailureCallback failureCallback) {
-        if (this.failureCallback != null) {
-            throw new IllegalStateException("failureCallback is already set");
-        }
-        this.failureCallback = failureCallback;
-    }
-
-    @Override
-    public void writeFailed(Exception e) {
-        if (failureCallback != null) {
-            failureCallback.writeFailed(this, e);
-        } else {
-            LOGGER.error("An IO Failure took place but the failure callback is not set", e);
-        }
     }
 
     public void setCompressedPageOffset(long offset) {

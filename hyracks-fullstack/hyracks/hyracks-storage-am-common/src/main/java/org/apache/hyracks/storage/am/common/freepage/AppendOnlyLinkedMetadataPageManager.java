@@ -31,8 +31,9 @@ import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
-import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
+import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
+import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
@@ -209,9 +210,9 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
     }
 
     @Override
-    public void close(IPageWriteFailureCallback callback) throws HyracksDataException {
+    public void close(IPageWriteFailureCallback failureCallback) throws HyracksDataException {
         if (ready) {
-            IFIFOPageQueue queue = bufferCache.createFIFOQueue();
+            IFIFOPageWriter pageWriter = bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, failureCallback);
             ITreeIndexMetadataFrame metaFrame = frameFactory.createFrame();
             confiscatedPage.acquireWriteLatch();
             try {
@@ -226,8 +227,7 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
             compressedPageWriter.prepareWrite(confiscatedPage);
             // WARNING: flushing the metadata page should be done after releasing the write latch; otherwise, the page
             // won't be flushed to disk because it won't be dirty until the write latch has been released.
-            queue.put(confiscatedPage, callback);
-            bufferCache.finishQueue();
+            pageWriter.write(confiscatedPage);
             compressedPageWriter.endWriting();
             metadataPage = getMetadataPageId();
             ready = false;

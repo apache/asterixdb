@@ -73,16 +73,6 @@ public class VirtualPage implements ICachedPage {
     }
 
     @Override
-    public IQueueInfo getQueueInfo() {
-        return null;
-    }
-
-    @Override
-    public void setQueueInfo(IQueueInfo queueInfo) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public int getPageSize() {
         return pageSize;
     }
@@ -146,15 +136,5 @@ public class VirtualPage implements ICachedPage {
         str.append(",\"next\":").append(next);
         str.append("}");
         return str.toString();
-    }
-
-    @Override
-    public void setFailureCallback(IPageWriteFailureCallback callback) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeFailed(Exception e) {
-        throw new UnsupportedOperationException();
     }
 }

@@ -81,4 +81,9 @@ public class BloomFilterBulkLoader implements IChainedComponentBulkLoader {
     public Throwable getFailure() {
         return bulkLoader.getFailure();
     }
+
+    @Override
+    public void force() throws HyracksDataException {
+        bulkLoader.force();
+    }
 }

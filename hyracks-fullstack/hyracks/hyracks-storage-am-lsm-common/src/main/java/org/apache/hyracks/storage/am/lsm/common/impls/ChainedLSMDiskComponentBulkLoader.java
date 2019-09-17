@@ -158,4 +158,11 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
         }
         return null;
     }
+
+    @Override
+    public void force() throws HyracksDataException {
+        for (IChainedComponentBulkLoader bulkLoader : bulkloaderChain) {
+            bulkLoader.force();
+        }
+    }
 }

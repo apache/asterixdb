@@ -28,7 +28,9 @@ import org.apache.hyracks.api.replication.IIOReplicationManager;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
-import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
+import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 
 public class TestVirtualBufferCache implements IVirtualBufferCache {
@@ -155,13 +157,8 @@ public class TestVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public IFIFOPageQueue createFIFOQueue() {
-        return vbc.createFIFOQueue();
-    }
-
-    @Override
-    public void finishQueue() throws HyracksDataException {
-        vbc.finishQueue();
+    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback) {
+        return vbc.createFIFOWriter(callback, failureCallback);
     }
 
     @Override

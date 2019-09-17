@@ -49,6 +49,7 @@ import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;
@@ -646,7 +647,8 @@ public abstract class OrderedIndexExamplesTest {
             LOGGER.info("Bulk loading " + ins + " tuples");
         }
         long start = System.currentTimeMillis();
-        IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, false, ins, true);
+        IIndexBulkLoader bulkLoader =
+                treeIndex.createBulkLoader(0.7f, false, ins, true, NoOpPageWriteCallback.INSTANCE);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         for (int i = 0; i < ins; i++) {
@@ -719,7 +721,8 @@ public abstract class OrderedIndexExamplesTest {
             treeIndex.activate();
 
             // Load sorted records, and expect to fail at tuple i.
-            IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, true, ins, true);
+            IIndexBulkLoader bulkLoader =
+                    treeIndex.createBulkLoader(0.7f, true, ins, true, NoOpPageWriteCallback.INSTANCE);
             for (int j = 0; j < ins; j++) {
                 if (j > i) {
                     fail("Bulk load failure test unexpectedly succeeded past tuple: " + j);

@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.common;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 
 /**
  * This interface describes the operations common to all indexes. Indexes
@@ -137,7 +138,7 @@ public interface IIndex {
      * @throws HyracksDataException
      */
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex) throws HyracksDataException;
+            boolean checkIfEmptyIndex, IPageWriteCallback callback) throws HyracksDataException;
 
     /**
      * TODO: This should be moved to ILSMIndex since filters don't make sense in non LSM context

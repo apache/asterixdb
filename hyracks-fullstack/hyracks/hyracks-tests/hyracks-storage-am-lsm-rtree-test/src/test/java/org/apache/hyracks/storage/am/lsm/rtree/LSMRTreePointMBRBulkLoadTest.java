@@ -60,7 +60,7 @@ public class LSMRTreePointMBRBulkLoadTest extends AbstractRTreeBulkLoadTest {
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, valueProviderFactories, numKeys,
                 rtreePolicyType, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
-                harness.getMetadataPageManagerFactory(), true);
+                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory(), true);
     }
 
     @Override

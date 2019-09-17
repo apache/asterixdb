@@ -70,7 +70,7 @@ public class LSMRTreeWithAntiMatterTuplesLifecycleTest extends AbstractIndexLife
                 harness.getVirtualBufferCaches(), harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes,
                 valueProviderFactories, numKeys, RTreePolicyType.RTREE, harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
-                harness.getMetadataPageManagerFactory());
+                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory());
         index = testCtx.getIndex();
     }
 

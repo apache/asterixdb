@@ -61,4 +61,10 @@ public interface IChainedComponentBulkLoader extends IPageWriteFailureCallback {
      * @throws HyracksDataException
      */
     void cleanupArtifacts() throws HyracksDataException;
+
+    /**
+     * Force all pages written by this bulkloader to disk.
+     * @throws HyracksDataException
+     */
+    void force() throws HyracksDataException;
 }

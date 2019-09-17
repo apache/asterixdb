@@ -51,6 +51,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFacto
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.dataflow.ExternalRTreeLocalResourceFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeWithAntiMatterLocalResourceFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -138,6 +139,7 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
         IStorageManager storageManager = storageComponentProvider.getStorageManager();
         ILSMOperationTrackerFactory opTrackerFactory = dataset.getIndexOperationTrackerFactory(index);
         ILSMIOOperationCallbackFactory ioOpCallbackFactory = dataset.getIoOperationCallbackFactory(index);
+        ILSMPageWriteCallbackFactory pageWriteCallbackFactory = dataset.getPageWriteCallbackFactory();
         IMetadataPageManagerFactory metadataPageManagerFactory =
                 storageComponentProvider.getMetadataPageManagerFactory();
         ILSMIOOperationSchedulerProvider ioSchedulerProvider =
@@ -157,15 +159,15 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     new AsterixVirtualBufferCacheProvider(dataset.getDatasetId());
             return new LSMRTreeWithAntiMatterLocalResourceFactory(storageManager, typeTraits, rtreeCmpFactories,
                     filterTypeTraits, filterCmpFactories, secondaryFilterFields, opTrackerFactory, ioOpCallbackFactory,
-                    metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, mergePolicyFactory,
-                    mergePolicyProperties, true, valueProviderFactories, rTreePolicyType, linearizeCmpFactory,
-                    rtreeFields, isPointMBR, btreeCompFactories);
+                    pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
+                    mergePolicyFactory, mergePolicyProperties, true, valueProviderFactories, rTreePolicyType,
+                    linearizeCmpFactory, rtreeFields, isPointMBR, btreeCompFactories);
         } else {
             return new ExternalRTreeLocalResourceFactory(storageManager, typeTraits, rtreeCmpFactories,
                     filterTypeTraits, filterCmpFactories, secondaryFilterFields, opTrackerFactory, ioOpCallbackFactory,
-                    metadataPageManagerFactory, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, true,
-                    btreeCompFactories, valueProviderFactories, rTreePolicyType, linearizeCmpFactory, rtreeFields,
-                    new int[] { numNestedSecondaryKeyFields }, isPointMBR,
+                    pageWriteCallbackFactory, metadataPageManagerFactory, ioSchedulerProvider, mergePolicyFactory,
+                    mergePolicyProperties, true, btreeCompFactories, valueProviderFactories, rTreePolicyType,
+                    linearizeCmpFactory, rtreeFields, new int[] { numNestedSecondaryKeyFields }, isPointMBR,
                     mdProvider.getStorageProperties().getBloomFilterFalsePositiveRate());
         }
     }

@@ -41,8 +41,10 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFacto
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpPageWriteCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.SynchronousSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.impls.ThreadCountingTracker;
 import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
@@ -79,6 +81,7 @@ public class LSMBTreeTestHarness {
     protected ILSMMergePolicy mergePolicy;
     protected ILSMOperationTracker opTracker;
     protected ILSMIOOperationCallbackFactory ioOpCallbackFactory;
+    protected ILSMPageWriteCallbackFactory pageWriteCallbackFactory;
     protected IMetadataPageManagerFactory metadataPageManagerFactory;
 
     protected final Random rnd = new Random();
@@ -101,6 +104,7 @@ public class LSMBTreeTestHarness {
         this.numMutableComponents = AccessMethodTestsConfig.LSM_BTREE_NUM_MUTABLE_COMPONENTS;
         this.metadataPageManagerFactory = AppendOnlyLinkedMetadataPageManagerFactory.INSTANCE;
         this.ioOpCallbackFactory = new CountingIoOperationCallbackFactory();
+        this.pageWriteCallbackFactory = NoOpPageWriteCallbackFactory.INSTANCE;
     }
 
     public void setUp() throws HyracksDataException {
@@ -211,6 +215,10 @@ public class LSMBTreeTestHarness {
 
     public ILSMIOOperationCallbackFactory getIOOperationCallbackFactory() {
         return ioOpCallbackFactory;
+    }
+
+    public ILSMPageWriteCallbackFactory getPageWriteCallbackFactory() {
+        return pageWriteCallbackFactory;
     }
 
     public IMetadataPageManagerFactory getMetadataPageManagerFactory() {

@@ -27,6 +27,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFacto
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
@@ -42,6 +43,7 @@ public abstract class LsmResourceFactory implements IResourceFactory {
     protected final int[] filterFields;
     protected final ILSMOperationTrackerFactory opTrackerProvider;
     protected final ILSMIOOperationCallbackFactory ioOpCallbackFactory;
+    protected final ILSMPageWriteCallbackFactory pageWriteCallbackFactory;
     protected final IMetadataPageManagerFactory metadataPageManagerFactory;
     protected final IVirtualBufferCacheProvider vbcProvider;
     protected final ILSMIOOperationSchedulerProvider ioSchedulerProvider;
@@ -53,6 +55,7 @@ public abstract class LsmResourceFactory implements IResourceFactory {
             IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
             ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             IMetadataPageManagerFactory metadataPageManagerFactory, IVirtualBufferCacheProvider vbcProvider,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, boolean durable) {
@@ -64,6 +67,7 @@ public abstract class LsmResourceFactory implements IResourceFactory {
         this.filterFields = filterFields;
         this.opTrackerProvider = opTrackerProvider;
         this.ioOpCallbackFactory = ioOpCallbackFactory;
+        this.pageWriteCallbackFactory = pageWriteCallbackFactory;
         this.metadataPageManagerFactory = metadataPageManagerFactory;
         this.vbcProvider = vbcProvider;
         this.ioSchedulerProvider = ioSchedulerProvider;

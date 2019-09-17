@@ -104,8 +104,8 @@ public class LSMBTreeMergeFailTest {
         return LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, numKeys,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
-                scheduler, harness.getIOOperationCallbackFactory(), harness.getMetadataPageManagerFactory(), filtered,
-                true, false);
+                scheduler, harness.getIOOperationCallbackFactory(), harness.getPageWriteCallbackFactory(),
+                harness.getMetadataPageManagerFactory(), filtered, true, false);
     }
 
     private class TestIoScheduler implements ILSMIOOperationScheduler {

@@ -39,7 +39,8 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
         this.lsmIndex = lsmIndex;
         this.opCtx = opCtx;
         this.componentBulkLoader = opCtx.getIoOperation().getNewComponent().createBulkLoader(opCtx.getIoOperation(),
-                fillFactor, verifyInput, numElementsHint, false, true, true);
+                fillFactor, verifyInput, numElementsHint, false, true, true,
+                lsmIndex.getPageWriteCallbackFactory().createPageWriteCallback());
     }
 
     public ILSMDiskComponent getComponent() {
@@ -131,5 +132,10 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
             loadOp.setFailure(th);
             loadOp.cleanup(lsmIndex.getBufferCache());
         }
+    }
+
+    @Override
+    public void force() throws HyracksDataException {
+        componentBulkLoader.force();
     }
 }

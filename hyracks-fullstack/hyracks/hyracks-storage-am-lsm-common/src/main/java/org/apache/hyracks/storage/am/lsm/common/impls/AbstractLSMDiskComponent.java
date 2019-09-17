@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -205,41 +206,41 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
         getIndex().validate();
     }
 
-    @Override
-    public IChainedComponentBulkLoader createFilterBulkLoader() throws HyracksDataException {
+    protected IChainedComponentBulkLoader createFilterBulkLoader() throws HyracksDataException {
         return new FilterBulkLoader(getLSMComponentFilter(), getMetadataHolder(), getLsmIndex().getFilterManager(),
                 getLsmIndex().getTreeFields(), getLsmIndex().getFilterFields(),
                 MultiComparator.create(getLSMComponentFilter().getFilterCmpFactories()));
     }
 
-    @Override
-    public IChainedComponentBulkLoader createIndexBulkLoader(float fillFactor, boolean verifyInput,
-            long numElementsHint, boolean checkIfEmptyIndex) throws HyracksDataException {
+    protected IChainedComponentBulkLoader createIndexBulkLoader(float fillFactor, boolean verifyInput,
+            long numElementsHint, boolean checkIfEmptyIndex, IPageWriteCallback callback) throws HyracksDataException {
         return new LSMIndexBulkLoader(
-                getIndex().createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex));
+                getIndex().createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, callback));
     }
 
     /**
      * Allows sub-class extend this method to use specialized bulkloader for merge
      */
     protected IChainedComponentBulkLoader createMergeIndexBulkLoader(float fillFactor, boolean verifyInput,
-            long numElementsHint, boolean checkIfEmptyIndex) throws HyracksDataException {
-        return this.createIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
+            long numElementsHint, boolean checkIfEmptyIndex, IPageWriteCallback callback) throws HyracksDataException {
+        return createIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, callback);
     }
 
     @Override
     public ChainedLSMDiskComponentBulkLoader createBulkLoader(ILSMIOOperation operation, float fillFactor,
             boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
-            boolean cleanupEmptyComponent) throws HyracksDataException {
+            boolean cleanupEmptyComponent, IPageWriteCallback callback) throws HyracksDataException {
         ChainedLSMDiskComponentBulkLoader chainedBulkLoader =
                 new ChainedLSMDiskComponentBulkLoader(operation, this, cleanupEmptyComponent);
         if (withFilter && getLsmIndex().getFilterFields() != null) {
             chainedBulkLoader.addBulkLoader(createFilterBulkLoader());
         }
         IChainedComponentBulkLoader indexBulkloader = operation.getIOOpertionType() == LSMIOOperationType.MERGE
-                ? createMergeIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex)
-                : createIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
+                ? createMergeIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, callback)
+                : createIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, callback);
         chainedBulkLoader.addBulkLoader(indexBulkloader);
+
+        callback.initialize(chainedBulkLoader);
         return chainedBulkLoader;
     }
 

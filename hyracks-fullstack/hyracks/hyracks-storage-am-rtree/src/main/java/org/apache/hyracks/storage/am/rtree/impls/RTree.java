@@ -60,6 +60,7 @@ import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class RTree extends AbstractTreeIndex {
@@ -892,9 +893,9 @@ public class RTree extends AbstractTreeIndex {
 
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex) throws HyracksDataException {
+            boolean checkIfEmptyIndex, IPageWriteCallback callback) throws HyracksDataException {
         // TODO: verifyInput currently does nothing.
-        return new RTreeBulkLoader(fillFactor);
+        return new RTreeBulkLoader(fillFactor, callback);
     }
 
     public class RTreeBulkLoader extends AbstractTreeIndex.AbstractTreeIndexBulkLoader {
@@ -905,8 +906,8 @@ public class RTree extends AbstractTreeIndex {
         ByteBuffer mbr;
         List<Integer> prevNodeFrontierPages = new ArrayList<>();
 
-        public RTreeBulkLoader(float fillFactor) throws HyracksDataException {
-            super(fillFactor);
+        public RTreeBulkLoader(float fillFactor, IPageWriteCallback callback) throws HyracksDataException {
+            super(fillFactor, callback);
             prevInteriorFrame = interiorFrameFactory.createFrame();
         }
 
@@ -942,9 +943,9 @@ public class RTree extends AbstractTreeIndex {
 
                     leafFrontier.pageId = freePageManager.takePage(metaFrame);
 
-                    putInQueue(leafFrontier.page);
+                    write(leafFrontier.page);
                     for (ICachedPage c : pagesToWrite) {
-                        putInQueue(c);
+                        write(c);
                     }
                     pagesToWrite.clear();
                     leafFrontier.page = bufferCache
@@ -975,7 +976,7 @@ public class RTree extends AbstractTreeIndex {
             }
 
             for (ICachedPage c : pagesToWrite) {
-                putInQueue(c);
+                write(c);
             }
             finish();
             super.end();
@@ -1012,7 +1013,7 @@ public class RTree extends AbstractTreeIndex {
                     ((RTreeNSMFrame) lowerFrame).adjustMBR();
                     interiorFrameTupleWriter.writeTupleFields(((RTreeNSMFrame) lowerFrame).getMBRTuples(), 0, mbr, 0);
                 }
-                putInQueue(n.page);
+                write(n.page);
                 n.page = null;
                 prevPageId = n.pageId;
             }

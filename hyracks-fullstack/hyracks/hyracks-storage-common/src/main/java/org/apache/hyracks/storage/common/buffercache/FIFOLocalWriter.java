@@ -21,20 +21,29 @@ import org.apache.logging.log4j.Logger;
 
 public class FIFOLocalWriter implements IFIFOPageWriter {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final FIFOLocalWriter INSTANCE = new FIFOLocalWriter();
     private static final boolean DEBUG = false;
 
-    private FIFOLocalWriter() {
+    private final BufferCache bufferCache;
+
+    private final IPageWriteCallback callback;
+    private final IPageWriteFailureCallback failureCallback;
+
+    public FIFOLocalWriter(BufferCache bufferCache, IPageWriteCallback callback,
+            IPageWriteFailureCallback failureCallback) {
+        this.bufferCache = bufferCache;
+        this.callback = callback;
+        this.failureCallback = failureCallback;
     }
 
     @SuppressWarnings("squid:S1181") // System must halt on all IO errors
     @Override
-    public void write(ICachedPage page, BufferCache bufferCache) {
+    public void write(ICachedPage page) {
         CachedPage cPage = (CachedPage) page;
         try {
             bufferCache.write(cPage);
+            callback.afterWrite(cPage);
         } catch (Exception e) {
-            page.writeFailed(e);
+            handleWriteFailure(page, e);
             LOGGER.warn("Failed to write page {}", cPage, e);
         } catch (Throwable th) {
             // Halt
@@ -45,6 +54,14 @@ public class FIFOLocalWriter implements IFIFOPageWriter {
             if (DEBUG) {
                 LOGGER.error("[FIFO] Return page: {}, {}", cPage.cpid, cPage.dpid);
             }
+        }
+    }
+
+    private void handleWriteFailure(ICachedPage page, Exception e) {
+        if (failureCallback != null) {
+            failureCallback.writeFailed(page, e);
+        } else {
+            LOGGER.error("an IO failure took place but the failure callback is not set", e);
         }
     }
 

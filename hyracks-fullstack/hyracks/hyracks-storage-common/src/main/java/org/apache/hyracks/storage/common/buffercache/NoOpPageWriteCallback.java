@@ -18,32 +18,25 @@
  */
 package org.apache.hyracks.storage.common.buffercache;
 
-import java.nio.ByteBuffer;
+import org.apache.hyracks.storage.common.IIndexBulkLoader;
 
-public interface ICachedPage {
+public class NoOpPageWriteCallback implements IPageWriteCallback {
+    public static final NoOpPageWriteCallback INSTANCE = new NoOpPageWriteCallback();
 
-    ByteBuffer getBuffer();
+    private NoOpPageWriteCallback() {
+    }
 
-    void acquireReadLatch();
+    @Override
+    public void initialize(IIndexBulkLoader bulkLoader) {
+        // no op
+    }
 
-    void releaseReadLatch();
+    public void beforeWrite(ICachedPage page) {
+        // no op
+    }
 
-    void acquireWriteLatch();
+    public void afterWrite(ICachedPage page) {
+        // no op
+    }
 
-    void releaseWriteLatch(boolean markDirty);
-
-    boolean confiscated();
-
-    int getPageSize();
-
-    int getFrameSizeMultiplier();
-
-    void setDiskPageId(long dpid);
-
-    /**
-     * Check if a page is a large page
-     *
-     * @return true if the page is large, false otherwise
-     */
-    boolean isLargePage();
 }

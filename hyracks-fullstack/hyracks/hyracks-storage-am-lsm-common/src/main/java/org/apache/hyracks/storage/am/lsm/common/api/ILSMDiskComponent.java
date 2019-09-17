@@ -23,9 +23,8 @@ import java.util.Set;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
-import org.apache.hyracks.storage.am.lsm.common.impls.ChainedLSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
-import org.apache.hyracks.storage.am.lsm.common.impls.IChainedComponentBulkLoader;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 
 public interface ILSMDiskComponent extends ILSMComponent {
@@ -122,27 +121,6 @@ public interface ILSMDiskComponent extends ILSMComponent {
     void validate() throws HyracksDataException;
 
     /**
-     * Creates a chained bulkloader which populates component's LSM filter
-     *
-     * @return
-     * @throws HyracksDataException
-     */
-    IChainedComponentBulkLoader createFilterBulkLoader() throws HyracksDataException;
-
-    /**
-     * Creates a chained bulkloader which populates component's index
-     *
-     * @param fillFactor
-     * @param verifyInput
-     * @param numElementsHint
-     * @param checkIfEmptyIndex
-     * @return
-     * @throws HyracksDataException
-     */
-    IChainedComponentBulkLoader createIndexBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex) throws HyracksDataException;
-
-    /**
      * Creates a bulkloader pipeline which includes all chained operations, bulkloading individual elements of the
      * component: indexes, LSM filters, Bloom filters, buddy indexes, etc.
      *
@@ -153,10 +131,10 @@ public interface ILSMDiskComponent extends ILSMComponent {
      * @param checkIfEmptyIndex
      * @param withFilter
      * @param cleanupEmptyComponent
-     * @return
+     * @return the created disk component bulk loader
      * @throws HyracksDataException
      */
-    ChainedLSMDiskComponentBulkLoader createBulkLoader(ILSMIOOperation operation, float fillFactor, boolean verifyInput,
-            long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter, boolean cleanupEmptyComponent)
-            throws HyracksDataException;
+    ILSMDiskComponentBulkLoader createBulkLoader(ILSMIOOperation operation, float fillFactor, boolean verifyInput,
+            long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter, boolean cleanupEmptyComponent,
+            IPageWriteCallback callback) throws HyracksDataException;
 }

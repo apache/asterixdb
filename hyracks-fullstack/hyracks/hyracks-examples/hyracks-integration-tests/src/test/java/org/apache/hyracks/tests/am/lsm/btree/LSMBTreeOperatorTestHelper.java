@@ -25,6 +25,7 @@ import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeLocalResourceFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpPageWriteCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.SynchronousSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.impls.ThreadCountingOperationTrackerFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
@@ -44,9 +45,10 @@ public class LSMBTreeOperatorTestHelper extends LSMTreeOperatorTestHelper {
             IBinaryComparatorFactory[] filtercmpfactories) {
         return new LSMBTreeLocalResourceFactory(storageManager, typeTraits, comparatorFactories, filtertypetraits,
                 filtercmpfactories, filterfields, ThreadCountingOperationTrackerFactory.INSTANCE,
-                NoOpIOOperationCallbackFactory.INSTANCE, pageManagerFactory, getVirtualBufferCacheProvider(),
-                SynchronousSchedulerProvider.INSTANCE, MERGE_POLICY_FACTORY, MERGE_POLICY_PROPERTIES, DURABLE,
-                bloomFilterKeyFields, LSMTreeOperatorTestHelper.DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, true,
-                btreefields, NoOpCompressorDecompressorFactory.INSTANCE);
+                NoOpIOOperationCallbackFactory.INSTANCE, NoOpPageWriteCallbackFactory.INSTANCE, pageManagerFactory,
+                getVirtualBufferCacheProvider(), SynchronousSchedulerProvider.INSTANCE, MERGE_POLICY_FACTORY,
+                MERGE_POLICY_PROPERTIES, DURABLE, bloomFilterKeyFields,
+                LSMTreeOperatorTestHelper.DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, true, btreefields,
+                NoOpCompressorDecompressorFactory.INSTANCE);
     }
 }

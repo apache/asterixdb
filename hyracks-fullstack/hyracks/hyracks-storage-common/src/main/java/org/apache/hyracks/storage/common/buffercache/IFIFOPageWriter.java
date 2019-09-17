@@ -17,5 +17,5 @@ package org.apache.hyracks.storage.common.buffercache;
 
 @FunctionalInterface
 public interface IFIFOPageWriter {
-    void write(ICachedPage page, BufferCache bufferCache);
+    void write(ICachedPage page);
 }

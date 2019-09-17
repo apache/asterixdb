@@ -39,10 +39,12 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFacto
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpPageWriteCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.SynchronousSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.impls.ThreadCountingTracker;
 import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
@@ -73,6 +75,7 @@ public class LSMInvertedIndexTestHarness {
     protected ILSMMergePolicy mergePolicy;
     protected ILSMOperationTracker opTracker;
     protected ILSMIOOperationCallbackFactory ioOpCallbackFactory;
+    protected ILSMPageWriteCallbackFactory pageWriteCallbackFactory;
 
     protected final Random rnd = new Random();
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
@@ -96,6 +99,7 @@ public class LSMInvertedIndexTestHarness {
         this.mergePolicy = new NoMergePolicy();
         this.opTracker = new ThreadCountingTracker();
         this.ioOpCallbackFactory = NoOpIOOperationCallbackFactory.INSTANCE;
+        this.pageWriteCallbackFactory = NoOpPageWriteCallbackFactory.INSTANCE;
         this.numMutableComponents = AccessMethodTestsConfig.LSM_INVINDEX_NUM_MUTABLE_COMPONENTS;
     }
 
@@ -215,6 +219,10 @@ public class LSMInvertedIndexTestHarness {
 
     public ILSMIOOperationCallbackFactory getIOOperationCallbackFactory() {
         return ioOpCallbackFactory;
+    }
+
+    public ILSMPageWriteCallbackFactory getPageWriteCallbackFactory() {
+        return pageWriteCallbackFactory;
     }
 
     public IMetadataPageManagerFactory getMetadataPageManagerFactory() {

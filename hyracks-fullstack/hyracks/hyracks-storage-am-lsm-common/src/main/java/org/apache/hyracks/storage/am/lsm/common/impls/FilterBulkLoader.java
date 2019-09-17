@@ -95,4 +95,9 @@ public class FilterBulkLoader implements IChainedComponentBulkLoader {
     public Throwable getFailure() {
         return null;
     }
+
+    @Override
+    public void force() throws HyracksDataException {
+        // no op
+    }
 }

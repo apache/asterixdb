@@ -43,6 +43,7 @@ import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.HaltOnFailureCallback;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
@@ -96,9 +97,8 @@ public class BufferCacheTest {
             long dpid = BufferedFileHandle.getDiskPageId(fileId, i);
             ICachedPage page = bufferCache.confiscatePage(dpid);
             page.getBuffer().putInt(0, i);
-            bufferCache.createFIFOQueue().put(page, HaltOnFailureCallback.INSTANCE);
+            bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, HaltOnFailureCallback.INSTANCE).write(page);
         }
-        bufferCache.finishQueue();
         bufferCache.closeFile(fileId);
         ExecutorService executor = Executors.newFixedThreadPool(bufferCacheNumPages);
         MutableObject<Thread>[] readers = new MutableObject[bufferCacheNumPages];

@@ -90,4 +90,10 @@ public class IndexWithBuddyBulkLoader implements IChainedComponentBulkLoader {
         }
         return null;
     }
+
+    @Override
+    public void force() throws HyracksDataException {
+        bulkLoader.force();
+        buddyBTreeBulkLoader.force();
+    }
 }

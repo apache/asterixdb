@@ -75,7 +75,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     private final IFileMapManager fileMapManager;
     private final CleanerThread cleanerThread;
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
-    private final AsyncFIFOPageQueueManager fifoWriter;
     private final BlockingQueue<BufferCacheHeaderHelper> headerPageCache;
 
     private IIOReplicationManager ioReplicationManager;
@@ -114,7 +113,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         executor.execute(cleanerThread);
         closed = false;
 
-        fifoWriter = new AsyncFIFOPageQueueManager(this);
         if (DEBUG) {
             confiscatedPages = new ArrayList<>();
             confiscatedPagesOwner = new HashMap<>();
@@ -716,7 +714,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     @Override
     public void close() {
         closed = true;
-        fifoWriter.destroyQueue();
         try {
             synchronized (cleanerThread.threadLock) {
                 cleanerThread.shutdownStart = true;
@@ -1302,7 +1299,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                         Thread.currentThread().interrupt();
                     }
                 }
-                finishQueue();
                 if (cycleCount > MAX_PIN_ATTEMPT_CYCLES) {
                     cycleCount = 0; // suppress warning below
                     throw new HyracksDataException("Unable to find free page in buffer cache after "
@@ -1378,13 +1374,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     }
 
     @Override
-    public IFIFOPageQueue createFIFOQueue() {
-        return fifoWriter.createQueue(FIFOLocalWriter.INSTANCE);
-    }
-
-    @Override
-    public void finishQueue() throws HyracksDataException {
-        fifoWriter.finishQueue();
+    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback) {
+        return new FIFOLocalWriter(this, callback, failureCallback);
     }
 
     @Override

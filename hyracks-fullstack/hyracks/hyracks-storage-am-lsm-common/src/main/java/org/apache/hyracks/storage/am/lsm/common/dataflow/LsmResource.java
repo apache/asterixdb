@@ -31,7 +31,9 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFacto
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpPageWriteCallbackFactory;
 import org.apache.hyracks.storage.common.IResource;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.LocalResource;
@@ -58,6 +60,7 @@ public abstract class LsmResource implements IResource {
     protected final int[] filterFields;
     protected final ILSMOperationTrackerFactory opTrackerProvider;
     protected final ILSMIOOperationCallbackFactory ioOpCallbackFactory;
+    protected final ILSMPageWriteCallbackFactory pageWriteCallbackFactory;
     protected final IMetadataPageManagerFactory metadataPageManagerFactory;
     protected final IVirtualBufferCacheProvider vbcProvider;
     protected final ILSMIOOperationSchedulerProvider ioSchedulerProvider;
@@ -69,6 +72,7 @@ public abstract class LsmResource implements IResource {
             IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
             ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             IMetadataPageManagerFactory metadataPageManagerFactory, IVirtualBufferCacheProvider vbcProvider,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, boolean durable) {
@@ -81,6 +85,7 @@ public abstract class LsmResource implements IResource {
         this.filterFields = filterFields;
         this.opTrackerProvider = opTrackerProvider;
         this.ioOpCallbackFactory = ioOpCallbackFactory;
+        this.pageWriteCallbackFactory = pageWriteCallbackFactory;
         this.metadataPageManagerFactory = metadataPageManagerFactory;
         this.vbcProvider = vbcProvider;
         this.ioSchedulerProvider = ioSchedulerProvider;
@@ -131,6 +136,14 @@ public abstract class LsmResource implements IResource {
         filterFields = OBJECT_MAPPER.convertValue(json.get("filterFields"), int[].class);
         opTrackerProvider = (ILSMOperationTrackerFactory) registry.deserialize(json.get("opTrackerProvider"));
         ioOpCallbackFactory = (ILSMIOOperationCallbackFactory) registry.deserialize(json.get("ioOpCallbackFactory"));
+        if (json.has("pageWriteCallbackFactory")) {
+            // for backward-compatibility
+            pageWriteCallbackFactory =
+                    (ILSMPageWriteCallbackFactory) registry.deserialize(json.get("pageWriteCallbackFactory"));
+        } else {
+            // treat legacy datasets as no op
+            pageWriteCallbackFactory = NoOpPageWriteCallbackFactory.INSTANCE;
+        }
 
         metadataPageManagerFactory =
                 (IMetadataPageManagerFactory) registry.deserialize(json.get("metadataPageManagerFactory"));
@@ -184,6 +197,7 @@ public abstract class LsmResource implements IResource {
         json.putPOJO("filterFields", filterFields);
         json.set("opTrackerProvider", opTrackerProvider.toJson(registry));
         json.set("ioOpCallbackFactory", ioOpCallbackFactory.toJson(registry));
+        json.set("pageWriteCallbackFactory", pageWriteCallbackFactory.toJson(registry));
         json.set("metadataPageManagerFactory", metadataPageManagerFactory.toJson(registry));
         if (vbcProvider != null) {
             json.set("vbcProvider", vbcProvider.toJson(registry));

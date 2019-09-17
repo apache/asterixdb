@@ -50,6 +50,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFacto
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
@@ -75,6 +76,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
         double bloomFilterFalsePositiveRate = mdProvider.getStorageProperties().getBloomFilterFalsePositiveRate();
         ILSMOperationTrackerFactory opTrackerFactory = dataset.getIndexOperationTrackerFactory(index);
         ILSMIOOperationCallbackFactory ioOpCallbackFactory = dataset.getIoOperationCallbackFactory(index);
+        ILSMPageWriteCallbackFactory pageWriteCallbackFactory = dataset.getPageWriteCallbackFactory();
         IStorageManager storageManager = storageComponentProvider.getStorageManager();
         IMetadataPageManagerFactory metadataPageManagerFactory =
                 storageComponentProvider.getMetadataPageManagerFactory();
@@ -85,13 +87,13 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                 return index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))
                         ? new ExternalBTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories,
                                 filterTypeTraits, filterCmpFactories, filterFields, opTrackerFactory,
-                                ioOpCallbackFactory, metadataPageManagerFactory, ioSchedulerProvider,
-                                mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
+                                ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
+                                ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
                                 bloomFilterFalsePositiveRate, false, btreeFields)
                         : new ExternalBTreeWithBuddyLocalResourceFactory(storageManager, typeTraits, cmpFactories,
                                 filterTypeTraits, filterCmpFactories, filterFields, opTrackerFactory,
-                                ioOpCallbackFactory, metadataPageManagerFactory, ioSchedulerProvider,
-                                mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
+                                ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
+                                ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
                                 bloomFilterFalsePositiveRate, false, btreeFields);
             case INTERNAL:
                 AsterixVirtualBufferCacheProvider vbcProvider =
@@ -107,9 +109,9 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
 
                 return new LSMBTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,
                         filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory,
-                        metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, mergePolicyFactory,
-                        mergePolicyProperties, true, bloomFilterFields, bloomFilterFalsePositiveRate,
-                        index.isPrimaryIndex(), btreeFields, compDecompFactory);
+                        pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
+                        mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
+                        bloomFilterFalsePositiveRate, index.isPrimaryIndex(), btreeFields, compDecompFactory);
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_DATASET_TYPE,
                         dataset.getDatasetType().toString());

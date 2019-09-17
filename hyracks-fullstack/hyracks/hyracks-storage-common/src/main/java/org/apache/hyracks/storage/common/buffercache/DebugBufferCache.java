@@ -194,13 +194,8 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public IFIFOPageQueue createFIFOQueue() {
-        return bufferCache.createFIFOQueue();
-    }
-
-    @Override
-    public void finishQueue() throws HyracksDataException {
-        bufferCache.finishQueue();
+    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback) {
+        return bufferCache.createFIFOWriter(callback, failureCallback);
     }
 
     @Override

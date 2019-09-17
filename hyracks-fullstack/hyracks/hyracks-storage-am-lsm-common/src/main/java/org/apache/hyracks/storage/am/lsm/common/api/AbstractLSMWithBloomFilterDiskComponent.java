@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.ChainedLSMDiskComponentBul
 import org.apache.hyracks.storage.am.lsm.common.impls.IChainedComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 
 public abstract class AbstractLSMWithBloomFilterDiskComponent extends AbstractLSMDiskComponent {
@@ -77,21 +78,22 @@ public abstract class AbstractLSMWithBloomFilterDiskComponent extends AbstractLS
         getBloomFilter().purge();
     }
 
-    public IChainedComponentBulkLoader createBloomFilterBulkLoader(long numElementsHint) throws HyracksDataException {
+    public IChainedComponentBulkLoader createBloomFilterBulkLoader(long numElementsHint, IPageWriteCallback callback)
+            throws HyracksDataException {
         BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(
                 BloomCalculations.maxBucketsPerElement(numElementsHint), getLsmIndex().bloomFilterFalsePositiveRate());
         return new BloomFilterBulkLoader(getBloomFilter().createBuilder(numElementsHint, bloomFilterSpec.getNumHashes(),
-                bloomFilterSpec.getNumBucketsPerElements()));
+                bloomFilterSpec.getNumBucketsPerElements(), callback));
     }
 
     @Override
     public ChainedLSMDiskComponentBulkLoader createBulkLoader(ILSMIOOperation operation, float fillFactor,
             boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
-            boolean cleanupEmptyComponent) throws HyracksDataException {
+            boolean cleanupEmptyComponent, IPageWriteCallback callback) throws HyracksDataException {
         ChainedLSMDiskComponentBulkLoader chainedBulkLoader = super.createBulkLoader(operation, fillFactor, verifyInput,
-                numElementsHint, checkIfEmptyIndex, withFilter, cleanupEmptyComponent);
+                numElementsHint, checkIfEmptyIndex, withFilter, cleanupEmptyComponent, callback);
         if (numElementsHint > 0) {
-            chainedBulkLoader.addBulkLoader(createBloomFilterBulkLoader(numElementsHint));
+            chainedBulkLoader.addBulkLoader(createBloomFilterBulkLoader(numElementsHint, callback));
         }
         return chainedBulkLoader;
     }

@@ -18,24 +18,23 @@
  */
 package org.apache.hyracks.storage.common.buffercache;
 
-public class QueueInfo implements IQueueInfo {
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.common.IIndexBulkLoader;
 
-    private final boolean poison;
-    private final boolean waiters;
+public interface IPageWriteCallback {
+    /**
+     * Initialization
+     *
+     * @param bulkLoader
+     */
+    void initialize(IIndexBulkLoader bulkLoader);
 
-    public QueueInfo(boolean waiters, boolean poison) {
-        this.waiters = waiters;
-        this.poison = poison;
-    }
+    /**
+     * Notify that a page has been written
+     *
+     * @param page
+     * @throws HyracksDataException
+     */
+    void afterWrite(ICachedPage page) throws HyracksDataException;
 
-    @Override
-    public boolean hasWaiters() {
-        return waiters;
-
-    }
-
-    @Override
-    public boolean isPoison() {
-        return poison;
-    }
 }

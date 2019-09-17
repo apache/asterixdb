@@ -32,28 +32,25 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.ICachedPageInternal;
-import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
+import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
+import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.PageWriteFailureCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
 
 /**
  * Look Aside File writer
- * This class is called by two threads simultaneously:
- * - a thread to prepare the LAF page (bulk-loader)
- * - and a writer thread to write the LAF page (buffer cache writer thread)
- * Hence, it is not thread safe to have more than one thread to prepare or to write LAF pages.
  */
 @NotThreadSafe
 class LAFWriter implements ICompressedPageWriter {
     private final CompressedFileManager compressedFileManager;
     private final IBufferCache bufferCache;
-    private final IFIFOPageQueue queue;
+    private final IFIFOPageWriter pageWriter;
     private final Map<Integer, LAFFrame> cachedFrames;
     private final Queue<LAFFrame> recycledFrames;
     private final int fileId;
     private final int maxNumOfEntries;
-    private final PageWriteFailureCallback callBack;
+    private final PageWriteFailureCallback failureCallback;
     private LAFFrame currentFrame;
     private int currentPageId;
     private int maxPageId;
@@ -64,12 +61,11 @@ class LAFWriter implements ICompressedPageWriter {
     public LAFWriter(CompressedFileManager compressedFileManager, IBufferCache bufferCache) {
         this.compressedFileManager = compressedFileManager;
         this.bufferCache = bufferCache;
-        queue = bufferCache.createFIFOQueue();
         cachedFrames = new HashMap<>();
         recycledFrames = new ArrayDeque<>();
         this.fileId = compressedFileManager.getFileId();
-        callBack = new PageWriteFailureCallback();
-
+        failureCallback = new PageWriteFailureCallback();
+        pageWriter = bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, failureCallback);
         maxNumOfEntries = bufferCache.getPageSize() / ENTRY_LENGTH;
         lastOffset = 0;
         totalNumOfPages = 0;
@@ -79,7 +75,7 @@ class LAFWriter implements ICompressedPageWriter {
 
     /* ************************************
      * ICompressedPageWriter methods
-     * Called by non-BufferCache thread (Bulk-loader)
+     * Called by non-BufferCache (Bulk-loader)
      * ************************************
      */
 
@@ -88,15 +84,13 @@ class LAFWriter implements ICompressedPageWriter {
         final ICachedPageInternal internalPage = (ICachedPageInternal) cPage;
         final int entryPageId = getLAFEntryPageId(BufferedFileHandle.getPageId(internalPage.getDiskPageId()));
 
-        synchronized (cachedFrames) {
-            if (!cachedFrames.containsKey(entryPageId)) {
-                try {
-                    //Writing new page(s). Confiscate the page(s) from the buffer cache.
-                    prepareFrames(entryPageId, internalPage);
-                } catch (HyracksDataException e) {
-                    abort();
-                    throw e;
-                }
+        if (!cachedFrames.containsKey(entryPageId)) {
+            try {
+                //Writing new page(s). Confiscate the page(s) from the buffer cache.
+                prepareFrames(entryPageId, internalPage);
+            } catch (HyracksDataException e) {
+                abort();
+                throw e;
             }
         }
     }
@@ -131,43 +125,38 @@ class LAFWriter implements ICompressedPageWriter {
 
     @Override
     public void endWriting() throws HyracksDataException {
-        if (callBack.hasFailed()) {
+        if (failureCallback.hasFailed()) {
             //if write failed, return confiscated pages
             abort();
-            throw HyracksDataException.create(callBack.getFailure());
+            throw HyracksDataException.create(failureCallback.getFailure());
         }
-        synchronized (cachedFrames) {
-            final LAFFrame lastPage = cachedFrames.get(maxPageId);
-            if (lastPage != null && !lastPage.isFull()) {
-                /*
-                 * The last page may or may not be filled. In case it is not filled (i.e do not have
-                 * the max number of entries). Then, write an indicator after the last entry.
-                 * If it has been written (i.e lastPage = null), that means it has been filled.
-                 */
-                lastPage.setEOF();
-            }
-            for (Entry<Integer, LAFFrame> entry : cachedFrames.entrySet()) {
-                queue.put(entry.getValue().cPage, callBack);
-            }
-            bufferCache.finishQueue();
+        final LAFFrame lastPage = cachedFrames.get(maxPageId);
+        if (lastPage != null && !lastPage.isFull()) {
+            /*
+             * The last page may or may not be filled. In case it is not filled (i.e do not have
+             * the max number of entries). Then, write an indicator after the last entry.
+             * If it has been written (i.e lastPage = null), that means it has been filled.
+             */
+            lastPage.setEOF();
+        }
+        for (Entry<Integer, LAFFrame> entry : cachedFrames.entrySet()) {
+            pageWriter.write(entry.getValue().cPage);
+        }
 
-            //Signal the compressedFileManager to change its state
-            compressedFileManager.endWriting(totalNumOfPages);
-        }
+        //Signal the compressedFileManager to change its state
+        compressedFileManager.endWriting(totalNumOfPages);
     }
 
     @Override
     public void abort() {
-        synchronized (cachedFrames) {
-            for (Entry<Integer, LAFFrame> frame : cachedFrames.entrySet()) {
-                bufferCache.returnPage(frame.getValue().cPage);
-            }
+        for (Entry<Integer, LAFFrame> frame : cachedFrames.entrySet()) {
+            bufferCache.returnPage(frame.getValue().cPage);
         }
     }
 
     /* ************************************
      * Local methods:
-     * Called by BufferCache writer thread
+     * Called by BufferCache writer
      * ************************************
      */
 
@@ -191,14 +180,12 @@ class LAFWriter implements ICompressedPageWriter {
         }
 
         final LAFFrame frame;
-        synchronized (cachedFrames) {
-            //Check if the frame is cached
-            frame = cachedFrames.get(pageId);
-            if (frame == null) {
-                //Trying to write unprepared page
-                abort();
-                throw new IllegalStateException("Unprepared compressed-write for page ID: " + pageId);
-            }
+        //Check if the frame is cached
+        frame = cachedFrames.get(pageId);
+        if (frame == null) {
+            //Trying to write unprepared page
+            abort();
+            throw new IllegalStateException("Unprepared compressed-write for page ID: " + pageId);
         }
 
         currentFrame = frame;
@@ -210,13 +197,11 @@ class LAFWriter implements ICompressedPageWriter {
         if (currentFrame.isFull()) {
             //The LAF page is filled. We do not need to keep it.
             //Write it to the file and remove it from the cachedFrames map
-            queue.put(currentFrame.cPage, callBack);
-            synchronized (cachedFrames) {
-                //Recycle the frame
-                final LAFFrame frame = cachedFrames.remove(currentPageId);
-                frame.setCachedPage(null);
-                recycledFrames.add(frame);
-            }
+            pageWriter.write(currentFrame.cPage);
+            //Recycle the frame
+            final LAFFrame frame = cachedFrames.remove(currentPageId);
+            frame.setCachedPage(null);
+            recycledFrames.add(frame);
             currentFrame = null;
             currentPageId = -1;
         }

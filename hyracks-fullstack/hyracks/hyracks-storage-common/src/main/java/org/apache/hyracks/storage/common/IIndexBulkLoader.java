@@ -52,4 +52,10 @@ public interface IIndexBulkLoader extends IPageWriteFailureCallback {
      *             If the operation was completed through end() invocation before abort is called
      */
     void abort() throws HyracksDataException;
+
+    /**
+     * Force all pages written by this bulkloader to disk.
+     * @throws HyracksDataException
+     */
+    void force() throws HyracksDataException;
 }

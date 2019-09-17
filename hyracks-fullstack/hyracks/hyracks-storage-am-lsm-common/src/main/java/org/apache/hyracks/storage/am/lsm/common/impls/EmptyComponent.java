@@ -31,6 +31,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 
 public class EmptyComponent implements ILSMDiskComponent {
@@ -136,20 +137,9 @@ public class EmptyComponent implements ILSMDiskComponent {
     }
 
     @Override
-    public IChainedComponentBulkLoader createFilterBulkLoader() throws HyracksDataException {
-        return null;
-    }
-
-    @Override
-    public IChainedComponentBulkLoader createIndexBulkLoader(float fillFactor, boolean verifyInput,
-            long numElementsHint, boolean checkIfEmptyIndex) throws HyracksDataException {
-        return null;
-    }
-
-    @Override
     public ChainedLSMDiskComponentBulkLoader createBulkLoader(ILSMIOOperation operation, float fillFactor,
             boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
-            boolean cleanupEmptyComponent) throws HyracksDataException {
+            boolean cleanupEmptyComponent, IPageWriteCallback callback) throws HyracksDataException {
         return null;
     }
 

@@ -46,7 +46,7 @@ public interface IPageManager {
      *
      * @throws HyracksDataException
      */
-    void close(IPageWriteFailureCallback callback) throws HyracksDataException;
+    void close(IPageWriteFailureCallback failureCallback) throws HyracksDataException;
 
     /**
      * Create a metadata frame to be used for reading and writing to metadata pages

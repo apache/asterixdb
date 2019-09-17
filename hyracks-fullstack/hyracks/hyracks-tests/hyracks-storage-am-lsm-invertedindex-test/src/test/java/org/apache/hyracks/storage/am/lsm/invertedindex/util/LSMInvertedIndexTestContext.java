@@ -185,9 +185,10 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
                         harness.getDiskBufferCache(), harness.getOnDiskDir(), harness.getBoomFilterFalsePositiveRate(),
                         harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
-                        harness.getIOOperationCallbackFactory(), invertedIndexFields, filterTypeTraits,
-                        filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                        invertedIndexFieldsForNonBulkLoadOps, true, harness.getMetadataPageManagerFactory(),
+                        harness.getIOOperationCallbackFactory(), harness.getPageWriteCallbackFactory(),
+                        invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
+                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true,
+                        harness.getMetadataPageManagerFactory(),
                         new Tracer(LSMInvertedIndexTestContext.class.getSimpleName(),
                                 ITraceCategoryRegistry.CATEGORIES_ALL, new TraceCategoryRegistry()));
                 break;
@@ -198,9 +199,10 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getOnDiskDir(),
                         harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                         harness.getOperationTracker(), harness.getIOScheduler(),
-                        harness.getIOOperationCallbackFactory(), invertedIndexFields, filterTypeTraits,
-                        filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                        invertedIndexFieldsForNonBulkLoadOps, true, harness.getMetadataPageManagerFactory(),
+                        harness.getIOOperationCallbackFactory(), harness.getPageWriteCallbackFactory(),
+                        invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
+                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true,
+                        harness.getMetadataPageManagerFactory(),
                         new Tracer(LSMInvertedIndexTestContext.class.getSimpleName(),
                                 ITraceCategoryRegistry.CATEGORIES_ALL, new TraceCategoryRegistry()));
                 break;

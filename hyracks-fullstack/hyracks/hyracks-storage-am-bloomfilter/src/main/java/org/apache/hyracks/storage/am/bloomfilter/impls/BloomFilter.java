@@ -28,7 +28,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
-import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
+import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.PageWriteFailureCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
@@ -271,9 +272,9 @@ public class BloomFilter {
         bufferCache.deleteFile(file);
     }
 
-    public IIndexBulkLoader createBuilder(long numElements, int numHashes, int numBitsPerElement)
-            throws HyracksDataException {
-        return new BloomFilterBuilder(numElements, numHashes, numBitsPerElement);
+    public IIndexBulkLoader createBuilder(long numElements, int numHashes, int numBitsPerElement,
+            IPageWriteCallback callback) throws HyracksDataException {
+        return new BloomFilterBuilder(numElements, numHashes, numBitsPerElement, callback);
     }
 
     public class BloomFilterBuilder extends PageWriteFailureCallback implements IIndexBulkLoader {
@@ -283,17 +284,17 @@ public class BloomFilter {
         private final long numBits;
         private final int numPages;
         private long actualNumElements;
-        private final IFIFOPageQueue queue;
+        private final IFIFOPageWriter pageWriter;
         private final ICachedPage[] pages;
         private ICachedPage metaDataPage = null;
 
         @SuppressWarnings("squid:S1181") // Catch Throwable Must return all confiscated pages
-        public BloomFilterBuilder(long estimatedNumElemenets, int numHashes, int numBitsPerElement)
-                throws HyracksDataException {
+        public BloomFilterBuilder(long estimatedNumElemenets, int numHashes, int numBitsPerElement,
+                IPageWriteCallback callback) throws HyracksDataException {
             if (!isActivated) {
                 throw HyracksDataException.create(ErrorCode.CANNOT_CREATE_BLOOM_FILTER_BUILDER_FOR_INACTIVE_FILTER);
             }
-            queue = bufferCache.createFIFOQueue();
+            pageWriter = bufferCache.createFIFOWriter(callback, this);
             this.estimatedNumElements = estimatedNumElemenets;
             this.numHashes = numHashes;
             numBits = this.estimatedNumElements * numBitsPerElement;
@@ -377,11 +378,10 @@ public class BloomFilter {
         @Override
         public void end() throws HyracksDataException {
             allocateAndInitMetaDataPage();
-            queue.put(metaDataPage, this);
+            pageWriter.write(metaDataPage);
             for (ICachedPage p : pages) {
-                queue.put(p, this);
+                pageWriter.write(p);
             }
-            bufferCache.finishQueue();
             if (hasFailed()) {
                 throw HyracksDataException.create(getFailure());
             }
@@ -402,6 +402,11 @@ public class BloomFilter {
             if (metaDataPage != null) {
                 bufferCache.returnPage(metaDataPage, false);
             }
+        }
+
+        @Override
+        public void force() throws HyracksDataException {
+            bufferCache.force(fileId, false);
         }
     }
 }

@@ -44,7 +44,8 @@ import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.HaltOnFailureCallback;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
-import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
+import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
+import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.apache.hyracks.storage.common.compression.SnappyCompressorDecompressorFactory;
 import org.apache.hyracks.storage.common.compression.file.CompressedFileReference;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
@@ -99,15 +100,15 @@ public class BufferCacheWithCompressionTest {
         final int numPages = 16;
         bufferCache.openFile(fileId);
         final ICompressedPageWriter writer = bufferCache.getCompressedPageWriter(fileId);
-        final IFIFOPageQueue queue = bufferCache.createFIFOQueue();
+        final IFIFOPageWriter pageWriter =
+                bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, HaltOnFailureCallback.INSTANCE);
         for (int i = 0; i < numPages; i++) {
             long dpid = BufferedFileHandle.getDiskPageId(fileId, i);
             ICachedPage page = bufferCache.confiscatePage(dpid);
             writer.prepareWrite(page);
             page.getBuffer().putInt(0, i);
-            queue.put(page, HaltOnFailureCallback.INSTANCE);
+            pageWriter.write(page);
         }
-        bufferCache.finishQueue();
         writer.endWriting();
         bufferCache.closeFile(fileId);
         ExecutorService executor = Executors.newFixedThreadPool(bufferCacheNumPages);
@@ -205,9 +206,9 @@ public class BufferCacheWithCompressionTest {
         for (int i = 0; i < num; i++) {
             page.getBuffer().putInt(i * 4, i);
         }
-        final IFIFOPageQueue queue = bufferCache.createFIFOQueue();
-        queue.put(page, HaltOnFailureCallback.INSTANCE);
-        bufferCache.finishQueue();
+        final IFIFOPageWriter pageWriter =
+                bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, HaltOnFailureCallback.INSTANCE);
+        pageWriter.write(page);
         writer.endWriting();
         bufferCache.closeFile(fileId);
 
@@ -259,9 +260,9 @@ public class BufferCacheWithCompressionTest {
                 values.add(x);
             }
             pageContents.put(fileId, values);
-            final IFIFOPageQueue queue = bufferCache.createFIFOQueue();
-            queue.put(page, HaltOnFailureCallback.INSTANCE);
-            bufferCache.finishQueue();
+            final IFIFOPageWriter pageWriter =
+                    bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, HaltOnFailureCallback.INSTANCE);
+            pageWriter.write(page);
             writer.endWriting();
         }
 

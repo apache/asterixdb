@@ -74,8 +74,8 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerFactory.INSTANCE.getOperationTracker(null, null), harness.getIOScheduler(),
-                harness.getIOOperationCallbackFactory(), true, null, null, null, null, true,
-                harness.getMetadataPageManagerFactory(), true, ITracer.NONE,
+                harness.getIOOperationCallbackFactory(), harness.getPageWriteCallbackFactory(), true, null, null, null,
+                null, true, harness.getMetadataPageManagerFactory(), true, ITracer.NONE,
                 NoOpCompressorDecompressorFactory.INSTANCE);
     }
 

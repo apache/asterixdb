@@ -64,6 +64,7 @@ import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class BTree extends AbstractTreeIndex {
@@ -992,16 +993,17 @@ public class BTree extends AbstractTreeIndex {
 
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex) throws HyracksDataException {
-        return new BTreeBulkLoader(fillFactor, verifyInput);
+            boolean checkIfEmptyIndex, IPageWriteCallback callback) throws HyracksDataException {
+        return new BTreeBulkLoader(fillFactor, verifyInput, callback);
     }
 
     public class BTreeBulkLoader extends AbstractTreeIndex.AbstractTreeIndexBulkLoader {
         protected final ISplitKey splitKey;
         protected final boolean verifyInput;
 
-        public BTreeBulkLoader(float fillFactor, boolean verifyInput) throws HyracksDataException {
-            super(fillFactor);
+        public BTreeBulkLoader(float fillFactor, boolean verifyInput, IPageWriteCallback callback)
+                throws HyracksDataException {
+            super(fillFactor, callback);
             this.verifyInput = verifyInput;
             splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
             splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
@@ -1043,9 +1045,9 @@ public class BTree extends AbstractTreeIndex {
 
                         ((IBTreeLeafFrame) leafFrame).setNextLeaf(leafFrontier.pageId);
 
-                        putInQueue(leafFrontier.page);
+                        write(leafFrontier.page);
                         for (ICachedPage c : pagesToWrite) {
-                            putInQueue(c);
+                            write(c);
                         }
                         pagesToWrite.clear();
                         splitKey.setRightPage(leafFrontier.pageId);
@@ -1152,7 +1154,7 @@ public class BTree extends AbstractTreeIndex {
                 ICachedPage lastLeaf = nodeFrontiers.get(level).page;
                 int lastLeafPage = nodeFrontiers.get(level).pageId;
                 lastLeaf.setDiskPageId(BufferedFileHandle.getDiskPageId(getFileId(), nodeFrontiers.get(level).pageId));
-                putInQueue(lastLeaf);
+                write(lastLeaf);
                 nodeFrontiers.get(level).page = null;
                 persistFrontiers(level + 1, lastLeafPage);
                 return;
@@ -1167,7 +1169,7 @@ public class BTree extends AbstractTreeIndex {
             ((IBTreeInteriorFrame) interiorFrame).setRightmostChildPageId(rightPage);
             int finalPageId = freePageManager.takePage(metaFrame);
             frontier.page.setDiskPageId(BufferedFileHandle.getDiskPageId(getFileId(), finalPageId));
-            putInQueue(frontier.page);
+            write(frontier.page);
             frontier.pageId = finalPageId;
             persistFrontiers(level + 1, finalPageId);
         }

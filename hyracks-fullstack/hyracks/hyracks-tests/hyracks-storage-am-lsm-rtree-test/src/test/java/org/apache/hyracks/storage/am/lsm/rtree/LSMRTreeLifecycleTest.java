@@ -70,7 +70,7 @@ public class LSMRTreeLifecycleTest extends AbstractIndexLifecycleTest {
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, valueProviderFactories, numKeys,
                 RTreePolicyType.RTREE, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
-                harness.getMetadataPageManagerFactory());
+                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory());
         index = testCtx.getIndex();
     }
 

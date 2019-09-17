@@ -229,14 +229,9 @@ public interface IBufferCache {
     void close() throws HyracksDataException;
 
     /**
-     * @return an instance of {@link IFIFOPageQueue} that can be used to write pages to the file
+     * @return an instance of {@link IFIFOPageWriter} that can be used to write pages to the file
      */
-    IFIFOPageQueue createFIFOQueue();
-
-    /**
-     * Flush the queued pages written through buffer cache FIFO queues
-     */
-    void finishQueue() throws HyracksDataException;
+    IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback);
 
     // TODO: remove the replication out of the buffer cache interface
     /**

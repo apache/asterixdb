@@ -45,6 +45,7 @@ import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -174,7 +175,7 @@ public class DiskBTreeSearchCursorTest extends BTreeSearchCursorTest {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(FIELD_COUNT);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        IIndexBulkLoader bulkloader = btree.createBulkLoader(1, true, 0, true);
+        IIndexBulkLoader bulkloader = btree.createBulkLoader(1, true, 0, true, NoOpPageWriteCallback.INSTANCE);
         // insert keys into btree
         for (int i = 0; i < keys.size(); i++) {
             TupleUtils.createIntegerTuple(tupleBuilder, tuple, keys.get(i), i);
