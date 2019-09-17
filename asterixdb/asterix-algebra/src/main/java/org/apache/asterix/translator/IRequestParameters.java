@@ -60,4 +60,9 @@ public interface IRequestParameters extends ICommonRequestParameters {
      *   {@code 0} if all categories are allowed
      */
     int getStatementCategoryRestrictionMask();
+
+    /**
+     * @return the maximum number of warnings to be reported.
+     */
+    long getMaxWarnings();
 }

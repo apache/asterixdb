@@ -71,6 +71,7 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected PhysicalOptimizationConfig physicalOptimizationConfig = new PhysicalOptimizationConfig();
     protected AlgebricksAbsolutePartitionConstraint clusterLocations;
     protected IWarningCollector warningCollector;
+    protected long maxWarnings;
 
     public abstract ICompilerFactory create();
 
@@ -250,5 +251,13 @@ public abstract class AbstractCompilerFactoryBuilder {
 
     public IWarningCollector getWarningCollector() {
         return warningCollector;
+    }
+
+    public void setMaxWarnings(long maxWarnings) {
+        this.maxWarnings = maxWarnings;
+    }
+
+    public long getMaxWarnings() {
+        return maxWarnings;
     }
 }

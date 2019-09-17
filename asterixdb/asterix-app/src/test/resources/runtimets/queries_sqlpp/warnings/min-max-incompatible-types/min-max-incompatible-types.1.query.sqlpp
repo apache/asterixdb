@@ -17,6 +17,7 @@
  * under the License.
  */
 
-SET `compiler.runtime.warnings` "10";
+// requesttype=application/json
+// param max-warnings:json=10
 
 SELECT VALUE ARRAY_MIN([1, '2']);

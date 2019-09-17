@@ -17,6 +17,7 @@
  * under the License.
  */
 
-SET `compiler.runtime.warnings` "1000";
+// requesttype=application/json
+// param max-warnings:json=20
 
 SELECT VALUE MIN(ds.InternalDetails) FROM Metadata.`Dataset` ds;

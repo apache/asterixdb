@@ -105,8 +105,8 @@
   <test-case FilePath="objects" check-warnings="true">
     <compilation-unit name="no_fieldname_constr">
       <output-dir compare="Text">no_fieldname_constr</output-dir>
-      <expected-warn>Encountered a cross product join (in line 25, at column 22)</expected-warn>
-      <expected-warn>Duplicate field name "a" (in line 29, at column 24)</expected-warn>
+      <expected-warn>Encountered a cross product join (in line 27, at column 22)</expected-warn>
+      <expected-warn>Duplicate field name "a" (in line 31, at column 24)</expected-warn>
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">
@@ -189,7 +189,7 @@
   <test-case FilePath="objects" check-warnings="true">
     <compilation-unit name="closed-closed-fieldname-conflict_issue173">
       <output-dir compare="Text">closed-closed-fieldname-conflict_issue173</output-dir>
-      <expected-warn>Duplicate field name "name" (in line 28, at column 16)</expected-warn>
+      <expected-warn>Duplicate field name "name" (in line 30, at column 16)</expected-warn>
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects" check-warnings="true">
@@ -217,15 +217,15 @@
   <test-case FilePath="objects" check-warnings="true">
     <compilation-unit name="object_duplicate_fields">
       <output-dir compare="Text">object_duplicate_fields</output-dir>
-      <expected-warn>Duplicate field name "name" (in line 25, at column 1)</expected-warn>
-      <expected-warn>Duplicate field name "Name" (in line 27, at column 1)</expected-warn>
-      <expected-warn>Duplicate field name "name" (in line 29, at column 1)</expected-warn>
-      <expected-warn>Duplicate field name "name" (in line 20, at column 30)</expected-warn>
-      <expected-warn>Duplicate field name "id" (in line 20, at column 56)</expected-warn>
-      <expected-warn>Duplicate field name "f1" (in line 20, at column 70)</expected-warn>
-      <expected-warn>Duplicate field name "id" (in line 20, at column 36)</expected-warn>
-      <expected-warn>Duplicate field name "f1" (in line 20, at column 83)</expected-warn>
-      <expected-warn>Duplicate field name "fname1" (in line 23, at column 45)</expected-warn>
+      <expected-warn>Duplicate field name "name" (in line 27, at column 1)</expected-warn>
+      <expected-warn>Duplicate field name "Name" (in line 29, at column 1)</expected-warn>
+      <expected-warn>Duplicate field name "name" (in line 31, at column 1)</expected-warn>
+      <expected-warn>Duplicate field name "name" (in line 22, at column 30)</expected-warn>
+      <expected-warn>Duplicate field name "id" (in line 22, at column 56)</expected-warn>
+      <expected-warn>Duplicate field name "f1" (in line 22, at column 70)</expected-warn>
+      <expected-warn>Duplicate field name "id" (in line 22, at column 36)</expected-warn>
+      <expected-warn>Duplicate field name "f1" (in line 22, at column 83)</expected-warn>
+      <expected-warn>Duplicate field name "fname1" (in line 25, at column 45)</expected-warn>
     </compilation-unit>
   </test-case>
 </test-group>

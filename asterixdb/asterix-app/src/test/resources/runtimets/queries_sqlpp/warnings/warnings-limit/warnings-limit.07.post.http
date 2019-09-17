@@ -16,20 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 /*
- * Description  : Warning when a GROUP BY hint is not recognized
- * Expected     : SUCCESS (with ASX1107 warning)
+ * Description     : test limiting number of reported runtime warnings
+ * Expected Result : success with 11 warnings count & 0 reported warnings
  */
-// requesttype=application/json
-// param max-warnings:json=10
-
-with ds as (
-  from range(1, 4) r
-  select r % 2 as x, r as y
-)
-
-from ds
-/*+ unknown_hint_groupby */ group by x
-select x, sum(y) as y
-order by x
+-- requesttype=application/json
+/query/service
+--body={"statement":"USE test; SELECT {\"a\":1 , \"a\":2} as F1, isbitset(6, ds.f) AS F2 FROM ds order by ds.id;", "max-warnings":-3}

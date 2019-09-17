@@ -18,7 +18,7 @@
  */
 /*
  * Description     : test limiting number of reported runtime warnings (DEFAULT)
- * Expected Result : success with 10 runtime warnings count
+ * Expected Result : success with 11 warnings count
  */
 -- requesttype=application/json
 /query/service

@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class QueryServiceRequestParameters {
 
+    public static final long DEFAULT_MAX_WARNINGS = 0L;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private String host;
@@ -53,6 +54,7 @@ public class QueryServiceRequestParameters {
     private boolean profile;
     private boolean signature;
     private boolean multiStatement;
+    private long maxWarnings = DEFAULT_MAX_WARNINGS;
 
     public String getHost() {
         return host;
@@ -222,6 +224,14 @@ public class QueryServiceRequestParameters {
         this.multiStatement = multiStatement;
     }
 
+    public void setMaxWarnings(long maxWarnings) {
+        this.maxWarnings = maxWarnings;
+    }
+
+    public long getMaxWarnings() {
+        return maxWarnings;
+    }
+
     public ObjectNode asJson() {
         ObjectNode object = OBJECT_MAPPER.createObjectNode();
         object.put("host", host);
@@ -244,6 +254,7 @@ public class QueryServiceRequestParameters {
         object.put("multiStatement", multiStatement);
         object.put("parseOnly", parseOnly);
         object.put("readOnly", readOnly);
+        object.put("maxWarnings", maxWarnings);
         if (statementParams != null) {
             for (Map.Entry<String, JsonNode> statementParam : statementParams.entrySet()) {
                 object.set('$' + statementParam.getKey(), statementParam.getValue());

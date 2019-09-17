@@ -21,6 +21,8 @@
  * Description  : Warning if cross product
  * Expected     : SUCCESS (with HYR10007 warning)
  */
+// requesttype=application/json
+// param max-warnings:json=10
 
 with ds as (
   from range(1, 4) r

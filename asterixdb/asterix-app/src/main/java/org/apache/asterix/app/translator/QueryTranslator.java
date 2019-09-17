@@ -75,6 +75,7 @@ import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.exceptions.WarningCollector;
+import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
@@ -289,6 +290,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final Stats stats = requestParameters.getStats();
         final ResultMetadata outMetadata = requestParameters.getOutMetadata();
         final Map<String, IAObject> stmtParams = requestParameters.getStatementParameters();
+        final long requestMaxWarnings = requestParameters.getMaxWarnings();
+        config.put(APIFramework.REQUEST_MAX_WARNINGS, String.valueOf(requestMaxWarnings));
+        warningCollector.setMaxWarnings(requestMaxWarnings);
         try {
             for (Statement stmt : statements) {
                 if (sessionConfig.is(SessionConfig.FORMAT_HTML)) {
@@ -2487,6 +2491,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             try {
                 final JobSpecification jobSpec =
                         rewriteCompileQuery(hcc, metadataProvider, query, null, stmtParams, stmtRewriter);
+                // update stats with count of compile-time warnings. needs to be adapted for multi-statement.
+                stats.updateTotalWarningsCount(warningCollector.getTotalWarningsCount());
                 afterCompile();
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
@@ -2556,8 +2562,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             stats.setJobProfile(resultMetadata.getJobProfile());
         }
         stats.setDiskIoCount(resultMetadata.getDiskIoCount());
-        stats.setTotalWarningsCount(resultMetadata.getTotalWarningsCount());
-        warningCollector.warn(resultMetadata.getWarnings());
+        stats.updateTotalWarningsCount(resultMetadata.getTotalWarningsCount());
+        WarningUtil.mergeWarnings(resultMetadata.getWarnings(), warningCollector);
     }
 
     private void asyncCreateAndRunJob(IHyracksClientConnection hcc, IStatementCompiler compiler, IMetadataLocker locker,
@@ -2932,8 +2938,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     @Override
-    public void getWarnings(Collection<? super Warning> outWarnings) {
-        warningCollector.getWarnings(outWarnings);
+    public void getWarnings(Collection<? super Warning> outWarnings, long maxWarnings) {
+        warningCollector.getWarnings(outWarnings, maxWarnings);
     }
 
     /**

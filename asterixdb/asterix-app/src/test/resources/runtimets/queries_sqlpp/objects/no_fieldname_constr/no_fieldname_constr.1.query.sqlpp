@@ -21,6 +21,8 @@
  * Description  : Testing object constructor without field names
  * Expected Res : Success
  */
+// requesttype=application/json
+// param max-warnings:json=10
 
  from range(1, 2) x, range(3, 4) y
  select value { x, y }

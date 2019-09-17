@@ -136,8 +136,10 @@ public interface IStatementExecutor {
             return totalWarningsCount;
         }
 
-        public void setTotalWarningsCount(long totalWarningsCount) {
-            this.totalWarningsCount = totalWarningsCount;
+        public void updateTotalWarningsCount(long delta) {
+            if (delta <= Long.MAX_VALUE - totalWarningsCount) {
+                totalWarningsCount += delta;
+            }
         }
 
         public void setJobProfile(ObjectNode profile) {
@@ -241,7 +243,7 @@ public interface IStatementExecutor {
     IResponsePrinter getResponsePrinter();
 
     /**
-     * Gets the warnings generated during compiling and executing a request
+     * Gets the warnings generated during compiling and executing a request up to the max number argument.
      */
-    void getWarnings(Collection<? super Warning> outWarnings);
+    void getWarnings(Collection<? super Warning> outWarnings, long maxWarnings);
 }

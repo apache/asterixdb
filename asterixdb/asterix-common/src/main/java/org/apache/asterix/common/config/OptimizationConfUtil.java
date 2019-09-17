@@ -59,7 +59,6 @@ public class OptimizationConfUtil {
         int textSearchFrameLimit = getTextSearchNumFrames(compilerProperties, querySpecificConfig, sourceLoc);
         int sortNumSamples = getSortSamples(compilerProperties, querySpecificConfig, sourceLoc);
         boolean fullParallelSort = getSortParallel(compilerProperties, querySpecificConfig);
-        long runtimeWarningsLimit = getRuntimeWarningsLimit(compilerProperties, querySpecificConfig, sourceLoc);
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -70,7 +69,6 @@ public class OptimizationConfUtil {
         physOptConf.setMaxFramesForTextSearch(textSearchFrameLimit);
         physOptConf.setSortParallel(fullParallelSort);
         physOptConf.setSortSamples(sortNumSamples);
-        physOptConf.setRuntimeWarningsLimit(runtimeWarningsLimit);
 
         return physOptConf;
     }
@@ -129,19 +127,6 @@ public class OptimizationConfUtil {
         } catch (IllegalArgumentException e) {
             throw AsterixException.create(ErrorCode.COMPILATION_BAD_QUERY_PARAMETER_VALUE, sourceLoc,
                     CompilerProperties.COMPILER_SORT_SAMPLES_KEY, 1, "samples");
-        }
-    }
-
-    @SuppressWarnings("squid:S1166") // Either log or rethrow this exception
-    private static long getRuntimeWarningsLimit(CompilerProperties compilerProperties,
-            Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AsterixException {
-        String valueInQuery = (String) querySpecificConfig.get(CompilerProperties.COMPILER_RUNTIME_WARNINGS_KEY);
-        try {
-            return valueInQuery == null ? compilerProperties.getNumRuntimeWarnings()
-                    : OptionTypes.UNSIGNED_LONG.parse(valueInQuery);
-        } catch (IllegalArgumentException e) {
-            throw AsterixException.create(ErrorCode.COMPILATION_BAD_QUERY_PARAMETER_VALUE, sourceLoc,
-                    CompilerProperties.COMPILER_RUNTIME_WARNINGS_KEY, 0, "warnings");
         }
     }
 }

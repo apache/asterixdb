@@ -29,8 +29,15 @@ public interface IParser {
     List<Statement> parse() throws CompilationException;
 
     /**
-     * Gets the warnings generated during parsing
+     * Gets the warnings generated during parsing up to the max number argument.
      */
-    default void getWarnings(Collection<? super Warning> outWarnings) {
+    default void getWarnings(Collection<? super Warning> outWarnings, long maxWarnings) {
+    }
+
+    /**
+     * Gets the count of all warnings generated during parsing.
+     */
+    default long getTotalWarningsCount() {
+        return 0L;
     }
 }

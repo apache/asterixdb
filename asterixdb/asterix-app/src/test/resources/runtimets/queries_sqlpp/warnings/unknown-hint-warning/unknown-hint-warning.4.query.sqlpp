@@ -21,6 +21,8 @@
  * Description  : Warning when a function call hint is not recognized
  * Expected     : SUCCESS (with ASX1107 warning)
  */
+// requesttype=application/json
+// param max-warnings:json=10
 
 from range(1, 4) r
 where /*+ unknown_hint_funcall */ tostring(r) < "2"

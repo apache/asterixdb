@@ -22,6 +22,8 @@
  *              : but not applicable for GROUP BY
  * Expected     : SUCCESS (with ASX1107 warning)
  */
+// requesttype=application/json
+// param max-warnings:json=10
 
 with ds as (
   from range(1, 4) r

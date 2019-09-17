@@ -105,7 +105,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final long jobStartTime;
 
-    private final long runtimeWarningsLimit;
+    private final long maxWarnings;
 
     public Joblet(NodeControllerService nodeController, DeploymentId deploymentId, JobId jobId,
             INCServiceContext serviceCtx, ActivityClusterGraph acg,
@@ -136,7 +136,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         IGlobalJobDataFactory gjdf = acg.getGlobalJobDataFactory();
         globalJobData = gjdf != null ? gjdf.createGlobalJobData(this) : null;
         this.jobStartTime = jobStartTime;
-        this.runtimeWarningsLimit = acg.getRuntimeWarningsLimit();
+        this.maxWarnings = acg.getMaxWarnings();
     }
 
     @Override
@@ -267,8 +267,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return frameManager.getInitialFrameSize();
     }
 
-    public final long getRuntimeWarningsLimit() {
-        return runtimeWarningsLimit;
+    public final long getMaxWarnings() {
+        return maxWarnings;
     }
 
     public IIOManager getIOManager() {

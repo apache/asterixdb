@@ -354,8 +354,13 @@ class SQLPPParser extends ScopeChecker implements IParser {
     }
 
     @Override
-    public void getWarnings(Collection<? super Warning> outWarnings) {
-        warningCollector.getWarnings(outWarnings);
+    public void getWarnings(Collection<? super Warning> outWarnings, long maxWarnings) {
+        warningCollector.getWarnings(outWarnings, maxWarnings);
+    }
+
+    @Override
+    public long getTotalWarningsCount() {
+        return warningCollector.getTotalWarningsCount();
     }
 
     protected String getMessage(ParseException pe) {

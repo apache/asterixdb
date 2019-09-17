@@ -46,7 +46,7 @@ public class ActivityClusterGraph implements Serializable {
 
     private int frameSize;
 
-    private long runtimeWarningsLimit;
+    private long maxWarnings;
 
     private int maxReattempts;
 
@@ -106,12 +106,12 @@ public class ActivityClusterGraph implements Serializable {
         return frameSize;
     }
 
-    public void setRuntimeWarningsLimit(long runtimeWarningsLimit) {
-        this.runtimeWarningsLimit = runtimeWarningsLimit;
+    public void setMaxWarnings(long maxWarnings) {
+        this.maxWarnings = maxWarnings;
     }
 
-    public long getRuntimeWarningsLimit() {
-        return runtimeWarningsLimit;
+    public long getMaxWarnings() {
+        return maxWarnings;
     }
 
     public void setMaxReattempts(int maxReattempts) {

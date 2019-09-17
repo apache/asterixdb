@@ -20,18 +20,26 @@
 package org.apache.asterix.common.exceptions;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.util.annotations.NotThreadSafe;
 
+/**
+ * A warning collector that collects warnings up to {@link Long#MAX_VALUE} by default.
+ */
+@NotThreadSafe
 public final class WarningCollector implements IWarningCollector {
 
-    private final Set<Warning> warnings = new HashSet<>();
+    private final Set<Warning> warnings = new LinkedHashSet<>();
+    private long maxWarnings = Long.MAX_VALUE;
+    private long totalWarningsCount;
 
     public void clear() {
         warnings.clear();
+        totalWarningsCount = 0;
     }
 
     @Override
@@ -41,28 +49,30 @@ public final class WarningCollector implements IWarningCollector {
 
     @Override
     public boolean shouldWarn() {
-        // this warning collector currently always collects warnings
-        return true;
+        return totalWarningsCount < Long.MAX_VALUE && totalWarningsCount++ < maxWarnings;
     }
 
     @Override
     public long getTotalWarningsCount() {
-        return warnings.size();
+        return totalWarningsCount;
     }
 
-    public void warn(Collection<Warning> warnings) {
-        this.warnings.addAll(warnings);
-    }
-
-    public void getWarnings(Collection<? super Warning> outWarnings) {
-        outWarnings.addAll(warnings);
+    public void getWarnings(Collection<? super Warning> outWarnings, long maxWarnings) {
+        long i = 0;
+        for (Warning warning : warnings) {
+            if (i >= maxWarnings) {
+                break;
+            }
+            outWarnings.add(warning);
+            i++;
+        }
     }
 
     public void getWarnings(IWarningCollector outWarningCollector) {
-        for (Warning warning : warnings) {
-            if (outWarningCollector.shouldWarn()) {
-                outWarningCollector.warn(warning);
-            }
-        }
+        WarningUtil.mergeWarnings(warnings, outWarningCollector);
+    }
+
+    public void setMaxWarnings(long maxWarnings) {
+        this.maxWarnings = maxWarnings;
     }
 }

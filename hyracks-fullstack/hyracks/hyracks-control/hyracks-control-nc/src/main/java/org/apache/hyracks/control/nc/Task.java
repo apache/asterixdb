@@ -150,7 +150,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         this.inputChannelsFromConnectors = inputChannelsFromConnectors;
         statsCollector = new StatsCollector();
         warnings = ConcurrentHashMap.newKeySet();
-        warningCollector = createWarningCollector(joblet.getRuntimeWarningsLimit());
+        warningCollector = createWarningCollector(joblet.getMaxWarnings());
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -531,7 +531,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         return warnings;
     }
 
-    private IWarningCollector createWarningCollector(long warningsLimit) {
+    private IWarningCollector createWarningCollector(long maxWarnings) {
         return new IWarningCollector() {
 
             private final AtomicLong warningsCount = new AtomicLong();
@@ -544,7 +544,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             @Override
             public boolean shouldWarn() {
                 long currentCount = warningsCount.getAndUpdate(count -> count < Long.MAX_VALUE ? count + 1 : count);
-                return currentCount < warningsLimit;
+                return currentCount < maxWarnings;
             }
 
             @Override

@@ -70,7 +70,7 @@ public class JobGenContext {
     private AlgebricksAbsolutePartitionConstraint clusterLocations;
     private int varCounter;
     private final ITypingContext typingContext;
-    private final long runtimeWarningsLimit;
+    private final long maxWarnings;
 
     public JobGenContext(IOperatorSchema outerFlowSchema, IMetadataProvider<?, ?> metadataProvider, Object appContext,
             ISerializerDeserializerProvider serializerDeserializerProvider,
@@ -85,7 +85,7 @@ public class JobGenContext {
             ITypingContext typingContext, IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IPartialAggregationTypeComputer partialAggregationTypeComputer,
             IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider, int frameSize,
-            AlgebricksAbsolutePartitionConstraint clusterLocations, long runtimeWarningsLimit) {
+            AlgebricksAbsolutePartitionConstraint clusterLocations, long maxWarnings) {
         this.outerFlowSchema = outerFlowSchema;
         this.metadataProvider = metadataProvider;
         this.appContext = appContext;
@@ -108,7 +108,7 @@ public class JobGenContext {
         this.predEvaluatorFactoryProvider = predEvaluatorFactoryProvider;
         this.frameSize = frameSize;
         this.varCounter = 0;
-        this.runtimeWarningsLimit = runtimeWarningsLimit;
+        this.maxWarnings = maxWarnings;
     }
 
     public IOperatorSchema getOuterFlowSchema() {
@@ -209,7 +209,7 @@ public class JobGenContext {
         return typingContext.getOutputTypeEnvironment(op);
     }
 
-    public long getRuntimeWarningsLimit() {
-        return runtimeWarningsLimit;
+    public long getMaxWarnings() {
+        return maxWarnings;
     }
 }

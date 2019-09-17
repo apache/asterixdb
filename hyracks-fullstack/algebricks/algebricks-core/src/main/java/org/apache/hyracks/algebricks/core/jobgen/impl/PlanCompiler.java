@@ -60,7 +60,7 @@ public class PlanCompiler {
     private JobSpecification compilePlanImpl(ILogicalPlan plan, boolean isNestedPlan, IOperatorSchema outerPlanSchema,
             IJobletEventListenerFactory jobEventListenerFactory) throws AlgebricksException {
         JobSpecification spec = new JobSpecification(context.getFrameSize());
-        spec.setRuntimeWarningsLimit(context.getRuntimeWarningsLimit());
+        spec.setMaxWarnings(context.getMaxWarnings());
         if (jobEventListenerFactory != null) {
             spec.setJobletEventListenerFactory(jobEventListenerFactory);
         }

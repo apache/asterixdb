@@ -19,7 +19,9 @@
 package org.apache.asterix.common.exceptions;
 
 import java.io.Serializable;
+import java.util.Collection;
 
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.util.ErrorMessageUtil;
@@ -32,5 +34,14 @@ public class WarningUtil {
     public static Warning forAsterix(SourceLocation srcLocation, int code, Serializable... params) {
         return Warning.of(ErrorCode.ASTERIX, srcLocation, code, ErrorMessageUtil.formatMessage(ErrorCode.ASTERIX, code,
                 ErrorCode.getErrorMessage(code), srcLocation, params));
+    }
+
+    /** Merges the warnings from the collection argument into the warning collector argument. */
+    public static void mergeWarnings(Collection<Warning> warnings, IWarningCollector warningsCollector) {
+        for (Warning warning : warnings) {
+            if (warningsCollector.shouldWarn()) {
+                warningsCollector.warn(warning);
+            }
+        }
     }
 }

@@ -20,6 +20,8 @@
 /*
  * Description    : Warn and ignore duplicates if there's a duplicate field name in the closed-object-constructor() function
  */
+// requesttype=application/json
+// param max-warnings:json=10
 
 set `import-private-functions` `true`;
 

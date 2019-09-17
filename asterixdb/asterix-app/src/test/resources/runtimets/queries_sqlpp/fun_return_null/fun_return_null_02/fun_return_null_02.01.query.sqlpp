@@ -20,9 +20,10 @@
 /*
  *  Description: tests reporting type mismatch for string functions
  */
+// requesttype=application/json
+// param max-warnings:json=1000
 
 set `import-private-functions` "true";
-set `compiler.runtime.warnings` "10000";
 
 FROM[
 `LIKE`("aa", int8("8")),

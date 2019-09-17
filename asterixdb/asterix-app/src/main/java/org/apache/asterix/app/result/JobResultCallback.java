@@ -40,8 +40,6 @@ import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 public class JobResultCallback implements IJobResultCallback {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -70,16 +68,6 @@ public class JobResultCallback implements IJobResultCallback {
         aggregateJobStats(jobId, metadata);
     }
 
-    ObjectNode getProfile(JobId jobId) {
-        IJobManager jobManager =
-                ((ClusterControllerService) appCtx.getServiceContext().getControllerService()).getJobManager();
-        final JobRun run = jobManager.get(jobId);
-        if (run != null) {
-            return run.getJobProfile().toJSON();
-        }
-        return null;
-    }
-
     private void aggregateJobStats(JobId jobId, ResultMetadata metadata) {
         long processedObjects = 0;
         long diskIoCount = 0;
@@ -91,7 +79,7 @@ public class JobResultCallback implements IJobResultCallback {
         if (run != null) {
             final JobProfile jobProfile = run.getJobProfile();
             final Collection<JobletProfile> jobletProfiles = jobProfile.getJobletProfiles().values();
-            final long runtimeWarningsLimit = run.getJobSpecification().getRuntimeWarningsLimit();
+            final long maxWarnings = run.getJobSpecification().getMaxWarnings();
             for (JobletProfile jp : jobletProfiles) {
                 final Collection<TaskProfile> jobletTasksProfile = jp.getTaskProfiles().values();
                 for (TaskProfile tp : jobletTasksProfile) {
@@ -99,9 +87,9 @@ public class JobResultCallback implements IJobResultCallback {
                     diskIoCount += tp.getStatsCollector().getAggregatedStats().getDiskIoCounter().get();
                     aggregateTotalWarningsCount += tp.getTotalWarningsCount();
                     Set<Warning> taskWarnings = tp.getWarnings();
-                    if (AggregateWarnings.size() < runtimeWarningsLimit && !taskWarnings.isEmpty()) {
+                    if (AggregateWarnings.size() < maxWarnings && !taskWarnings.isEmpty()) {
                         Iterator<Warning> taskWarningsIt = taskWarnings.iterator();
-                        while (AggregateWarnings.size() < runtimeWarningsLimit && taskWarningsIt.hasNext()) {
+                        while (AggregateWarnings.size() < maxWarnings && taskWarningsIt.hasNext()) {
                             AggregateWarnings.add(taskWarningsIt.next());
                         }
                     }
@@ -112,9 +100,10 @@ public class JobResultCallback implements IJobResultCallback {
         metadata.setWarnings(AggregateWarnings);
         metadata.setDiskIoCount(diskIoCount);
         metadata.setTotalWarningsCount(aggregateTotalWarningsCount);
-        if (run.getFlags() != null && run.getFlags().contains(JobFlag.PROFILE_RUNTIME)) {
-            metadata.setJobProfile(getProfile(jobId));
+        if (run != null && run.getFlags() != null && run.getFlags().contains(JobFlag.PROFILE_RUNTIME)) {
+            metadata.setJobProfile(run.getJobProfile().toJSON());
+        } else {
+            metadata.setJobProfile(null);
         }
     }
-
 }

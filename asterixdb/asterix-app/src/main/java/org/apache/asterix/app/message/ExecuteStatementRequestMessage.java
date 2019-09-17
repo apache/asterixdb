@@ -24,10 +24,9 @@ import static org.apache.asterix.translator.IStatementExecutor.Stats.ProfileType
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.algebra.base.ILangExtension;
@@ -90,12 +89,13 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
     private final int statementCategoryRestrictionMask;
     private final boolean profile;
     private final IRequestReference requestReference;
+    private final long maxWarnings;
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
             String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
             String clientContextID, String handleUrl, Map<String, String> optionalParameters,
             Map<String, byte[]> statementParameters, boolean multiStatement, boolean profile,
-            int statementCategoryRestrictionMask, IRequestReference requestReference) {
+            int statementCategoryRestrictionMask, IRequestReference requestReference, long maxWarnings) {
         this.requestNodeId = requestNodeId;
         this.requestMessageId = requestMessageId;
         this.lang = lang;
@@ -110,6 +110,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         this.statementCategoryRestrictionMask = statementCategoryRestrictionMask;
         this.profile = profile;
         this.requestReference = requestReference;
+        this.maxWarnings = maxWarnings;
     }
 
     @Override
@@ -129,10 +130,11 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         IStatementExecutorFactory statementExecutorFactory = ccApp.getStatementExecutorFactory();
         ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
         try {
-            Set<Warning> warnings = new HashSet<>();
+            List<Warning> warnings = new ArrayList<>();
             IParser parser = compilationProvider.getParserFactory().createParser(statementsText);
             List<Statement> statements = parser.parse();
-            parser.getWarnings(warnings);
+            parser.getWarnings(warnings, maxWarnings);
+            long parserTotalWarningsCount = parser.getTotalWarningsCount();
             StringWriter outWriter = new StringWriter(256);
             PrintWriter outPrinter = new PrintWriter(outWriter);
             SessionOutput.ResultDecorator resultPrefix = ResultUtil.createPreResultDecorator();
@@ -150,9 +152,10 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
             final IRequestParameters requestParameters = new RequestParameters(requestReference, statementsText, null,
                     resultProperties, stats, outMetadata, clientContextID, optionalParameters, stmtParams,
-                    multiStatement, statementCategoryRestrictionMask);
+                    multiStatement, statementCategoryRestrictionMask, maxWarnings);
             translator.compileAndExecute(ccApp.getHcc(), requestParameters);
-            translator.getWarnings(warnings);
+            translator.getWarnings(warnings, maxWarnings - warnings.size());
+            stats.updateTotalWarningsCount(parserTotalWarningsCount);
             outPrinter.close();
             responseMsg.setResult(outWriter.toString());
             responseMsg.setMetadata(outMetadata);

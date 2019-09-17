@@ -24,7 +24,6 @@ import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.UNSIGNED_INTEGER;
-import static org.apache.hyracks.control.common.config.OptionTypes.UNSIGNED_LONG;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
@@ -74,8 +73,7 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_SORT_SAMPLES(
                 POSITIVE_INTEGER,
                 AlgebricksConfig.SORT_SAMPLES,
-                "The number of samples which parallel sorting should take from each partition"),
-        COMPILER_RUNTIME_WARNINGS(UNSIGNED_LONG, 0L, "The maximum number of runtime warnings to be reported");
+                "The number of samples which parallel sorting should take from each partition");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -129,8 +127,6 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final String COMPILER_SORT_SAMPLES_KEY = Option.COMPILER_SORT_SAMPLES.ini();
 
-    public static final String COMPILER_RUNTIME_WARNINGS_KEY = Option.COMPILER_RUNTIME_WARNINGS.ini();
-
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
 
     public CompilerProperties(PropertiesAccessor accessor) {
@@ -176,9 +172,5 @@ public class CompilerProperties extends AbstractProperties {
 
     public int getSortSamples() {
         return accessor.getInt(Option.COMPILER_SORT_SAMPLES);
-    }
-
-    public long getNumRuntimeWarnings() {
-        return accessor.getLong(Option.COMPILER_RUNTIME_WARNINGS);
     }
 }

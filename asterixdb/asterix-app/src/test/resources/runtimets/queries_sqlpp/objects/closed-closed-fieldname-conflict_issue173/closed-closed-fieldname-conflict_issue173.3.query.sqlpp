@@ -21,6 +21,8 @@
  * Expected Result: Success (ignoring duplicates) with a warning reporting that there is a duplicate field name "name"
  * Author: zheilbron
  */
+// requesttype=application/json
+// param max-warnings:json=10
 
 use test;
 

@@ -88,11 +88,11 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             }
             int stmtCategoryRestrictionMask = org.apache.asterix.app.translator.RequestParameters
                     .getStatementCategoryRestrictionMask(param.isReadOnly());
-            ExecuteStatementRequestMessage requestMsg =
-                    new ExecuteStatementRequestMessage(ncCtx.getNodeId(), responseFuture.getFutureId(), queryLanguage,
-                            statementsText, sessionOutput.config(), resultProperties.getNcToCcResultProperties(),
-                            param.getClientContextID(), handleUrl, optionalParameters, statementParameters,
-                            param.isMultiStatement(), param.isProfile(), stmtCategoryRestrictionMask, requestReference);
+            ExecuteStatementRequestMessage requestMsg = new ExecuteStatementRequestMessage(ncCtx.getNodeId(),
+                    responseFuture.getFutureId(), queryLanguage, statementsText, sessionOutput.config(),
+                    resultProperties.getNcToCcResultProperties(), param.getClientContextID(), handleUrl,
+                    optionalParameters, statementParameters, param.isMultiStatement(), param.isProfile(),
+                    stmtCategoryRestrictionMask, requestReference, param.getMaxWarnings());
             execution.start();
             ncMb.sendMessageToPrimaryCC(requestMsg);
             try {
@@ -122,6 +122,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                 throw new Exception(err.toString(), err);
             }
         }
+        updateStatsFromCC(stats, responseMsg);
         if (hasResult(responseMsg)) {
             responsePrinter.addResultPrinter(
                     new NcResultPrinter(appCtx, responseMsg, getResultSet(), delivery, sessionOutput, stats));
@@ -172,5 +173,13 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
 
     private static boolean hasResult(ExecuteStatementResponseMessage responseMsg) {
         return !responseMsg.getMetadata().getResultSets().isEmpty() || !responseMsg.getResult().isEmpty();
+    }
+
+    private static void updateStatsFromCC(IStatementExecutor.Stats stats, ExecuteStatementResponseMessage responseMsg) {
+        IStatementExecutor.Stats responseStats = responseMsg.getStats();
+        stats.setJobProfile(responseStats.getJobProfile());
+        stats.setProcessedObjects(responseStats.getProcessedObjects());
+        stats.setDiskIoCount(responseStats.getDiskIoCount());
+        stats.updateTotalWarningsCount(responseStats.getTotalWarningsCount());
     }
 }

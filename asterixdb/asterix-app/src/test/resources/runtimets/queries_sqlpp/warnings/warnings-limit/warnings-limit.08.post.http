@@ -18,8 +18,8 @@
  */
 /*
  * Description     : test limiting number of reported runtime warnings
- * Expected Result : success with 10 runtime warnings count
+ * Expected Result : success with 12 warnings count & 3 warnings reported
  */
 -- requesttype=application/json
 /query/service
---body={"statement":"USE test; SET `compiler.runtime.warnings` \"3\"; SELECT {\"a\":1, \"a\":2} as F1, isbitset(6, ds.f) AS F2 \/*+ hint*\/ FROM ds order by ds.id;"}
+--body={"statement":"USE test; SELECT {\"a\":1, \"a\":2} as F1, isbitset(6, ds.f) AS F2 \/*+ hint*\/ FROM ds order by ds.id;", "max-warnings":"3"}
