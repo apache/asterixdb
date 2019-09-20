@@ -314,7 +314,7 @@ public class MetadataTxnTest {
         // ensure flush completed successfully and the component was switched
         datasetInfo.waitForIO();
         Assert.assertNotEquals(mutableComponentBeforeFlush, index.getCurrentMemoryComponentIndex());
-        Assert.assertEquals(diskComponentsBeforeFlush + 1, index.getDiskComponents().size());
+        Assert.assertNotEquals(diskComponentsBeforeFlush, index.getDiskComponents().size());
     }
 
     private void addDataset(ICcApplicationContext appCtx, Dataset source, int datasetPostfix, boolean abort)

@@ -103,6 +103,7 @@ import org.apache.hyracks.storage.am.common.freepage.AppendOnlyLinkedMetadataPag
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeLocalResource;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyLocalResource;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeLocalResource;
+import org.apache.hyracks.storage.am.lsm.common.impls.ConcurrentMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
@@ -159,6 +160,7 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         // ILSMMergePolicyFactory
         registeredClasses.put("NoMergePolicyFactory", NoMergePolicyFactory.class);
         registeredClasses.put("PrefixMergePolicyFactory", PrefixMergePolicyFactory.class);
+        registeredClasses.put("ConcurrentMergePolicyFactory", ConcurrentMergePolicyFactory.class);
         registeredClasses.put("ConstantMergePolicyFactory", ConstantMergePolicyFactory.class);
         registeredClasses.put("CorrelatedPrefixMergePolicyFactory", CorrelatedPrefixMergePolicyFactory.class);
 

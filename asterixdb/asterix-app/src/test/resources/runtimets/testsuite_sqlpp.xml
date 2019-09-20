@@ -3680,6 +3680,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="using-concurrent-merge-policy">
+        <output-dir compare="Text">using-concurrent-merge-policy</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="using-correlated-prefix-merge-policy">
         <output-dir compare="Text">using-correlated-prefix-merge-policy</output-dir>
       </compilation-unit>

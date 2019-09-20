@@ -38,6 +38,11 @@ public class DatasetDeclParametersUtil {
     public static final String MERGE_POLICY_TOLERANCE_COUNT_PARAMETER_NAME = "max-tolerance-component-count";
     public static final String MERGE_POLICY_NUMBER_COMPONENTS_PARAMETER_NAME = "num-components";
 
+    public static final String MERGE_POLICY_SIZE_RATIO_NAME = "size-ratio";
+    public static final String MERGE_POLICY_MAX_COMPONENT_COUNT_NAME = "max-component-count";
+    public static final String MERGE_POLICY_MIN_MERGE_COMPONENT_COUNT_NAME = "min-merge-component-count";
+    public static final String MERGE_POLICY_MAX_MERGE_COMPONENT_COUNT_NAME = "max-merge-component-count";
+
     /* ***********************************************
      * Storage Block Compression Parameters
      * ***********************************************
@@ -75,8 +80,14 @@ public class DatasetDeclParametersUtil {
     private static ARecordType getMergePolicyType() {
         //merge-policy.parameters
         final String[] parameterNames = { MERGE_POLICY_MERGABLE_SIZE_PARAMETER_NAME,
-                MERGE_POLICY_TOLERANCE_COUNT_PARAMETER_NAME, MERGE_POLICY_NUMBER_COMPONENTS_PARAMETER_NAME };
+                MERGE_POLICY_TOLERANCE_COUNT_PARAMETER_NAME, MERGE_POLICY_NUMBER_COMPONENTS_PARAMETER_NAME,
+                MERGE_POLICY_SIZE_RATIO_NAME, MERGE_POLICY_MAX_COMPONENT_COUNT_NAME,
+                MERGE_POLICY_MIN_MERGE_COMPONENT_COUNT_NAME, MERGE_POLICY_MAX_MERGE_COMPONENT_COUNT_NAME };
         final IAType[] parametersTypes = { AUnionType.createUnknownableType(BuiltinType.AINT64),
+                AUnionType.createUnknownableType(BuiltinType.AINT64),
+                AUnionType.createUnknownableType(BuiltinType.AINT64),
+                AUnionType.createUnknownableType(BuiltinType.ADOUBLE),
+                AUnionType.createUnknownableType(BuiltinType.AINT64),
                 AUnionType.createUnknownableType(BuiltinType.AINT64),
                 AUnionType.createUnknownableType(BuiltinType.AINT64) };
         final ARecordType parameters =
