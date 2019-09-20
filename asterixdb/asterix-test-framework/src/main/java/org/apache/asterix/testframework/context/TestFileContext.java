@@ -31,6 +31,11 @@ public class TestFileContext implements Comparable<TestFileContext> {
         this.file = file;
     }
 
+    public TestFileContext(File file, String type) {
+        this.file = file;
+        this.type = type;
+    }
+
     public File getFile() {
         return file;
     }

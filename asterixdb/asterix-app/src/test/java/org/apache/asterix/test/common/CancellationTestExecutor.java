@@ -58,8 +58,9 @@ public class CancellationTestExecutor extends TestExecutor {
                 ? upsertParam(params, "client_context_id", ParameterTypeEnum.STRING, clientContextId) : params;
         Callable<InputStream> query = () -> {
             try {
-                return CancellationTestExecutor.super.executeQueryService(str, fmt, uri, newParams, jsonEncoded,
-                        responseCharset, responseCodeValidator, true);
+                return CancellationTestExecutor.super.executeQueryService(str, fmt, uri,
+                        constructQueryParameters(str, fmt, newParams), jsonEncoded, responseCharset,
+                        responseCodeValidator, true);
             } catch (Exception e) {
                 e.printStackTrace();
                 throw e;
