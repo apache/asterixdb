@@ -89,13 +89,12 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
     private final int statementCategoryRestrictionMask;
     private final boolean profile;
     private final IRequestReference requestReference;
-    private final long maxWarnings;
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
             String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
             String clientContextID, String handleUrl, Map<String, String> optionalParameters,
             Map<String, byte[]> statementParameters, boolean multiStatement, boolean profile,
-            int statementCategoryRestrictionMask, IRequestReference requestReference, long maxWarnings) {
+            int statementCategoryRestrictionMask, IRequestReference requestReference) {
         this.requestNodeId = requestNodeId;
         this.requestMessageId = requestMessageId;
         this.lang = lang;
@@ -110,7 +109,6 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         this.statementCategoryRestrictionMask = statementCategoryRestrictionMask;
         this.profile = profile;
         this.requestReference = requestReference;
-        this.maxWarnings = maxWarnings;
     }
 
     @Override
@@ -133,6 +131,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             List<Warning> warnings = new ArrayList<>();
             IParser parser = compilationProvider.getParserFactory().createParser(statementsText);
             List<Statement> statements = parser.parse();
+            long maxWarnings = sessionConfig.getMaxWarnings();
             parser.getWarnings(warnings, maxWarnings);
             long parserTotalWarningsCount = parser.getTotalWarningsCount();
             StringWriter outWriter = new StringWriter(256);
@@ -152,7 +151,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
             final IRequestParameters requestParameters = new RequestParameters(requestReference, statementsText, null,
                     resultProperties, stats, outMetadata, clientContextID, optionalParameters, stmtParams,
-                    multiStatement, statementCategoryRestrictionMask, maxWarnings);
+                    multiStatement, statementCategoryRestrictionMask);
             translator.compileAndExecute(ccApp.getHcc(), requestParameters);
             translator.getWarnings(warnings, maxWarnings - warnings.size());
             stats.updateTotalWarningsCount(parserTotalWarningsCount);

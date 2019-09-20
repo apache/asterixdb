@@ -135,6 +135,7 @@ public class SessionConfig implements Serializable {
     private final boolean executeQuery;
     private final boolean generateJobSpec;
     private final boolean optimize;
+    private long maxWarnings;
 
     // Flags.
     private final Map<String, Boolean> flags;
@@ -195,6 +196,17 @@ public class SessionConfig implements Serializable {
 
     public void setPlanFormat(PlanFormat planFormat) {
         this.planFormat = planFormat;
+    }
+
+    /**
+     * Retrieve the maximum number of warnings to be reported.
+     */
+    public long getMaxWarnings() {
+        return maxWarnings;
+    }
+
+    public void setMaxWarnings(long maxWarnings) {
+        this.maxWarnings = maxWarnings;
     }
 
     /**

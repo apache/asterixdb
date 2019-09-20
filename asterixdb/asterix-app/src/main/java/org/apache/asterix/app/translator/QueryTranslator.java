@@ -290,9 +290,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final Stats stats = requestParameters.getStats();
         final ResultMetadata outMetadata = requestParameters.getOutMetadata();
         final Map<String, IAObject> stmtParams = requestParameters.getStatementParameters();
-        final long requestMaxWarnings = requestParameters.getMaxWarnings();
-        config.put(APIFramework.REQUEST_MAX_WARNINGS, String.valueOf(requestMaxWarnings));
-        warningCollector.setMaxWarnings(requestMaxWarnings);
+        warningCollector.setMaxWarnings(sessionConfig.getMaxWarnings());
         try {
             for (Statement stmt : statements) {
                 if (sessionConfig.is(SessionConfig.FORMAT_HTML)) {

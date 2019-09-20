@@ -625,7 +625,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
         IParser parser = compilationProvider.getParserFactory().createParser(statementsText);
         List<Statement> statements = parser.parse();
-        long maxWarnings = param.getMaxWarnings();
+        long maxWarnings = sessionOutput.config().getMaxWarnings();
         parser.getWarnings(warnings, maxWarnings);
         long parserTotalWarningsCount = parser.getTotalWarningsCount();
         MetadataManager.INSTANCE.init();
@@ -638,7 +638,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 .getStatementCategoryRestrictionMask(param.isReadOnly());
         IRequestParameters requestParameters = new org.apache.asterix.app.translator.RequestParameters(requestReference,
                 statementsText, getResultSet(), resultProperties, stats, null, param.getClientContextID(),
-                optionalParameters, stmtParams, param.isMultiStatement(), stmtCategoryRestriction, maxWarnings);
+                optionalParameters, stmtParams, param.isMultiStatement(), stmtCategoryRestriction);
         translator.compileAndExecute(getHyracksClientConnection(), requestParameters);
         execution.end();
         translator.getWarnings(warnings, maxWarnings - warnings.size());
@@ -698,6 +698,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 SessionConfig.PlanFormat.JSON, LOGGER);
         sessionConfig.setFmt(format);
         sessionConfig.setPlanFormat(planFormat);
+        sessionConfig.setMaxWarnings(param.getMaxWarnings());
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
         sessionConfig.set(SessionConfig.OOB_EXPR_TREE, param.isExpressionTree());
         sessionConfig.set(SessionConfig.OOB_REWRITTEN_EXPR_TREE, param.isRewrittenExpressionTree());

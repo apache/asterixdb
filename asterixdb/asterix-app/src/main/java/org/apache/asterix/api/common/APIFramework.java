@@ -33,7 +33,6 @@ import java.util.Set;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
-import org.apache.asterix.api.http.server.QueryServiceRequestParameters;
 import org.apache.asterix.app.result.fields.ExplainOnlyResultsPrinter;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.api.IResponsePrinter;
@@ -130,7 +129,6 @@ public class APIFramework {
     private static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writerWithDefaultPrettyPrinter();
 
     public static final String PREFIX_INTERNAL_PARAMETERS = "_internal";
-    public static final String REQUEST_MAX_WARNINGS = PREFIX_INTERNAL_PARAMETERS + "_max_warn";
 
     // A white list of supported configurable parameters.
     private static final Set<String> CONFIGURABLE_PARAMETER_NAMES =
@@ -246,9 +244,7 @@ public class APIFramework {
         builder.setMissableTypeComputer(MissableTypeComputer.INSTANCE);
         builder.setConflictingTypeResolver(ConflictingTypeResolver.INSTANCE);
         builder.setWarningCollector(warningCollector);
-        String maxWarnings = metadataProvider.getProperty(APIFramework.REQUEST_MAX_WARNINGS);
-        builder.setMaxWarnings(
-                maxWarnings != null ? Long.parseLong(maxWarnings) : QueryServiceRequestParameters.DEFAULT_MAX_WARNINGS);
+        builder.setMaxWarnings(conf.getMaxWarnings());
 
         int parallelism = getParallelism((String) querySpecificConfig.get(CompilerProperties.COMPILER_PARALLELISM_KEY),
                 compilerProperties.getParallelism());

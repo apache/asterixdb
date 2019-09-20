@@ -23,7 +23,6 @@ import java.io.DataOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.api.http.server.QueryServiceRequestParameters;
 import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.external.parser.JSONDataParser;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -57,21 +56,19 @@ public class RequestParameters implements IRequestParameters {
     private final boolean multiStatement;
     private final int statementCategoryRestrictionMask;
     private final String statement;
-    private final long maxWarnings;
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
             ResultProperties resultProperties, Stats stats, IStatementExecutor.ResultMetadata outMetadata,
             String clientContextId, Map<String, String> optionalParameters, Map<String, IAObject> statementParameters,
             boolean multiStatement) {
         this(requestReference, statement, resultSet, resultProperties, stats, outMetadata, clientContextId,
-                optionalParameters, statementParameters, multiStatement, NO_CATEGORY_RESTRICTION_MASK,
-                QueryServiceRequestParameters.DEFAULT_MAX_WARNINGS);
+                optionalParameters, statementParameters, multiStatement, NO_CATEGORY_RESTRICTION_MASK);
     }
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
             ResultProperties resultProperties, Stats stats, IStatementExecutor.ResultMetadata outMetadata,
             String clientContextId, Map<String, String> optionalParameters, Map<String, IAObject> statementParameters,
-            boolean multiStatement, int statementCategoryRestrictionMask, long maxWarnings) {
+            boolean multiStatement, int statementCategoryRestrictionMask) {
         this.requestReference = requestReference;
         this.statement = statement;
         this.resultSet = resultSet;
@@ -83,7 +80,6 @@ public class RequestParameters implements IRequestParameters {
         this.statementParameters = statementParameters;
         this.multiStatement = multiStatement;
         this.statementCategoryRestrictionMask = statementCategoryRestrictionMask;
-        this.maxWarnings = maxWarnings;
     }
 
     @Override
@@ -124,11 +120,6 @@ public class RequestParameters implements IRequestParameters {
     @Override
     public int getStatementCategoryRestrictionMask() {
         return statementCategoryRestrictionMask;
-    }
-
-    @Override
-    public long getMaxWarnings() {
-        return maxWarnings;
     }
 
     @Override

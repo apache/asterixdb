@@ -88,11 +88,11 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             }
             int stmtCategoryRestrictionMask = org.apache.asterix.app.translator.RequestParameters
                     .getStatementCategoryRestrictionMask(param.isReadOnly());
-            ExecuteStatementRequestMessage requestMsg = new ExecuteStatementRequestMessage(ncCtx.getNodeId(),
-                    responseFuture.getFutureId(), queryLanguage, statementsText, sessionOutput.config(),
-                    resultProperties.getNcToCcResultProperties(), param.getClientContextID(), handleUrl,
-                    optionalParameters, statementParameters, param.isMultiStatement(), param.isProfile(),
-                    stmtCategoryRestrictionMask, requestReference, param.getMaxWarnings());
+            ExecuteStatementRequestMessage requestMsg =
+                    new ExecuteStatementRequestMessage(ncCtx.getNodeId(), responseFuture.getFutureId(), queryLanguage,
+                            statementsText, sessionOutput.config(), resultProperties.getNcToCcResultProperties(),
+                            param.getClientContextID(), handleUrl, optionalParameters, statementParameters,
+                            param.isMultiStatement(), param.isProfile(), stmtCategoryRestrictionMask, requestReference);
             execution.start();
             ncMb.sendMessageToPrimaryCC(requestMsg);
             try {
