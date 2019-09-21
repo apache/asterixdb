@@ -25,14 +25,13 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 
 public class ALogicalPlanImpl implements ILogicalPlan {
     private List<Mutable<ILogicalOperator>> roots;
 
     public ALogicalPlanImpl() {
-        this.roots = new ArrayList<Mutable<ILogicalOperator>>();
+        this.roots = new ArrayList<>();
     }
 
     public ALogicalPlanImpl(List<Mutable<ILogicalOperator>> roots) {
@@ -40,7 +39,7 @@ public class ALogicalPlanImpl implements ILogicalPlan {
     }
 
     public ALogicalPlanImpl(Mutable<ILogicalOperator> root) {
-        roots = new ArrayList<Mutable<ILogicalOperator>>(1);
+        roots = new ArrayList<>(1);
         roots.add(root);
     }
 
@@ -54,9 +53,7 @@ public class ALogicalPlanImpl implements ILogicalPlan {
     }
 
     public static String prettyPrintPlan(ILogicalPlan plan) throws AlgebricksException {
-        LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
-        PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
-        return pvisitor.get().toString();
+        return PlanPrettyPrinter.createStringPlanPrettyPrinter().printPlan(plan).toString();
     }
 
     @Override

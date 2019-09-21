@@ -28,36 +28,25 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOper
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
-public abstract class AbstractLogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisitor<Void, Integer> {
-    ILogicalExpressionVisitor<String, Integer> exprVisitor;
-    AlgebricksAppendable buffer;
+public abstract class AbstractLogicalOperatorPrettyPrintVisitor<T> implements ILogicalOperatorVisitor<Void, T> {
 
-    public AbstractLogicalOperatorPrettyPrintVisitor() {
-        this(new AlgebricksAppendable());
-    }
+    protected final ILogicalExpressionVisitor<String, T> exprVisitor;
+    protected final AlgebricksStringBuilderWriter buffer;
 
-    public AbstractLogicalOperatorPrettyPrintVisitor(Appendable app) {
-        this(new AlgebricksAppendable(app), new LogicalExpressionPrettyPrintVisitor());
-    }
-
-    public AbstractLogicalOperatorPrettyPrintVisitor(AlgebricksAppendable buffer) {
-        this(buffer, new LogicalExpressionPrettyPrintVisitor());
-    }
-
-    public AbstractLogicalOperatorPrettyPrintVisitor(AlgebricksAppendable buffer,
-            ILogicalExpressionVisitor<String, Integer> exprVisitor) {
-        this.buffer = buffer;
+    public AbstractLogicalOperatorPrettyPrintVisitor(ILogicalExpressionVisitor<String, T> exprVisitor) {
+        this.buffer = new AlgebricksStringBuilderWriter(PlanPrettyPrinter.INIT_SIZE);
         this.exprVisitor = exprVisitor;
     }
 
-    public AlgebricksAppendable reset(AlgebricksAppendable buffer) {
-        AlgebricksAppendable old = this.buffer;
-        this.buffer = buffer;
-        return old;
+    public static void printPhysicalOps(ILogicalPlan plan, AlgebricksStringBuilderWriter out, int indent)
+            throws AlgebricksException {
+        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
+            printPhysicalOperator((AbstractLogicalOperator) root.getValue(), indent, out);
+        }
     }
 
-    public AlgebricksAppendable get() {
-        return buffer;
+    protected void resetState() {
+        buffer.getBuilder().setLength(0);
     }
 
     @Override
@@ -65,41 +54,33 @@ public abstract class AbstractLogicalOperatorPrettyPrintVisitor implements ILogi
         return buffer.toString();
     }
 
-    CharSequence str(Object o) {
+    String str(Object o) {
         return String.valueOf(o);
     }
 
-    protected static void appendln(AlgebricksAppendable buf, String s) throws AlgebricksException {
+    protected static void appendln(AlgebricksStringBuilderWriter buf, String s) {
         buf.append(s);
         buf.append("\n");
     }
 
-    protected static void append(AlgebricksAppendable buf, String s) throws AlgebricksException {
+    protected static void append(AlgebricksStringBuilderWriter buf, String s) {
         buf.append(s);
     }
 
-    protected static void pad(AlgebricksAppendable buf, int indent) throws AlgebricksException {
+    protected static void pad(AlgebricksStringBuilderWriter buf, int indent) {
         for (int i = 0; i < indent; ++i) {
             buf.append(' ');
         }
     }
 
-    protected AlgebricksAppendable addIndent(int level) throws AlgebricksException {
+    protected AlgebricksStringBuilderWriter addIndent(int level) {
         for (int i = 0; i < level; ++i) {
             buffer.append(' ');
         }
         return buffer;
     }
 
-    public void printPlan(ILogicalPlan plan, int indent) throws AlgebricksException {
-        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-            printOperator((AbstractLogicalOperator) root.getValue(), indent);
-        }
-    }
-
-    public abstract void printOperator(AbstractLogicalOperator op, int indent) throws AlgebricksException;
-
-    public static void printPhysicalOperator(AbstractLogicalOperator op, int indent, AlgebricksAppendable out)
+    private static void printPhysicalOperator(AbstractLogicalOperator op, int indent, AlgebricksStringBuilderWriter out)
             throws AlgebricksException {
         IPhysicalOperator pOp = op.getPhysicalOperator();
         pad(out, indent);
@@ -116,13 +97,6 @@ public abstract class AbstractLogicalOperatorPrettyPrintVisitor implements ILogi
         }
         for (Mutable<ILogicalOperator> i : op.getInputs()) {
             printPhysicalOperator((AbstractLogicalOperator) i.getValue(), indent + 2, out);
-        }
-    }
-
-    public static void printPhysicalOps(ILogicalPlan plan, AlgebricksAppendable out, int indent)
-            throws AlgebricksException {
-        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-            printPhysicalOperator((AbstractLogicalOperator) root.getValue(), indent, out);
         }
     }
 }

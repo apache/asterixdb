@@ -47,6 +47,7 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.test.runtime.HDFSCluster;
+import org.apache.asterix.translator.ExecutionPlans;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig.PlanFormat;
 import org.apache.commons.io.FileUtils;
@@ -62,18 +63,24 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(Parameterized.class)
 public class JsonLogicalPlanTest {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    static {
+        OBJECT_MAPPER.enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
+        OBJECT_MAPPER.enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+    }
 
     protected static final String SEPARATOR = File.separator;
     private static final String EXTENSION_AQL = "aql";
     private static final String EXTENSION_SQLPP = "sqlpp";
-    private static final String EXTENSION_RESULT = "plan";
+    private static final String EXTENSION_RESULT = "plan.json";
     private static final String FILENAME_IGNORE = "ignore.txt";
     private static final String FILENAME_ONLY = "only.txt";
     private static final String PATH_BASE =
@@ -189,13 +196,16 @@ public class JsonLogicalPlanTest {
                 provider = extensionLangCompilationProvider;
             }
             IHyracksClientConnection hcc = integrationUtil.getHyracksClientConnection();
-
+            String planStr;
             try (PrintWriter plan = new PrintWriter(actualFile)) {
                 AsterixJavaClient asterix = new AsterixJavaClient(
                         (ICcApplicationContext) integrationUtil.cc.getApplicationContext(), hcc,
                         new StringReader(query), plan, provider, statementExecutorFactory, storageComponentProvider);
                 asterix.setStatementParameters(queryParams);
                 asterix.compile(true, false, !optimized, optimized, false, false, false, PlanFormat.JSON);
+                ExecutionPlans executionPlans = asterix.getExecutionPlans();
+                planStr = optimized ? executionPlans.getOptimizedLogicalPlan() : executionPlans.getLogicalPlan();
+                plan.write(planStr);
             } catch (AsterixException e) {
                 throw new Exception("Compile ERROR for " + queryFile + ": " + e.getMessage(), e);
             }
@@ -217,8 +227,9 @@ public class JsonLogicalPlanTest {
             }
 
             try {
-                final JsonParser parser = new ObjectMapper().getJsonFactory().createJsonParser(objectActual);
-                while (parser.nextToken() != null) {
+                JsonNode jsonNode = OBJECT_MAPPER.readTree(planStr);
+                if (jsonNode == null || !jsonNode.isObject()) {
+                    throw new Exception("ERROR: No JSON plan or plan is malformed!");
                 }
             } finally {
                 readerActual.close();

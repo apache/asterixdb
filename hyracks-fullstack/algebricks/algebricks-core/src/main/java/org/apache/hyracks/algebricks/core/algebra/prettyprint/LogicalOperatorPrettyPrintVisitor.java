@@ -70,43 +70,55 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
-import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 
-public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPrettyPrintVisitor {
+public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPrettyPrintVisitor<Integer>
+        implements IPlanPrettyPrinter {
 
-    public LogicalOperatorPrettyPrintVisitor() {
-        super();
-    }
+    private static final int INIT_INDENT = 2;
+    private static final int SUBPLAN_INDENT = INIT_INDENT * 5;
 
-    public LogicalOperatorPrettyPrintVisitor(AlgebricksAppendable buffer,
-            ILogicalExpressionVisitor<String, Integer> exprVisitor) {
-        super(buffer, exprVisitor);
-    }
-
-    public LogicalOperatorPrettyPrintVisitor(AlgebricksAppendable buffer) {
-        super(buffer);
-    }
-
-    public LogicalOperatorPrettyPrintVisitor(Appendable app) {
-        super(app);
+    LogicalOperatorPrettyPrintVisitor() {
+        super(new LogicalExpressionPrettyPrintVisitor<>());
     }
 
     @Override
-    public void printOperator(AbstractLogicalOperator op, int indent) throws AlgebricksException {
-        final AlgebricksAppendable out = this.get();
+    public final IPlanPrettyPrinter reset() throws AlgebricksException {
+        resetState();
+        return this;
+    }
+
+    @Override
+    public final IPlanPrettyPrinter printPlan(ILogicalPlan plan) throws AlgebricksException {
+        printPlanImpl(plan, 0);
+        return this;
+    }
+
+    @Override
+    public final IPlanPrettyPrinter printOperator(AbstractLogicalOperator op) throws AlgebricksException {
+        printOperatorImpl(op, 0);
+        return this;
+    }
+
+    private void printPlanImpl(ILogicalPlan plan, int indent) throws AlgebricksException {
+        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
+            printOperatorImpl((AbstractLogicalOperator) root.getValue(), indent);
+        }
+    }
+
+    private void printOperatorImpl(AbstractLogicalOperator op, int indent) throws AlgebricksException {
         op.accept(this, indent);
         IPhysicalOperator pOp = op.getPhysicalOperator();
 
         if (pOp != null) {
-            out.append("\n");
-            pad(out, indent);
-            appendln(out, "-- " + pOp.toString() + "  |" + op.getExecutionMode() + "|");
+            buffer.append("\n");
+            pad(buffer, indent);
+            appendln(buffer, "-- " + pOp.toString() + "  |" + op.getExecutionMode() + "|");
         } else {
-            appendln(out, " -- |" + op.getExecutionMode() + "|");
+            appendln(buffer, " -- |" + op.getExecutionMode() + "|");
         }
 
         for (Mutable<ILogicalOperator> i : op.getInputs()) {
-            printOperator((AbstractLogicalOperator) i.getValue(), indent + 2);
+            printOperatorImpl((AbstractLogicalOperator) i.getValue(), indent + INIT_INDENT);
         }
     }
 
@@ -293,7 +305,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, Integer indent) throws AlgebricksException {
-        AlgebricksAppendable plan = printAbstractUnnestMapOperator(op, indent, "unnest-map");
+        AlgebricksStringBuilderWriter plan = printAbstractUnnestMapOperator(op, indent, "unnest-map");
         appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
         appendLimitInformation(plan, op.getOutputLimit());
         return null;
@@ -306,9 +318,9 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         return null;
     }
 
-    private AlgebricksAppendable printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, Integer indent,
+    private AlgebricksStringBuilderWriter printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, Integer indent,
             String opSignature) throws AlgebricksException {
-        AlgebricksAppendable plan = addIndent(indent).append(opSignature + " " + op.getVariables() + " <- "
+        AlgebricksStringBuilderWriter plan = addIndent(indent).append(opSignature + " " + op.getVariables() + " <- "
                 + op.getExpressionRef().getValue().accept(exprVisitor, indent));
         appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars());
         return plan;
@@ -316,7 +328,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitDataScanOperator(DataSourceScanOperator op, Integer indent) throws AlgebricksException {
-        AlgebricksAppendable plan = addIndent(indent).append(
+        AlgebricksStringBuilderWriter plan = addIndent(indent).append(
                 "data-scan " + op.getProjectVariables() + "<-" + op.getVariables() + " <- " + op.getDataSource());
         appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars());
         appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
@@ -324,23 +336,21 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         return null;
     }
 
-    private Void appendSelectConditionInformation(AlgebricksAppendable plan,
+    private void appendSelectConditionInformation(AlgebricksStringBuilderWriter plan,
             Mutable<ILogicalExpression> selectCondition, Integer indent) throws AlgebricksException {
         if (selectCondition != null) {
             plan.append(" condition (").append(selectCondition.getValue().accept(exprVisitor, indent)).append(")");
         }
-
-        return null;
     }
 
-    private Void appendLimitInformation(AlgebricksAppendable plan, long outputLimit) throws AlgebricksException {
+    private void appendLimitInformation(AlgebricksStringBuilderWriter plan, long outputLimit)
+            throws AlgebricksException {
         if (outputLimit >= 0) {
             plan.append(" limit ").append(String.valueOf(outputLimit));
         }
-        return null;
     }
 
-    private Void appendFilterInformation(AlgebricksAppendable plan, List<LogicalVariable> minFilterVars,
+    private void appendFilterInformation(AlgebricksStringBuilderWriter plan, List<LogicalVariable> minFilterVars,
             List<LogicalVariable> maxFilterVars) throws AlgebricksException {
         if (minFilterVars != null || maxFilterVars != null) {
             plan.append(" with filter on");
@@ -351,7 +361,6 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         if (maxFilterVars != null) {
             plan.append(" max:" + maxFilterVars);
         }
-        return null;
     }
 
     @Override
@@ -565,7 +574,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
                 } else {
                     addIndent(indent).append("       {\n");
                 }
-                printPlan(p, indent + 10);
+                printPlanImpl(p, indent + SUBPLAN_INDENT);
                 addIndent(indent).append("       }");
             }
         }

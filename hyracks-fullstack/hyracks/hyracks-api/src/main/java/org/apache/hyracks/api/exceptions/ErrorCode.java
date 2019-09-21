@@ -155,6 +155,7 @@ public class ErrorCode {
     public static final int UNSUPPORTED_WINDOW_SPEC = 119;
     public static final int EOF = 120;
     public static final int NUMERIC_PROMOTION_ERROR = 121;
+    public static final int ERROR_PRINTING_PLAN = 122;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

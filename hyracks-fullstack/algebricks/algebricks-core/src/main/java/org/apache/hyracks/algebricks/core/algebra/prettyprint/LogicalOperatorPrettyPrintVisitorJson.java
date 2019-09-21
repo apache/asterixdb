@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 
+import java.io.IOException;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -36,6 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestNonMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -73,39 +75,59 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 
-public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperatorPrettyPrintVisitor {
-    Map<AbstractLogicalOperator, String> operatorIdentity = new HashMap<>();
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 
-    public LogicalOperatorPrettyPrintVisitorJson() {
+public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperatorPrettyPrintVisitor<Void>
+        implements IPlanPrettyPrinter {
+
+    private static final JsonFactory JSON_FACTORY = new JsonFactory();
+    private static final DefaultIndenter OBJECT_INDENT = new DefaultIndenter("   ", DefaultIndenter.SYS_LF);
+    private static final String OPERATOR_FIELD = "operator";
+    private static final String VARIABLES_FIELD = "variables";
+    private static final String EXPRESSIONS_FIELD = "expressions";
+    private static final String EXPRESSION_FIELD = "expression";
+    private static final String CONDITION_FIELD = "condition";
+
+    private final Map<AbstractLogicalOperator, String> operatorIdentity = new HashMap<>();
+    private final IdCounter idCounter = new IdCounter();
+    private final JsonGenerator jsonGenerator;
+
+    LogicalOperatorPrettyPrintVisitorJson() {
+        super(new LogicalExpressionPrettyPrintVisitor<>());
+        DefaultPrettyPrinter prettyPrinter = new DefaultPrettyPrinter(DefaultIndenter.SYS_LF);
+        prettyPrinter.indentObjectsWith(OBJECT_INDENT);
+        try {
+            jsonGenerator = JSON_FACTORY.createGenerator(buffer).setPrettyPrinter(prettyPrinter);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public LogicalOperatorPrettyPrintVisitorJson(Appendable app) {
-        super(app);
-    }
-
-    IdCounter idCounter = new IdCounter();
-
-    public class IdCounter {
+    private class IdCounter {
         private int id;
         private final Deque<Integer> prefix;
 
-        public IdCounter() {
-            prefix = new LinkedList<Integer>();
+        private IdCounter() {
+            prefix = new LinkedList<>();
             prefix.add(1);
             this.id = 0;
         }
 
-        public void previousPrefix() {
+        private void previousPrefix() {
             this.id = prefix.removeLast();
         }
 
-        public void nextPrefix() {
+        private void nextPrefix() {
             prefix.add(this.id);
             this.id = 0;
         }
 
-        public String printOperatorId(AbstractLogicalOperator op) {
+        private String printOperatorId(AbstractLogicalOperator op) {
             String stringPrefix = "";
             Object[] values = this.prefix.toArray();
             for (Object val : values) {
@@ -121,531 +143,673 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     }
 
     @Override
-    public AlgebricksAppendable reset(AlgebricksAppendable buffer) {
+    public final IPlanPrettyPrinter reset() throws AlgebricksException {
+        flushContentToWriter();
+        resetState();
         operatorIdentity.clear();
-        return super.reset(buffer);
+        return this;
     }
 
     @Override
-    public void printOperator(AbstractLogicalOperator op, int indent) throws AlgebricksException {
-        int currentIndent = indent;
-        final AlgebricksAppendable out = get();
-        pad(out, currentIndent);
-        appendln(out, "{");
-        currentIndent++;
-        op.accept(this, currentIndent);
-        appendln(out, ",");
-        pad(out, currentIndent);
-        append(out, "\"operatorId\": \"" + idCounter.printOperatorId(op) + "\"");
-        IPhysicalOperator pOp = op.getPhysicalOperator();
-        if (pOp != null) {
-            appendln(out, ",");
-            pad(out, currentIndent);
-            String pOperator = "\"physical-operator\": \"" + pOp.toString() + "\"";
-            append(out, pOperator);
+    public final IPlanPrettyPrinter printPlan(ILogicalPlan plan) throws AlgebricksException {
+        printPlanImpl(plan);
+        flushContentToWriter();
+        return this;
+    }
+
+    @Override
+    public final IPlanPrettyPrinter printOperator(AbstractLogicalOperator op) throws AlgebricksException {
+        printOperatorImpl(op);
+        flushContentToWriter();
+        return this;
+    }
+
+    private void printPlanImpl(ILogicalPlan plan) throws AlgebricksException {
+        try {
+            boolean writeArrayOfRoots = plan.getRoots().size() > 1;
+            if (writeArrayOfRoots) {
+                jsonGenerator.writeStartArray();
+            }
+            for (Mutable<ILogicalOperator> root : plan.getRoots()) {
+                printOperatorImpl((AbstractLogicalOperator) root.getValue());
+            }
+            if (writeArrayOfRoots) {
+                jsonGenerator.writeEndArray();
+            }
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
         }
-        appendln(out, ",");
-        pad(out, currentIndent);
-        append(out, "\"execution-mode\": \"" + op.getExecutionMode() + '"');
-        if (!op.getInputs().isEmpty()) {
-            appendln(out, ",");
-            pad(out, currentIndent);
-            appendln(out, "\"inputs\": [");
-            boolean moreInputes = false;
-            for (Mutable<ILogicalOperator> k : op.getInputs()) {
-                if (moreInputes) {
-                    append(out, ",");
+    }
+
+    private void printOperatorImpl(AbstractLogicalOperator op) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStartObject();
+            op.accept(this, null);
+            jsonGenerator.writeStringField("operatorId", idCounter.printOperatorId(op));
+            IPhysicalOperator pOp = op.getPhysicalOperator();
+            if (pOp != null) {
+                jsonGenerator.writeStringField("physical-operator", pOp.toString());
+            }
+            jsonGenerator.writeStringField("execution-mode", op.getExecutionMode().toString());
+            if (!op.getInputs().isEmpty()) {
+                jsonGenerator.writeArrayFieldStart("inputs");
+                for (Mutable<ILogicalOperator> k : op.getInputs()) {
+                    printOperatorImpl((AbstractLogicalOperator) k.getValue());
                 }
-                printOperator((AbstractLogicalOperator) k.getValue(), currentIndent + 4);
-                moreInputes = true;
+                jsonGenerator.writeEndArray();
             }
-            pad(out, currentIndent + 2);
-            appendln(out, "]");
-        } else {
-            out.append("\n");
-        }
-        pad(out, currentIndent - 1);
-        appendln(out, "}");
-    }
-
-    public void variablePrintHelper(List<LogicalVariable> variables, Integer indent) throws AlgebricksException {
-        if (!variables.isEmpty()) {
-            addIndent(0).append(",\n");
-            addIndent(indent).append("\"variables\": [");
-            appendVars(variables);
-            buffer.append("]");
+            jsonGenerator.writeEndObject();
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
         }
     }
 
     @Override
-    public Void visitAggregateOperator(AggregateOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"aggregate\"");
-        if (!op.getExpressions().isEmpty()) {
-            addIndent(0).append(",\n");
-            pprintExprList(op.getExpressions(), indent);
+    public Void visitAggregateOperator(AggregateOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "aggregate");
+            writeVariablesAndExpressions(op.getVariables(), op.getExpressions(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
         }
-        variablePrintHelper(op.getVariables(), indent);
-        return null;
     }
 
     @Override
-    public Void visitRunningAggregateOperator(RunningAggregateOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"running-aggregate\"");
-        variablePrintHelper(op.getVariables(), indent);
-        if (!op.getExpressions().isEmpty()) {
-            addIndent(0).append(",\n");
-            pprintExprList(op.getExpressions(), indent);
+    public Void visitRunningAggregateOperator(RunningAggregateOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "running-aggregate");
+            writeVariablesAndExpressions(op.getVariables(), op.getExpressions(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
         }
-        return null;
     }
 
     @Override
-    public Void visitEmptyTupleSourceOperator(EmptyTupleSourceOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"empty-tuple-source\"");
-        return null;
-    }
-
-    @Override
-    public Void visitGroupByOperator(GroupByOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"group-by\"");
-
-        if (op.isGroupAll()) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"option\": \"all\"");
+    public Void visitEmptyTupleSourceOperator(EmptyTupleSourceOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "empty-tuple-source");
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
         }
-        if (!op.getGroupByList().isEmpty()) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"group-by-list\": ");
-            pprintVeList(op.getGroupByList(), indent);
-        }
-        if (!op.getDecorList().isEmpty()) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"decor-list\": ");
-            pprintVeList(op.getDecorList(), indent);
-        }
-        if (!op.getNestedPlans().isEmpty()) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"subplan\": ");
-            printNestedPlans(op, indent);
-        }
-        return null;
     }
 
     @Override
-    public Void visitDistinctOperator(DistinctOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"distinct\"");
-        if (!op.getExpressions().isEmpty()) {
-            addIndent(0).append(",\n");
-            pprintExprList(op.getExpressions(), indent);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visitInnerJoinOperator(InnerJoinOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"join\",\n");
-        addIndent(indent).append("\"condition\": \"" + op.getCondition().getValue().accept(exprVisitor, indent) + "\"");
-        return null;
-    }
-
-    @Override
-    public Void visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"left-outer-join\",\n");
-        addIndent(indent).append("\"condition\": \"" + op.getCondition().getValue().accept(exprVisitor, indent) + "\"");
-        return null;
-    }
-
-    @Override
-    public Void visitNestedTupleSourceOperator(NestedTupleSourceOperator op, Integer indent)
-            throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"nested-tuple-source\"");
-        return null;
-    }
-
-    @Override
-    public Void visitOrderOperator(OrderOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"order\"");
-        buffer.append(",\n");
-        int topK = op.getTopK();
-        if (topK != -1) {
-            addIndent(indent).append("\"topK\": \"" + topK + "\",\n");
-        }
-        addIndent(indent).append("\"order-by-list\": ");
-        pprintOrderExprList(op.getOrderExpressions(), indent);
-        return null;
-    }
-
-    @Override
-    public Void visitAssignOperator(AssignOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"assign\"");
-        variablePrintHelper(op.getVariables(), indent);
-        if (!op.getExpressions().isEmpty()) {
-            addIndent(0).append(",\n");
-            pprintExprList(op.getExpressions(), indent);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visitWriteOperator(WriteOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"write\"");
-        if (!op.getExpressions().isEmpty()) {
-            addIndent(0).append(",\n");
-            pprintExprList(op.getExpressions(), indent);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visitDistributeResultOperator(DistributeResultOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"distribute-result\"");
-        if (!op.getExpressions().isEmpty()) {
-            addIndent(0).append(",\n");
-            pprintExprList(op.getExpressions(), indent);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visitWriteResultOperator(WriteResultOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"load\",\n");
-        addIndent(indent).append(str(op.getDataSource())).append("\"from\":")
-                .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent) + ",\n");
-        addIndent(indent).append("\"partitioned-by\": {");
-        pprintExprList(op.getKeyExpressions(), indent);
-        addIndent(indent).append("}");
-        return null;
-    }
-
-    @Override
-    public Void visitSelectOperator(SelectOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"select\",\n");
-        addIndent(indent).append("\"expressions\": \""
-                + op.getCondition().getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
-        return null;
-    }
-
-    @Override
-    public Void visitProjectOperator(ProjectOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"project\"");
-        variablePrintHelper(op.getVariables(), indent);
-        return null;
-    }
-
-    @Override
-    public Void visitSubplanOperator(SubplanOperator op, Integer indent) throws AlgebricksException {
-        if (!op.getNestedPlans().isEmpty()) {
-            addIndent(indent).append("\"subplan\": ");
-            printNestedPlans(op, indent);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visitUnionOperator(UnionAllOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"union\"");
-        for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> v : op.getVariableMappings()) {
-            buffer.append(",\n");
-            addIndent(indent).append(
-                    "\"values\": [" + "\"" + v.first + "\"," + "\"" + v.second + "\"," + "\"" + v.third + "\"]");
-        }
-        return null;
-    }
-
-    @Override
-    public Void visitIntersectOperator(IntersectOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"intersect\",\n");
-
-        addIndent(indent).append("\"output-compare-variables\": [");
-        appendVars(op.getOutputCompareVariables());
-        buffer.append(']');
-        if (op.hasExtraVariables()) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"output-extra-variables\": [");
-            appendVars(op.getOutputExtraVariables());
-            buffer.append(']');
-        }
-        buffer.append(",\n");
-        addIndent(indent).append("\"input-compare-variables\": [");
-        for (int i = 0, n = op.getNumInput(); i < n; i++) {
-            if (i > 0) {
-                buffer.append(", ");
+    public Void visitGroupByOperator(GroupByOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "group-by");
+            if (op.isGroupAll()) {
+                jsonGenerator.writeStringField("option", "all");
             }
-            buffer.append('[');
-            appendVars(op.getInputCompareVariables(i));
-            buffer.append(']');
+            if (!op.getGroupByList().isEmpty()) {
+                writeArrayFieldOfVariableExpressionPairs("group-by-list", op.getGroupByList(), indent);
+            }
+            if (!op.getDecorList().isEmpty()) {
+                writeArrayFieldOfVariableExpressionPairs("decor-list", op.getDecorList(), indent);
+            }
+            if (!op.getNestedPlans().isEmpty()) {
+                writeNestedPlans(op, indent);
+            }
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
         }
-        buffer.append(']');
-        if (op.hasExtraVariables()) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"input-extra-variables\": [");
-            for (int i = 0, n = op.getNumInput(); i < n; i++) {
-                if (i > 0) {
-                    buffer.append(", ");
+    }
+
+    @Override
+    public Void visitDistinctOperator(DistinctOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "distinct");
+            List<Mutable<ILogicalExpression>> expressions = op.getExpressions();
+            if (!expressions.isEmpty()) {
+                writeArrayFieldOfExpressions(EXPRESSIONS_FIELD, expressions, indent);
+            }
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitInnerJoinOperator(InnerJoinOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "join");
+            writeStringFieldExpression(CONDITION_FIELD, op.getCondition(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "left-outer-join");
+            writeStringFieldExpression(CONDITION_FIELD, op.getCondition(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitNestedTupleSourceOperator(NestedTupleSourceOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "nested-tuple-source");
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitOrderOperator(OrderOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "order");
+            int topK = op.getTopK();
+            if (topK != -1) {
+                jsonGenerator.writeStringField("topK", String.valueOf(topK));
+            }
+            writeArrayFieldOfOrderExprList("order-by-list", op.getOrderExpressions(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitAssignOperator(AssignOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "assign");
+            writeVariablesAndExpressions(op.getVariables(), op.getExpressions(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitWriteOperator(WriteOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "write");
+            List<Mutable<ILogicalExpression>> expressions = op.getExpressions();
+            if (!expressions.isEmpty()) {
+                writeArrayFieldOfExpressions(EXPRESSIONS_FIELD, expressions, indent);
+            }
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitDistributeResultOperator(DistributeResultOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "distribute-result");
+            List<Mutable<ILogicalExpression>> expressions = op.getExpressions();
+            if (!expressions.isEmpty()) {
+                writeArrayFieldOfExpressions(EXPRESSIONS_FIELD, expressions, indent);
+            }
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitWriteResultOperator(WriteResultOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "load");
+            jsonGenerator.writeStringField("data-source", String.valueOf(op.getDataSource()));
+            writeStringFieldExpression("from", op.getPayloadExpression(), indent);
+            writeObjectFieldWithExpressions("partitioned-by", op.getKeyExpressions(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitSelectOperator(SelectOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "select");
+            writeStringFieldExpression(EXPRESSIONS_FIELD, op.getCondition(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitProjectOperator(ProjectOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "project");
+            List<LogicalVariable> variables = op.getVariables();
+            if (!variables.isEmpty()) {
+                writeArrayFieldOfVariables(VARIABLES_FIELD, variables);
+            }
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitSubplanOperator(SubplanOperator op, Void indent) throws AlgebricksException {
+        if (!op.getNestedPlans().isEmpty()) {
+            writeNestedPlans(op, indent);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitUnionOperator(UnionAllOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "union");
+            jsonGenerator.writeArrayFieldStart("values");
+            for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> v : op.getVariableMappings()) {
+                jsonGenerator.writeStartArray();
+                jsonGenerator.writeString(String.valueOf(v.first));
+                jsonGenerator.writeString(String.valueOf(v.second));
+                jsonGenerator.writeString(String.valueOf(v.third));
+                jsonGenerator.writeEndArray();
+            }
+            jsonGenerator.writeEndArray();
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitIntersectOperator(IntersectOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "intersect");
+            writeArrayFieldOfVariables("output-compare-variables", op.getOutputCompareVariables());
+            if (op.hasExtraVariables()) {
+                writeArrayFieldOfVariables("output-extra-variables", op.getOutputExtraVariables());
+            }
+            writeArrayFieldOfNestedVariablesList("input-compare-variables", op.getAllInputsCompareVariables());
+            if (op.hasExtraVariables()) {
+                writeArrayFieldOfNestedVariablesList("input-extra-variables", op.getAllInputsExtraVariables());
+            }
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitUnnestOperator(UnnestOperator op, Void indent) throws AlgebricksException {
+        writeUnnestNonMapOperator(op, "unnest", indent);
+        return null;
+    }
+
+    @Override
+    public Void visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Void indent) throws AlgebricksException {
+        writeUnnestNonMapOperator(op, "outer-unnest", indent);
+        return null;
+    }
+
+    @Override
+    public Void visitUnnestMapOperator(UnnestMapOperator op, Void indent) throws AlgebricksException {
+        try {
+            writeUnnestMapOperator(op, indent, "unnest-map");
+            writeSelectLimitInformation(op.getSelectCondition(), op.getOutputLimit(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void indent) throws AlgebricksException {
+        writeUnnestMapOperator(op, indent, "left-outer-unnest-map");
+        return null;
+    }
+
+    @Override
+    public Void visitDataScanOperator(DataSourceScanOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "data-scan");
+            List<LogicalVariable> projectVariables = op.getProjectVariables();
+            if (!projectVariables.isEmpty()) {
+                writeArrayFieldOfVariables("project-variables", projectVariables);
+            }
+            List<LogicalVariable> variables = op.getVariables();
+            if (!variables.isEmpty()) {
+                writeArrayFieldOfVariables(VARIABLES_FIELD, variables);
+            }
+            if (op.getDataSource() != null) {
+                jsonGenerator.writeStringField("data-source", String.valueOf(op.getDataSource()));
+            }
+            writeFilterInformation(op.getMinFilterVars(), op.getMaxFilterVars());
+            writeSelectLimitInformation(op.getSelectCondition(), op.getOutputLimit(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitLimitOperator(LimitOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "limit");
+            writeStringFieldExpression("value", op.getMaxObjects(), indent);
+            Mutable<ILogicalExpression> offsetRef = op.getOffset();
+            if (offsetRef != null && offsetRef.getValue() != null) {
+                writeStringFieldExpression("offset", offsetRef, indent);
+            }
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitExchangeOperator(ExchangeOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "exchange");
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitScriptOperator(ScriptOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "script");
+            List<LogicalVariable> inputVariables = op.getInputVariables();
+            if (!inputVariables.isEmpty()) {
+                writeArrayFieldOfVariables("in", inputVariables);
+            }
+            List<LogicalVariable> outputVariables = op.getOutputVariables();
+            if (!outputVariables.isEmpty()) {
+                writeArrayFieldOfVariables("out", outputVariables);
+            }
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitReplicateOperator(ReplicateOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "replicate");
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitSplitOperator(SplitOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "split");
+            writeStringFieldExpression(EXPRESSION_FIELD, op.getBranchingExpression(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitMaterializeOperator(MaterializeOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "materialize");
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, getIndexOpString(op.getOperation()));
+            jsonGenerator.writeStringField("data-source", String.valueOf(op.getDataSource()));
+            writeStringFieldExpression("from-record", op.getPayloadExpression(), indent);
+            if (op.getAdditionalNonFilteringExpressions() != null) {
+                writeObjectFieldWithExpressions("meta", op.getAdditionalNonFilteringExpressions(), indent);
+            }
+            writeObjectFieldWithExpressions("partitioned-by", op.getPrimaryKeyExpressions(), indent);
+            if (op.getOperation() == Kind.UPSERT) {
+                jsonGenerator.writeObjectFieldStart("out");
+                jsonGenerator.writeStringField("record-before-upsert", String.valueOf(op.getBeforeOpRecordVar()));
+                if (op.getBeforeOpAdditionalNonFilteringVars() != null) {
+                    jsonGenerator.writeStringField("additional-before-upsert",
+                            String.valueOf(op.getBeforeOpAdditionalNonFilteringVars()));
                 }
-                buffer.append('[');
-                appendVars(op.getInputExtraVariables(i));
-                buffer.append(']');
+                jsonGenerator.writeEndObject();
             }
-            buffer.append(']');
+            if (op.isBulkload()) {
+                jsonGenerator.writeBooleanField("bulkload", true);
+            }
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
         }
-        return null;
     }
 
     @Override
-    public Void visitUnnestOperator(UnnestOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"unnest\"");
-        variablePrintHelper(op.getVariables(), indent);
-        if (op.getPositionalVariable() != null) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"position\": \"" + op.getPositionalVariable() + "\"");
-        }
-        buffer.append(",\n");
-        addIndent(indent).append("\"expressions\": \""
-                + op.getExpressionRef().getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
-        return null;
-    }
-
-    @Override
-    public Void visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"outer-unnest\",\n");
-        addIndent(indent).append("\"variables\": [\"" + op.getVariable() + "\"]");
-        if (op.getPositionalVariable() != null) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"position\": " + op.getPositionalVariable());
-        }
-        buffer.append(",\n");
-        addIndent(indent).append("\"expressions\": \""
-                + op.getExpressionRef().getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
-        return null;
-    }
-
-    @Override
-    public Void visitUnnestMapOperator(UnnestMapOperator op, Integer indent) throws AlgebricksException {
-        AlgebricksAppendable plan = printAbstractUnnestMapOperator(op, indent, "unnest-map");
-        appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
-        appendLimitInformation(plan, op.getOutputLimit(), indent);
-        return null;
-    }
-
-    @Override
-    public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Integer indent)
+    public Void visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, Void indent)
             throws AlgebricksException {
-        printAbstractUnnestMapOperator(op, indent, "left-outer-unnest-map");
-        return null;
-    }
-
-    private AlgebricksAppendable printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, Integer indent,
-            String opSignature) throws AlgebricksException {
-        AlgebricksAppendable plan = addIndent(indent).append("\"operator\": \"" + opSignature + "\"");
-        variablePrintHelper(op.getVariables(), indent);
-        buffer.append(",\n");
-        addIndent(indent).append("\"expressions\": \""
-                + op.getExpressionRef().getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
-        appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars(), indent);
-        return plan;
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, getIndexOpString(op.getOperation()));
+            jsonGenerator.writeStringField("index", op.getIndexName());
+            jsonGenerator.writeStringField("on", String.valueOf(op.getDataSourceIndex().getDataSource()));
+            jsonGenerator.writeObjectFieldStart("from");
+            if (op.getOperation() == Kind.UPSERT) {
+                writeArrayFieldOfExpressions("replace", op.getPrevSecondaryKeyExprs(), indent);
+                writeArrayFieldOfExpressions("with", op.getSecondaryKeyExpressions(), indent);
+            } else {
+                writeArrayFieldOfExpressions(EXPRESSIONS_FIELD, op.getSecondaryKeyExpressions(), indent);
+            }
+            jsonGenerator.writeEndObject();
+            if (op.isBulkload()) {
+                jsonGenerator.writeBooleanField("bulkload", true);
+            }
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
     }
 
     @Override
-    public Void visitDataScanOperator(DataSourceScanOperator op, Integer indent) throws AlgebricksException {
-        AlgebricksAppendable plan = addIndent(indent).append("\"operator\": \"data-scan\"");
-        if (!op.getProjectVariables().isEmpty()) {
-            addIndent(0).append(",\n");
-            addIndent(indent).append("\"project-variables\": [");
-            appendVars(op.getProjectVariables());
-            buffer.append("]");
+    public Void visitTokenizeOperator(TokenizeOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "tokenize");
+            writeVariablesAndExpressions(op.getTokenizeVars(), op.getSecondaryKeyExpressions(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
         }
-        variablePrintHelper(op.getVariables(), indent);
-        if (op.getDataSource() != null) {
-            addIndent(0).append(",\n");
-            addIndent(indent).append("\"data-source\": \"" + op.getDataSource() + "\"");
-        }
-        appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars(), indent);
-        appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
-        appendLimitInformation(plan, op.getOutputLimit(), indent);
-        return null;
     }
 
-    private Void appendFilterInformation(AlgebricksAppendable plan, List<LogicalVariable> minFilterVars,
-            List<LogicalVariable> maxFilterVars, Integer indent) throws AlgebricksException {
-        if (minFilterVars != null || maxFilterVars != null) {
-            plan.append(",\n");
-            addIndent(indent);
-            plan.append("\"with-filter-on\": {");
+    @Override
+    public Void visitForwardOperator(ForwardOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "forward");
+            writeStringFieldExpression(EXPRESSION_FIELD, op.getSideDataExpression(), indent);
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
         }
-        if (minFilterVars != null) {
-            buffer.append("\n");
-            addIndent(indent).append("\"min\": [");
-            appendVars(minFilterVars);
-            buffer.append("]");
-        }
-        if (minFilterVars != null && maxFilterVars != null) {
-            buffer.append(",");
-        }
-        if (maxFilterVars != null) {
-            buffer.append("\n");
-            addIndent(indent).append("\"max\": [");
-            appendVars(maxFilterVars);
-            buffer.append("]");
-        }
-        if (minFilterVars != null || maxFilterVars != null) {
-            plan.append("\n");
-            addIndent(indent).append("}");
-        }
-        return null;
     }
 
-    private Void appendSelectConditionInformation(AlgebricksAppendable plan, Mutable<ILogicalExpression> condition,
-            Integer indent) throws AlgebricksException {
-        if (condition != null) {
-            plan.append(",\n");
-            addIndent(indent).append(
-                    "\"condition\": \"" + condition.getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
+    @Override
+    public Void visitSinkOperator(SinkOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "sink");
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
         }
-        return null;
     }
 
-    private Void appendLimitInformation(AlgebricksAppendable plan, long outputLimit, Integer indent)
+    @Override
+    public Void visitDelegateOperator(DelegateOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, op.toString());
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public Void visitWindowOperator(WindowOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "window-aggregate");
+            writeVariablesAndExpressions(op.getVariables(), op.getExpressions(), indent);
+            List<Mutable<ILogicalExpression>> partitionExpressions = op.getPartitionExpressions();
+            if (!partitionExpressions.isEmpty()) {
+                writeObjectFieldWithExpressions("partition-by", partitionExpressions, indent);
+            }
+            List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions = op.getOrderExpressions();
+            if (!orderExpressions.isEmpty()) {
+                writeArrayFieldOfOrderExprList("order-by", orderExpressions, indent);
+            }
+            if (op.hasNestedPlans()) {
+                List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> frameValueExpressions =
+                        op.getFrameValueExpressions();
+                if (!frameValueExpressions.isEmpty()) {
+                    writeArrayFieldOfOrderExprList("frame-on", frameValueExpressions, indent);
+                }
+                List<Mutable<ILogicalExpression>> frameStartExpressions = op.getFrameStartExpressions();
+                if (!frameStartExpressions.isEmpty()) {
+                    writeObjectFieldWithExpressions("frame-start", frameStartExpressions, indent);
+                }
+                List<Mutable<ILogicalExpression>> frameStartValidationExpressions =
+                        op.getFrameStartValidationExpressions();
+                if (!frameStartValidationExpressions.isEmpty()) {
+                    writeObjectFieldWithExpressions("frame-start-if", frameStartValidationExpressions, indent);
+                }
+                List<Mutable<ILogicalExpression>> frameEndExpressions = op.getFrameEndExpressions();
+                if (!frameEndExpressions.isEmpty()) {
+                    writeObjectFieldWithExpressions("frame-end", frameEndExpressions, indent);
+                }
+                List<Mutable<ILogicalExpression>> frameEndValidationExpressions = op.getFrameEndValidationExpressions();
+                if (!frameEndValidationExpressions.isEmpty()) {
+                    writeObjectFieldWithExpressions("frame-end-if", frameEndValidationExpressions, indent);
+                }
+                List<Mutable<ILogicalExpression>> frameExcludeExpressions = op.getFrameExcludeExpressions();
+                if (!frameExcludeExpressions.isEmpty()) {
+                    writeObjectFieldWithExpressions("frame-exclude", frameExcludeExpressions, indent);
+                    jsonGenerator.writeStringField("frame-exclude-negation-start",
+                            String.valueOf(op.getFrameExcludeNegationStartIdx()));
+                }
+                Mutable<ILogicalExpression> frameExcludeUnaryExpression = op.getFrameExcludeUnaryExpression();
+                if (frameExcludeUnaryExpression.getValue() != null) {
+                    writeStringFieldExpression("frame-exclude-unary", frameExcludeUnaryExpression, indent);
+                }
+                Mutable<ILogicalExpression> frameOffsetExpression = op.getFrameOffsetExpression();
+                if (frameOffsetExpression.getValue() != null) {
+                    writeStringFieldExpression("frame-offset", frameOffsetExpression, indent);
+                }
+                int frameMaxObjects = op.getFrameMaxObjects();
+                if (frameMaxObjects != -1) {
+                    jsonGenerator.writeStringField("frame-max-objects", String.valueOf(frameMaxObjects));
+                }
+                writeNestedPlans(op, indent);
+            }
+            return null;
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    private void writeNestedPlans(AbstractOperatorWithNestedPlans op, Void indent) throws AlgebricksException {
+        try {
+            idCounter.nextPrefix();
+            jsonGenerator.writeArrayFieldStart("subplan");
+            List<ILogicalPlan> nestedPlans = op.getNestedPlans();
+            for (int i = 0, size = nestedPlans.size(); i < size; i++) {
+                printPlanImpl(nestedPlans.get(i));
+            }
+            jsonGenerator.writeEndArray();
+            idCounter.previousPrefix();
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    private void writeUnnestNonMapOperator(AbstractUnnestNonMapOperator op, String opName, Void indent)
             throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, opName);
+            List<LogicalVariable> variables = op.getVariables();
+            if (!variables.isEmpty()) {
+                writeArrayFieldOfVariables(VARIABLES_FIELD, variables);
+            }
+            LogicalVariable positionalVariable = op.getPositionalVariable();
+            if (positionalVariable != null) {
+                jsonGenerator.writeStringField("position", String.valueOf(positionalVariable));
+            }
+            writeArrayFieldOfExpression(EXPRESSIONS_FIELD, op.getExpressionRef(), indent);
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    private void writeUnnestMapOperator(AbstractUnnestMapOperator op, Void indent, String opName)
+            throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, opName);
+            List<LogicalVariable> variables = op.getVariables();
+            if (!variables.isEmpty()) {
+                writeArrayFieldOfVariables(VARIABLES_FIELD, variables);
+            }
+            writeArrayFieldOfExpression(EXPRESSIONS_FIELD, op.getExpressionRef(), indent);
+            writeFilterInformation(op.getMinFilterVars(), op.getMaxFilterVars());
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    private void writeFilterInformation(List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars)
+            throws AlgebricksException {
+        try {
+            if (minFilterVars != null || maxFilterVars != null) {
+                jsonGenerator.writeObjectFieldStart("with-filter-on");
+                if (minFilterVars != null) {
+                    writeArrayFieldOfVariables("min", minFilterVars);
+                }
+                if (maxFilterVars != null) {
+                    writeArrayFieldOfVariables("max", maxFilterVars);
+                }
+                jsonGenerator.writeEndObject();
+            }
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    private void writeSelectLimitInformation(Mutable<ILogicalExpression> selectCondition, long outputLimit, Void i)
+            throws AlgebricksException, IOException {
+        if (selectCondition != null) {
+            writeStringFieldExpression(CONDITION_FIELD, selectCondition, i);
+        }
         if (outputLimit >= 0) {
-            plan.append(",\n");
-            addIndent(indent).append("\"limit\": \"" + outputLimit + "\"");
-        }
-        return null;
-    }
-
-    private void appendVars(List<LogicalVariable> minFilterVars) throws AlgebricksException {
-        boolean first = true;
-        for (LogicalVariable v : minFilterVars) {
-            if (!first) {
-                buffer.append(",");
-            }
-            buffer.append("\"" + str(v) + "\"");
-            first = false;
+            jsonGenerator.writeStringField("limit", String.valueOf(outputLimit));
         }
     }
 
-    @Override
-    public Void visitLimitOperator(LimitOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"limit\",\n");
-        addIndent(indent).append("\"value\": \"" + op.getMaxObjects().getValue().accept(exprVisitor, indent) + "\"");
-        ILogicalExpression offset = op.getOffset().getValue();
-        if (offset != null) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"offset\": \"" + offset.accept(exprVisitor, indent) + "\"");
+    private void writeVariablesAndExpressions(List<LogicalVariable> variables,
+            List<Mutable<ILogicalExpression>> expressions, Void indent) throws IOException, AlgebricksException {
+        if (!variables.isEmpty()) {
+            writeArrayFieldOfVariables(VARIABLES_FIELD, variables);
         }
-        return null;
+        if (!expressions.isEmpty()) {
+            writeArrayFieldOfExpressions(EXPRESSIONS_FIELD, expressions, indent);
+        }
     }
 
-    @Override
-    public Void visitExchangeOperator(ExchangeOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"exchange\"");
-        return null;
-    }
-
-    @Override
-    public Void visitScriptOperator(ScriptOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"script\"");
-        if (!op.getInputVariables().isEmpty()) {
-            addIndent(0).append(",\n");
-            addIndent(indent).append("\"in\": [");
-            appendVars(op.getInputVariables());
-            buffer.append("]");
-        }
-        if (!op.getOutputVariables().isEmpty()) {
-            addIndent(0).append(",\n");
-            addIndent(indent).append("\"out\": [");
-            appendVars(op.getOutputVariables());
-            buffer.append("]");
-        }
-        return null;
-    }
-
-    @Override
-    public Void visitReplicateOperator(ReplicateOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"replicate\"");
-        return null;
-    }
-
-    @Override
-    public Void visitSplitOperator(SplitOperator op, Integer indent) throws AlgebricksException {
-        Mutable<ILogicalExpression> branchingExpression = op.getBranchingExpression();
-        addIndent(indent).append("\"operator\": \"split\",\n");
-        addIndent(indent).append("\"expressions\": \""
-                + branchingExpression.getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
-        return null;
-    }
-
-    @Override
-    public Void visitMaterializeOperator(MaterializeOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"materialize\"");
-        return null;
-    }
-
-    @Override
-    public Void visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, Integer indent)
-            throws AlgebricksException {
-        String header = "\"operator\": \"" + getIndexOpString(op.getOperation()) + "\",\n";
-        addIndent(indent).append(header);
-        addIndent(indent).append(str("\"data-source\": \"" + op.getDataSource() + "\",\n"));
-        addIndent(indent).append("\"from-record\": \"")
-                .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent) + "\"");
-        if (op.getAdditionalNonFilteringExpressions() != null) {
-            buffer.append(",\n\"meta\": {");
-            pprintExprList(op.getAdditionalNonFilteringExpressions(), 0);
-            buffer.append("}");
-        }
-        buffer.append(",\n");
-        addIndent(indent).append("\"partitioned-by\": {");
-        pprintExprList(op.getPrimaryKeyExpressions(), 0);
-        buffer.append("}");
-        if (op.getOperation() == Kind.UPSERT) {
-            addIndent(indent).append(",\n\"out\": {\n");
-            addIndent(indent).append("\"record-before-upsert\": \"" + op.getBeforeOpRecordVar() + "\"");
-            if (op.getBeforeOpAdditionalNonFilteringVars() != null) {
-                buffer.append(",\n");
-                addIndent(indent)
-                        .append("\"additional-before-upsert\": \"" + op.getBeforeOpAdditionalNonFilteringVars() + "\"");
-            }
-            addIndent(indent).append("}");
-        }
-        if (op.isBulkload()) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"bulkload\": true");
-        }
-        return null;
-    }
-
-    @Override
-    public Void visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, Integer indent)
-            throws AlgebricksException {
-        String header = getIndexOpString(op.getOperation());
-        addIndent(indent).append("\"operator\": \"" + header + "\",\n");
-        addIndent(indent).append("\"index\": \"" + op.getIndexName() + "\",\n");
-        addIndent(indent).append("\"on\": \"").append(str(op.getDataSourceIndex().getDataSource()) + "\",\n");
-        addIndent(indent).append("\"from\": {");
-
-        if (op.getOperation() == Kind.UPSERT) {
-
-            addIndent(indent).append("[\"replace\": \"");
-            pprintExprList(op.getPrevSecondaryKeyExprs(), 0);
-            buffer.append("\",\n");
-            addIndent(indent).append("\"with\": \"");
-            pprintExprList(op.getSecondaryKeyExpressions(), 0);
-            buffer.append("\"}");
-        } else {
-            pprintExprList(op.getSecondaryKeyExpressions(), 0);
-        }
-        buffer.append("\n");
-        addIndent(indent).append("}");
-        if (op.isBulkload()) {
-            buffer.append(",\n");
-            buffer.append("\"bulkload\": true");
-        }
-        return null;
-    }
-
-    public String getIndexOpString(Kind opKind) {
+    private String getIndexOpString(Kind opKind) {
         switch (opKind) {
             case DELETE:
                 return "delete-from";
@@ -653,220 +817,115 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 return "insert-into";
             case UPSERT:
                 return "upsert-into";
+            default:
+                throw new IllegalStateException();
+
         }
-        return null;
     }
 
-    @Override
-    public Void visitTokenizeOperator(TokenizeOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"tokenize\"");
-        variablePrintHelper(op.getTokenizeVars(), indent);
-        if (!op.getSecondaryKeyExpressions().isEmpty()) {
-            addIndent(0).append(",\n");
-            pprintExprList(op.getSecondaryKeyExpressions(), indent);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visitForwardOperator(ForwardOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"forward\"");
-        addIndent(0).append(",\n");
-        addIndent(indent).append("\"expressions\": \""
-                + op.getSideDataExpression().getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
-        return null;
-    }
-
-    @Override
-    public Void visitSinkOperator(SinkOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"sink\"");
-        return null;
-    }
-
-    @Override
-    public Void visitDelegateOperator(DelegateOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("\"operator\": \"" + op.toString() + "\"");
-        return null;
-    }
-
-    @Override
-    public Void visitWindowOperator(WindowOperator op, Integer indent) throws AlgebricksException {
-        Integer fldIndent = indent + 2;
-        addIndent(indent).append("\"operator\": \"window-aggregate\"");
-        variablePrintHelper(op.getVariables(), indent);
-        List<Mutable<ILogicalExpression>> expressions = op.getExpressions();
-        if (!expressions.isEmpty()) {
-            buffer.append(",\n");
-            pprintExprList(expressions, indent);
-        }
-        List<Mutable<ILogicalExpression>> partitionExpressions = op.getPartitionExpressions();
-        if (!partitionExpressions.isEmpty()) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"partition-by\": {\n");
-            pprintExprList(partitionExpressions, fldIndent);
-            buffer.append("\n");
-            addIndent(indent).append("}");
-        }
-        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions = op.getOrderExpressions();
-        if (!orderExpressions.isEmpty()) {
-            buffer.append(",\n");
-            addIndent(indent).append("\"order-by\": ");
-            pprintOrderExprList(orderExpressions, fldIndent);
-        }
-        if (op.hasNestedPlans()) {
-            List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> frameValueExpressions =
-                    op.getFrameValueExpressions();
-            if (!frameValueExpressions.isEmpty()) {
-                buffer.append(",\n");
-                addIndent(indent).append("\"frame-on\": ");
-                pprintOrderExprList(frameValueExpressions, fldIndent);
-            }
-            List<Mutable<ILogicalExpression>> frameStartExpressions = op.getFrameStartExpressions();
-            if (!frameStartExpressions.isEmpty()) {
-                buffer.append(",\n");
-                addIndent(indent).append("\"frame-start\": {\n");
-                pprintExprList(frameStartExpressions, fldIndent);
-                buffer.append("\n");
-                addIndent(indent).append("}");
-            }
-            List<Mutable<ILogicalExpression>> frameStartValidationExpressions = op.getFrameStartValidationExpressions();
-            if (!frameStartValidationExpressions.isEmpty()) {
-                buffer.append(",\n");
-                addIndent(indent).append("\"frame-start-if\": {\n");
-                pprintExprList(frameStartValidationExpressions, fldIndent);
-                buffer.append("\n");
-                addIndent(indent).append("}");
-            }
-            List<Mutable<ILogicalExpression>> frameEndExpressions = op.getFrameEndExpressions();
-            if (!frameEndExpressions.isEmpty()) {
-                buffer.append(",\n");
-                addIndent(indent).append("\"frame-end\": {\n");
-                pprintExprList(frameEndExpressions, fldIndent);
-                buffer.append("\n");
-                addIndent(indent).append("}");
-            }
-            List<Mutable<ILogicalExpression>> frameEndValidationExpressions = op.getFrameEndValidationExpressions();
-            if (!frameEndValidationExpressions.isEmpty()) {
-                buffer.append(",\n");
-                addIndent(indent).append("\"frame-end-if\": {\n");
-                pprintExprList(frameEndValidationExpressions, fldIndent);
-                buffer.append("\n");
-                addIndent(indent).append("}");
-            }
-            List<Mutable<ILogicalExpression>> frameExcludeExpressions = op.getFrameExcludeExpressions();
-            if (!frameExcludeExpressions.isEmpty()) {
-                buffer.append(",\n");
-                addIndent(indent).append("\"frame-exclude\": {\n");
-                pprintExprList(frameExcludeExpressions, fldIndent);
-                buffer.append("\n");
-                addIndent(indent).append("},\n");
-                addIndent(indent).append("\"frame-exclude-negation-start\": ")
-                        .append(String.valueOf(op.getFrameExcludeNegationStartIdx()));
-            }
-            Mutable<ILogicalExpression> frameExcludeUnaryExpression = op.getFrameExcludeUnaryExpression();
-            if (frameExcludeUnaryExpression.getValue() != null) {
-                buffer.append(",\n");
-                addIndent(indent).append("\"frame-exclude-unary\": ");
-                pprintExpr(frameExcludeUnaryExpression, fldIndent);
-            }
-            Mutable<ILogicalExpression> frameOffsetExpression = op.getFrameOffsetExpression();
-            if (frameOffsetExpression.getValue() != null) {
-                buffer.append(",\n");
-                addIndent(indent).append("\"frame-offset\": ");
-                pprintExpr(frameOffsetExpression, fldIndent);
-            }
-            int frameMaxObjects = op.getFrameMaxObjects();
-            if (frameMaxObjects != -1) {
-                buffer.append(",\n");
-                addIndent(indent).append("\"frame-max-objects\": ").append(String.valueOf(frameMaxObjects));
-            }
-            buffer.append(",\n");
-            addIndent(indent).append("\"subplan\": ");
-            printNestedPlans(op, fldIndent);
-        }
-        return null;
-    }
-
-    protected void printNestedPlans(AbstractOperatorWithNestedPlans op, Integer indent) throws AlgebricksException {
-        idCounter.nextPrefix();
-        buffer.append("[\n");
-        boolean first = true;
-        for (ILogicalPlan p : op.getNestedPlans()) {
-            if (!first) {
-                buffer.append(",");
-            }
-            printPlan(p, indent + 4);
-            first = false;
-        }
-        addIndent(indent).append("]");
-        idCounter.previousPrefix();
-    }
-
-    protected void pprintExprList(List<Mutable<ILogicalExpression>> expressions, Integer indent)
-            throws AlgebricksException {
-        addIndent(indent);
-        buffer.append("\"expressions\": \"");
-        boolean first = true;
-        for (Mutable<ILogicalExpression> exprRef : expressions) {
-            if (first) {
-                first = false;
-            } else {
-                buffer.append(", ");
-            }
-            pprintExpr(exprRef, indent);
-        }
-        buffer.append("\"");
-    }
-
-    protected void pprintExpr(Mutable<ILogicalExpression> exprRef, Integer indent) throws AlgebricksException {
-        buffer.append(exprRef.getValue().accept(exprVisitor, indent).replace('"', ' '));
-    }
-
-    protected void pprintVeList(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> vePairList, Integer indent)
-            throws AlgebricksException {
-        buffer.append("[");
-        boolean first = true;
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : vePairList) {
-            if (first) {
-                first = false;
-            } else {
-                buffer.append(",");
-            }
-            if (ve.first != null) {
-                buffer.append("{\"variable\": \"" + ve.first.toString().replace('"', ' ') + "\"," + "\"expression\": \""
-                        + ve.second.toString().replace('"', ' ') + "\"}");
-            } else {
-                buffer.append("{\"expression\": \"" + ve.second.getValue().accept(exprVisitor, indent).replace('"', ' ')
-                        + "\"}");
-            }
-        }
-        buffer.append("]");
-    }
-
-    private void pprintOrderExprList(List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions,
-            Integer indent) throws AlgebricksException {
-        buffer.append("[");
-        boolean first = true;
-        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExpressions) {
-            if (first) {
-                first = false;
-            } else {
-                buffer.append(",");
-            }
-            buffer.append("{\"order\": \"" + getOrderString(p.first, indent) + "\"," + "\"expression\": \""
-                    + p.second.getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"}");
-        }
-        buffer.append("]");
-    }
-
-    private String getOrderString(OrderOperator.IOrder order, Integer indent) throws AlgebricksException {
+    private String getOrderString(OrderOperator.IOrder order, Void indent) throws AlgebricksException {
         switch (order.getKind()) {
             case ASC:
                 return "ASC";
             case DESC:
                 return "DESC";
             default:
-                return order.getExpressionRef().getValue().accept(exprVisitor, indent).replace('"', ' ');
+                return order.getExpressionRef().getValue().accept(exprVisitor, indent);
+        }
+    }
+
+    /////////////// string fields ///////////////
+    /** Writes "fieldName": "expr" */
+    private void writeStringFieldExpression(String fieldName, Mutable<ILogicalExpression> expression, Void indent)
+            throws AlgebricksException, IOException {
+        jsonGenerator.writeStringField(fieldName, expression.getValue().accept(exprVisitor, indent));
+    }
+
+    /////////////// array fields ///////////////
+    /** Writes "fieldName": [ "var1", "var2", ... ] */
+    private void writeArrayFieldOfVariables(String fieldName, List<LogicalVariable> variables) throws IOException {
+        jsonGenerator.writeArrayFieldStart(fieldName);
+        for (int i = 0, size = variables.size(); i < size; i++) {
+            jsonGenerator.writeString(String.valueOf(variables.get(i)));
+        }
+        jsonGenerator.writeEndArray();
+    }
+
+    /** Writes "fieldName": [ ["var1", "var2", ...], ["var1", "var2", ...] ] */
+    private void writeArrayFieldOfNestedVariablesList(String fieldName, List<List<LogicalVariable>> nestedVarList)
+            throws IOException {
+        jsonGenerator.writeArrayFieldStart(fieldName);
+        for (int i = 0, size = nestedVarList.size(); i < size; i++) {
+            List<LogicalVariable> nextList = nestedVarList.get(i);
+            for (int k = 0, varSize = nextList.size(); k < varSize; k++) {
+                jsonGenerator.writeString(String.valueOf(nextList.get(k)));
+            }
+        }
+        jsonGenerator.writeEndArray();
+    }
+
+    /** Writes "fieldName" : [ "expr" ] */
+    private void writeArrayFieldOfExpression(String fieldName, Mutable<ILogicalExpression> expr, Void indent)
+            throws IOException, AlgebricksException {
+        jsonGenerator.writeArrayFieldStart(fieldName);
+        jsonGenerator.writeString(expr.getValue().accept(exprVisitor, indent));
+        jsonGenerator.writeEndArray();
+    }
+
+    /** Writes "fieldName" : [ "expr1", "expr2", ...] */
+    private void writeArrayFieldOfExpressions(String fieldName, List<Mutable<ILogicalExpression>> exprs, Void indent)
+            throws IOException, AlgebricksException {
+        jsonGenerator.writeArrayFieldStart(fieldName);
+        for (int i = 0, size = exprs.size(); i < size; i++) {
+            jsonGenerator.writeString(exprs.get(i).getValue().accept(exprVisitor, indent));
+        }
+        jsonGenerator.writeEndArray();
+    }
+
+    /** Writes "fieldName" : [ { "variable": "var1", "expression": "expr1" }, ... ] */
+    private void writeArrayFieldOfVariableExpressionPairs(String fieldName,
+            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> varExprPairs, Void indent)
+            throws AlgebricksException, IOException {
+        jsonGenerator.writeArrayFieldStart(fieldName);
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : varExprPairs) {
+            jsonGenerator.writeStartObject();
+            if (ve.first != null) {
+                jsonGenerator.writeStringField("variable", ve.first.toString());
+            }
+            writeStringFieldExpression(EXPRESSION_FIELD, ve.second, indent);
+            jsonGenerator.writeEndObject();
+        }
+        jsonGenerator.writeEndArray();
+    }
+
+    /** Writes "fieldName" : [ { "order": "", "expression": "" }, ... ] */
+    private void writeArrayFieldOfOrderExprList(String fieldName,
+            List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderList, Void indent)
+            throws AlgebricksException, IOException {
+        jsonGenerator.writeArrayFieldStart(fieldName);
+        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderList) {
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeStringField("order", getOrderString(p.first, indent));
+            writeStringFieldExpression(EXPRESSION_FIELD, p.second, indent);
+            jsonGenerator.writeEndObject();
+        }
+        jsonGenerator.writeEndArray();
+    }
+
+    /////////////// object fields ///////////////
+    /** Writes "fieldName" : { "expressions": [ "expr1", "expr2", ...] } */
+    private void writeObjectFieldWithExpressions(String fieldName, List<Mutable<ILogicalExpression>> exprs, Void indent)
+            throws IOException, AlgebricksException {
+        jsonGenerator.writeObjectFieldStart(fieldName);
+        writeArrayFieldOfExpressions(EXPRESSIONS_FIELD, exprs, indent);
+        jsonGenerator.writeEndObject();
+    }
+
+    private void flushContentToWriter() throws AlgebricksException {
+        try {
+            jsonGenerator.flush();
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
         }
     }
 }

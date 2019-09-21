@@ -158,6 +158,14 @@ public class IntersectOperator extends AbstractLogicalOperator {
         return inputExtraVars.get(inputIndex);
     }
 
+    public List<List<LogicalVariable>> getAllInputsCompareVariables() {
+        return inputCompareVars;
+    }
+
+    public List<List<LogicalVariable>> getAllInputsExtraVariables() {
+        return inputExtraVars;
+    }
+
     public List<LogicalVariable> getOutputCompareVariables() {
         return outputCompareVars;
     }

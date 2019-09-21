@@ -76,8 +76,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.SequentialM
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SortForwardPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SortMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StableSortPOperator;
-import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
-import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty.PropertyType;
@@ -283,7 +281,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             if (loggerTraceEnabled) {
                 AlgebricksConfig.ALGEBRICKS_LOGGER
                         .trace(">>>> Removing redundant SORT operator " + op.getPhysicalOperator() + "\n");
-                printOp(op);
+                printOp(op, context);
             }
             changed = true;
             AbstractLogicalOperator nextOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
@@ -528,7 +526,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         op.getInputs().set(i, topOp);
         OperatorPropertiesUtil.computeSchemaAndPropertiesRecIfNull((AbstractLogicalOperator) topOp.getValue(), context);
         OperatorManipulationUtil.setOperatorMode(op);
-        printOp((AbstractLogicalOperator) topOp.getValue());
+        printOp((AbstractLogicalOperator) topOp.getValue(), context);
     }
 
     private Mutable<ILogicalOperator> enforceOrderProperties(List<LocalOrderProperty> oList,
@@ -616,7 +614,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
                 AlgebricksConfig.ALGEBRICKS_LOGGER
                         .trace(">>>> Added partitioning enforcer " + exchg.getPhysicalOperator() + ".\n");
-                printOp((AbstractLogicalOperator) op);
+                printOp((AbstractLogicalOperator) op, context);
             }
         }
     }
@@ -875,11 +873,10 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         return !childLocalProperties.isEmpty();
     }
 
-    private void printOp(AbstractLogicalOperator op) throws AlgebricksException {
-        LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
-        PlanPrettyPrinter.printOperator(op, pvisitor, 0);
+    private void printOp(AbstractLogicalOperator op, IOptimizationContext ctx) throws AlgebricksException {
         if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(LogRedactionUtil.userData(pvisitor.get().toString()));
+            String plan = ctx.getPrettyPrinter().reset().printOperator(op).toString();
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(LogRedactionUtil.userData(plan));
         }
     }
 

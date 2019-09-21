@@ -20,21 +20,22 @@ package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 
-public class PlanPrettyPrinter {
+/**
+ * Note: Some implementations may be stateful and not thread-safe.
+ */
+public interface IPlanPrettyPrinter {
 
-    public static final int INIT_SIZE = 256;
+    /** Prints the plan rooted at the operator argument. */
+    IPlanPrettyPrinter printOperator(AbstractLogicalOperator operator) throws AlgebricksException;
 
-    public static IPlanPrettyPrinter createJsonPlanPrettyPrinter() {
-        return new LogicalOperatorPrettyPrintVisitorJson();
-    }
+    /** Prints the whole logical plan. */
+    IPlanPrettyPrinter printPlan(ILogicalPlan plan) throws AlgebricksException;
 
-    public static IPlanPrettyPrinter createStringPlanPrettyPrinter() {
-        return new LogicalOperatorPrettyPrintVisitor();
-    }
+    /** Resets the state of the pretty printer. */
+    IPlanPrettyPrinter reset() throws AlgebricksException;
 
-    public static void printPhysicalOps(ILogicalPlan plan, AlgebricksStringBuilderWriter out, int indent)
-            throws AlgebricksException {
-        AbstractLogicalOperatorPrettyPrintVisitor.printPhysicalOps(plan, out, indent);
-    }
+    /** @return the string of the printed plan. */
+    String toString();
 }

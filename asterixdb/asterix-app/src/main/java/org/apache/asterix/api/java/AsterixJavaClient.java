@@ -37,6 +37,7 @@ import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.translator.ExecutionPlans;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorFactory;
@@ -63,6 +64,7 @@ public class AsterixJavaClient {
     private final IStorageComponentProvider storageComponentProvider;
     private ICcApplicationContext appCtx;
     private Map<String, IAObject> statementParams;
+    private ExecutionPlans executionPlans;
 
     public AsterixJavaClient(ICcApplicationContext appCtx, IHyracksClientConnection hcc, Reader queryText,
             PrintWriter writer, ILangCompilationProvider compilationProvider,
@@ -107,6 +109,7 @@ public class AsterixJavaClient {
             PlanFormat pformat) throws Exception {
         queryJobSpec = null;
         dmlJobs = null;
+        executionPlans = null;
 
         if (queryText == null) {
             return;
@@ -136,6 +139,7 @@ public class AsterixJavaClient {
                 new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE), new IStatementExecutor.Stats(), null,
                 null, null, statementParams, true);
         translator.compileAndExecute(hcc, requestParameters);
+        executionPlans = translator.getExecutionPlans();
         writer.flush();
     }
 
@@ -148,4 +152,7 @@ public class AsterixJavaClient {
         }
     }
 
+    public ExecutionPlans getExecutionPlans() {
+        return executionPlans;
+    }
 }

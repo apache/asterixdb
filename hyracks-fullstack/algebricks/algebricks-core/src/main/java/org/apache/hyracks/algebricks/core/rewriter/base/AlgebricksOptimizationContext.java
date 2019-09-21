@@ -38,7 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeCompu
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableEvalSizeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
-import org.apache.hyracks.algebricks.core.algebra.prettyprint.AbstractLogicalOperatorPrettyPrintVisitor;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
@@ -86,7 +86,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     private final IExpressionTypeComputer expressionTypeComputer;
     private final IMissableTypeComputer nullableTypeComputer;
     private final INodeDomain defaultNodeDomain;
-    private final AbstractLogicalOperatorPrettyPrintVisitor prettyPrintVisitor;
+    private final IPlanPrettyPrinter prettyPrinter;
     private final IConflictingTypeResolver conflictingTypeResovler;
     private final IWarningCollector warningCollector;
 
@@ -94,8 +94,8 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
             IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer nullableTypeComputer,
             IConflictingTypeResolver conflictingTypeResovler, PhysicalOptimizationConfig physicalOptimizationConfig,
-            AlgebricksPartitionConstraint clusterLocations,
-            AbstractLogicalOperatorPrettyPrintVisitor prettyPrintVisitor, IWarningCollector warningCollector) {
+            AlgebricksPartitionConstraint clusterLocations, IPlanPrettyPrinter prettyPrinter,
+            IWarningCollector warningCollector) {
         this.varCounter = varCounter;
         this.expressionEvalSizeComputer = expressionEvalSizeComputer;
         this.mergeAggregationExpressionFactory = mergeAggregationExpressionFactory;
@@ -103,7 +103,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
         this.nullableTypeComputer = nullableTypeComputer;
         this.physicalOptimizationConfig = physicalOptimizationConfig;
         this.defaultNodeDomain = new DefaultNodeGroupDomain(clusterLocations);
-        this.prettyPrintVisitor = prettyPrintVisitor;
+        this.prettyPrinter = prettyPrinter;
         this.conflictingTypeResovler = conflictingTypeResovler;
         this.warningCollector = warningCollector;
     }
@@ -324,8 +324,8 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     }
 
     @Override
-    public AbstractLogicalOperatorPrettyPrintVisitor getPrettyPrintVisitor() {
-        return prettyPrintVisitor;
+    public IPlanPrettyPrinter getPrettyPrinter() {
+        return prettyPrinter;
     }
 
     @Override
