@@ -19,23 +19,22 @@
 package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
-import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
-public class ArrayRepeatTypeComputer extends AbstractResultTypeComputer {
+public class ABooleanArrayContainsTypeComputer extends AbstractResultTypeComputer {
 
-    public static final ArrayRepeatTypeComputer INSTANCE = new ArrayRepeatTypeComputer();
+    public static final ABooleanArrayContainsTypeComputer INSTANCE = new ABooleanArrayContainsTypeComputer();
 
-    private ArrayRepeatTypeComputer() {
+    private ABooleanArrayContainsTypeComputer() {
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        // return type is always nullable since even if the args are valid, array repeat might return null if the 2nd
-        // arg turns out to be NaN/Inf at runtime (2nd arg is number of times to repeat the value (1st arg))
-        return AUnionType.createNullableType(new AOrderedListType(strippedInputTypes[0], null));
+        return strippedInputTypes[0].getTypeTag().isListType() ? BuiltinType.ABOOLEAN
+                : AUnionType.createNullableType(BuiltinType.ABOOLEAN);
     }
 }

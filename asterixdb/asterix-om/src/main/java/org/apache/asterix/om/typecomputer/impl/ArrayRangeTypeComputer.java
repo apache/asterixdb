@@ -22,6 +22,7 @@ package org.apache.asterix.om.typecomputer.impl;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -49,7 +50,8 @@ public class ArrayRangeTypeComputer extends AbstractResultTypeComputer {
         } else if (ATypeHierarchy.canPromote(startNum.getTypeTag(), ATypeTag.DOUBLE)
                 && ATypeHierarchy.canPromote(endNum.getTypeTag(), ATypeTag.DOUBLE)
                 && (step == null || ATypeHierarchy.canPromote(step.getTypeTag(), ATypeTag.DOUBLE))) {
-            return DOUBLE_LIST;
+            // even if the args types are valid, range function might return NULL if the doubles turn out to be Nan/Inf
+            return AUnionType.createNullableType(DOUBLE_LIST);
         } else {
             return BuiltinType.ANY;
         }
