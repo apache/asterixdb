@@ -17,8 +17,7 @@
  * under the License.
  */
 /*
- * Description     : This test is intended to test the compact statement which merge the disk components of a dataset and
- * all of its indexes using the concurrent merge policy.
+ * Description     : This test is intended to test a dataset and all of its indexes using the concurrent merge policy.
  * Expected Result : Success
  * Date            : June 25 2019
  */
