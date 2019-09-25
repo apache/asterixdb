@@ -89,6 +89,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     private static final DefaultIndenter OBJECT_INDENT = new DefaultIndenter("   ", DefaultIndenter.SYS_LF);
     private static final String OPERATOR_FIELD = "operator";
     private static final String VARIABLES_FIELD = "variables";
+    // printing using the "expressions" field has to be an array of strings of the form ["str1", "str2", ...]
     private static final String EXPRESSIONS_FIELD = "expressions";
     private static final String EXPRESSION_FIELD = "expression";
     private static final String CONDITION_FIELD = "condition";
@@ -375,7 +376,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     public Void visitSelectOperator(SelectOperator op, Void indent) throws AlgebricksException {
         try {
             jsonGenerator.writeStringField(OPERATOR_FIELD, "select");
-            writeStringFieldExpression(EXPRESSIONS_FIELD, op.getCondition(), indent);
+            writeStringFieldExpression(CONDITION_FIELD, op.getCondition(), indent);
             return null;
         } catch (IOException e) {
             throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
