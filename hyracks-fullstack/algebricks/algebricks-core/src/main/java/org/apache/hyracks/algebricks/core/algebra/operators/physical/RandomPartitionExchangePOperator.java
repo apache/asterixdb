@@ -18,6 +18,11 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
+import static org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty.PartitioningType;
+
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
@@ -27,7 +32,9 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
@@ -68,7 +75,7 @@ public class RandomPartitionExchangePOperator extends AbstractExchangePOperator 
             ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context) throws AlgebricksException {
         ITuplePartitionComputerFactory tpcf = new RandomPartitionComputerFactory();
         MToNPartitioningConnectorDescriptor conn = new MToNPartitioningConnectorDescriptor(spec, tpcf);
-        return new Pair<IConnectorDescriptor, TargetConstraint>(conn, null);
+        return new Pair<>(conn, null);
     }
 
     @Override
@@ -79,8 +86,16 @@ public class RandomPartitionExchangePOperator extends AbstractExchangePOperator 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-        this.deliveredProperties = new StructuralPropertiesVector(new RandomPartitioningProperty(domain),
-                op2.getDeliveredPhysicalProperties().getLocalProperties());
+        IPhysicalPropertiesVector childDeliveredProps = op2.getDeliveredPhysicalProperties();
+        IPartitioningProperty childPartitioning = childDeliveredProps.getPartitioningProperty();
+        List<ILocalStructuralProperty> localProps;
+        // local properties of child is preserved if child is unpartitioned. Otherwise, local props are destroyed.
+        if (childPartitioning != null && childPartitioning.getPartitioningType() == PartitioningType.UNPARTITIONED) {
+            localProps = childDeliveredProps.getLocalProperties();
+        } else {
+            localProps = Collections.emptyList();
+        }
+        this.deliveredProperties = new StructuralPropertiesVector(new RandomPartitioningProperty(domain), localProps);
     }
 
     @Override
@@ -88,5 +103,4 @@ public class RandomPartitionExchangePOperator extends AbstractExchangePOperator 
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         return emptyUnaryRequirements();
     }
-
 }
