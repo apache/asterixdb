@@ -27,8 +27,10 @@ import org.apache.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import org.apache.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
@@ -56,10 +58,17 @@ public class RTreeSearchCursor extends EnforcedIndexCursor implements ITreeIndex
     private ITreeIndexTupleReference frameTuple;
     private boolean readLatched = false;
 
+    private final IIndexCursorStats stats;
+
     public RTreeSearchCursor(IRTreeInteriorFrame interiorFrame, IRTreeLeafFrame leafFrame) {
+        this(interiorFrame, leafFrame, NoOpIndexCursorStats.INSTANCE);
+    }
+
+    public RTreeSearchCursor(IRTreeInteriorFrame interiorFrame, IRTreeLeafFrame leafFrame, IIndexCursorStats stats) {
         this.interiorFrame = interiorFrame;
         this.leafFrame = leafFrame;
         this.frameTuple = leafFrame.createTupleReference();
+        this.stats = stats;
     }
 
     @Override
@@ -108,6 +117,7 @@ public class RTreeSearchCursor extends EnforcedIndexCursor implements ITreeIndex
             }
             ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
             node.acquireReadLatch();
+            stats.getPageCounter().update(1);
             readLatched = true;
             try {
                 interiorFrame.setPage(node);

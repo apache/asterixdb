@@ -174,4 +174,24 @@ class TracedIOOperation implements ILSMIOOperation {
     public boolean hasFailed() {
         return ioOp.hasFailed();
     }
+
+    @Override
+    public long getRemainingPages() {
+        return ioOp.getRemainingPages();
+    }
+
+    @Override
+    public void resume() {
+        ioOp.resume();
+    }
+
+    @Override
+    public void pause() {
+        ioOp.pause();
+    }
+
+    @Override
+    public boolean isActive() {
+        return ioOp.isActive();
+    }
 }

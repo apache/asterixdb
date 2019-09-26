@@ -51,7 +51,8 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE(DOUBLE, 0.01d),
         STORAGE_MAX_ACTIVE_WRITABLE_DATASETS(UNSIGNED_INTEGER, 8),
         STORAGE_COMPRESSION_BLOCK(STRING, "none"),
-        STORAGE_DISK_FORCE_BYTES(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(16, MEGABYTE));
+        STORAGE_DISK_FORCE_BYTES(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(16, MEGABYTE)),
+        STORAGE_IO_SCHEDULER(STRING, "greedy");
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -96,6 +97,8 @@ public class StorageProperties extends AbstractProperties {
                     return "The default compression scheme for the storage";
                 case STORAGE_DISK_FORCE_BYTES:
                     return "The number of bytes before each disk force (fsync)";
+                case STORAGE_IO_SCHEDULER:
+                    return "The I/O scheduler for LSM flush and merge operations";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -189,6 +192,10 @@ public class StorageProperties extends AbstractProperties {
 
     public String getCompressionScheme() {
         return accessor.getString(Option.STORAGE_COMPRESSION_BLOCK);
+    }
+
+    public String getIoScheduler() {
+        return accessor.getString(Option.STORAGE_IO_SCHEDULER);
     }
 
     protected int getMetadataDatasets() {

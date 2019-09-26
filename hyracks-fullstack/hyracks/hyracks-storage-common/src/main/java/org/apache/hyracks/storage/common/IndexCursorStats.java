@@ -16,26 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.lsm.common.api;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+package org.apache.hyracks.storage.common;
 
-/**
- * Schedules IO operations for LSM indexes
- */
-public interface ILSMIOOperationScheduler {
+import org.apache.hyracks.api.com.job.profiling.counters.Counter;
+import org.apache.hyracks.api.job.profiling.counters.ICounter;
 
-    /**
-     * Schedule an IO operation
-     * @param operation
-     * @throws HyracksDataException
-     */
-    void scheduleOperation(ILSMIOOperation operation) throws HyracksDataException;
+public class IndexCursorStats implements IIndexCursorStats {
 
-    /**
-     * Notify an IO operation has completed
-     * @param operation
-     * @throws HyracksDataException
-     */
-    void completeOperation(ILSMIOOperation operation) throws HyracksDataException;
+    private final ICounter pageCounter = new Counter("pageCounter");
+
+    @Override
+    public ICounter getPageCounter() {
+        return pageCounter;
+    }
+
 }

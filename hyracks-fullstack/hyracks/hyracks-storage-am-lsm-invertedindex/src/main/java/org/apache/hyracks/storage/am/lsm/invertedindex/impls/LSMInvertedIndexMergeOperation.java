@@ -25,15 +25,16 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.MergeOperation;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 
 public class LSMInvertedIndexMergeOperation extends MergeOperation {
     private final FileReference deletedKeysBTreeMergeTarget;
     private final FileReference bloomFilterMergeTarget;
 
-    public LSMInvertedIndexMergeOperation(ILSMIndexAccessor accessor, IIndexCursor cursor, FileReference target,
-            FileReference deletedKeysBTreeMergeTarget, FileReference bloomFilterMergeTarget,
+    public LSMInvertedIndexMergeOperation(ILSMIndexAccessor accessor, IIndexCursor cursor, IIndexCursorStats stats,
+            FileReference target, FileReference deletedKeysBTreeMergeTarget, FileReference bloomFilterMergeTarget,
             ILSMIOOperationCallback callback, String indexIdentifier) {
-        super(accessor, target, callback, indexIdentifier, cursor);
+        super(accessor, target, callback, indexIdentifier, cursor, stats);
         this.deletedKeysBTreeMergeTarget = deletedKeysBTreeMergeTarget;
         this.bloomFilterMergeTarget = bloomFilterMergeTarget;
     }
@@ -50,4 +51,5 @@ public class LSMInvertedIndexMergeOperation extends MergeOperation {
     public LSMComponentFileReferences getComponentFiles() {
         return new LSMComponentFileReferences(target, deletedKeysBTreeMergeTarget, bloomFilterMergeTarget);
     }
+
 }

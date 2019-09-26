@@ -73,4 +73,9 @@ public abstract class FlushOperation extends AbstractIoOperation {
     public int hashCode() {
         return target.getFile().getName().hashCode();
     }
+
+    @Override
+    public long getRemainingPages() {
+        return 0;
+    }
 }

@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
@@ -34,6 +35,10 @@ public class DiskBTreeRangeSearchCursor extends BTreeRangeSearchCursor {
 
     public DiskBTreeRangeSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes) {
         super(frame, exclusiveLatchNodes);
+    }
+
+    public DiskBTreeRangeSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes, IIndexCursorStats stats) {
+        super(frame, exclusiveLatchNodes, stats);
     }
 
     @Override
@@ -95,6 +100,7 @@ public class DiskBTreeRangeSearchCursor extends BTreeRangeSearchCursor {
 
     @Override
     protected ICachedPage acquirePage(int pageId) throws HyracksDataException {
+        stats.getPageCounter().update(1);
         return bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
     }
 

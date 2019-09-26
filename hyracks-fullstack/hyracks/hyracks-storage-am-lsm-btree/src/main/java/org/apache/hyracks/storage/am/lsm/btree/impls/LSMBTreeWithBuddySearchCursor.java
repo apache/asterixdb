@@ -24,14 +24,21 @@ import org.apache.hyracks.dataflow.common.data.accessors.PermutingTupleReference
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.ICursorInitialState;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 
 public class LSMBTreeWithBuddySearchCursor extends LSMBTreeWithBuddyAbstractCursor {
     private int currentCursor;
     private final PermutingTupleReference buddyBTreeTuple;
 
     public LSMBTreeWithBuddySearchCursor(ILSMIndexOperationContext opCtx, int[] buddyBTreeFields) {
-        super(opCtx);
+        this(opCtx, buddyBTreeFields, NoOpIndexCursorStats.INSTANCE);
+    }
+
+    public LSMBTreeWithBuddySearchCursor(ILSMIndexOperationContext opCtx, int[] buddyBTreeFields,
+            IIndexCursorStats stats) {
+        super(opCtx, stats);
         currentCursor = 0;
         this.buddyBTreeTuple = new PermutingTupleReference(buddyBTreeFields);
     }

@@ -32,9 +32,11 @@ import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolic
 import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexAccessor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
@@ -73,12 +75,19 @@ public class BTreeRangeSearchCursor extends EnforcedIndexCursor implements ITree
     protected ITupleReference lowKey;
     protected ITupleReference highKey;
 
+    protected final IIndexCursorStats stats;
+
     public BTreeRangeSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes) {
+        this(frame, exclusiveLatchNodes, NoOpIndexCursorStats.INSTANCE);
+    }
+
+    public BTreeRangeSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes, IIndexCursorStats stats) {
         this.frame = frame;
         this.frameTuple = frame.createTupleReference();
         this.exclusiveLatchNodes = exclusiveLatchNodes;
         this.reusablePredicate = new RangePredicate();
         this.reconciliationTuple = new ArrayTupleReference();
+        this.stats = stats;
     }
 
     @Override
@@ -300,6 +309,7 @@ public class BTreeRangeSearchCursor extends EnforcedIndexCursor implements ITree
         } else {
             nextPage.acquireReadLatch();
         }
+        stats.getPageCounter().update(1);
         return nextPage;
     }
 }

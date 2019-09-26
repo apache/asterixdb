@@ -40,6 +40,7 @@ import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
 public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
@@ -59,7 +60,7 @@ public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
     private IntegerPointable cursorIndexPointable;
 
     public LSMBTreeDiskComponentScanCursor(ILSMIndexOperationContext opCtx) {
-        super(opCtx, true);
+        super(opCtx, true, NoOpIndexCursorStats.INSTANCE);
         this.outputTuple = new ArrayTupleReference();
     }
 

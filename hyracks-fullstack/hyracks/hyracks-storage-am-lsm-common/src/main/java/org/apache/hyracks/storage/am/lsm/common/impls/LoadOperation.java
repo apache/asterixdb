@@ -59,4 +59,9 @@ public class LoadOperation extends AbstractIoOperation {
     public Map<String, Object> getParameters() {
         return parameters;
     }
+
+    @Override
+    public long getRemainingPages() {
+        return 0;
+    }
 }

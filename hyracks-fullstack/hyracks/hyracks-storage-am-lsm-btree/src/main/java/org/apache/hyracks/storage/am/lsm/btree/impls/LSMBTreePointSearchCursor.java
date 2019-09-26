@@ -31,7 +31,6 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.ILSMIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
@@ -200,7 +199,7 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
                 btreeCursors[i] = btreeAccessors[i].createPointCursor(false);
             } else {
                 // re-use
-                btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                btreeAccessors[i].reset(btree, NoOpIndexAccessParameters.INSTANCE);
                 btreeCursors[i].close();
             }
         }

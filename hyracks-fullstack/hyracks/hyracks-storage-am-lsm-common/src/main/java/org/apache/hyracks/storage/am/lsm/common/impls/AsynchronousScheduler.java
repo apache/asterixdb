@@ -18,80 +18,43 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.storage.am.lsm.common.api.IIoOperationFailedCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerFactory;
 
-public class AsynchronousScheduler implements ILSMIOOperationScheduler, Closeable {
-    // Since this is a asynchronous scheduler, we make sure that flush operations coming from the same lsm index
-    // will be executed serially in same order of scheduling the operations. Look at asterix issue 630.
+/**
+ * The asynchronous scheduler schedules merge operations as they arrive and allocate disk bandwidth to them
+ * fairly. It avoids starvation of any merge. It is important to use this scheduler when measuring system performance.
+ *
+ */
+public class AsynchronousScheduler extends AbstractAsynchronousScheduler {
 
-    private final ExecutorService executor;
-    private final Map<String, ILSMIOOperation> runningFlushOperations = new HashMap<>();
-    private final Map<String, Deque<ILSMIOOperation>> waitingFlushOperations = new HashMap<>();
-    private final Map<String, Throwable> failedGroups = new HashMap<>();
+    public static final ILSMIOOperationSchedulerFactory FACTORY = new ILSMIOOperationSchedulerFactory() {
+        @Override
+        public ILSMIOOperationScheduler createIoScheduler(ThreadFactory threadFactory,
+                IIoOperationFailedCallback callback) {
+            return new AsynchronousScheduler(threadFactory, callback);
+        }
 
-    public AsynchronousScheduler(ThreadFactory threadFactory, final IIoOperationFailedCallback callback) {
-        executor = new IoOperationExecutor(threadFactory, this, callback, runningFlushOperations,
-                waitingFlushOperations, failedGroups);
+        public String getName() {
+            return "async";
+        }
+    };
+
+    public AsynchronousScheduler(ThreadFactory threadFactory, IIoOperationFailedCallback callback) {
+        super(threadFactory, callback);
     }
 
     @Override
-    public void scheduleOperation(ILSMIOOperation operation) {
-        switch (operation.getIOOpertionType()) {
-            case FLUSH:
-                scheduleFlush(operation);
-                break;
-            case MERGE:
-                executor.submit(operation);
-                break;
-            case NOOP:
-                return;
-            default:
-                // this should never happen
-                // just guard here to avoid silent failures in case of future extensions
-                throw new IllegalArgumentException("Unknown operation type " + operation.getIOOpertionType());
-        }
-    }
-
-    private void scheduleFlush(ILSMIOOperation operation) {
-        String id = operation.getIndexIdentifier();
-        synchronized (executor) {
-            if (failedGroups.containsKey(id)) {
-                // Group failure. Fail the operation right away
-                operation.setStatus(LSMIOOperationStatus.FAILURE);
-                operation.setFailure(new RuntimeException("Operation group " + id + " has permanently failed",
-                        failedGroups.get(id)));
-                operation.complete();
-                return;
-            }
-            if (runningFlushOperations.containsKey(id)) {
-                if (waitingFlushOperations.containsKey(id)) {
-                    waitingFlushOperations.get(id).offer(operation);
-                } else {
-                    Deque<ILSMIOOperation> q = new ArrayDeque<>();
-                    q.offer(operation);
-                    waitingFlushOperations.put(id, q);
-                }
-            } else {
-                runningFlushOperations.put(id, operation);
-                executor.submit(operation);
-            }
-        }
+    protected void scheduleMerge(ILSMIOOperation operation) {
+        executor.submit(operation);
     }
 
     @Override
-    public void close() throws IOException {
-        executor.shutdown();
+    public void completeOperation(ILSMIOOperation operation) {
+        // no op
     }
 }

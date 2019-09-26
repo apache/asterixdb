@@ -30,6 +30,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
@@ -57,10 +58,12 @@ import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
@@ -816,7 +819,7 @@ public class BTree extends AbstractTreeIndex {
 
     @Override
     public BTreeAccessor createAccessor(IIndexAccessParameters iap) {
-        return new BTreeAccessor(this, iap.getModificationCallback(), iap.getSearchOperationCallback());
+        return new BTreeAccessor(this, iap);
     }
 
     // TODO: Class should be private. But currently we need to expose the
@@ -832,18 +835,19 @@ public class BTree extends AbstractTreeIndex {
         protected BTree btree;
         protected BTreeOpContext ctx;
         private boolean destroyed = false;
+        protected IIndexAccessParameters iap;
 
-        public BTreeAccessor(BTree btree, IModificationOperationCallback modificationCalback,
-                ISearchOperationCallback searchCallback) {
+        public BTreeAccessor(BTree btree, IIndexAccessParameters iap) {
             this.btree = btree;
-            this.ctx = btree.createOpContext(this, modificationCalback, searchCallback);
+            this.ctx = btree.createOpContext(this, iap.getModificationCallback(), iap.getSearchOperationCallback());
+            this.iap = iap;
         }
 
-        public void reset(BTree btree, IModificationOperationCallback modificationCallback,
-                ISearchOperationCallback searchCallback) {
+        public void reset(BTree btree, IIndexAccessParameters iap) {
             this.btree = btree;
-            ctx.setCallbacks(modificationCallback, searchCallback);
+            ctx.setCallbacks(iap.getModificationCallback(), iap.getSearchOperationCallback());
             ctx.reset();
+            this.iap = iap;
         }
 
         @Override
@@ -879,7 +883,8 @@ public class BTree extends AbstractTreeIndex {
         @Override
         public BTreeRangeSearchCursor createSearchCursor(boolean exclusive) {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
-            return new BTreeRangeSearchCursor(leafFrame, exclusive);
+            return new BTreeRangeSearchCursor(leafFrame, exclusive, (IIndexCursorStats) iap.getParameters()
+                    .getOrDefault(HyracksConstants.INDEX_CURSOR_STATS, NoOpIndexCursorStats.INSTANCE));
         }
 
         public BTreeRangeSearchCursor createPointCursor(boolean exclusive) {

@@ -18,24 +18,10 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.api;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import java.util.concurrent.ThreadFactory;
 
-/**
- * Schedules IO operations for LSM indexes
- */
-public interface ILSMIOOperationScheduler {
+public interface ILSMIOOperationSchedulerFactory {
+    ILSMIOOperationScheduler createIoScheduler(ThreadFactory threadFactory, IIoOperationFailedCallback callback);
 
-    /**
-     * Schedule an IO operation
-     * @param operation
-     * @throws HyracksDataException
-     */
-    void scheduleOperation(ILSMIOOperation operation) throws HyracksDataException;
-
-    /**
-     * Notify an IO operation has completed
-     * @param operation
-     * @throws HyracksDataException
-     */
-    void completeOperation(ILSMIOOperation operation) throws HyracksDataException;
+    String getName();
 }

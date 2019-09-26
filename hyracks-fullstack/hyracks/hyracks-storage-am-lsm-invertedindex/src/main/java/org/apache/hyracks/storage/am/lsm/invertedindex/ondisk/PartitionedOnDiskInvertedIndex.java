@@ -19,12 +19,10 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
@@ -54,9 +52,9 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
     }
 
     public class PartitionedOnDiskInvertedIndexAccessor extends OnDiskInvertedIndexAccessor {
-        public PartitionedOnDiskInvertedIndexAccessor(OnDiskInvertedIndex index, IHyracksTaskContext ctx)
+        public PartitionedOnDiskInvertedIndexAccessor(OnDiskInvertedIndex index, IIndexAccessParameters iap)
                 throws HyracksDataException {
-            super(index, ctx);
+            super(index, iap);
         }
 
         @Override
@@ -79,8 +77,7 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
     @Override
     public PartitionedOnDiskInvertedIndexAccessor createAccessor(IIndexAccessParameters iap)
             throws HyracksDataException {
-        return new PartitionedOnDiskInvertedIndexAccessor(this,
-                (IHyracksTaskContext) iap.getParameters().get(HyracksConstants.HYRACKS_TASK_CONTEXT));
+        return new PartitionedOnDiskInvertedIndexAccessor(this, iap);
     }
 
     @Override

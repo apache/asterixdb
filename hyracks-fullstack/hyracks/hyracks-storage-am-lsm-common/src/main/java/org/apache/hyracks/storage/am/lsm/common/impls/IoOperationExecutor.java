@@ -79,6 +79,7 @@ public class IoOperationExecutor extends ThreadPoolExecutor {
         if (!failed || executedOp.getIOOpertionType() != LSMIOOperationType.FLUSH) {
             executedOp.complete(); // destroy if merge or successful flush
         }
+        scheduler.completeOperation(executedOp);
         if (executedOp.getIOOpertionType() == LSMIOOperationType.FLUSH) {
             String id = executedOp.getIndexIdentifier();
             synchronized (this) {

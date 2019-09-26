@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.btree.impls;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.api.IBTreeFrame;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
@@ -33,10 +34,10 @@ import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
-import org.apache.hyracks.storage.common.ISearchOperationCallback;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
@@ -195,14 +196,13 @@ public class DiskBTree extends BTree {
 
     @Override
     public BTreeAccessor createAccessor(IIndexAccessParameters iap) {
-        return new DiskBTreeAccessor(this, iap.getModificationCallback(), iap.getSearchOperationCallback());
+        return new DiskBTreeAccessor(this, iap);
     }
 
     public class DiskBTreeAccessor extends BTreeAccessor {
 
-        public DiskBTreeAccessor(DiskBTree btree, IModificationOperationCallback modificationCalback,
-                ISearchOperationCallback searchCallback) {
-            super(btree, modificationCalback, searchCallback);
+        public DiskBTreeAccessor(DiskBTree btree, IIndexAccessParameters iap) {
+            super(btree, iap);
         }
 
         @Override
@@ -228,7 +228,8 @@ public class DiskBTree extends BTree {
         @Override
         public DiskBTreeRangeSearchCursor createSearchCursor(boolean exclusive) {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
-            return new DiskBTreeRangeSearchCursor(leafFrame, exclusive);
+            return new DiskBTreeRangeSearchCursor(leafFrame, exclusive, (IIndexCursorStats) iap.getParameters()
+                    .getOrDefault(HyracksConstants.INDEX_CURSOR_STATS, NoOpIndexCursorStats.INSTANCE));
         }
 
         @Override

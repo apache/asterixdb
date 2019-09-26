@@ -41,12 +41,17 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
+import org.apache.hyracks.storage.am.lsm.common.impls.MergeOperation;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.Assert;
 
 @SuppressWarnings("rawtypes")
 public abstract class TreeIndexTestUtils {
@@ -385,6 +390,17 @@ public abstract class TreeIndexTestUtils {
             checkTuples[numCheckTuples - 1] = checkTuple;
             checkTuples[checkTupleIdx] = tmp;
             numCheckTuples--;
+        }
+    }
+
+    public static void checkCursorStats(ILSMIOOperation op) {
+        if (op.getIOOpertionType() == LSMIOOperationType.MERGE) {
+            MergeOperation mergeOp = (MergeOperation) op;
+            IIndexCursorStats stats = mergeOp.getCursorStats();
+            Assert.assertTrue(stats.getPageCounter().get() > 0);
+            // Index cursor stats are only an (conservative) approximation of the number of pages of
+            // merging components. Thus, there could be some left over pages.
+            Assert.assertTrue(stats.getPageCounter().get() >= 0);
         }
     }
 

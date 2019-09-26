@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -45,6 +46,8 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
     private ILSMDiskComponent newComponent;
     private boolean completed = false;
     private List<IoOperationCompleteListener> completeListeners;
+
+    private final AtomicBoolean isActive = new AtomicBoolean(true);
 
     public AbstractIoOperation(ILSMIndexAccessor accessor, FileReference target, ILSMIOOperationCallback callback,
             String indexIdentifier) {
@@ -179,5 +182,36 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
     @Override
     public boolean hasFailed() {
         return status == LSMIOOperationStatus.FAILURE;
+    }
+
+    @Override
+    public void resume() {
+        synchronized (this) {
+            isActive.set(true);
+            notifyAll();
+        }
+    }
+
+    @Override
+    public void pause() {
+        isActive.set(false);
+    }
+
+    @Override
+    public boolean isActive() {
+        return isActive.get();
+    }
+
+    public void waitIfPaused() throws HyracksDataException {
+        synchronized (this) {
+            while (!isActive.get()) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw HyracksDataException.create(e);
+                }
+            }
+        }
     }
 }

@@ -30,14 +30,15 @@ import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.ILSMIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 
@@ -59,14 +60,16 @@ public abstract class LSMBTreeWithBuddyAbstractCursor extends EnforcedIndexCurso
     protected ILSMHarness lsmHarness;
     protected boolean foundNext;
     protected final ILSMIndexOperationContext opCtx;
+    protected final IIndexAccessParameters iap;
 
     protected final long[] hashes = BloomFilter.createHashArray();
 
     protected List<ILSMComponent> operationalComponents;
 
-    public LSMBTreeWithBuddyAbstractCursor(ILSMIndexOperationContext opCtx) {
+    public LSMBTreeWithBuddyAbstractCursor(ILSMIndexOperationContext opCtx, IIndexCursorStats stats) {
         super();
         this.opCtx = opCtx;
+        this.iap = IndexAccessParameters.createNoOpParams(stats);
         buddyBtreeRangePredicate = new RangePredicate(null, null, true, true, null, null);
     }
 
@@ -127,13 +130,12 @@ public abstract class LSMBTreeWithBuddyAbstractCursor extends EnforcedIndexCurso
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getBTreeLeafFrameFactory().createFrame();
             if (btreeAccessors[i] == null) {
                 btreeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
-                btreeAccessors[i] = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-                buddyBtreeAccessors[i] = buddyBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+                btreeAccessors[i] = btree.createAccessor(iap);
+                buddyBtreeAccessors[i] = buddyBtree.createAccessor(iap);
             } else {
                 btreeCursors[i].close();
-                btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-                buddyBtreeAccessors[i].reset(buddyBtree, NoOpOperationCallback.INSTANCE,
-                        NoOpOperationCallback.INSTANCE);
+                btreeAccessors[i].reset(btree, iap);
+                buddyBtreeAccessors[i].reset(buddyBtree, iap);
             }
         }
         btreeRangePredicate = (RangePredicate) searchPred;

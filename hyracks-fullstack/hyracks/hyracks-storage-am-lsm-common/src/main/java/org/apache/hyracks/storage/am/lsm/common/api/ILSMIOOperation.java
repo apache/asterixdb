@@ -153,4 +153,27 @@ public interface ILSMIOOperation extends Callable<LSMIOOperationStatus>, IPageWr
      * Get parameters passed when calling this IO operation
      */
     Map<String, Object> getParameters();
+
+    /**
+     *
+     * @return the estimated number of disk pages remaining for this IO operation
+     */
+    long getRemainingPages();
+
+    /**
+     * Resume this IO operation
+     */
+    void resume();
+
+    /**
+     * Pause this IO operation
+     */
+    void pause();
+
+    /**
+     *
+     * @return whether this IO operation is currently active (i.e., not paused)
+     */
+    boolean isActive();
+
 }

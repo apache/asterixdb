@@ -27,6 +27,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.PermutingTupleReference
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.ICursorInitialState;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
@@ -40,8 +41,8 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
     private PermutingTupleReference btreeTuple;
 
     public LSMRTreeSortedCursor(ILSMIndexOperationContext opCtx, ILinearizeComparatorFactory linearizer,
-            int[] buddyBTreeFields) throws HyracksDataException {
-        super(opCtx);
+            int[] buddyBTreeFields, IIndexCursorStats stats) throws HyracksDataException {
+        super(opCtx, stats);
         this.linearizeCmp = linearizer.createBinaryComparator();
         this.btreeTuple = new PermutingTupleReference(buddyBTreeFields);
         close();

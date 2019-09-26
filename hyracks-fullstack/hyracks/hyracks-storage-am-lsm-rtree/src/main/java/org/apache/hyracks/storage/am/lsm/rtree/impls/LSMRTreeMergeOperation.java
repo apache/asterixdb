@@ -24,15 +24,16 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.MergeOperation;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 
 public class LSMRTreeMergeOperation extends MergeOperation {
     private final FileReference btreeMergeTarget;
     private final FileReference bloomFilterMergeTarget;
 
-    public LSMRTreeMergeOperation(ILSMIndexAccessor accessor, IIndexCursor cursor, FileReference target,
-            FileReference btreeMergeTarget, FileReference bloomFilterMergeTarget, ILSMIOOperationCallback callback,
-            String indexIdentifier) {
-        super(accessor, target, callback, indexIdentifier, cursor);
+    public LSMRTreeMergeOperation(ILSMIndexAccessor accessor, IIndexCursor cursor, IIndexCursorStats stats,
+            FileReference target, FileReference btreeMergeTarget, FileReference bloomFilterMergeTarget,
+            ILSMIOOperationCallback callback, String indexIdentifier) {
+        super(accessor, target, callback, indexIdentifier, cursor, stats);
         this.btreeMergeTarget = btreeMergeTarget;
         this.bloomFilterMergeTarget = bloomFilterMergeTarget;
     }
@@ -49,4 +50,5 @@ public class LSMRTreeMergeOperation extends MergeOperation {
     public LSMComponentFileReferences getComponentFiles() {
         return new LSMComponentFileReferences(btreeMergeTarget, null, bloomFilterMergeTarget);
     }
+
 }

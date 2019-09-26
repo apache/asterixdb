@@ -21,9 +21,11 @@ package org.apache.hyracks.storage.am.lsm.invertedindex;
 
 import java.io.IOException;
 
+import org.apache.hyracks.storage.am.common.TreeIndexTestUtils;
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexLoadTest;
 import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndex;
@@ -56,7 +58,9 @@ public class LSMInvertedIndexMergeTest extends AbstractInvertedIndexLoadTest {
                 invIndex.activate();
             }
             // Perform merge.
-            invIndexAccessor.scheduleMerge(((LSMInvertedIndex) invIndex).getDiskComponents());
+            ILSMIOOperation mergeOp = invIndexAccessor.scheduleMerge(((LSMInvertedIndex) invIndex).getDiskComponents());
+            mergeOp.addCompleteListener(op -> TreeIndexTestUtils.checkCursorStats(op));
+
             validateAndCheckIndex(testCtx);
             runTinySearchWorkload(testCtx, tupleGen);
         }

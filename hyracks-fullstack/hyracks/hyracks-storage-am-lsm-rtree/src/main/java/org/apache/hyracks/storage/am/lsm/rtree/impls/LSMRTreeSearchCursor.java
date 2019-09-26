@@ -26,6 +26,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 
 public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
 
@@ -34,7 +35,7 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
     private boolean resultOfsearchCallbackProceed = false;
 
     public LSMRTreeSearchCursor(ILSMIndexOperationContext opCtx, int[] buddyBTreeFields) {
-        super(opCtx);
+        super(opCtx, NoOpIndexCursorStats.INSTANCE);
         currentCursor = 0;
         this.btreeTuple = new PermutingTupleReference(buddyBTreeFields);
     }

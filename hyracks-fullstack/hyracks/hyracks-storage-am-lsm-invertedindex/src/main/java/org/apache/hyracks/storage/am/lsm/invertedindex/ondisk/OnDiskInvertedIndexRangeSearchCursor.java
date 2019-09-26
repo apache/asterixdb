@@ -24,13 +24,15 @@ import org.apache.hyracks.dataflow.common.data.accessors.PermutingTupleReference
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
+import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tuples.TokenKeyPairTuple;
 import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 
 /**
@@ -51,10 +53,12 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
     private final PermutingTupleReference tokenTuple;
     private final TokenKeyPairTuple resultTuple;
 
-    public OnDiskInvertedIndexRangeSearchCursor(OnDiskInvertedIndex invIndex, IIndexOperationContext opCtx)
-            throws HyracksDataException {
+    public OnDiskInvertedIndexRangeSearchCursor(OnDiskInvertedIndex invIndex, IIndexOperationContext opCtx,
+            IIndexCursorStats stats) throws HyracksDataException {
         this.btree = invIndex.getBTree();
-        this.btreeAccessor = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+
+        IIndexAccessParameters iap = IndexAccessParameters.createNoOpParams(stats);
+        this.btreeAccessor = btree.createAccessor(iap);
         this.invIndex = invIndex;
         this.opCtx = opCtx;
         // Project away non-token fields of the BTree tuples.
@@ -65,7 +69,7 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
         tokenTuple = new PermutingTupleReference(fieldPermutation);
         btreeCursor = btreeAccessor.createSearchCursor(false);
         resultTuple = new TokenKeyPairTuple(invIndex.getTokenTypeTraits().length, btree.getCmpFactories().length);
-        invListRangeSearchCursor = invIndex.createInvertedListRangeSearchCursor();
+        invListRangeSearchCursor = invIndex.createInvertedListRangeSearchCursor(stats);
         isInvListCursorOpen = false;
     }
 

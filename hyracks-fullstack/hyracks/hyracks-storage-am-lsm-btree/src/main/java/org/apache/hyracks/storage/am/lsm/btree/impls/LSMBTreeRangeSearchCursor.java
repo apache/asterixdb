@@ -30,8 +30,6 @@ import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
-import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
@@ -40,8 +38,10 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMMemoryComponent
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
 public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
@@ -56,11 +56,12 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     private int tupleFromMemoryComponentCount = 0;
 
     public LSMBTreeRangeSearchCursor(ILSMIndexOperationContext opCtx) {
-        this(opCtx, false);
+        this(opCtx, false, NoOpIndexCursorStats.INSTANCE);
     }
 
-    public LSMBTreeRangeSearchCursor(ILSMIndexOperationContext opCtx, boolean returnDeletedTuples) {
-        super(opCtx, returnDeletedTuples);
+    public LSMBTreeRangeSearchCursor(ILSMIndexOperationContext opCtx, boolean returnDeletedTuples,
+            IIndexCursorStats stats) {
+        super(opCtx, returnDeletedTuples, stats);
         this.copyTuple = new ArrayTupleReference();
         this.reusablePred = new RangePredicate(null, null, true, true, null, null);
     }
@@ -233,7 +234,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                             switchComponentTupleBuilders[i].getByteArray());
                     reusablePred.setLowKey(copyTuple, true);
                     rangeCursors[i].close();
-                    btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                    btreeAccessors[i].reset(btree, iap);
                     btreeAccessors[i].search(rangeCursors[i], reusablePred);
                     pushIntoQueueFromCursorAndReplaceThisElement(switchedElements[i]);
                 }
@@ -370,11 +371,11 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             }
             btree = (BTree) component.getIndex();
             if (btreeAccessors[i] == null || destroyIncompatible(component, i)) {
-                btreeAccessors[i] = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+                btreeAccessors[i] = btree.createAccessor(iap);
                 rangeCursors[i] = btreeAccessors[i].createSearchCursor(false);
             } else {
                 // re-use
-                btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                btreeAccessors[i].reset(btree, iap);
                 rangeCursors[i].close();
             }
             isMemoryComponent[i] = component.getType() == LSMComponentType.MEMORY;

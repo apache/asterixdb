@@ -36,6 +36,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
@@ -79,9 +80,10 @@ public class FixedSizeElementInvertedListCursor extends InvertedListCursor {
     private boolean moreBlocksToRead = true;
     // The last searched element index (used for random traversal)
     private int lastRandomSearchedElementIx;
+    private final IIndexCursorStats stats;
 
     public FixedSizeElementInvertedListCursor(IBufferCache bufferCache, int fileId, ITypeTraits[] invListFields,
-            IHyracksTaskContext ctx) throws HyracksDataException {
+            IHyracksTaskContext ctx, IIndexCursorStats stats) throws HyracksDataException {
         this.bufferCache = bufferCache;
         this.fileId = fileId;
         int tmpSize = 0;
@@ -109,6 +111,7 @@ public class FixedSizeElementInvertedListCursor extends InvertedListCursor {
         if (bufferManagerForSearch == null) {
             throw HyracksDataException.create(ErrorCode.CANNOT_CONTINUE_TEXT_SEARCH_BUFFER_MANAGER_IS_NULL);
         }
+        this.stats = stats;
     }
 
     /**
@@ -216,6 +219,7 @@ public class FixedSizeElementInvertedListCursor extends InvertedListCursor {
         ByteBuffer tmpBuffer;
         for (int i = bufferStartPageId; i <= endPageId; i++) {
             page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i), false);
+            stats.getPageCounter().update(1);
             // Copies the content to the buffer (working memory).
             // Assumption: processing inverted list takes time; so, we don't want to keep them on the buffer cache.
             // Rather, we utilize the assigned working memory (buffers).

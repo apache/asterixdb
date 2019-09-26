@@ -127,6 +127,11 @@ public class LSMBTreeMergeFailTest {
             }
         }
 
+        @Override
+        public void completeOperation(ILSMIOOperation operation) throws HyracksDataException {
+            // No op
+        }
+
         private void modifyOperation(ILSMIOOperation operation) throws Exception {
             if (!(operation instanceof MergeOperation)) {
                 return;

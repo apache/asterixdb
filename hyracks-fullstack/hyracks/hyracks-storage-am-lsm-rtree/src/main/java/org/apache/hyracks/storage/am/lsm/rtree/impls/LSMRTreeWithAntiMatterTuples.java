@@ -63,7 +63,9 @@ import org.apache.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.IndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
@@ -287,10 +289,11 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         if (mergingComponents.get(mergingComponents.size() - 1) != diskComponents.get(diskComponents.size() - 1)) {
             returnDeletedTuples = true;
         }
+        IIndexCursorStats stats = new IndexCursorStats();
         LSMRTreeWithAntiMatterTuplesSearchCursor cursor =
-                new LSMRTreeWithAntiMatterTuplesSearchCursor(opCtx, returnDeletedTuples);
+                new LSMRTreeWithAntiMatterTuplesSearchCursor(opCtx, returnDeletedTuples, stats);
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getHarness(), opCtx, cursorFactory);
-        return new LSMRTreeMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(), null, null,
-                callback, getIndexIdentifier());
+        return new LSMRTreeMergeOperation(accessor, cursor, stats, mergeFileRefs.getInsertIndexFileReference(), null,
+                null, callback, getIndexIdentifier());
     }
 }

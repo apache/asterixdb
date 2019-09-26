@@ -138,4 +138,24 @@ public class NoOpIoOperation implements ILSMIOOperation {
         return false;
     }
 
+    @Override
+    public long getRemainingPages() {
+        return 0;
+    }
+
+    @Override
+    public void resume() {
+        // No Op
+    }
+
+    @Override
+    public void pause() {
+        // No Op
+    }
+
+    @Override
+    public boolean isActive() {
+        return false;
+    }
+
 }

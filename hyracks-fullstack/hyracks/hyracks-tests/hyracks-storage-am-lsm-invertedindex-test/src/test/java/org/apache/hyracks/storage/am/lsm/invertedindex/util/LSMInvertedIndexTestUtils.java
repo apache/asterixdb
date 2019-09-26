@@ -106,6 +106,7 @@ import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.apache.hyracks.test.support.TestUtils;
 import org.apache.hyracks.util.IThreadStats;
@@ -299,7 +300,7 @@ public class LSMInvertedIndexTestUtils {
         LSMInvertedIndexAccessor invIndexAccessor =
                 (LSMInvertedIndexAccessor) invIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
         compareActualAndExpectedIndexesRangeSearch(testCtx,
-                new LSMInvertedIndexMergeCursor(invIndexAccessor.getOpContext()));
+                new LSMInvertedIndexMergeCursor(invIndexAccessor.getOpContext(), NoOpIndexCursorStats.INSTANCE));
     }
 
     /**

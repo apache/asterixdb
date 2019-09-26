@@ -20,25 +20,23 @@
 package org.apache.hyracks.storage.am.lsm.rtree.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
 public class LSMRTreeDeletedKeysBTreeMergeCursor extends LSMIndexSearchCursor {
 
-    public LSMRTreeDeletedKeysBTreeMergeCursor(ILSMIndexOperationContext opCtx) {
-        super(opCtx, true);
+    public LSMRTreeDeletedKeysBTreeMergeCursor(ILSMIndexOperationContext opCtx, IIndexCursorStats stats) {
+        super(opCtx, true, stats);
     }
 
     @Override
@@ -60,11 +58,10 @@ public class LSMRTreeDeletedKeysBTreeMergeCursor extends LSMIndexSearchCursor {
         IIndexAccessor[] btreeAccessors = new ITreeIndexAccessor[numBTrees];
         for (int i = 0; i < numBTrees; i++) {
             ILSMComponent component = operationalComponents.get(i);
-            IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getBTreeLeafFrameFactory().createFrame();
-            rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
             BTree btree = ((LSMRTreeDiskComponent) component).getBuddyIndex();
-            btreeAccessors[i] = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+            btreeAccessors[i] = btree.createAccessor(iap);
             btreeAccessors[i].search(rangeCursors[i], btreePredicate);
+            rangeCursors[i] = btreeAccessors[i].createSearchCursor(false);
         }
         IndexCursorUtils.open(btreeAccessors, rangeCursors, btreePredicate);
         try {

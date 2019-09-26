@@ -27,6 +27,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.util.annotations.CriticalPath;
 
@@ -35,12 +36,15 @@ import org.apache.hyracks.util.annotations.CriticalPath;
  */
 public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkLoader {
 
+    private static final int CHECK_CYCLE = 1000;
+
     private List<IChainedComponentBulkLoader> bulkloaderChain = new ArrayList<>();
     private final ILSMIOOperation operation;
     private final ILSMDiskComponent diskComponent;
     private final boolean cleanupEmptyComponent;
     private boolean isEmptyComponent = true;
     private boolean cleanedUpArtifacts = false;
+    private int tupleCounter = 0;
 
     public ChainedLSMDiskComponentBulkLoader(ILSMIOOperation operation, ILSMDiskComponent diskComponent,
             boolean cleanupEmptyComponent) {
@@ -63,6 +67,7 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
             for (int i = 0; i < bulkloadersCount; i++) {
                 t = bulkloaderChain.get(i).add(t);
             }
+            checkOperation();
         } catch (Throwable e) {
             operation.setFailure(e);
             cleanupArtifacts();
@@ -83,6 +88,7 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
             for (int i = 0; i < bulkloadersCount; i++) {
                 t = bulkloaderChain.get(i).delete(t);
             }
+            checkOperation();
         } catch (Throwable e) {
             operation.setFailure(e);
             cleanupArtifacts();
@@ -163,6 +169,13 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
     public void force() throws HyracksDataException {
         for (IChainedComponentBulkLoader bulkLoader : bulkloaderChain) {
             bulkLoader.force();
+        }
+    }
+
+    private void checkOperation() throws HyracksDataException {
+        if (operation.getIOOpertionType() == LSMIOOperationType.MERGE && ++tupleCounter % CHECK_CYCLE == 0) {
+            tupleCounter = 0;
+            ((MergeOperation) operation).waitIfPaused();
         }
     }
 }

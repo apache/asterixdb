@@ -93,6 +93,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
 import org.apache.hyracks.storage.am.lsm.common.impls.ConcurrentMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.GreedyScheduler;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
@@ -184,7 +185,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(600000);
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator,
                 storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages());
-        lsmIOScheduler = new AsynchronousScheduler(getServiceContext().getThreadFactory(), HaltCallback.INSTANCE);
+        lsmIOScheduler = createIoScheduler(storageProperties);
         metadataMergePolicyFactory = new ConcurrentMergePolicyFactory();
         indexCheckpointManagerProvider = new IndexCheckpointManagerProvider(ioManager);
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory =
@@ -551,5 +552,25 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IConfigValidator getConfigValidator() {
         return configValidator;
+    }
+
+    private ILSMIOOperationScheduler createIoScheduler(StorageProperties properties) {
+        String schedulerName = storageProperties.getIoScheduler();
+        ILSMIOOperationScheduler ioScheduler = null;
+        if (AsynchronousScheduler.FACTORY.getName().equalsIgnoreCase(schedulerName)) {
+            ioScheduler = AsynchronousScheduler.FACTORY.createIoScheduler(getServiceContext().getThreadFactory(),
+                    HaltCallback.INSTANCE);
+        } else if (GreedyScheduler.FACTORY.getName().equalsIgnoreCase(schedulerName)) {
+            ioScheduler = GreedyScheduler.FACTORY.createIoScheduler(getServiceContext().getThreadFactory(),
+                    HaltCallback.INSTANCE);
+        } else {
+            if (LOGGER.isWarnEnabled()) {
+                LOGGER.log(Level.WARN,
+                        "Unknown storage I/O scheduler: " + schedulerName + "; defaulting to greedy I/O scheduler.");
+            }
+            ioScheduler = GreedyScheduler.FACTORY.createIoScheduler(getServiceContext().getThreadFactory(),
+                    HaltCallback.INSTANCE);
+        }
+        return ioScheduler;
     }
 }

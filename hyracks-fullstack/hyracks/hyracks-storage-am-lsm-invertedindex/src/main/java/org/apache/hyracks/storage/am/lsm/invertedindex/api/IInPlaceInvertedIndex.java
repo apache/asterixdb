@@ -22,6 +22,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 
 public interface IInPlaceInvertedIndex extends IInvertedIndex {
     /**
@@ -37,7 +38,7 @@ public interface IInPlaceInvertedIndex extends IInvertedIndex {
      *
      * @throws HyracksDataException
      */
-    InvertedListCursor createInvertedListRangeSearchCursor() throws HyracksDataException;
+    InvertedListCursor createInvertedListRangeSearchCursor(IIndexCursorStats stats) throws HyracksDataException;
 
     /**
      * Opens an inverted list cursor

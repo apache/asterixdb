@@ -64,7 +64,9 @@ import org.apache.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.IndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.util.trace.ITracer;
 
@@ -337,7 +339,7 @@ public class LSMRTree extends AbstractLSMRTree {
                     }
                     componentBulkLoader = mergedComponent.createBulkLoader(mergeOp, 1.0f, false, numElements, false,
                             false, false, pageWriteCallbackFactory.createPageWriteCallback());
-                    mergeLoadBTree(opCtx, rtreeSearchPred, componentBulkLoader);
+                    mergeLoadBTree(mergeOp, opCtx, rtreeSearchPred, componentBulkLoader);
                 } else {
                     //no buddy-btree needed
                     componentBulkLoader = mergedComponent.createBulkLoader(mergeOp, 1.0f, false, 0L, false, false,
@@ -361,9 +363,11 @@ public class LSMRTree extends AbstractLSMRTree {
         return componentBulkLoader;
     }
 
-    private void mergeLoadBTree(ILSMIndexOperationContext opCtx, ISearchPredicate rtreeSearchPred,
-            ILSMDiskComponentBulkLoader componentBulkLoader) throws HyracksDataException {
-        LSMRTreeDeletedKeysBTreeMergeCursor btreeCursor = new LSMRTreeDeletedKeysBTreeMergeCursor(opCtx);
+    private void mergeLoadBTree(LSMRTreeMergeOperation mergeOp, ILSMIndexOperationContext opCtx,
+            ISearchPredicate rtreeSearchPred, ILSMDiskComponentBulkLoader componentBulkLoader)
+            throws HyracksDataException {
+        LSMRTreeDeletedKeysBTreeMergeCursor btreeCursor =
+                new LSMRTreeDeletedKeysBTreeMergeCursor(opCtx, mergeOp.getCursorStats());
         try {
             search(opCtx, btreeCursor, rtreeSearchPred);
             try {
@@ -434,9 +438,10 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     protected ILSMIOOperation createMergeOperation(AbstractLSMIndexOperationContext opCtx,
             LSMComponentFileReferences mergeFileRefs, ILSMIOOperationCallback callback) throws HyracksDataException {
-        LSMRTreeSortedCursor cursor = new LSMRTreeSortedCursor(opCtx, linearizer, buddyBTreeFields);
+        IIndexCursorStats stats = new IndexCursorStats();
+        LSMRTreeSortedCursor cursor = new LSMRTreeSortedCursor(opCtx, linearizer, buddyBTreeFields, stats);
         ILSMIndexAccessor accessor = new LSMRTreeAccessor(getHarness(), opCtx, buddyBTreeFields);
-        return new LSMRTreeMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(),
+        return new LSMRTreeMergeOperation(accessor, cursor, stats, mergeFileRefs.getInsertIndexFileReference(),
                 mergeFileRefs.getDeleteIndexFileReference(), mergeFileRefs.getBloomFilterFileReference(), callback,
                 getIndexIdentifier());
     }

@@ -19,23 +19,24 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
-import java.util.ArrayList;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
 public class LSMInvertedIndexDeletedKeysBTreeMergeCursor extends LSMIndexSearchCursor {
 
-    public LSMInvertedIndexDeletedKeysBTreeMergeCursor(ILSMIndexOperationContext opCtx) {
-        super(opCtx, true);
+    public LSMInvertedIndexDeletedKeysBTreeMergeCursor(ILSMIndexOperationContext opCtx, IIndexCursorStats stats) {
+        super(opCtx, true, stats);
     }
 
     @Override
@@ -57,9 +58,16 @@ public class LSMInvertedIndexDeletedKeysBTreeMergeCursor extends LSMIndexSearchC
 
         MultiComparator keyCmp = lsmInitialState.getKeyComparator();
         RangePredicate btreePredicate = new RangePredicate(null, null, true, true, keyCmp, keyCmp);
-        ArrayList<IIndexAccessor> btreeAccessors = lsmInitialState.getDeletedKeysBTreeAccessors();
+
+        IIndexAccessor[] btreeAccessors = new IIndexAccessor[operationalComponents.size()];
         for (int i = 0; i < numBTrees; i++) {
-            rangeCursors[i] = btreeAccessors.get(i).createSearchCursor(false);
+            ILSMComponent component = operationalComponents.get(i);
+            if (component.getType() == LSMComponentType.MEMORY) {
+                btreeAccessors[i] = ((LSMInvertedIndexMemoryComponent) component).getBuddyIndex().createAccessor(iap);
+            } else {
+                btreeAccessors[i] = ((LSMInvertedIndexDiskComponent) component).getBuddyIndex().createAccessor(iap);
+            }
+            rangeCursors[i] = btreeAccessors[i].createSearchCursor(false);
         }
         IndexCursorUtils.open(btreeAccessors, rangeCursors, btreePredicate);
         try {

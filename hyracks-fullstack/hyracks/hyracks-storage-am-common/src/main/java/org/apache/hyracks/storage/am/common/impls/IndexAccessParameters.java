@@ -21,9 +21,12 @@ package org.apache.hyracks.storage.am.common.impls;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
+import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 
 public class IndexAccessParameters implements IIndexAccessParameters {
 
@@ -54,6 +57,17 @@ public class IndexAccessParameters implements IIndexAccessParameters {
             paramMap = new HashMap<String, Object>();
         }
         return paramMap;
+    }
+
+    public static IIndexAccessParameters createNoOpParams(IIndexCursorStats stats) {
+        if (stats == NoOpIndexCursorStats.INSTANCE) {
+            return NoOpIndexAccessParameters.INSTANCE;
+        } else {
+            IndexAccessParameters iap =
+                    new IndexAccessParameters(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            iap.getParameters().put(HyracksConstants.INDEX_CURSOR_STATS, stats);
+            return iap;
+        }
     }
 
 }

@@ -38,6 +38,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 
@@ -158,7 +159,7 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
     }
 
     @Override
-    public InvertedListCursor createInvertedListRangeSearchCursor() {
+    public InvertedListCursor createInvertedListRangeSearchCursor(IIndexCursorStats stats) {
         // An in-memory index does not have a separate inverted list.
         // Therefore, a different range-search cursor for an inverted list is not required.
         return createInvertedListCursor(null);

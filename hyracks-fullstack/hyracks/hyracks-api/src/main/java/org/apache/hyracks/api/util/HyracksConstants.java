@@ -26,6 +26,8 @@ public class HyracksConstants {
     // Hyracks task context
     public static final String HYRACKS_TASK_CONTEXT = "HYRACKS_TASK_CONTEXT";
 
+    public static final String INDEX_CURSOR_STATS = "INDEX_CURSOR_STATS";
+
     private HyracksConstants() {
     }
 }

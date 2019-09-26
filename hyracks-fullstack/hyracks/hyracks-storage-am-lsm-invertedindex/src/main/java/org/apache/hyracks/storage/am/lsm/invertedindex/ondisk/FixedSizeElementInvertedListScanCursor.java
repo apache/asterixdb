@@ -24,6 +24,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
@@ -54,9 +55,10 @@ public class FixedSizeElementInvertedListScanCursor extends InvertedListCursor {
 
     protected boolean pinned;
     protected int pinnedPageId = -1;
+    protected final IIndexCursorStats stats;
 
-    public FixedSizeElementInvertedListScanCursor(IBufferCache bufferCache, int fileId, ITypeTraits[] invListFields)
-            throws HyracksDataException {
+    public FixedSizeElementInvertedListScanCursor(IBufferCache bufferCache, int fileId, ITypeTraits[] invListFields,
+            IIndexCursorStats stats) throws HyracksDataException {
         this.bufferCache = bufferCache;
         this.fileId = fileId;
         int tmpSize = 0;
@@ -74,6 +76,7 @@ public class FixedSizeElementInvertedListScanCursor extends InvertedListCursor {
         this.numPages = 0;
         this.tuple = new FixedSizeTupleReference(invListFields);
         this.pinned = false;
+        this.stats = stats;
     }
 
     @Override
@@ -117,6 +120,8 @@ public class FixedSizeElementInvertedListScanCursor extends InvertedListCursor {
         page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
         pinnedPageId = currentPageId;
         pinned = true;
+        stats.getPageCounter().update(1);
+
     }
 
     @Override

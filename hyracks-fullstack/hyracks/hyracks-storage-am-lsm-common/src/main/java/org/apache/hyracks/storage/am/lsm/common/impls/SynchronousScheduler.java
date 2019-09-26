@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.IIoOperationFailedCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
@@ -53,6 +54,11 @@ public class SynchronousScheduler implements ILSMIOOperationScheduler {
         } finally {
             after(operation);
         }
+    }
+
+    @Override
+    public void completeOperation(ILSMIOOperation operation) throws HyracksDataException {
+        // no op
     }
 
     private void run(ILSMIOOperation operation) {

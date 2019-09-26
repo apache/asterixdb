@@ -63,8 +63,10 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LoadOperation;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.IndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.util.trace.ITracer;
@@ -274,7 +276,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         ILSMIndexOperationContext bctx = createOpContext(NoOpOperationCallback.INSTANCE, 0);
         bctx.setOperation(IndexOperation.MERGE);
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
-        LSMBTreeWithBuddySortedCursor cursor = new LSMBTreeWithBuddySortedCursor(bctx, buddyBTreeFields);
+        IIndexCursorStats stats = new IndexCursorStats();
+        LSMBTreeWithBuddySortedCursor cursor = new LSMBTreeWithBuddySortedCursor(bctx, buddyBTreeFields, stats);
         LSMComponentFileReferences relMergeFileRefs = getMergeTargetFileName(mergingComponents);
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getHarness(), bctx,
                 opCtx -> new LSMBTreeWithBuddySearchCursor(opCtx, buddyBTreeFields));
@@ -291,10 +294,10 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                     .get(secondDiskComponents.size() - 1);
         }
 
-        LSMBTreeWithBuddyMergeOperation mergeOp =
-                new LSMBTreeWithBuddyMergeOperation(accessor, cursor, relMergeFileRefs.getInsertIndexFileReference(),
-                        relMergeFileRefs.getDeleteIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(),
-                        ioOpCallback, fileManager.getBaseDir().getAbsolutePath(), keepDeleteTuples);
+        LSMBTreeWithBuddyMergeOperation mergeOp = new LSMBTreeWithBuddyMergeOperation(accessor, cursor, stats,
+                relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
+                relMergeFileRefs.getBloomFilterFileReference(), ioOpCallback,
+                fileManager.getBaseDir().getAbsolutePath(), keepDeleteTuples);
         ioOpCallback.scheduled(mergeOp);
         return mergeOp;
 
@@ -328,7 +331,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         if (mergeOp.isKeepDeletedTuples()) {
             // Keep the deleted tuples since the oldest disk component is not
             // included in the merge operation
-            LSMBuddyBTreeMergeCursor buddyBtreeCursor = new LSMBuddyBTreeMergeCursor(opCtx);
+            LSMBuddyBTreeMergeCursor buddyBtreeCursor = new LSMBuddyBTreeMergeCursor(opCtx, mergeOp.getCursorStats());
             search(opCtx, buddyBtreeCursor, btreeSearchPred);
 
             long numElements = 0L;
