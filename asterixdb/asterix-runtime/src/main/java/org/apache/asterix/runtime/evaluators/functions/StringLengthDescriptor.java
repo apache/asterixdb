@@ -87,7 +87,7 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
 
                             if (serString[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 PointableHelper.setNull(resultPointable);
-                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), 0, serString[offset],
+                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), serString[offset], 0,
                                         ATypeTag.STRING);
                                 return;
                             }

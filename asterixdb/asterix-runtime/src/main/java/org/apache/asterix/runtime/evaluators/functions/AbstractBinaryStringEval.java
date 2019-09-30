@@ -90,12 +90,12 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
         // Type check.
         if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
             PointableHelper.setNull(resultPointable);
-            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, 0, bytes0[offset0], ATypeTag.STRING);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, bytes0[offset0], 0, ATypeTag.STRING);
             return;
         }
         if (bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
             PointableHelper.setNull(resultPointable);
-            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, 1, bytes1[offset1], ATypeTag.STRING);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, bytes1[offset1], 1, ATypeTag.STRING);
             return;
         }
 

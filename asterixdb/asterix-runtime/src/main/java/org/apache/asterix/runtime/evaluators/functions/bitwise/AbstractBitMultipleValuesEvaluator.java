@@ -116,7 +116,7 @@ abstract class AbstractBitMultipleValuesEvaluator extends AbstractScalarEval {
 
         // Type and value validity check
         if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
-            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, 0, bytes[startOffset],
+            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, bytes[startOffset], 0,
                     ATypeTag.BIGINT);
             PointableHelper.setNull(result);
             return;
@@ -132,7 +132,7 @@ abstract class AbstractBitMultipleValuesEvaluator extends AbstractScalarEval {
 
             // Type and value validity check
             if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
-                ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, i, bytes[startOffset],
+                ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, bytes[startOffset], i,
                         ATypeTag.BIGINT);
                 PointableHelper.setNull(result);
                 return;

@@ -87,7 +87,7 @@ public class ExceptionUtil {
     }
 
     public static void warnTypeMismatch(IEvaluatorContext ctx, SourceLocation srcLoc, FunctionIdentifier fid,
-            int argIdx, byte actualType, ATypeTag expectedType) {
+            byte actualType, int argIdx, ATypeTag expectedType) {
         IWarningCollector warningCollector = ctx.getWarningCollector();
         if (warningCollector.shouldWarn()) {
             warningCollector.warn(WarningUtil.forAsterix(srcLoc, ErrorCode.TYPE_MISMATCH_FUNCTION, fid.getName(),

@@ -90,13 +90,13 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
 
                         if (src[srcOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                             PointableHelper.setNull(result);
-                            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), 0, src[srcOffset],
+                            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), src[srcOffset], 0,
                                     ATypeTag.STRING);
                             return;
                         }
                         if (pattern[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                             PointableHelper.setNull(result);
-                            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), 1, pattern[patternOffset],
+                            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), pattern[patternOffset], 1,
                                     ATypeTag.STRING);
                             return;
                         }
