@@ -41,7 +41,7 @@ public abstract class AbstractTransactionContext implements ITransactionContext 
     private final AtomicLong lastLSN;
     private final AtomicInteger txnState;
     private final AtomicBoolean isWriteTxn;
-    private boolean isTimeout = false;
+    private volatile boolean isTimeout;
 
     protected AbstractTransactionContext(TxnId txnId) {
         this.txnId = txnId;
@@ -80,12 +80,12 @@ public abstract class AbstractTransactionContext implements ITransactionContext 
     }
 
     @Override
-    public synchronized void setTimeout(boolean isTimeout) {
+    public void setTimeout(boolean isTimeout) {
         this.isTimeout = isTimeout;
     }
 
     @Override
-    public synchronized boolean isTimeout() {
+    public boolean isTimeout() {
         return isTimeout;
     }
 

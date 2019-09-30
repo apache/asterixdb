@@ -76,7 +76,7 @@ abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
         byte inputTypeTag = argBytes[offset];
         if (inputTypeTag != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
             PointableHelper.setNull(resultPointable);
-            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, 0, argBytes[offset], ATypeTag.STRING);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, argBytes[offset], 0, ATypeTag.STRING);
             return;
         }
         stringPtr.set(argBytes, offset + 1, argPtr.getLength() - 1);

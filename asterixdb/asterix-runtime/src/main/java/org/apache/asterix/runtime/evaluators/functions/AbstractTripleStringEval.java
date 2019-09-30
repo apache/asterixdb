@@ -96,17 +96,17 @@ abstract class AbstractTripleStringEval implements IScalarEvaluator {
         // Type check.
         if (bytes0[start0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
             PointableHelper.setNull(result);
-            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, 0, bytes0[start0], ATypeTag.STRING);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, bytes0[start0], 0, ATypeTag.STRING);
             return;
         }
         if (bytes1[start1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
             PointableHelper.setNull(result);
-            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, 1, bytes1[start1], ATypeTag.STRING);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, bytes1[start1], 1, ATypeTag.STRING);
             return;
         }
         if (bytes2[start2] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
             PointableHelper.setNull(result);
-            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, 2, bytes2[start2], ATypeTag.STRING);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, bytes2[start2], 2, ATypeTag.STRING);
             return;
         }
 

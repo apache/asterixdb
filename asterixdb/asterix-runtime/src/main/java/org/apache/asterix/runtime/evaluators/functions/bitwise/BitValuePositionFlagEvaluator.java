@@ -148,7 +148,7 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
 
         // Type and value validity check
         if (!PointableHelper.isValidLongValue(valueBytes, valueStartOffset, true)) {
-            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, 0, valueBytes[valueStartOffset],
+            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, valueBytes[valueStartOffset], 0,
                     ATypeTag.BIGINT);
             PointableHelper.setNull(result);
             return;
@@ -177,7 +177,7 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
             ATypeTag flagTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(flagBytes[flagStartOffset]);
 
             if (flagTypeTag != ATypeTag.BOOLEAN) {
-                ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, 2, flagBytes[flagStartOffset],
+                ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, flagBytes[flagStartOffset], 2,
                         ATypeTag.BOOLEAN);
                 PointableHelper.setNull(result);
                 return;
@@ -271,7 +271,7 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
 
         // Value validity check
         if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
-            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, 1, bytes[startOffset],
+            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, bytes[startOffset], 1,
                     ATypeTag.BIGINT);
             return false;
         }

@@ -104,7 +104,7 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
                             // Type check for the first argument.
                             if (srcString[srcOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 PointableHelper.setNull(result);
-                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), 0, srcString[srcOffset],
+                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), srcString[srcOffset], 0,
                                         ATypeTag.STRING);
                                 return;
                             }
@@ -116,8 +116,8 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
                             // Type check for the second argument.
                             if (patternString[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 PointableHelper.setNull(result);
-                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), 1,
-                                        patternString[patternOffset], ATypeTag.STRING);
+                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(),
+                                        patternString[patternOffset], 1, ATypeTag.STRING);
                                 return;
                             }
 
