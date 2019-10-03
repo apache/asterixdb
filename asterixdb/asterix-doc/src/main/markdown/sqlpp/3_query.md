@@ -1698,11 +1698,11 @@ with an OVER clause.
 ### <a id="Window_function_call">Window Function Call</a> ###
 
     WindowFunctionCall ::= WindowFunctionType "(" WindowFunctionArguments ")"
-    (WindowFunctionOptions)? <OVER> (Variable <AS>)? "(" WindowClause ")"
+    (WindowFunctionOptions)? <OVER> (Variable <AS>)? "(" WindowDefinition ")"
 
 #### <a id="Window_function_type">Window Function Type</a> ####
 
-    WindowFunctionType ::= AggregateFunctions | WindowFunctions
+    WindowFunctionType ::= AggregateFunction | WindowFunction
 
 Refer to the [Aggregate Functions](builtins.html#AggregateFunctions) section
 for a list of aggregate functions.
@@ -1763,9 +1763,9 @@ When using a built-in [aggregate function](builtins.html#AggregateFunctions) as
 a window function, the function’s argument must be a subquery which refers to
 this alias, for example:
 
-    FROM source AS src
     SELECT ARRAY_COUNT(DISTINCT (FROM alias SELECT VALUE alias.src.field))
     OVER alias AS (PARTITION BY … ORDER BY …)
+    FROM source AS src
 
 The alias is not necessary when using a [window function](builtins.html#WindowFunctions),
 or when using a standard SQL aggregate function with the OVER clause.
@@ -1776,15 +1776,14 @@ A standard SQL aggregate function with an OVER clause is rewritten by the
 query compiler using a built-in aggregate function over a frame variable.
 For example, the following query with the `sum()` function:
 
+    SELECT SUM(field) OVER (PARTITION BY … ORDER BY …)
     FROM source AS src
-    SELECT SUM(field)
-    OVER (PARTITION BY … ORDER BY …)
 
 Is rewritten as the following query using the `array_sum()` function:
 
+    SELECT ARRAY_SUM( (SELECT VALUE alias.src.field FROM alias) )
+      OVER alias AS (PARTITION BY … ORDER BY …)
     FROM source AS src
-    SELECT ARRAY_SUM( (FROM alias SELECT VALUE alias.src.field) )
-    OVER alias AS (PARTITION BY … ORDER BY …)
 
 This is similar to the way that standard SQL aggregate functions are rewritten
 as built-in aggregate functions in the presence of the GROUP BY clause.
@@ -1801,8 +1800,8 @@ window functions.
 
     WindowPartitionClause ::= <PARTITION> <BY> Expression ("," Expression)*
 
-The **window partition clause** divides the tuples into partitions using
-one or more expressions.
+The **window partition clause** divides the tuples into logical partitions
+using one or more expressions.
 
 This clause may be used with any [window function](builtins.html#WindowFunctions),
 or any [aggregate function](builtins.html#AggregateFunctions) used as a window
@@ -1823,13 +1822,8 @@ This clause may be used with any [window function](builtins.html#WindowFunctions
 or any [aggregate function](builtins.html#AggregateFunctions) used as a window
 function.
 
-This clause is optional for some functions, and required for others.
-Refer to the [Aggregate Functions](builtins.html#AggregateFunctions) section or
-the [Window Functions](builtins.html#WindowFunctions) section for details of
-the syntax of individual functions.
-
-If this clause is omitted, all tuples are considered peers, i.e. their order
-is tied.
+This clause is optional.
+If omitted, all tuples are considered peers, i.e. their order is tied.
 When tuples in the window partition are tied, each window function behaves
 differently.
 
@@ -1904,11 +1898,15 @@ The window frame can be defined in the following ways:
 If this clause uses `RANGE` with either `Expression PRECEDING` or
 `Expression FOLLOWING`, the [window order clause](#Window_order_clause) must
 have only a single ordering term.
+
+The ordering term expression must evaluate to a number.
+<!--
 The ordering term expression must evaluate to a number, a date, a time, or a
 datetime.
 If the ordering term expression evaluates to a date, a time, or a datetime, the
 expression in `Expression PRECEDING` or `Expression FOLLOWING` must evaluate to
 a duration.
+-->
 
 If these conditions are not met, the window frame will be empty,
 which means the window function will return its default
@@ -1930,10 +1928,11 @@ data type that can be added to the ordering expression.
 
 #### <a id="Window_frame_extent">Window Frame Extent</a> ####
 
-    WindowFrameExtent ::= ( <UNBOUNDED> <PRECEDING> | <CURRENT> <ROW> |
-    Expression <FOLLOWING> ) | <BETWEEN> ( <UNBOUNDED> <PRECEDING> | <CURRENT>
-    <ROW> | Expression ( <PRECEDING> | <FOLLOWING> ) ) <AND> ( <UNBOUNDED>
-    <FOLLOWING> | <CURRENT> <ROW> | Expression ( <PRECEDING> | <FOLLOWING> ) )
+    WindowFrameExtent ::= ( ( <UNBOUNDED> | Expression ) <PRECEDING> | <CURRENT> <ROW> ) |
+    <BETWEEN>
+      ( <UNBOUNDED> <PRECEDING> | <CURRENT> <ROW> | Expression ( <PRECEDING> | <FOLLOWING> ) )
+    <AND>
+      ( <UNBOUNDED> <FOLLOWING> | <CURRENT> <ROW> | Expression ( <PRECEDING> | <FOLLOWING> ) )
 
 The **window frame extent clause** specifies the start point and end point of
 the window frame.
