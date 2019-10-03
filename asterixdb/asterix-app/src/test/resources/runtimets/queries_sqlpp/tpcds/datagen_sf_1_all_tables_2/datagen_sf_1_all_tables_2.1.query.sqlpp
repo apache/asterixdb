@@ -19,7 +19,7 @@
 
 set `import-private-functions` `true`;
 
-select d.tableName, count(*) as count
+select d.table_name, count(*) as count
 from tpcds_datagen(1) as d
-group by d.tableName
-order by d.tableName;
+group by d.table_name
+order by d.table_name;
