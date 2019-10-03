@@ -16,25 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+use test;
 
-/**
- * For function signature: nullable_int64 fun(string)
- */
-public class UnaryStringInt64TypeComputer extends AbstractStringTypeComputer {
+insert into closedDS([
+{"id": 1, "i8": int8("-2"), "i16": int16("10"), "i32": int32("21"), "i64": int64("87"), "f": float("4.2"), "d": double("5.0"), "str1": "foo", "mixed": 7},
+{"id": 2, "i8": int8("0"), "i16": int16("-10"), "i32": int32("21"), "i64": int64("87"), "f": float("4.2"), "d": double("5.3"), "str1": "foo", "mixed": "m"}
+]);
 
-    public static final UnaryStringInt64TypeComputer INSTANCE = new UnaryStringInt64TypeComputer();
-
-    private UnaryStringInt64TypeComputer() {
-    }
-
-    @Override
-    public IAType getResultType(ILogicalExpression expr, IAType... types) throws AlgebricksException {
-        return getType(BuiltinType.AINT64, types);
-    }
-}
+insert into openDS([
+{"id": 1, "i8": int8("-2"), "i16": int16("10"), "i32": int32("21"), "i64": int64("87"), "f": float("4.2"), "d": double("5.0"), "str1": "foo", "mixed": 7},
+{"id": 2, "i8": int8("0"), "i16": int16("-10"), "i32": int32("21"), "i64": int64("87"), "f": float("4.2"), "d": double("5.3"), "str1": "foo", "mixed": "m"}
+]);

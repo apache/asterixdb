@@ -16,25 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-
-/**
- * For function signature: nullable_int64 fun(string)
- */
-public class UnaryStringInt64TypeComputer extends AbstractStringTypeComputer {
-
-    public static final UnaryStringInt64TypeComputer INSTANCE = new UnaryStringInt64TypeComputer();
-
-    private UnaryStringInt64TypeComputer() {
-    }
-
-    @Override
-    public IAType getResultType(ILogicalExpression expr, IAType... types) throws AlgebricksException {
-        return getType(BuiltinType.AINT64, types);
-    }
-}
+drop dataverse test if exists;

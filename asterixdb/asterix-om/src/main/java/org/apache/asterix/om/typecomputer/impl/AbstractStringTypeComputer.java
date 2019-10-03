@@ -23,21 +23,17 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 
-abstract public class AbstractStringTypeComputer extends AbstractResultTypeComputer {
+/**
+ * For function signature: nullable_return_type fun(string...)
+ */
+public abstract class AbstractStringTypeComputer extends AbstractResultTypeComputer {
 
-    protected IAType getType(IAType returnType, IAType... argsTypes) {
+    protected static IAType getType(IAType returnType, IAType... argsTypes) {
         // all args are expected to be strings. If any arg is not string (ANY or mismatched-type), return nullable
         for (IAType actualType : argsTypes) {
             if (actualType.getTypeTag() != ATypeTag.STRING) {
                 return AUnionType.createNullableType(returnType);
             }
-        }
-        return returnType;
-    }
-
-    protected IAType getType(IAType returnType, IAType argType) {
-        if (argType.getTypeTag() != ATypeTag.STRING) {
-            return AUnionType.createNullableType(returnType);
         }
         return returnType;
     }

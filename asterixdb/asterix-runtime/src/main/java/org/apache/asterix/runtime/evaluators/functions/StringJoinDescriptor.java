@@ -22,23 +22,16 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.om.base.AMissing;
-import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -50,12 +43,7 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new StringJoinDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = StringJoinDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -74,13 +62,9 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                     private final IPointable inputArgSep = new VoidPointable();
                     private final IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
                     private final IScalarEvaluator evalSep = sepEvalFactory.createScalarEvaluator(ctx);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde =
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AMissing> missingSerde =
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
                     private final byte[] tempLengthArray = new byte[5];
+                    private final byte[] expectedTypeList =
+                            { ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG };
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -96,15 +80,18 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                         int listOffset = inputArgList.getStartOffset();
                         if (listBytes[listOffset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                 && listBytes[listOffset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, listBytes[listOffset],
-                                    ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
-                                    ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
+                            PointableHelper.setNull(result);
+                            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), listBytes[listOffset], 0,
+                                    expectedTypeList);
+                            return;
                         }
                         byte[] sepBytes = inputArgSep.getByteArray();
                         int sepOffset = inputArgSep.getStartOffset();
                         if (sepBytes[sepOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, sepBytes[sepOffset],
-                                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                            PointableHelper.setNull(result);
+                            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), sepBytes[sepOffset], 1,
+                                    ATypeTag.STRING);
+                            return;
                         }
                         int sepLen = UTF8StringUtil.getUTFLength(sepBytes, sepOffset + 1);
                         int sepMetaLen = UTF8StringUtil.getNumBytesToStoreLength(sepLen);
@@ -123,18 +110,17 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                                     itemOffset += 1;
                                 }
                                 if (itemType != ATypeTag.STRING) {
-                                    if (itemType == ATypeTag.NULL) {
-                                        nullSerde.serialize(ANull.NULL, out);
-                                        result.set(resultStorage);
-                                        return;
-                                    }
                                     if (itemType == ATypeTag.MISSING) {
-                                        missingSerde.serialize(AMissing.MISSING, out);
-                                        result.set(resultStorage);
+                                        PointableHelper.setMissing(result);
                                         return;
                                     }
-                                    throw new UnsupportedItemTypeException(sourceLoc, getIdentifier(),
-                                            itemType.serialize());
+                                    PointableHelper.setNull(result);
+                                    if (itemType != ATypeTag.NULL) {
+                                        // warn only if the call is: string_join([1,3], "/") where elements are non-null
+                                        ExceptionUtil.warnUnsupportedType(ctx, sourceLoc, getIdentifier().getName(),
+                                                itemType);
+                                    }
+                                    return;
                                 }
                                 int currentSize = UTF8StringUtil.getUTFLength(listBytes, itemOffset);
                                 if (i != size - 1 && currentSize != 0) {

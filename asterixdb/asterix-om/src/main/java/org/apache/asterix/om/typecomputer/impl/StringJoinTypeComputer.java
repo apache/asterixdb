@@ -18,26 +18,35 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import static org.apache.asterix.om.types.BuiltinType.ASTRING;
+
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
-public class AStringTypeComputer extends AbstractResultTypeComputer {
+/**
+ * For function signature: nullable_string fun([string], string)
+ */
+public class StringJoinTypeComputer extends AbstractResultTypeComputer {
 
-    public static final AStringTypeComputer INSTANCE = new AStringTypeComputer(false);
-    public static final AStringTypeComputer INSTANCE_NULLABLE = new AStringTypeComputer(true);
+    public static final StringJoinTypeComputer INSTANCE = new StringJoinTypeComputer();
 
-    private final boolean nullable;
-
-    private AStringTypeComputer(boolean nullable) {
-        this.nullable = nullable;
+    private StringJoinTypeComputer() {
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return nullable ? AUnionType.createNullableType(BuiltinType.ASTRING) : BuiltinType.ASTRING;
+        return validArgs(strippedInputTypes) ? ASTRING : AUnionType.createNullableType(ASTRING);
+    }
+
+    private static boolean validArgs(IAType... strippedInputTypes) {
+        IAType firstArg = strippedInputTypes[0];
+        return firstArg.getTypeTag().isListType()
+                && ((AbstractCollectionType) firstArg).getItemType().getTypeTag() == ATypeTag.STRING
+                && strippedInputTypes[1].getTypeTag() == ATypeTag.STRING;
     }
 }

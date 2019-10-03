@@ -66,7 +66,7 @@ public class DoubleToInt32TypeConvertComputer implements ITypeConvertComputer {
         return new AInt32(targetValue);
     }
 
-    private int convert(double sourceValue) throws HyracksDataException {
+    public int convert(double sourceValue) throws HyracksDataException {
         // Boundary check
         if (Double.isNaN(sourceValue)) {
             if (strict) {

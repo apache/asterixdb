@@ -16,25 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-
-/**
- * For function signature: nullable_int64 fun(string)
+/*
+ *  Description: tests that string functions do not throw exception on type/data errors
  */
-public class UnaryStringInt64TypeComputer extends AbstractStringTypeComputer {
+// requesttype=application/json
+// param max-warnings:json=1000
 
-    public static final UnaryStringInt64TypeComputer INSTANCE = new UnaryStringInt64TypeComputer();
+use test;
 
-    private UnaryStringInt64TypeComputer() {
-    }
-
-    @Override
-    public IAType getResultType(ILogicalExpression expr, IAType... types) throws AlgebricksException {
-        return getType(BuiltinType.AINT64, types);
-    }
-}
+select
+repeat("str", double("INF")),
+replace("hello world he", "he", "be", double("-INF")),
+replace("hello world he", "he", "be", double("NaN")),
+regexp_replace("hello world he", "he", "be", double("NaN")),
+regexp_replace("hello world he", "he", "be", double("-INF")),
+substring("hello world", double("INF"));

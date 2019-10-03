@@ -16,25 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-
-/**
- * For function signature: nullable_int64 fun(string)
+/*
+ *  Description: tests that string functions do not throw exception on type/data errors
  */
-public class UnaryStringInt64TypeComputer extends AbstractStringTypeComputer {
+// requesttype=application/json
+// param max-warnings:json=1000
 
-    public static final UnaryStringInt64TypeComputer INSTANCE = new UnaryStringInt64TypeComputer();
+use test;
 
-    private UnaryStringInt64TypeComputer() {
-    }
-
-    @Override
-    public IAType getResultType(ILogicalExpression expr, IAType... types) throws AlgebricksException {
-        return getType(BuiltinType.AINT64, types);
-    }
-}
+from openDS as ds
+select
+repeat(ds.str1, ds.i8),
+repeat(ds.str1, ds.d),
+string_join(["str", "str"], ds.mixed),
+replace("hello world he", "he", "be", ds.i8),
+replace("hello world he", "he", "be", ds.d),
+regexp_replace("hello world he", "he", "be", ds.i8),
+regexp_replace("hello world he", "he", "be", ds.d),
+substring(ds.mixed, 0)
+order by ds.id;

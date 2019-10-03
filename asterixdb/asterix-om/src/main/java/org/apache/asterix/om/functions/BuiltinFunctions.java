@@ -126,7 +126,7 @@ import org.apache.asterix.om.typecomputer.impl.ScalarVersionOfAggregateResultTyp
 import org.apache.asterix.om.typecomputer.impl.SleepTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.StringBooleanTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.StringInt32TypeComputer;
-import org.apache.asterix.om.typecomputer.impl.StringIntToStringTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.StringJoinTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.StringStringTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.StringToInt64ListTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.StringToStringListTypeComputer;
@@ -1703,7 +1703,8 @@ public class BuiltinFunctions {
         addFunction(STRING_TO_CODEPOINT, StringToInt64ListTypeComputer.INSTANCE, true);
         addFunction(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE, true); // TODO
         addFunction(STRING_CONCAT, ConcatTypeComputer.INSTANCE_STRING, true); // TODO
-        addFunction(SUBSTRING2, StringIntToStringTypeComputer.INSTANCE_NULLABLE, true); // TODO
+        addFunction(SUBSTRING, SubstringTypeComputer.INSTANCE, true); // TODO
+        addFunction(SUBSTRING2, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_LENGTH, UnaryStringInt64TypeComputer.INSTANCE, true);
         addFunction(STRING_LOWERCASE, StringStringTypeComputer.INSTANCE, true);
         addFunction(STRING_UPPERCASE, StringStringTypeComputer.INSTANCE, true);
@@ -1724,16 +1725,15 @@ public class BuiltinFunctions {
         addFunction(STRING_REGEXP_POSITION, StringInt32TypeComputer.INSTANCE, true);
         addFunction(STRING_REGEXP_POSITION_WITH_FLAG, StringInt32TypeComputer.INSTANCE, true);
         addFunction(STRING_REGEXP_REPLACE, StringStringTypeComputer.INSTANCE, true);
-        addFunction(STRING_REGEXP_REPLACE_WITH_FLAG,
-                StringIntToStringTypeComputer.INSTANCE_STRING_REGEXP_REPLACE_WITH_FLAG, true); // TODO
+        addFunction(STRING_REGEXP_REPLACE_WITH_FLAG, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_REPLACE, StringStringTypeComputer.INSTANCE, true);
-        addFunction(STRING_REPLACE_WITH_LIMIT, StringIntToStringTypeComputer.INSTANCE_TRIPLE_STRING, true); // TODO
+        addFunction(STRING_REPLACE_WITH_LIMIT, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_REVERSE, StringStringTypeComputer.INSTANCE, true);
         addFunction(SUBSTRING_BEFORE, StringStringTypeComputer.INSTANCE, true);
         addFunction(SUBSTRING_AFTER, StringStringTypeComputer.INSTANCE, true);
         addPrivateFunction(STRING_EQUAL, StringBooleanTypeComputer.INSTANCE, true);
-        addFunction(STRING_JOIN, AStringTypeComputer.INSTANCE, true); // TODO
-        addFunction(STRING_REPEAT, StringIntToStringTypeComputer.INSTANCE, true); // TODO
+        addFunction(STRING_JOIN, StringJoinTypeComputer.INSTANCE, true);
+        addFunction(STRING_REPEAT, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_SPLIT, StringToStringListTypeComputer.INSTANCE, true);
 
         addPrivateFunction(ORDERED_LIST_CONSTRUCTOR, OrderedListConstructorTypeComputer.INSTANCE, true);
@@ -2147,7 +2147,6 @@ public class BuiltinFunctions {
         addFunction(BINARY_BASE64_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE, true);
 
         addPrivateFunction(SUBSET_COLLECTION, SubsetCollectionTypeComputer.INSTANCE, true);
-        addFunction(SUBSTRING, SubstringTypeComputer.INSTANCE, true);
         addFunction(SWITCH_CASE, SwitchCaseComputer.INSTANCE, true);
         addFunction(SLEEP, SleepTypeComputer.INSTANCE, false);
         addPrivateFunction(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE, true);

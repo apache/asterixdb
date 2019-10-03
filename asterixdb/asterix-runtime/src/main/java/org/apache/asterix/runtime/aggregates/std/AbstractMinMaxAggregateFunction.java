@@ -43,7 +43,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateFunction {
-    private final String FUN_NAME = "min/max";
+    private static final String FUN_NAME = "min/max";
     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final IPointable inputVal = new VoidPointable();
     private final ArrayBackedValueStorage outputVal = new ArrayBackedValueStorage();
