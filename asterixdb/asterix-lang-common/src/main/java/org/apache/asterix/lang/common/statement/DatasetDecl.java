@@ -101,16 +101,12 @@ public class DatasetDecl extends AbstractStatement {
         }
     }
 
-    public Identifier getMetaName() {
-        return name;
-    }
-
     public Identifier getMetaItemTypeName() {
-        return metaItemTypeName == null ? new Identifier() : metaItemTypeName;
+        return metaItemTypeName;
     }
 
     public Identifier getMetaItemTypeDataverse() {
-        return metaItemTypeDataverse == null ? new Identifier() : metaItemTypeDataverse;
+        return metaItemTypeDataverse;
     }
 
     public String getQualifiedMetaTypeName() {

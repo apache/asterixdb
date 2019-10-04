@@ -21,10 +21,8 @@ package org.apache.asterix.lang.common.struct;
 import java.util.Objects;
 
 public final class VarIdentifier extends Identifier {
-    private int id = 0;
 
-    public VarIdentifier() {
-    }
+    private int id;
 
     public VarIdentifier(VarIdentifier v) {
         this(v.getValue(), v.getId());
@@ -35,7 +33,7 @@ public final class VarIdentifier extends Identifier {
     }
 
     public VarIdentifier(String value, int id) {
-        this.value = value;
+        super(value);
         this.id = id;
     }
 
@@ -45,11 +43,6 @@ public final class VarIdentifier extends Identifier {
 
     public int getId() {
         return id;
-    }
-
-    @Override
-    public VarIdentifier clone() {
-        return new VarIdentifier(value, id);
     }
 
     @Override

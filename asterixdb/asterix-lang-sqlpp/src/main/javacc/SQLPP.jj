@@ -181,6 +181,7 @@ import org.apache.asterix.lang.sqlpp.util.ExpressionToVariableUtil;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -215,6 +216,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String ROWS = "ROWS";
     private static final String TIES = "TIES";
     private static final String UNBOUNDED = "UNBOUNDED";
+
+    private static final String INT_TYPE_NAME = "int";
 
     // error configuration
     protected static final boolean REPORT_EXPECTED_TOKENS = false;
@@ -1644,8 +1647,8 @@ TypeReferenceExpression TypeReference() throws ParseException:
 {
   id = QualifiedName()
   {
-    if (id.first == null && id.second.getValue().equalsIgnoreCase("int")) {
-      id.second.setValue("int64");
+    if (id.first == null && id.second.getValue().equalsIgnoreCase(INT_TYPE_NAME)) {
+      id.second = new Identifier(BuiltinType.AINT64.getTypeName());
     }
 
     TypeReferenceExpression typeRef = new TypeReferenceExpression(id);
@@ -1727,8 +1730,8 @@ FunctionName FunctionName() throws ParseException:
         result.function  = third;
       }
 
-      if (result.function.equalsIgnoreCase("int")) {
-            result.function = "int64";
+      if (result.function.equalsIgnoreCase(INT_TYPE_NAME)) {
+         result.function = BuiltinType.AINT64.getTypeName();
       }
       return result;
     }
@@ -2564,7 +2567,6 @@ Expression Literal() throws ParseException:
 
 VariableExpr VariableRef() throws ParseException:
 {
-    VarIdentifier var = new VarIdentifier();
     String id = null;
 }
 {
@@ -2576,13 +2578,12 @@ VariableExpr VariableRef() throws ParseException:
        throw new SqlppParseException(getSourceLocation(token),
         "Inside limit clauses, it is disallowed to reference a variable having the same name as any variable bound in the same scope as the limit clause.");
      }
-     VariableExpr varExp = new VariableExpr();
+     VariableExpr varExp;
      if (ident != null) { // exist such ident
-       varExp.setVar((VarIdentifier)ident);
+       varExp = new VariableExpr((VarIdentifier)ident);
      } else {
-       varExp.setVar(var);
+       varExp = new VariableExpr(new VarIdentifier(id));
        varExp.setIsNewVar(false);
-       var.setValue(id);
      }
      return addSourceLocation(varExp, token);
     }
@@ -2590,7 +2591,6 @@ VariableExpr VariableRef() throws ParseException:
 
 VariableExpr Variable() throws ParseException:
 {
-    VarIdentifier var = new VarIdentifier();
     String id = null;
 }
 {
@@ -2598,12 +2598,10 @@ VariableExpr Variable() throws ParseException:
     {
      id = SqlppVariableUtil.toInternalVariableName(id); // prefix user-defined variables with "$".
      Identifier ident = lookupSymbol(id);
-     VariableExpr varExp = new VariableExpr();
-     if(ident != null) { // exist such ident
+     VariableExpr varExp = new VariableExpr(new VarIdentifier(id));
+     if (ident != null) { // exist such ident
        varExp.setIsNewVar(false);
      }
-     varExp.setVar(var);
-     var.setValue(id);
      return addSourceLocation(varExp, token);
     }
 }

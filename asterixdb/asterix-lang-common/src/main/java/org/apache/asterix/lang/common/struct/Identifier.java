@@ -21,11 +21,8 @@ package org.apache.asterix.lang.common.struct;
 import java.util.Objects;
 
 public class Identifier {
-    protected String value;
 
-    public Identifier() {
-        // default constructor.
-    }
+    protected final String value;
 
     public Identifier(String value) {
         this.value = value;
@@ -33,10 +30,6 @@ public class Identifier {
 
     public final String getValue() {
         return value;
-    }
-
-    public final void setValue(String value) {
-        this.value = value;
     }
 
     @Override

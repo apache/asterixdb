@@ -557,11 +557,20 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         SourceLocation sourceLoc = dd.getSourceLocation();
         String dataverseName = getActiveDataverse(dd.getDataverse());
         String datasetName = dd.getName().getValue();
+        String datasetFullyQualifiedName = dataverseName + "." + datasetName;
         DatasetType dsType = dd.getDatasetType();
         String itemTypeDataverseName = getActiveDataverse(dd.getItemTypeDataverse());
         String itemTypeName = dd.getItemTypeName().getValue();
-        String metaItemTypeDataverseName = getActiveDataverse(dd.getMetaItemTypeDataverse());
-        String metaItemTypeName = dd.getMetaItemTypeName().getValue();
+        String itemTypeFullyQualifiedName = itemTypeDataverseName + "." + itemTypeName;
+        String metaItemTypeDataverseName = null;
+        String metaItemTypeName = null;
+        String metaItemTypeFullyQualifiedName = null;
+        Identifier metaItemTypeId = dd.getMetaItemTypeName();
+        if (metaItemTypeId != null) {
+            metaItemTypeName = metaItemTypeId.getValue();
+            metaItemTypeDataverseName = getActiveDataverse(dd.getMetaItemTypeDataverse());
+            metaItemTypeFullyQualifiedName = metaItemTypeDataverseName + "." + metaItemTypeName;
+        }
         Identifier ngNameId = dd.getNodegroupName();
         String nodegroupName = ngNameId == null ? null : ngNameId.getValue();
         String compactionPolicy = dd.getCompactionPolicy();
@@ -573,12 +582,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         MetadataLockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName,
-                itemTypeDataverseName, itemTypeDataverseName + "." + itemTypeName, metaItemTypeDataverseName,
-                metaItemTypeDataverseName + "." + metaItemTypeName, nodegroupName, compactionPolicy,
-                dataverseName + "." + datasetName, defaultCompactionPolicy);
+                itemTypeDataverseName, itemTypeFullyQualifiedName, metaItemTypeDataverseName,
+                metaItemTypeFullyQualifiedName, nodegroupName, compactionPolicy, datasetFullyQualifiedName,
+                defaultCompactionPolicy);
         Dataset dataset = null;
         try {
-            IDatasetDetails datasetDetails = null;
+            IDatasetDetails datasetDetails;
             Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
             if (ds != null) {
                 if (dd.getIfNotExists()) {
@@ -1372,8 +1381,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
-            if (activeDataverse != null && activeDataverse.getDataverseName() == dataverseName) {
-                activeDataverse = null;
+            if (activeDataverse.getDataverseName().equals(dataverseName)) {
+                activeDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
@@ -1383,8 +1392,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             if (progress == ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA) {
-                if (activeDataverse != null && activeDataverse.getDataverseName() == dataverseName) {
-                    activeDataverse = null;
+                if (activeDataverse.getDataverseName().equals(dataverseName)) {
+                    activeDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
                 }
 
                 // #. execute compensation operations

@@ -29,11 +29,6 @@ public class VariableExpr extends AbstractExpression {
     private VarIdentifier var;
     private boolean isNewVar;
 
-    public VariableExpr() {
-        super();
-        isNewVar = true;
-    }
-
     public VariableExpr(VarIdentifier var) {
         super();
         this.var = var;

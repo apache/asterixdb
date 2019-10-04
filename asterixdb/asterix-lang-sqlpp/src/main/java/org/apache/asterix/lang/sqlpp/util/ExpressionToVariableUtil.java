@@ -96,8 +96,7 @@ public class ExpressionToVariableUtil {
         try {
             String varName = getGeneratedIdentifier(expr);
             VarIdentifier var = new VarIdentifier(varName);
-            VariableExpr varExpr = new VariableExpr();
-            varExpr.setVar(var);
+            VariableExpr varExpr = new VariableExpr(var);
             varExpr.setSourceLocation(expr.getSourceLocation());
             return varExpr;
         } catch (ParseException e) {

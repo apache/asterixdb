@@ -27,6 +27,13 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 public class MetaVariableClause extends AbstractClause {
     private VarIdentifier var;
 
+    public MetaVariableClause() {
+    }
+
+    public MetaVariableClause(VarIdentifier var) {
+        this.var = var;
+    }
+
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
         return ((IAQLPlusVisitor<R, T>) visitor).visitMetaVariableClause(this, arg);

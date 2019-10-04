@@ -152,6 +152,7 @@ import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.RangeMapBuilder;
 import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -183,6 +184,8 @@ class AQLParser extends ScopeChecker implements IParser {
     private static final String GEN_FIELDS_HINT = "gen-fields";
     // data generator hints
     private static final String DGEN_HINT = "dgen";
+
+    private static final String INT_TYPE_NAME = "int";
 
     private static class IndexParams {
       public IndexType type;
@@ -797,15 +800,13 @@ List<VarIdentifier> ParameterList() throws ParseException:
 {
   <LEFTPAREN> (<VARIABLE>
     {
-      var = new VarIdentifier();
-      var.setValue(token.image);
+      var = new VarIdentifier(token.image);
       paramList.add(var);
       getCurrentScope().addNewVarSymbolToScope(var);
     }
   ( <COMMA> <VARIABLE>
     {
-      var = new VarIdentifier();
-      var.setValue(token.image);
+      var = new VarIdentifier(token.image);
       paramList.add(var);
       getCurrentScope().addNewVarSymbolToScope(var);
     }
@@ -1386,8 +1387,8 @@ TypeReferenceExpression TypeReference() throws ParseException:
 {
  id = QualifiedName()
    {
-     if (id.first == null && id.second.getValue().equalsIgnoreCase("int")) {
-        id.second.setValue("int64");
+     if (id.first == null && id.second.getValue().equalsIgnoreCase(INT_TYPE_NAME)) {
+        id.second = new Identifier(BuiltinType.AINT64.getTypeName());
      }
 
      return new TypeReferenceExpression(id);
@@ -1460,8 +1461,8 @@ FunctionName FunctionName() throws ParseException:
         result.function  = third;
       }
 
-      if (result.function.equalsIgnoreCase("int")) {
-            result.function = "int64";
+      if (result.function.equalsIgnoreCase(INT_TYPE_NAME)) {
+        result.function = BuiltinType.AINT64.getTypeName();
       }
       return result;
     }
@@ -2086,8 +2087,6 @@ Expression Literal() throws ParseException:
 
 VariableExpr VariableRef() throws ParseException:
 {
-    VariableExpr varExp = new VariableExpr();
-    VarIdentifier var = new VarIdentifier();
 }
 {
   <VARIABLE>
@@ -2097,13 +2096,13 @@ VariableExpr VariableRef() throws ParseException:
      if (isInForbiddenScopes(varName)) {
        throw new ParseException("Inside limit clauses, it is disallowed to reference a variable having the same name as any variable bound in the same scope as the limit clause.");
      }
+     VariableExpr varExp;
      if(ident != null) { // exist such ident
+       varExp = new VariableExpr((VarIdentifier)ident);
        varExp.setIsNewVar(false);
-       varExp.setVar((VarIdentifier)ident);
      } else {
-       varExp.setVar(var);
+       varExp = new VariableExpr(new VarIdentifier(varName));
      }
-     var.setValue(varName);
      return varExp;
     }
 }
@@ -2111,18 +2110,16 @@ VariableExpr VariableRef() throws ParseException:
 
 VariableExpr Variable() throws ParseException:
 {
-    VariableExpr varExp = new VariableExpr();
-    VarIdentifier var = new VarIdentifier();
 }
 {
   <VARIABLE>
     {
-     Identifier ident = lookupSymbol(token.image);
+     String varName = token.image;
+     Identifier ident = lookupSymbol(varName);
+     VariableExpr varExp = new VariableExpr(new VarIdentifier(varName));
      if(ident != null) { // exist such ident
        varExp.setIsNewVar(false);
      }
-     varExp.setVar(var);
-     var.setValue(token.image);
      return varExp;
     }
 }

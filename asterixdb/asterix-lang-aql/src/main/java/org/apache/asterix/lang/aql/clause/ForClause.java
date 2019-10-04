@@ -31,17 +31,14 @@ public class ForClause extends AbstractClause {
     private Expression inExpr = null;
 
     public ForClause() {
-        super();
     }
 
     public ForClause(VariableExpr varExpr, Expression inExpr) {
-        super();
         this.varExpr = varExpr;
         this.inExpr = inExpr;
     }
 
     public ForClause(VariableExpr varExpr, Expression inExpr, VariableExpr posExpr) {
-        super();
         this.varExpr = varExpr;
         this.inExpr = inExpr;
         this.posExpr = posExpr;

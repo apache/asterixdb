@@ -106,30 +106,24 @@ Expression FLWOGR() throws ParseException:
 @new
 Clause MetaVariableClause() throws ParseException :
 {
-    MetaVariableClause mc = new MetaVariableClause();
-    VarIdentifier var = new VarIdentifier();
 }
 {
     <METAVARIABLECLAUSE>
     {
-      mc.setVar(var);
-      var.setValue(token.image);
-      return mc;
+      VarIdentifier var = new VarIdentifier(token.image);
+      return new MetaVariableClause(var);
     }
 }
 
 @new
 MetaVariableExpr MetaVariableRef() throws ParseException:
 {
-    MetaVariableExpr metaVarExp = new MetaVariableExpr();
-    VarIdentifier var = new VarIdentifier();
 }
 {
-      <METAVARIABLE>
+    <METAVARIABLE>
     {
-     metaVarExp.setVar(var);
-     var.setValue(token.image);
-     return metaVarExp;
+      VarIdentifier var = new VarIdentifier(token.image);
+      return new MetaVariableExpr(var);
     }
 }
 

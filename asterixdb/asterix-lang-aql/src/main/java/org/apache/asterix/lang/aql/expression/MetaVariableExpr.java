@@ -21,9 +21,14 @@ package org.apache.asterix.lang.aql.expression;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.visitor.base.IAQLPlusVisitor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class MetaVariableExpr extends VariableExpr {
+
+    public MetaVariableExpr(VarIdentifier var) {
+        super(var);
+    }
 
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
