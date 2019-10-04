@@ -44,12 +44,15 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpScheme;
 import io.netty.util.AsciiString;
 
 public class HttpUtil {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
     private static final Charset DEFAULT_RESPONSE_CHARSET = StandardCharsets.UTF_8;
+
+    public static final AsciiString X_FORWARDED_PROTO = AsciiString.cached("x-forwarded-proto");
 
     private HttpUtil() {
     }
@@ -80,10 +83,10 @@ public class HttpUtil {
         return parameter == null ? null : String.join(",", parameter);
     }
 
-    public static IServletRequest toServletRequest(ChannelHandlerContext ctx, FullHttpRequest request)
-            throws IOException {
+    public static IServletRequest toServletRequest(ChannelHandlerContext ctx, FullHttpRequest request,
+            HttpScheme scheme) {
         return ContentType.APPLICATION_X_WWW_FORM_URLENCODED.equals(getContentTypeOnly(request))
-                ? FormUrlEncodedRequest.create(ctx, request) : BaseRequest.create(ctx, request);
+                ? FormUrlEncodedRequest.create(ctx, request, scheme) : BaseRequest.create(ctx, request, scheme);
     }
 
     public static String getContentTypeOnly(IServletRequest request) {

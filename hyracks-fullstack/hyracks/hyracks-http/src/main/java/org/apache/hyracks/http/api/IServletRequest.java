@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpScheme;
 
 /**
  * An Http Request instance
@@ -81,4 +82,9 @@ public interface IServletRequest {
      * @return the remote address
      */
     InetSocketAddress getRemoteAddress();
+
+    /**
+     * Indicates which scheme the client used making this request
+     */
+    HttpScheme getScheme();
 }

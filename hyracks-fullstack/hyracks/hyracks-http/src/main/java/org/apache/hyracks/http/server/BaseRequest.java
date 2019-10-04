@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.http.server;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,25 +30,28 @@ import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpScheme;
 import io.netty.handler.codec.http.QueryStringDecoder;
 
 public class BaseRequest implements IServletRequest {
     protected final FullHttpRequest request;
     protected final Map<String, List<String>> parameters;
     protected final InetSocketAddress remoteAddress;
+    protected final HttpScheme scheme;
 
-    public static IServletRequest create(ChannelHandlerContext ctx, FullHttpRequest request) throws IOException {
+    public static IServletRequest create(ChannelHandlerContext ctx, FullHttpRequest request, HttpScheme scheme) {
         QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
         Map<String, List<String>> param = decoder.parameters();
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        return new BaseRequest(request, remoteAddress, param);
+        return new BaseRequest(request, remoteAddress, param, scheme);
     }
 
     protected BaseRequest(FullHttpRequest request, InetSocketAddress remoteAddress,
-            Map<String, List<String>> parameters) {
+            Map<String, List<String>> parameters, HttpScheme scheme) {
         this.request = request;
         this.remoteAddress = remoteAddress;
         this.parameters = parameters;
+        this.scheme = scheme;
     }
 
     @Override
@@ -85,5 +87,10 @@ public class BaseRequest implements IServletRequest {
     @Override
     public InetSocketAddress getRemoteAddress() {
         return remoteAddress;
+    }
+
+    @Override
+    public HttpScheme getScheme() {
+        return scheme;
     }
 }
