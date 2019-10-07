@@ -21,9 +21,10 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
 
+import org.apache.asterix.om.base.AMutableInt32;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.evaluators.common.ArgumentUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -37,11 +38,13 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractStringStringStringIntEval implements IScalarEvaluator {
+
+    private final IEvaluatorContext ctx;
     // Argument evaluators.
-    private IScalarEvaluator eval0;
-    private IScalarEvaluator eval1;
-    private IScalarEvaluator eval2;
-    private IScalarEvaluator eval3;
+    private final IScalarEvaluator eval0;
+    private final IScalarEvaluator eval1;
+    private final IScalarEvaluator eval2;
+    private final IScalarEvaluator eval3;
 
     // Argument pointables.
     final IPointable argPtrFirst = new VoidPointable();
@@ -51,6 +54,7 @@ public abstract class AbstractStringStringStringIntEval implements IScalarEvalua
     private final UTF8StringPointable strPtr1st = new UTF8StringPointable();
     private final UTF8StringPointable strPtr2nd = new UTF8StringPointable();
     private final UTF8StringPointable strPtr3rd = new UTF8StringPointable();
+    private final AMutableInt32 mutableInt = new AMutableInt32(0);
 
     // For outputting results.
     ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -63,6 +67,7 @@ public abstract class AbstractStringStringStringIntEval implements IScalarEvalua
     AbstractStringStringStringIntEval(IEvaluatorContext context, IScalarEvaluatorFactory eval0,
             IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, IScalarEvaluatorFactory eval3,
             FunctionIdentifier funcID, SourceLocation sourceLoc) throws HyracksDataException {
+        this.ctx = context;
         this.sourceLoc = sourceLoc;
         this.eval0 = eval0.createScalarEvaluator(context);
         this.eval1 = eval1.createScalarEvaluator(context);
@@ -100,29 +105,20 @@ public abstract class AbstractStringStringStringIntEval implements IScalarEvalua
         int start3 = argPtrFourth.getStartOffset();
 
         // Type check.
-        if (bytes0[start0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, 0, bytes0[start0], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+        if (!checkStringsAndWarn(bytes0[start0], bytes1[start1], bytes2[start2])) {
+            PointableHelper.setNull(result);
+            return;
         }
-        if (bytes1[start1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, 1, bytes1[start1], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+        // check that the int argument is numeric without fractions (in case arg is double or float)
+        if (!ArgumentUtils.checkWarnOrSetInteger(ctx, sourceLoc, funcID, 3, bytes3, start3, mutableInt)) {
+            PointableHelper.setNull(result);
+            return;
         }
-        if (bytes2[start2] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, 2, bytes2[start2], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-        }
-        if (bytes3[start3] != ATypeTag.SERIALIZED_INT8_TYPE_TAG && bytes3[start3] != ATypeTag.SERIALIZED_INT16_TYPE_TAG
-                && bytes3[start3] != ATypeTag.SERIALIZED_INT32_TYPE_TAG
-                && bytes3[start3] != ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, 3, bytes3[start3], ATypeTag.SERIALIZED_INT8_TYPE_TAG,
-                    ATypeTag.SERIALIZED_INT16_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG,
-                    ATypeTag.SERIALIZED_INT64_TYPE_TAG);
-        }
-
+        int int4th = mutableInt.getIntegerValue();
         // Sets argument UTF8Pointables.
         strPtr1st.set(bytes0, start0 + 1, len0 - 1);
         strPtr2nd.set(bytes1, start1 + 1, len1 - 1);
         strPtr3rd.set(bytes2, start2 + 1, len2 - 1);
-
-        long int4th = ATypeHierarchy.getLongValue(funcID.getName(), 3, bytes3, start3);
 
         // Resets the output storage.
         resultStorage.reset();
@@ -146,5 +142,18 @@ public abstract class AbstractStringStringStringIntEval implements IScalarEvalua
      * @throws HyracksDataException
      */
     protected abstract void process(UTF8StringPointable first, UTF8StringPointable second, UTF8StringPointable third,
-            long fourth, IPointable resultPointable) throws HyracksDataException;
+            int fourth, IPointable resultPointable) throws HyracksDataException;
+
+    /** Checks the arguments expected to be strings returning {@code false} if they are not and issuing a warning */
+    private boolean checkStringsAndWarn(byte actualType0, byte actualType1, byte actualType2) {
+        return checkAndWarn(0, actualType0) && checkAndWarn(1, actualType1) && checkAndWarn(2, actualType2);
+    }
+
+    private boolean checkAndWarn(int argIdx, byte actualType) {
+        if (actualType != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, actualType, argIdx, ATypeTag.STRING);
+            return false;
+        }
+        return true;
+    }
 }

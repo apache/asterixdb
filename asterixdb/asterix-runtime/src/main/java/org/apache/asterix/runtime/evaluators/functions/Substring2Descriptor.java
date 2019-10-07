@@ -22,14 +22,14 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
+import org.apache.asterix.om.base.AMutableInt32;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.evaluators.common.ArgumentUtils;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.DescriptorFactoryUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -46,17 +46,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 @MissingNullInOutFunction
 public class Substring2Descriptor extends AbstractStringOffsetConfigurableDescriptor {
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new Substring2Descriptor();
-        }
-
-        @Override
-        public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_STRING_OFFSET;
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY =
+            DescriptorFactoryUtil.createFactory(Substring2Descriptor::new, FunctionTypeInferers.SET_STRING_OFFSET);
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -68,15 +59,17 @@ public class Substring2Descriptor extends AbstractStringOffsetConfigurableDescri
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable argString = new VoidPointable();
-                    private IPointable argStart = new VoidPointable();
-                    private IScalarEvaluator evalString = args[0].createScalarEvaluator(ctx);
-                    private IScalarEvaluator evalStart = args[1].createScalarEvaluator(ctx);
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IPointable argString = new VoidPointable();
+                    private final IPointable argStart = new VoidPointable();
+                    private final IScalarEvaluator evalString = args[0].createScalarEvaluator(ctx);
+                    private final IScalarEvaluator evalStart = args[1].createScalarEvaluator(ctx);
                     private final GrowableArray array = new GrowableArray();
                     private final UTF8StringBuilder builder = new UTF8StringBuilder();
                     private final UTF8StringPointable string = new UTF8StringPointable();
+                    private final FunctionIdentifier funID = getIdentifier();
+                    private final AMutableInt32 mutableInt = new AMutableInt32(0);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -90,13 +83,19 @@ public class Substring2Descriptor extends AbstractStringOffsetConfigurableDescri
 
                         byte[] bytes = argStart.getByteArray();
                         int offset = argStart.getStartOffset();
-                        int start = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1, bytes, offset);
+                        // check that the int argument is numeric without fractions (in case arg is double or float)
+                        if (!ArgumentUtils.checkWarnOrSetInteger(ctx, sourceLoc, funID, 1, bytes, offset, mutableInt)) {
+                            PointableHelper.setNull(result);
+                            return;
+                        }
+                        int start = mutableInt.getIntegerValue();
                         bytes = argString.getByteArray();
                         offset = argString.getStartOffset();
                         int len = argString.getLength();
                         if (bytes[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
-                                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                            PointableHelper.setNull(result);
+                            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funID, bytes[offset], 0, ATypeTag.STRING);
+                            return;
                         }
                         string.set(bytes, offset + 1, len - 1);
                         array.reset();

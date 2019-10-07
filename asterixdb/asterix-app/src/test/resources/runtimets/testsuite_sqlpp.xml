@@ -8722,12 +8722,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="repeat_error">
-        <output-dir compare="Text">repeat</output-dir>
-        <expected-error>Invalid value: function repeat expects its 1 input parameter to be a non-negative value, but gets -1</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
       <compilation-unit name="replace">
         <output-dir compare="Text">replace</output-dir>
       </compilation-unit>
@@ -12513,10 +12507,10 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="fun_return_null">
-    <test-case FilePath="fun_return_null" check-warnings="true">
-      <compilation-unit name="fun_return_null_01">
-        <output-dir compare="Text">fun_return_null_01</output-dir>
+  <test-group name="fun_return_null/string_fun">
+    <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
+      <compilation-unit name="string_fun_001">
+        <output-dir compare="Text">string_fun_001</output-dir>
         <expected-warn>Type mismatch: function trim expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 41, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function like expects its 2nd input parameter to be of type string, but the actual input type is tinyint (in line 32, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function uppercase expects its 1st input parameter to be of type string, but the actual input type is smallint (in line 38, at column 1)</expected-warn>
@@ -12614,9 +12608,9 @@
         <expected-warn>Type mismatch: function ends-with expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 33, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="fun_return_null" check-warnings="true">
-      <compilation-unit name="fun_return_null_02">
-        <output-dir compare="Text">fun_return_null_02</output-dir>
+    <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
+      <compilation-unit name="string_fun_002">
+        <output-dir compare="Text">string_fun_002</output-dir>
         <expected-warn>Type mismatch: function rtrim expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 42, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function regexp-replace expects its 2nd input parameter to be of type string, but the actual input type is bigint (in line 52, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function regexp-like expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 48, at column 1)</expected-warn>
@@ -12647,6 +12641,31 @@
         <expected-warn>Type mismatch: function string-length expects its 1st input parameter to be of type string, but the actual input type is integer (in line 33, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function like expects its 1st input parameter to be of type string, but the actual input type is tinyint (in line 30, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function regexp-position expects its 1st input parameter to be of type string, but the actual input type is integer (in line 50, at column 1)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
+      <compilation-unit name="string_fun_003">
+        <output-dir compare="Text">string_fun_003</output-dir>
+        <expected-warn>Invalid value: function repeat expects its 2nd input parameter to be an integer value, got 5.3 (in line 31, at column 1)</expected-warn>
+        <expected-warn>Invalid value: function regexp-replace expects its 4th input parameter to be an integer value, got 5.3 (in line 36, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function substring expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 37, at column 1)</expected-warn>
+        <expected-warn>Invalid value: function replace expects its 4th input parameter to be an integer value, got 5.3 (in line 34, at column 1)</expected-warn>
+        <expected-warn>Invalid value: function repeat expects its 2nd input parameter to be a non-negative value, got -2.0 (in line 30, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function string-join expects its 2nd input parameter to be of type string, but the actual input type is bigint (in line 32, at column 1)</expected-warn>
+
+        <expected-warn>Invalid value: function repeat expects its 2nd input parameter to be an integer value, got 5.3 (in line 31, at column 1)</expected-warn>
+        <expected-warn>Invalid value: function regexp-replace expects its 4th input parameter to be an integer value, got 5.3 (in line 36, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function substring expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 37, at column 1)</expected-warn>
+        <expected-warn>Invalid value: function replace expects its 4th input parameter to be an integer value, got 5.3 (in line 34, at column 1)</expected-warn>
+        <expected-warn>Invalid value: function repeat expects its 2nd input parameter to be a non-negative value, got -2.0 (in line 30, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function string-join expects its 2nd input parameter to be of type string, but the actual input type is bigint (in line 32, at column 1)</expected-warn>
+
+        <expected-warn>Invalid value: function repeat expects its 2nd input parameter to be an integer value, got Infinity (in line 29, at column 1)</expected-warn>
+        <expected-warn>Invalid value: function replace expects its 4th input parameter to be an integer value, got -Infinity (in line 30, at column 1)</expected-warn>
+        <expected-warn>Invalid value: function replace expects its 4th input parameter to be an integer value, got NaN (in line 31, at column 1)</expected-warn>
+        <expected-warn>Invalid value: function regexp-replace expects its 4th input parameter to be an integer value, got NaN (in line 32, at column 1)</expected-warn>
+        <expected-warn>Invalid value: function regexp-replace expects its 4th input parameter to be an integer value, got -Infinity (in line 33, at column 1)</expected-warn>
+        <expected-warn>Invalid value: function substring expects its 2nd input parameter to be an integer value, got Infinity (in line 34, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
   </test-group>

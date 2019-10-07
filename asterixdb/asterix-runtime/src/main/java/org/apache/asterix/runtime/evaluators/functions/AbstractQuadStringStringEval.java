@@ -27,9 +27,9 @@ import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableString;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -64,6 +64,7 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
     private ISerializerDeserializer strSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
+    private final IEvaluatorContext ctx;
     private final UTF8StringPointable strPtr0 = new UTF8StringPointable();
     private final UTF8StringPointable strPtr1 = new UTF8StringPointable();
     private final UTF8StringPointable strPtr2 = new UTF8StringPointable();
@@ -72,6 +73,7 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
     public AbstractQuadStringStringEval(IEvaluatorContext context, IScalarEvaluatorFactory eval0,
             IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, IScalarEvaluatorFactory eval3,
             FunctionIdentifier funcID, SourceLocation sourceLoc) throws HyracksDataException {
+        this.ctx = context;
         this.eval0 = eval0.createScalarEvaluator(context);
         this.eval1 = eval1.createScalarEvaluator(context);
         this.eval2 = eval2.createScalarEvaluator(context);
@@ -92,10 +94,11 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
             return;
         }
 
-        processArgument(0, ptr0, strPtr0);
-        processArgument(1, ptr1, strPtr1);
-        processArgument(2, ptr2, strPtr2);
-        processArgument(3, ptr3, strPtr3);
+        if (!processArgument(0, ptr0, strPtr0) || !processArgument(1, ptr1, strPtr1)
+                || !processArgument(2, ptr2, strPtr2) || !processArgument(3, ptr3, strPtr3)) {
+            PointableHelper.setNull(result);
+            return;
+        }
 
         resultStorage.reset();
         try {
@@ -108,17 +111,18 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
         result.set(resultStorage);
     }
 
-    protected void processArgument(int argIdx, IPointable argPtr, UTF8StringPointable outStrPtr)
+    protected boolean processArgument(int argIdx, IPointable argPtr, UTF8StringPointable outStrPtr)
             throws HyracksDataException {
         byte[] bytes = argPtr.getByteArray();
         int start = argPtr.getStartOffset();
         // Type check.
         if (bytes[start] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, argIdx, bytes[start],
-                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, bytes[start], argIdx, ATypeTag.STRING);
+            return false;
         }
         int len = argPtr.getLength();
         outStrPtr.set(bytes, start + 1, len);
+        return true;
     }
 
     protected abstract String compute(UTF8StringPointable strPtr1st, UTF8StringPointable strPtr2nd,

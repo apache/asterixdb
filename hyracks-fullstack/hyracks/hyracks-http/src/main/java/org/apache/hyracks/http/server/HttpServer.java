@@ -48,6 +48,7 @@ import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpScheme;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
@@ -402,6 +403,10 @@ public class HttpServer {
 
     public IChannelClosedHandler getChannelClosedHandler() {
         return closedHandler;
+    }
+
+    public HttpScheme getScheme() {
+        return HttpScheme.HTTP;
     }
 
     @Override

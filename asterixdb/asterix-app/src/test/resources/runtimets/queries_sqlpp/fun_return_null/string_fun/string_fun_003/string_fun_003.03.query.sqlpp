@@ -17,4 +17,22 @@
  * under the License.
  */
 
-SELECT VALUE repeat(" new ", -1);
+/*
+ *  Description: tests that string functions do not throw exception on type/data errors
+ */
+// requesttype=application/json
+// param max-warnings:json=1000
+
+use test;
+
+from closedDS as ds
+select
+repeat(ds.str1, ds.i8),
+repeat(ds.str1, ds.d),
+string_join(["str", "str"], ds.mixed),
+replace("hello world he", "he", "be", ds.i8),
+replace("hello world he", "he", "be", ds.d),
+regexp_replace("hello world he", "he", "be", ds.i8),
+regexp_replace("hello world he", "he", "be", ds.d),
+substring(ds.mixed, 0)
+order by ds.id;

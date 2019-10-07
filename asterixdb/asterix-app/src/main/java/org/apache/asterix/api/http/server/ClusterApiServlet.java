@@ -145,7 +145,8 @@ public class ClusterApiServlet extends AbstractServlet {
     }
 
     protected String resolveClusterUrl(IServletRequest request, String pathToNode) {
-        final StringBuilder requestURL = new StringBuilder("http://");
+        final StringBuilder requestURL = new StringBuilder(request.getScheme().name());
+        requestURL.append("://");
         requestURL.append(request.getHeader(HttpHeaderNames.HOST));
         requestURL.append(request.getHttpRequest().uri());
         if (requestURL.charAt(requestURL.length() - 1) != '/') {

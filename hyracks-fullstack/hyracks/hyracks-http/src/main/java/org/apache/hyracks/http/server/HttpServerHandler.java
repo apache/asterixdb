@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.http.server;
 
+import static org.apache.hyracks.http.server.utils.HttpUtil.X_FORWARDED_PROTO;
+
 import java.io.IOException;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
@@ -42,6 +44,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpScheme;
 
 public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboundHandler<Object>
         implements ChannelFutureListener {
@@ -130,7 +133,10 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
     private void submit(ChannelHandlerContext ctx, IServlet servlet, FullHttpRequest request) throws IOException {
         IServletRequest servletRequest;
         try {
-            servletRequest = HttpUtil.toServletRequest(ctx, request);
+            HttpScheme scheme =
+                    server.getScheme() == HttpScheme.HTTPS || "https".equals(request.headers().get(X_FORWARDED_PROTO))
+                            ? HttpScheme.HTTPS : HttpScheme.HTTP;
+            servletRequest = HttpUtil.toServletRequest(ctx, request, scheme);
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.WARN, "Failure Decoding Request", e);
             respond(ctx, request, HttpResponseStatus.BAD_REQUEST);
