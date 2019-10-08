@@ -17,13 +17,11 @@
  * under the License.
  */
 
-{
-  'result1':REGEXP_REPLACE('abracadabra','',null,null),
-  'result2':REGEXP_REPLACE('abracadabra','bra','XXX',''),
-  'result3':REGEXP_REPLACE(null,'hello world','XxXx','x'),
-  'result4':REGEXP_REPLACE('abracadabra','bra','XXX',null),
-  'result5':REGEXP_REPLACE('abracadabra',null,'XXX',null),
-  'result6':REGEXP_REPLACE('abracadabra','Bra',null,'i'),
-  'result7':REGEXP_REPLACE('abracadabra','Bra','','i'),
-  'result8':REGEXP_REPLACE('abracadabra','','XXX','')
-};
+USE test;
+
+INSERT INTO ds [
+{"id": 1, "test_str": "hello_world", "pattern": "\\w+"},
+{"id": 2, "test_str": "\n", "pattern": "\\w+"},
+{"id": 3, "test_str": "hello_world", "pattern": "\\d+"},
+{"id": 4, "test_str": "\n", "pattern": "\\w+"}
+];

@@ -23,6 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.data.std.util.UTF8CharSequence;
@@ -57,7 +58,7 @@ public class RegExpMatcher {
 
     @FunctionalInterface
     public interface IRegExpPatternGenerator {
-        String toRegExpPatternString(String inputString);
+        String toRegExpPatternString(String inputString) throws HyracksDataException;
     }
 
     /**
@@ -68,7 +69,7 @@ public class RegExpMatcher {
      * @param patternPtr
      *            , the definition of the regular expression.
      */
-    public void build(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr) {
+    public void build(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr) throws HyracksDataException {
         build(srcPtr, patternPtr, null);
     }
 
@@ -82,7 +83,8 @@ public class RegExpMatcher {
      * @param flagPtr
      *            , the flags.
      */
-    public void build(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr, UTF8StringPointable flagPtr) {
+    public void build(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr, UTF8StringPointable flagPtr)
+            throws HyracksDataException {
         build(srcPtr, patternPtr, flagPtr, null);
     }
 
@@ -99,33 +101,32 @@ public class RegExpMatcher {
      *            , the regular expression pattern generator.
      */
     public void build(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr, UTF8StringPointable flagPtr,
-            IRegExpPatternGenerator patternGenerator) {
-        // Builds a new pattern if necessary.
-        final boolean newPattern = patternPtr != null && (pattern == null || lastPatternPtr.compareTo(patternPtr) != 0);
+            IRegExpPatternGenerator patternGenerator) throws HyracksDataException {
+        // Builds a new pattern if necessary. patternPtr cannot be null
+        final boolean newPattern = pattern == null || lastPatternPtr.compareTo(patternPtr) != 0;
         final boolean newFlag = flagPtr != null && (pattern == null || lastFlagPtr.compareTo(flagPtr) != 0);
-        if (newPattern) {
-            StringEvaluatorUtils.copyResetUTF8Pointable(patternPtr, lastPatternStorage, lastPatternPtr);
-        }
-        if (newFlag) {
-            StringEvaluatorUtils.copyResetUTF8Pointable(flagPtr, lastFlagsStorage, lastFlagPtr);
-        }
-        if (newPattern || newFlag) {
-            StringEvaluatorUtils.copyResetUTF8Pointable(patternPtr, lastPatternStorage, lastPatternPtr);
-            // ! object creation !
-            String inputPatternString = lastPatternPtr.toString();
-            String patternString = patternGenerator == null ? inputPatternString
-                    : patternGenerator.toRegExpPatternString(inputPatternString);
-            if (newFlag) {
-                pattern = Pattern.compile(patternString, StringEvaluatorUtils.toFlag(flagPtr.toString()));
-
-            } else {
-                pattern = Pattern.compile(patternString);
-            }
-        }
-
-        // Resets the matcher.
         charSeq.reset(srcPtr);
         if (newPattern || newFlag) {
+            // ! object creation !
+            String patternString;
+            if (newPattern) {
+                StringEvaluatorUtils.copyResetUTF8Pointable(patternPtr, lastPatternStorage, lastPatternPtr);
+                String inputPatternString = lastPatternPtr.toString();
+                patternString = patternGenerator == null ? inputPatternString
+                        : patternGenerator.toRegExpPatternString(inputPatternString);
+            } else {
+                // use whatever pattern string the previous pattern was using
+                patternString = pattern.pattern();
+            }
+            int flags = 0;
+            if (newFlag) {
+                StringEvaluatorUtils.copyResetUTF8Pointable(flagPtr, lastFlagsStorage, lastFlagPtr);
+                flags = StringEvaluatorUtils.toFlag(lastFlagPtr.toString());
+            } else if (pattern != null) {
+                // use whatever flags the previous pattern was using
+                flags = pattern.flags();
+            }
+            pattern = Pattern.compile(patternString, flags);
             matcher = pattern.matcher(charSeq);
         } else {
             matcher.reset(charSeq);
@@ -153,7 +154,7 @@ public class RegExpMatcher {
     /**
      * @return the first matched position of the regular expression pattern in the source string.
      */
-    public int postion() {
+    public int position() {
         return matcher.find() ? matcher.start() : -1;
     }
 

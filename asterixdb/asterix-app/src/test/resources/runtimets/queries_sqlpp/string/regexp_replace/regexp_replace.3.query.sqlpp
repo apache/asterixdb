@@ -17,6 +17,11 @@
  * under the License.
  */
 
-{
-  'result1':regexp_replace('abracadabra','bra','*')
-};
+select element a
+from [
+  regexp_replace('abracadabra','a',''),
+  regexp_replace('abracadabra','a(.)','a$1$1'),
+  regexp_replace('darted','^(.*?)d(.*)$','$1c$2'),
+  regexp_replace('abracadabra','bra','*'),
+  regexp_replace('abracadabra','a.*a','*')
+] as a;

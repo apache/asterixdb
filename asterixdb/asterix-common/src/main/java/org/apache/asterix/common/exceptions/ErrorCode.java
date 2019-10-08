@@ -78,6 +78,7 @@ public class ErrorCode {
     public static final int VALUE_OUT_OF_RANGE = 43;
     public static final int PROHIBITED_STATEMENT_CATEGORY = 44;
     public static final int INTEGER_VALUE_EXPECTED_FUNCTION = 45;
+    public static final int INVALID_LIKE_PATTERN = 46;
 
     public static final int UNSUPPORTED_JRE = 100;
 

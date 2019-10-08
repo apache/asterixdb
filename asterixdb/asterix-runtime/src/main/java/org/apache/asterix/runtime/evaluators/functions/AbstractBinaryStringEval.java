@@ -55,7 +55,7 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
 
     // Function ID, for error reporting.
     private final FunctionIdentifier funcID;
-    private final SourceLocation sourceLoc;
+    protected final SourceLocation sourceLoc;
 
     public AbstractBinaryStringEval(IEvaluatorContext context, IScalarEvaluatorFactory evalLeftFactory,
             IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID, SourceLocation sourceLoc)

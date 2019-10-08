@@ -24,7 +24,10 @@ import java.util.regex.Pattern;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 
-public class StringEvaluatorUtils {
+public final class StringEvaluatorUtils {
+
+    private StringEvaluatorUtils() {
+    }
 
     public static int toFlag(String pattern) {
         int flag = 0;
@@ -57,32 +60,10 @@ public class StringEvaluatorUtils {
         return destString;
     }
 
-    static char[] reservedRegexChars =
-            new char[] { '\\', '(', ')', '[', ']', '{', '}', '.', '^', '$', '*', '|', '+', '?' };
+    static final char[] RESERVED_REGEX_CHARS = new char[] { '\\', '(', ')', '[', ']', '{', '}', '.', '^', '$', '*', '|',
+            '+', '?', '<', '>', '-', '=', '!' };
 
     static {
-        Arrays.sort(reservedRegexChars);
-    }
-
-    public static String toRegex(String pattern) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < pattern.length(); i++) {
-            char c = pattern.charAt(i);
-            if (c == '\\' && (i < pattern.length() - 1)
-                    && (pattern.charAt(i + 1) == '_' || pattern.charAt(i + 1) == '%')) {
-                sb.append(pattern.charAt(i + 1));
-                ++i;
-            } else if (c == '%') {
-                sb.append(".*");
-            } else if (c == '_') {
-                sb.append(".");
-            } else {
-                if (Arrays.binarySearch(reservedRegexChars, c) >= 0) {
-                    sb.append('\\');
-                }
-                sb.append(c);
-            }
-        }
-        return sb.toString();
+        Arrays.sort(RESERVED_REGEX_CHARS);
     }
 }

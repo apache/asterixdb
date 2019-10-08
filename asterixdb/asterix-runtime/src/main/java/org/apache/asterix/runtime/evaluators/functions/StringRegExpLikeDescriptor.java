@@ -19,8 +19,6 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.IOException;
-
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -58,7 +56,7 @@ public class StringRegExpLikeDescriptor extends AbstractScalarFunctionDynamicDes
 
                     @Override
                     protected boolean compute(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr)
-                            throws IOException {
+                            throws HyracksDataException {
                         matcher.build(srcPtr, patternPtr);
                         return matcher.matches();
                     }
