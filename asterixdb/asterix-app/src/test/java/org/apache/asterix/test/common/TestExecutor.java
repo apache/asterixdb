@@ -138,6 +138,9 @@ public class TestExecutor {
             Pattern.compile("polltimeoutsecs=(\\d+)(\\D|$)", Pattern.MULTILINE);
     private static final Pattern POLL_DELAY_PATTERN = Pattern.compile("polldelaysecs=(\\d+)(\\D|$)", Pattern.MULTILINE);
     private static final Pattern HANDLE_VARIABLE_PATTERN = Pattern.compile("handlevariable=(\\w+)");
+    private static final Pattern RESULT_VARIABLE_PATTERN = Pattern.compile("resultvariable=(\\w+)");
+    private static final Pattern OUTPUTFORMAT_VARIABLE_PATTERN = Pattern.compile("outputformat=(\\w+)");
+
     private static final Pattern VARIABLE_REF_PATTERN = Pattern.compile("\\$(\\w+)");
     private static final Pattern HTTP_PARAM_PATTERN =
             Pattern.compile("param (?<name>[\\w-$]+)(?::(?<type>\\w+))?=(?<value>.*)", Pattern.MULTILINE);
@@ -236,6 +239,9 @@ public class TestExecutor {
             ComparisonEnum compare, Charset actualEncoding) throws Exception {
         LOGGER.info("Expected results file: {} ", expectedFile);
         boolean regex = false;
+        if (expectedFile.getName().endsWith(".ignore")) {
+            return; //skip the comparison
+        }
         try (BufferedReader readerExpected =
                 new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), UTF_8));
                 BufferedReader readerActual =
@@ -1318,13 +1324,14 @@ public class TestExecutor {
         }
 
         boolean isJsonEncoded = isJsonEncoded(extractHttpRequestType(statement));
-
         Charset responseCharset = getResponseCharset(expectedResultFile);
         InputStream resultStream;
         ExtractedResult extractedResult = null;
+        final String variablesReplaced = replaceVarRefRelaxed(statement, variableCtx);
+        String resultVar = getResultVariable(statement); //Is the result of the statement/query to be used in later tests
         if (DELIVERY_IMMEDIATE.equals(delivery)) {
-            resultStream = executeQueryService(statement, ctx, fmt, uri, params, isJsonEncoded, responseCharset, null,
-                    isCancellable(reqType));
+            resultStream = executeQueryService(variablesReplaced, ctx, fmt, uri, params, isJsonEncoded, responseCharset,
+                    null, isCancellable(reqType));
             switch (reqType) {
                 case METRICS_QUERY_TYPE:
                     resultStream = ResultExtractor.extractMetrics(resultStream, responseCharset);
@@ -1336,7 +1343,13 @@ public class TestExecutor {
                     resultStream = ResultExtractor.extractPlans(resultStream, responseCharset);
                     break;
                 default:
-                    extractedResult = ResultExtractor.extract(resultStream, responseCharset);
+                    String outputFormatVariable = getOutputFormatVariable(statement);
+                    if ((outputFormatVariable == null) || (outputFormatVariable.equals("jsonl"))) {
+                        extractedResult = ResultExtractor.extract(resultStream, responseCharset);
+                    } else {
+                        extractedResult = ResultExtractor.extract(resultStream, responseCharset, "json");
+                    }
+
                     resultStream = extractedResult.getResult();
                     break;
             }
@@ -1356,7 +1369,13 @@ public class TestExecutor {
                         + ", filectxs.size: " + numResultFiles);
             }
         } else {
-            writeOutputToFile(actualResultFile, resultStream);
+            if (resultVar != null) {
+                String result = IOUtils.toString(resultStream, responseCharset);
+                variableCtx.put(resultVar, result);
+                writeOutputToFile(actualResultFile, new ByteArrayInputStream(result.getBytes(responseCharset)));
+            } else {
+                writeOutputToFile(actualResultFile, resultStream);
+            }
             if (expectedResultFile == null) {
                 if (reqType.equals("store")) {
                     return extractedResult;
@@ -1584,6 +1603,16 @@ public class TestExecutor {
         return handleVariableMatcher.find() ? handleVariableMatcher.group(1) : null;
     }
 
+    protected static String getResultVariable(String statement) {
+        final Matcher resultVariableMatcher = RESULT_VARIABLE_PATTERN.matcher(statement);
+        return resultVariableMatcher.find() ? resultVariableMatcher.group(1) : null;
+    }
+
+    protected static String getOutputFormatVariable(String statement) {
+        final Matcher outputFormatVariableMatcher = OUTPUTFORMAT_VARIABLE_PATTERN.matcher(statement);
+        return outputFormatVariableMatcher.find() ? outputFormatVariableMatcher.group(1) : null;
+    }
+
     protected static String replaceVarRef(String statement, Map<String, Object> variableCtx) {
         String tmpStmt = statement;
         Matcher variableReferenceMatcher = VARIABLE_REF_PATTERN.matcher(tmpStmt);
@@ -1591,6 +1620,21 @@ public class TestExecutor {
             String var = variableReferenceMatcher.group(1);
             Object value = variableCtx.get(var);
             Assert.assertNotNull("No value for variable reference $" + var, value);
+            tmpStmt = tmpStmt.replace("$" + var, String.valueOf(value));
+            variableReferenceMatcher = VARIABLE_REF_PATTERN.matcher(tmpStmt);
+        }
+        return tmpStmt;
+    }
+
+    protected static String replaceVarRefRelaxed(String statement, Map<String, Object> variableCtx) {
+        String tmpStmt = statement;
+        Matcher variableReferenceMatcher = VARIABLE_REF_PATTERN.matcher(tmpStmt);
+        while (variableReferenceMatcher.find()) {
+            String var = variableReferenceMatcher.group(1);
+            Object value = variableCtx.get(var);
+            if (value == null) {
+                continue;
+            }
             tmpStmt = tmpStmt.replace("$" + var, String.valueOf(value));
             variableReferenceMatcher = VARIABLE_REF_PATTERN.matcher(tmpStmt);
         }

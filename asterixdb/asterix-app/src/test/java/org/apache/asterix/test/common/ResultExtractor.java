@@ -86,6 +86,12 @@ public class ResultExtractor {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    public static ExtractedResult extract(InputStream resultStream, Charset resultCharset, String outputFormat)
+            throws Exception {
+        return extract(resultStream, EnumSet.of(ResultField.RESULTS, ResultField.WARNINGS), resultCharset,
+                outputFormat);
+    }
+
     public static ExtractedResult extract(InputStream resultStream, Charset resultCharset) throws Exception {
         return extract(resultStream, EnumSet.of(ResultField.RESULTS, ResultField.WARNINGS), resultCharset);
     }
@@ -120,6 +126,25 @@ public class ResultExtractor {
 
     private static ExtractedResult extract(InputStream resultStream, EnumSet<ResultField> resultFields,
             Charset resultCharset) throws Exception {
+        return extract(resultStream, resultFields, resultCharset, "jsonl"); //default output format type is jsonl
+    }
+
+    private static ExtractedResult extract(InputStream resultStream, EnumSet<ResultField> resultFields,
+            Charset resultCharset, String fmt) throws Exception {
+
+        if (fmt.equals("json")) {
+            return extract(resultStream, resultFields, resultCharset, "[", ",", "]");
+        }
+
+        if (fmt.equals("jsonl")) {
+            return extract(resultStream, resultFields, resultCharset, "", "", "");
+        }
+
+        throw new AsterixException("Unkown output format for result of test query");
+    }
+
+    private static ExtractedResult extract(InputStream resultStream, EnumSet<ResultField> resultFields,
+            Charset resultCharset, String openMarker, String separator, String closeMarker) throws Exception {
         ExtractedResult extractedResult = new ExtractedResult();
         final String resultStr = IOUtils.toString(resultStream, resultCharset);
         final ObjectNode result = OBJECT_MAPPER.readValue(resultStr, ObjectNode.class);
@@ -158,7 +183,10 @@ public class ResultExtractor {
                     } else {
                         JsonNode[] fields = Iterators.toArray(fieldValue.elements(), JsonNode.class);
                         if (fields.length > 1) {
+                            String sep = openMarker;
                             for (JsonNode f : fields) {
+                                resultBuilder.append(sep);
+                                sep = separator;
                                 if (f.isObject()) {
 
                                     resultBuilder.append(OBJECT_MAPPER.writeValueAsString(f));
@@ -166,6 +194,7 @@ public class ResultExtractor {
                                     resultBuilder.append(f.asText());
                                 }
                             }
+                            resultBuilder.append(closeMarker);
                         }
 
                     }
