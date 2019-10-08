@@ -18,7 +18,7 @@
  */
 use externallibtest;
 
-let i={"id":1, "text_list": [{"text":"lower text1"}, {"text":"lower text2"}]}
+let i={"id":1, "text_list": [{"text":"lower text1"}, {"text":"lower text2"}], "another_list" : ["string_1", "string_2"]}
 select value `testlib#toUpper`(i);
 
 let i=`testlib#toUpper`({"id":1, "text_list":[{"text":"lower text"}]})

@@ -583,10 +583,20 @@ public class JObjectAccessors {
         public IJObject access(AListVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool,
                 IAType listType, JObjectPointableVisitor pointableVisitor) throws HyracksDataException {
             List<IVisitablePointable> items = pointable.getItems();
+            List<IVisitablePointable> itemTags = pointable.getItemTags();
             JList list = pointable.ordered() ? new JOrderedList(listType) : new JUnorderedList(listType);
             IJObject listItem;
-            for (IVisitablePointable itemPointable : items) {
-                final IAType fieldType = ((AbstractCollectionType) listType).getItemType();
+            for (int iter1 = 0; iter1 < items.size(); iter1++) {
+                IVisitablePointable itemPointable = items.get(iter1);
+                // First, try to get defined type.
+                IAType fieldType = ((AbstractCollectionType) listType).getItemType();
+                if (fieldType.getTypeTag() == ATypeTag.ANY) {
+                    // Second, if defined type is not available, try to infer it from data
+                    IVisitablePointable itemTagPointable = itemTags.get(iter1);
+                    ATypeTag itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                            .deserialize(itemTagPointable.getByteArray()[itemTagPointable.getStartOffset()]);
+                    fieldType = TypeTagUtil.getBuiltinTypeByTag(itemTypeTag);
+                }
                 typeInfo.reset(fieldType, fieldType.getTypeTag());
                 switch (typeInfo.getTypeTag()) {
                     case OBJECT:
