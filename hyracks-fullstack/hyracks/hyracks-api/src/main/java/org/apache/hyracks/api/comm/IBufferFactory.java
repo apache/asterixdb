@@ -22,9 +22,20 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-@FunctionalInterface
 public interface IBufferFactory {
 
-    public ByteBuffer createBuffer() throws HyracksDataException;
+    /**
+     * Creates a buffer
+     *
+     * @return the created buffer
+     * @throws HyracksDataException
+     */
+    ByteBuffer createBuffer() throws HyracksDataException;
 
+    /**
+     * Gets the number of created buffers
+     *
+     * @return the number of created buffers
+     */
+    int getCreatedBuffersCount();
 }

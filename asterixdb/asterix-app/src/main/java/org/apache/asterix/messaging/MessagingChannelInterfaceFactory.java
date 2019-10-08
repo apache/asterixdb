@@ -93,6 +93,11 @@ public class MessagingChannelInterfaceFactory implements IChannelInterfaceFactor
             }
             return buffer;
         }
+
+        @Override
+        public int getCreatedBuffersCount() {
+            return 0;
+        }
     }
 
     /**

@@ -23,6 +23,7 @@ import org.apache.hyracks.api.comm.IChannelControlBlock;
 import org.apache.hyracks.api.comm.IConnectionWriterState;
 import org.apache.hyracks.api.comm.MuxDemuxCommand;
 import org.apache.hyracks.api.exceptions.NetException;
+import org.apache.hyracks.util.annotations.GuardedBy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,6 +36,7 @@ public class FullFrameChannelWriteInterface extends AbstractChannelWriteInterfac
     }
 
     @Override
+    @GuardedBy("ChannelControlBlock")
     public void write(IConnectionWriterState writerState) throws NetException {
         if (currentWriteBuffer == null) {
             currentWriteBuffer = wiFullQueue.poll();
@@ -43,6 +45,9 @@ public class FullFrameChannelWriteInterface extends AbstractChannelWriteInterfac
             int size = Math.min(currentWriteBuffer.remaining(), credits);
             if (size > 0) {
                 credits -= size;
+                if (credits % currentWriteBuffer.capacity() != 0) {
+                    LOGGER.warn("partial frame being written on {}", ccb);
+                }
                 writerState.getCommand().setChannelId(channelId);
                 writerState.getCommand().setCommandType(MuxDemuxCommand.CommandType.DATA);
                 writerState.getCommand().setData(size);
