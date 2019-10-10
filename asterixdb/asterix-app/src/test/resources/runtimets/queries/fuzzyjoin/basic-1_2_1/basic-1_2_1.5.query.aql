@@ -39,7 +39,7 @@ let $tokenLeftVerify := (
             for $token in $tokenUnrankedLeft
             let $index :=
                 for $tokenRanked at $i in $rankedTokens
-                    where $token = /*+ bcast */ $tokenRanked
+                    where $token = /*+ hash-bcast */ $tokenRanked
                 return $i
             order by $index
             return $index
@@ -54,7 +54,7 @@ let $tokenLeft := (
         let $lenLeft := len($tokenUnrankedLeft)
         for $token in $tokenUnrankedLeft
         for $tokenRanked at $i in $rankedTokens
-            where $token = /*+ bcast */ $tokenRanked
+            where $token = /*+ hash-bcast */ $tokenRanked
         order by $i
     return $i
 )

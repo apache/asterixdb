@@ -116,8 +116,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
-import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation.BroadcastSide;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -1181,35 +1179,18 @@ class LangExpressionToPlanTranslator
             // now look at the operator
             if (i < nOps) {
                 OperatorType opType = ops.get(i);
-                boolean isCmpOp = OperatorExpr.opIsComparison(opType);
                 AbstractFunctionCallExpression f = createFunctionCallExpressionForBuiltinOperator(opType, sourceLoc);
-
                 // chain the operators
                 if (i == 0) {
                     f.getArguments().add(new MutableObject<>(e));
                     currExpr = f;
-                    if (isCmpOp && op.isBroadcastOperand(i)) {
-                        BroadcastExpressionAnnotation bcast = new BroadcastExpressionAnnotation();
-                        bcast.setObject(BroadcastSide.LEFT);
-                        f.getAnnotations().put(BroadcastExpressionAnnotation.BROADCAST_ANNOTATION_KEY, bcast);
-                    }
                 } else {
                     currExpr.getArguments().add(new MutableObject<>(e));
                     f.getArguments().add(new MutableObject<>(currExpr));
                     currExpr = f;
-                    if (isCmpOp && i == 1 && op.isBroadcastOperand(i)) {
-                        BroadcastExpressionAnnotation bcast = new BroadcastExpressionAnnotation();
-                        bcast.setObject(BroadcastSide.RIGHT);
-                        f.getAnnotations().put(BroadcastExpressionAnnotation.BROADCAST_ANNOTATION_KEY, bcast);
-                    }
                 }
             } else { // don't forget the last expression...
                 currExpr.getArguments().add(new MutableObject<>(e));
-                if (i == 1 && op.isBroadcastOperand(i)) {
-                    BroadcastExpressionAnnotation bcast = new BroadcastExpressionAnnotation();
-                    bcast.setObject(BroadcastSide.RIGHT);
-                    currExpr.getAnnotations().put(BroadcastExpressionAnnotation.BROADCAST_ANNOTATION_KEY, bcast);
-                }
             }
         }
 

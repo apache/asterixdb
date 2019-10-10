@@ -65,7 +65,7 @@ let $tokensDBLP :=
         /*+ inmem 16 16384 */
         order by count($id), $tokenGroupped
         return $tokenGroupped
-    where $token = /*+ bcast */ $tokenRanked
+    where $token = /*+ hash-bcast */ $tokenRanked
     order by $i
     return $i
 for $prefixTokenDBLP in subset-collection($tokensDBLP, 0, prefix-len-jaccard(len($tokensDBLP), .8f))
@@ -88,7 +88,7 @@ let $tokensCSX :=
         /*+ inmem 16 16384 */
         order by count($id), $tokenGroupped
         return $tokenGroupped
-    where $token = /*+ bcast */ $tokenRanked
+    where $token = /*+ hash-bcast */ $tokenRanked
     order by $i
     return $i
 let $actualPrefixLen := prefix-len-jaccard(len($unrankedTokensCSX), .8f) - len($unrankedTokensCSX) + len($tokensCSX)

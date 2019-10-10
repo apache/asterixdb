@@ -66,6 +66,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.BroadcastSideSwitchingVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.visitors.IQueryOperatorVisitor;
 
@@ -186,6 +187,7 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
             Mutable<ILogicalOperator> rightBranch = op.getInputs().get(1);
             op.getInputs().set(0, rightBranch);
             op.getInputs().set(1, leftBranch);
+            op.getCondition().getValue().accept(BroadcastSideSwitchingVisitor.getInstance(), null);
         }
         AbstractBinaryJoinOperator returnOp = op;
         // After rewriting, the original inner join should become an left outer join.
@@ -419,5 +421,4 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
         joinOp.getInputs().set(1, new MutableObject<ILogicalOperator>(assignOp));
         nullCheckVars.add(assignVar);
     }
-
 }

@@ -55,7 +55,7 @@ write output to asterix_nc1:'rttest/fuzzyjoin_078.adm';
             /*+ inmem 1 302 */
             order by count($paper), $tokenGroupped
             return $tokenGroupped
-        where $token = /*+ bcast */ $tokenRanked
+        where $token = /*+ hash-bcast */ $tokenRanked
         order by $i
         return $i
     order by $paperDBLP.id

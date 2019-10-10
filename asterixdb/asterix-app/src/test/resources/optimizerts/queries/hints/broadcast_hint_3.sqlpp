@@ -18,7 +18,7 @@
  */
 /*
 * Description  : Test broadcast join hint
-*                Incompatible broadcast sides -> no broadcast
+*                Different operand order in where clause -> Successful broadcast
 * Expected Res : Success
 * Date         : 09/22/2017
 */
@@ -42,5 +42,5 @@ create  dataset t2(TT) primary key c_key;
 
 select t1.c_4 as c0, t2.c_4 as c1
 from t1 join t2
-on t1.c_1 /*+ bcast */ = t2.c_1 and t1.c_2 /*+ bcast */ = t2.c_2 and t2.c_3 /*+ bcast */ = t1.c_3
+on t1.c_1 /*+ hash-bcast */ = t2.c_1 and t1.c_2 /*+ hash-bcast */ = t2.c_2 and t2.c_3 /*+ hash-bcast */ = t1.c_3
 ;

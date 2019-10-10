@@ -65,7 +65,7 @@ let $tokensRight :=
         /*+ inmem 1 302 */ order by $r.rc * $l.lc
         return $r.rt
 
-    where $tokenUnranked = /*+ bcast */ $tokenRanked
+    where $tokenUnranked = /*+ hash-bcast */ $tokenRanked
     order by $i
     return $i
 for $prefixTokenRight in subset-collection($tokensRight, 0, prefix-len-jaccard(len($tokensRight), .8f))
@@ -96,7 +96,7 @@ let $tokensLeft :=
         /*+ inmem 1 302 */ order by $r.rc * $l.lc
         return $r.rt
 
-    where $tokenUnranked = /*+ bcast */ $tokenRanked
+    where $tokenUnranked = /*+ hash-bcast */ $tokenRanked
     order by $i
     return $i
 let $actualPrefixLen := prefix-len-jaccard(len($tokensUnrankedLeft), .8f) - len($tokensUnrankedLeft) + len($tokensLeft)

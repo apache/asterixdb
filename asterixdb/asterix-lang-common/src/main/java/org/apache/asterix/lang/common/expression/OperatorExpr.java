@@ -31,20 +31,16 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 public class OperatorExpr extends AbstractExpression {
     private List<Expression> exprList;
     private List<OperatorType> opList;
-    private List<Integer> exprBroadcastIdx;
     private boolean currentop;
 
     public OperatorExpr() {
         super();
         exprList = new ArrayList<>();
-        exprBroadcastIdx = new ArrayList<>();
         opList = new ArrayList<>();
     }
 
-    public OperatorExpr(List<Expression> exprList, List<Integer> exprBroadcastIdx, List<OperatorType> opList,
-            boolean currentop) {
+    public OperatorExpr(List<Expression> exprList, List<OperatorType> opList, boolean currentop) {
         this.exprList = exprList;
-        this.exprBroadcastIdx = exprBroadcastIdx;
         this.opList = opList;
         this.currentop = currentop;
     }
@@ -61,10 +57,6 @@ public class OperatorExpr extends AbstractExpression {
         return exprList;
     }
 
-    public List<Integer> getExprBroadcastIdx() {
-        return exprBroadcastIdx;
-    }
-
     public List<OperatorType> getOpList() {
         return opList;
     }
@@ -74,13 +66,6 @@ public class OperatorExpr extends AbstractExpression {
     }
 
     public void addOperand(Expression operand) {
-        addOperand(operand, false);
-    }
-
-    public void addOperand(Expression operand, boolean broadcast) {
-        if (broadcast) {
-            exprBroadcastIdx.add(exprList.size());
-        }
         exprList.add(operand);
     }
 
@@ -123,18 +108,9 @@ public class OperatorExpr extends AbstractExpression {
         return visitor.visit(this, arg);
     }
 
-    public boolean isBroadcastOperand(int idx) {
-        for (Integer i : exprBroadcastIdx) {
-            if (i == idx) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public int hashCode() {
-        return Objects.hash(currentop, exprBroadcastIdx, exprList, opList);
+        return Objects.hash(currentop, exprList, opList);
     }
 
     @Override
@@ -146,7 +122,7 @@ public class OperatorExpr extends AbstractExpression {
             return false;
         }
         OperatorExpr target = (OperatorExpr) object;
-        return currentop == target.isCurrentop() && Objects.equals(exprBroadcastIdx, target.exprBroadcastIdx)
-                && Objects.equals(exprList, target.exprList) && Objects.equals(opList, target.opList);
+        return currentop == target.isCurrentop() && Objects.equals(exprList, target.exprList)
+                && Objects.equals(opList, target.opList);
     }
 }

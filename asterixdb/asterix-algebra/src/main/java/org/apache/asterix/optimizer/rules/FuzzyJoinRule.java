@@ -106,7 +106,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
             //
             // -- -- -- -
             //
-            + "        where $token = /*+ bcast */ $tokenRanked " + "order by $i " + "return $i "
+            + "        where $token = /*+ hash-bcast */ $tokenRanked " + "order by $i " + "return $i "
             + "      for $prefixTokenRight in subset-collection($tokensRight, 0, prefix-len-%s(len($tokensRight), %ff)) "
             + "      ), " + "( " + "##LEFT_1 " + "let $tokensUnrankedLeft := %s($$LEFT_1) "
             + "      let $lenLeft := len($tokensUnrankedLeft) " + "let $tokensLeft := "
@@ -119,7 +119,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
             //
             // -- -- -- -
             //
-            + "        where $token = /*+ bcast */ $tokenRanked " + "order by $i " + "return $i "
+            + "        where $token = /*+ hash-bcast */ $tokenRanked " + "order by $i " + "return $i "
             // We use the input string $tokensUnrankedLeft instead of $tokensLeft to ensure it will not miss similar
             // pairs when the prefix of S has been reduced in case of R ~= S, where some tokens are in S but not in R.
             + "      let $actualPreLen := prefix-len-%s(len($tokensUnrankedLeft), %ff) - $lenLeft + len($tokensLeft) "

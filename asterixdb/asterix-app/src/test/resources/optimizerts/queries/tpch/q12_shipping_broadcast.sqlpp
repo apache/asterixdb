@@ -48,7 +48,7 @@ SELECT l.l_shipmode,
            END) low_line_count
 FROM  LineItem l,
       Orders o
-WHERE l.l_orderkey /*+ bcast */ = o.o_orderkey AND l.l_commitdate < l.l_receiptdate AND
+WHERE l.l_orderkey /*+ hash-bcast */ = o.o_orderkey AND l.l_commitdate < l.l_receiptdate AND
       l.l_shipdate < l.l_commitdate AND l.l_receiptdate >= '1994-01-01' AND
       l.l_receiptdate < '1995-01-01' AND (l.l_shipmode = 'MAIL' OR l.l_shipmode = 'SHIP')
 GROUP BY l.l_shipmode

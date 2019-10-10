@@ -25,7 +25,7 @@ SELECT l_shipmode,
        sum(CASE o.o_orderpriority = '1-URGENT' or o.o_orderpriority = '2-HIGH' WHEN true THEN 0 ELSE 1 END) low_line_count
 FROM  LineItem l,
       Orders o
-WHERE l.l_orderkey /*+ bcast */ = o.o_orderkey AND l.l_commitdate < l.l_receiptdate AND
+WHERE l.l_orderkey /*+ hash-bcast */ = o.o_orderkey AND l.l_commitdate < l.l_receiptdate AND
       l.l_shipdate < l.l_commitdate AND l.l_receiptdate >= '1994-01-01' AND
       l.l_receiptdate < '1995-01-01' AND (l.l_shipmode = 'MAIL' OR l.l_shipmode = 'SHIP')
 GROUP BY l.l_shipmode

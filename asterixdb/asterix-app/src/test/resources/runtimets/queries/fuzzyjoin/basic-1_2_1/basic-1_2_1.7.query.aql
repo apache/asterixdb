@@ -38,7 +38,7 @@ for $paperDBLP in dataset('right')
                 /*+ inmem 1 302 */
                 order by count($id), $tokenGrouped
                 return $tokenGrouped
-            where $tokenUnranked = /*+ bcast */ $tokenRanked
+            where $tokenUnranked = /*+ hash-bcast */ $tokenRanked
             return $i
         order by $index[0]
         return $index[0]

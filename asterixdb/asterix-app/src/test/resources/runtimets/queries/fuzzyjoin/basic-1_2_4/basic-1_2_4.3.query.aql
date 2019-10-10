@@ -41,7 +41,7 @@ let $tokensLeft :=
         /*+ inmem 1 302 */
         order by count($id), $tokenGrouped
         return $tokenGrouped
-    where $tokenUnranked = /*+ bcast */ $tokenRanked
+    where $tokenUnranked = /*+ hash-bcast */ $tokenRanked
     order by $i
     return $i
 
@@ -60,7 +60,7 @@ let $tokensRight :=
         /*+ inmem 1 302 */
         order by count($id), $tokenGrouped
         return $tokenGrouped
-    where $tokenUnranked = /*+ bcast */ $tokenRanked
+    where $tokenUnranked = /*+ hash-bcast */ $tokenRanked
     order by $i
     return $i
 

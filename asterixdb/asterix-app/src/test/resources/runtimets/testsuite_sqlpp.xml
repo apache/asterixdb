@@ -12489,7 +12489,7 @@
         <output-dir compare="Text">inapplicable-hint-warning</output-dir>
         <expected-warn>HYR10006: Could not apply Group By hint: hash</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: indexnl. "hash" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "skip-index", "bcast" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "skip-index", "hash-bcast" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: auto. "indexnl", "skip-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "skip-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: hash. None expected at this location</expected-warn>
@@ -12512,7 +12512,7 @@
       <compilation-unit name="unknown-hint-warning">
         <output-dir compare="Text">unknown-hint-warning</output-dir>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_groupby. "hash" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr. "indexnl", "skip-index", "bcast" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr. "indexnl", "skip-index", "hash-bcast" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_between. "indexnl", "skip-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_funcall. "indexnl", "skip-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_elsewhere. None expected at this location</expected-warn>
