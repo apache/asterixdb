@@ -51,7 +51,7 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
     private final FixedSizeFrame appendFrame;
     private final FixedSizeFrameTupleAppender appender;
     private BufferInfo tempInfo;
-    private final IPartitionedMemoryConstrain constrain;
+    private IPartitionedMemoryConstrain constrain;
 
     // In case where a frame pool is shared by one or more buffer manager(s), it can be provided from the caller.
     public VPartitionTupleBufferManager(IPartitionedMemoryConstrain constrain, int partitions,
@@ -74,6 +74,11 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         this.appendFrame = new FixedSizeFrame();
         this.appender = new FixedSizeFrameTupleAppender();
         this.tempInfo = new BufferInfo(null, -1, -1);
+    }
+
+    @Override
+    public void setConstrain(IPartitionedMemoryConstrain constrain) {
+        this.constrain = constrain;
     }
 
     @Override

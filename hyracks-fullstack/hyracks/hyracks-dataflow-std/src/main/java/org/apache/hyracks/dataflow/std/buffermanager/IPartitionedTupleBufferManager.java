@@ -80,6 +80,13 @@ public interface IPartitionedTupleBufferManager {
     void cancelInsertTuple(int partition) throws HyracksDataException;
 
     /**
+     * Sets the constrain.
+     * @param constrain
+     *              the constrain to be set.
+     */
+    void setConstrain(IPartitionedMemoryConstrain constrain);
+
+    /**
      * Reset to the initial states. The previous allocated resources won't be released in order to be used in the next round.
      *
      * @throws HyracksDataException

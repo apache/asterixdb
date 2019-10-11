@@ -432,6 +432,7 @@ public class OptimizedHybridHashJoin {
 
     public void initProbe() {
         probePSizeInTups = new int[numOfPartitions];
+        bufferManager.setConstrain(VPartitionTupleBufferManager.NO_CONSTRAIN);
     }
 
     public void probe(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException {
