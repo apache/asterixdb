@@ -17,10 +17,6 @@
  * under the License.
  */
 
-{
-  'result1':regexp_replace('abracadabra','bra','kkk',-1),
-  'result2':regexp_replace('abracadabra','bra','kkk',0),
-  'result3':regexp_replace('abracadabra','bra','kkk',1),
-  'result4':regexp_replace('abracadabra_abracadabra','bra','kkk',2),
-  'result5':regexp_replace('abracadabra_abracadabra','bra','kkk',5)
-};
+USE test;
+
+FROM ds SELECT VALUE regexp_contains(test_str, pattern, flags) ORDER BY id;

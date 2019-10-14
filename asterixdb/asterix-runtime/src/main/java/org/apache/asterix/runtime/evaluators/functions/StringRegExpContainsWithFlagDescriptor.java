@@ -59,7 +59,7 @@ public class StringRegExpContainsWithFlagDescriptor extends AbstractScalarFuncti
 
                     @Override
                     protected boolean compute(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr,
-                            UTF8StringPointable flagPtr) {
+                            UTF8StringPointable flagPtr) throws HyracksDataException {
                         matcher.build(srcPtr, patternPtr, flagPtr);
                         return matcher.find();
                     }

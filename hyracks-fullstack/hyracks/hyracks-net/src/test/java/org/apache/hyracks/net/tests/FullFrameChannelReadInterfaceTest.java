@@ -176,5 +176,11 @@ public class FullFrameChannelReadInterfaceTest {
             counter++;
             return ByteBuffer.allocate(frameSize);
         }
+
+        @Override
+        public int getCreatedBuffersCount() {
+            return counter;
+        }
+
     }
 }

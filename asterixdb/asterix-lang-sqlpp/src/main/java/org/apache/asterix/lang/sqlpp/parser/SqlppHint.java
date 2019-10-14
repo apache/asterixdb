@@ -27,7 +27,7 @@ public enum SqlppHint {
 
     // optimizer hints
     AUTO_HINT("auto"),
-    BROADCAST_JOIN_HINT("bcast"),
+    HASH_BROADCAST_JOIN_HINT("hash-bcast"),
     COMPOSE_VAL_FILES_HINT("compose-val-files"),
     DATE_BETWEEN_YEARS_HINT("date-between-years"),
     DATETIME_ADD_RAND_HOURS_HINT("datetime-add-rand-hours"),

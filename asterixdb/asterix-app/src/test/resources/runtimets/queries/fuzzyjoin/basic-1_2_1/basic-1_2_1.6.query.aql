@@ -38,7 +38,7 @@ let $tokenRightVerify := (
             for $token in $tokenUnrankedLeft
             let $index :=
                 for $tokenRanked at $i in $rankedTokens
-                    where $token = /*+ bcast */ $tokenRanked
+                    where $token = /*+ hash-bcast */ $tokenRanked
                 return $i
             order by $index
             return $index
@@ -51,7 +51,7 @@ let $tokenRight := (
         let $tokenUnrankedRight := word-tokens($right.authors)
         for $token in $tokenUnrankedRight
         for $tokenRanked at $i in $rankedTokens
-            where $token = /*+ bcast */ $tokenRanked
+            where $token = /*+ hash-bcast */ $tokenRanked
         order by $i
     return $i
 )

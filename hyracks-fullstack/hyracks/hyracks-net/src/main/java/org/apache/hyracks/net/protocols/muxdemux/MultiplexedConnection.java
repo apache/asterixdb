@@ -34,7 +34,7 @@ import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.net.protocols.tcp.ITCPConnectionEventListener;
 import org.apache.hyracks.net.protocols.tcp.TCPConnection;
 import org.apache.hyracks.util.JSONUtil;
-import org.apache.hyracks.util.annotations.ThreadSafetyGuaranteedBy;
+import org.apache.hyracks.util.annotations.GuardedBy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -406,6 +406,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                         int channelId = readerState.command.getChannelId();
                         ccb = cSet.registerChannel(channelId);
                         muxDemux.getChannelOpenListener().channelOpened(ccb);
+                        break;
                     }
                 }
                 if (LOGGER.isTraceEnabled()) {
@@ -429,7 +430,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         return muxDemux.getChannelInterfaceFactory();
     }
 
-    @ThreadSafetyGuaranteedBy("MultiplexedConnection.this")
+    @GuardedBy("MultiplexedConnection.this")
     private class EventCounter implements IEventCounter {
         private int counter;
 

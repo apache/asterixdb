@@ -227,7 +227,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = e.accept(this, env);
             exprs.add((Expression) p1.first);
         }
-        OperatorExpr oe = new OperatorExpr(exprs, op.getExprBroadcastIdx(), op.getOpList(), op.isCurrentop());
+        OperatorExpr oe = new OperatorExpr(exprs, op.getOpList(), op.isCurrentop());
         oe.setSourceLocation(op.getSourceLocation());
         oe.addHints(op.getHints());
         return new Pair<>(oe, env);

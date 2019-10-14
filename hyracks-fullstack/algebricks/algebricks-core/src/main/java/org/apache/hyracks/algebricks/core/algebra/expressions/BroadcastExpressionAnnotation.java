@@ -20,12 +20,10 @@ package org.apache.hyracks.algebricks.core.algebra.expressions;
 
 public class BroadcastExpressionAnnotation implements IExpressionAnnotation {
 
-    public static final String BROADCAST_ANNOTATION_KEY = "broadcast";
-
     public enum BroadcastSide {
         LEFT,
         RIGHT
-    };
+    }
 
     private BroadcastSide side;
 
@@ -41,14 +39,9 @@ public class BroadcastExpressionAnnotation implements IExpressionAnnotation {
 
     @Override
     public IExpressionAnnotation copy() {
-        BroadcastExpressionAnnotation bcast = new BroadcastExpressionAnnotation();
-        bcast.side = side;
-        return bcast;
-    }
-
-    @Override
-    public String toString() {
-        return BROADCAST_ANNOTATION_KEY;
+        BroadcastExpressionAnnotation hashBcast = new BroadcastExpressionAnnotation();
+        hashBcast.side = side;
+        return hashBcast;
     }
 
 }

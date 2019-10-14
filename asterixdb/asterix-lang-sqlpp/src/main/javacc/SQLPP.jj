@@ -187,6 +187,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -2057,7 +2058,6 @@ Expression RelExpr() throws ParseException:
   boolean not = false;
   OperatorExpr op = null;
   Expression operand = null;
-  boolean broadcast = false;
   IExpressionAnnotation annotation = null;
 }
 {
@@ -2067,7 +2067,7 @@ Expression RelExpr() throws ParseException:
       LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> | <LG> |<SIMILAR> | (<NOT> { not = true; })? <IN>)
         {
           Token hintToken = fetchHint(token, SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
-            SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.BROADCAST_JOIN_HINT);
+            SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.HASH_BROADCAST_JOIN_HINT);
           if (hintToken != null) {
             switch (hintToken.hint) {
               case INDEXED_NESTED_LOOP_JOIN_HINT:
@@ -2076,8 +2076,9 @@ Expression RelExpr() throws ParseException:
               case SKIP_SECONDARY_INDEX_SEARCH_HINT:
                 annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
                 break;
-              case BROADCAST_JOIN_HINT:
-                broadcast = true;
+              case HASH_BROADCAST_JOIN_HINT:
+                annotation = new BroadcastExpressionAnnotation();
+                annotation.setObject(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
                 break;
             }
           }
@@ -2091,7 +2092,7 @@ Expression RelExpr() throws ParseException:
           }
           if (op == null) {
             op = new OperatorExpr();
-            op.addOperand(operand, false); // broadcast is always for the right branch
+            op.addOperand(operand);
             op.setCurrentop(true);
             addSourceLocation(op, token);
           }
@@ -2104,7 +2105,7 @@ Expression RelExpr() throws ParseException:
 
        operand = BetweenExpr()
        {
-         op.addOperand(operand, broadcast);
+         op.addOperand(operand);
        }
     )?
 

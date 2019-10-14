@@ -156,6 +156,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -165,7 +166,7 @@ class AQLParser extends ScopeChecker implements IParser {
 
     // optimizer hints
     private static final String AUTO_HINT = "auto";
-    private static final String BROADCAST_JOIN_HINT = "bcast";
+    private static final String HASH_BROADCAST_JOIN_HINT = "hash-bcast";
     private static final String COMPOSE_VAL_FILES_HINT = "compose-val-files";
     private static final String DATE_BETWEEN_YEARS_HINT = "date-between-years";
     private static final String DATETIME_ADD_RAND_HOURS_HINT = "datetime-add-rand-hours";
@@ -1746,19 +1747,10 @@ Expression RelExpr()throws ParseException:
 {
   OperatorExpr op = null;
   Expression operand = null;
-  boolean broadcast = false;
   IExpressionAnnotation annotation = null;
 }
 {
     operand = AddExpr()
-    {
-      if (operand instanceof VariableExpr) {
-        String hint = getHint(token);
-        if (hint != null && hint.equals(BROADCAST_JOIN_HINT)) {
-          broadcast = true;
-        }
-      }
-    }
 
     (
       LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> |<SIMILAR>)
@@ -1773,9 +1765,8 @@ Expression RelExpr()throws ParseException:
         }
           if (op == null) {
             op = new OperatorExpr();
-            op.addOperand(operand, broadcast);
+            op.addOperand(operand);
           op.setCurrentop(true);
-          broadcast = false;
           }
          try{
            op.addOperator(token.image);
@@ -1786,14 +1777,14 @@ Expression RelExpr()throws ParseException:
 
        operand = AddExpr()
       {
-         broadcast = false;
          if (operand instanceof VariableExpr) {
            String hint = getHint(token);
-           if (hint != null && hint.equals(BROADCAST_JOIN_HINT)) {
-             broadcast = true;
+           if (hint != null && hint.equals(HASH_BROADCAST_JOIN_HINT)) {
+             annotation = new BroadcastExpressionAnnotation();
+             annotation.setObject(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
            }
          }
-         op.addOperand(operand, broadcast);
+         op.addOperand(operand);
       }
     )?
 

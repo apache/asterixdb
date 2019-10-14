@@ -37,7 +37,7 @@ let $r := count(
                 /*+ hash */ group by $tokenRightGrouped := $orderTokenRight with $rightId
             /*+ inmem 1 302 */ order by count($rightId)
             return $tokenRightGrouped
-        where $tokenUnranked = /*+ bcast */ $tokenRanked
+        where $tokenUnranked = /*+ hash-bcast */ $tokenRanked
         order by $i
         return $i
     for $prefixTokenRight in subset-collection($tokensRight, 0, prefix-len-jaccard(len($tokensRight), .8f))
@@ -58,7 +58,7 @@ let $r := count(
                 /*+ hash */ group by $tokenRightGrouped := $orderTokenRight with $rightId
             /*+ inmem 1 302 */ order by count($rightId)
             return $tokenRightGrouped
-        where $tokenUnranked = /*+ bcast */ $tokenRanked
+        where $tokenUnranked = /*+ hash-bcast */ $tokenRanked
         order by $i
         return $i
     let $actualPrefixLen := prefix-len-jaccard(len($tokensUnrankedLeft), .8f) - len($tokensUnrankedLeft) + len($tokensLeft)

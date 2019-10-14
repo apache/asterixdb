@@ -61,8 +61,8 @@ public abstract class AbstractBinaryStringBoolEval extends AbstractBinaryStringE
      * @param right
      *            , the second input argument.
      * @return a boolean value.
-     * @throws IOException
+     * @throws HyracksDataException
      */
-    protected abstract boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws IOException;
+    protected abstract boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws HyracksDataException;
 
 }

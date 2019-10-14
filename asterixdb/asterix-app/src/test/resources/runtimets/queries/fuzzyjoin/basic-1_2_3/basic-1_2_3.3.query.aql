@@ -69,10 +69,10 @@ where count($d.simpairs) = 0
     let $sstr := for $t in word-tokens($d.sstr) order by $t return $t
     let $rlen := len(for $t in word-tokens($d.rstr) order by $t return $t)
     let $slen := len(for $t in word-tokens($d.sstr) order by $t return $t)
-    let $orstr := for $t in word-tokens($d.rstr) for $token at $i in $orderedTokens where $t /*+ bcast */ = $token order by $i return $i
-    let $osstr := for $t in word-tokens($d.sstr) for $token at $i in $orderedTokens where $t /*+ bcast */ = $token order by $i return $i
-    let $lorstr := len(for $t in word-tokens($d.rstr) for $token at $i in $orderedTokens where $t /*+ bcast */ = $token order by $i return $i)
-    let $losstr := len(for $t in word-tokens($d.sstr) for $token at $i in $orderedTokens where $t /*+ bcast */ = $token order by $i return $i)
+    let $orstr := for $t in word-tokens($d.rstr) for $token at $i in $orderedTokens where $t /*+ hash-bcast */ = $token order by $i return $i
+    let $osstr := for $t in word-tokens($d.sstr) for $token at $i in $orderedTokens where $t /*+ hash-bcast */ = $token order by $i return $i
+    let $lorstr := len(for $t in word-tokens($d.rstr) for $token at $i in $orderedTokens where $t /*+ hash-bcast */ = $token order by $i return $i)
+    let $losstr := len(for $t in word-tokens($d.sstr) for $token at $i in $orderedTokens where $t /*+ hash-bcast */ = $token order by $i return $i)
 return {
         "rid": $rid,
         "sid": $sid,

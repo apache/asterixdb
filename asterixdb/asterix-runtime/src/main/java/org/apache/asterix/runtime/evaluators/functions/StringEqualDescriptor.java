@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.IOException;
-
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -55,7 +53,7 @@ public class StringEqualDescriptor extends AbstractScalarFunctionDynamicDescript
                         sourceLoc) {
 
                     @Override
-                    protected boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws IOException {
+                    protected boolean compute(UTF8StringPointable left, UTF8StringPointable right) {
                         return left.compareTo(right) == 0;
                     }
 

@@ -162,7 +162,7 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
                 IndexedNLJoinExpressionAnnotation.INSTANCE);
         BroadcastExpressionAnnotation bcast = new BroadcastExpressionAnnotation();
         bcast.setObject(BroadcastExpressionAnnotation.BroadcastSide.LEFT); // Broadcast the OR predicates branch.
-        eqExp.getAnnotations().put(BroadcastExpressionAnnotation.BROADCAST_ANNOTATION_KEY, bcast);
+        eqExp.getAnnotations().put(bcast, bcast);
 
         InnerJoinOperator jOp = new InnerJoinOperator(new MutableObject<>(eqExp));
         jOp.setSourceLocation(sourceLoc);

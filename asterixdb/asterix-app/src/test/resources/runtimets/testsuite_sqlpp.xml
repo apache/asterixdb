@@ -8602,6 +8602,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="like_02">
+        <output-dir compare="Text">like_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="like_03_negative">
+        <output-dir compare="Text">like_03_negative</output-dir>
+        <expected-error>Invalid pattern "__\c" for LIKE (in line 21, at column 11)</expected-error>
+        <expected-error>Invalid pattern "%\" for LIKE (in line 21, at column 18)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="like_null">
         <output-dir compare="Text">like_null</output-dir>
       </compilation-unit>
@@ -8688,12 +8700,12 @@
     </test-case>
     <test-case FilePath="string">
       <compilation-unit name="regexp_contains">
-        <output-dir compare="Text">matches06</output-dir>
+        <output-dir compare="Text">regexp_contains</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
       <compilation-unit name="regexp_contains_with_flag">
-        <output-dir compare="Text">matches23</output-dir>
+        <output-dir compare="Text">regexp_contains_with_flag</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -8703,7 +8715,7 @@
     </test-case>
     <test-case FilePath="string">
       <compilation-unit name="regexp_like_with_flag">
-        <output-dir compare="Text">matches23</output-dir>
+        <output-dir compare="Text">regexp_like_with_flag</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -8734,6 +8746,11 @@
     <test-case FilePath="string">
       <compilation-unit name="regexp_replace">
         <output-dir compare="Text">regexp_replace</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_replace_with_flag">
+        <output-dir compare="Text">regexp_replace_with_flag</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -12472,7 +12489,7 @@
         <output-dir compare="Text">inapplicable-hint-warning</output-dir>
         <expected-warn>HYR10006: Could not apply Group By hint: hash</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: indexnl. "hash" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "skip-index", "bcast" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "skip-index", "hash-bcast" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: auto. "indexnl", "skip-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "skip-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: hash. None expected at this location</expected-warn>
@@ -12495,7 +12512,7 @@
       <compilation-unit name="unknown-hint-warning">
         <output-dir compare="Text">unknown-hint-warning</output-dir>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_groupby. "hash" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr. "indexnl", "skip-index", "bcast" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr. "indexnl", "skip-index", "hash-bcast" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_between. "indexnl", "skip-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_funcall. "indexnl", "skip-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_elsewhere. None expected at this location</expected-warn>

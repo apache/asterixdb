@@ -396,8 +396,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public OperatorExpr visit(OperatorExpr operatorExpr, Void arg) throws CompilationException {
-        OperatorExpr copy = new OperatorExpr(copyExprList(operatorExpr.getExprList(), arg),
-                operatorExpr.getExprBroadcastIdx(), operatorExpr.getOpList(), operatorExpr.isCurrentop());
+        OperatorExpr copy = new OperatorExpr(copyExprList(operatorExpr.getExprList(), arg), operatorExpr.getOpList(),
+                operatorExpr.isCurrentop());
         copy.setSourceLocation(operatorExpr.getSourceLocation());
         copy.addHints(operatorExpr.getHints());
         return copy;

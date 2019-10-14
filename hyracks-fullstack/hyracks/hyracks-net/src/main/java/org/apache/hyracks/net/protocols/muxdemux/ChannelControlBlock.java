@@ -30,6 +30,7 @@ import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.net.protocols.muxdemux.MultiplexedConnection.WriterState;
 import org.apache.hyracks.util.JSONUtil;
+import org.apache.hyracks.util.annotations.GuardedBy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -95,10 +96,12 @@ public class ChannelControlBlock implements IChannelControlBlock {
         return ri.read(sc, size);
     }
 
+    @GuardedBy("MultiplexConnection")
     int getReadCredits() {
         return ri.getCredits();
     }
 
+    @GuardedBy("MultiplexConnection")
     void setReadCredits(int credits) {
         ri.setReadCredits(credits);
     }

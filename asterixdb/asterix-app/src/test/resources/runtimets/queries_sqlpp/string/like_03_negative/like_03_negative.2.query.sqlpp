@@ -17,8 +17,6 @@
  * under the License.
  */
 
-{
-  'result1':regexp_replace('abracadabra','Bra','kkk',''),
-  'result2':regexp_replace('abracadabra','Bra','kkk','i'),
-  'result3':regexp_replace('helloworld','hello world','kkk','x')
-};
+SELECT ELEMENT A FROM [
+  "test\\string" LIKE "%\\"
+] AS A;

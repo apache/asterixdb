@@ -29,7 +29,7 @@ set import-private-functions 'true';
     let $tokensDBLP :=
         for $tokenUnranked in $tokensUnrankedDBLP
         for $tokenRanked in dataset('TOKENSRANKEDADM')
-        where $tokenUnranked = /*+ bcast*/ $tokenRanked.token
+        where $tokenUnranked = /*+ hash-bcast*/ $tokenRanked.token
         order by $tokenRanked.rank
         return $tokenRanked.rank
     for $prefixTokenDBLP in subset-collection(

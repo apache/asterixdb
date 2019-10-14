@@ -27,6 +27,7 @@ import org.apache.hyracks.api.comm.IBufferAcceptor;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
 import org.apache.hyracks.api.comm.IChannelWriteInterface;
 import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
+import org.apache.hyracks.util.annotations.GuardedBy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -42,6 +43,7 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
     protected boolean channelWritabilityState;
     protected final int channelId;
     protected IBufferAcceptor eba;
+    @GuardedBy("ChannelControlBlock")
     protected int credits;
     protected boolean eos;
     protected boolean eosSent;
@@ -61,6 +63,7 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
     }
 
     @Override
+    @GuardedBy("ChannelControlBlock")
     public void writeComplete() {
         if (currentWriteBuffer.remaining() <= 0) {
             currentWriteBuffer.clear();
@@ -70,6 +73,7 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
         }
     }
 
+    @GuardedBy("ChannelControlBlock")
     private boolean computeWritability() {
         boolean writableDataPresent = currentWriteBuffer != null || !wiFullQueue.isEmpty();
         if (writableDataPresent) {
@@ -82,6 +86,7 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
     }
 
     @Override
+    @GuardedBy("ChannelControlBlock")
     public void adjustChannelWritability() {
         boolean writable = computeWritability();
         if (writable) {
@@ -97,6 +102,7 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
     }
 
     @Override
+    @GuardedBy("ChannelControlBlock")
     public void addCredits(int credit) {
         credits += credit;
     }

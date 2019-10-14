@@ -47,7 +47,7 @@ for $ridpair in
             /*+ inmem 1 302 */
             order by count($id), $tokenGrouped
             return $tokenGrouped
-        where $tokenUnranked = /*+ bcast */ $tokenRanked
+        where $tokenUnranked = /*+ hash-bcast */ $tokenRanked
         order by $i
         return $i
     for $prefixTokenDBLP in subset-collection(
@@ -73,7 +73,7 @@ for $ridpair in
             /*+ inmem 1 302 */
             order by count($id), $tokenGrouped
             return $tokenGrouped
-        where $tokenUnranked = /*+ bcast */ $tokenRanked
+        where $tokenUnranked = /*+ hash-bcast */ $tokenRanked
         order by $i
         return $i
     for $prefixTokenCSX in subset-collection(

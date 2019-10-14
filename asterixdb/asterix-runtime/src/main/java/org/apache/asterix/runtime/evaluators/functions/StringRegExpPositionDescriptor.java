@@ -63,9 +63,10 @@ public class StringRegExpPositionDescriptor extends AbstractStringOffsetConfigur
                     private final RegExpMatcher matcher = new RegExpMatcher();
 
                     @Override
-                    protected int compute(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr) {
+                    protected int compute(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr)
+                            throws HyracksDataException {
                         matcher.build(srcPtr, patternPtr);
-                        int pos = matcher.postion();
+                        int pos = matcher.position();
                         return pos < 0 ? pos : pos + baseOffset;
                     }
                 };

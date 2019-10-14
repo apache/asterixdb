@@ -27,6 +27,7 @@ import org.apache.hyracks.api.comm.IBufferFactory;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
 import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.api.network.ISocketChannel;
+import org.apache.hyracks.util.annotations.GuardedBy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,6 +37,9 @@ public class FullFrameChannelReadInterface extends AbstractChannelReadInterface 
     private final Deque<ByteBuffer> riEmptyStack;
     private final IChannelControlBlock ccb;
     private final Object bufferRecycleLock = new Object();
+    private int frameSize;
+    private long recycledBuffers = 0;
+    private long flushedBuffers = 0;
 
     public FullFrameChannelReadInterface(IChannelControlBlock ccb) {
         this.ccb = ccb;
@@ -43,17 +47,22 @@ public class FullFrameChannelReadInterface extends AbstractChannelReadInterface 
         credits = 0;
         emptyBufferAcceptor = buffer -> {
             final int delta = buffer.remaining();
+            if (delta != frameSize) {
+                LOGGER.warn("partial frame being recycled; expected size {}, actual size {}", frameSize, delta);
+            }
             synchronized (bufferRecycleLock) {
                 if (ccb.isRemotelyClosed()) {
                     return;
                 }
                 riEmptyStack.push(buffer);
+                recycledBuffers++;
                 ccb.addPendingCredits(delta);
             }
         };
     }
 
     @Override
+    @GuardedBy("ChannelControlBlock")
     public int read(ISocketChannel sc, int size) throws IOException, NetException {
         synchronized (bufferRecycleLock) {
             while (true) {
@@ -62,16 +71,12 @@ public class FullFrameChannelReadInterface extends AbstractChannelReadInterface 
                 }
                 if (currentReadBuffer == null) {
                     currentReadBuffer = riEmptyStack.poll();
-                    //if current buffer == null and limit not reached
-                    // factory.createBuffer factory
                     if (currentReadBuffer == null) {
                         currentReadBuffer = bufferFactory.createBuffer();
                     }
                 }
                 if (currentReadBuffer == null) {
-                    if (LOGGER.isWarnEnabled()) {
-                        LOGGER.warn("{} read buffers exceeded. Current empty buffers: {}", ccb, riEmptyStack.size());
-                    }
+                    logStats();
                     throw new IllegalStateException(ccb + " read buffers exceeded");
                 }
                 int rSize = Math.min(size, currentReadBuffer.remaining());
@@ -95,6 +100,7 @@ public class FullFrameChannelReadInterface extends AbstractChannelReadInterface 
                 }
                 if (currentReadBuffer.remaining() <= 0) {
                     flush();
+                    flushedBuffers++;
                 }
             }
         }
@@ -102,7 +108,16 @@ public class FullFrameChannelReadInterface extends AbstractChannelReadInterface 
 
     @Override
     public void setBufferFactory(IBufferFactory bufferFactory, int limit, int frameSize) {
+        this.frameSize = frameSize;
         super.setBufferFactory(bufferFactory, limit, frameSize);
         ccb.addPendingCredits(limit * frameSize);
+    }
+
+    private void logStats() {
+        if (LOGGER.isWarnEnabled()) {
+            LOGGER.warn(
+                    "{} read buffers exceeded; current empty buffers: {}, created buffers: {}, recycled buffers: {}, flushed buffers: {}",
+                    ccb, riEmptyStack.size(), bufferFactory.getCreatedBuffersCount(), recycledBuffers, flushedBuffers);
+        }
     }
 }

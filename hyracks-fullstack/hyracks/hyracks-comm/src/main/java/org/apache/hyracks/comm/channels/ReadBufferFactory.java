@@ -22,7 +22,9 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.comm.IBufferFactory;
 import org.apache.hyracks.api.context.IHyracksCommonContext;
+import org.apache.hyracks.util.annotations.NotThreadSafe;
 
+@NotThreadSafe
 public class ReadBufferFactory implements IBufferFactory {
 
     private final int limit;
@@ -43,5 +45,10 @@ public class ReadBufferFactory implements IBufferFactory {
             counter++;
             return frame;
         }
+    }
+
+    @Override
+    public int getCreatedBuffersCount() {
+        return counter;
     }
 }

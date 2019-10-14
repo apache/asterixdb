@@ -39,12 +39,16 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Syntax:
 
-        CUME_DIST() OVER ([window-partition-clause] window-order-clause)
+        CUME_DIST() OVER ([window-partition-clause] [window-order-clause])
 
 * Returns the percentile rank of the current tuple as part of the cumulative
   distribution – that is, the number of tuples ranked lower than or equal to
   the current tuple, including the current tuple, divided by the total number
   of tuples in the window partition.
+
+    The window order clause determines the sort order of the tuples.
+    If the window order clause is omitted, the function returns the same
+    result (1.0) for each tuple.
 
 * Arguments:
 
@@ -54,7 +58,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
     * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](manual.html#Window_order_clause).
+    * (Optional) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
@@ -116,7 +120,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Syntax:
 
-        DENSE_RANK() OVER ([window-partition-clause] window-order-clause)
+        DENSE_RANK() OVER ([window-partition-clause] [window-order-clause])
 
 * Returns the dense rank of the current tuple – that is, the number of
   distinct tuples preceding this tuple in the current window partition, plus
@@ -124,6 +128,8 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
     The tuples are ordered by the window order clause.
     If any tuples are tied, they will have the same rank.
+    If the window order clause is omitted, the function returns the same
+    result (1) for each tuple.
 
     For this function, when any tuples have the same rank, the rank of the next
     tuple will be consecutive, so there will not be a gap in the sequence of
@@ -138,7 +144,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
     * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](manual.html#Window_order_clause).
+    * (Optional) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
@@ -219,7 +225,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 * Modifiers:
 
     * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
-      NULL or MISSING values are treated when finding the first tuple in the
+      NULL or MISSING values are treated when finding the first value in the
       window frame.
 
         - `IGNORE NULLS`: If the values for any tuples evaluate to NULL or
@@ -245,7 +251,8 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
     * The specified value from the first tuple.
       The order of the tuples is determined by the window order clause.
 
-    * If all values are NULL or MISSING it returns NULL.
+    * NULL, if the frame was empty or if all values were NULL or MISSING and
+      the `IGNORE NULLS` modifier was specified.
 
     * In the following cases, this function may return unpredictable results.
 
@@ -326,36 +333,38 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Syntax:
 
-        LAG(expr[, offset[, default]]) [nulls-treatment] OVER ([window-partition-clause] window-order-clause)
+        LAG(expr[, offset[, default]]) [nulls-treatment] OVER ([window-partition-clause] [window-order-clause])
 
-* Returns the value of a tuple at a given offset prior to the current tuple
+* Returns the value from a tuple at a given offset prior to the current tuple
   position.
+
+    The window order clause determines the sort order of the tuples.
+    If the window order clause is omitted, the return values may be
+    unpredictable.
 
 * Arguments:
 
     * `expr`: The value that you want to return from the offset
       tuple. <sup>\[[1](#fn_1)\]</sup>
 
-    * `offset`: (Optional) A positive integer greater than 0.
+    * `offset`: (Optional) A positive integer.
       If omitted, the default is 1.
 
     * `default`: (Optional) The value to return when the offset goes out of
-      window scope.
+      partition scope.
       If omitted, the default is NULL.
 
 * Modifiers:
 
     * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
-      NULL or MISSING values are treated when finding the first tuple in the
-      window frame.
+      NULL or MISSING values are treated when finding the offset tuple in the
+      window partition.
 
         - `IGNORE NULLS`: If the values for any tuples evaluate to NULL or
-          MISSING, those tuples are ignored when finding the first tuple.
-          In this case, the function returns the first non-NULL, non-MISSING
-          value.
+          MISSING, those tuples are ignored when finding the offset tuple.
 
         - `RESPECT NULLS`: If the values for any tuples evaluate to NULL or
-          MISSING, those tuples are included when finding the first tuple.
+          MISSING, those tuples are included when finding the offset tuple.
 
         If this modifier is omitted, the default is `RESPECT NULLS`.
 
@@ -363,13 +372,13 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
     * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](manual.html#Window_order_clause).
+    * (Optional) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
     * The specified value from the offset tuple.
 
-    * If the offset tuple is out of scope, it returns the default value,
+    * If the offset tuple is out of partition scope, it returns the default value,
       or NULL if no default is specified.
 
 * Example:
@@ -449,16 +458,16 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 * Modifiers:
 
     * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
-      NULL or MISSING values are treated when finding the first tuple in the
+      NULL or MISSING values are treated when finding the last tuple in the
       window frame.
 
         - `IGNORE NULLS`: If the values for any tuples evaluate to NULL or
-          MISSING, those tuples are ignored when finding the first tuple.
-          In this case, the function returns the first non-NULL, non-MISSING
+          MISSING, those tuples are ignored when finding the last tuple.
+          In this case, the function returns the last non-NULL, non-MISSING
           value.
 
         - `RESPECT NULLS`: If the values for any tuples evaluate to NULL or
-          MISSING, those tuples are included when finding the first tuple.
+          MISSING, those tuples are included when finding the last tuple.
 
         If this modifier is omitted, the default is `RESPECT NULLS`.
 
@@ -475,7 +484,8 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
     * The specified value from the last tuple.
       The order of the tuples is determined by the window order clause.
 
-    * If all values are NULL or MISSING it returns NULL.
+    * NULL, if the frame was empty or if all values were NULL or MISSING and
+      the `IGNORE NULLS` modifier was specified.
 
     * In the following cases, this function may return unpredictable results.
 
@@ -566,36 +576,38 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Syntax:
 
-        LEAD(expr[, offset[, default]]) [nulls-treatment] OVER ([window-partition-clause] window-order-clause)
+        LEAD(expr[, offset[, default]]) [nulls-treatment] OVER ([window-partition-clause] [window-order-clause])
 
-* Returns the value of a tuple at a given offset ahead of the current tuple
+* Returns the value from a tuple at a given offset ahead of the current tuple
   position.
+
+    The window order clause determines the sort order of the tuples.
+    If the window order clause is omitted, the return values may be
+    unpredictable.
 
 * Arguments:
 
     * `expr`: The value that you want to return from the offset
       tuple. <sup>\[[1](#fn_1)\]</sup>
 
-    * `offset`: (Optional) A positive integer greater than 0. If omitted, the
+    * `offset`: (Optional) A positive integer. If omitted, the
       default is 1.
 
     * `default`: (Optional) The value to return when the offset goes out of
-      window scope.
+      window partition scope.
       If omitted, the default is NULL.
 
 * Modifiers:
 
     * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
-      NULL or MISSING values are treated when finding the first tuple in the
-      window frame.
+      NULL or MISSING values are treated when finding the offset tuple in the
+      window partition.
 
         - `IGNORE NULLS`: If the values for any tuples evaluate to NULL or
-          MISSING, those tuples are ignored when finding the first tuple.
-          In this case, the function returns the first non-NULL, non-MISSING
-          value.
+          MISSING, those tuples are ignored when finding the offset tuple.
 
         - `RESPECT NULLS`: If the values for any tuples evaluate to NULL or
-          MISSING, those tuples are included when finding the first tuple.
+          MISSING, those tuples are included when finding the offset tuple.
 
         If this modifier is omitted, the default is `RESPECT NULLS`.
 
@@ -603,13 +615,13 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
     * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](manual.html#Window_order_clause).
+    * (Optional) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
     * The specified value from the offset tuple.
 
-    * If the offset tuple is out of scope, it returns the default value, or
+    * If the offset tuple is out of partition scope, it returns the default value, or
       NULL if no default is specified.
 
 * Example:
@@ -706,16 +718,14 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
         If this modifier is omitted, the default is `FROM FIRST`.
 
     * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
-      NULL or MISSING values are treated when finding the first tuple in the
+      NULL or MISSING values are treated when finding the offset tuple in the
       window frame.
 
         - `IGNORE NULLS`: If the values for any tuples evaluate to NULL or
-          MISSING, those tuples are ignored when finding the first tuple.
-          In this case, the function returns the first non-NULL, non-MISSING
-          value.
+          MISSING, those tuples are ignored when finding the offset tuple.
 
         - `RESPECT NULLS`: If the values for any tuples evaluate to NULL or
-          MISSING, those tuples are included when finding the first tuple.
+          MISSING, those tuples are included when finding the offset tuple.
 
         If this modifier is omitted, the default is `RESPECT NULLS`.
 
@@ -734,8 +744,6 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
     * In the following cases, this function may return unpredictable results.
 
         - If the window order clause is omitted.
-
-        - If the window frame clause is omitted.
 
         - If the window frame is defined by `ROWS`, and there are tied tuples
           in the window frame.
@@ -893,7 +901,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Syntax:
 
-        NTILE(num_tiles) OVER ([window-partition-clause] window-order-clause)
+        NTILE(num_tiles) OVER ([window-partition-clause] [window-order-clause])
 
 * Divides the window partition into the specified number of tiles, and
   allocates each tuple in the window partition to a tile, so that as far as
@@ -903,20 +911,22 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
   For each tuple, the function returns the number of the tile into which that
   tuple was placed.
 
+    The window order clause determines the sort order of the tuples.
+    If the window order clause is omitted then the tuples are processed in
+    an undefined order.
+
 * Arguments:
 
     * `num_tiles`: The number of tiles into which you want to divide
       the window partition.
       This argument can be an expression and must evaluate to a number.
       If the number is not an integer, it will be truncated.
-      If the expression depends on a tuple, it evaluates from the first
-      tuple in the window partition.
 
 * Clauses:
 
     * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](manual.html#Window_order_clause).
+    * (Optional) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
@@ -977,11 +987,15 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Syntax:
 
-        PERCENT_RANK() OVER ([window-partition-clause] window-order-clause)
+        PERCENT_RANK() OVER ([window-partition-clause] [window-order-clause])
 
 * Returns the percentile rank of the current tuple – that is, the rank of the
   tuples minus one, divided by the total number of tuples in the window
   partition minus one.
+
+    The window order clause determines the sort order of the tuples.
+    If the window order clause is omitted, the function returns the same
+    result (0) for each tuple.
 
 * Arguments:
 
@@ -991,7 +1005,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
     * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](manual.html#Window_order_clause).
+    * (Optional) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
@@ -1053,18 +1067,22 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 * Syntax:
 
-        RANK() OVER ([window-partition-clause] window-order-clause)
+        RANK() OVER ([window-partition-clause] [window-order-clause])
 
 * Returns the rank of the current tuple – that is, the number of distinct
   tuples preceding this tuple in the current window partition, plus one.
 
     The tuples are ordered by the window order clause.
     If any tuples are tied, they will have the same rank.
+    If the window order clause is omitted, the function returns the same
+    result (1) for each tuple.
 
     When any tuples have the same rank, the rank of the next tuple will include
     all preceding tuples, so there may be a gap in the sequence of returned
     values.
     For example, if there are three tuples ranked 2, the next rank is 5.
+
+    To avoid gaps in the returned values, use the DENSE_RANK() function instead.
 
 * Arguments:
 
@@ -1074,7 +1092,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
     * (Optional) [Window Partition Clause](manual.html#Window_partition_clause).
 
-    * (Required) [Window Order Clause](manual.html#Window_order_clause).
+    * (Optional) [Window Order Clause](manual.html#Window_order_clause).
 
 * Return Value:
 
@@ -1145,7 +1163,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
         RATIO_TO_REPORT(expr) OVER (window-definition)
 
 * Returns the fractional ratio of the specified value for each tuple to the
-  sum of values for all tuples in the window partition.
+  sum of values for all tuples in the window frame.
 
 * Arguments:
 
@@ -1165,7 +1183,7 @@ described in the section on [SELECT Statements](manual.html#SELECT_statements).
     * A number between 0 and 1, representing the fractional ratio of the value
       for the current tuple to the sum of values for all tuples in the
       current window frame.
-      The sum of values for all tuples in the current window frame is 1.
+      The sum of returned values for all tuples in the current window frame is 1.
 
     * If the input expression does not evaluate to a number, or the sum of
       values for all tuples is zero, it returns NULL.

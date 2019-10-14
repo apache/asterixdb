@@ -18,10 +18,10 @@
  */
 package org.apache.hyracks.algebricks.rewriter.util;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -67,7 +67,7 @@ public class JoinUtils {
         List<LogicalVariable> varsRight = op.getInputs().get(1).getValue().getSchema();
         ILogicalExpression conditionExpr = op.getCondition().getValue();
         if (isHashJoinCondition(conditionExpr, varsLeft, varsRight, sideLeft, sideRight)) {
-            BroadcastSide side = getBroadcastJoinSide(conditionExpr, varsLeft, varsRight);
+            BroadcastSide side = getBroadcastJoinSide(conditionExpr);
             if (side == null) {
                 setHashJoinOp(op, JoinPartitioningType.PAIRWISE, sideLeft, sideRight, context);
             } else {
@@ -190,55 +190,33 @@ public class JoinUtils {
         }
     }
 
-    private static BroadcastSide getBroadcastJoinSide(ILogicalExpression e, List<LogicalVariable> varsLeft,
-            List<LogicalVariable> varsRight) {
+    private static BroadcastSide getBroadcastJoinSide(ILogicalExpression e) {
+        BroadcastSide side = null;
         if (e.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return null;
         }
         AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) e;
         FunctionIdentifier fi = fexp.getFunctionIdentifier();
         if (fi.equals(AlgebricksBuiltinFunctions.AND)) {
-            BroadcastSide fBcastSide = null;
             for (Mutable<ILogicalExpression> a : fexp.getArguments()) {
-                BroadcastSide aBcastSide = getBroadcastJoinSide(a.getValue(), varsLeft, varsRight);
-                if (fBcastSide == null) {
-                    fBcastSide = aBcastSide;
-                } else if (aBcastSide != null && !aBcastSide.equals(fBcastSide)) {
+                BroadcastSide newSide = getBroadcastJoinSide(a.getValue());
+                if (side == null) {
+                    side = newSide;
+                } else if (newSide != null && !newSide.equals(side)) {
                     return null;
                 }
             }
-            return fBcastSide;
+            return side;
         } else {
-            IExpressionAnnotation ann =
-                    fexp.getAnnotations().get(BroadcastExpressionAnnotation.BROADCAST_ANNOTATION_KEY);
-            if (ann == null) {
-                return null;
-            }
-            BroadcastSide side = (BroadcastSide) ann.getObject();
-            if (side == null) {
-                return null;
-            }
-            int i;
-            switch (side) {
-                case LEFT:
-                    i = 0;
-                    break;
-                case RIGHT:
-                    i = 1;
-                    break;
-                default:
-                    return null;
-            }
-            ArrayList<LogicalVariable> vars = new ArrayList<>();
-            fexp.getArguments().get(i).getValue().getUsedVariables(vars);
-            if (varsLeft.containsAll(vars)) {
-                return BroadcastSide.LEFT;
-            } else if (varsRight.containsAll(vars)) {
-                return BroadcastSide.RIGHT;
-            } else {
-                return null;
+            Set<Object> annotationSet = fexp.getAnnotations().keySet();
+            for (Object o : annotationSet) {
+                if (o instanceof BroadcastExpressionAnnotation) {
+                    IExpressionAnnotation ann = (BroadcastExpressionAnnotation) o;
+                    return (BroadcastSide) ann.getObject();
+                }
             }
         }
+        return null;
     }
 
     private static void warnIfCrossProduct(ILogicalExpression conditionExpr, SourceLocation sourceLoc,

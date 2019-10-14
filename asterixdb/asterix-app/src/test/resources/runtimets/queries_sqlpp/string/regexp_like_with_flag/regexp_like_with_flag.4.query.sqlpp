@@ -17,8 +17,6 @@
  * under the License.
  */
 
-{
-  'result1':regexp_replace('abracadabra','a',''),
-  'result2':regexp_replace('abracadabra','a(.)','a$1$1'),
-  'result3':regexp_replace('darted','^(.*?)d(.*)$','$1c$2')
-};
+USE test;
+
+FROM ds SELECT VALUE regexp_contains(test_str, pattern, flags) ORDER BY id;

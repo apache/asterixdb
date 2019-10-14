@@ -24,6 +24,7 @@ import org.apache.hyracks.api.comm.IBufferAcceptor;
 import org.apache.hyracks.api.comm.IBufferFactory;
 import org.apache.hyracks.api.comm.IChannelReadInterface;
 import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
+import org.apache.hyracks.util.annotations.GuardedBy;
 
 public abstract class AbstractChannelReadInterface implements IChannelReadInterface {
 
@@ -31,6 +32,7 @@ public abstract class AbstractChannelReadInterface implements IChannelReadInterf
     protected IBufferAcceptor emptyBufferAcceptor;
     protected ByteBuffer currentReadBuffer;
     protected IBufferFactory bufferFactory;
+    @GuardedBy("MultiplexConnection")
     protected volatile int credits;
 
     @Override
@@ -58,11 +60,13 @@ public abstract class AbstractChannelReadInterface implements IChannelReadInterf
     }
 
     @Override
+    @GuardedBy("MultiplexConnection")
     public int getCredits() {
         return credits;
     }
 
     @Override
+    @GuardedBy("MultiplexConnection")
     public void setReadCredits(int credits) {
         this.credits = credits;
     }

@@ -29,8 +29,8 @@ import java.lang.annotation.Target;
  * to be thread safe by {@link #value()}
  */
 @Documented
-@Target({ ElementType.TYPE, ElementType.METHOD })
+@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.SOURCE)
-public @interface ThreadSafetyGuaranteedBy {
+public @interface GuardedBy {
     String value();
 }
