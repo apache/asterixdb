@@ -80,7 +80,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     private IIOReplicationManager ioReplicationManager;
     private final List<ICachedPageInternal> cachedPages = new ArrayList<>();
     private final AtomicLong masterPinCount = new AtomicLong();
-    private final Map<Long, IThreadStats> statsSubscribers = new ConcurrentHashMap<>();
+    private final Map<Thread, IThreadStats> statsSubscribers = new ConcurrentHashMap<>();
 
     private boolean closed;
 
@@ -171,7 +171,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         if (DEBUG) {
             pinSanityCheck(dpid);
         }
-        final IThreadStats threadStats = statsSubscribers.get(Thread.currentThread().getId());
+        final IThreadStats threadStats = statsSubscribers.get(Thread.currentThread());
         if (threadStats != null) {
             threadStats.pagePinned();
         }
@@ -585,12 +585,12 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
 
     @Override
     public void subscribe(IThreadStats stats) {
-        statsSubscribers.put(Thread.currentThread().getId(), stats);
+        statsSubscribers.put(Thread.currentThread(), stats);
     }
 
     @Override
     public void unsubscribe() {
-        statsSubscribers.remove(Thread.currentThread().getId());
+        statsSubscribers.remove(Thread.currentThread());
     }
 
     private int hash(long dpid) {
