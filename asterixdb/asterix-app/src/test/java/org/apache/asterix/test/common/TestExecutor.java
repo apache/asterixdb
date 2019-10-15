@@ -64,7 +64,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.asterix.api.http.server.QueryServiceServlet;
@@ -173,7 +172,7 @@ public class TestExecutor {
     private static List<InetSocketAddress> ncEndPointsList = new ArrayList<>();
     private static Map<String, InetSocketAddress> replicationAddress;
 
-    private final List<Charset> allCharsets;
+    private List<Charset> allCharsets;
     private final Queue<Charset> charsetsRemaining = new ArrayDeque<>();
 
     /*
@@ -199,10 +198,7 @@ public class TestExecutor {
 
     public TestExecutor(List<InetSocketAddress> endpoints) {
         this.endpoints = endpoints;
-        this.allCharsets = Stream
-                .of("UTF-8", "UTF-16", "UTF-16BE", "UTF-16LE", "UTF-32", "UTF-32BE", "UTF-32LE", "x-UTF-32BE-BOM",
-                        "x-UTF-32LE-BOM", "x-UTF-16LE-BOM")
-                .filter(Charset::isSupported).map(Charset::forName).collect(Collectors.toList());
+        this.allCharsets = Collections.singletonList(UTF_8);
     }
 
     public void setLibrarian(IExternalUDFLibrarian librarian) {
@@ -669,9 +665,12 @@ public class TestExecutor {
                 responseCharset, responseCodeValidator, cancellable);
     }
 
-    public synchronized void setAvailableCharsets(Charset... charsets) {
-        allCharsets.clear();
-        allCharsets.addAll(Arrays.asList(charsets));
+    public void setAvailableCharsets(Charset... charsets) {
+        setAvailableCharsets(Arrays.asList(charsets));
+    }
+
+    public synchronized void setAvailableCharsets(List<Charset> charsets) {
+        allCharsets = charsets;
         charsetsRemaining.clear();
     }
 
