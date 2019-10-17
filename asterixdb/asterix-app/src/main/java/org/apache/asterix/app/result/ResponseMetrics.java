@@ -33,7 +33,7 @@ public class ResponseMetrics {
     }
 
     public static ResponseMetrics of(long elapsedTime, long executionTime, long resultCount, long resultSize,
-            long processedObjects, long errorCount, long warnCount, long diskIoCount) {
+            long processedObjects, long errorCount, long warnCount) {
         ResponseMetrics metrics = new ResponseMetrics();
         metrics.elapsedTime = elapsedTime;
         metrics.executionTime = executionTime;
@@ -42,7 +42,6 @@ public class ResponseMetrics {
         metrics.processedObjects = processedObjects;
         metrics.errorCount = errorCount;
         metrics.warnCount = warnCount;
-        metrics.diskIoCount = diskIoCount;
         return metrics;
     }
 
@@ -72,9 +71,5 @@ public class ResponseMetrics {
 
     public long getWarnCount() {
         return warnCount;
-    }
-
-    public long getDiskIoCount() {
-        return diskIoCount;
     }
 }

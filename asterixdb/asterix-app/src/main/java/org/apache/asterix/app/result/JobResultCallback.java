@@ -70,7 +70,6 @@ public class JobResultCallback implements IJobResultCallback {
 
     private void aggregateJobStats(JobId jobId, ResultMetadata metadata) {
         long processedObjects = 0;
-        long diskIoCount = 0;
         long aggregateTotalWarningsCount = 0;
         Set<Warning> AggregateWarnings = new HashSet<>();
         IJobManager jobManager =
@@ -84,7 +83,6 @@ public class JobResultCallback implements IJobResultCallback {
                 final Collection<TaskProfile> jobletTasksProfile = jp.getTaskProfiles().values();
                 for (TaskProfile tp : jobletTasksProfile) {
                     processedObjects += tp.getStatsCollector().getAggregatedStats().getTupleCounter().get();
-                    diskIoCount += tp.getStatsCollector().getAggregatedStats().getDiskIoCounter().get();
                     aggregateTotalWarningsCount += tp.getTotalWarningsCount();
                     Set<Warning> taskWarnings = tp.getWarnings();
                     if (AggregateWarnings.size() < maxWarnings && !taskWarnings.isEmpty()) {
@@ -98,7 +96,6 @@ public class JobResultCallback implements IJobResultCallback {
         }
         metadata.setProcessedObjects(processedObjects);
         metadata.setWarnings(AggregateWarnings);
-        metadata.setDiskIoCount(diskIoCount);
         metadata.setTotalWarningsCount(aggregateTotalWarningsCount);
         if (run != null && run.getFlags() != null && run.getFlags().contains(JobFlag.PROFILE_RUNTIME)) {
             metadata.setJobProfile(run.getJobProfile().toJSON());

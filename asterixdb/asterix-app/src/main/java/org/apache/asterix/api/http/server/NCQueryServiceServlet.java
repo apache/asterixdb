@@ -179,7 +179,6 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         IStatementExecutor.Stats responseStats = responseMsg.getStats();
         stats.setJobProfile(responseStats.getJobProfile());
         stats.setProcessedObjects(responseStats.getProcessedObjects());
-        stats.setDiskIoCount(responseStats.getDiskIoCount());
         stats.updateTotalWarningsCount(responseStats.getTotalWarningsCount());
     }
 }

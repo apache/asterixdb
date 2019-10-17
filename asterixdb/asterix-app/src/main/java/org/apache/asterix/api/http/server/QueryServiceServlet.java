@@ -586,9 +586,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             // in case of ASYNC delivery, the status is printed by query translator
             responsePrinter.addFooterPrinter(new StatusPrinter(execution.getResultStatus()));
         }
-        final ResponseMetrics metrics = ResponseMetrics.of(System.nanoTime() - elapsedStart, execution.duration(),
-                stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount,
-                stats.getTotalWarningsCount(), stats.getDiskIoCount());
+        final ResponseMetrics metrics =
+                ResponseMetrics.of(System.nanoTime() - elapsedStart, execution.duration(), stats.getCount(),
+                        stats.getSize(), stats.getProcessedObjects(), errorCount, stats.getTotalWarningsCount());
         responsePrinter.addFooterPrinter(new MetricsPrinter(metrics, resultCharset));
         if (isPrintingProfile(stats)) {
             responsePrinter.addFooterPrinter(new ProfilePrinter(stats.getJobProfile()));
