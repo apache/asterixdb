@@ -545,6 +545,7 @@ import org.apache.asterix.runtime.runningaggregates.std.PercentRankRunningAggreg
 import org.apache.asterix.runtime.runningaggregates.std.RankRunningAggregateDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.RowNumberRunningAggregateDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
+import org.apache.asterix.runtime.runningaggregates.std.WinMarkFirstMissingRunningAggregateDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.WinPartitionLenRunningAggregateDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.RangeDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor;
@@ -820,6 +821,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(RankRunningAggregateDescriptor.FACTORY);
         fc.add(RowNumberRunningAggregateDescriptor.FACTORY);
         fc.add(PercentRankRunningAggregateDescriptor.FACTORY);
+        fc.add(WinMarkFirstMissingRunningAggregateDescriptor.FACTORY);
         fc.add(WinPartitionLenRunningAggregateDescriptor.FACTORY);
 
         // boolean functions

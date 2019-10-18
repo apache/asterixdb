@@ -497,7 +497,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     public boolean applyJoinPlanTransformation(List<Mutable<ILogicalOperator>> afterJoinRefs,
             Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree leftSubTree,
             OptimizableOperatorSubTree rightSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
-            IOptimizationContext context, boolean isLeftOuterJoin, boolean hasGroupBy) throws AlgebricksException {
+            IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy)
+            throws AlgebricksException {
         Dataset dataset = analysisCtx.getDatasetFromIndexDatasetMap(chosenIndex);
         OptimizableOperatorSubTree indexSubTree;
         OptimizableOperatorSubTree probeSubTree;
@@ -524,13 +525,16 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         //if LOJ, reset null place holder variable
         LogicalVariable newNullPlaceHolderVar = null;
-        if (isLeftOuterJoin && hasGroupBy) {
+        if (isLeftOuterJoin) {
             //get a new null place holder variable that is the first field variable of the primary key
             //from the indexSubTree's datasourceScanOp
+            // We need this for all left outer joins, even those that do not have a special GroupBy
             newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
 
-            //reset the null place holder variable
-            AccessMethodUtils.resetLOJMissingPlaceholderVarInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
+            if (isLeftOuterJoinWithSpecialGroupBy) {
+                //reset the null place holder variable
+                AccessMethodUtils.resetLOJMissingPlaceholderVarInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
+            }
         }
 
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) joinRef.getValue();

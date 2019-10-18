@@ -52,8 +52,10 @@ public class AccessMethodAnalysisContext {
     private Map<Index, Integer> indexNumMatchedKeys = new TreeMap<Index, Integer>();
 
     // variables for resetting null placeholder for left-outer-join
-    private Mutable<ILogicalOperator> lojGroupbyOpRef = null;
-    private ScalarFunctionCallExpression lojIsMissingFuncInGroupBy = null;
+    // See AccessMethodUtils#removeUnjoinedDuplicatesInLOJ() for a definition of a special GroupBy
+    // and extra output processing steps needed when it's not available.
+    private Mutable<ILogicalOperator> lojSpecialGroupByOpRef = null;
+    private ScalarFunctionCallExpression lojIsMissingFuncInSpecialGroupBy = null;
 
     // For a secondary index, if we use only PK and secondary key field in a plan, it is an index-only plan.
     // Contains information about index-only plan
@@ -134,20 +136,20 @@ public class AccessMethodAnalysisContext {
         indexNumMatchedKeys.put(index, numMatchedKeys);
     }
 
-    public void setLOJGroupbyOpRef(Mutable<ILogicalOperator> opRef) {
-        lojGroupbyOpRef = opRef;
+    public void setLOJSpecialGroupByOpRef(Mutable<ILogicalOperator> opRef) {
+        lojSpecialGroupByOpRef = opRef;
     }
 
-    public Mutable<ILogicalOperator> getLOJGroupbyOpRef() {
-        return lojGroupbyOpRef;
+    public Mutable<ILogicalOperator> getLOJSpecialGroupByOpRef() {
+        return lojSpecialGroupByOpRef;
     }
 
-    public void setLOJIsMissingFuncInGroupBy(ScalarFunctionCallExpression isMissingFunc) {
-        lojIsMissingFuncInGroupBy = isMissingFunc;
+    public void setLOJIsMissingFuncInSpecialGroupBy(ScalarFunctionCallExpression isMissingFunc) {
+        lojIsMissingFuncInSpecialGroupBy = isMissingFunc;
     }
 
-    public ScalarFunctionCallExpression getLOJIsMissingFuncInGroupBy() {
-        return lojIsMissingFuncInGroupBy;
+    public ScalarFunctionCallExpression getLOJIsMissingFuncInSpecialGroupBy() {
+        return lojIsMissingFuncInSpecialGroupBy;
     }
 
     public Dataset getDatasetFromIndexDatasetMap(Index idx) {
