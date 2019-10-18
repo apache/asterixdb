@@ -1,0 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// substr0 alias
+{'str2':substr0('Hello World',9),'str4':substr0('This is a test string',20),'str6':substr0('This is a test string',21),'str8':substr0('This is a test string',0),'str10':substr0('This is a test string',-6),'str13':substr0(`string-concat`(['This is a test string','This is a another test string']),20),'str14':substr0('UC Irvine',(`string-length`('UC Irvine') div 2 - 1))};

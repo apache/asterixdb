@@ -19,14 +19,10 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.IOException;
-
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.functions.IFunctionTypeInferer;
-import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -35,27 +31,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 @MissingNullInOutFunction
-public class StringPositionDescriptor extends AbstractStringOffsetConfigurableDescriptor {
+public class StringPositionDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new StringPositionDescriptor();
-        }
-
-        @Override
-        public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_STRING_OFFSET;
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = StringPositionDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
-
-            private final int baseOffset = stringOffset;
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
@@ -63,9 +47,8 @@ public class StringPositionDescriptor extends AbstractStringOffsetConfigurableDe
                         StringPositionDescriptor.this.getIdentifier(), sourceLoc) {
 
                     @Override
-                    protected int compute(UTF8StringPointable left, UTF8StringPointable right) throws IOException {
-                        int pos = UTF8StringPointable.find(left, right, false);
-                        return pos < 0 ? pos : pos + baseOffset;
+                    protected int compute(UTF8StringPointable left, UTF8StringPointable right) {
+                        return UTF8StringPointable.find(left, right, false);
                     }
                 };
             }
@@ -76,5 +59,4 @@ public class StringPositionDescriptor extends AbstractStringOffsetConfigurableDe
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.STRING_POSITION;
     }
-
 }

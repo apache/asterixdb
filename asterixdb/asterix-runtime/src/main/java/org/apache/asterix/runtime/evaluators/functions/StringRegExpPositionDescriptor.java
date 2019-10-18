@@ -21,11 +21,9 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.functions.IFunctionTypeInferer;
+import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.utils.RegExpMatcher;
-import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -34,27 +32,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 @MissingNullInOutFunction
-public class StringRegExpPositionDescriptor extends AbstractStringOffsetConfigurableDescriptor {
+public class StringRegExpPositionDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new StringRegExpPositionDescriptor();
-        }
-
-        @Override
-        public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_STRING_OFFSET;
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = StringRegExpPositionDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
-
-            private final int baseOffset = stringOffset;
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
@@ -66,8 +52,7 @@ public class StringRegExpPositionDescriptor extends AbstractStringOffsetConfigur
                     protected int compute(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr)
                             throws HyracksDataException {
                         matcher.build(srcPtr, patternPtr);
-                        int pos = matcher.position();
-                        return pos < 0 ? pos : pos + baseOffset;
+                        return matcher.position();
                     }
                 };
             }

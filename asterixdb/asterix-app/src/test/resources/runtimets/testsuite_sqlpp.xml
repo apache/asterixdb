@@ -8694,38 +8694,213 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="position">
-        <output-dir compare="Text">position</output-dir>
+      <compilation-unit name="position/offset0/position">
+        <output-dir compare="Text">position/offset0/position</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="regexp_contains">
-        <output-dir compare="Text">regexp_contains</output-dir>
+      <compilation-unit name="position/offset0/pos">
+        <output-dir compare="Text">position/offset0/pos</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="regexp_contains_with_flag">
-        <output-dir compare="Text">regexp_contains_with_flag</output-dir>
+      <compilation-unit name="position/offset0/position0">
+        <output-dir compare="Text">position/offset0/position0</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="regexp_like">
-        <output-dir compare="Text">regexp_like</output-dir>
+      <compilation-unit name="position/offset0/pos0">
+        <output-dir compare="Text">position/offset0/pos0</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="regexp_like_with_flag">
-        <output-dir compare="Text">regexp_like_with_flag</output-dir>
+      <compilation-unit name="position/offset1/position1">
+        <output-dir compare="Text">position/offset1/position1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="regexp_position">
-        <output-dir compare="Text">regexp_position</output-dir>
+      <compilation-unit name="position/offset1/pos1">
+        <output-dir compare="Text">position/offset1/pos1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="regexp_position_with_flag">
-        <output-dir compare="Text">regexp_position_with_flag</output-dir>
+      <compilation-unit name="regexp_contains/regexp_contains">
+        <output-dir compare="Text">regexp_contains/regexp_contains</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_contains/regex_contains">
+        <output-dir compare="Text">regexp_contains/regex_contains</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_contains/contains_regexp">
+        <output-dir compare="Text">regexp_contains/contains_regexp</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_contains/contains_regex">
+        <output-dir compare="Text">regexp_contains/contains_regex</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_contains_with_flag/regexp_contains_with_flag">
+        <output-dir compare="Text">regexp_contains_with_flag/regexp_contains_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_contains_with_flag/regex_contains_with_flag">
+        <output-dir compare="Text">regexp_contains_with_flag/regex_contains_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_contains_with_flag/contains_regexp_with_flag">
+        <output-dir compare="Text">regexp_contains_with_flag/contains_regexp_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_contains_with_flag/contains_regex_with_flag">
+        <output-dir compare="Text">regexp_contains_with_flag/contains_regex_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_like/regexp_like">
+        <output-dir compare="Text">regexp_like/regexp_like</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_like/regex_like">
+        <output-dir compare="Text">regexp_like/regex_like</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_like_with_flag/regexp_like_with_flag">
+        <output-dir compare="Text">regexp_like_with_flag/regexp_like_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_like_with_flag/regex_like_with_flag">
+        <output-dir compare="Text">regexp_like_with_flag/regex_like_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position/offset0/regexp_position">
+        <output-dir compare="Text">regexp_position/offset0/regexp_position</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position/offset0/regexp_pos">
+        <output-dir compare="Text">regexp_position/offset0/regexp_pos</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position/offset0/regexp_position0">
+        <output-dir compare="Text">regexp_position/offset0/regexp_position0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position/offset0/regexp_pos0">
+        <output-dir compare="Text">regexp_position/offset0/regexp_pos0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position/offset0/regex_position">
+        <output-dir compare="Text">regexp_position/offset0/regex_position</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position/offset0/regex_pos">
+        <output-dir compare="Text">regexp_position/offset0/regex_pos</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position/offset0/regex_position0">
+        <output-dir compare="Text">regexp_position/offset0/regex_position0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position/offset0/regex_pos0">
+        <output-dir compare="Text">regexp_position/offset0/regex_pos0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position/offset1/regexp_position1">
+        <output-dir compare="Text">regexp_position/offset1/regexp_position1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position/offset1/regexp_pos1">
+        <output-dir compare="Text">regexp_position/offset1/regexp_pos1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position/offset1/regex_position1">
+        <output-dir compare="Text">regexp_position/offset1/regex_position1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position/offset1/regex_pos1">
+        <output-dir compare="Text">regexp_position/offset1/regex_pos1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag/offset0/regexp_position_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag/offset0/regexp_position_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag/offset0/regexp_pos_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag/offset0/regexp_pos_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag/offset0/regexp_position0_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag/offset0/regexp_position0_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag/offset0/regexp_pos0_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag/offset0/regexp_pos0_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag/offset0/regex_position_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag/offset0/regex_position_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag/offset0/regex_pos_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag/offset0/regex_pos_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag/offset0/regex_position0_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag/offset0/regex_position0_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag/offset0/regex_pos0_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag/offset0/regex_pos0_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag/offset1/regexp_position1_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag/offset1/regexp_position1_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag/offset1/regexp_pos1_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag/offset1/regexp_pos1_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag/offset1/regex_position1_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag/offset1/regex_position1_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag/offset1/regex_pos1_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag/offset1/regex_pos1_with_flag</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -8744,13 +8919,23 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="regexp_replace">
-        <output-dir compare="Text">regexp_replace</output-dir>
+      <compilation-unit name="regexp_replace/regexp_replace">
+        <output-dir compare="Text">regexp_replace/regexp_replace</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="regexp_replace_with_flag">
-        <output-dir compare="Text">regexp_replace_with_flag</output-dir>
+      <compilation-unit name="regexp_replace/regex_replace">
+        <output-dir compare="Text">regexp_replace/regex_replace</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_replace_with_flag/regexp_replace_with_flag">
+        <output-dir compare="Text">regexp_replace_with_flag/regexp_replace_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_replace_with_flag/regex_replace_with_flag">
+        <output-dir compare="Text">regexp_replace_with_flag/regex_replace_with_flag</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -8879,8 +9064,33 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="substr01">
-        <output-dir compare="Text">substr01</output-dir>
+      <compilation-unit name="substr01/offset0/substring">
+        <output-dir compare="Text">substr01/offset0/substring</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substr01/offset0/substr">
+        <output-dir compare="Text">substr01/offset0/substr</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substr01/offset0/substring0">
+        <output-dir compare="Text">substr01/offset0/substring0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substr01/offset0/substr0">
+        <output-dir compare="Text">substr01/offset0/substr0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substr01/offset1/substring1">
+        <output-dir compare="Text">substr01/offset1/substring1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substr01/offset1/substr1">
+        <output-dir compare="Text">substr01/offset1/substr1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -8934,8 +9144,33 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="substring2-1">
-        <output-dir compare="Text">substring2-1</output-dir>
+      <compilation-unit name="substring2-1/offset0/substring">
+        <output-dir compare="Text">substring2-1/offset0/substring</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring2-1/offset0/substr">
+        <output-dir compare="Text">substring2-1/offset0/substr</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring2-1/offset0/substring0">
+        <output-dir compare="Text">substring2-1/offset0/substring0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring2-1/offset0/substr0">
+        <output-dir compare="Text">substring2-1/offset0/substr0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring2-1/offset1/substring1">
+        <output-dir compare="Text">substring2-1/offset1/substring1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="substring2-1/offset1/substr1">
+        <output-dir compare="Text">substring2-1/offset1/substr1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">

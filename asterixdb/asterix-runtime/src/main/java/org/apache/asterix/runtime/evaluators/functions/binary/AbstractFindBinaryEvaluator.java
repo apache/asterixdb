@@ -38,7 +38,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEvaluator {
 
     private static final ATypeTag[] EXPECTED_INPUT_TAG = { ATypeTag.BINARY, ATypeTag.BINARY };
-    protected final int baseOffset;
     protected final AMutableInt64 result = new AMutableInt64(-1);
     protected final ByteArrayPointable textPtr = new ByteArrayPointable();
     protected final ByteArrayPointable wordPtr = new ByteArrayPointable();
@@ -48,9 +47,8 @@ public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEv
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
     public AbstractFindBinaryEvaluator(IEvaluatorContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,
-            int baseOffset, FunctionIdentifier funcId, SourceLocation sourceLoc) throws HyracksDataException {
+            FunctionIdentifier funcId, SourceLocation sourceLoc) throws HyracksDataException {
         super(context, copyEvaluatorFactories, funcId, sourceLoc);
-        this.baseOffset = baseOffset;
     }
 
     @Override
@@ -85,7 +83,7 @@ public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEv
         wordPtr.set(pointables[1].getByteArray(), pointables[0].getStartOffset() + 1, pointables[1].getLength() - 1);
         int pos = indexOf(textPtr.getByteArray(), textPtr.getContentStartOffset(), textPtr.getContentLength(),
                 wordPtr.getByteArray(), wordPtr.getContentStartOffset(), wordPtr.getContentLength(), fromOffset);
-        result.setValue(pos < 0 ? pos : pos + baseOffset);
+        result.setValue(pos);
         intSerde.serialize(result, dataOutput);
         resultPointable.set(resultStorage);
     }

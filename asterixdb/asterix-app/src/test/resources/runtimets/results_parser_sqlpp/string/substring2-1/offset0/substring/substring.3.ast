@@ -1,0 +1,12 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    FunctionCall test.substring@2[
+      LiteralExpr [STRING] [HEllow]
+      LiteralExpr [LONG] [1]
+    ]
+  )
+]

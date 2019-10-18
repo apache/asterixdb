@@ -1,0 +1,74 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [str2]
+    :
+    FunctionCall null.substring@2[
+      LiteralExpr [STRING] [Hello World]
+      LiteralExpr [LONG] [9]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [str4]
+    :
+    FunctionCall null.substring@2[
+      LiteralExpr [STRING] [This is a test string]
+      LiteralExpr [LONG] [20]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [str6]
+    :
+    FunctionCall null.substring@2[
+      LiteralExpr [STRING] [This is a test string]
+      LiteralExpr [LONG] [21]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [str8]
+    :
+    FunctionCall null.substring@2[
+      LiteralExpr [STRING] [This is a test string]
+      LiteralExpr [LONG] [0]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [str10]
+    :
+    FunctionCall null.substring@2[
+      LiteralExpr [STRING] [This is a test string]
+      - LiteralExpr [LONG] [6]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [str13]
+    :
+    FunctionCall null.substring@2[
+      FunctionCall null.string-concat@1[
+        OrderedListConstructor [
+          LiteralExpr [STRING] [This is a test string]
+          LiteralExpr [STRING] [This is a another test string]
+        ]
+      ]
+      LiteralExpr [LONG] [20]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [str14]
+    :
+    FunctionCall null.substring@2[
+      LiteralExpr [STRING] [UC Irvine]
+      OperatorExpr [
+        OperatorExpr [
+          FunctionCall null.string-length@1[
+            LiteralExpr [STRING] [UC Irvine]
+          ]
+          div
+          LiteralExpr [LONG] [2]
+        ]
+        -
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+]

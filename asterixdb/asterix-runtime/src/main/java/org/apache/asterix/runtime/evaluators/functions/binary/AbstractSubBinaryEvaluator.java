@@ -39,14 +39,12 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
 
     private ByteArrayPointable byteArrayPointable = new ByteArrayPointable();
     private byte[] metaBuffer = new byte[5];
-    protected final int baseOffset;
 
     private static final ATypeTag[] EXPECTED_INPUT_TAGS = { ATypeTag.BINARY, ATypeTag.INTEGER };
 
     public AbstractSubBinaryEvaluator(IEvaluatorContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,
-            int baseOffset, FunctionIdentifier funcId, SourceLocation sourceLoc) throws HyracksDataException {
+            FunctionIdentifier funcId, SourceLocation sourceLoc) throws HyracksDataException {
         super(context, copyEvaluatorFactories, funcId, sourceLoc);
-        this.baseOffset = baseOffset;
     }
 
     @Override
@@ -86,8 +84,7 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
 
             int subStart;
 
-            subStart = ATypeHierarchy.getIntegerValue(BuiltinFunctions.SUBBINARY_FROM.getName(), 1, startBytes, offset)
-                    - baseOffset;
+            subStart = ATypeHierarchy.getIntegerValue(BuiltinFunctions.SUBBINARY_FROM.getName(), 1, startBytes, offset);
 
             int totalLength = byteArrayPointable.getContentLength();
             int subLength = getSubLength(tuple);

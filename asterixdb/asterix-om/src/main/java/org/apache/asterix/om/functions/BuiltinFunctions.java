@@ -432,8 +432,12 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-like", 3);
     public static final FunctionIdentifier STRING_REGEXP_POSITION =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-position", 2);
+    public static final FunctionIdentifier STRING_REGEXP_POSITION_OFFSET_1 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-position1", 2);
     public static final FunctionIdentifier STRING_REGEXP_POSITION_WITH_FLAG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-position", 3);
+    public static final FunctionIdentifier STRING_REGEXP_POSITION_OFFSET_1_WITH_FLAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-position1", 3);
     public static final FunctionIdentifier STRING_REGEXP_REPLACE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-replace", 3);
     public static final FunctionIdentifier STRING_REGEXP_REPLACE_WITH_FLAG =
@@ -458,6 +462,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "rtrim", 2);
     public static final FunctionIdentifier STRING_POSITION =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "position", 2);
+    public static final FunctionIdentifier STRING_POSITION_OFFSET_1 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "position1", 2);
     public static final FunctionIdentifier STRING_REPLACE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "replace", 3);
     public static final FunctionIdentifier STRING_REPLACE_WITH_LIMIT =
@@ -476,8 +482,12 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ends-with", 2);
     public static final FunctionIdentifier SUBSTRING =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "substring", 3);
+    public static final FunctionIdentifier SUBSTRING_OFFSET_1 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "substring1", 3);
     public static final FunctionIdentifier SUBSTRING2 =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "substring", 2);
+    public static final FunctionIdentifier SUBSTRING2_OFFSET_1 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "substring1", 2);
     public static final FunctionIdentifier SUBSTRING_BEFORE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "substring-before", 2);
     public static final FunctionIdentifier SUBSTRING_AFTER =
@@ -1704,7 +1714,9 @@ public class BuiltinFunctions {
         addFunction(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE, true); // TODO
         addFunction(STRING_CONCAT, ConcatTypeComputer.INSTANCE_STRING, true); // TODO
         addFunction(SUBSTRING, SubstringTypeComputer.INSTANCE, true); // TODO
+        addFunction(SUBSTRING_OFFSET_1, SubstringTypeComputer.INSTANCE, true); // TODO
         addFunction(SUBSTRING2, AStringTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(SUBSTRING2_OFFSET_1, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_LENGTH, UnaryStringInt64TypeComputer.INSTANCE, true);
         addFunction(STRING_LOWERCASE, StringStringTypeComputer.INSTANCE, true);
         addFunction(STRING_UPPERCASE, StringStringTypeComputer.INSTANCE, true);
@@ -1716,6 +1728,7 @@ public class BuiltinFunctions {
         addFunction(STRING_LTRIM2, StringStringTypeComputer.INSTANCE, true);
         addFunction(STRING_RTRIM2, StringStringTypeComputer.INSTANCE, true);
         addFunction(STRING_POSITION, StringInt32TypeComputer.INSTANCE, true);
+        addFunction(STRING_POSITION_OFFSET_1, StringInt32TypeComputer.INSTANCE, true);
         addFunction(STRING_STARTS_WITH, StringBooleanTypeComputer.INSTANCE, true);
         addFunction(STRING_ENDS_WITH, StringBooleanTypeComputer.INSTANCE, true);
         addFunction(STRING_MATCHES, StringBooleanTypeComputer.INSTANCE, true);
@@ -1723,7 +1736,9 @@ public class BuiltinFunctions {
         addFunction(STRING_REGEXP_LIKE, StringBooleanTypeComputer.INSTANCE, true);
         addFunction(STRING_REGEXP_LIKE_WITH_FLAG, StringBooleanTypeComputer.INSTANCE, true);
         addFunction(STRING_REGEXP_POSITION, StringInt32TypeComputer.INSTANCE, true);
+        addFunction(STRING_REGEXP_POSITION_OFFSET_1, StringInt32TypeComputer.INSTANCE, true);
         addFunction(STRING_REGEXP_POSITION_WITH_FLAG, StringInt32TypeComputer.INSTANCE, true);
+        addFunction(STRING_REGEXP_POSITION_OFFSET_1_WITH_FLAG, StringInt32TypeComputer.INSTANCE, true);
         addFunction(STRING_REGEXP_REPLACE, StringStringTypeComputer.INSTANCE, true);
         addFunction(STRING_REGEXP_REPLACE_WITH_FLAG, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_REPLACE, StringStringTypeComputer.INSTANCE, true);

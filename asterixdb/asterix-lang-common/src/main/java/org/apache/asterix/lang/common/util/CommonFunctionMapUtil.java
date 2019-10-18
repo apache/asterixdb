@@ -37,7 +37,6 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("substr", "substring"); // substr,  internal: substring
         addFunctionMapping("upper", "uppercase"); // upper, internal: uppercase
         addFunctionMapping("title", "initcap"); // title, internal: initcap
-        addFunctionMapping("regexp_contains", "matches"); // regexp_contains, internal: matches
         addFunctionMapping("int", "integer"); // int, internal: integer
 
         // The "mapped-to" names are to be deprecated.
@@ -45,6 +44,32 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("smallint", "int16"); // smallint, internal: int16
         addFunctionMapping("integer", "int32"); // integer, internal: int32
         addFunctionMapping("bigint", "int64"); // bigint, internal: int64
+
+        // String functions
+        addFunctionMapping("pos", "position");
+        addFunctionMapping("pos0", "position");
+        addFunctionMapping("position0", "position");
+        addFunctionMapping("pos1", "position1");
+        addFunctionMapping("substr", "substring");
+        addFunctionMapping("substr0", "substring");
+        addFunctionMapping("substring0", "substring");
+        addFunctionMapping("substr1", "substring1");
+        addFunctionMapping("regex_contains", "matches");
+        addFunctionMapping("contains_regex", "matches");
+        addFunctionMapping("regexp_contains", "matches");
+        addFunctionMapping("contains_regexp", "matches");
+        addFunctionMapping("regex_like", "regexp-like");
+        addFunctionMapping("regex_pos", "regexp-position");
+        addFunctionMapping("regex_position", "regexp-position");
+        addFunctionMapping("regex_pos0", "regexp-position");
+        addFunctionMapping("regex_position0", "regexp-position");
+        addFunctionMapping("regexp_pos", "regexp-position");
+        addFunctionMapping("regexp_pos0", "regexp-position");
+        addFunctionMapping("regexp_position0", "regexp-position");
+        addFunctionMapping("regex_pos1", "regexp-position1");
+        addFunctionMapping("regex_position1", "regexp-position1");
+        addFunctionMapping("regexp_pos1", "regexp-position1");
+        addFunctionMapping("regex_replace", "regexp-replace");
 
         // Type functions.
         addFunctionMapping("isnull", "is-null"); // isnull, internal: is-null

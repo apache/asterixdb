@@ -5063,8 +5063,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="substr01">
-        <output-dir compare="AST">substr01</output-dir>
+      <compilation-unit name="substr01/offset0/substring">
+        <output-dir compare="AST">substr01/offset0/substring</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -5118,8 +5118,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="substring2-1">
-        <output-dir compare="AST">substring2-1</output-dir>
+      <compilation-unit name="substring2-1/offset0/substring">
+        <output-dir compare="AST">substring2-1/offset0/substring</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">

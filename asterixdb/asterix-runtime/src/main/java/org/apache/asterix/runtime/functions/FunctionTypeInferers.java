@@ -61,14 +61,6 @@ public final class FunctionTypeInferers {
         }
     };
 
-    public static final IFunctionTypeInferer SET_STRING_OFFSET = new IFunctionTypeInferer() {
-        @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
-                CompilerProperties compilerProps) {
-            fd.setImmutableStates(compilerProps.getStringOffset());
-        }
-    };
-
     public static final IFunctionTypeInferer SET_ARGUMENT_TYPE = new IFunctionTypeInferer() {
         @Override
         public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,

@@ -21,11 +21,8 @@ package org.apache.asterix.runtime.evaluators.functions.binary;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.functions.IFunctionTypeInferer;
-import org.apache.asterix.runtime.evaluators.functions.AbstractStringOffsetConfigurableDescriptor;
-import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -34,19 +31,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 @MissingNullInOutFunction
-public class SubBinaryFromDescriptor extends AbstractStringOffsetConfigurableDescriptor {
+public class SubBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new SubBinaryFromDescriptor();
-        }
-
-        @Override
-        public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_STRING_OFFSET;
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = SubBinaryFromDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -58,11 +45,9 @@ public class SubBinaryFromDescriptor extends AbstractStringOffsetConfigurableDes
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
-            private final int baseOffset = stringOffset;
-
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                return new AbstractSubBinaryEvaluator(ctx, args, baseOffset, getIdentifier(), sourceLoc) {
+                return new AbstractSubBinaryEvaluator(ctx, args, getIdentifier(), sourceLoc) {
                     @Override
                     protected int getSubLength(IFrameTupleReference tuple) {
                         return Integer.MAX_VALUE;
