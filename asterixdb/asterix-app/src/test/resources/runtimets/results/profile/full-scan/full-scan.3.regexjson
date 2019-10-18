@@ -30,15 +30,18 @@
                     "counters": [
                         {
                             "name": "Empty Tuple Source",
-                            "time": "R{[0-9.]+}"
+                            "time": "R{[0-9.]+}",
+                            "disk-io": "R{[0-9.]+}"
                         },
                         {
                             "name": "Index Search",
-                            "time": "R{[0-9.]+}"
+                            "time": "R{[0-9.]+}",
+                            "disk-io": "R{[0-9.]+}"
                         },
                         {
                             "name": "R{.+}",
-                            "time": "R{[0-9.]+}"
+                            "time": "R{[0-9.]+}",
+                            "disk-io": "R{[0-9.]+}"
                         }
                     ]
                 },
@@ -50,11 +53,13 @@
                   "counters": [
                     {
                       "name": "R{.+}",
-                      "time": "R{[0-9.]+}"
+                      "time": "R{[0-9.]+}",
+                      "disk-io": "R{[0-9.]+}"
                     },
                     {
                       "name": "Result Writer",
-                      "time": "R{[0-9.]+}"
+                      "time": "R{[0-9.]+}",
+                      "disk-io": "R{[0-9.]+}"
                     }
                   ]
                 }

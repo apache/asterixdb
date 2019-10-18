@@ -40,10 +40,5 @@
         <output-dir compare="Text">secondary-index-index-only</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="metrics">
-      <compilation-unit name="disk-io-count">
-        <output-dir compare="Text">disk-io-count</output-dir>
-      </compilation-unit>
-    </test-case>
   </test-group>
 </test-suite>

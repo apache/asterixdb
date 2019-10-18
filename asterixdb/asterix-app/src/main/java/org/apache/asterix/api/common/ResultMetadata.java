@@ -86,14 +86,6 @@ public class ResultMetadata implements IResultMetadata {
         return warnings;
     }
 
-    public void setDiskIoCount(long diskIoCount) {
-        this.diskIoCount = diskIoCount;
-    }
-
-    public long getDiskIoCount() {
-        return diskIoCount;
-    }
-
     /**
      * @return Total count of all warnings generated including unreported ones.
      */

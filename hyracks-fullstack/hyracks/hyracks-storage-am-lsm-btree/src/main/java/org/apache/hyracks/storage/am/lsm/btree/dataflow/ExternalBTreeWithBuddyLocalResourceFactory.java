@@ -45,11 +45,12 @@ public class ExternalBTreeWithBuddyLocalResourceFactory extends LSMBTreeLocalRes
             IMetadataPageManagerFactory metadataPageManagerFactory,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, boolean durable, int[] buddyBtreeFields,
-            double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields) {
+            double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields, boolean hasBloomFilter) {
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory, null,
                 ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, buddyBtreeFields,
-                bloomFilterFalsePositiveRate, isPrimary, btreeFields, NoOpCompressorDecompressorFactory.INSTANCE);
+                bloomFilterFalsePositiveRate, isPrimary, btreeFields, NoOpCompressorDecompressorFactory.INSTANCE,
+                hasBloomFilter);
     }
 
     @Override
@@ -58,6 +59,6 @@ public class ExternalBTreeWithBuddyLocalResourceFactory extends LSMBTreeLocalRes
                 bloomFilterFalsePositiveRate, isPrimary, fileRef.getRelativePath(), storageManager, mergePolicyFactory,
                 mergePolicyProperties, filterTypeTraits, filterCmpFactories, btreeFields, filterFields,
                 opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
-                ioSchedulerProvider, durable);
+                ioSchedulerProvider, durable, hasBloomFilter);
     }
 }

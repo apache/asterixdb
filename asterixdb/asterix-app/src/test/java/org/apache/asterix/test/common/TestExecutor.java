@@ -259,6 +259,7 @@ public class TestExecutor {
                 ObjectMapper OM = new ObjectMapper();
                 JsonNode expectedJson = OM.readTree(readerExpected);
                 JsonNode actualJson = OM.readTree(readerActual);
+                System.out.println(OM.writeValueAsString(actualJson));
                 if (expectedJson == null || actualJson == null) {
                     throw new NullPointerException("Error parsing expected or actual result file for " + scriptFile);
                 }

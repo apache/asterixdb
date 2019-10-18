@@ -97,7 +97,6 @@ public interface IStatementExecutor {
         private long processedObjects;
         private Profile profile;
         private ProfileType type;
-        private long diskIoCount;
         private long totalWarningsCount;
 
         public long getCount() {
@@ -122,14 +121,6 @@ public interface IStatementExecutor {
 
         public void setProcessedObjects(long processedObjects) {
             this.processedObjects = processedObjects;
-        }
-
-        public long getDiskIoCount() {
-            return diskIoCount;
-        }
-
-        public void setDiskIoCount(long diskIoCount) {
-            this.diskIoCount = diskIoCount;
         }
 
         public long getTotalWarningsCount() {

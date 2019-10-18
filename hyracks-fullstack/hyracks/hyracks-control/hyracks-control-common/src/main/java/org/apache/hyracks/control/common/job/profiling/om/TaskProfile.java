@@ -82,7 +82,6 @@ public class TaskProfile extends AbstractProfile {
 
     @Override
     public ObjectNode toJSON() {
-
         ObjectMapper om = new ObjectMapper();
         ObjectNode json = om.createObjectNode();
 
@@ -131,6 +130,7 @@ public class TaskProfile extends AbstractProfile {
             jpe.put("name", key);
             jpe.put("time", Double
                     .parseDouble(new DecimalFormat("#.####").format((double) value.getTimeCounter().get() / 1000000)));
+            jpe.put("disk-io", value.getDiskIoCounter().get());
             countersObj.add(jpe);
         });
         json.set("counters", countersObj);

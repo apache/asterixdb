@@ -507,7 +507,9 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     @Override
     public synchronized void subscribeThreadToStats(IThreadStatsCollector threadStatsCollector) {
-        //TODO do this only when profiling is enabled
+        if (!isRuntimeProfilingEnabled()) {
+            return;
+        }
         synchronized (threadStatsCollectors) {
             threadStatsCollectors.add(threadStatsCollector);
             final long threadId = Thread.currentThread().getId();
@@ -518,6 +520,9 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     @Override
     public synchronized void unsubscribeThreadFromStats() {
+        if (!isRuntimeProfilingEnabled()) {
+            return;
+        }
         synchronized (threadStatsCollectors) {
             threadStatsCollectors.forEach(IThreadStatsCollector::unsubscribe);
         }
@@ -558,5 +563,9 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     public String toString() {
         return "{ \"class\" : \"" + getClass().getSimpleName() + "\", \"node\" : \"" + ncs.getId() + "\" \"jobId\" : \""
                 + joblet.getJobId() + "\", \"taskId\" : \"" + taskAttemptId + "\" }";
+    }
+
+    private boolean isRuntimeProfilingEnabled() {
+        return getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
     }
 }

@@ -26,6 +26,7 @@ import org.apache.hyracks.storage.common.MultiComparator;
 
 public abstract class AbstractOperationCallbackTest {
     protected static final int NUM_KEY_FIELDS = 1;
+    protected static final boolean HAS_BLOOM_FILTER = true;
 
     @SuppressWarnings("rawtypes")
     protected final ISerializerDeserializer[] keySerdes;

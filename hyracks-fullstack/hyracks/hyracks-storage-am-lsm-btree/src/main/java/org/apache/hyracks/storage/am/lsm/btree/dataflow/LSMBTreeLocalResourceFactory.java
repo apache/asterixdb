@@ -41,6 +41,7 @@ import org.apache.hyracks.util.ReflectionUtils;
 public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
 
     private static final long serialVersionUID = 1L;
+    protected final boolean hasBloomFilter;
     protected final int[] bloomFilterKeyFields;
     protected final double bloomFilterFalsePositiveRate;
     protected final boolean isPrimary;
@@ -56,10 +57,11 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, boolean durable, int[] bloomFilterKeyFields,
             double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields,
-            ICompressorDecompressorFactory compressorDecompressorFactory) {
+            ICompressorDecompressorFactory compressorDecompressorFactory, boolean hasBloomFilter) {
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                 vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable);
+        this.hasBloomFilter = hasBloomFilter;
         this.bloomFilterKeyFields = bloomFilterKeyFields;
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.isPrimary = isPrimary;
@@ -73,7 +75,7 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
                 isPrimary, fileRef.getRelativePath(), storageManager, mergePolicyFactory, mergePolicyProperties,
                 filterTypeTraits, filterCmpFactories, btreeFields, filterFields, opTrackerProvider, ioOpCallbackFactory,
                 pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, durable,
-                compressorDecompressorFactory);
+                compressorDecompressorFactory, hasBloomFilter);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
