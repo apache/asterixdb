@@ -206,28 +206,36 @@
 
         position(string, string_pattern)
 
- * Returns the first position of `string_pattern` within `string`.
+ * Returns the first position of `string_pattern` within `string`. The function returns the 0-based position. Another
+ version of the function returns the 1-based position. Below are the aliases for each version:
+
+ * Aliases:
+    * 0-based: `position`, `pos`, `position0`, `pos0`.
+    * 1-based: `position1`, `pos1`.
+
  * Arguments:
-    * `string` : a `string` that might contain the pattern,
+    * `string` : a `string` that might contain the pattern.
     * `string_pattern` : a pattern `string` to be matched.
  * Return Value:
     * the first position that `string_pattern` appears within `string`
       (starting at 0), or -1 if it does not appear,
     * `missing` if any argument is a `missing` value,
     * `null` if any argument is a `null` value but no argument is a `missing` value,
-    * any other non-string input value will cause a type error.
+    * any other non-string input value will return a `null`.
 
  * Example:
 
         {
           "v1": position("ppphonepp", "phone"),
-          "v2": position("hone", "phone")
+          "v2": position("hone", "phone"),
+          "v3": position1("ppphonepp", "phone"),
+          "v4": position1("hone", "phone"),
         };
 
 
  * The expected result is:
 
-        { "v1": 3, "v2": -1 }
+        { "v1": 2, "v2": -1, v3": 3, "v4": -1 }
 
 
 ### regexp_contains ###
@@ -237,24 +245,27 @@
 
  * Checks whether the strings `string` contains the regular expression
     pattern `string_pattern` (a Java regular expression pattern).
+
+  * Aliases:
+      * `regexp_contains`, `regex_contains`, `contains_regexp`, `contains_regex`.
+
  * Arguments:
-    * `string` : a `string` that might contain the pattern,
-    * `string_pattern` : a pattern `string` to be matched,
+    * `string` : a `string` that might contain the pattern.
+    * `string_pattern` : a pattern `string` to be matched.
     * `string_flag` : (Optional) a `string` with flags to be used during regular expression matching.
         * The following modes are enabled with these flags: dotall (s), multiline (m), case_insensitive (i), and comments and whitespace (x).
  * Return Value:
-    * a `boolean`, returns `true` if `string` contains the pattern `string_pattern`,
-    * `missing` if any argument is a `missing` value,
-    * `null` if any argument is a `null` value but no argument is a `missing` value,
-    * any other non-string input value will cause a type error,
-    * `false` otherwise.
+    * a `boolean`, returns `true` if `string` contains the pattern `string_pattern`, `false` otherwise.
+    * `missing` if any argument is a `missing` value.
+    * `null` if any argument is a `null` value but no argument is a `missing` value.
+    * any other non-string input value will return a `null`.
 
  * Example:
 
         {
           "v1": regexp_contains("pphonepp", "p*hone"),
           "v2": regexp_contains("hone", "p+hone")
-        }
+        };
 
 
  * The expected result is:
@@ -269,17 +280,20 @@
 
  * Checks whether the string `string` exactly matches the regular expression pattern `string_pattern`
    (a Java regular expression pattern).
+
+ * Aliases:
+    * `regexp_like`, `regex_like`.
+
  * Arguments:
-    * `string` : a `string` that might contain the pattern,
-    * `string_pattern` : a pattern `string` that might be contained,
+    * `string` : a `string` that might contain the pattern.
+    * `string_pattern` : a pattern `string` that might be contained.
     * `string_flag` : (Optional) a `string` with flags to be used during regular expression matching.
         * The following modes are enabled with these flags: dotall (s), multiline (m), case_insensitive (i), and comments and whitespace (x).
  * Return Value:
-    * a `boolean` value, `true` if `string` contains the pattern `string_pattern`,
-    * `missing` if any argument is a `missing` value,
-    * `null` if any argument is a `null` value but no argument is a `missing` value,
-    * any other non-string input value will cause a type error,
-    * `false` otherwise.
+    * a `boolean` value, `true` if `string` contains the pattern `string_pattern`, `false` otherwise.
+    * `missing` if any argument is a `missing` value.
+    * `null` if any argument is a `null` value but no argument is a `missing` value.
+    * any other non-string input value will return a `null`.
 
  * Example:
 
@@ -298,11 +312,18 @@
 
         regexp_position(string, string_pattern[, string_flags])
 
- * Returns first position of the regular expression `string_pattern` (a Java regular expression pattern)
-   within `string`.
+ * Returns first position of the regular expression `string_pattern` (a Java regular expression pattern) within `string`.
+ The function returns the 0-based position. Another version of the function returns the 1-based position. Below are the
+ aliases for each version:
+
+ * Aliases:
+    * 0-Based: `regexp_position`, `regexp_pos`, `regexp_position0`, `regexp_pos0`, `regex_position`, `regex_pos`,
+    `regex_position0`, `regex_pos0`.
+    * 1-Based: `regexp_position1`, `regexp_pos1`, `regex_position1` `regex_pos1`.
+
  * Arguments:
-    * `string` : a `string` that might contain the pattern,
-    * `string_pattern` : a pattern `string` to be matched,
+    * `string` : a `string` that might contain the pattern.
+    * `string_pattern` : a pattern `string` to be matched.
     * `string_flag` : (Optional) a `string` with flags to be used during regular expression matching.
         * The following modes are enabled with these flags: dotall (s), multiline (m), case_insensitive (i), and comments and whitespace (x).
  * Return Value:
@@ -310,19 +331,20 @@
       (starting at 0), or -1 if it does not appear.
     * `missing` if any argument is a `missing` value,
     * `null` if any argument is a `null` value but no argument is a `missing` value,
-    * any other non-string input value will cause a type error.
+    * any other non-string input value will return a `null`.
 
  * Example:
 
         {
           "v1": regexp_position("pphonepp", "p*hone"),
-          "v2": regexp_position("hone", "p+hone")
+          "v2": regexp_position("hone", "p+hone"),
+          "v3": regexp_position1("pphonepp", "p*hone"),
+          "v4": regexp_position1("hone", "p+hone")
         };
-
 
  * The expected result is:
 
-        { "v1": 1, "v2": -1 }
+        { "v1": 0, "v2": -1, "v3": 1, "v4": -1 }
 
 
 ### regexp_replace ###
@@ -334,23 +356,27 @@
  * Checks whether the string `string` matches the given
    regular expression pattern `string_pattern` (a Java regular expression pattern),
    and replaces the matched pattern `string_pattern` with the new pattern `string_replacement`.
+
+ * Aliases:
+    * `regexp_replace`, `regex_replace`.
+
  * Arguments:
-    * `string` : a `string` that might contain the pattern,
-    * `string_pattern` : a pattern `string` to be matched,
-    * `string_replacement` : a pattern `string` to be used as the replacement,
+    * `string` : a `string` that might contain the pattern.
+    * `string_pattern` : a pattern `string` to be matched.
+    * `string_replacement` : a pattern `string` to be used as the replacement.
     * `string_flag` : (Optional) a `string` with flags to be used during replace.
         * The following modes are enabled with these flags: dotall (s), multiline (m), case_insensitive (i), and comments and whitespace (x).
     * `replacement_limit`: (Optional) an `integer` specifying the maximum number of replacements to make
          (if negative then all occurrences will be replaced)
  * Return Value:
-    * Returns a `string` that is obtained after the replacements,
-    * `missing` if any argument is a `missing` value,
-    * any other non-string input value will cause a type error,
+    * Returns a `string` that is obtained after the replacements.
+    * `missing` if any argument is a `missing` value.
     * `null` if any argument is a `null` value but no argument is a `missing` value.
+    * any other non-string input value will return a `null`.
 
  * Example:
 
-        regexp_replace(" like x-phone the voicemail_service is awesome", " like x-phone", "like product-a")
+        regexp_replace(" like x-phone the voicemail_service is awesome", " like x-phone", "like product-a");
 
 
  * The expected result is:
@@ -527,30 +553,37 @@
 
         substr(string, offset[, length])
 
- * Returns the substring from the given string `string` based on the given start offset `offset` with the optional `length`.
+ * Returns the substring from the given string `string` based on the given start offset `offset` with the optional `length`. 
+ The function uses the 0-based position. Another version of the function uses the 1-based position. Below are the
+ aliases for each version:
+
+ * Aliases:
+    * 0-Based: `substring`, `substr`, `substring0`, `substr0`.
+    * 1-Based: `substring1`, `substr1`.
+
  * Arguments:
-    * `string` : a `string` to be extracted,
+    * `string` : a `string` to be extracted.
     * `offset` : an `tinyint`/`smallint`/`integer`/`bigint` value as the starting offset of the substring in `string`
-                 (starting at 0). If negative then counted from the end of the string,
+                 (starting at 0). If negative then counted from the end of the string.
     * `length` : (Optional) an an `tinyint`/`smallint`/`integer`/`bigint` value as the length of the substring.
  * Return Value:
     * a `string` that represents the substring,
     * `missing` if any argument is a `missing` value,
     * `null` if any argument is a `null` value but no argument is a `missing` value, or if the substring could not
              be obtained because the starting offset is not within string bounds or `length` is negative.
-    * a type error will be raised if:
-        * the first argument is any other non-string value,
-        * or, the second argument is not a `tinyint`, `smallint`, `integer`, or `bigint`,
-        * or, the third argument is not a `tinyint`, `smallint`, `integer`, or `bigint` if the argument is present.
+    * a `null` will be returned if:
+        * the first argument is any other non-string value.
+        * the second argument is not a `tinyint`, `smallint`, `integer`, or `bigint`.
+        * the third argument is not a `tinyint`, `smallint`, `integer`, or `bigint` if the argument is present.
 
  * Example:
 
-        substr("test string", 6, 3);
+        { "v1": substr("test string", 6, 3), "v2": substr1("test string", 6, 3) };
 
 
  * The expected result is:
 
-        "str"
+        { "v1": "tri", "v2": "str" }
 
 The function has an alias `substring`.
 
