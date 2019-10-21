@@ -64,7 +64,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.asterix.api.http.server.QueryServiceServlet;
@@ -139,6 +138,9 @@ public class TestExecutor {
             Pattern.compile("polltimeoutsecs=(\\d+)(\\D|$)", Pattern.MULTILINE);
     private static final Pattern POLL_DELAY_PATTERN = Pattern.compile("polldelaysecs=(\\d+)(\\D|$)", Pattern.MULTILINE);
     private static final Pattern HANDLE_VARIABLE_PATTERN = Pattern.compile("handlevariable=(\\w+)");
+    private static final Pattern RESULT_VARIABLE_PATTERN = Pattern.compile("resultvariable=(\\w+)");
+    private static final Pattern OUTPUTFORMAT_VARIABLE_PATTERN = Pattern.compile("outputformat=(\\w+)");
+
     private static final Pattern VARIABLE_REF_PATTERN = Pattern.compile("\\$(\\w+)");
     private static final Pattern HTTP_PARAM_PATTERN =
             Pattern.compile("param (?<name>[\\w-$]+)(?::(?<type>\\w+))?=(?<value>.*)", Pattern.MULTILINE);
@@ -173,7 +175,7 @@ public class TestExecutor {
     private static List<InetSocketAddress> ncEndPointsList = new ArrayList<>();
     private static Map<String, InetSocketAddress> replicationAddress;
 
-    private final List<Charset> allCharsets;
+    private List<Charset> allCharsets;
     private final Queue<Charset> charsetsRemaining = new ArrayDeque<>();
 
     /*
@@ -199,10 +201,7 @@ public class TestExecutor {
 
     public TestExecutor(List<InetSocketAddress> endpoints) {
         this.endpoints = endpoints;
-        this.allCharsets = Stream
-                .of("UTF-8", "UTF-16", "UTF-16BE", "UTF-16LE", "UTF-32", "UTF-32BE", "UTF-32LE", "x-UTF-32BE-BOM",
-                        "x-UTF-32LE-BOM", "x-UTF-16LE-BOM")
-                .filter(Charset::isSupported).map(Charset::forName).collect(Collectors.toList());
+        this.allCharsets = Collections.singletonList(UTF_8);
     }
 
     public void setLibrarian(IExternalUDFLibrarian librarian) {
@@ -240,6 +239,9 @@ public class TestExecutor {
             ComparisonEnum compare, Charset actualEncoding) throws Exception {
         LOGGER.info("Expected results file: {} ", expectedFile);
         boolean regex = false;
+        if (expectedFile.getName().endsWith(".ignore")) {
+            return; //skip the comparison
+        }
         try (BufferedReader readerExpected =
                 new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), UTF_8));
                 BufferedReader readerActual =
@@ -259,7 +261,6 @@ public class TestExecutor {
                 ObjectMapper OM = new ObjectMapper();
                 JsonNode expectedJson = OM.readTree(readerExpected);
                 JsonNode actualJson = OM.readTree(readerActual);
-                System.out.println(OM.writeValueAsString(actualJson));
                 if (expectedJson == null || actualJson == null) {
                     throw new NullPointerException("Error parsing expected or actual result file for " + scriptFile);
                 }
@@ -670,9 +671,12 @@ public class TestExecutor {
                 responseCharset, responseCodeValidator, cancellable);
     }
 
-    public synchronized void setAvailableCharsets(Charset... charsets) {
-        allCharsets.clear();
-        allCharsets.addAll(Arrays.asList(charsets));
+    public void setAvailableCharsets(Charset... charsets) {
+        setAvailableCharsets(Arrays.asList(charsets));
+    }
+
+    public synchronized void setAvailableCharsets(List<Charset> charsets) {
+        allCharsets = charsets;
         charsetsRemaining.clear();
     }
 
@@ -1320,13 +1324,14 @@ public class TestExecutor {
         }
 
         boolean isJsonEncoded = isJsonEncoded(extractHttpRequestType(statement));
-
         Charset responseCharset = getResponseCharset(expectedResultFile);
         InputStream resultStream;
         ExtractedResult extractedResult = null;
+        final String variablesReplaced = replaceVarRefRelaxed(statement, variableCtx);
+        String resultVar = getResultVariable(statement); //Is the result of the statement/query to be used in later tests
         if (DELIVERY_IMMEDIATE.equals(delivery)) {
-            resultStream = executeQueryService(statement, ctx, fmt, uri, params, isJsonEncoded, responseCharset, null,
-                    isCancellable(reqType));
+            resultStream = executeQueryService(variablesReplaced, ctx, fmt, uri, params, isJsonEncoded, responseCharset,
+                    null, isCancellable(reqType));
             switch (reqType) {
                 case METRICS_QUERY_TYPE:
                     resultStream = ResultExtractor.extractMetrics(resultStream, responseCharset);
@@ -1338,7 +1343,13 @@ public class TestExecutor {
                     resultStream = ResultExtractor.extractPlans(resultStream, responseCharset);
                     break;
                 default:
-                    extractedResult = ResultExtractor.extract(resultStream, responseCharset);
+                    String outputFormatVariable = getOutputFormatVariable(statement);
+                    if ((outputFormatVariable == null) || (outputFormatVariable.equals("jsonl"))) {
+                        extractedResult = ResultExtractor.extract(resultStream, responseCharset);
+                    } else {
+                        extractedResult = ResultExtractor.extract(resultStream, responseCharset, "json");
+                    }
+
                     resultStream = extractedResult.getResult();
                     break;
             }
@@ -1358,7 +1369,13 @@ public class TestExecutor {
                         + ", filectxs.size: " + numResultFiles);
             }
         } else {
-            writeOutputToFile(actualResultFile, resultStream);
+            if (resultVar != null) {
+                String result = IOUtils.toString(resultStream, responseCharset);
+                variableCtx.put(resultVar, result);
+                writeOutputToFile(actualResultFile, new ByteArrayInputStream(result.getBytes(responseCharset)));
+            } else {
+                writeOutputToFile(actualResultFile, resultStream);
+            }
             if (expectedResultFile == null) {
                 if (reqType.equals("store")) {
                     return extractedResult;
@@ -1586,6 +1603,16 @@ public class TestExecutor {
         return handleVariableMatcher.find() ? handleVariableMatcher.group(1) : null;
     }
 
+    protected static String getResultVariable(String statement) {
+        final Matcher resultVariableMatcher = RESULT_VARIABLE_PATTERN.matcher(statement);
+        return resultVariableMatcher.find() ? resultVariableMatcher.group(1) : null;
+    }
+
+    protected static String getOutputFormatVariable(String statement) {
+        final Matcher outputFormatVariableMatcher = OUTPUTFORMAT_VARIABLE_PATTERN.matcher(statement);
+        return outputFormatVariableMatcher.find() ? outputFormatVariableMatcher.group(1) : null;
+    }
+
     protected static String replaceVarRef(String statement, Map<String, Object> variableCtx) {
         String tmpStmt = statement;
         Matcher variableReferenceMatcher = VARIABLE_REF_PATTERN.matcher(tmpStmt);
@@ -1593,6 +1620,21 @@ public class TestExecutor {
             String var = variableReferenceMatcher.group(1);
             Object value = variableCtx.get(var);
             Assert.assertNotNull("No value for variable reference $" + var, value);
+            tmpStmt = tmpStmt.replace("$" + var, String.valueOf(value));
+            variableReferenceMatcher = VARIABLE_REF_PATTERN.matcher(tmpStmt);
+        }
+        return tmpStmt;
+    }
+
+    protected static String replaceVarRefRelaxed(String statement, Map<String, Object> variableCtx) {
+        String tmpStmt = statement;
+        Matcher variableReferenceMatcher = VARIABLE_REF_PATTERN.matcher(tmpStmt);
+        while (variableReferenceMatcher.find()) {
+            String var = variableReferenceMatcher.group(1);
+            Object value = variableCtx.get(var);
+            if (value == null) {
+                continue;
+            }
             tmpStmt = tmpStmt.replace("$" + var, String.valueOf(value));
             variableReferenceMatcher = VARIABLE_REF_PATTERN.matcher(tmpStmt);
         }

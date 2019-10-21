@@ -47,7 +47,7 @@ public class FullFrameChannelReadInterface extends AbstractChannelReadInterface 
         credits = 0;
         emptyBufferAcceptor = buffer -> {
             final int delta = buffer.remaining();
-            if (delta != frameSize) {
+            if (bufferFactory != null && delta != frameSize) {
                 LOGGER.warn("partial frame being recycled; expected size {}, actual size {}", frameSize, delta);
             }
             synchronized (bufferRecycleLock) {

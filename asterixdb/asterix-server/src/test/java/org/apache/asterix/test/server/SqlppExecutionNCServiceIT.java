@@ -15,10 +15,14 @@
 package org.apache.asterix.test.server;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -36,6 +40,14 @@ public class SqlppExecutionNCServiceIT extends AbstractExecutionIT {
             testArgs = buildTestsInXml("testsuite_sqlpp.xml");
         }
         return testArgs;
+    }
+
+    @BeforeClass
+    public static void setup() {
+        testExecutor.setAvailableCharsets(Stream
+                .of("UTF-8", "UTF-16", "UTF-16BE", "UTF-16LE", "UTF-32", "UTF-32BE", "UTF-32LE", "x-UTF-32BE-BOM",
+                        "x-UTF-32LE-BOM", "x-UTF-16LE-BOM")
+                .filter(Charset::isSupported).map(Charset::forName).collect(Collectors.toList()));
     }
 
     protected static Collection<Object[]> buildTestsInXml(String xmlfile) throws Exception {
