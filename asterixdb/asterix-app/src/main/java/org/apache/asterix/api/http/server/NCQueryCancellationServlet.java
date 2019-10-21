@@ -24,7 +24,7 @@ import static org.apache.asterix.app.message.ExecuteStatementRequestMessage.DEFA
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.asterix.api.http.server.QueryServiceServlet.Parameter;
+import org.apache.asterix.api.http.server.QueryServiceRequestParameters.Parameter;
 import org.apache.asterix.app.message.CancelQueryRequest;
 import org.apache.asterix.app.message.CancelQueryResponse;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;

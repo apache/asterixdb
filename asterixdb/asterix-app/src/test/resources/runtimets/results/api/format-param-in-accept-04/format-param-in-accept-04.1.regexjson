@@ -1,0 +1,8 @@
+{
+	"requestID": "R{[a-zA-Z0-9-]+}",
+	"signature": {"*": "*"},
+	"results": [["foo","bar"]],
+	"plans":{},
+	"status": "success",
+    "metrics": "R{.*}"
+}

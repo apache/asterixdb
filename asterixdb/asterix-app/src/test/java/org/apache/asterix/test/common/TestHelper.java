@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.asterix.api.http.server.QueryServiceServlet;
+import org.apache.asterix.api.http.server.QueryServiceRequestParameters;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.testframework.xml.ParameterTypeEnum;
@@ -126,10 +126,10 @@ public final class TestHelper {
                     throw new IllegalArgumentException(String.valueOf(paramType));
 
             }
-            String name = QueryServiceServlet.extractStatementParameterName(paramName);
+            String name = QueryServiceRequestParameters.extractStatementParameterName(paramName);
             if (name != null) {
                 stmtParams.put(name, paramJsonValue);
-            } else if (QueryServiceServlet.Parameter.ARGS.str().equals(paramName)) {
+            } else if (QueryServiceRequestParameters.Parameter.ARGS.str().equals(paramName)) {
                 if (paramJsonValue.isArray()) {
                     for (int i = 0, ln = paramJsonValue.size(); i < ln; i++) {
                         stmtParams.put(String.valueOf(i + 1), paramJsonValue.get(i));

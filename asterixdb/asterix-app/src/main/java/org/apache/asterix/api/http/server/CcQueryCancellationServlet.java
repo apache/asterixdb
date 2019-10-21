@@ -21,7 +21,7 @@ package org.apache.asterix.api.http.server;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.asterix.api.http.server.QueryServiceServlet.Parameter;
+import org.apache.asterix.api.http.server.QueryServiceRequestParameters.Parameter;
 import org.apache.asterix.common.api.IClientRequest;
 import org.apache.asterix.common.api.IRequestTracker;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;

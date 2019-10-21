@@ -1,0 +1,14 @@
+{
+	"errors": [{ 
+		"code": 1,		"msg": "ASX0047: Invalid value for parameter \"format\": foo"	} 
+	],
+	"status": "fatal",
+	"metrics": {
+		"elapsedTime": "R{.*}",
+		"executionTime": "R{.*}",
+		"resultCount": 0,
+		"resultSize": 0,
+		"processedObjects": 0,
+		"errorCount": 1
+	}
+}

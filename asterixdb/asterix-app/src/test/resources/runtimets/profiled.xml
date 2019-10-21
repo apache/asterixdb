@@ -22,8 +22,20 @@
   <test-group name="profile">
     <test-case FilePath="profile">
       <compilation-unit name="full-scan">
-        <parameter name="profile" value="true" />
+        <parameter name="profile" value="timings" type="string"/>
         <output-dir compare="Text">full-scan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="profile">
+      <compilation-unit name="full-scan-2">
+        <parameter name="profile" value="counts" type="string"/>
+        <output-dir compare="Text">full-scan-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="profile">
+      <compilation-unit name="full-scan-3">
+        <parameter name="profile" value="off" type="string"/>
+        <output-dir compare="Text">full-scan-3</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

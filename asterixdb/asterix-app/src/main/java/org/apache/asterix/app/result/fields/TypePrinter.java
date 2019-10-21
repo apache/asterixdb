@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.app.result.fields;
 
-import static org.apache.hyracks.http.server.utils.HttpUtil.ContentType.CSV;
+import static org.apache.hyracks.http.server.utils.HttpUtil.ContentType.TEXT_CSV;
 
 import java.io.PrintWriter;
 
@@ -43,8 +43,8 @@ public class TypePrinter implements IResponseFieldPrinter {
                 ResultUtil.printField(pw, FIELD_NAME, HttpUtil.ContentType.APPLICATION_ADM, false);
                 break;
             case CSV:
-                String contentType =
-                        CSV + "; header=" + (sessionConfig.is(SessionConfig.FORMAT_CSV_HEADER) ? "present" : "absent");
+                String contentType = TEXT_CSV + "; header="
+                        + (sessionConfig.is(SessionConfig.FORMAT_CSV_HEADER) ? "present" : "absent");
                 ResultUtil.printField(pw, FIELD_NAME, contentType, false);
                 break;
             default:
