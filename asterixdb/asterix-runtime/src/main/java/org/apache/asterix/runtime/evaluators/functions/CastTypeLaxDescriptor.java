@@ -97,7 +97,8 @@ public class CastTypeLaxDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new CastTypeLaxEvaluator(reqType, inputType, recordEvalFactory.createScalarEvaluator(ctx));
+                IScalarEvaluator argEval = recordEvalFactory.createScalarEvaluator(ctx);
+                return new CastTypeLaxEvaluator(reqType, inputType, argEval, sourceLoc);
             }
         };
     }

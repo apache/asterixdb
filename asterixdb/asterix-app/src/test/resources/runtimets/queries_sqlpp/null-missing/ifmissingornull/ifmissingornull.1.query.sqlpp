@@ -39,5 +39,6 @@
                 { "c": [ 2 ] }
             )
             select v as b
-        )
+        ),
+   "k": if_missing_or_null(null, missing, ["a"], "abc", {"id":3})
 };

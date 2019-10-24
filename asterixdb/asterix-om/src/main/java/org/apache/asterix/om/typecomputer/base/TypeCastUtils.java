@@ -35,17 +35,25 @@ public class TypeCastUtils {
 
     public static boolean setRequiredAndInputTypes(AbstractFunctionCallExpression expr, IAType requiredType,
             IAType inputType) throws CompilationException {
+        return setRequiredAndInputTypes(expr, requiredType, inputType, true);
+    }
+
+    public static boolean setRequiredAndInputTypes(AbstractFunctionCallExpression expr, IAType requiredType,
+            IAType inputType, boolean failIfTypeMismatch) throws CompilationException {
         boolean changed = false;
         Object[] opaqueParameters = expr.getOpaqueParameters();
         if (opaqueParameters == null) {
             opaqueParameters = new Object[2];
             opaqueParameters[0] = requiredType;
             opaqueParameters[1] = inputType;
-            ATypeTag requiredTypeTag = requiredType.getTypeTag();
-            ATypeTag actualTypeTag = TypeComputeUtils.getActualType(inputType).getTypeTag();
-            if (!ATypeHierarchy.isCompatible(requiredTypeTag, actualTypeTag)) {
-                FunctionIdentifier funcId = expr.getFunctionIdentifier();
-                throw new IncompatibleTypeException(expr.getSourceLocation(), funcId, actualTypeTag, requiredTypeTag);
+            if (failIfTypeMismatch) {
+                ATypeTag requiredTypeTag = requiredType.getTypeTag();
+                ATypeTag actualTypeTag = TypeComputeUtils.getActualType(inputType).getTypeTag();
+                if (!ATypeHierarchy.isCompatible(requiredTypeTag, actualTypeTag)) {
+                    FunctionIdentifier funcId = expr.getFunctionIdentifier();
+                    throw new IncompatibleTypeException(expr.getSourceLocation(), funcId, actualTypeTag,
+                            requiredTypeTag);
+                }
             }
             expr.setOpaqueParameters(opaqueParameters);
             changed = true;

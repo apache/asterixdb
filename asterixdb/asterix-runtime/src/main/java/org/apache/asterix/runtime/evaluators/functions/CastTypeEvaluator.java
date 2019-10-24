@@ -29,6 +29,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -36,6 +37,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class CastTypeEvaluator implements IScalarEvaluator {
 
     private IScalarEvaluator argEvaluator;
+    protected final SourceLocation sourceLoc;
     private final IPointable argPointable = new VoidPointable();
     private final PointableAllocator allocator = new PointableAllocator();
     private IVisitablePointable inputPointable;
@@ -44,10 +46,22 @@ public class CastTypeEvaluator implements IScalarEvaluator {
     private final Triple<IVisitablePointable, IAType, Boolean> arg = new Triple<>(null, null, null);
 
     public CastTypeEvaluator() {
+        this(null);
+        // reset() should be called after using this constructor before calling any method
+    }
+
+    public CastTypeEvaluator(SourceLocation sourceLoc) {
+        this.sourceLoc = sourceLoc;
         // reset() should be called after using this constructor before calling any method
     }
 
     public CastTypeEvaluator(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator) {
+        this(reqType, inputType, argEvaluator, null);
+    }
+
+    public CastTypeEvaluator(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator,
+            SourceLocation sourceLoc) {
+        this.sourceLoc = sourceLoc;
         resetAndAllocate(reqType, inputType, argEvaluator);
     }
 
@@ -61,7 +75,7 @@ public class CastTypeEvaluator implements IScalarEvaluator {
     }
 
     protected ACastVisitor createCastVisitor() {
-        return new ACastVisitor();
+        return new ACastVisitor(sourceLoc);
     }
 
     @Override

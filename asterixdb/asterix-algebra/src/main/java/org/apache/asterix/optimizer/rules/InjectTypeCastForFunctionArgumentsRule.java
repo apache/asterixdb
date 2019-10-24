@@ -144,7 +144,8 @@ public class InjectTypeCastForFunctionArgumentsRule implements IAlgebraicRewrite
                     new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE),
                             new ArrayList<>(Collections.singletonList(new MutableObject<>(argExpr))));
             castFunc.setSourceLocation(argExpr.getSourceLocation());
-            TypeCastUtils.setRequiredAndInputTypes(castFunc, funcOutputType, type);
+            IAType funcOutputPrimeType = TypeComputeUtils.getActualType(funcOutputType);
+            TypeCastUtils.setRequiredAndInputTypes(castFunc, funcOutputPrimeType, type, false);
             argRef.setValue(castFunc);
             return true;
         }

@@ -36,5 +36,6 @@
                 { "c": [ 2 ] }
             )
             select v as b
-        )
+        ),
+   "k": if_missing(missing, ["a"], "abc", {"id":3})
 };
