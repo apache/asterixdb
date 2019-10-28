@@ -36,6 +36,7 @@ import org.apache.asterix.common.storage.IndexCheckpoint;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.annotations.ThreadSafe;
+import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -191,9 +192,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
                 if (checkpointPath.toFile().exists()) {
                     Files.delete(checkpointPath);
                 }
-                try (BufferedWriter writer = Files.newBufferedWriter(checkpointPath)) {
-                    writer.write(checkpoint.asJson());
-                }
+                FileUtil.writeAndForce(checkpointPath, checkpoint.asJson().getBytes());
                 // ensure it was written correctly by reading it
                 read(checkpointPath);
                 return;
