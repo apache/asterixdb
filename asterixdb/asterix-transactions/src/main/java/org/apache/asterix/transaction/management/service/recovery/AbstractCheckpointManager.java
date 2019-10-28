@@ -26,7 +26,6 @@ import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,6 +41,8 @@ import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -172,8 +173,11 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         }
         // Write checkpoint file to disk
         try {
+            if (path.toFile().exists()) {
+                IoUtil.delete(path);
+            }
             byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(checkpoint.toJson(persistedResourceRegistry));
-            Files.write(path, bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            FileUtil.writeAndForce(path, bytes);
             readCheckpoint(path);
         } catch (IOException e) {
             LOGGER.log(Level.ERROR, "Failed to write checkpoint to disk", e);

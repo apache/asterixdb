@@ -20,6 +20,8 @@ package org.apache.hyracks.util.file;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.file.Path;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
@@ -84,6 +86,13 @@ public class FileUtil {
                     return;
                 }
             }
+        }
+    }
+
+    public static void writeAndForce(Path path, byte[] data) throws IOException {
+        try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw");) {
+            raf.write(data);
+            raf.getChannel().force(true);
         }
     }
 }
