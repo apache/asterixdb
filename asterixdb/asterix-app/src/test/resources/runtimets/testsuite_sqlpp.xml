@@ -42,6 +42,72 @@
         <expected-error>ASX0044: DELETE statement is prohibited by this request</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="request-param-validation">
+        <output-dir compare="Text">request-param-validation</output-dir>
+        <source-location>false</source-location>
+        <expected-error>Invalid value for parameter "format": foo</expected-error>
+        <expected-error>Invalid value for parameter "pretty": bar</expected-error>
+        <expected-error>Invalid value for parameter "plan-format": blah</expected-error>
+        <expected-error>Invalid value for parameter "max-result-reads": foo</expected-error>
+        <expected-error>Invalid value for parameter "max-result-reads": 9999999999999999999999999999999999999999</expected-error>
+        <expected-error>Invalid value for parameter "max-warnings": baz</expected-error>
+        <expected-error>Invalid value for parameter "max-warnings": 1.5</expected-error>
+        <expected-error>Invalid value for parameter "mode": asyn</expected-error>
+        <expected-error>Invalid value for parameter "timeout": 12</expected-error>
+        <expected-error>Invalid value for parameter "args": 12</expected-error>
+        <expected-error>Unable to process JSON content in request</expected-error>
+        <expected-error>Unable to process JSON content in request</expected-error>
+        <expected-error>Invalid value for parameter "format": foo</expected-error>
+        <expected-error>Invalid value for parameter "pretty": bar</expected-error>
+        <expected-error>Invalid value for parameter "plan-format": blah</expected-error>
+        <expected-error>Invalid value for parameter "max-result-reads": foo</expected-error>
+        <expected-error>Invalid value for parameter "max-warnings": baz</expected-error>
+        <expected-error>Invalid value for parameter "mode": asyn</expected-error>
+        <expected-error>Invalid value for parameter "args": 12</expected-error>
+        <expected-error>Unable to process JSON content in request</expected-error>
+        <expected-error>Unable to process JSON content in request</expected-error>
+        <expected-error>Invalid value for parameter "profile": true</expected-error>
+        <expected-error>Invalid value for parameter "profile": true</expected-error>
+        <expected-error>Invalid value for parameter "profile": foo</expected-error>
+        <expected-error>Invalid value for parameter "profile": foo</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="request-param-validation-400-BAD">
+        <output-dir compare="Text">request-param-validation-400-BAD</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="request-param">
+        <output-dir compare="Text">request-param</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="format-param-in-accept-01">
+        <output-dir compare="Text">format-param-in-accept-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="format-param-in-accept-02">
+        <output-dir compare="Clean-JSON">format-param-in-accept-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="format-param-in-accept-03">
+        <output-dir compare="Lossless-JSON">format-param-in-accept-03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="format-param-in-accept-04">
+        <output-dir compare="Text">format-param-in-accept-04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="format-param-in-accept-05">
+        <output-dir compare="AST">format-param-in-accept-05</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="flwor">
     <test-case FilePath="flwor">

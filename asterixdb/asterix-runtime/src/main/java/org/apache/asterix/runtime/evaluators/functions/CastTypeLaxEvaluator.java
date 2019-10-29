@@ -24,6 +24,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -35,13 +36,13 @@ class CastTypeLaxEvaluator extends CastTypeEvaluator {
 
     private static final byte[] MISSING_BYTES = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
 
-    CastTypeLaxEvaluator(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator) {
-        super(reqType, inputType, argEvaluator);
+    CastTypeLaxEvaluator(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator, SourceLocation sourceLoc) {
+        super(reqType, inputType, argEvaluator, sourceLoc);
     }
 
     @Override
     protected ACastVisitor createCastVisitor() {
-        return new ACastVisitor(false);
+        return new ACastVisitor(false, sourceLoc);
     }
 
     @Override

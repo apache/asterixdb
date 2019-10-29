@@ -66,7 +66,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.apache.asterix.api.http.server.QueryServiceServlet;
+import org.apache.asterix.api.http.server.QueryServiceRequestParameters;
 import org.apache.asterix.app.external.IExternalUDFLibrarian;
 import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -626,13 +626,14 @@ public class TestExecutor {
     }
 
     public List<Parameter> constructQueryParameters(String str, OutputFormat fmt, List<Parameter> params) {
-        List<Parameter> newParams = upsertParam(params, "format", ParameterTypeEnum.STRING, fmt.mimeType());
+        List<Parameter> newParams = upsertParam(params, QueryServiceRequestParameters.Parameter.FORMAT.str(),
+                ParameterTypeEnum.STRING, fmt.mimeType());
 
-        newParams = upsertParam(newParams, QueryServiceServlet.Parameter.PLAN_FORMAT.str(), ParameterTypeEnum.STRING,
-                DEFAULT_PLAN_FORMAT);
+        newParams = upsertParam(newParams, QueryServiceRequestParameters.Parameter.PLAN_FORMAT.str(),
+                ParameterTypeEnum.STRING, DEFAULT_PLAN_FORMAT);
         final Optional<String> maxReadsOptional = extractMaxResultReads(str);
         if (maxReadsOptional.isPresent()) {
-            newParams = upsertParam(newParams, QueryServiceServlet.Parameter.MAX_RESULT_READS.str(),
+            newParams = upsertParam(newParams, QueryServiceRequestParameters.Parameter.MAX_RESULT_READS.str(),
                     ParameterTypeEnum.STRING, maxReadsOptional.get());
         }
         return newParams;
@@ -2186,7 +2187,7 @@ public class TestExecutor {
     protected static boolean containsClientContextID(String statement) {
         List<Parameter> httpParams = extractParameters(statement);
         return httpParams.stream().map(Parameter::getName)
-                .anyMatch(QueryServiceServlet.Parameter.CLIENT_ID.str()::equals);
+                .anyMatch(QueryServiceRequestParameters.Parameter.CLIENT_ID.str()::equals);
     }
 
     private static boolean isCancellable(String type) {

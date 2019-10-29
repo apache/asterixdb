@@ -451,4 +451,14 @@ public class OperatorManipulationUtil {
             assignExprList.remove(i);
         }
     }
+
+    public static int findChild(ILogicalOperator op, LogicalOperatorTag childOpTag) {
+        List<Mutable<ILogicalOperator>> inputs = op.getInputs();
+        for (int i = 0, ln = inputs.size(); i < ln; i++) {
+            if (inputs.get(i).getValue().getOperatorTag() == childOpTag) {
+                return i;
+            }
+        }
+        return -1;
+    }
 }

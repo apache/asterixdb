@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.pointables.AFlatValuePointable;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
@@ -37,6 +39,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 /**
@@ -57,13 +60,19 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
     private final ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
 
     private final boolean strictDemote;
+    private final SourceLocation sourceLoc;
 
     public ACastVisitor() {
-        this(true);
+        this(true, null);
     }
 
-    public ACastVisitor(boolean strictDemote) {
+    public ACastVisitor(SourceLocation sourceLoc) {
+        this(true, sourceLoc);
+    }
+
+    public ACastVisitor(boolean strictDemote, SourceLocation sourceLoc) {
         this.strictDemote = strictDemote;
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
@@ -74,11 +83,23 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
             caster = new AListCaster();
             laccessorToCaster.put(accessor, caster);
         }
-        if (arg.second.getTypeTag().equals(ATypeTag.ANY)) {
-            arg.second = accessor.ordered() ? DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE
-                    : DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
+
+        AbstractCollectionType resultType;
+        switch (arg.second.getTypeTag()) {
+            case ANY:
+                resultType = accessor.ordered() ? DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE
+                        : DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
+                break;
+            case ARRAY:
+            case MULTISET:
+                resultType = (AbstractCollectionType) arg.second;
+                break;
+            default:
+                throw new RuntimeDataException(ErrorCode.TYPE_CONVERT, sourceLoc,
+                        accessor.ordered() ? ATypeTag.ARRAY : ATypeTag.MULTISET, arg.second.getTypeTag());
         }
-        caster.castList(accessor, arg.first, (AbstractCollectionType) arg.second, this);
+
+        caster.castList(accessor, arg.first, resultType, this);
         return null;
     }
 
@@ -90,10 +111,20 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
             caster = new ARecordCaster();
             raccessorToCaster.put(accessor, caster);
         }
-        if (arg.second.getTypeTag().equals(ATypeTag.ANY)) {
-            arg.second = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+
+        ARecordType resultType;
+        switch (arg.second.getTypeTag()) {
+            case ANY:
+                resultType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+                break;
+            case OBJECT:
+                resultType = (ARecordType) arg.second;
+                break;
+            default:
+                throw new RuntimeDataException(ErrorCode.TYPE_CONVERT, sourceLoc, ATypeTag.OBJECT,
+                        arg.second.getTypeTag());
         }
-        ARecordType resultType = (ARecordType) arg.second;
+
         caster.castRecord(accessor, arg.first, resultType, this);
         return null;
     }
@@ -123,11 +154,11 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
                 ATypeHierarchy.convertNumericTypeByteArray(accessor.getByteArray(), accessor.getStartOffset(),
                         accessor.getLength(), reqTypeTag, castBuffer.getDataOutput(), strictDemote);
                 arg.first.set(castBuffer);
-            } catch (IOException e1) {
-                throw new HyracksDataException(
-                        "Type mismatch: cannot cast the " + inputTypeTag + " type to the " + reqTypeTag + " type.");
+            } catch (HyracksDataException e) {
+                throw e;
+            } catch (IOException e) {
+                throw new RuntimeDataException(ErrorCode.TYPE_CONVERT, sourceLoc, inputTypeTag, reqTypeTag);
             }
-
         }
 
         return null;

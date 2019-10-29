@@ -104,7 +104,8 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
     public boolean applyJoinPlanTransformation(List<Mutable<ILogicalOperator>> afterJoinRefs,
             Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree leftSubTree,
             OptimizableOperatorSubTree rightSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
-            IOptimizationContext context, boolean isLeftOuterJoin, boolean hasGroupBy) throws AlgebricksException;
+            IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy)
+            throws AlgebricksException;
 
     /**
      * Analyzes expr to see whether it is optimizable by the given concrete index.

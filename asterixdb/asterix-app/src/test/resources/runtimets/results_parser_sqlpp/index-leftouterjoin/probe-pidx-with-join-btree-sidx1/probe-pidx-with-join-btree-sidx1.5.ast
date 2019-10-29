@@ -1,0 +1,68 @@
+DataverseUse test
+Set noindexonly=false
+Query:
+SELECT [
+FieldAccessor [
+  Variable [ Name=$t1 ]
+  Field=tweetid
+]
+tweetid1
+FieldAccessor [
+  Variable [ Name=$t1 ]
+  Field=countA
+]
+count1
+FieldAccessor [
+  Variable [ Name=$t2 ]
+  Field=tweetid
+]
+tweetid2
+FieldAccessor [
+  Variable [ Name=$t2 ]
+  Field=countB
+]
+count2
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.TweetMessages]
+  ]
+  AS Variable [ Name=$t1 ]
+  LEFTOUTER JOIN
+    FunctionCall asterix.dataset@1[
+      LiteralExpr [STRING] [test.TweetMessages]
+    ]
+    AS Variable [ Name=$t2 ]
+    ON
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=$t1 ]
+        Field=countA
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=$t2 ]
+        Field=countB
+      ]
+    ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=$t1 ]
+      Field=tweetid
+    ]
+    <
+    LiteralExpr [LONG] [10]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=$t1 ]
+    Field=tweetid
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=$t2 ]
+    Field=tweetid
+  ]
+  ASC
+

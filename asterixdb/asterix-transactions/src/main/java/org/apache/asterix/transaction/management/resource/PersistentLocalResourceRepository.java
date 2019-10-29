@@ -72,6 +72,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.util.ExitUtil;
+import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -195,8 +196,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         try {
             createResourceFileMask(resourceFile);
             byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(resource.toJson(persistedResourceRegistry));
-            final Path path = Paths.get(resourceFile.getAbsolutePath());
-            Files.write(path, bytes);
+            FileUtil.writeAndForce(Paths.get(resourceFile.getAbsolutePath()), bytes);
             indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(Long.MIN_VALUE, 0,
                     LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId());
             deleteResourceFileMask(resourceFile);

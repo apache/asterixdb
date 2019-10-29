@@ -306,7 +306,8 @@ public class RTreeAccessMethod implements IAccessMethod {
     public boolean applyJoinPlanTransformation(List<Mutable<ILogicalOperator>> afterJoinRefs,
             Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree leftSubTree,
             OptimizableOperatorSubTree rightSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
-            IOptimizationContext context, boolean isLeftOuterJoin, boolean hasGroupBy) throws AlgebricksException {
+            IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy)
+            throws AlgebricksException {
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
         Mutable<ILogicalExpression> conditionRef = joinOp.getCondition();
 
@@ -335,6 +336,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         if (isLeftOuterJoin) {
             // Gets a new null place holder variable that is the first field variable of the primary key
             // from the indexSubTree's datasourceScanOp.
+            // We need this for all left outer joins, even those that do not have a special GroupBy
             newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
         }
 
@@ -352,8 +354,9 @@ public class RTreeAccessMethod implements IAccessMethod {
             return false;
         }
 
-        return AccessMethodUtils.finalizeJoinPlanTransformation(afterJoinRefs, joinRef, indexSubTree, analysisCtx,
-                context, isLeftOuterJoin, hasGroupBy, indexSearchOp, newNullPlaceHolderVar, conditionRef, dataset);
+        return AccessMethodUtils.finalizeJoinPlanTransformation(afterJoinRefs, joinRef, indexSubTree, probeSubTree,
+                analysisCtx, context, isLeftOuterJoin, isLeftOuterJoinWithSpecialGroupBy, indexSearchOp,
+                newNullPlaceHolderVar, conditionRef, dataset);
     }
 
     @Override

@@ -93,6 +93,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
@@ -717,29 +718,63 @@ public class AccessMethodUtils {
      */
     public static boolean finalizeJoinPlanTransformation(List<Mutable<ILogicalOperator>> afterJoinRefs,
             Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree indexSubTree,
-            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin,
-            boolean hasGroupBy, ILogicalOperator indexSearchOp, LogicalVariable newNullPlaceHolderVar,
+            OptimizableOperatorSubTree probeSubTree, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy,
+            ILogicalOperator indexSearchOp, LogicalVariable newNullPlaceHolderVar,
             Mutable<ILogicalExpression> conditionRef, Dataset dataset) throws AlgebricksException {
+        boolean isIndexOnlyPlan = analysisCtx.getIndexOnlyPlanInfo().getFirst();
+        List<LogicalVariable> probePKVars = null;
         ILogicalOperator finalIndexSearchOp = indexSearchOp;
-        if (isLeftOuterJoin && hasGroupBy) {
-            ScalarFunctionCallExpression lojFuncExprs = analysisCtx.getLOJIsMissingFuncInGroupBy();
-            List<LogicalVariable> lojMissingVariables = new ArrayList<>();
-            lojFuncExprs.getUsedVariables(lojMissingVariables);
-            boolean lojMissingVarExist = false;
-            if (!lojMissingVariables.isEmpty()) {
-                lojMissingVarExist = true;
+        if (isLeftOuterJoin) {
+            if (isLeftOuterJoinWithSpecialGroupBy) {
+                ScalarFunctionCallExpression lojFuncExprs = analysisCtx.getLOJIsMissingFuncInSpecialGroupBy();
+                List<LogicalVariable> lojMissingVariables = new ArrayList<>();
+                lojFuncExprs.getUsedVariables(lojMissingVariables);
+                boolean lojMissingVarExist = !lojMissingVariables.isEmpty();
+
+                // Resets the missing place holder variable.
+                AccessMethodUtils.resetLOJMissingPlaceholderVarInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
+
+                // For the index-only plan, if newNullPlaceHolderVar is not in the variable map of the union operator
+                // or if the variable is removed during the above method, we need to refresh the variable mapping in UNION.
+                if (isIndexOnlyPlan) {
+                    finalIndexSearchOp = AccessMethodUtils.resetVariableMappingInUnionOpInIndexOnlyPlan(
+                            lojMissingVarExist, lojMissingVariables, indexSearchOp, afterJoinRefs, context);
+                }
+            } else {
+                // We'll need to remove unjoined duplicates after the left outer join if there is no special GroupBy,
+                // but in order to do that we need to know the keys of the probe branch.
+                // If probe keys are not available then we fail this transformation
+                // See AccessMethodUtils#removeUnjoinedDuplicatesInLOJ() for a definition of a special GroupBy
+                // and extra output processing steps needed when it's not available.
+                if (probeSubTree.hasDataSource()) {
+                    probePKVars = new ArrayList<>();
+                    probeSubTree.getPrimaryKeyVars(null, probePKVars);
+                }
+                if (probePKVars == null || probePKVars.isEmpty()) {
+                    return false;
+                }
+                if (isIndexOnlyPlan) {
+                    // re-map probe branch keys after UnionAll introduced by the indexonly plan
+                    if (indexSearchOp.getOperatorTag() != LogicalOperatorTag.UNIONALL) {
+                        return false;
+                    }
+                    UnionAllOperator unionAllOp = (UnionAllOperator) indexSearchOp;
+                    for (int i = 0, ln = probePKVars.size(); i < ln; i++) {
+                        LogicalVariable unionAllOutputVar = findUnionAllOutputVariable(unionAllOp, probePKVars.get(i));
+                        if (unionAllOutputVar == null) {
+                            return false;
+                        }
+                        probePKVars.set(i, unionAllOutputVar);
+                    }
+                }
             }
-
-            // Resets the missing place holder variable.
-            AccessMethodUtils.resetLOJMissingPlaceholderVarInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
-
-            // For the index-only plan, if newNullPlaceHolderVar is not in the variable map of the union operator
-            // or if the variable is removed during the above method, we need to refresh the variable mapping in UNION.
-            finalIndexSearchOp = AccessMethodUtils.resetVariableMappingInUnionOpInIndexOnlyPlan(lojMissingVarExist,
-                    lojMissingVariables, indexSearchOp, afterJoinRefs, context);
         }
 
-        boolean isIndexOnlyPlan = analysisCtx.getIndexOnlyPlanInfo().getFirst();
+        SourceLocation sourceLoc = joinRef.getValue().getSourceLocation();
+
+        ILogicalOperator finalOp;
+
         // If there are any left conditions, add a new select operator on top.
         indexSubTree.getDataSourceRef().setValue(finalIndexSearchOp);
         if (conditionRef.getValue() != null) {
@@ -754,25 +789,103 @@ public class AccessMethodUtils {
                     indexSubTree.getDataSourceRef().setValue(dataSourceRefOp);
                 }
                 // Replaces the current operator with the newly created UNIONALL operator.
-                joinRef.setValue(finalIndexSearchOp);
+                finalOp = finalIndexSearchOp;
             } else {
                 // Non-index only plan case
                 indexSubTree.getDataSourceRef().setValue(finalIndexSearchOp);
                 SelectOperator topSelectOp = new SelectOperator(conditionRef, isLeftOuterJoin, newNullPlaceHolderVar);
-                topSelectOp.setSourceLocation(finalIndexSearchOp.getSourceLocation());
+                topSelectOp.setSourceLocation(sourceLoc);
                 topSelectOp.getInputs().add(indexSubTree.getRootRef());
                 topSelectOp.setExecutionMode(ExecutionMode.LOCAL);
                 context.computeAndSetTypeEnvironmentForOperator(topSelectOp);
-                joinRef.setValue(topSelectOp);
+                finalOp = topSelectOp;
             }
         } else {
             if (finalIndexSearchOp.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
-                joinRef.setValue(finalIndexSearchOp);
+                finalOp = finalIndexSearchOp;
             } else {
-                joinRef.setValue(indexSubTree.getRootRef().getValue());
+                finalOp = indexSubTree.getRootRef().getValue();
             }
         }
+
+        if (isLeftOuterJoin && !isLeftOuterJoinWithSpecialGroupBy) {
+            finalOp = removeUnjoinedDuplicatesInLOJ(finalOp, probePKVars, newNullPlaceHolderVar, context, sourceLoc);
+        }
+
+        joinRef.setValue(finalOp);
         return true;
+    }
+
+    /**
+     * In case of a left outer join we look for a special GroupBy above the join operator
+     * (see {@link IntroduceJoinAccessMethodRule#checkAndApplyJoinTransformation(Mutable, IOptimizationContext)}.
+     * A "Special GroupBy" is a GroupBy that eliminates unjoined duplicates that might be produced by the secondary
+     * index probe. We probe secondary indexes on each index partition and return a tuple with a right branch variable
+     * set to MISSING if there's no match on that partition. Therefore if there's more than one partition where
+     * nothing joined then the index probe plan will produce several such MISSING tuples, however the join result
+     * must have a single MISSING tuple for each unjoined left branch tuple. If the special GroupBy is available then
+     * it'll eliminate those MISSING duplicates, otherwise this method is called to produce additional operators to
+     * achieve that. The special GroupBy operators are introduced by the optimizer when rewriting FROM-LET or
+     * equivalent patterns into a left outer join with parent a group by.
+     * <p>
+     * The plan generated by this method to eliminate unjoined duplicates is as follows:
+     * <ul>
+     * <li> SelectOp $m</li>
+     * <li> WindowOp [$m=win-mark-first-missing-impl(right-branch-non-missing-value)]
+     *        PARTITION BY left-branch-key
+     *        ORDER BY right-branch-non-missing-value DESC</li>
+     * <li> input_subtree</li>
+     * </ul>
+     * <p>
+     * The {@link org.apache.asterix.runtime.runningaggregates.std.WinMarkFirstMissingRunningAggregateDescriptor
+     * win-mark-first-missing-impl} internal function assigns {@code TRUE} for each tuple that has a non-MISSING
+     * value that comes from the right branch or the first MISSING value in the window partition. The remaining
+     * tuples in each window partition are unjoined duplicate tuples and will be assigned {@code FALSE}. Then
+     * the Select operator eliminates those unjoined duplicate tuples.
+     */
+    private static SelectOperator removeUnjoinedDuplicatesInLOJ(ILogicalOperator inputOp,
+            List<LogicalVariable> probePKVars, LogicalVariable newNullPlaceHolderVar, IOptimizationContext context,
+            SourceLocation sourceLoc) throws AlgebricksException {
+        if (probePKVars == null || probePKVars.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        List<Mutable<ILogicalExpression>> winPartitionByList = new ArrayList<>(probePKVars.size());
+        for (LogicalVariable probePKeyVar : probePKVars) {
+            VariableReferenceExpression probePKeyVarRef = new VariableReferenceExpression(probePKeyVar);
+            probePKeyVarRef.setSourceLocation(sourceLoc);
+            winPartitionByList.add(new MutableObject<>(probePKeyVarRef));
+        }
+
+        VariableReferenceExpression winOrderByVarRef = new VariableReferenceExpression(newNullPlaceHolderVar);
+        winOrderByVarRef.setSourceLocation(sourceLoc);
+        /* Sort in DESC order, so all MISSING values are at the end */
+        Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> winOrderByPair =
+                new Pair<>(OrderOperator.DESC_ORDER, new MutableObject<>(winOrderByVarRef));
+
+        LogicalVariable winVar = context.newVar();
+        VariableReferenceExpression winOrderByVarRef2 = new VariableReferenceExpression(newNullPlaceHolderVar);
+        winOrderByVarRef2.setSourceLocation(sourceLoc);
+        AbstractFunctionCallExpression winExpr =
+                BuiltinFunctions.makeWindowFunctionExpression(BuiltinFunctions.WIN_MARK_FIRST_MISSING_IMPL,
+                        Collections.singletonList(new MutableObject<>(winOrderByVarRef2)));
+
+        WindowOperator winOp = new WindowOperator(winPartitionByList, Collections.singletonList(winOrderByPair));
+        winOp.getVariables().add(winVar);
+        winOp.getExpressions().add(new MutableObject<>(winExpr));
+        winOp.getInputs().add(new MutableObject<>(inputOp));
+        winOp.setExecutionMode(ExecutionMode.PARTITIONED);
+        winOp.setSourceLocation(sourceLoc);
+        context.computeAndSetTypeEnvironmentForOperator(winOp);
+
+        VariableReferenceExpression winVarRef = new VariableReferenceExpression(winVar);
+        winVarRef.setSourceLocation(sourceLoc);
+        SelectOperator selectOp = new SelectOperator(new MutableObject<>(winVarRef), false, null);
+        selectOp.getInputs().add(new MutableObject<>(winOp));
+        selectOp.setExecutionMode(ExecutionMode.LOCAL);
+        selectOp.setSourceLocation(sourceLoc);
+        context.computeAndSetTypeEnvironmentForOperator(selectOp);
+
+        return selectOp;
     }
 
     public static ILogicalOperator createSecondaryIndexUnnestMap(Dataset dataset, ARecordType recordType,
@@ -1583,27 +1696,21 @@ public class AccessMethodUtils {
         ALogicalPlanImpl subPlan = (ALogicalPlanImpl) lojGroupbyOp.getNestedPlans().get(0);
         Mutable<ILogicalOperator> subPlanRootOpRef = subPlan.getRoots().get(0);
         AbstractLogicalOperator subPlanRootOp = (AbstractLogicalOperator) subPlanRootOpRef.getValue();
-        ScalarFunctionCallExpression isMissingFuncExpr = findIsMissingInSubplan(subPlanRootOp, rightSubTree);
-
-        if (isMissingFuncExpr == null) {
-            throw CompilationException.create(ErrorCode.CANNOT_FIND_NON_MISSING_SELECT_OPERATOR,
-                    lojGroupbyOp.getSourceLocation());
-        }
-        return isMissingFuncExpr;
+        return findIsMissingInSubplan(subPlanRootOp, rightSubTree);
     }
 
     public static void resetLOJMissingPlaceholderVarInGroupByOp(AccessMethodAnalysisContext analysisCtx,
             LogicalVariable newMissingPlaceholderVaraible, IOptimizationContext context) throws AlgebricksException {
 
         //reset the missing placeholder variable in groupby operator
-        ScalarFunctionCallExpression isMissingFuncExpr = analysisCtx.getLOJIsMissingFuncInGroupBy();
+        ScalarFunctionCallExpression isMissingFuncExpr = analysisCtx.getLOJIsMissingFuncInSpecialGroupBy();
         isMissingFuncExpr.getArguments().clear();
         VariableReferenceExpression newMissingVarRef = new VariableReferenceExpression(newMissingPlaceholderVaraible);
         newMissingVarRef.setSourceLocation(isMissingFuncExpr.getSourceLocation());
         isMissingFuncExpr.getArguments().add(new MutableObject<ILogicalExpression>(newMissingVarRef));
 
         //recompute type environment.
-        OperatorPropertiesUtil.typeOpRec(analysisCtx.getLOJGroupbyOpRef(), context);
+        OperatorPropertiesUtil.typeOpRec(analysisCtx.getLOJSpecialGroupByOpRef(), context);
     }
 
     // New < For external datasets indexing>
@@ -2558,4 +2665,15 @@ public class AccessMethodUtils {
         return AbstractIntroduceAccessMethodRule.NO_INDEX_ONLY_PLAN_OPTION_DEFAULT_VALUE;
     }
 
+    /**
+     * Finds an output variable for the given input variable of UnionAllOperator.
+     */
+    static LogicalVariable findUnionAllOutputVariable(UnionAllOperator unionAllOp, LogicalVariable inputVar) {
+        for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : unionAllOp.getVariableMappings()) {
+            if (t.first.equals(inputVar) || t.second.equals(inputVar)) {
+                return t.third;
+            }
+        }
+        return null;
+    }
 }

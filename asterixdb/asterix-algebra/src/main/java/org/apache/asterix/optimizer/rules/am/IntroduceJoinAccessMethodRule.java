@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
 /**
@@ -87,7 +88,6 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     protected final OptimizableOperatorSubTree leftSubTree = new OptimizableOperatorSubTree();
     protected final OptimizableOperatorSubTree rightSubTree = new OptimizableOperatorSubTree();
     protected IVariableTypeEnvironment typeEnvironment = null;
-    protected boolean hasGroupBy = true;
     protected List<Mutable<ILogicalOperator>> afterJoinRefs = null;
 
     // Registers access methods.
@@ -191,22 +191,10 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     }
 
     /**
-     * Checks whether the given operator is LEFTOUTERJOIN.
-     * If so, also checks that GROUPBY is placed after LEFTOUTERJOIN.
+     * Checks whether the given operator has a single child which is a LEFTOUTERJOIN.
      */
-    // Check whether (Groupby)? <-- Leftouterjoin
-    private boolean isLeftOuterJoin(AbstractLogicalOperator op1) {
-        if (op1.getInputs().size() != 1) {
-            return false;
-        }
-        if (op1.getInputs().get(0).getValue().getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
-            return false;
-        }
-        if (op1.getOperatorTag() == LogicalOperatorTag.GROUP) {
-            return true;
-        }
-        hasGroupBy = false;
-        return true;
+    private int findLeftOuterJoinChild(AbstractLogicalOperator op) {
+        return OperatorManipulationUtil.findChild(op, LogicalOperatorTag.LEFTOUTERJOIN);
     }
 
     /**
@@ -254,35 +242,37 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
 
         // Now, we are sure that transformation attempts for earlier joins have been failed.
         // Checks the current operator pattern to see whether it is a JOIN or not.
-        boolean isThisOpInnerJoin = isInnerJoin(op);
-        boolean isThisOpLeftOuterJoin = isLeftOuterJoin(op);
-        boolean isParentOpGroupBy = hasGroupBy;
+        boolean isInnerJoin = false;
+        boolean isLeftOuterJoin = false;
+        int leftOuterJoinChildIdx;
 
         Mutable<ILogicalOperator> joinRefFromThisOp = null;
         AbstractBinaryJoinOperator joinOpFromThisOp = null;
         // operators that need to be removed from the afterJoinRefs list.
         Mutable<ILogicalOperator> opRefRemove = opRef;
-        if (isThisOpInnerJoin) {
-            // Sets the join operator.
+        if (isInnerJoin(op)) {
+            // Sets the inner join operator.
+            isInnerJoin = true;
             joinRef = opRef;
             joinOp = (InnerJoinOperator) op;
             joinRefFromThisOp = opRef;
             joinOpFromThisOp = (InnerJoinOperator) op;
-        } else if (isThisOpLeftOuterJoin) {
+        } else if ((leftOuterJoinChildIdx = findLeftOuterJoinChild(op)) >= 0) {
             // Sets the left-outer-join operator.
-            // The current operator is GROUP and the child of this operator is LEFTOUERJOIN.
-            joinRef = op.getInputs().get(0);
+            // A child of the current operator is LEFTOUTERJOIN.
+            isLeftOuterJoin = true;
+            joinRef = op.getInputs().get(leftOuterJoinChildIdx);
             joinOp = (LeftOuterJoinOperator) joinRef.getValue();
-            joinRefFromThisOp = op.getInputs().get(0);
+            joinRefFromThisOp = op.getInputs().get(leftOuterJoinChildIdx);
             joinOpFromThisOp = (LeftOuterJoinOperator) joinRefFromThisOp.getValue();
-
-            // Group-by should not be removed at this point since the given left-outer-join can be transformed.
-            opRefRemove = op.getInputs().get(0);
+            // Left outer join's parent operator should not be removed at this point since the given left-outer-join
+            // can be transformed.
+            opRefRemove = op.getInputs().get(leftOuterJoinChildIdx);
         }
         afterJoinRefs.remove(opRefRemove);
 
         // For a JOIN case, tries to transform the given plan.
-        if (isThisOpInnerJoin || isThisOpLeftOuterJoin) {
+        if (isInnerJoin || isLeftOuterJoin) {
 
             // Restores the information from this operator since it might have been be set to null
             // if there are other join operators in the earlier path.
@@ -375,13 +365,24 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                     // Applies the plan transformation using chosen index.
                     AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndex.first);
 
-                    // For LOJ with GroupBy, prepare objects to reset LOJ nullPlaceHolderVariable
-                    // in GroupByOp.
-                    if (isThisOpLeftOuterJoin && isParentOpGroupBy) {
-                        analysisCtx.setLOJGroupbyOpRef(opRef);
-                        ScalarFunctionCallExpression isNullFuncExpr = AccessMethodUtils
-                                .findLOJIsMissingFuncInGroupBy((GroupByOperator) opRef.getValue(), rightSubTree);
-                        analysisCtx.setLOJIsMissingFuncInGroupBy(isNullFuncExpr);
+                    // For a left outer join with a special GroupBy, prepare objects to reset LOJ's
+                    // nullPlaceHolderVariable in that GroupBy's nested plan.
+                    // See AccessMethodUtils#removeUnjoinedDuplicatesInLOJ() for a definition of a special GroupBy
+                    // and extra output processing steps needed when it's not available.
+                    boolean isLeftOuterJoinWithSpecialGroupBy;
+                    if (isLeftOuterJoin && op.getOperatorTag() == LogicalOperatorTag.GROUP) {
+                        GroupByOperator groupByOp = (GroupByOperator) opRef.getValue();
+                        ScalarFunctionCallExpression isNullFuncExpr =
+                                AccessMethodUtils.findLOJIsMissingFuncInGroupBy(groupByOp, rightSubTree);
+                        // TODO:(dmitry) do we need additional checks to ensure that this is a special GroupBy,
+                        // i.e. that this GroupBy will eliminate unjoined duplicates?
+                        isLeftOuterJoinWithSpecialGroupBy = isNullFuncExpr != null;
+                        if (isLeftOuterJoinWithSpecialGroupBy) {
+                            analysisCtx.setLOJSpecialGroupByOpRef(opRef);
+                            analysisCtx.setLOJIsMissingFuncInSpecialGroupBy(isNullFuncExpr);
+                        }
+                    } else {
+                        isLeftOuterJoinWithSpecialGroupBy = false;
                     }
 
                     Dataset indexDataset = analysisCtx.getDatasetFromIndexDatasetMap(chosenIndex.second);
@@ -396,8 +397,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
 
                     // Finally, tries to apply plan transformation using the chosen index.
                     boolean res = chosenIndex.first.applyJoinPlanTransformation(afterJoinRefs, joinRef, leftSubTree,
-                            rightSubTree, chosenIndex.second, analysisCtx, context, isThisOpLeftOuterJoin,
-                            isParentOpGroupBy);
+                            rightSubTree, chosenIndex.second, analysisCtx, context, isLeftOuterJoin,
+                            isLeftOuterJoinWithSpecialGroupBy);
 
                     // If the plan transformation is successful, we don't need to traverse the plan
                     // any more, since if there are more JOIN operators, the next trigger on this plan
@@ -412,10 +413,10 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             joinOp = null;
         }
 
-        // Checked the given left-outer-join operator and it is not transformed. So, this group-by operator
-        // after the left-outer-join operator should be removed from the afterJoinRefs list
-        // since the current operator is a group-by operator.
-        if (isThisOpLeftOuterJoin) {
+        // Checked the given left-outer-join operator and it is not transformed.
+        // So, the left-outer-join's parent operator should be removed from the afterJoinRefs list
+        // since the current operator is that parent operator.
+        if (isLeftOuterJoin) {
             afterJoinRefs.remove(opRef);
         }
 
@@ -425,8 +426,6 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     /**
      * After the pattern is matched, checks the condition and initializes the data source
      * from the right (inner) sub tree.
-     *
-     * @throws AlgebricksException
      */
     protected boolean checkJoinOpConditionAndInitSubTree(IOptimizationContext context) throws AlgebricksException {
 
