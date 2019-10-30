@@ -78,7 +78,7 @@ public class TransactionProperties extends AbstractProperties {
         TXN_JOB_RECOVERY_MEMORYSIZE(
                 LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(64L, MEGABYTE),
-                "The memory budget (in bytes) used for recovery");
+                "The memory budget for each job (in bytes) used for recovery");
 
         private final IOptionType type;
         private final Object defaultValue;

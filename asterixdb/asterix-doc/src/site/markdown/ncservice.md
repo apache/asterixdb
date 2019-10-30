@@ -365,7 +365,7 @@ The following parameters are configured under the "[common]" section.
 | common  | storage.max.active.writable.datasets      | The maximum number of datasets that can be concurrently modified | 8 |
 | common  | txn.commitprofiler.enabled                | Enable output of commit profiler logs | false |
 | common  | txn.commitprofiler.reportinterval         | Interval (in seconds) to report commit profiler logs | 5 |
-| common  | txn.job.recovery.memorysize               | The memory budget (in bytes) used for recovery | 67108864 (64 MB) |
+| common  | txn.job.recovery.memorysize               | The memory budget for each job job (in bytes) used for recovery | 67108864 (64 MB) |
 | common  | txn.lock.escalationthreshold              | The maximum number of entity locks to obtain before upgrading to a dataset lock | 1000 |
 | common  | txn.lock.shrinktimer                      | The time (in milliseconds) where under utilization of resources will trigger a shrink phase | 5000 |
 | common  | txn.lock.timeout.sweepthreshold           | Interval (in milliseconds) for checking lock timeout | 10000 |
