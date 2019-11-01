@@ -31,7 +31,7 @@ public class RPCInterface implements IIPCI {
     public Object call(IIPCHandle handle, Object request) throws Exception {
         Request req;
         long mid;
-        synchronized (this) {
+        synchronized (reqMap) {
             req = new Request(handle, this);
             mid = handle.send(-1, request, null);
             reqMap.put(mid, req);
@@ -40,21 +40,23 @@ public class RPCInterface implements IIPCI {
     }
 
     @Override
-    public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload, Exception exception) {
+    public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload) {
         Request req;
-        synchronized (this) {
+        synchronized (reqMap) {
             req = reqMap.remove(rmid);
         }
         assert req != null;
-        if (exception != null) {
-            req.setException(exception);
-        } else {
-            req.setResult(payload);
-        }
+        req.setResult(payload);
     }
 
-    protected synchronized void removeRequest(Request r) {
-        reqMap.remove(r);
+    @Override
+    public void onError(IIPCHandle handle, long mid, long rmid, Exception exception) {
+        Request req;
+        synchronized (reqMap) {
+            req = reqMap.remove(rmid);
+        }
+        assert req != null;
+        req.setException(exception);
     }
 
     private static class Request {

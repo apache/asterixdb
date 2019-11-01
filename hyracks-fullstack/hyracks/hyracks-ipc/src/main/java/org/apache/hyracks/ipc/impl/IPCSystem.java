@@ -29,13 +29,8 @@ import org.apache.hyracks.ipc.api.IIPCI;
 import org.apache.hyracks.ipc.api.IPCPerformanceCounters;
 import org.apache.hyracks.ipc.api.IPayloadSerializerDeserializer;
 import org.apache.hyracks.ipc.exceptions.IPCException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class IPCSystem {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private final IPCConnectionManager cMgr;
 
     private final IIPCI ipci;
@@ -101,15 +96,11 @@ public class IPCSystem {
     void deliverIncomingMessage(final Message message) {
         long mid = message.getMessageId();
         long rmid = message.getRequestMessageId();
-        Object payload = null;
-        Exception exception = null;
         if (message.getFlag() == Message.ERROR) {
-            exception = (Exception) message.getPayload();
-            LOGGER.log(Level.INFO, "Exception in message", exception);
+            ipci.onError(message.getIPCHandle(), mid, rmid, (Exception) message.getPayload());
         } else {
-            payload = message.getPayload();
+            ipci.deliverIncomingMessage(message.getIPCHandle(), mid, rmid, message.getPayload());
         }
-        ipci.deliverIncomingMessage(message.getIPCHandle(), mid, rmid, payload, exception);
     }
 
     IPCConnectionManager getConnectionManager() {

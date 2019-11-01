@@ -37,12 +37,15 @@ import org.apache.hyracks.control.nc.work.UnDeployBinaryWork;
 import org.apache.hyracks.control.nc.work.UndeployJobSpecWork;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.IIPCI;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Interprocess communication in a node controller
  * This class must be refactored with each function carrying its own implementation
  */
 final class NodeControllerIPCI implements IIPCI {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final NodeControllerService ncs;
 
     /**
@@ -53,8 +56,7 @@ final class NodeControllerIPCI implements IIPCI {
     }
 
     @Override
-    public void deliverIncomingMessage(final IIPCHandle handle, long mid, long rmid, Object payload,
-            Exception exception) {
+    public void deliverIncomingMessage(final IIPCHandle handle, long mid, long rmid, Object payload) {
         CCNCFunctions.Function fn = (CCNCFunctions.Function) payload;
         switch (fn.getFunctionId()) {
             case SEND_APPLICATION_MESSAGE:
@@ -149,5 +151,10 @@ final class NodeControllerIPCI implements IIPCI {
                 throw new IllegalArgumentException("Unknown function: " + fn.getFunctionId());
         }
 
+    }
+
+    @Override
+    public void onError(IIPCHandle handle, long mid, long rmid, Exception exception) {
+        LOGGER.info("exception in/or processing message", exception);
     }
 }

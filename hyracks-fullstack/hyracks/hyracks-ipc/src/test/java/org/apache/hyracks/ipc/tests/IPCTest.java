@@ -47,7 +47,7 @@ public class IPCTest {
         IIPCHandle handle = client.getHandle(serverAddr, 0);
 
         for (int i = 0; i < 100; ++i) {
-            Assert.assertEquals(rpci.call(handle, Integer.valueOf(i)), Integer.valueOf(2 * i));
+            Assert.assertEquals(rpci.call(handle, i), 2 * i);
         }
 
         try {
@@ -62,26 +62,23 @@ public class IPCTest {
         final Executor executor = Executors.newCachedThreadPool();
         IIPCI ipci = new IIPCI() {
             @Override
-            public void deliverIncomingMessage(final IIPCHandle handle, final long mid, long rmid, final Object payload,
-                    Exception exception) {
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        Object result = null;
-                        Exception exception = null;
+            public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload) {
+                executor.execute(() -> {
+                    try {
+                        handle.send(mid, (int) payload * 2, null);
+                    } catch (Exception e) {
                         try {
-                            Integer i = (Integer) payload;
-                            result = i.intValue() * 2;
-                        } catch (Exception e) {
-                            exception = e;
-                        }
-                        try {
-                            handle.send(mid, result, exception);
-                        } catch (IPCException e) {
-                            e.printStackTrace();
+                            handle.send(mid, null, e);
+                        } catch (IPCException e1) {
+                            e1.printStackTrace();
                         }
                     }
                 });
+            }
+
+            @Override
+            public void onError(IIPCHandle handle, long mid, long rmid, Exception exception) {
+                exception.printStackTrace();
             }
         };
         return new IPCSystem(new InetSocketAddress("127.0.0.1", 0), PlainSocketChannelFactory.INSTANCE, ipci,

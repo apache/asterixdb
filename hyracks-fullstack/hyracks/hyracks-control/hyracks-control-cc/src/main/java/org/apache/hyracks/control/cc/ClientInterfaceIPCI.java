@@ -64,7 +64,7 @@ class ClientInterfaceIPCI implements IIPCI {
     }
 
     @Override
-    public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload, Exception exception) {
+    public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload) {
         HyracksClientInterfaceFunctions.Function fn = (HyracksClientInterfaceFunctions.Function) payload;
         switch (fn.getFunctionId()) {
             case GET_CLUSTER_CONTROLLER_INFO:
@@ -198,6 +198,16 @@ class ClientInterfaceIPCI implements IIPCI {
                 } catch (IPCException e) {
                     LOGGER.log(Level.WARN, "Error sending Unknown function response", e);
                 }
+        }
+    }
+
+    @Override
+    public void onError(IIPCHandle handle, long mid, long rmid, Exception exception) {
+        LOGGER.info("exception in/or processing message", exception);
+        try {
+            handle.send(mid, null, exception);
+        } catch (IPCException e) {
+            LOGGER.warn("error sending exception response", e);
         }
     }
 }

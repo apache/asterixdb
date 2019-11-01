@@ -60,8 +60,7 @@ class ClusterControllerIPCI implements IIPCI {
     }
 
     @Override
-    public void deliverIncomingMessage(final IIPCHandle handle, long mid, long rmid, Object payload,
-            Exception exception) {
+    public void deliverIncomingMessage(final IIPCHandle handle, long mid, long rmid, Object payload) {
         CCNCFunctions.Function fn = (Function) payload;
         switch (fn.getFunctionId()) {
             case REGISTER_NODE:
@@ -168,6 +167,11 @@ class ClusterControllerIPCI implements IIPCI {
             default:
                 LOGGER.warn("Unknown function: " + fn.getFunctionId());
         }
+    }
+
+    @Override
+    public void onError(IIPCHandle handle, long mid, long rmid, Exception exception) {
+        LOGGER.info("exception in/or processing message", exception);
     }
 
     private static void processNodeHeartbeat(ClusterControllerService ccs, CCNCFunctions.Function fn) {
