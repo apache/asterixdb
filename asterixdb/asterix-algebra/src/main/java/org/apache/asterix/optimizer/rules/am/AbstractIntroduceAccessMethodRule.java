@@ -285,13 +285,13 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
 
             boolean allUsed = true;
             int lastFieldMatched = -1;
-            boolean foundKeyField = false;
             matchedExpressions.clear();
             numMatchedKeys = 0;
 
             for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
                 List<String> keyField = index.getKeyFieldNames().get(i);
                 final IAType keyType = index.getKeyFieldTypes().get(i);
+                boolean foundKeyField = false;
                 Iterator<Pair<Integer, Integer>> exprsAndVarIter = indexExprAndVarEntry.getValue().iterator();
                 while (exprsAndVarIter.hasNext()) {
                     final Pair<Integer, Integer> exprAndVarIdx = exprsAndVarIter.next();
