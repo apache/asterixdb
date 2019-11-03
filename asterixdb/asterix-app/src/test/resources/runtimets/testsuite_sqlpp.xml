@@ -5356,6 +5356,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-composite-key-03">
+        <output-dir compare="Text">btree-index-composite-key-03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="btree-sec-primary-index">
         <output-dir compare="Text">btree-sec-primary-index</output-dir>
       </compilation-unit>
@@ -6411,6 +6416,11 @@
       <test-case FilePath="open-index-non-enforced/index-selection">
         <compilation-unit name="btree-index-04">
           <output-dir compare="Text">btree-index-04</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="open-index-non-enforced/index-selection">
+        <compilation-unit name="btree-index-composite-key-03">
+          <output-dir compare="Text">btree-index-composite-key-03</output-dir>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-non-enforced/correlated-index-selection">

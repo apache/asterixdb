@@ -577,7 +577,7 @@ for each user, it constructs a result object containing a "uname" field with the
 name and a "messages" field with a nested collection of all messages for that user.
 The nested collection for each user is specified by using a correlated subquery.
 (Note: While it looks like nested loops could be involved in computing the result,
-AsterixDB recogizes the equivalence of such a query to an outerjoin, and it will
+AsterixDB recognizes the equivalence of such a query to an outerjoin, and it will
 use an efficient hash-based strategy when actually computing the query's result.)
 
 Here is this example query's expected output:
