@@ -27,7 +27,7 @@ public class ExecutionPlansJsonPrintUtil {
     private static final String LOGICAL_PLAN_LBL = "logicalPlan";
     private static final String EXPRESSION_TREE_LBL = "expressionTree";
     private static final String REWRITTEN_EXPRESSION_TREE_LBL = "rewrittenExpressionTree";
-    private static final String OPTIMIZED_LOGICAL_PLAN_LBL = "optimizedLogicalPlan";
+    public static final String OPTIMIZED_LOGICAL_PLAN_LBL = "optimizedLogicalPlan";
     private static final String JOB_LBL = "job";
 
     private ExecutionPlansJsonPrintUtil() {

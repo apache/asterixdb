@@ -141,7 +141,7 @@ public final class TestHelper {
         return RequestParameters.deserializeParameterValues(RequestParameters.serializeParameterValues(stmtParams));
     }
 
-    public static boolean equalJson(JsonNode expectedJson, JsonNode actualJson) {
+    public static boolean equalJson(JsonNode expectedJson, JsonNode actualJson, boolean compareUnorderedArray) {
         if (expectedJson == actualJson) {
             return true;
         }
@@ -149,8 +149,17 @@ public final class TestHelper {
         if (expectedJson == null || actualJson == null) {
             return false;
         }
+        if ((expectedJson.isMissingNode() && !actualJson.isMissingNode())
+                || (!expectedJson.isMissingNode() && actualJson.isMissingNode())) {
+            return false;
+        }
         // both are not null
-        if (!isRegexField(expectedJson) && expectedJson.getNodeType() != actualJson.getNodeType()) {
+        if (isRegexField(expectedJson)) {
+            String expectedRegex = expectedJson.asText();
+            String actualAsString = actualJson.isValueNode() ? actualJson.asText() : actualJson.toString();
+            expectedRegex = expectedRegex.substring(2, expectedRegex.length() - 1);
+            return actualAsString.matches(expectedRegex);
+        } else if (expectedJson.getNodeType() != actualJson.getNodeType()) {
             return false;
         } else if (expectedJson.isArray() && actualJson.isArray()) {
             ArrayNode expectedArray = (ArrayNode) expectedJson;
@@ -158,22 +167,8 @@ public final class TestHelper {
             if (expectedArray.size() != actualArray.size()) {
                 return false;
             }
-            boolean found;
-            BitSet alreadyMatched = new BitSet(actualArray.size());
-            for (int i = 0; i < expectedArray.size(); i++) {
-                found = false;
-                for (int k = 0; k < actualArray.size(); k++) {
-                    if (!alreadyMatched.get(k) && equalJson(expectedArray.get(i), actualArray.get(k))) {
-                        alreadyMatched.set(k);
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    return false;
-                }
-            }
-            return true;
+            return compareUnorderedArray ? compareUnordered(expectedArray, actualArray)
+                    : compareOrdered(expectedArray, actualArray);
         } else if (expectedJson.isObject() && actualJson.isObject()) {
             // assumes no duplicates in field names
             ObjectNode expectedObject = (ObjectNode) expectedJson;
@@ -187,20 +182,45 @@ public final class TestHelper {
             while (expectedFields.hasNext()) {
                 expectedField = expectedFields.next();
                 actualFieldValue = actualObject.get(expectedField.getKey());
-                if (actualFieldValue == null || !equalJson(expectedField.getValue(), actualFieldValue)) {
+                if (actualFieldValue == null
+                        || !equalJson(expectedField.getValue(), actualFieldValue, compareUnorderedArray)) {
                     return false;
                 }
             }
             return true;
         }
         // value node
-        String expectedAsString = expectedJson.asText();
-        String actualAsString = actualJson.asText();
-        if (expectedAsString.startsWith("R{")) {
-            expectedAsString = expectedAsString.substring(2, expectedAsString.length() - 1);
-            return actualAsString.matches(expectedAsString);
-        }
+        String expectedAsString = expectedJson.isValueNode() ? expectedJson.asText() : expectedJson.toString();
+        String actualAsString = actualJson.isValueNode() ? actualJson.asText() : actualJson.toString();
         return expectedAsString.equals(actualAsString);
+    }
+
+    private static boolean compareUnordered(ArrayNode expectedArray, ArrayNode actualArray) {
+        BitSet alreadyMatched = new BitSet(actualArray.size());
+        for (int i = 0; i < expectedArray.size(); i++) {
+            boolean found = false;
+            JsonNode expectedElement = expectedArray.get(i);
+            for (int k = 0; k < actualArray.size(); k++) {
+                if (!alreadyMatched.get(k) && equalJson(expectedElement, actualArray.get(k), true)) {
+                    alreadyMatched.set(k);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean compareOrdered(ArrayNode expectedArray, ArrayNode actualArray) {
+        for (int i = 0, size = expectedArray.size(); i < size; i++) {
+            if (!equalJson(expectedArray.get(i), actualArray.get(i), false)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static boolean isRegexField(JsonNode expectedJson) {
@@ -217,17 +237,5 @@ public final class TestHelper {
         objectMapper.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
         objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
         return objectMapper;
-    }
-
-    public static void main(String[] args) throws Exception {
-        ObjectMapper om = createObjectMapper();
-        String patternFile = args[0];
-        String instanceFile = args[1];
-        if (equalJson(om.readTree(new File(patternFile)), om.readTree(new File(instanceFile)))) {
-            System.out.println(instanceFile + " matches " + patternFile);
-        } else {
-            System.out.println(instanceFile + " does not match " + patternFile);
-            System.exit(1);
-        }
     }
 }

@@ -163,7 +163,7 @@ public class ParserTestExecutor extends TestExecutor {
             writer.close();
             // Compares the actual result and the expected result.
             runScriptAndCompareWithResult(queryFile, expectedFile, actualResultFile, ComparisonEnum.TEXT,
-                    StandardCharsets.UTF_8);
+                    StandardCharsets.UTF_8, null);
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.warn("Failed while testing file " + queryFile);
             throw e;

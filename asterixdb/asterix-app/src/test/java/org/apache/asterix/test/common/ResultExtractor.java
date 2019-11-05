@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.test.common;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -28,14 +29,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Iterators;
@@ -46,6 +50,60 @@ import com.google.common.collect.Iterators;
  * The current implementation creates a too many copies of the data to be usable for larger results.
  */
 public class ResultExtractor {
+
+    private static class JsonPrettyPrinter implements PrettyPrinter {
+
+        JsonPrettyPrinter() {
+        }
+
+        @Override
+        public void writeRootValueSeparator(JsonGenerator gen) throws IOException {
+
+        }
+
+        @Override
+        public void writeStartObject(JsonGenerator g) throws IOException {
+            g.writeRaw("{ ");
+        }
+
+        @Override
+        public void writeEndObject(JsonGenerator g, int nrOfEntries) throws IOException {
+            g.writeRaw(" }");
+        }
+
+        @Override
+        public void writeObjectFieldValueSeparator(JsonGenerator jg) throws IOException {
+            jg.writeRaw(": ");
+        }
+
+        @Override
+        public void writeObjectEntrySeparator(JsonGenerator g) throws IOException {
+            g.writeRaw(", ");
+        }
+
+        @Override
+        public void writeStartArray(JsonGenerator g) throws IOException {
+            g.writeRaw("[ ");
+        }
+
+        @Override
+        public void writeEndArray(JsonGenerator g, int nrOfValues) throws IOException {
+            g.writeRaw(" ]");
+        }
+
+        @Override
+        public void writeArrayValueSeparator(JsonGenerator g) throws IOException {
+            g.writeRaw(", ");
+        }
+
+        @Override
+        public void beforeArrayValues(JsonGenerator gen) throws IOException {
+        }
+
+        @Override
+        public void beforeObjectEntries(JsonGenerator gen) throws IOException {
+        }
+    }
 
     private enum ResultField {
         RESULTS("results"),
@@ -85,11 +143,14 @@ public class ResultExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectWriter WRITER = OBJECT_MAPPER.writer();
+    private static final ObjectWriter PP_WRITER = OBJECT_MAPPER.writer(new JsonPrettyPrinter());
+    private static final ObjectReader OBJECT_READER = OBJECT_MAPPER.readerFor(ObjectNode.class);
 
-    public static ExtractedResult extract(InputStream resultStream, Charset resultCharset, String outputFormat)
+    public static ExtractedResult extract(InputStream resultStream, Charset resultCharset, OutputFormat outputFormat)
             throws Exception {
-        return extract(resultStream, EnumSet.of(ResultField.RESULTS, ResultField.WARNINGS), resultCharset,
-                outputFormat);
+        return extract(resultStream, EnumSet.of(ResultField.RESULTS, ResultField.WARNINGS), resultCharset, outputFormat,
+                null);
     }
 
     public static ExtractedResult extract(InputStream resultStream, Charset resultCharset) throws Exception {
@@ -104,13 +165,14 @@ public class ResultExtractor {
         return extract(resultStream, EnumSet.of(ResultField.PROFILE), resultCharset).getResult();
     }
 
-    public static InputStream extractPlans(InputStream resultStream, Charset resultCharset) throws Exception {
-        return extract(resultStream, EnumSet.of(ResultField.PLANS), resultCharset).getResult();
+    public static InputStream extractPlans(InputStream resultStream, Charset resultCharset, String[] plans)
+            throws Exception {
+        return extract(resultStream, EnumSet.of(ResultField.PLANS), resultCharset, OutputFormat.ADM, plans).getResult();
     }
 
     public static String extractHandle(InputStream resultStream, Charset responseCharset) throws Exception {
         String result = IOUtils.toString(resultStream, responseCharset);
-        ObjectNode resultJson = OBJECT_MAPPER.readValue(result, ObjectNode.class);
+        ObjectNode resultJson = OBJECT_READER.readValue(result);
         final JsonNode handle = resultJson.get("handle");
         if (handle != null) {
             return handle.asText();
@@ -126,28 +188,15 @@ public class ResultExtractor {
 
     private static ExtractedResult extract(InputStream resultStream, EnumSet<ResultField> resultFields,
             Charset resultCharset) throws Exception {
-        return extract(resultStream, resultFields, resultCharset, "jsonl"); //default output format type is jsonl
+        return extract(resultStream, resultFields, resultCharset, OutputFormat.ADM, null);
     }
 
     private static ExtractedResult extract(InputStream resultStream, EnumSet<ResultField> resultFields,
-            Charset resultCharset, String fmt) throws Exception {
-
-        if (fmt.equals("json")) {
-            return extract(resultStream, resultFields, resultCharset, "[", ",", "]");
-        }
-
-        if (fmt.equals("jsonl")) {
-            return extract(resultStream, resultFields, resultCharset, "", "", "");
-        }
-
-        throw new AsterixException("Unkown output format for result of test query");
-    }
-
-    private static ExtractedResult extract(InputStream resultStream, EnumSet<ResultField> resultFields,
-            Charset resultCharset, String openMarker, String separator, String closeMarker) throws Exception {
+            Charset resultCharset, OutputFormat fmt, String[] plans) throws Exception {
         ExtractedResult extractedResult = new ExtractedResult();
         final String resultStr = IOUtils.toString(resultStream, resultCharset);
-        final ObjectNode result = OBJECT_MAPPER.readValue(resultStr, ObjectNode.class);
+        final ObjectNode result = OBJECT_READER.readValue(resultStr);
+        final boolean isJsonFormat = isJsonFormat(fmt);
 
         LOGGER.debug("+++++++\n" + result + "\n+++++++\n");
         // if we have errors field in the results, we will always return it
@@ -169,34 +218,31 @@ public class ResultExtractor {
                         if (fieldValue.size() == 0) {
                             resultBuilder.append("");
                         } else if (fieldValue.isArray()) {
-                            if (fieldValue.get(0).isTextual()) {
-                                resultBuilder.append(fieldValue.get(0).asText());
+                            JsonNode oneElement = fieldValue.get(0);
+                            if (oneElement.isTextual()) {
+                                resultBuilder.append(
+                                        isJsonFormat ? PP_WRITER.writeValueAsString(oneElement) : oneElement.asText());
                             } else {
-                                ObjectMapper omm = new ObjectMapper();
-                                omm.enable(SerializationFeature.INDENT_OUTPUT);
-                                resultBuilder
-                                        .append(omm.writer(new DefaultPrettyPrinter()).writeValueAsString(fieldValue));
+                                resultBuilder.append(PP_WRITER.writeValueAsString(oneElement));
                             }
                         } else {
-                            resultBuilder.append(OBJECT_MAPPER.writeValueAsString(fieldValue));
+                            resultBuilder.append(PP_WRITER.writeValueAsString(fieldValue));
                         }
                     } else {
                         JsonNode[] fields = Iterators.toArray(fieldValue.elements(), JsonNode.class);
-                        if (fields.length > 1) {
-                            String sep = openMarker;
+                        if (isJsonFormat) {
                             for (JsonNode f : fields) {
-                                resultBuilder.append(sep);
-                                sep = separator;
-                                if (f.isObject()) {
-
-                                    resultBuilder.append(OBJECT_MAPPER.writeValueAsString(f));
-                                } else {
+                                resultBuilder.append(PP_WRITER.writeValueAsString(f)).append('\n');
+                            }
+                        } else {
+                            for (JsonNode f : fields) {
+                                if (f.isValueNode()) {
                                     resultBuilder.append(f.asText());
+                                } else {
+                                    resultBuilder.append(PP_WRITER.writeValueAsString(f)).append('\n');
                                 }
                             }
-                            resultBuilder.append(closeMarker);
                         }
-
                     }
                     break;
                 case REQUEST_ID:
@@ -207,7 +253,17 @@ public class ResultExtractor {
                 case STATUS:
                 case TYPE:
                 case PLANS:
-                    resultBuilder.append(OBJECT_MAPPER.writeValueAsString(fieldValue));
+                    if (plans == null) {
+                        resultBuilder.append(WRITER.writeValueAsString(fieldValue));
+                    } else {
+                        for (int i = 0, size = plans.length; i < size; i++) {
+                            JsonNode plan = fieldValue.get(plans[i]);
+                            if (plan != null) {
+                                resultBuilder.append(plan.asText());
+                            }
+                        }
+                    }
+
                 case WARNINGS:
                     extractWarnings(fieldValue, extractedResult);
                     break;
@@ -239,5 +295,9 @@ public class ResultExtractor {
             }
         }
         exeResult.setWarnings(warnings);
+    }
+
+    private static boolean isJsonFormat(OutputFormat format) {
+        return format == OutputFormat.CLEAN_JSON || format == OutputFormat.LOSSLESS_JSON;
     }
 }

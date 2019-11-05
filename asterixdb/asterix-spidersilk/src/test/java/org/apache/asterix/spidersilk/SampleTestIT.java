@@ -19,8 +19,6 @@
 package org.apache.asterix.spidersilk;
 
 import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -31,7 +29,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 
 import me.arminb.spidersilk.SpiderSilkRunner;
 import me.arminb.spidersilk.dsl.entities.Deployment;
@@ -76,12 +77,16 @@ public class SampleTestIT {
         InputStream resultStream = testExecutor.executeSqlppUpdateOrDdl(query, TestCaseContext.OutputFormat.CLEAN_JSON);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        List<Map<String, String>> result = objectMapper.readValue(resultStream, List.class);
-
-        Assert.assertEquals(1, result.size());
-        Assert.assertEquals(123, result.get(0).get("id"));
-        Assert.assertEquals("John Doe", result.get(0).get("name"));
-
+        ObjectReader objectReader = objectMapper.readerFor(JsonNode.class);
+        MappingIterator<JsonNode> jsonIterator = objectReader.readValues(resultStream);
+        int size = 0;
+        while (jsonIterator.hasNext()) {
+            size++;
+            JsonNode result = jsonIterator.next();
+            Assert.assertEquals(1, size);
+            Assert.assertEquals(123, result.get("id").asInt());
+            Assert.assertEquals("John Doe", result.get("name").asText());
+        }
         logger.info("The fetched record matches the inserted record");
     }
 }

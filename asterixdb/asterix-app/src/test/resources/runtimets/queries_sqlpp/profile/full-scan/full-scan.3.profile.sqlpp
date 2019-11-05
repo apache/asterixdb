@@ -21,7 +21,7 @@
  * Expected Res : Success
  * Date         : 28 Sep 2017
  */
-
+-- compareunorderedarray=true
 use test;
 
 select count(*) from Customers;

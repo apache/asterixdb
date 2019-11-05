@@ -31,6 +31,7 @@ import org.apache.asterix.app.result.fields.MetricsPrinter;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.test.common.ResultExtractor;
+import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionOutput;
@@ -77,8 +78,8 @@ public class ResultPrinterTest {
         boolean exceptionThrown = false;
         try {
             // ensure result is valid json and error will be returned and not results.
-            ResultExtractor.extract(IOUtils.toInputStream(resultStr, StandardCharsets.UTF_8), StandardCharsets.UTF_8)
-                    .getResult();
+            ResultExtractor.extract(IOUtils.toInputStream(resultStr, StandardCharsets.UTF_8), StandardCharsets.UTF_8,
+                    TestCaseContext.OutputFormat.CLEAN_JSON).getResult();
         } catch (Exception e) {
             exceptionThrown = true;
             Assert.assertTrue(e.getMessage().contains(expectedException.getMessage()));

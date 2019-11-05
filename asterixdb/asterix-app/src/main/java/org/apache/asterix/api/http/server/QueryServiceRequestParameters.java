@@ -559,12 +559,10 @@ public class QueryServiceRequestParameters {
             return Pair.of(OutputFormat.CSV, Boolean.FALSE);
         } else if (value.equals(HttpUtil.ContentType.JSON)) {
             return Pair.of(OutputFormat.CLEAN_JSON, Boolean.FALSE);
+        } else if (value.equals(HttpUtil.ContentType.ADM)) {
+            return Pair.of(OutputFormat.ADM, Boolean.FALSE);
         } else {
-            Pair<OutputFormat, Boolean> format = fromMime(value);
-            if (format == null) {
-                throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, parameterName, value);
-            }
-            return format;
+            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, parameterName, value);
         }
     }
 
