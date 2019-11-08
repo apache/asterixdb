@@ -297,6 +297,7 @@ import org.apache.asterix.runtime.evaluators.functions.ArrayAppendDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayConcatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayContainsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayDistinctDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayExceptDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayFlattenDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayIfNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayInsertDescriptor;
@@ -598,6 +599,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ArraySymDiffDescriptor.FACTORY);
         fc.add(ArraySymDiffnDescriptor.FACTORY);
         fc.add(ArrayStarDescriptor.FACTORY);
+        fc.add(ArrayExceptDescriptor.FACTORY);
 
         // unnesting functions
         fc.add(TidRunningAggregateDescriptor.FACTORY);

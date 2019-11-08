@@ -67,6 +67,7 @@ import org.apache.asterix.om.typecomputer.impl.ATimeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AUUIDTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AYearMonthDurationTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AnyTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ArrayExceptTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ArrayIfNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ArrayRangeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ArrayRepeatTypeComputer;
@@ -260,6 +261,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-slice", 2);
     public static final FunctionIdentifier ARRAY_SLICE_WITH_END_POSITION =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-slice", 3);
+    public static final FunctionIdentifier ARRAY_EXCEPT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-except", 2);
 
     // objects
     public static final FunctionIdentifier RECORD_MERGE =
@@ -2200,6 +2203,7 @@ public class BuiltinFunctions {
         addFunction(ARRAY_STAR, OpenARecordTypeComputer.INSTANCE, true);
         addFunction(ARRAY_SLICE_WITH_END_POSITION, AListTypeComputer.INSTANCE_SLICE, true);
         addFunction(ARRAY_SLICE_WITHOUT_END_POSITION, AListTypeComputer.INSTANCE_SLICE, true);
+        addFunction(ARRAY_EXCEPT, ArrayExceptTypeComputer.INSTANCE, true);
 
         // objects
         addFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);

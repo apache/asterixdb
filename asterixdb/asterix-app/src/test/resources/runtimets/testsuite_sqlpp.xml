@@ -2814,6 +2814,36 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="array_fun">
+      <compilation-unit name="array_except/001">
+        <output-dir compare="Text">array_except/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_except/002">
+        <output-dir compare="Text">array_except/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_except/003">
+        <output-dir compare="Text">array_except/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_except/004">
+        <output-dir compare="Text">array_except/004</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_except/005">
+        <output-dir compare="Text">array_except/005</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_except/006">
+        <output-dir compare="Text">array_except/006</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
       <compilation-unit name="array_errors">
         <output-dir compare="Text">array_errors</output-dir>
         <expected-error>Input contains different list types (in line 25, at column 8)</expected-error>

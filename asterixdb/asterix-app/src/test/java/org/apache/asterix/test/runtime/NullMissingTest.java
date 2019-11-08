@@ -197,6 +197,7 @@ public class NullMissingTest {
         functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.ARRAY_CONTAINS, true));
         functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.ARRAY_SORT, true));
         functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.ARRAY_DISTINCT, true));
+        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.ARRAY_EXCEPT, true));
         functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.EQ, true));
         functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.LT, true));
         functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.GT, true));
