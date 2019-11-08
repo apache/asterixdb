@@ -55,5 +55,12 @@ use TinySocial;
     select distinct string_join((select value f from g order by f), ",") res
     from TweetMessages as t, object_names(t) f
     group by t.tweetid group as g
+  ),
+
+  /* nullable/missable type */
+  "t6": (
+    select distinct string_join((select value f from g order by f), ",") res
+    from TweetMessages2 as t, object_names(t.user) f
+    group by t.tweetid group as g
   )
 }

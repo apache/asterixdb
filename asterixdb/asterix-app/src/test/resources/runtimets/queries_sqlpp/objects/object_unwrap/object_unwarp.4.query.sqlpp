@@ -18,39 +18,15 @@
  */
 
 /*
- * Description  : Testing object_names under different queries.
+ * Description  : Testing object_unwrap under different queries.
  * Expected Res : Success
  */
 
-drop  dataverse TinySocial if exists;
-create  dataverse TinySocial;
-
 use TinySocial;
 
-create type TinySocial.TwitterUserType as
-{
-  `screen-name` : string,
-  lang : string,
-  friends_count : bigint,
-  statuses_count : bigint
-};
-
-create type TinySocial.TweetMessageType as closed {
-  tweetid : string,
-  user : TwitterUserType,
-  `sender-location` : point?,
-  `send-time` : datetime,
-  `referred-topics` : {{string}},
-  `message-text` : string
-};
-
-create type TinySocial.TweetMessageType2 as {
-  tweetid : string,
-  user : TwitterUserType?
-};
-
-create  dataset TwitterUsers(TwitterUserType) primary key `screen-name`;
-
-create  dataset TweetMessages(TweetMessageType) primary key tweetid;
-
-create  dataset TweetMessages2(TweetMessageType2) primary key tweetid;
+select object_unwrap(o) from (
+    select lang
+    from TwitterUsers u
+    order by lang
+    limit 1
+) o;

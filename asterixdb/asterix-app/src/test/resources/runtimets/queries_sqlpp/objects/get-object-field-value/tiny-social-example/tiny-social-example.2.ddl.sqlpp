@@ -33,6 +33,8 @@ create  dataset TwitterUsers(TwitterUserType) primary key `screen-name`;
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid hints (`CARDINALITY`=`100`);
 
+create  dataset TweetMessages2(TweetMessageType2) primary key tweetid hints (`CARDINALITY`=`100`);
+
 create  index fbUserSinceIdx  on FacebookUsers (`user-since`) type btree;
 
 create  index fbAuthorIdx  on FacebookMessages (`author-id`) type btree;

@@ -27,4 +27,16 @@ create type FacebookUserType as
   id : bigint
 };
 
+create type Emp as {
+
+};
+
+create type FacebookUserType2 as
+ open {
+  id : bigint,
+  employment : [Emp]?
+};
+
 create  dataset FacebookUsers(FacebookUserType) primary key id;
+
+create  dataset FacebookUsers2(FacebookUserType2) primary key id;

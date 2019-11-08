@@ -44,6 +44,13 @@ create type TinySocial.TweetMessageType as closed {
   `message-text` : string
 };
 
+create type TinySocial.TweetMessageType2 as {
+  tweetid : string,
+  user : TwitterUserType?
+};
+
 create  dataset TwitterUsers(TwitterUserType) primary key `screen-name`;
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid;
+
+create  dataset TweetMessages2(TweetMessageType2) primary key tweetid;

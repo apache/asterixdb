@@ -25,3 +25,5 @@
 use TinySocial;
 
 load  dataset TwitterUsers using localfs ((`path`=`asterix_nc1://data/tinysocial/twu.adm`),(`format`=`adm`));
+
+insert into ds ({"id": 1, "rec_f": {"f": 2} });
