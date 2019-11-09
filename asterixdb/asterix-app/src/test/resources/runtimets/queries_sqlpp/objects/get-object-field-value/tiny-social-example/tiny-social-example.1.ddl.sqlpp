@@ -74,3 +74,12 @@ create type TinySocial.FacebookMessageType as
   message : string
 };
 
+create type TinySocial.TweetMessageType2 as
+{
+  tweetid : string,
+  user : TwitterUserType?,
+  `sender-location` : point?,
+  `send-time` : datetime,
+  `referred-topics` : {{string}},
+  `message-text` : string
+};

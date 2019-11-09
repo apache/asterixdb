@@ -88,3 +88,14 @@ TypeDecl FacebookMessageAlternateType [
     message : string
   }
 ]
+TypeDecl TweetMessageType2 [
+  open RecordType {
+    tweetid : string,
+    user : TwitterUserType?,
+    sender-location : point?,
+    send-time : datetime,
+    referred-topics : UnorderedList <string>
+,
+    message-text : string
+  }
+]

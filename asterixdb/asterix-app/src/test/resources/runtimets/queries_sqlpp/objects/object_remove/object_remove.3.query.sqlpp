@@ -47,5 +47,18 @@ use TinySocial;
     select value object_remove(m, "user")
     from TweetMessages as m
     order by m.tweetid
+  ),
+
+  /* nullable/missable type */
+  "t7": (
+    select value object_remove(m.user, "lang")
+    from TweetMessages2 as m
+    order by m.tweetid
+  ),
+
+  "t8": (
+    select value object_remove(object_remove( object_remove(u, "lang"), "friends_count"), "statuses_count")
+    from TwitterUsers u
+    limit 1
   )
 };

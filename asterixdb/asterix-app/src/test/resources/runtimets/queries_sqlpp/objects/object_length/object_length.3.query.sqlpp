@@ -52,5 +52,11 @@ use TinySocial;
   "t5": (
     select distinct value object_length(user)
     from TweetMessages as t
+  ),
+
+  /* nullable/missable type */
+  "t6": (
+    select distinct value object_length(user)
+        from TweetMessages2 as t
   )
 };

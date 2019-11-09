@@ -160,9 +160,9 @@
       <artifactId>netty-all</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.25.Final,4.1.32.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.25.Final,4.1.32.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.25.Final,4.1.32.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.25.Final,4.1.32.Final,4.1.42.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.25.Final,4.1.32.Final,4.1.42.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.25.Final,4.1.32.Final,4.1.42.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -174,8 +174,8 @@
         <!-- guava is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
         <!-- see https://github.com/google/guava/blob/v18.0/COPYING -->
         <!-- see https://github.com/google/guava/tree/v28.0/COPYING -->
-        <license.ignoreMissingEmbeddedNotice>18.0,28.0-jre</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreMissingEmbeddedLicense>18.0,28.0-jre</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>18.0,28.0-jre,28.1-jre</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>18.0,28.0-jre,28.1-jre</license.ignoreMissingEmbeddedLicense>
       </properties>
     </project>
   </supplement>
@@ -229,7 +229,7 @@
       <artifactId>jackson-annotations</artifactId>
       <properties>
         <!-- jackson-annotation does not provide an embedded NOTICE file -->
-        <license.ignoreMissingEmbeddedNotice>2.8.4,2.9.7,2.9.10</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>2.8.4,2.9.7,2.9.10,2.10.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -239,8 +239,8 @@
       <artifactId>esri-geometry-api</artifactId>
       <properties>
         <!-- esri is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>2.0.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.0.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.0.0,2.2.3</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.0.0,2.2.3</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -252,8 +252,8 @@
         <!-- fastutil is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
         <!-- see https://github.com/vigna/fastutil/blob/8.1.1/LICENSE-2.0 -->
         <!-- see https://github.com/vigna/fastutil/blob/8.2.2/LICENSE-2.0 -->
-        <license.ignoreMissingEmbeddedLicense>8.1.1,8.2.2</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>8.1.1,8.2.2</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>8.1.1,8.2.2,8.3.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>8.1.1,8.2.2,8.3.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>

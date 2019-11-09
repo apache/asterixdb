@@ -17,33 +17,9 @@
  * under the License.
  */
 
-/*
- * Description  : Testing object_unwrap under different queries.
- * Expected Res : Success
- */
+USE TinySocial;
 
-drop  dataverse TinySocial if exists;
-create  dataverse TinySocial;
-
-use TinySocial;
-
-create type TinySocial.TwitterUserType as
-{
-  `screen-name` : string,
-  lang : string,
-  friends_count : bigint,
-  statuses_count : bigint
-};
-
-create type recordType as {
-  f : int
-};
-
-create type dsType as closed {
-  id: int,
-  rec_f : recordType?
-};
-
-create  dataset TwitterUsers(TwitterUserType) primary key `screen-name`;
-
-create  dataset ds(dsType) primary key id;
+SELECT kv.name, COUNT(*) values
+FROM FacebookUsers2 fu, fu.employment emp, OBJECT_PAIRS(emp) kv
+GROUP BY kv.name
+ORDER BY values, kv.name;

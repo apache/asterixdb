@@ -48,5 +48,13 @@ use TinySocial;
     from TweetMessages as m
     order by m.tweetid
     limit 1
+  ),
+
+  /* nullable/missable type */
+  "t7": (
+    select value object_rename(m.user, "lang", "language")
+    from TweetMessages2 as m
+    order by m.tweetid
+    limit 1
   )
 };

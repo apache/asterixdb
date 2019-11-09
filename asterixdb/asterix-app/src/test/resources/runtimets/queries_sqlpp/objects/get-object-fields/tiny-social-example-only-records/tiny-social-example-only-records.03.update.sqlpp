@@ -33,6 +33,8 @@ load  dataset TwitterUsers using localfs ((`path`=`asterix_nc1://data/tinysocial
 
 load  dataset TweetMessages using localfs ((`path`=`asterix_nc1://data/tinysocial/twm.adm`),(`format`=`adm`));
 
+load  dataset TweetMessages2 using localfs ((`path`=`asterix_nc1://data/tinysocial/twm.adm`),(`format`=`adm`));
+
 insert into TwitterUsersAlternate
 select element {'screen-name':r.`screen-name`,'lang':r.lang,'friends_count':r.friends_count,'statuses_count':r.statuses_count}
 from  TwitterUsers as r
