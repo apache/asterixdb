@@ -16,34 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 /*
- * Description  : Testing object_unwrap under different queries.
- * Expected Res : Success
- */
-
-drop  dataverse TinySocial if exists;
-create  dataverse TinySocial;
+* Description  : Testing get-object-field-value under different queries.
+* Expected Res : Success
+*/
 
 use TinySocial;
 
-create type TinySocial.TwitterUserType as
-{
-  `screen-name` : string,
-  lang : string,
-  friends_count : bigint,
-  statuses_count : bigint
-};
-
-create type recordType as {
-  f : int
-};
-
-create type dsType as closed {
-  id: int,
-  rec_f : recordType?
-};
-
-create  dataset TwitterUsers(TwitterUserType) primary key `screen-name`;
-
-create  dataset ds(dsType) primary key id;
+select element TinySocial.`get-object-field-value`(m.user, "screen-name")
+from TweetMessages2 as m
+where m.tweetid = "1";

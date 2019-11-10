@@ -1,0 +1,24 @@
+DataverseUse TinySocial
+Query:
+SELECT ELEMENT [
+FunctionCall TinySocial.get-object-fields@1[
+  FieldAccessor [
+    Variable [ Name=$message ]
+    Field=user
+  ]
+]
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [TinySocial.TweetMessages2]
+  ]
+  AS Variable [ Name=$message ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=$message ]
+      Field=tweetid
+    ]
+    =
+    LiteralExpr [STRING] [1]
+  ]
