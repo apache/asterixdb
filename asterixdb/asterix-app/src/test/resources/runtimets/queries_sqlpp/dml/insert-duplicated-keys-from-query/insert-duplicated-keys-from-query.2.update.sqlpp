@@ -1,0 +1,43 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+is "Cannot load an index that is not empty" the correct expected error? I am getting it for both AQL and SQL++ tests,
+but the original testsuite.xml says a different expected error.
+*/
+
+use recovery;
+
+load dataset Fragile_raw using localfs
+(("path"="asterix_nc1://data/csv/fragile_01.csv"),("format"="delimited-text"),("delimiter"=",")) pre-sorted;
+
+
+use recovery;
+
+/* Load Fragile data from raw dataset into cleaned dataset*/
+insert into Fragile (
+  select t.row_id % 28000 as row_id,
+t.sid as sid,
+date(t.date) as date,
+t.day as day,
+parse_time(t.time, "h:m:s") as time,
+t.bpm as bpm,
+t.RR as RR
+from Fragile_raw t
+);
