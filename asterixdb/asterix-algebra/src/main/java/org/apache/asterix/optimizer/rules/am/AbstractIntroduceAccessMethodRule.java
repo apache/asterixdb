@@ -32,6 +32,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -1095,12 +1096,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         if (dataSourceScanOp.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
             return null;
         }
-        Pair<String, String> datasetInfo = AnalysisUtil.getDatasetInfo((DataSourceScanOperator) dataSourceScanOp);
-        String dataverseName = datasetInfo.first;
-        String datasetName = datasetInfo.second;
-
-        Index idxUsedInUnnestMap = metadataProvider.getIndex(dataverseName, datasetName, datasetName);
-        return idxUsedInUnnestMap;
+        Pair<DataverseName, String> datasetInfo =
+                AnalysisUtil.getDatasetInfo((DataSourceScanOperator) dataSourceScanOp);
+        return metadataProvider.getIndex(datasetInfo.first, datasetInfo.second, datasetInfo.second);
     }
-
 }

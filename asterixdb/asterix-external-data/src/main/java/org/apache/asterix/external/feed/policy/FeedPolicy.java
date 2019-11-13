@@ -21,10 +21,12 @@ package org.apache.asterix.external.feed.policy;
 import java.io.Serializable;
 import java.util.Map;
 
+import org.apache.asterix.common.metadata.DataverseName;
+
 public class FeedPolicy implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    private final String dataverseName;
+    private static final long serialVersionUID = 2L;
+    private final DataverseName dataverseName;
     // Enforced to be unique within a dataverse.
     private final String policyName;
     // A description of the policy
@@ -32,14 +34,15 @@ public class FeedPolicy implements Serializable {
     // The policy properties associated with the feed dataset
     private Map<String, String> properties;
 
-    public FeedPolicy(String dataverseName, String policyName, String description, Map<String, String> properties) {
+    public FeedPolicy(DataverseName dataverseName, String policyName, String description,
+            Map<String, String> properties) {
         this.dataverseName = dataverseName;
         this.policyName = policyName;
         this.description = description;
         this.properties = properties;
     }
 
-    public String getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 

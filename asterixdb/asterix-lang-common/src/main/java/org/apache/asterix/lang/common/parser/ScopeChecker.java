@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.context.RootScopeFactory;
 import org.apache.asterix.lang.common.context.Scope;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -41,8 +42,6 @@ public class ScopeChecker {
     protected Stack<Scope> forbiddenScopeStack = new Stack<>();
 
     protected String[] inputLines;
-
-    protected String defaultDataverse;
 
     public ScopeChecker() {
         scopeStack.push(RootScopeFactory.createRootScope(this));
@@ -139,9 +138,9 @@ public class ScopeChecker {
      *
      * @return functionDescriptor
      */
-    public final FunctionSignature lookupFunctionSignature(String dataverse, String name, int arity) {
-        if (dataverse != null) {
-            return getCurrentScope().findFunctionSignature(dataverse, name, arity);
+    public final FunctionSignature lookupFunctionSignature(DataverseName dataverseName, String name, int arity) {
+        if (dataverseName != null) {
+            return getCurrentScope().findFunctionSignature(dataverseName, name, arity);
         } else {
             return null;
         }

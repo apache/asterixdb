@@ -18,10 +18,13 @@
  */
 package org.apache.hyracks.algebricks.common.utils;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 //TODO: Remove and use apache commons lang3 instead
-public class Triple<T1, T2, T3> {
+public class Triple<T1, T2, T3> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
     public T1 first;
     public T2 second;
     public T3 third;

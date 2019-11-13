@@ -19,6 +19,7 @@
 
 package org.apache.asterix.metadata.declared;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
@@ -26,16 +27,17 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 public class DataSourceIndex implements IDataSourceIndex<String, DataSourceId> {
 
     private final Index index;
-    private final String dataset;
-    private final String dataverse;
+    private final DataverseName dataverseName;
+    private final String datasetName;
     private final MetadataProvider metadataProvider;
 
     // Every transactions needs to work with its own instance of an
     // MetadataProvider.
-    public DataSourceIndex(Index index, String dataverse, String dataset, MetadataProvider metadataProvider) {
+    public DataSourceIndex(Index index, DataverseName dataverseName, String datasetName,
+            MetadataProvider metadataProvider) {
         this.index = index;
-        this.dataset = dataset;
-        this.dataverse = dataverse;
+        this.dataverseName = dataverseName;
+        this.datasetName = datasetName;
         this.metadataProvider = metadataProvider;
     }
 
@@ -43,7 +45,7 @@ public class DataSourceIndex implements IDataSourceIndex<String, DataSourceId> {
     @Override
     public IDataSource<DataSourceId> getDataSource() {
         try {
-            DataSourceId sourceId = new DataSourceId(dataverse, dataset);
+            DataSourceId sourceId = new DataSourceId(dataverseName, datasetName);
             return metadataProvider.lookupSourceInMetadata(sourceId);
         } catch (Exception me) {
             return null;

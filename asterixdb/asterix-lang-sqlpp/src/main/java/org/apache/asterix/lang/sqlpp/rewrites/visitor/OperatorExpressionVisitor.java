@@ -94,7 +94,7 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         }
     }
 
-    private Expression processInOperator(OperatorExpr operatorExpr, OperatorType opType) throws CompilationException {
+    private Expression processInOperator(OperatorExpr operatorExpr, OperatorType opType) {
         VariableExpr bindingVar = new VariableExpr(context.newVariable());
         bindingVar.setSourceLocation(operatorExpr.getSourceLocation());
         Expression itemExpr = operatorExpr.getExprList().get(0);
@@ -123,7 +123,7 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
 
     private Expression processConcatOperator(OperatorExpr operatorExpr) {
         // All operators have to be "||"s (according to the grammar).
-        CallExpr callExpr = new CallExpr(new FunctionSignature(FunctionConstants.ASTERIX_NS, FunctionMapUtil.CONCAT, 1),
+        CallExpr callExpr = new CallExpr(new FunctionSignature(FunctionConstants.ASTERIX_DV, FunctionMapUtil.CONCAT, 1),
                 operatorExpr.getExprList());
         callExpr.setSourceLocation(operatorExpr.getSourceLocation());
         return callExpr;

@@ -103,4 +103,14 @@ public class ExpressionUtils {
     public static <T> Collection<T> emptyIfNull(Collection<T> coll) {
         return coll == null ? Collections.emptyList() : coll;
     }
+
+    public static String getStringLiteral(Expression arg) {
+        if (arg.getKind() == Expression.Kind.LITERAL_EXPRESSION) {
+            Literal item = ((LiteralExpr) arg).getValue();
+            if (item.getLiteralType() == Literal.Type.STRING) {
+                return item.getStringValue();
+            }
+        }
+        return null;
+    }
 }

@@ -19,18 +19,12 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -38,56 +32,34 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Dataset metadata entity to an ITupleReference and vice versa.
  */
 public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<CompactionPolicy> {
-    private static final long serialVersionUID = 5291424952240239023L;
-
-    // Field indexes of serialized CompactionPolicy in a tuple.
-    // Key field.
-    public static final int COMPACTION_POLICY_DATAVERSE_NAME_FIELD_INDEX = 0;
-
-    public static final int COMPACTION_POLICY_NAME_FIELD_INDEX = 1;
 
     // Payload field containing serialized compactionPolicy.
-    public static final int COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX = 2;
-
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(MetadataRecordTypes.COMPACTION_POLICY_RECORDTYPE);
+    private static final int COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
     protected CompactionPolicyTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET.getFieldCount());
+        super(getTuple, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET, COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
     }
 
     @Override
-    public CompactionPolicy getMetadataEntityFromTuple(ITupleReference tuple) throws HyracksDataException {
-        byte[] serRecord = tuple.getFieldData(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordStartOffset = tuple.getFieldStart(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordLength = tuple.getFieldLength(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
-        ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
-        DataInput in = new DataInputStream(stream);
-        ARecord compactionPolicyRecord = recordSerDes.deserialize(in);
-        return createCompactionPolicyFromARecord(compactionPolicyRecord);
-    }
-
-    private CompactionPolicy createCompactionPolicyFromARecord(ARecord compactionPolicyRecord) {
-        CompactionPolicy compactionPolicy = null;
-        String dataverseName = ((AString) compactionPolicyRecord
+    protected CompactionPolicy createMetadataEntityFromARecord(ARecord compactionPolicyRecord) {
+        String dataverseCanonicalName = ((AString) compactionPolicyRecord
                 .getValueByPos(MetadataRecordTypes.COMPACTION_POLICY_ARECORD_DATAVERSE_NAME_FIELD_INDEX))
                         .getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String policyName = ((AString) compactionPolicyRecord
                 .getValueByPos(MetadataRecordTypes.COMPACTION_POLICY_ARECORD_POLICY_NAME_FIELD_INDEX)).getStringValue();
         String className = ((AString) compactionPolicyRecord
                 .getValueByPos(MetadataRecordTypes.COMPACTION_POLICY_ARECORD_CLASSNAME_FIELD_INDEX)).getStringValue();
 
-        compactionPolicy = new CompactionPolicy(dataverseName, policyName, className);
-        return compactionPolicy;
+        return new CompactionPolicy(dataverseName, policyName, className);
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(CompactionPolicy compactionPolicy)
-            throws HyracksDataException, AlgebricksException {
+    public ITupleReference getTupleFromMetadataEntity(CompactionPolicy compactionPolicy) throws HyracksDataException {
+        String dataverseCanonicalName = compactionPolicy.getDataverseName().getCanonicalForm();
 
         tupleBuilder.reset();
-        aString.setValue(compactionPolicy.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
@@ -99,7 +71,7 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
 
         // write field 0
         fieldValue.reset();
-        aString.setValue(compactionPolicy.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.COMPACTION_POLICY_ARECORD_DATAVERSE_NAME_FIELD_INDEX, fieldValue);
 

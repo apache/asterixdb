@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -378,17 +379,17 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         wrappedQuery.setBody(fnDecl.getFuncBody());
         wrappedQuery.setTopLevel(false);
 
-        String fnNamespace = fnDecl.getSignature().getNamespace();
+        DataverseName fnDataverseName = fnDecl.getSignature().getDataverseName();
         Dataverse defaultDataverse = metadataProvider.getDefaultDataverse();
 
         Dataverse fnDataverse;
-        if (fnNamespace == null || fnNamespace.equals(defaultDataverse.getDataverseName())) {
+        if (fnDataverseName == null || fnDataverseName.equals(defaultDataverse.getDataverseName())) {
             fnDataverse = defaultDataverse;
         } else {
             try {
-                fnDataverse = metadataProvider.findDataverse(fnNamespace);
+                fnDataverse = metadataProvider.findDataverse(fnDataverseName);
             } catch (AlgebricksException e) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, sourceLoc, fnNamespace);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, sourceLoc, fnDataverseName);
             }
         }
 

@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -26,11 +27,11 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class FeedDropStatement extends AbstractStatement {
 
-    private final Identifier dataverseName;
+    private final DataverseName dataverseName;
     private final Identifier feedName;
     private boolean ifExists;
 
-    public FeedDropStatement(Identifier dataverseName, Identifier feedName, boolean ifExists) {
+    public FeedDropStatement(DataverseName dataverseName, Identifier feedName, boolean ifExists) {
         this.dataverseName = dataverseName;
         this.feedName = feedName;
         this.ifExists = ifExists;
@@ -41,7 +42,7 @@ public class FeedDropStatement extends AbstractStatement {
         return Statement.Kind.DROP_FEED;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 

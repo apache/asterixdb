@@ -100,7 +100,7 @@ public class FunctionMapUtil {
         String name = applySql92AggregateNameMapping(fs.getName().toLowerCase());
         String prefix =
                 CORE_AGGREGATE_PREFIX_FUNCTIONS.contains(name) ? CORE_AGGREGATE_PREFIX : CORE_SQL_AGGREGATE_PREFIX;
-        return new FunctionSignature(FunctionConstants.ASTERIX_NS, prefix + name, fs.getArity());
+        return new FunctionSignature(FunctionConstants.ASTERIX_DV, prefix + name, fs.getArity());
     }
 
     /**
@@ -142,7 +142,7 @@ public class FunctionMapUtil {
             FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, internalName, ns.getArity());
             IFunctionInfo finfo = FunctionUtil.getFunctionInfo(fi);
             if (finfo != null && BuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null) {
-                return new FunctionSignature(FunctionConstants.ASTERIX_NS, internalName, ns.getArity());
+                return new FunctionSignature(FunctionConstants.ASTERIX_DV, internalName, ns.getArity());
             }
         } else if (checkSql92Aggregate) {
             if (isSql92AggregateFunction(ns)) {
@@ -154,7 +154,7 @@ public class FunctionMapUtil {
                 throw new CompilationException(ErrorCode.COMPILATION_UNEXPECTED_WINDOW_EXPRESSION, sourceLoc);
             }
         }
-        return new FunctionSignature(ns.getNamespace(), ns.getName(), ns.getArity());
+        return new FunctionSignature(ns.getDataverseName(), ns.getName(), ns.getArity());
     }
 
     /**
@@ -170,7 +170,7 @@ public class FunctionMapUtil {
         if (internalFuncName == null) {
             return callExpr;
         }
-        callExpr.setFunctionSignature(new FunctionSignature(FunctionConstants.ASTERIX_NS, internalFuncName, 1));
+        callExpr.setFunctionSignature(new FunctionSignature(FunctionConstants.ASTERIX_DV, internalFuncName, 1));
         ListConstructor listConstr =
                 new ListConstructor(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, callExpr.getExprList());
         listConstr.setSourceLocation(callExpr.getSourceLocation());

@@ -49,6 +49,14 @@ public interface IMetadataLock {
         }
     }
 
+    interface LockKey {
+        @Override
+        boolean equals(Object o);
+
+        @Override
+        int hashCode();
+    }
+
     /**
      * Acquire a lock
      *
@@ -68,9 +76,9 @@ public interface IMetadataLock {
     /**
      * Get the lock's key
      *
-     * @return the key identiying the lock
+     * @return the key identifying the lock
      */
-    String getKey();
+    LockKey getKey();
 
     /**
      * upgrade the lock

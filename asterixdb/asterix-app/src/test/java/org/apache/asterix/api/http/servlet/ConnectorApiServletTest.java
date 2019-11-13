@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,10 +32,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.asterix.api.http.server.ConnectorApiServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -97,7 +100,7 @@ public class ConnectorApiServletTest {
         // Sets up mock returns.
         when(mockRequest.getHttpRequest()).thenReturn(mockHttpRequest);
         when(mockHttpRequest.method()).thenReturn(HttpMethod.GET);
-        when(mockRequest.getParameter("dataverseName")).thenReturn("Metadata");
+        when(mockRequest.getParameterValues("dataverseName")).thenReturn(Collections.singletonList("Metadata"));
         when(mockRequest.getParameter("datasetName")).thenReturn("Dataset");
         when(mockResponse.writer()).thenReturn(outputWriter);
         when(mockHcc.getNodeControllerInfos()).thenReturn(nodeMap);
@@ -117,7 +120,8 @@ public class ConnectorApiServletTest {
         String primaryKey = actualResponse.get("keys").asText();
         Assert.assertEquals("DataverseName,DatasetName", primaryKey);
         ARecordType recordType = (ARecordType) JSONDeserializerForTypes.convertFromJSON(actualResponse.get("type"));
-        Assert.assertEquals(getMetadataRecordType("Metadata", "Dataset"), recordType);
+        Assert.assertEquals(getMetadataRecordType(MetadataConstants.METADATA_DATAVERSE_NAME,
+                MetadataConstants.DATASET_DATASET_NAME), recordType);
 
         // Checks the correctness of results.
         ArrayNode splits = (ArrayNode) actualResponse.get("splits");
@@ -174,7 +178,7 @@ public class ConnectorApiServletTest {
         Assert.assertEquals(actualResponse.toString(), expectedResponse.toString());
     }
 
-    private ARecordType getMetadataRecordType(String dataverseName, String datasetName) throws Exception {
+    private ARecordType getMetadataRecordType(DataverseName dataverseName, String datasetName) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         // Retrieves file splits of the dataset.
         MetadataProvider metadataProvider = new MetadataProvider(

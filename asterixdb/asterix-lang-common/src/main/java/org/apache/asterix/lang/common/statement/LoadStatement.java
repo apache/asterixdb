@@ -21,6 +21,7 @@ package org.apache.asterix.lang.common.statement;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -29,12 +30,12 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 public class LoadStatement extends AbstractStatement {
 
     private Identifier datasetName;
-    private Identifier dataverseName;
+    private DataverseName dataverseName;
     private String adapter;
     private Map<String, String> properties;
     private boolean dataIsLocallySorted;
 
-    public LoadStatement(Identifier dataverseName, Identifier datasetName, String adapter,
+    public LoadStatement(DataverseName dataverseName, Identifier datasetName, String adapter,
             Map<String, String> propertiees, boolean dataIsLocallySorted) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
@@ -59,11 +60,11 @@ public class LoadStatement extends AbstractStatement {
         this.properties = properties;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
-    public void setDataverseName(Identifier dataverseName) {
+    public void setDataverseName(DataverseName dataverseName) {
         this.dataverseName = dataverseName;
     }
 

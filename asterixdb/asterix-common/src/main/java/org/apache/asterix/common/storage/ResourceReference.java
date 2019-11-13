@@ -29,7 +29,7 @@ public class ResourceReference {
 
     protected String root;
     protected String partition;
-    protected String dataverse;
+    protected String dataverse; // == DataverseName.getCanonicalForm()
     protected String dataset;
     protected String rebalance;
     protected String index;
@@ -52,7 +52,7 @@ public class ResourceReference {
         return partition;
     }
 
-    public String getDataverse() {
+    public String getDataverse() { //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
         return dataverse;
     }
 
@@ -96,17 +96,13 @@ public class ResourceReference {
         ref.index = tokens[--offset];
         ref.rebalance = tokens[--offset];
         ref.dataset = tokens[--offset];
-        ref.dataverse = tokens[--offset];
+        ref.dataverse = tokens[--offset]; //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
         ref.partition = tokens[--offset];
         ref.root = tokens[--offset];
     }
 
     public int getPartitionNum() {
         return Integer.parseInt(partition.substring(StorageConstants.PARTITION_DIR_PREFIX.length()));
-    }
-
-    public String getDatasetFullyQualifiedName() {
-        return dataverse + '.' + dataset;
     }
 
     @Override

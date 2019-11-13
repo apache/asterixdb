@@ -19,6 +19,7 @@
 package org.apache.hyracks.http.api;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,6 +42,14 @@ public interface IServletRequest {
      * @return the parameter or null if not found
      */
     String getParameter(CharSequence name);
+
+    /**
+     * Get all values of a request parameter
+     *
+     * @param name
+     * @return the parameter values or null if not found
+     */
+    List<String> getParameterValues(CharSequence name);
 
     /**
      * Get the names of all request parameters

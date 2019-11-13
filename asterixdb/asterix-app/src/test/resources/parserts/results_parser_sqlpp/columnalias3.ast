@@ -9,7 +9,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [tbl_name]
+    LiteralExpr [STRING] [Default.tbl_name]
   ]
   AS Variable [ Name=$t ]
 ]

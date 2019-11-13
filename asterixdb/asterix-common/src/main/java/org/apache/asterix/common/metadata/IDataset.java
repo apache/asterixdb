@@ -25,7 +25,7 @@ public interface IDataset {
     /**
      * @return the dataverse name
      */
-    String getDataverseName();
+    DataverseName getDataverseName();
 
     /**
      * @return the dataset name

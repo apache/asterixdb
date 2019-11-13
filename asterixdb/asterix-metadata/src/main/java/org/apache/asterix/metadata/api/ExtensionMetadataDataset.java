@@ -45,7 +45,7 @@ public class ExtensionMetadataDataset<T> extends MetadataIndex {
         return indexId;
     }
 
-    public IMetadataEntityTupleTranslator<T> getTupleTranslator() {
-        return tupleTranslatorFactory.createTupleTranslator();
+    public IMetadataEntityTupleTranslator<T> getTupleTranslator(boolean getTuple) {
+        return tupleTranslatorFactory.createTupleTranslator(getTuple);
     }
 }

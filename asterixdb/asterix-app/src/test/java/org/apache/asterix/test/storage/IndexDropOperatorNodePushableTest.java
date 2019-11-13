@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.asterix.app.bootstrap.TestNodeController;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -70,7 +71,7 @@ public class IndexDropOperatorNodePushableTest {
     private static final int[] KEY_INDEXES = { 0 };
     private static final List<Integer> KEY_INDICATORS_LIST = Arrays.asList(new Integer[] { Index.RECORD_INDICATOR });
     private static final int DATASET_ID = 101;
-    private static final String DATAVERSE_NAME = "TestDV";
+    private static final DataverseName DATAVERSE_NAME = DataverseName.createSinglePartName("TestDV");
     private static final String DATASET_NAME = "TestDS";
     private static final String DATA_TYPE_NAME = "DUMMY";
     private static final String NODE_GROUP_NAME = "DEFAULT";
@@ -148,7 +149,7 @@ public class IndexDropOperatorNodePushableTest {
                     .getClusterControllerService().getApplicationContext();
             MetadataProvider metadataProver = new MetadataProvider(appCtx, null);
             metadataProver.setMetadataTxnContext(mdTxn);
-            final String defaultDv = MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDataverseName();
+            final DataverseName defaultDv = MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDataverseName();
             final Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxn, defaultDv, datasetName);
             MetadataManager.INSTANCE.commitTransaction(mdTxn);
             FileSplit[] splits = SplitsAndConstraintsUtil.getIndexSplits(appCtx.getClusterStateManager(), dataset,

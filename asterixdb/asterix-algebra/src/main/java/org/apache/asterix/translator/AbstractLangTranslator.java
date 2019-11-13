@@ -32,6 +32,7 @@ import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -114,14 +115,14 @@ public abstract class AbstractLangTranslator {
 
         boolean invalidOperation = false;
         String message = null;
-        String dataverse = defaultDataverse != null ? defaultDataverse.getDataverseName() : null;
+        DataverseName dataverseName = defaultDataverse != null ? defaultDataverse.getDataverseName() : null;
         switch (stmt.getKind()) {
             case INSERT:
                 InsertStatement insertStmt = (InsertStatement) stmt;
                 if (insertStmt.getDataverseName() != null) {
-                    dataverse = insertStmt.getDataverseName().getValue();
+                    dataverseName = insertStmt.getDataverseName();
                 }
-                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverse);
+                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName);
                 if (invalidOperation) {
                     message = "Insert operation is not permitted in dataverse "
                             + MetadataConstants.METADATA_DATAVERSE_NAME;
@@ -131,9 +132,9 @@ public abstract class AbstractLangTranslator {
             case DELETE:
                 DeleteStatement deleteStmt = (DeleteStatement) stmt;
                 if (deleteStmt.getDataverseName() != null) {
-                    dataverse = deleteStmt.getDataverseName().getValue();
+                    dataverseName = deleteStmt.getDataverseName();
                 }
-                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverse);
+                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName);
                 if (invalidOperation) {
                     message = "Delete operation is not permitted in dataverse "
                             + MetadataConstants.METADATA_DATAVERSE_NAME;
@@ -142,19 +143,19 @@ public abstract class AbstractLangTranslator {
 
             case DATAVERSE_DROP:
                 DataverseDropStatement dvDropStmt = (DataverseDropStatement) stmt;
-                invalidOperation =
-                        MetadataConstants.METADATA_DATAVERSE_NAME.equals(dvDropStmt.getDataverseName().getValue());
+                dataverseName = dvDropStmt.getDataverseName();
+                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName);
                 if (invalidOperation) {
-                    message = "Cannot drop dataverse:" + dvDropStmt.getDataverseName().getValue();
+                    message = "Cannot drop dataverse:" + dataverseName;
                 }
                 break;
 
             case DATASET_DROP:
                 DropDatasetStatement dropStmt = (DropDatasetStatement) stmt;
                 if (dropStmt.getDataverseName() != null) {
-                    dataverse = dropStmt.getDataverseName().getValue();
+                    dataverseName = dropStmt.getDataverseName();
                 }
-                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverse);
+                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName);
                 if (invalidOperation) {
                     message = "Cannot drop a dataset belonging to the dataverse:"
                             + MetadataConstants.METADATA_DATAVERSE_NAME;

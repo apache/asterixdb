@@ -22,12 +22,13 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.asterix.active.EntityId;
+import org.apache.asterix.common.metadata.DataverseName;
 
 public interface IFeed extends Serializable {
 
     public String getFeedName();
 
-    public String getDataverseName();
+    public DataverseName getDataverseName();
 
     public EntityId getFeedId();
 

@@ -21,12 +21,13 @@ package org.apache.asterix.app.message;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.metadata.DataverseName;
 
 public class DeleteUdfMessage extends AbstractUdfMessage {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
-    public DeleteUdfMessage(String dataverseName, String libraryName, long reqId) {
+    public DeleteUdfMessage(DataverseName dataverseName, String libraryName, long reqId) {
         super(dataverseName, libraryName, reqId);
     }
 

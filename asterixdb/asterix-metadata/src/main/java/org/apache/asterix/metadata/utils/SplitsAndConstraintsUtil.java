@@ -27,6 +27,7 @@ import java.util.List;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.exceptions.MetadataException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -43,13 +44,14 @@ public class SplitsAndConstraintsUtil {
     private SplitsAndConstraintsUtil() {
     }
 
-    private static FileSplit[] getDataverseSplits(IClusterStateManager clusterStateManager, String dataverseName) {
+    private static FileSplit[] getDataverseSplits(IClusterStateManager clusterStateManager,
+            DataverseName dataverseName) {
         List<FileSplit> splits = new ArrayList<>();
         // get all partitions
         ClusterPartition[] clusterPartition = clusterStateManager.getClusterPartitons();
         for (int j = 0; j < clusterPartition.length; j++) {
             File f = new File(StoragePathUtil.prepareStoragePartitionPath(clusterPartition[j].getPartitionId()),
-                    dataverseName);
+                    dataverseName.getCanonicalForm()); //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
             splits.add(StoragePathUtil.getFileSplitForClusterPartition(clusterPartition[j], f.getPath()));
         }
         return splits.toArray(new FileSplit[] {});
@@ -83,8 +85,8 @@ public class SplitsAndConstraintsUtil {
     }
 
     public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint> getDataverseSplitProviderAndConstraints(
-            IClusterStateManager clusterStateManager, String dataverse) {
-        FileSplit[] splits = getDataverseSplits(clusterStateManager, dataverse);
+            IClusterStateManager clusterStateManager, DataverseName dataverseName) {
+        FileSplit[] splits = getDataverseSplits(clusterStateManager, dataverseName);
         return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
     }
 

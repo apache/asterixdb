@@ -74,7 +74,7 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_KIND = "Kind";
     public static final String FIELD_NAME_LANGUAGE = "Language";
     public static final String FIELD_NAME_LAST_REFRESH_TIME = "LastRefreshTime";
-    public static final String FIELD_NAME_METADATA_DATAVERSE = "MetatypeDataverseName";
+    public static final String FIELD_NAME_METATYPE_DATAVERSE_NAME = "MetatypeDataverseName";
     public static final String FIELD_NAME_METATYPE_NAME = "MetatypeName";
     public static final String FIELD_NAME_NAME = "Name";
     public static final String FIELD_NAME_NODE_NAME = "NodeName";

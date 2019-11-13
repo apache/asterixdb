@@ -20,6 +20,7 @@ package org.apache.asterix.translator;
 
 import java.util.Map;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
@@ -189,7 +190,7 @@ public class CompiledStatements {
 
     public interface ICompiledDmlStatement extends ICompiledStatement {
 
-        String getDataverseName();
+        DataverseName getDataverseName();
 
         String getDatasetName();
     }
@@ -210,7 +211,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public String getDataverseName() {
+        public DataverseName getDataverseName() {
             return index.getDataverseName();
         }
 
@@ -230,13 +231,13 @@ public class CompiledStatements {
 
     public static class CompiledLoadFromFileStatement extends AbstractCompiledStatement
             implements ICompiledDmlStatement {
-        private final String dataverseName;
+        private final DataverseName dataverseName;
         private final String datasetName;
         private final boolean alreadySorted;
         private final String adapter;
         private final Map<String, String> properties;
 
-        public CompiledLoadFromFileStatement(String dataverseName, String datasetName, String adapter,
+        public CompiledLoadFromFileStatement(DataverseName dataverseName, String datasetName, String adapter,
                 Map<String, String> properties, boolean alreadySorted) {
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
@@ -246,7 +247,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public String getDataverseName() {
+        public DataverseName getDataverseName() {
             return dataverseName;
         }
 
@@ -274,14 +275,14 @@ public class CompiledStatements {
     }
 
     public static class CompiledInsertStatement extends AbstractCompiledStatement implements ICompiledDmlStatement {
-        private final String dataverseName;
+        private final DataverseName dataverseName;
         private final String datasetName;
         private final Query query;
         private final int varCounter;
         private final VariableExpr var;
         private final Expression returnExpression;
 
-        public CompiledInsertStatement(String dataverseName, String datasetName, Query query, int varCounter,
+        public CompiledInsertStatement(DataverseName dataverseName, String datasetName, Query query, int varCounter,
                 VariableExpr var, Expression returnExpression) {
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
@@ -292,7 +293,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public String getDataverseName() {
+        public DataverseName getDataverseName() {
             return dataverseName;
         }
 
@@ -325,7 +326,7 @@ public class CompiledStatements {
 
     public static class CompiledUpsertStatement extends CompiledInsertStatement {
 
-        public CompiledUpsertStatement(String dataverseName, String datasetName, Query query, int varCounter,
+        public CompiledUpsertStatement(DataverseName dataverseName, String datasetName, Query query, int varCounter,
                 VariableExpr var, Expression returnExpression) {
             super(dataverseName, datasetName, query, varCounter, var, returnExpression);
         }
@@ -348,8 +349,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public String getDataverseName() {
-            return request.getReceivingFeedId().getDataverse();
+        public DataverseName getDataverseName() {
+            return request.getReceivingFeedId().getDataverseName();
         }
 
         public String getFeedName() {
@@ -372,14 +373,14 @@ public class CompiledStatements {
     }
 
     public static class CompiledDeleteStatement extends AbstractCompiledStatement implements ICompiledDmlStatement {
-        private final String dataverseName;
+        private final DataverseName dataverseName;
         private final String datasetName;
         private final Expression condition;
         private final int varCounter;
         private final Query query;
 
-        public CompiledDeleteStatement(VariableExpr var, String dataverseName, String datasetName, Expression condition,
-                int varCounter, Query query) {
+        public CompiledDeleteStatement(VariableExpr var, DataverseName dataverseName, String datasetName,
+                Expression condition, int varCounter, Query query) {
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
             this.condition = condition;
@@ -393,7 +394,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public String getDataverseName() {
+        public DataverseName getDataverseName() {
             return dataverseName;
         }
 
@@ -417,15 +418,15 @@ public class CompiledStatements {
     }
 
     public static class CompiledCompactStatement extends AbstractCompiledStatement {
-        private final String dataverseName;
+        private final DataverseName dataverseName;
         private final String datasetName;
 
-        public CompiledCompactStatement(String dataverseName, String datasetName) {
+        public CompiledCompactStatement(DataverseName dataverseName, String datasetName) {
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
         }
 
-        public String getDataverseName() {
+        public DataverseName getDataverseName() {
             return dataverseName;
         }
 

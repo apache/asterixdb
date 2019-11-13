@@ -19,7 +19,7 @@ FROM [  (
         Variable [ Name=$u ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [User]
+            LiteralExpr [STRING] [Default.User]
           ]
           AS Variable [ Name=$u ]
         ]

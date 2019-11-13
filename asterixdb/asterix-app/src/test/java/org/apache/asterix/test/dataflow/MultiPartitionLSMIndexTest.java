@@ -35,6 +35,7 @@ import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TransactionOptions;
@@ -98,7 +99,7 @@ public class MultiPartitionLSMIndexTest {
     private static final int TOTAL_NUM_OF_RECORDS = 5000;
     private static final int RECORDS_PER_COMPONENT = 500;
     private static final int DATASET_ID = 101;
-    private static final String DATAVERSE_NAME = "TestDV";
+    private static final DataverseName DATAVERSE_NAME = DataverseName.createSinglePartName("TestDV");
     private static final String DATASET_NAME = "TestDS";
     private static final String INDEX_NAME = "TestIdx";
     private static final String DATA_TYPE_NAME = "DUMMY";

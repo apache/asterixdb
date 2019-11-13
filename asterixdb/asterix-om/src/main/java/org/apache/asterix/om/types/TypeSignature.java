@@ -18,16 +18,20 @@
  */
 package org.apache.asterix.om.types;
 
+import java.util.Objects;
+
+import org.apache.asterix.common.metadata.DataverseName;
+
 public class TypeSignature {
 
-    private final String dataverse;
+    private final DataverseName dataverseName;
     private final String name;
     private final String alias;
 
-    public TypeSignature(String namespace, String name) {
-        this.dataverse = namespace;
+    public TypeSignature(DataverseName dataverseName, String name) {
+        this.dataverseName = dataverseName;
         this.name = name;
-        this.alias = dataverse + "@" + name;
+        this.alias = (dataverseName != null ? dataverseName.getCanonicalForm() : null) + "@" + name;
     }
 
     @Override
@@ -36,7 +40,7 @@ public class TypeSignature {
             return false;
         } else {
             TypeSignature f = ((TypeSignature) o);
-            return dataverse.equals(f.getNamespace()) && name.equals(f.getName());
+            return Objects.equals(dataverseName, f.getDataverseName()) && name.equals(f.getName());
         }
     }
 
@@ -50,12 +54,11 @@ public class TypeSignature {
         return alias.hashCode();
     }
 
-    public String getNamespace() {
-        return dataverse;
+    public DataverseName getDataverseName() {
+        return dataverseName;
     }
 
     public String getName() {
         return name;
     }
-
 }

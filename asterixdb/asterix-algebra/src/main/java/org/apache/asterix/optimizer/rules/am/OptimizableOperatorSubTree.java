@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -236,7 +237,7 @@ public class OptimizableOperatorSubTree {
      * Also sets recordType to be the type of that dataset.
      */
     public boolean setDatasetAndTypeMetadata(MetadataProvider metadataProvider) throws AlgebricksException {
-        String dataverseName = null;
+        DataverseName dataverseName = null;
         String datasetName = null;
 
         Dataset ds = null;
@@ -267,7 +268,7 @@ public class OptimizableOperatorSubTree {
                             return false;
                         }
                     }
-                    Pair<String, String> datasetInfo = AnalysisUtil.getDatasetInfo(dataSourceScan);
+                    Pair<DataverseName, String> datasetInfo = AnalysisUtil.getDatasetInfo(dataSourceScan);
                     dataverseName = datasetInfo.first;
                     datasetName = datasetInfo.second;
                     break;

@@ -35,6 +35,7 @@ import org.apache.asterix.common.context.TransactionSubsystemProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.formats.base.IDataFormat;
@@ -342,7 +343,7 @@ public class DatasetUtil {
 
     public static JobSpecification compactDatasetJobSpec(Dataverse dataverse, String datasetName,
             MetadataProvider metadataProvider) throws AlgebricksException {
-        String dataverseName = dataverse.getDataverseName();
+        DataverseName dataverseName = dataverse.getDataverseName();
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
             throw new AsterixException("Could not find dataset " + datasetName + " in dataverse " + dataverseName);
@@ -531,12 +532,12 @@ public class DatasetUtil {
         return keyProviderOp;
     }
 
-    public static boolean isFullyQualifiedName(String datasetName) {
-        return datasetName.indexOf('.') > 0; // NOSONAR a fully qualified name can't start with a .
+    public static String getFullyQualifiedDisplayName(Dataset dataset) {
+        return getFullyQualifiedDisplayName(dataset.getDataverseName(), dataset.getDatasetName());
     }
 
-    public static String getFullyQualifiedName(Dataset dataset) {
-        return dataset.getDataverseName() + '.' + dataset.getDatasetName();
+    public static String getFullyQualifiedDisplayName(DataverseName dataverseName, String datasetName) {
+        return dataverseName + "." + datasetName;
     }
 
     /***
@@ -553,8 +554,8 @@ public class DatasetUtil {
      * @return the name of the created node group.
      * @throws Exception
      */
-    public static String createNodeGroupForNewDataset(String dataverseName, String datasetName, Set<String> ncNames,
-            MetadataProvider metadataProvider) throws Exception {
+    public static String createNodeGroupForNewDataset(DataverseName dataverseName, String datasetName,
+            Set<String> ncNames, MetadataProvider metadataProvider) throws Exception {
         return createNodeGroupForNewDataset(dataverseName, datasetName, 0L, ncNames, metadataProvider);
     }
 
@@ -574,8 +575,8 @@ public class DatasetUtil {
      * @return the name of the created node group.
      * @throws Exception
      */
-    public static String createNodeGroupForNewDataset(String dataverseName, String datasetName, long rebalanceCount,
-            Set<String> ncNames, MetadataProvider metadataProvider) throws Exception {
+    public static String createNodeGroupForNewDataset(DataverseName dataverseName, String datasetName,
+            long rebalanceCount, Set<String> ncNames, MetadataProvider metadataProvider) throws Exception {
         ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
         String nodeGroup = dataverseName + "." + datasetName + (rebalanceCount == 0L ? "" : "_" + rebalanceCount);
         MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
@@ -589,18 +590,4 @@ public class DatasetUtil {
         return nodeGroup;
     }
 
-    // This doesn't work if the dataset  or the dataverse name contains a '.'
-    public static Pair<String, String> getDatasetInfo(MetadataProvider metadata, String datasetArg) {
-        String first;
-        String second;
-        int i = datasetArg.indexOf('.');
-        if (i > 0 && i < datasetArg.length() - 1) {
-            first = datasetArg.substring(0, i);
-            second = datasetArg.substring(i + 1);
-        } else {
-            first = metadata.getDefaultDataverse() == null ? null : metadata.getDefaultDataverse().getDataverseName();
-            second = datasetArg;
-        }
-        return new Pair<>(first, second);
-    }
 }

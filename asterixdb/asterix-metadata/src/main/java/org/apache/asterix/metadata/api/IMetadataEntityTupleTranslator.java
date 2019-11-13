@@ -19,9 +19,6 @@
 
 package org.apache.asterix.metadata.api;
 
-import java.io.Serializable;
-import java.rmi.RemoteException;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -32,7 +29,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * representation in a Hyracks tuple, and vice versa. Implementations of this
  * interface are intended to be used within an IMetadataNode.
  */
-public interface IMetadataEntityTupleTranslator<T> extends Serializable {
+public interface IMetadataEntityTupleTranslator<T> {
 
     /**
      * Transforms a metadata entity of type T from a given tuple to a Java object
@@ -44,10 +41,8 @@ public interface IMetadataEntityTupleTranslator<T> extends Serializable {
      * @return A new instance of a metadata entity of type T.
      * @throws AlgebricksException
      * @throws HyracksDataException
-     * @throws RemoteException
      */
-    T getMetadataEntityFromTuple(ITupleReference tuple)
-            throws AlgebricksException, HyracksDataException, RemoteException;
+    T getMetadataEntityFromTuple(ITupleReference tuple) throws AlgebricksException, HyracksDataException;
 
     /**
      * Serializes the given metadata entity of type T into an appropriate tuple

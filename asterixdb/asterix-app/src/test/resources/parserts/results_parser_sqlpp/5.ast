@@ -9,7 +9,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Event]
+    LiteralExpr [STRING] [Default.Event]
   ]
   AS Variable [ Name=$event ]
 ]
@@ -29,7 +29,7 @@ Let Variable [ Name=$collocated_events ]
     ]
     ]
     FROM [      FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [Events]
+        LiteralExpr [STRING] [Default.Events]
       ]
       AS Variable [ Name=$collocated_event ]
     ]

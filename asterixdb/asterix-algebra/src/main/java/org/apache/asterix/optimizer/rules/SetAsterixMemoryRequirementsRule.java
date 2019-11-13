@@ -22,13 +22,13 @@ package org.apache.asterix.optimizer.rules;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.base.AsterixOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import org.apache.hyracks.algebricks.rewriter.rules.SetMemoryRequirementsRule;
 
@@ -83,7 +83,7 @@ public final class SetAsterixMemoryRequirementsRule extends SetMemoryRequirement
 
     private static boolean isMinMemoryBudgetFunction(DataSourceId dsId) {
         return BuiltinFunctions.builtinFunctionHasProperty(
-                new FunctionIdentifier(dsId.getDataverseName(), dsId.getDatasourceName()),
+                FunctionSignature.createFunctionIdentifier(dsId.getDataverseName(), dsId.getDatasourceName()),
                 BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
     }
 }

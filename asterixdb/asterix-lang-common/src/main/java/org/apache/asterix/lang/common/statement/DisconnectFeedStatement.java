@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -27,29 +28,28 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class DisconnectFeedStatement extends AbstractStatement {
 
-    private final Identifier dataverseName;
+    private final DataverseName dataverseName;
     private final Identifier feedName;
     private final Identifier datasetName;
 
-    public DisconnectFeedStatement(Identifier dataverseName, Identifier feedName, Identifier datasetName) {
+    public DisconnectFeedStatement(DataverseName dataverseName, Identifier feedName, Identifier datasetName) {
         this.feedName = feedName;
         this.datasetName = datasetName;
         this.dataverseName = dataverseName;
     }
 
-    public DisconnectFeedStatement(Pair<Identifier, Identifier> feedNameComponent,
-            Pair<Identifier, Identifier> datasetNameComponent) {
+    public DisconnectFeedStatement(Pair<DataverseName, Identifier> feedNameComponent,
+            Pair<DataverseName, Identifier> datasetNameComponent) {
         if (feedNameComponent.first != null && datasetNameComponent.first != null
-                && !feedNameComponent.first.getValue().equals(datasetNameComponent.first.getValue())) {
+                && !feedNameComponent.first.equals(datasetNameComponent.first)) {
             throw new IllegalArgumentException("Dataverse for source feed and target dataset do not match");
         }
-        this.dataverseName = feedNameComponent.first != null ? feedNameComponent.first
-                : datasetNameComponent.first != null ? datasetNameComponent.first : null;
+        this.dataverseName = feedNameComponent.first != null ? feedNameComponent.first : datasetNameComponent.first;
         this.datasetName = datasetNameComponent.second;
         this.feedName = feedNameComponent.second;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 

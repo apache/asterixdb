@@ -19,21 +19,28 @@
 package org.apache.asterix.common.functions;
 
 import java.io.Serializable;
+import java.util.Objects;
 
+import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class FunctionSignature implements Serializable {
-    private static final long serialVersionUID = 1L;
-    private String namespace;
+
+    private static final long serialVersionUID = 2L;
+
+    private DataverseName dataverseName;
+
     private String name;
+
     private int arity;
 
     public FunctionSignature(FunctionIdentifier fi) {
-        this(fi.getNamespace(), fi.getName(), fi.getArity());
+        this(getDataverseName(fi), fi.getName(), fi.getArity());
     }
 
-    public FunctionSignature(String namespace, String name, int arity) {
-        this.namespace = namespace;
+    public FunctionSignature(DataverseName dataverseName, String name, int arity) {
+        this.dataverseName = dataverseName;
         this.name = name;
         this.arity = arity;
     }
@@ -42,27 +49,36 @@ public class FunctionSignature implements Serializable {
     public boolean equals(Object o) {
         if (!(o instanceof FunctionSignature)) {
             return false;
-        } else {
-            FunctionSignature f = ((FunctionSignature) o);
-            return ((namespace != null && namespace.equals(f.getNamespace())
-                    || (namespace == null && f.getNamespace() == null))) && name.equals(f.getName())
-                    && (arity == f.getArity() || arity == FunctionIdentifier.VARARGS
-                            || f.getArity() == FunctionIdentifier.VARARGS);
         }
+        FunctionSignature f = ((FunctionSignature) o);
+        return Objects.equals(dataverseName, f.dataverseName) && name.equals(f.name)
+                && (arity == f.arity || arity == FunctionIdentifier.VARARGS || f.arity == FunctionIdentifier.VARARGS);
     }
 
     @Override
     public String toString() {
-        return namespace + "." + name + "@" + arity;
+        return toString(true);
+    }
+
+    public String toString(boolean includeArity) {
+        String namespaceCanonicalForm = dataverseName != null ? dataverseName.getCanonicalForm() : null;
+        int len = (namespaceCanonicalForm != null ? namespaceCanonicalForm.length() : 4) + 1 + name.length()
+                + (includeArity ? 3 : 0);
+        StringBuilder sb = new StringBuilder(len);
+        sb.append(namespaceCanonicalForm).append('.').append(name);
+        if (includeArity) {
+            sb.append('@').append(arity);
+        }
+        return sb.toString();
     }
 
     @Override
     public int hashCode() {
-        return (namespace + "." + name).hashCode();
+        return Objects.hash(dataverseName, name);
     }
 
-    public String getNamespace() {
-        return namespace;
+    public DataverseName getDataverseName() {
+        return dataverseName;
     }
 
     public String getName() {
@@ -73,8 +89,8 @@ public class FunctionSignature implements Serializable {
         return arity;
     }
 
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
+    public void setDataverseName(DataverseName dataverseName) {
+        this.dataverseName = dataverseName;
     }
 
     public void setName(String name) {
@@ -85,4 +101,28 @@ public class FunctionSignature implements Serializable {
         this.arity = arity;
     }
 
+    public FunctionIdentifier createFunctionIdentifier() {
+        return createFunctionIdentifier(dataverseName, name, arity);
+    }
+
+    public static FunctionIdentifier createFunctionIdentifier(DataverseName dataverseName, String functionName,
+            int arity) {
+        return new FunctionIdentifier(dataverseName.getCanonicalForm(), functionName, arity);
+    }
+
+    public static FunctionIdentifier createFunctionIdentifier(DataverseName dataverseName, String functionName) {
+        return new FunctionIdentifier(dataverseName.getCanonicalForm(), functionName);
+    }
+
+    public static DataverseName getDataverseName(FunctionIdentifier fi) {
+        String dataverseCanonicalName = fi.getNamespace();
+        switch (dataverseCanonicalName) {
+            case FunctionConstants.ASTERIX_NS:
+                return FunctionConstants.ASTERIX_DV;
+            case AlgebricksBuiltinFunctions.ALGEBRICKS_NS:
+                return FunctionConstants.ALGEBRICKS_DV;
+            default:
+                return DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        }
+    }
 }

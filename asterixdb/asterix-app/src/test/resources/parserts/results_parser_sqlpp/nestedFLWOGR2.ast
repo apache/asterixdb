@@ -35,7 +35,7 @@ FROM [  OrderedListConstructor [
       Variable [ Name=$tmp ]
       ]
       FROM [        FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [number]
+          LiteralExpr [STRING] [Default.number]
         ]
         AS Variable [ Name=$tmp ]
       ]

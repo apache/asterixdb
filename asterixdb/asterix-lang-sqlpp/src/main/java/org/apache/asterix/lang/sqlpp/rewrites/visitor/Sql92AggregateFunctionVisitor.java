@@ -144,7 +144,7 @@ class Sql92AggregateFunctionVisitor extends AbstractSqlppSimpleExpressionVisitor
                 }
                 FieldAccessor faInner = new FieldAccessor(fromBindingVar, groupVarField);
                 faInner.setSourceLocation(usedVar.getSourceLocation());
-                Expression faOuter = VariableCheckAndRewriteVisitor.resolveAsFieldAccess(faInner, usedVar.getVar(),
+                Expression faOuter = VariableCheckAndRewriteVisitor.generateFieldAccess(faInner, usedVar.getVar(),
                         usedVar.getSourceLocation());
                 varExprMap.put(usedVar, faOuter);
             }

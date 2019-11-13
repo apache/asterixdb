@@ -793,7 +793,7 @@
         <output-dir compare="Text">partition-by-nonexistent-field</output-dir>
         <expected-error>Field "id" is not found</expected-error>
         <expected-error>Cannot find dataset</expected-error>
-        <expected-error>Could not find dataset</expected-error>
+        <expected-error>Cannot find dataset</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">

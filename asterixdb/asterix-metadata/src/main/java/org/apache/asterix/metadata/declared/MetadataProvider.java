@@ -39,6 +39,7 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
@@ -227,7 +228,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return defaultDataverse;
     }
 
-    public String getDefaultDataverseName() {
+    public DataverseName getDefaultDataverseName() {
         return defaultDataverse.getDataverseName();
     }
 
@@ -325,16 +326,15 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 getProperty("output-record-type"));
     }
 
-    public Dataset findDataset(String dataverse, String dataset) throws AlgebricksException {
-        String dv =
-                dataverse == null ? (defaultDataverse == null ? null : defaultDataverse.getDataverseName()) : dataverse;
-        if (dv == null) {
+    public Dataset findDataset(DataverseName dataverseName, String datasetName) throws AlgebricksException {
+        DataverseName dvName = dataverseName == null
+                ? (defaultDataverse == null ? null : defaultDataverse.getDataverseName()) : dataverseName;
+        if (dvName == null) {
             return null;
         }
-        String fqName = dv + '.' + dataset;
-        appCtx.getMetadataLockManager().acquireDataverseReadLock(locks, dv);
-        appCtx.getMetadataLockManager().acquireDatasetReadLock(locks, fqName);
-        return MetadataManagerUtil.findDataset(mdTxnCtx, dv, dataset);
+        appCtx.getMetadataLockManager().acquireDataverseReadLock(locks, dvName);
+        appCtx.getMetadataLockManager().acquireDatasetReadLock(locks, dvName, datasetName);
+        return MetadataManagerUtil.findDataset(mdTxnCtx, dvName, datasetName);
     }
 
     public INodeDomain findNodeDomain(String nodeGroupName) throws AlgebricksException {
@@ -345,8 +345,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return MetadataManagerUtil.findNodes(mdTxnCtx, nodeGroupName);
     }
 
-    public IAType findType(String dataverse, String typeName) throws AlgebricksException {
-        return MetadataManagerUtil.findType(mdTxnCtx, dataverse, typeName);
+    public IAType findType(DataverseName dataverseName, String typeName) throws AlgebricksException {
+        return MetadataManagerUtil.findType(mdTxnCtx, dataverseName, typeName);
     }
 
     public IAType findType(Dataset dataset) throws AlgebricksException {
@@ -357,17 +357,17 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
     }
 
-    public Feed findFeed(String dataverse, String feedName) throws AlgebricksException {
-        return MetadataManagerUtil.findFeed(mdTxnCtx, dataverse, feedName);
+    public Feed findFeed(DataverseName dataverseName, String feedName) throws AlgebricksException {
+        return MetadataManagerUtil.findFeed(mdTxnCtx, dataverseName, feedName);
     }
 
-    public FeedConnection findFeedConnection(String dataverseName, String feedName, String datasetName)
+    public FeedConnection findFeedConnection(DataverseName dataverseName, String feedName, String datasetName)
             throws AlgebricksException {
         return MetadataManagerUtil.findFeedConnection(mdTxnCtx, dataverseName, feedName, datasetName);
     }
 
-    public FeedPolicyEntity findFeedPolicy(String dataverse, String policyName) throws AlgebricksException {
-        return MetadataManagerUtil.findFeedPolicy(mdTxnCtx, dataverse, policyName);
+    public FeedPolicyEntity findFeedPolicy(DataverseName dataverseName, String policyName) throws AlgebricksException {
+        return MetadataManagerUtil.findFeedPolicy(mdTxnCtx, dataverseName, policyName);
     }
 
     @Override
@@ -390,11 +390,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 : null;
     }
 
-    public Index getIndex(String dataverseName, String datasetName, String indexName) throws AlgebricksException {
+    public Index getIndex(DataverseName dataverseName, String datasetName, String indexName)
+            throws AlgebricksException {
         return MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, indexName);
     }
 
-    public List<Index> getDatasetIndexes(String dataverseName, String datasetName) throws AlgebricksException {
+    public List<Index> getDatasetIndexes(DataverseName dataverseName, String datasetName) throws AlgebricksException {
         return MetadataManagerUtil.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
     }
 
@@ -426,7 +427,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
     }
 
-    public Dataverse findDataverse(String dataverseName) throws AlgebricksException {
+    public Dataverse findDataverse(DataverseName dataverseName) throws AlgebricksException {
         return MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
     }
 
@@ -620,7 +621,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             IDataSource<DataSourceId> dataSource, IOperatorSchema propagatedSchema, List<LogicalVariable> keys,
             LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields, JobGenContext context,
             JobSpecification spec) throws AlgebricksException {
-        String dataverseName = dataSource.getId().getDataverseName();
+        DataverseName dataverseName = dataSource.getId().getDataverseName();
         String datasetName = dataSource.getId().getDatasourceName();
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
         int numKeys = keys.size();
@@ -720,7 +721,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             JobGenContext context, JobSpecification spec, boolean bulkload) throws AlgebricksException {
 
         String indexName = dataSourceIndex.getId();
-        String dataverseName = dataSourceIndex.getDataSource().getId().getDataverseName();
+        DataverseName dataverseName = dataSourceIndex.getDataSource().getId().getDataverseName();
         String datasetName = dataSourceIndex.getDataSource().getId().getDatasourceName();
 
         IOperatorSchema inputSchema;
@@ -778,7 +779,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     protected IAdapterFactory getConfiguredAdapterFactory(Dataset dataset, String adapterName,
             Map<String, String> configuration, ARecordType itemType, ARecordType metaType) throws AlgebricksException {
         try {
-            configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataset.getDataverseName());
+            configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataset.getDataverseName().getCanonicalForm());
             IAdapterFactory adapterFactory = AdapterFactoryProvider.getAdapterFactory(
                     getApplicationContext().getServiceContext(), adapterName, configuration, itemType, metaType);
 
@@ -814,9 +815,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 numKeyFields / 2);
     }
 
-    public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitAndConstraints(String dataverse) {
+    public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitAndConstraints(DataverseName dataverseName) {
         return SplitsAndConstraintsUtil.getDataverseSplitProviderAndConstraints(appCtx.getClusterStateManager(),
-                dataverse);
+                dataverseName);
     }
 
     public FileSplit[] splitsForIndex(MetadataTransactionContext mdTxnCtx, Dataset dataset, String indexName)
@@ -824,8 +825,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return SplitsAndConstraintsUtil.getIndexSplits(dataset, indexName, mdTxnCtx, appCtx.getClusterStateManager());
     }
 
-    public DatasourceAdapter getAdapter(MetadataTransactionContext mdTxnCtx, String dataverseName, String adapterName)
-            throws AlgebricksException {
+    public DatasourceAdapter getAdapter(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
+            String adapterName) throws AlgebricksException {
         DatasourceAdapter adapter;
         // search in default namespace (built-in adapter)
         adapter = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME, adapterName);
@@ -1082,7 +1083,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             LogicalVariable upsertIndicatorVar, List<LogicalVariable> prevSecondaryKeys,
             LogicalVariable prevAdditionalFilteringKey) throws AlgebricksException {
         String indexName = dataSourceIndex.getId();
-        String dataverseName = dataSourceIndex.getDataSource().getId().getDataverseName();
+        DataverseName dataverseName = dataSourceIndex.getDataSource().getId().getDataverseName();
         String datasetName = dataSourceIndex.getDataSource().getId().getDatasourceName();
 
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
@@ -1119,7 +1120,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
     }
 
-    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getBTreeRuntime(String dataverseName,
+    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getBTreeRuntime(DataverseName dataverseName,
             String datasetName, String indexName, IOperatorSchema propagatedSchema, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
             AsterixTupleFilterFactory filterFactory, RecordDescriptor inputRecordDesc, JobGenContext context,
@@ -1206,7 +1207,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
     }
 
-    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getRTreeRuntime(String dataverseName,
+    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getRTreeRuntime(DataverseName dataverseName,
             String datasetName, String indexName, IOperatorSchema propagatedSchema, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
             AsterixTupleFilterFactory filterFactory, RecordDescriptor recordDesc, JobGenContext context,
@@ -1303,13 +1304,14 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return new Pair<>(op, splitsAndConstraint.second);
     }
 
-    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInvertedIndexRuntime(String dataverseName,
-            String datasetName, String indexName, IOperatorSchema propagatedSchema, List<LogicalVariable> primaryKeys,
-            List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
-            AsterixTupleFilterFactory filterFactory, RecordDescriptor recordDesc, JobGenContext context,
-            JobSpecification spec, IndexOperation indexOp, IndexType indexType, boolean bulkload,
-            LogicalVariable upsertIndicatorVar, List<LogicalVariable> prevSecondaryKeys,
-            List<LogicalVariable> prevAdditionalFilteringKeys) throws AlgebricksException {
+    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInvertedIndexRuntime(
+            DataverseName dataverseName, String datasetName, String indexName, IOperatorSchema propagatedSchema,
+            List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
+            List<LogicalVariable> additionalNonKeyFields, AsterixTupleFilterFactory filterFactory,
+            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, IndexOperation indexOp,
+            IndexType indexType, boolean bulkload, LogicalVariable upsertIndicatorVar,
+            List<LogicalVariable> prevSecondaryKeys, List<LogicalVariable> prevAdditionalFilteringKeys)
+            throws AlgebricksException {
         // Check the index is length-partitioned or not.
         boolean isPartitioned;
         if (indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
@@ -1418,10 +1420,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     // Get a Tokenizer for the bulk-loading data into a n-gram or keyword index.
-    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getBinaryTokenizerRuntime(String dataverseName,
-            String datasetName, String indexName, IOperatorSchema inputSchema, IOperatorSchema propagatedSchema,
-            List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys, RecordDescriptor recordDesc,
-            JobSpecification spec, IndexType indexType) throws AlgebricksException {
+    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getBinaryTokenizerRuntime(
+            DataverseName dataverseName, String datasetName, String indexName, IOperatorSchema inputSchema,
+            IOperatorSchema propagatedSchema, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
+            RecordDescriptor recordDesc, JobSpecification spec, IndexType indexType) throws AlgebricksException {
 
         // Sanity checks.
         if (primaryKeys.size() > 1) {

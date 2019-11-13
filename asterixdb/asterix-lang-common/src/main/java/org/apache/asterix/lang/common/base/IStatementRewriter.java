@@ -19,14 +19,17 @@
 package org.apache.asterix.lang.common.base;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 
 public interface IStatementRewriter {
 
     /**
      * @param statement,
      *            a non-query statement.
+     * @param metadataProvider
+     *            a metadata provider
      */
-    void rewrite(Statement statement) throws CompilationException;
+    void rewrite(Statement statement, MetadataProvider metadataProvider) throws CompilationException;
 
     String toExternalVariableName(String statementParameterName);
 }

@@ -56,6 +56,10 @@ public class MetadataTupleTranslatorProvider {
         return new FeedTupleTranslator(getTuple);
     }
 
+    public FeedConnectionTupleTranslator getFeedConnectionTupleTranslator(boolean getTuple) {
+        return new FeedConnectionTupleTranslator(getTuple);
+    }
+
     public FunctionTupleTranslator getFunctionTupleTranslator(boolean getTuple) {
         return new FunctionTupleTranslator(getTuple);
     }

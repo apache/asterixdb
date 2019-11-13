@@ -17,7 +17,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Users]
+    LiteralExpr [STRING] [Default.Users]
   ]
   AS Variable [ Name=$user ]
 ]
@@ -42,7 +42,7 @@ Let Variable [ Name=$similar_users ]
     ]
     ]
     FROM [      FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [Users]
+        LiteralExpr [STRING] [Default.Users]
       ]
       AS Variable [ Name=$similar_user ]
     ]

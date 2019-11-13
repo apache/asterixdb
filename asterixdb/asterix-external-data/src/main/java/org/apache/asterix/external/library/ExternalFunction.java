@@ -23,7 +23,9 @@ import java.io.IOException;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.IExternalFunction;
 import org.apache.asterix.external.api.IFunctionFactory;
 import org.apache.asterix.external.api.IFunctionHelper;
@@ -61,7 +63,7 @@ public abstract class ExternalFunction implements IExternalFunction {
         ILibraryManager libraryManager = appCtx.getLibraryManager();
         String[] fnameComponents = finfo.getFunctionIdentifier().getName().split("#");
         String functionLibary = fnameComponents[0];
-        String dataverse = finfo.getFunctionIdentifier().getNamespace();
+        DataverseName dataverse = FunctionSignature.getDataverseName(finfo.getFunctionIdentifier());
 
         functionHelper = new JavaFunctionHelper(finfo, resultBuffer,
                 libraryManager.getFunctionParameters(dataverse, finfo.getFunctionIdentifier().getName()));

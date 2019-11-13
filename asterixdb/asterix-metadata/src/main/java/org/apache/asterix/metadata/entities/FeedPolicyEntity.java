@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.entities;
 
 import java.util.Map;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.feed.policy.FeedPolicy;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -30,12 +31,12 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
  */
 public class FeedPolicyEntity extends FeedPolicy implements IMetadataEntity<FeedPolicyEntity> {
 
-    public FeedPolicyEntity(String dataverseName, String policyName, String description,
+    public FeedPolicyEntity(DataverseName dataverseName, String policyName, String description,
             Map<String, String> properties) {
         super(dataverseName, policyName, description, properties);
     }
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @Override
     public FeedPolicyEntity addToCache(MetadataCache cache) {

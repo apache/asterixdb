@@ -19,6 +19,7 @@
 package org.apache.asterix.metadata.utils;
 
 import org.apache.asterix.common.api.IMetadataLockManager;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
@@ -27,10 +28,10 @@ public class MetadataLockUtil {
     private MetadataLockUtil() {
     }
 
-    public static void createDatasetBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String itemTypeDataverseName, String itemTypeFullyQualifiedName, String metaItemTypeDataverseName,
-            String metaItemTypeFullyQualifiedName, String nodeGroupName, String compactionPolicyName,
-            String datasetFullyQualifiedName, boolean isDefaultCompactionPolicy) throws AlgebricksException {
+    public static void createDatasetBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String datasetName, DataverseName itemTypeDataverseName, String itemTypeName,
+            DataverseName metaItemTypeDataverseName, String metaItemTypeName, String nodeGroupName,
+            String compactionPolicyName, boolean isDefaultCompactionPolicy) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
         if (!dataverseName.equals(itemTypeDataverseName)) {
             lockMgr.acquireDataverseReadLock(locks, itemTypeDataverseName);
@@ -39,10 +40,10 @@ public class MetadataLockUtil {
                 && !metaItemTypeDataverseName.equals(itemTypeDataverseName)) {
             lockMgr.acquireDataverseReadLock(locks, metaItemTypeDataverseName);
         }
-        lockMgr.acquireDataTypeReadLock(locks, itemTypeFullyQualifiedName);
-        if (metaItemTypeFullyQualifiedName != null
-                && !metaItemTypeFullyQualifiedName.equals(itemTypeFullyQualifiedName)) {
-            lockMgr.acquireDataTypeReadLock(locks, metaItemTypeFullyQualifiedName);
+        lockMgr.acquireDataTypeReadLock(locks, itemTypeDataverseName, itemTypeName);
+        if (metaItemTypeDataverseName != null && !metaItemTypeDataverseName.equals(itemTypeDataverseName)
+                && !metaItemTypeName.equals(itemTypeName)) {
+            lockMgr.acquireDataTypeReadLock(locks, metaItemTypeDataverseName, metaItemTypeName);
         }
         if (nodeGroupName != null) {
             lockMgr.acquireNodeGroupReadLock(locks, nodeGroupName);
@@ -50,119 +51,123 @@ public class MetadataLockUtil {
         if (!isDefaultCompactionPolicy) {
             lockMgr.acquireMergePolicyReadLock(locks, compactionPolicyName);
         }
-        lockMgr.acquireDatasetWriteLock(locks, datasetFullyQualifiedName);
+        lockMgr.acquireDatasetWriteLock(locks, dataverseName, datasetName);
     }
 
-    public static void createIndexBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String datasetFullyQualifiedName) throws AlgebricksException {
+    public static void createIndexBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireDatasetCreateIndexLock(locks, datasetFullyQualifiedName);
+        lockMgr.acquireDatasetCreateIndexLock(locks, dataverseName, datasetName);
     }
 
-    public static void dropIndexBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String datasetFullyQualifiedName) throws AlgebricksException {
+    public static void dropIndexBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireDatasetWriteLock(locks, datasetFullyQualifiedName);
+        lockMgr.acquireDatasetWriteLock(locks, dataverseName, datasetName);
     }
 
-    public static void createTypeBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String itemTypeFullyQualifiedName) throws AlgebricksException {
+    public static void createTypeBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String typeName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireDataTypeWriteLock(locks, itemTypeFullyQualifiedName);
+        lockMgr.acquireDataTypeWriteLock(locks, dataverseName, typeName);
     }
 
-    public static void dropDatasetBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String datasetFullyQualifiedName) throws AlgebricksException {
+    public static void dropDatasetBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireDatasetWriteLock(locks, datasetFullyQualifiedName);
+        lockMgr.acquireDatasetWriteLock(locks, dataverseName, datasetName);
     }
 
-    public static void dropTypeBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String dataTypeFullyQualifiedName) throws AlgebricksException {
+    public static void dropTypeBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String typeName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireDataTypeWriteLock(locks, dataTypeFullyQualifiedName);
+        lockMgr.acquireDataTypeWriteLock(locks, dataverseName, typeName);
     }
 
-    public static void functionStatementBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String functionFullyQualifiedName) throws AlgebricksException {
+    public static void createFunctionBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String functionName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireFunctionWriteLock(locks, functionFullyQualifiedName);
+        lockMgr.acquireFunctionWriteLock(locks, dataverseName, functionName);
     }
 
-    public static void modifyDatasetBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String datasetFullyQualifiedName) throws AlgebricksException {
+    public static void dropFunctionBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String functionName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireDatasetModifyLock(locks, datasetFullyQualifiedName);
+        lockMgr.acquireFunctionWriteLock(locks, dataverseName, functionName);
+    }
+
+    public static void modifyDatasetBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
+        lockMgr.acquireDataverseReadLock(locks, dataverseName);
+        lockMgr.acquireDatasetModifyLock(locks, dataverseName, datasetName);
     }
 
     public static void insertDeleteUpsertBegin(IMetadataLockManager lockMgr, LockList locks,
-            String datasetFullyQualifiedName) throws AlgebricksException {
-        lockMgr.acquireDataverseReadLock(locks,
-                MetadataUtil.getDataverseFromFullyQualifiedName(datasetFullyQualifiedName));
-        lockMgr.acquireDatasetModifyLock(locks, datasetFullyQualifiedName);
-    }
-
-    public static void dropFeedBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String feedFullyQualifiedName) throws AlgebricksException {
+            DataverseName dataverseName, String datasetName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireActiveEntityWriteLock(locks, feedFullyQualifiedName);
+        lockMgr.acquireDatasetModifyLock(locks, dataverseName, datasetName);
     }
 
-    public static void dropFeedPolicyBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String policyName) throws AlgebricksException {
-        lockMgr.acquireActiveEntityWriteLock(locks, policyName);
-        lockMgr.acquireDataverseReadLock(locks, dataverseName);
-    }
-
-    public static void startFeedBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
+    public static void dropFeedBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
             String feedName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireActiveEntityReadLock(locks, feedName);
+        lockMgr.acquireActiveEntityWriteLock(locks, dataverseName, feedName);
     }
 
-    public static void stopFeedBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
+    public static void dropFeedPolicyBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String policyName) throws AlgebricksException {
+        lockMgr.acquireDataverseReadLock(locks, dataverseName);
+        lockMgr.acquireActiveEntityWriteLock(locks, dataverseName, policyName);
+    }
+
+    public static void startFeedBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String feedName) throws AlgebricksException {
+        lockMgr.acquireDataverseReadLock(locks, dataverseName);
+        lockMgr.acquireActiveEntityReadLock(locks, dataverseName, feedName);
+    }
+
+    public static void stopFeedBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
             String feedName) throws AlgebricksException {
         // TODO: dataset lock?
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireActiveEntityReadLock(locks, feedName);
+        lockMgr.acquireActiveEntityReadLock(locks, dataverseName, feedName);
     }
 
-    public static void createFeedBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String feedFullyQualifiedName) throws AlgebricksException {
+    public static void createFeedBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String feedName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireActiveEntityWriteLock(locks, feedFullyQualifiedName);
+        lockMgr.acquireActiveEntityWriteLock(locks, dataverseName, feedName);
     }
 
-    public static void connectFeedBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String datasetFullyQualifiedName, String feedFullyQualifiedName) throws AlgebricksException {
+    public static void connectFeedBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String datasetName, String feedName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireActiveEntityReadLock(locks, feedFullyQualifiedName);
-        lockMgr.acquireDatasetReadLock(locks, datasetFullyQualifiedName);
+        lockMgr.acquireActiveEntityReadLock(locks, dataverseName, feedName);
+        lockMgr.acquireDatasetReadLock(locks, dataverseName, datasetName);
     }
 
-    public static void createFeedPolicyBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
+    public static void createFeedPolicyBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
             String policyName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireFeedPolicyWriteLock(locks, policyName);
+        lockMgr.acquireFeedPolicyWriteLock(locks, dataverseName, policyName);
     }
 
-    public static void disconnectFeedBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String datasetFullyQualifiedName, String feedFullyQualifiedName) throws AlgebricksException {
+    public static void disconnectFeedBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String datasetName, String feedName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireActiveEntityReadLock(locks, feedFullyQualifiedName);
-        lockMgr.acquireDatasetReadLock(locks, datasetFullyQualifiedName);
+        lockMgr.acquireActiveEntityReadLock(locks, dataverseName, feedName);
+        lockMgr.acquireDatasetReadLock(locks, dataverseName, datasetName);
     }
 
-    public static void compactBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String datasetFullyQualifiedName) throws AlgebricksException {
+    public static void compactBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireDatasetReadLock(locks, datasetFullyQualifiedName);
+        lockMgr.acquireDatasetReadLock(locks, dataverseName, datasetName);
     }
 
-    public static void refreshDatasetBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String datasetFullyQualifiedName) throws AlgebricksException {
+    public static void refreshDatasetBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireDatasetExclusiveModificationLock(locks, datasetFullyQualifiedName);
+        lockMgr.acquireDatasetExclusiveModificationLock(locks, dataverseName, datasetName);
     }
-
 }

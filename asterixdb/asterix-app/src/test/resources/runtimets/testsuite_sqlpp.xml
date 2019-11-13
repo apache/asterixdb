@@ -45,7 +45,6 @@
     <test-case FilePath="api">
       <compilation-unit name="request-param-validation">
         <output-dir compare="Text">request-param-validation</output-dir>
-        <source-location>false</source-location>
         <expected-error>Invalid value for parameter "format": foo</expected-error>
         <expected-error>Invalid value for parameter "pretty": bar</expected-error>
         <expected-error>Invalid value for parameter "plan-format": blah</expected-error>
@@ -71,6 +70,7 @@
         <expected-error>Invalid value for parameter "profile": true</expected-error>
         <expected-error>Invalid value for parameter "profile": foo</expected-error>
         <expected-error>Invalid value for parameter "profile": foo</expected-error>
+        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="api">
@@ -6449,6 +6449,28 @@
     <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-865">
         <output-dir compare="Text">query-ASTERIXDB-865</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="multipart-dataverse">
+    <test-case FilePath="multipart-dataverse">
+      <compilation-unit name="index_1">
+        <output-dir compare="Text">index_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="multipart-dataverse">
+      <compilation-unit name="resolution_1">
+        <output-dir compare="Text">resolution_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="multipart-dataverse">
+      <compilation-unit name="special_chars_1">
+        <output-dir compare="Text">special_chars_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="multipart-dataverse">
+      <compilation-unit name="udf_1">
+        <output-dir compare="Text">udf_1</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

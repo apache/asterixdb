@@ -20,6 +20,7 @@
 package org.apache.asterix.utils;
 
 import org.apache.asterix.common.config.CompilerProperties;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -44,7 +45,7 @@ public class FlushDatasetUtil {
     }
 
     public static void flushDataset(IHyracksClientConnection hcc, MetadataProvider metadataProvider,
-            String dataverseName, String datasetName) throws Exception {
+            DataverseName dataverseName, String datasetName) throws Exception {
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         flushDataset(hcc, metadataProvider, dataset);
     }

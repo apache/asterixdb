@@ -19,16 +19,13 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataNode;
@@ -61,67 +58,63 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates an Index metadata entity to an ITupleReference and vice versa.
  */
 public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
-    private static final long serialVersionUID = 1L;
-    // Field indexes of serialized Index in a tuple.
-    // First key field.
-    public static final int INDEX_DATAVERSENAME_TUPLE_FIELD_INDEX = 0;
-    // Second key field.
-    public static final int INDEX_DATASETNAME_TUPLE_FIELD_INDEX = 1;
-    // Third key field.
-    public static final int INDEX_INDEXNAME_TUPLE_FIELD_INDEX = 2;
+
     // Payload field containing serialized Index.
-    public static final int INDEX_PAYLOAD_TUPLE_FIELD_INDEX = 3;
+    private static final int INDEX_PAYLOAD_TUPLE_FIELD_INDEX = 3;
+
     // Field name of open field.
     public static final String GRAM_LENGTH_FIELD_NAME = "GramLength";
     public static final String INDEX_SEARCHKEY_TYPE_FIELD_NAME = "SearchKeyType";
     public static final String INDEX_ISENFORCED_FIELD_NAME = "IsEnforced";
     public static final String INDEX_SEARCHKEY_SOURCE_INDICATOR_FIELD_NAME = "SearchKeySourceIndicator";
 
-    private transient OrderedListBuilder listBuilder = new OrderedListBuilder();
-    private transient OrderedListBuilder primaryKeyListBuilder = new OrderedListBuilder();
-    private transient AOrderedListType stringList = new AOrderedListType(BuiltinType.ASTRING, null);
-    private transient AOrderedListType int8List = new AOrderedListType(BuiltinType.AINT8, null);
-    private transient ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
-    private transient ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
-    private transient AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AInt32> intSerde =
-            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AInt8> int8Serde =
-            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerde =
-            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(MetadataRecordTypes.INDEX_RECORDTYPE);
-    private final MetadataNode metadataNode;
-    private final TxnId txnId;
+    protected final TxnId txnId;
+    protected final MetadataNode metadataNode;
 
+    protected OrderedListBuilder listBuilder;
+    protected OrderedListBuilder primaryKeyListBuilder;
+    protected AOrderedListType stringList;
+    protected AOrderedListType int8List;
+    protected ArrayBackedValueStorage nameValue;
+    protected ArrayBackedValueStorage itemValue;
+    protected AMutableInt8 aInt8;
+    protected ISerializerDeserializer<AInt8> int8Serde;
+
+    @SuppressWarnings("unchecked")
     protected IndexTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.INDEX_DATASET.getFieldCount());
+        super(getTuple, MetadataPrimaryIndexes.INDEX_DATASET, INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
         this.txnId = txnId;
         this.metadataNode = metadataNode;
+        if (getTuple) {
+            listBuilder = new OrderedListBuilder();
+            primaryKeyListBuilder = new OrderedListBuilder();
+            stringList = new AOrderedListType(BuiltinType.ASTRING, null);
+            int8List = new AOrderedListType(BuiltinType.AINT8, null);
+            nameValue = new ArrayBackedValueStorage();
+            itemValue = new ArrayBackedValueStorage();
+            aInt8 = new AMutableInt8((byte) 0);
+            int8Serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
+        }
     }
 
     @Override
-    public Index getMetadataEntityFromTuple(ITupleReference frameTuple)
-            throws AlgebricksException, HyracksDataException {
-        byte[] serRecord = frameTuple.getFieldData(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordStartOffset = frameTuple.getFieldStart(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordLength = frameTuple.getFieldLength(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
-        ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
-        DataInput in = new DataInputStream(stream);
-        ARecord rec = recordSerde.deserialize(in);
-        String dvName = ((AString) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_DATAVERSENAME_FIELD_INDEX))
-                .getStringValue();
-        String dsName = ((AString) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_DATASETNAME_FIELD_INDEX))
-                .getStringValue();
+    protected Index createMetadataEntityFromARecord(ARecord indexRecord) throws AlgebricksException {
+        String dataverseCanonicalName =
+                ((AString) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_DATAVERSENAME_FIELD_INDEX))
+                        .getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        String datasetName =
+                ((AString) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_DATASETNAME_FIELD_INDEX))
+                        .getStringValue();
         String indexName =
-                ((AString) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXNAME_FIELD_INDEX)).getStringValue();
-        IndexType indexStructure = IndexType
-                .valueOf(((AString) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXSTRUCTURE_FIELD_INDEX))
+                ((AString) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXNAME_FIELD_INDEX))
+                        .getStringValue();
+        IndexType indexStructure = IndexType.valueOf(
+                ((AString) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXSTRUCTURE_FIELD_INDEX))
                         .getStringValue());
         IACursor fieldNameCursor =
-                ((AOrderedList) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX)).getCursor();
+                ((AOrderedList) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX))
+                        .getCursor();
         List<List<String>> searchKey = new ArrayList<>();
         AOrderedList fieldNameList;
         while (fieldNameCursor.next()) {
@@ -133,40 +126,42 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             }
             searchKey.add(nestedFieldName);
         }
-        int indexKeyTypeFieldPos = rec.getType().getFieldIndex(INDEX_SEARCHKEY_TYPE_FIELD_NAME);
+        int indexKeyTypeFieldPos = indexRecord.getType().getFieldIndex(INDEX_SEARCHKEY_TYPE_FIELD_NAME);
         IACursor fieldTypeCursor = new ACollectionCursor();
         if (indexKeyTypeFieldPos > 0) {
-            fieldTypeCursor = ((AOrderedList) rec.getValueByPos(indexKeyTypeFieldPos)).getCursor();
+            fieldTypeCursor = ((AOrderedList) indexRecord.getValueByPos(indexKeyTypeFieldPos)).getCursor();
         }
         List<IAType> searchKeyType = new ArrayList<>(searchKey.size());
         while (fieldTypeCursor.next()) {
             String typeName = ((AString) fieldTypeCursor.get()).getStringValue();
-            IAType fieldType = BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dvName, typeName, false);
+            IAType fieldType = BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName, false);
             searchKeyType.add(fieldType);
         }
         boolean isOverridingKeyTypes = !searchKeyType.isEmpty();
 
-        int isEnforcedFieldPos = rec.getType().getFieldIndex(INDEX_ISENFORCED_FIELD_NAME);
+        int isEnforcedFieldPos = indexRecord.getType().getFieldIndex(INDEX_ISENFORCED_FIELD_NAME);
         Boolean isEnforcingKeys = false;
         if (isEnforcedFieldPos > 0) {
-            isEnforcingKeys = ((ABoolean) rec.getValueByPos(isEnforcedFieldPos)).getBoolean();
+            isEnforcingKeys = ((ABoolean) indexRecord.getValueByPos(isEnforcedFieldPos)).getBoolean();
         }
         Boolean isPrimaryIndex =
-                ((ABoolean) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_ISPRIMARY_FIELD_INDEX)).getBoolean();
-        int pendingOp =
-                ((AInt32) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX)).getIntegerValue();
+                ((ABoolean) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_ISPRIMARY_FIELD_INDEX))
+                        .getBoolean();
+        int pendingOp = ((AInt32) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX))
+                .getIntegerValue();
         // Check if there is a gram length as well.
         int gramLength = -1;
-        int gramLenPos = rec.getType().getFieldIndex(GRAM_LENGTH_FIELD_NAME);
+        int gramLenPos = indexRecord.getType().getFieldIndex(GRAM_LENGTH_FIELD_NAME);
         if (gramLenPos >= 0) {
-            gramLength = ((AInt32) rec.getValueByPos(gramLenPos)).getIntegerValue();
+            gramLength = ((AInt32) indexRecord.getValueByPos(gramLenPos)).getIntegerValue();
         }
 
         // Read a field-source-indicator field.
         List<Integer> keyFieldSourceIndicator = new ArrayList<>();
-        int keyFieldSourceIndicatorIndex = rec.getType().getFieldIndex(INDEX_SEARCHKEY_SOURCE_INDICATOR_FIELD_NAME);
+        int keyFieldSourceIndicatorIndex =
+                indexRecord.getType().getFieldIndex(INDEX_SEARCHKEY_SOURCE_INDICATOR_FIELD_NAME);
         if (keyFieldSourceIndicatorIndex >= 0) {
-            IACursor cursor = ((AOrderedList) rec.getValueByPos(keyFieldSourceIndicatorIndex)).getCursor();
+            IACursor cursor = ((AOrderedList) indexRecord.getValueByPos(keyFieldSourceIndicatorIndex)).getCursor();
             while (cursor.next()) {
                 keyFieldSourceIndicator.add((int) ((AInt8) cursor.get()).getByteValue());
             }
@@ -179,72 +174,72 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         // index key type information is not persisted, thus we extract type information
         // from the record metadata
         if (searchKeyType.isEmpty()) {
-            try {
-                Dataset dSet = metadataNode.getDataset(txnId, dvName, dsName);
-                String datatypeName = dSet.getItemTypeName();
-                String datatypeDataverseName = dSet.getItemTypeDataverseName();
-                ARecordType recordDt = (ARecordType) metadataNode
-                        .getDatatype(txnId, datatypeDataverseName, datatypeName).getDatatype();
-                String metatypeName = dSet.getMetaItemTypeName();
-                String metatypeDataverseName = dSet.getMetaItemTypeDataverseName();
-                ARecordType metaDt = null;
-                if (metatypeName != null && metatypeDataverseName != null) {
-                    metaDt = (ARecordType) metadataNode.getDatatype(txnId, metatypeDataverseName, metatypeName)
-                            .getDatatype();
-                }
-                searchKeyType = KeyFieldTypeUtil.getKeyTypes(recordDt, metaDt, searchKey, keyFieldSourceIndicator);
-            } catch (RemoteException re) {
-                throw HyracksDataException.create(re);
+            Dataset dataset = metadataNode.getDataset(txnId, dataverseName, datasetName);
+            String datatypeName = dataset.getItemTypeName();
+            DataverseName datatypeDataverseName = dataset.getItemTypeDataverseName();
+            ARecordType recordDt =
+                    (ARecordType) metadataNode.getDatatype(txnId, datatypeDataverseName, datatypeName).getDatatype();
+            String metatypeName = dataset.getMetaItemTypeName();
+            DataverseName metatypeDataverseName = dataset.getMetaItemTypeDataverseName();
+            ARecordType metaDt = null;
+            if (metatypeName != null && metatypeDataverseName != null) {
+                metaDt = (ARecordType) metadataNode.getDatatype(txnId, metatypeDataverseName, metatypeName)
+                        .getDatatype();
             }
+            searchKeyType = KeyFieldTypeUtil.getKeyTypes(recordDt, metaDt, searchKey, keyFieldSourceIndicator);
         }
-        return new Index(dvName, dsName, indexName, indexStructure, searchKey, keyFieldSourceIndicator, searchKeyType,
-                gramLength, isOverridingKeyTypes, isEnforcingKeys, isPrimaryIndex, pendingOp);
+
+        return new Index(dataverseName, datasetName, indexName, indexStructure, searchKey, keyFieldSourceIndicator,
+                searchKeyType, gramLength, isOverridingKeyTypes, isEnforcingKeys, isPrimaryIndex, pendingOp);
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Index instance) throws HyracksDataException {
+    public ITupleReference getTupleFromMetadataEntity(Index index) throws HyracksDataException {
+        String dataverseCanonicalName = index.getDataverseName().getCanonicalForm();
+
         // write the key in the first 3 fields of the tuple
         tupleBuilder.reset();
-        aString.setValue(instance.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
-        aString.setValue(instance.getDatasetName());
+        aString.setValue(index.getDatasetName());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
-        aString.setValue(instance.getIndexName());
+        aString.setValue(index.getIndexName());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
         // write the payload in the fourth field of the tuple
         recordBuilder.reset(MetadataRecordTypes.INDEX_RECORDTYPE);
+
         // write field 0
         fieldValue.reset();
-        aString.setValue(instance.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_DATAVERSENAME_FIELD_INDEX, fieldValue);
 
         // write field 1
         fieldValue.reset();
-        aString.setValue(instance.getDatasetName());
+        aString.setValue(index.getDatasetName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_DATASETNAME_FIELD_INDEX, fieldValue);
 
         // write field 2
         fieldValue.reset();
-        aString.setValue(instance.getIndexName());
+        aString.setValue(index.getIndexName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_INDEXNAME_FIELD_INDEX, fieldValue);
 
         // write field 3
         fieldValue.reset();
-        aString.setValue(instance.getIndexType().toString());
+        aString.setValue(index.getIndexType().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_INDEXSTRUCTURE_FIELD_INDEX, fieldValue);
 
         // write field 4
         primaryKeyListBuilder.reset((AOrderedListType) MetadataRecordTypes.INDEX_RECORDTYPE
                 .getFieldTypes()[MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX]);
-        List<List<String>> searchKey = instance.getKeyFieldNames();
+        List<List<String>> searchKey = index.getKeyFieldNames();
         for (List<String> field : searchKey) {
             listBuilder.reset(stringList);
             for (String subField : field) {
@@ -263,7 +258,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
         // write field 5
         fieldValue.reset();
-        if (instance.isPrimaryIndex()) {
+        if (index.isPrimaryIndex()) {
             booleanSerde.serialize(ABoolean.TRUE, fieldValue.getDataOutput());
         } else {
             booleanSerde.serialize(ABoolean.FALSE, fieldValue.getDataOutput());
@@ -278,21 +273,43 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
         // write field 7
         fieldValue.reset();
-        intSerde.serialize(new AInt32(instance.getPendingOp()), fieldValue.getDataOutput());
+        int32Serde.serialize(new AInt32(index.getPendingOp()), fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX, fieldValue);
 
-        // write optional field 8
-        if (instance.getGramLength() > 0) {
+        // write open fields
+        writeOpenFields(index);
+
+        // write record
+        recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        tupleBuilder.addFieldEndOffset();
+
+        tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
+        return tuple;
+    }
+
+    /**
+     * Keep protected to allow other extensions to add additional fields
+     */
+    protected void writeOpenFields(Index index) throws HyracksDataException {
+        writeGramLength(index);
+        writeSearchKeyType(index);
+        writeEnforced(index);
+        writeSearchKeySourceIndicator(index);
+    }
+
+    private void writeGramLength(Index index) throws HyracksDataException {
+        if (index.getGramLength() > 0) {
             fieldValue.reset();
             nameValue.reset();
             aString.setValue(GRAM_LENGTH_FIELD_NAME);
             stringSerde.serialize(aString, nameValue.getDataOutput());
-            intSerde.serialize(new AInt32(instance.getGramLength()), fieldValue.getDataOutput());
+            int32Serde.serialize(new AInt32(index.getGramLength()), fieldValue.getDataOutput());
             recordBuilder.addField(nameValue, fieldValue);
         }
+    }
 
-        if (instance.isOverridingKeyFieldTypes()) {
-            // write optional field 9
+    private void writeSearchKeyType(Index index) throws HyracksDataException {
+        if (index.isOverridingKeyFieldTypes()) {
             OrderedListBuilder typeListBuilder = new OrderedListBuilder();
             typeListBuilder.reset(new AOrderedListType(BuiltinType.ANY, null));
             nameValue.reset();
@@ -300,7 +317,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
             stringSerde.serialize(aString, nameValue.getDataOutput());
 
-            List<IAType> searchKeyType = instance.getKeyFieldTypes();
+            List<IAType> searchKeyType = index.getKeyFieldTypes();
             for (IAType type : searchKeyType) {
                 itemValue.reset();
                 aString.setValue(type.getTypeName());
@@ -311,21 +328,21 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             typeListBuilder.write(fieldValue.getDataOutput(), true);
             recordBuilder.addField(nameValue, fieldValue);
         }
+    }
 
-        if (instance.isEnforced()) {
-            // write optional field 10
+    private void writeEnforced(Index index) throws HyracksDataException {
+        if (index.isEnforced()) {
             fieldValue.reset();
             nameValue.reset();
             aString.setValue(INDEX_ISENFORCED_FIELD_NAME);
-
             stringSerde.serialize(aString, nameValue.getDataOutput());
-
             booleanSerde.serialize(ABoolean.TRUE, fieldValue.getDataOutput());
-
             recordBuilder.addField(nameValue, fieldValue);
         }
+    }
 
-        List<Integer> keySourceIndicator = instance.getKeyFieldSourceIndicators();
+    private void writeSearchKeySourceIndicator(Index index) throws HyracksDataException {
+        List<Integer> keySourceIndicator = index.getKeyFieldSourceIndicators();
         boolean needSerialization = false;
         if (keySourceIndicator != null) {
             for (int source : keySourceIndicator) {
@@ -350,12 +367,5 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             listBuilder.write(fieldValue.getDataOutput(), true);
             recordBuilder.addField(nameValue, fieldValue);
         }
-
-        // write record
-        recordBuilder.write(tupleBuilder.getDataOutput(), true);
-        tupleBuilder.addFieldEndOffset();
-
-        tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
-        return tuple;
     }
 }

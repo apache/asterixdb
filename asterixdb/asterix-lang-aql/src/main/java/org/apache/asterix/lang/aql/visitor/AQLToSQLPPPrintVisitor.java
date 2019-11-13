@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
@@ -47,7 +47,6 @@ import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
-import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
@@ -57,6 +56,8 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.common.util.ExpressionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.FormatPrintVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
@@ -264,7 +265,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
 
     @Override
     public Void visit(DataverseDecl dv, Integer step) throws CompilationException {
-        out.println(skip(step) + "use " + normalize(dv.getDataverseName().getValue()) + ";\n\n");
+        out.println(skip(step) + "use " + generateDataverseName(dv.getDataverseName()) + ";\n\n");
         return null;
     }
 
@@ -302,14 +303,17 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
 
     @Override
     public Void visit(CallExpr callExpr, Integer step) throws CompilationException {
-        FunctionSignature signature = callExpr.getFunctionSignature();
-        if (signature.getNamespace() != null && signature.getNamespace().equals("Metadata")
-                && signature.getName().equals("dataset") && signature.getArity() == 1) {
-            LiteralExpr expr = (LiteralExpr) callExpr.getExprList().get(0);
-            out.print(normalize(expr.getValue().getStringValue()));
+        if (FunctionUtil.isBuiltinDatasetFunction(callExpr.getFunctionSignature())) {
+            Pair<DataverseName, String> dataset = FunctionUtil.parseDatasetFunctionArguments(callExpr.getExprList(),
+                    null, callExpr.getSourceLocation(), ExpressionUtils::getStringLiteral);
+            if (dataset.first != null) {
+                out.print(generateDataverseName(dataset.first));
+                out.print(".");
+            }
+            out.print(normalize(dataset.second));
         } else {
             printHints(callExpr.getHints(), step);
-            out.print(generateFullName(callExpr.getFunctionSignature().getNamespace(),
+            out.print(generateFullName(callExpr.getFunctionSignature().getDataverseName(),
                     callExpr.getFunctionSignature().getName()) + "(");
             printDelimitedExpressions(callExpr.getExprList(), COMMA, step);
             out.print(")");

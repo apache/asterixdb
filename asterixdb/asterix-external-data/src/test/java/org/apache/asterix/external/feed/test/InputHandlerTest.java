@@ -32,6 +32,7 @@ import java.util.concurrent.Future;
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
@@ -59,7 +60,7 @@ public class InputHandlerTest {
     private static final int DEFAULT_FRAME_SIZE = 32768;
     private static final int NUM_FRAMES = 128;
     private static final long FEED_MEM_BUDGET = DEFAULT_FRAME_SIZE * NUM_FRAMES;
-    private static final String DATAVERSE = "dataverse";
+    private static final DataverseName DATAVERSE = DataverseName.createSinglePartName("dataverse");
     private static final String DATASET = "dataset";
     private static final String FEED = "feed";
     private static final String NODE_ID = "NodeId";

@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.feed.watch.FeedActivityDetails;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedUtils;
@@ -36,12 +37,10 @@ import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
-import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionToDataSourceRewriter;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
@@ -49,7 +48,6 @@ import org.apache.asterix.optimizer.rules.UnnestToDataScanRule;
 import org.apache.asterix.translator.util.PlanTranslationUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -75,16 +73,17 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, unnest.getSourceLocation(),
                     "No positional variables are allowed over feeds.");
         }
-        String dataverse = ConstantExpressionUtil.getStringArgument(f, 0);
+        DataverseName dataverseName =
+                DataverseName.createFromCanonicalForm(ConstantExpressionUtil.getStringArgument(f, 0));
         String sourceFeedName = ConstantExpressionUtil.getStringArgument(f, 1);
         String getTargetFeed = ConstantExpressionUtil.getStringArgument(f, 2);
         String subscriptionLocation = ConstantExpressionUtil.getStringArgument(f, 3);
         String targetDataset = ConstantExpressionUtil.getStringArgument(f, 4);
         String outputType = ConstantExpressionUtil.getStringArgument(f, 5);
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
-        DataSourceId asid = new DataSourceId(dataverse, getTargetFeed);
+        DataSourceId asid = new DataSourceId(dataverseName, getTargetFeed);
         String policyName = (String) metadataProvider.getConfig().get(FeedActivityDetails.FEED_POLICY_NAME);
-        FeedPolicyEntity policy = metadataProvider.findFeedPolicy(dataverse, policyName);
+        FeedPolicyEntity policy = metadataProvider.findFeedPolicy(dataverseName, policyName);
         if (policy == null) {
             policy = BuiltinFeedPolicies.getFeedPolicy(policyName);
             if (policy == null) {
@@ -116,15 +115,15 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
         return true;
     }
 
-    private FeedDataSource createFeedDataSource(DataSourceId aqlId, String targetDataset, String sourceFeedName,
+    private FeedDataSource createFeedDataSource(DataSourceId id, String targetDataset, String sourceFeedName,
             String subscriptionLocation, MetadataProvider metadataProvider, FeedPolicyEntity feedPolicy,
             String outputType, String locations, LogicalVariable recordVar, IOptimizationContext context,
             List<LogicalVariable> pkVars) throws AlgebricksException {
-        Dataset dataset = metadataProvider.findDataset(aqlId.getDataverseName(), targetDataset);
-        ARecordType feedOutputType = (ARecordType) metadataProvider.findType(aqlId.getDataverseName(), outputType);
-        Feed sourceFeed = metadataProvider.findFeed(aqlId.getDataverseName(), sourceFeedName);
+        Dataset dataset = metadataProvider.findDataset(id.getDataverseName(), targetDataset);
+        ARecordType feedOutputType = (ARecordType) metadataProvider.findType(id.getDataverseName(), outputType);
+        Feed sourceFeed = metadataProvider.findFeed(id.getDataverseName(), sourceFeedName);
         FeedConnection feedConnection =
-                metadataProvider.findFeedConnection(aqlId.getDataverseName(), sourceFeedName, targetDataset);
+                metadataProvider.findFeedConnection(id.getDataverseName(), sourceFeedName, targetDataset);
         ARecordType metaType = null;
         // Does dataset have meta?
         if (dataset.hasMetaPart()) {
@@ -132,12 +131,7 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
             if (metaTypeName == null) {
                 throw new AlgebricksException("Feed to a dataset with metadata doesn't have meta type specified");
             }
-            String dataverseName = aqlId.getDataverseName();
-            if (metaTypeName.contains(".")) {
-                dataverseName = metaTypeName.substring(0, metaTypeName.indexOf('.'));
-                metaTypeName = metaTypeName.substring(metaTypeName.indexOf('.') + 1);
-            }
-            metaType = (ARecordType) metadataProvider.findType(dataverseName, metaTypeName);
+            metaType = (ARecordType) metadataProvider.findType(id.getDataverseName(), metaTypeName);
         }
         // Is a change feed?
         List<IAType> pkTypes = null;
@@ -168,7 +162,7 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
         } else {
             keyAccessScalarFunctionCallExpression = null;
         }
-        FeedDataSource feedDataSource = new FeedDataSource(sourceFeed, aqlId, targetDataset, feedOutputType, metaType,
+        FeedDataSource feedDataSource = new FeedDataSource(sourceFeed, id, targetDataset, feedOutputType, metaType,
                 pkTypes, keyAccessScalarFunctionCallExpression, sourceFeed.getFeedId(),
                 FeedRuntimeType.valueOf(subscriptionLocation), locations.split(","), context.getComputationNodeDomain(),
                 feedConnection);
@@ -184,31 +178,17 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
             throw new AlgebricksException("Incorrect number of arguments -> arity is "
                     + BuiltinFunctions.FEED_COLLECT.getArity() + ", not " + f.getArguments().size());
         }
-        ILogicalExpression a1 = f.getArguments().get(5).getValue();
-        IAType t1 = (IAType) env.getType(a1);
-        if (t1.getTypeTag() == ATypeTag.ANY) {
-            return BuiltinType.ANY;
-        }
-        if (t1.getTypeTag() != ATypeTag.STRING) {
-            throw new AlgebricksException("Illegal type " + t1 + " for feed-ingest argument.");
-        }
-        String typeArg = ConstantExpressionUtil.getStringConstant(a1);
-        if (typeArg == null) {
+        DataverseName dataverseName =
+                DataverseName.createFromCanonicalForm(ConstantExpressionUtil.getStringArgument(f, 0));
+        String outputTypeName = ConstantExpressionUtil.getStringArgument(f, 5);
+        if (outputTypeName == null) {
             return BuiltinType.ANY;
         }
         MetadataProvider metadata = (MetadataProvider) mp;
-        Pair<String, String> argInfo = DatasetUtil.getDatasetInfo(metadata, typeArg);
-        String dataverseName = argInfo.first;
-        String typeName = argInfo.second;
-        if (dataverseName == null) {
-            throw new AlgebricksException("Unspecified dataverse!");
+        IAType outputType = metadata.findType(dataverseName, outputTypeName);
+        if (outputType == null) {
+            throw new AlgebricksException("Unknown type " + outputTypeName);
         }
-        IAType t2 = metadata.findType(dataverseName, typeName);
-        if (t2 == null) {
-            throw new AlgebricksException("Unknown type  " + typeName);
-        }
-        return t2;
-
+        return outputType;
     }
-
 }

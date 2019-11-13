@@ -31,8 +31,6 @@ import org.apache.asterix.om.types.IAType;
  * Contains static primary-index descriptors of all metadata datasets.
  */
 public class MetadataPrimaryIndexes {
-    public static final MetadataIndexImmutableProperties PROPERTIES_METADATA =
-            new MetadataIndexImmutableProperties(MetadataConstants.METADATA_DATAVERSE_NAME, 0, 0);
     public static final MetadataIndexImmutableProperties PROPERTIES_DATAVERSE =
             new MetadataIndexImmutableProperties(MetadataConstants.DATAVERSE_DATASET_NAME, 1, 1);
     public static final MetadataIndexImmutableProperties PROPERTIES_DATASET =

@@ -19,6 +19,7 @@
 
 package org.apache.asterix.metadata.entities;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.om.types.IAType;
@@ -28,22 +29,22 @@ import org.apache.asterix.om.types.IAType;
  */
 public class Datatype implements IMetadataEntity<Datatype> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private final String dataverseName;
+    private final DataverseName dataverseName;
     // Enforced to be unique within a dataverse.
     private final String datatypeName;
     private final IAType datatype;
     private final boolean isAnonymous;
 
-    public Datatype(String dataverseName, String datatypeName, IAType datatype, boolean isAnonymous) {
+    public Datatype(DataverseName dataverseName, String datatypeName, IAType datatype, boolean isAnonymous) {
         this.dataverseName = dataverseName;
         this.datatypeName = datatypeName;
         this.datatype = datatype;
         this.isAnonymous = isAnonymous;
     }
 
-    public String getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 

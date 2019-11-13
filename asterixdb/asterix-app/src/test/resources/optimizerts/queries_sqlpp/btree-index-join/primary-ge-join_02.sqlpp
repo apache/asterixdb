@@ -40,7 +40,7 @@ create  dataset test1.DsTwo(TestType) primary key key1;
 
 write output to asterix_nc1:"rttest/btree-index-join_primary-ge-join_02.adm";
 select element x
-from  `test1.DsOne` as x,
-      `test1.DsTwo` as y
+from  test1.DsOne as x,
+      test1.DsTwo as y
 where (x.key2 /*+ indexnl */  <= y.key1)
 ;

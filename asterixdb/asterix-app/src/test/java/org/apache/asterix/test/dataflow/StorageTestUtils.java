@@ -42,6 +42,7 @@ import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -84,7 +85,7 @@ public class StorageTestUtils {
     public static final int TOTAL_NUM_OF_RECORDS = 10000;
     public static final int RECORDS_PER_COMPONENT = 1000;
     public static final int DATASET_ID = 101;
-    public static final String DATAVERSE_NAME = "TestDV";
+    public static final DataverseName DATAVERSE_NAME = DataverseName.createSinglePartName("TestDV");
     public static final String DATASET_NAME = "TestDS";
     public static final String DATA_TYPE_NAME = "DUMMY";
     public static final String NODE_GROUP_NAME = "DEFAULT";

@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -32,11 +33,11 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
  */
 public class FeedConnection implements IMetadataEntity<FeedConnection> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private EntityId feedId;
     private String connectionId;
-    private String dataverseName;
+    private DataverseName dataverseName;
     private String feedName;
     private String datasetName;
     private String policyName;
@@ -44,7 +45,7 @@ public class FeedConnection implements IMetadataEntity<FeedConnection> {
     private String outputType;
     private List<FunctionSignature> appliedFunctions;
 
-    public FeedConnection(String dataverseName, String feedName, String datasetName,
+    public FeedConnection(DataverseName dataverseName, String feedName, String datasetName,
             List<FunctionSignature> appliedFunctions, String policyName, String whereClauseBody, String outputType) {
         this.dataverseName = dataverseName;
         this.feedName = feedName;
@@ -87,7 +88,7 @@ public class FeedConnection implements IMetadataEntity<FeedConnection> {
         return null;
     }
 
-    public String getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 

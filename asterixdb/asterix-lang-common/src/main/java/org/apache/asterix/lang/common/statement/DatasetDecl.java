@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
@@ -35,10 +36,10 @@ import org.apache.asterix.runtime.compression.CompressionManager;
 
 public class DatasetDecl extends AbstractStatement {
     protected final Identifier name;
-    protected final Identifier dataverse;
-    protected final Identifier itemTypeDataverse;
+    protected final DataverseName dataverse;
+    protected final DataverseName itemTypeDataverse;
     protected final Identifier itemTypeName;
-    protected final Identifier metaItemTypeDataverse;
+    protected final DataverseName metaItemTypeDataverse;
     protected final Identifier metaItemTypeName;
     protected final Identifier nodegroupName;
     protected final DatasetType datasetType;
@@ -47,24 +48,16 @@ public class DatasetDecl extends AbstractStatement {
     private final AdmObjectNode withObjectNode;
     protected final boolean ifNotExists;
 
-    public DatasetDecl(Identifier dataverse, Identifier name, Identifier itemTypeDataverse, Identifier itemTypeName,
-            Identifier metaItemTypeDataverse, Identifier metaItemTypeName, Identifier nodeGroupName,
-            Map<String, String> hints, DatasetType datasetType, IDatasetDetailsDecl idd, RecordConstructor withRecord,
-            boolean ifNotExists) throws CompilationException {
+    public DatasetDecl(DataverseName dataverse, Identifier name, DataverseName itemTypeDataverse,
+            Identifier itemTypeName, DataverseName metaItemTypeDataverse, Identifier metaItemTypeName,
+            Identifier nodeGroupName, Map<String, String> hints, DatasetType datasetType, IDatasetDetailsDecl idd,
+            RecordConstructor withRecord, boolean ifNotExists) throws CompilationException {
         this.dataverse = dataverse;
         this.name = name;
         this.itemTypeName = itemTypeName;
-        if (itemTypeDataverse.getValue() == null) {
-            this.itemTypeDataverse = dataverse;
-        } else {
-            this.itemTypeDataverse = itemTypeDataverse;
-        }
+        this.itemTypeDataverse = itemTypeDataverse == null ? dataverse : itemTypeDataverse;
         this.metaItemTypeName = metaItemTypeName;
-        if (metaItemTypeDataverse == null || metaItemTypeDataverse.getValue() == null) {
-            this.metaItemTypeDataverse = dataverse;
-        } else {
-            this.metaItemTypeDataverse = metaItemTypeDataverse;
-        }
+        this.metaItemTypeDataverse = metaItemTypeDataverse == null ? dataverse : metaItemTypeDataverse;
         this.nodegroupName = nodeGroupName;
         this.hints = hints;
         this.withObjectNode = DatasetDeclParametersUtil.validateAndGetWithObjectNode(withRecord);
@@ -85,36 +78,24 @@ public class DatasetDecl extends AbstractStatement {
         return name;
     }
 
+    public DataverseName getDataverse() {
+        return dataverse;
+    }
+
     public Identifier getItemTypeName() {
         return itemTypeName;
     }
 
-    public Identifier getItemTypeDataverse() {
+    public DataverseName getItemTypeDataverse() {
         return itemTypeDataverse;
-    }
-
-    public String getQualifiedTypeName() {
-        if (itemTypeDataverse == dataverse) {
-            return itemTypeName.getValue();
-        } else {
-            return itemTypeDataverse.getValue() + "." + itemTypeName.getValue();
-        }
     }
 
     public Identifier getMetaItemTypeName() {
         return metaItemTypeName;
     }
 
-    public Identifier getMetaItemTypeDataverse() {
+    public DataverseName getMetaItemTypeDataverse() {
         return metaItemTypeDataverse;
-    }
-
-    public String getQualifiedMetaTypeName() {
-        if (metaItemTypeDataverse == dataverse) {
-            return metaItemTypeName.getValue();
-        } else {
-            return metaItemTypeDataverse.getValue() + "." + metaItemTypeName.getValue();
-        }
     }
 
     public Identifier getNodegroupName() {
@@ -177,10 +158,6 @@ public class DatasetDecl extends AbstractStatement {
 
     public IDatasetDetailsDecl getDatasetDetailsDecl() {
         return datasetDetailsDecl;
-    }
-
-    public Identifier getDataverse() {
-        return dataverse;
     }
 
     @Override

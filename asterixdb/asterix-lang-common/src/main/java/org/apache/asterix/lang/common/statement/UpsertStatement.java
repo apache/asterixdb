@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.lang.common.statement;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -25,7 +26,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 
 public class UpsertStatement extends InsertStatement {
 
-    public UpsertStatement(Identifier dataverseName, Identifier datasetName, Query query, int varCounter,
+    public UpsertStatement(DataverseName dataverseName, Identifier datasetName, Query query, int varCounter,
             VariableExpr var, Expression returnExpression) {
         super(dataverseName, datasetName, query, varCounter, var, returnExpression);
     }

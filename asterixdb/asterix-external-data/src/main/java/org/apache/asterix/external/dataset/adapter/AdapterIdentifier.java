@@ -20,22 +20,24 @@ package org.apache.asterix.external.dataset.adapter;
 
 import java.io.Serializable;
 
+import org.apache.asterix.common.metadata.DataverseName;
+
 /**
  * A unique identifier for a data source adapter.
  */
 public class AdapterIdentifier implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private final String dataverseName;
+    private final DataverseName dataverseName;
     private final String adapterName;
 
-    public AdapterIdentifier(String namespace, String name) {
-        this.dataverseName = namespace;
+    public AdapterIdentifier(DataverseName dataverse, String name) {
+        this.dataverseName = dataverse;
         this.adapterName = name;
     }
 
-    public String getNamespace() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
@@ -61,6 +63,6 @@ public class AdapterIdentifier implements Serializable {
             return false;
         }
         AdapterIdentifier a = (AdapterIdentifier) o;
-        return dataverseName.equals(a.getNamespace()) && adapterName.equals(a.getName());
+        return dataverseName.equals(a.dataverseName) && adapterName.equals(a.adapterName);
     }
 }

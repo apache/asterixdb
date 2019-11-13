@@ -25,6 +25,7 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -40,10 +41,10 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
  */
 public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     public static final int RECORD_INDICATOR = 0;
 
-    private final String dataverseName;
+    private final DataverseName dataverseName;
     // Enforced to be unique within a dataverse.
     private final String datasetName;
     // Enforced to be unique within a dataverse, dataset combination.
@@ -60,7 +61,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     // Type of pending operations with respect to atomic DDL operation
     private int pendingOp;
 
-    public Index(String dataverseName, String datasetName, String indexName, IndexType indexType,
+    public Index(DataverseName dataverseName, String datasetName, String indexName, IndexType indexType,
             List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators, List<IAType> keyFieldTypes,
             int gramLength, boolean overrideKeyFieldTypes, boolean isEnforced, boolean isPrimaryIndex, int pendingOp) {
         this.dataverseName = dataverseName;
@@ -77,14 +78,14 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         this.pendingOp = pendingOp;
     }
 
-    public Index(String dataverseName, String datasetName, String indexName, IndexType indexType,
+    public Index(DataverseName dataverseName, String datasetName, String indexName, IndexType indexType,
             List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators, List<IAType> keyFieldTypes,
             boolean overrideKeyFieldTypes, boolean isEnforced, boolean isPrimaryIndex, int pendingOp) {
         this(dataverseName, datasetName, indexName, indexType, keyFieldNames, keyFieldSourceIndicators, keyFieldTypes,
                 -1, overrideKeyFieldTypes, isEnforced, isPrimaryIndex, pendingOp);
     }
 
-    public String getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
@@ -297,6 +298,6 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
     @Override
     public String toString() {
-        return dataverseName + '.' + datasetName + '.' + indexName;
+        return dataverseName + "." + datasetName + "." + indexName;
     }
 }

@@ -29,6 +29,7 @@ import java.util.Set;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -127,13 +128,13 @@ public final class Scope {
      *            # of arguments
      * @return FunctionDescriptor of the function found; otherwise null
      */
-    public FunctionSignature findFunctionSignature(String dataverse, String name, int arity) {
+    public FunctionSignature findFunctionSignature(DataverseName dataverseName, String name, int arity) {
         FunctionSignature fd = null;
         if (functionSignatures != null) {
-            fd = functionSignatures.get(dataverse, name, arity);
+            fd = functionSignatures.get(dataverseName, name, arity);
         }
         if (fd == null && parent != null) {
-            fd = parent.findFunctionSignature(dataverse, name, arity);
+            fd = parent.findFunctionSignature(dataverseName, name, arity);
         }
         return fd;
     }

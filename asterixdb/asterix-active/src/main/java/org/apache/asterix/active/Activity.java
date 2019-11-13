@@ -19,6 +19,8 @@ package org.apache.asterix.active;
 
 import java.util.Map;
 
+import org.apache.asterix.common.metadata.DataverseName;
+
 public class Activity implements Comparable<Activity> {
 
     protected int activityId;
@@ -30,8 +32,8 @@ public class Activity implements Comparable<Activity> {
         this.activityDetails = activityDetails;
     }
 
-    public String getDataverseName() {
-        return activeEntityId.getDataverse();
+    public DataverseName getDataverseName() {
+        return activeEntityId.getDataverseName();
     }
 
     public String getActiveEntityName() {

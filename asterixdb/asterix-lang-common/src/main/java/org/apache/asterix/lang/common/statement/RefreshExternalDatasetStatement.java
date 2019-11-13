@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -26,7 +27,7 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class RefreshExternalDatasetStatement extends AbstractStatement {
 
-    private Identifier dataverseName;
+    private DataverseName dataverseName;
     private Identifier datasetName;
 
     public Identifier getDatasetName() {
@@ -37,11 +38,11 @@ public class RefreshExternalDatasetStatement extends AbstractStatement {
         this.datasetName = datasetName;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
-    public void setDataverseName(Identifier dataverseName) {
+    public void setDataverseName(DataverseName dataverseName) {
         this.dataverseName = dataverseName;
     }
 

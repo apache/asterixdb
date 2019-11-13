@@ -22,6 +22,7 @@ package org.apache.asterix.common.library;
 import java.net.URLClassLoader;
 import java.util.List;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -30,10 +31,11 @@ public interface ILibraryManager {
     /**
      * Registers the library class loader with the external library manager.
      * <code>dataverseName</code> and <code>libraryName</code> uniquely identifies a class loader.
+     * @param dataverseName
      * @param libraryName
      * @param classLoader
      */
-    void registerLibraryClassLoader(String dataverseName, String libraryName, URLClassLoader classLoader)
+    void registerLibraryClassLoader(DataverseName dataverseName, String libraryName, URLClassLoader classLoader)
             throws HyracksDataException;
 
     /**
@@ -43,11 +45,10 @@ public interface ILibraryManager {
 
     /**
      * De-registers a library class loader.
-     *
-     * @param dataverseName
+     *  @param dataverseName
      * @param libraryName
      */
-    void deregisterLibraryClassLoader(String dataverseName, String libraryName);
+    void deregisterLibraryClassLoader(DataverseName dataverseName, String libraryName);
 
     /**
      * Finds a class loader for a given pair of dataverse name and library name.
@@ -56,7 +57,7 @@ public interface ILibraryManager {
      * @param libraryName
      * @return the library class loader associated with the dataverse and library.
      */
-    ClassLoader getLibraryClassLoader(String dataverseName, String libraryName);
+    ClassLoader getLibraryClassLoader(DataverseName dataverseName, String libraryName);
 
     /**
      * Add function parameters  to library manager if it exists.
@@ -65,7 +66,7 @@ public interface ILibraryManager {
      * @param parameters
      */
 
-    void addFunctionParameters(String dataverseName, String fullFunctionName, List<String> parameters);
+    void addFunctionParameters(DataverseName dataverseName, String fullFunctionName, List<String> parameters);
 
     /**
      * Get a list of parameters.
@@ -73,5 +74,5 @@ public interface ILibraryManager {
      * @param fullFunctionName
      * @return A list contains all pre-specified function parameters.
      */
-    List<String> getFunctionParameters(String dataverseName, String fullFunctionName);
+    List<String> getFunctionParameters(DataverseName dataverseName, String fullFunctionName);
 }

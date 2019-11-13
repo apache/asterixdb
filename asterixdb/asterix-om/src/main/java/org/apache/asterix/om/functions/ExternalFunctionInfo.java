@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunctionInfo {
 
@@ -37,8 +38,13 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
 
     public ExternalFunctionInfo(String namespace, String name, int arity, FunctionKind kind, List<IAType> argumentTypes,
             IAType returnType, IResultTypeComputer rtc, String body, String language) {
+        this(new FunctionIdentifier(namespace, name, arity), kind, argumentTypes, returnType, rtc, body, language);
+    }
+
+    public ExternalFunctionInfo(FunctionIdentifier fid, FunctionKind kind, List<IAType> argumentTypes,
+            IAType returnType, IResultTypeComputer rtc, String body, String language) {
         // TODO: fix CheckNonFunctionalExpressionVisitor once we have non-functional external functions
-        super(namespace, name, arity, true);
+        super(fid, true);
         this.rtc = rtc;
         this.argumentTypes = argumentTypes;
         this.body = body;

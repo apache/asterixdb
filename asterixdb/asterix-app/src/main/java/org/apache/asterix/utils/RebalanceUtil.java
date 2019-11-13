@@ -34,6 +34,7 @@ import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
@@ -90,7 +91,7 @@ public class RebalanceUtil {
      *            the reusable hyracks connection.
      * @throws Exception
      */
-    public static void rebalance(String dataverseName, String datasetName, Set<String> targetNcNames,
+    public static void rebalance(DataverseName dataverseName, String datasetName, Set<String> targetNcNames,
             MetadataProvider metadataProvider, IHyracksClientConnection hcc,
             IDatasetRebalanceCallback datasetRebalanceCallback) throws Exception {
         Dataset sourceDataset;
@@ -241,7 +242,8 @@ public class RebalanceUtil {
         ActiveNotificationHandler activeNotificationHandler =
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
         IMetadataLockManager lockManager = appCtx.getMetadataLockManager();
-        lockManager.upgradeDatasetLockToWrite(metadataProvider.getLocks(), DatasetUtil.getFullyQualifiedName(source));
+        lockManager.upgradeDatasetLockToWrite(metadataProvider.getLocks(), source.getDataverseName(),
+                source.getDatasetName());
         LOGGER.info("Updating dataset {} node group from {} to {}", source.getDatasetName(), source.getNodeGroupName(),
                 target.getNodeGroupName());
         try {
@@ -256,8 +258,8 @@ public class RebalanceUtil {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             LOGGER.info("dataset {} node group updated to {}", target.getDatasetName(), target.getNodeGroupName());
         } finally {
-            lockManager.downgradeDatasetLockToExclusiveModify(metadataProvider.getLocks(),
-                    DatasetUtil.getFullyQualifiedName(target));
+            lockManager.downgradeDatasetLockToExclusiveModify(metadataProvider.getLocks(), target.getDataverseName(),
+                    target.getDatasetName());
         }
     }
 

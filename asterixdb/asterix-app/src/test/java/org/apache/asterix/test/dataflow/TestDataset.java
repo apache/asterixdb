@@ -21,6 +21,7 @@ package org.apache.asterix.test.dataflow;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -45,10 +46,10 @@ public class TestDataset extends Dataset {
 
     private static final long serialVersionUID = 1L;
 
-    public TestDataset(String dataverseName, String datasetName, String recordTypeDataverseName, String recordTypeName,
-            String nodeGroupName, String compactionPolicy, Map<String, String> compactionPolicyProperties,
-            IDatasetDetails datasetDetails, Map<String, String> hints, DatasetType datasetType, int datasetId,
-            int pendingOp) {
+    public TestDataset(DataverseName dataverseName, String datasetName, DataverseName recordTypeDataverseName,
+            String recordTypeName, String nodeGroupName, String compactionPolicy,
+            Map<String, String> compactionPolicyProperties, IDatasetDetails datasetDetails, Map<String, String> hints,
+            DatasetType datasetType, int datasetId, int pendingOp) {
         super(dataverseName, datasetName, recordTypeDataverseName, recordTypeName, nodeGroupName, compactionPolicy,
                 compactionPolicyProperties, datasetDetails, hints, datasetType, datasetId, pendingOp);
     }

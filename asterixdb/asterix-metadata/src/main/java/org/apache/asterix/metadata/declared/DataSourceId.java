@@ -20,10 +20,17 @@
 package org.apache.asterix.metadata.declared;
 
 import java.util.Arrays;
+import java.util.Objects;
+
+import org.apache.asterix.common.metadata.DataverseName;
 
 public final class DataSourceId {
 
-    private String[] components;
+    private final DataverseName dataverseName;
+
+    private final String datasourceName;
+
+    private final String[] parameters;
 
     /**
      * The original constructor taking
@@ -33,34 +40,33 @@ public final class DataSourceId {
      * @param datasourceName
      *            the name for this datasource
      */
-    public DataSourceId(String dataverseName, String datasourceName) {
-        this(new String[] { dataverseName, datasourceName });
+    public DataSourceId(DataverseName dataverseName, String datasourceName) {
+        this(dataverseName, datasourceName, null);
     }
 
     /**
-     * An extended constructor taking an arbitrary number of name components.
+     * An extended constructor taking an arbitrary number of name parameters.
      * This constructor allows the definition of datasources that have the same dataverse name and datasource name but
      * that would expose different behavior. It enables the definition of (compile-time) parameterized datasources.
      * Please note that the first 2 parameters still need to be 1) a dataverse name and 2) a datasource name.
-     *
-     * @param components
-     *            name components used to construct the datasource identifier.
      */
-    public DataSourceId(String... components) {
-        this.components = components;
+    public DataSourceId(DataverseName dataverseName, String datasourceName, String[] parameters) {
+        this.dataverseName = dataverseName;
+        this.datasourceName = datasourceName;
+        this.parameters = parameters;
     }
 
     @Override
     public String toString() {
-        return String.join(".", components);
+        return dataverseName + "." + datasourceName + (parameters != null ? "." + String.join(".", parameters) : "");
     }
 
-    public String getDataverseName() {
-        return components[0];
+    public DataverseName getDataverseName() {
+        return dataverseName;
     }
 
     public String getDatasourceName() {
-        return components[1];
+        return datasourceName;
     }
 
     @Override
@@ -71,11 +77,15 @@ public final class DataSourceId {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        return Arrays.equals(components, ((DataSourceId) o).components);
+        DataSourceId that = (DataSourceId) o;
+        return dataverseName.equals(that.dataverseName) && datasourceName.equals(that.datasourceName)
+                && Arrays.equals(parameters, that.parameters);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(components);
+        int result = Objects.hash(dataverseName, datasourceName);
+        result = 31 * result + Arrays.hashCode(parameters);
+        return result;
     }
 }

@@ -32,9 +32,9 @@ import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -280,13 +280,13 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
             // write lock the listener
             // exclusive lock all the datasets (except the target dataset)
             IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
-            String dataverseName = listener.getEntityId().getDataverse();
+            DataverseName dataverseName = listener.getEntityId().getDataverseName();
             String entityName = listener.getEntityId().getEntityName();
             if (LOGGER.isEnabled(level)) {
                 LOGGER.log(level, "Suspending " + listener.getEntityId());
             }
             LOGGER.log(level, "Acquiring locks");
-            lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(), dataverseName + '.' + entityName);
+            lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(), dataverseName, entityName);
             List<Dataset> datasets = ((ActiveEntityEventsListener) listener).getDatasets();
             for (Dataset dataset : datasets) {
                 if (targetDataset != null && targetDataset.equals(dataset)) {
@@ -294,7 +294,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
                     continue;
                 }
                 lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(),
-                        DatasetUtil.getFullyQualifiedName(dataset));
+                        dataset.getDataverseName(), dataset.getDatasetName());
             }
             LOGGER.log(level, "locks acquired");
             ((ActiveEntityEventsListener) listener).suspend(metadataProvider);

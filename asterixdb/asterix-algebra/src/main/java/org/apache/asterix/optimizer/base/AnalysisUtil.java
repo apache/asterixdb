@@ -23,11 +23,11 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.AccessMethodUtils;
 import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -122,14 +122,15 @@ public class AnalysisUtil {
         return false;
     }
 
-    public static Pair<String, String> getDatasetInfo(AbstractDataSourceOperator op) throws AlgebricksException {
+    public static Pair<DataverseName, String> getDatasetInfo(AbstractDataSourceOperator op) {
         DataSourceId srcId = (DataSourceId) op.getDataSource().getId();
         return new Pair<>(srcId.getDataverseName(), srcId.getDatasourceName());
     }
 
-    public static Pair<String, String> getExternalDatasetInfo(UnnestMapOperator op) throws AlgebricksException {
+    public static Pair<DataverseName, String> getExternalDatasetInfo(UnnestMapOperator op) {
         AbstractFunctionCallExpression unnestExpr = (AbstractFunctionCallExpression) op.getExpressionRef().getValue();
-        String dataverseName = AccessMethodUtils.getStringConstant(unnestExpr.getArguments().get(0));
+        DataverseName dataverseName = DataverseName
+                .createFromCanonicalForm(AccessMethodUtils.getStringConstant(unnestExpr.getArguments().get(0)));
         String datasetName = AccessMethodUtils.getStringConstant(unnestExpr.getArguments().get(1));
         return new Pair<>(dataverseName, datasetName);
     }

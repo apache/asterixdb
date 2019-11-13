@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
@@ -33,7 +34,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 public class CreateIndexStatement extends AbstractStatement {
 
     private Identifier indexName;
-    private Identifier dataverseName;
+    private DataverseName dataverseName;
     private Identifier datasetName;
     private List<Pair<List<String>, IndexedTypeExpression>> fieldExprs = new ArrayList<>();
     private List<Integer> fieldIndexIndicators = new ArrayList<>();
@@ -63,11 +64,11 @@ public class CreateIndexStatement extends AbstractStatement {
         this.indexName = indexName;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
-    public void setDataverseName(Identifier dataverseName) {
+    public void setDataverseName(DataverseName dataverseName) {
         this.dataverseName = dataverseName;
     }
 

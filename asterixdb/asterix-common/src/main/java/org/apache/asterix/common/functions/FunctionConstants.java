@@ -18,8 +18,18 @@
  */
 package org.apache.asterix.common.functions;
 
-public interface FunctionConstants {
+import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
+
+public final class FunctionConstants {
 
     public static final String ASTERIX_NS = "asterix";
 
+    public static final DataverseName ASTERIX_DV = DataverseName.createBuiltinDataverseName(ASTERIX_NS);
+
+    public static final DataverseName ALGEBRICKS_DV =
+            DataverseName.createBuiltinDataverseName(AlgebricksBuiltinFunctions.ALGEBRICKS_NS);
+
+    private FunctionConstants() {
+    }
 }

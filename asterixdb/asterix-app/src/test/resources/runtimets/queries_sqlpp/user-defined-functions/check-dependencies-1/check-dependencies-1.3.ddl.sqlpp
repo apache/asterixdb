@@ -26,9 +26,7 @@ drop function B.f5@2;
 drop function C.f3@2;
 drop function C.f2@2;
 
-drop dataset B.TweetMessages2;
-
-drop dataverse C;
 drop dataverse B;
+drop dataverse C;
 
 

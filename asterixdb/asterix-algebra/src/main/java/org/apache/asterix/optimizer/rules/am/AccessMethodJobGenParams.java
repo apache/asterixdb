@@ -21,6 +21,7 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -38,7 +39,7 @@ public class AccessMethodJobGenParams {
     private static final int NUM_PARAMS = 6;
     protected String indexName;
     protected IndexType indexType;
-    protected String dataverseName;
+    protected DataverseName dataverseName;
     protected String datasetName;
     protected boolean retainInput;
     protected boolean requiresBroadcast;
@@ -48,8 +49,8 @@ public class AccessMethodJobGenParams {
         // Enable creation of an empty object and fill members using setters
     }
 
-    public AccessMethodJobGenParams(String indexName, IndexType indexType, String dataverseName, String datasetName,
-            boolean retainInput, boolean requiresBroadcast) {
+    public AccessMethodJobGenParams(String indexName, IndexType indexType, DataverseName dataverseName,
+            String datasetName, boolean retainInput, boolean requiresBroadcast) {
         this.indexName = indexName;
         this.indexType = indexType;
         this.dataverseName = dataverseName;
@@ -62,7 +63,7 @@ public class AccessMethodJobGenParams {
     public void writeToFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
         funcArgs.add(new MutableObject<>(AccessMethodUtils.createStringConstant(indexName)));
         funcArgs.add(new MutableObject<>(AccessMethodUtils.createInt32Constant(indexType.ordinal())));
-        funcArgs.add(new MutableObject<>(AccessMethodUtils.createStringConstant(dataverseName)));
+        funcArgs.add(new MutableObject<>(AccessMethodUtils.createStringConstant(dataverseName.getCanonicalForm())));
         funcArgs.add(new MutableObject<>(AccessMethodUtils.createStringConstant(datasetName)));
         funcArgs.add(new MutableObject<>(AccessMethodUtils.createBooleanConstant(retainInput)));
         funcArgs.add(new MutableObject<>(AccessMethodUtils.createBooleanConstant(requiresBroadcast)));
@@ -71,7 +72,7 @@ public class AccessMethodJobGenParams {
     public void readFromFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
         indexName = AccessMethodUtils.getStringConstant(funcArgs.get(0));
         indexType = IndexType.values()[AccessMethodUtils.getInt32Constant(funcArgs.get(1))];
-        dataverseName = AccessMethodUtils.getStringConstant(funcArgs.get(2));
+        dataverseName = DataverseName.createFromCanonicalForm(AccessMethodUtils.getStringConstant(funcArgs.get(2)));
         datasetName = AccessMethodUtils.getStringConstant(funcArgs.get(3));
         retainInput = AccessMethodUtils.getBooleanConstant(funcArgs.get(4));
         requiresBroadcast = AccessMethodUtils.getBooleanConstant(funcArgs.get(5));
@@ -86,7 +87,7 @@ public class AccessMethodJobGenParams {
         return indexType;
     }
 
-    public String getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 

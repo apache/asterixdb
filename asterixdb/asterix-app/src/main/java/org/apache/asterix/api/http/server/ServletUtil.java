@@ -20,13 +20,16 @@ package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.RESULTSET_ATTR;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.client.result.ResultSet;
+import org.apache.hyracks.http.api.IServletRequest;
 
 public class ServletUtil {
     static IResultSet getResultSet(IHyracksClientConnection hcc, IApplicationContext appCtx,
@@ -45,5 +48,10 @@ public class ServletUtil {
             }
         }
         return resultSet;
+    }
+
+    public static DataverseName getDataverseName(IServletRequest request, String dataverseParameterName) {
+        List<String> values = request.getParameterValues(dataverseParameterName);
+        return values != null ? DataverseName.create(values) : null;
     }
 }

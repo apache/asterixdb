@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -64,6 +65,7 @@ import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Integer> {
     protected final PrintWriter out;
@@ -142,12 +144,28 @@ public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<V
 
     @Override
     public Void visit(CallExpr pf, Integer step) throws CompilationException {
-        out.println(skip(step) + "FunctionCall " + pf.getFunctionSignature().toString() + "[");
-        for (Expression expr : pf.getExprList()) {
+        return printFunctionCall(pf.getFunctionSignature(), pf.getFunctionSignature().getArity(), pf.getExprList(),
+                step);
+    }
+
+    protected Void printFunctionCall(FunctionSignature fs, int arity, List<Expression> argList, Integer step)
+            throws CompilationException {
+        out.print(skip(step) + "FunctionCall ");
+        printFunctionSignature(out, fs, arity);
+        out.println("[");
+        for (Expression expr : argList) {
             expr.accept(this, step + 1);
         }
         out.println(skip(step) + "]");
         return null;
+    }
+
+    private static void printFunctionSignature(PrintWriter out, FunctionSignature fs, int arity) {
+        out.print(fs.toString(false));
+        if (arity != FunctionIdentifier.VARARGS) {
+            out.print("@");
+            out.print(arity);
+        }
     }
 
     @Override
@@ -329,8 +347,8 @@ public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<V
 
     @Override
     public Void visit(TypeReferenceExpression t, Integer arg) throws CompilationException {
-        if (t.getIdent().first != null && t.getIdent().first.getValue() != null) {
-            out.print(t.getIdent().first.getValue());
+        if (t.getIdent().first != null && t.getIdent().first != null) {
+            out.print(t.getIdent().first);
             out.print('.');
         }
         out.print(t.getIdent().second.getValue());

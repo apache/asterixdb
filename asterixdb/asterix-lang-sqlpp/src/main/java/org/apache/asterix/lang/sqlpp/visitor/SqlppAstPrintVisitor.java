@@ -19,8 +19,10 @@
 package org.apache.asterix.lang.sqlpp.visitor;
 
 import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -32,8 +34,11 @@ import org.apache.asterix.lang.common.clause.OrderbyClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.ListSliceExpression;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.QueryPrintVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
@@ -84,7 +89,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
         out.print(skip(step) + "AS ");
         fromTerm.getLeftVariable().accept(this, 0);
         if (fromTerm.hasPositionalVariable()) {
-            out.println(" AT ");
+            out.println(" AT");
             fromTerm.getPositionalVariable().accept(this, 0);
         }
         if (fromTerm.hasCorrelateClauses()) {
@@ -252,11 +257,15 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
         if (BuiltinFunctions.isBuiltinCompilerFunction(normalizedFunctionSignature, true)) {
             functionSignature = normalizedFunctionSignature;
         }
-        out.println(skip(step) + "FunctionCall " + functionSignature.toString() + "[");
-        for (Expression expr : pf.getExprList()) {
-            expr.accept(this, step + 1);
+        //TODO(MULTI_PART_DATAVERSE_NAME):temporary workaround to preserve AST reference results
+        if (FunctionUtil.isBuiltinDatasetFunction(functionSignature)) {
+            String singleArg = pf.getExprList().stream().map(LiteralExpr.class::cast).map(LiteralExpr::getValue)
+                    .map(StringLiteral.class::cast).map(StringLiteral::getValue).collect(Collectors.joining("."));
+            printFunctionCall(functionSignature, 1,
+                    Collections.singletonList(new LiteralExpr(new StringLiteral(singleArg))), step);
+        } else {
+            printFunctionCall(functionSignature, functionSignature.getArity(), pf.getExprList(), step);
         }
-        out.println(skip(step) + "]");
         return null;
     }
 

@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.lang.sqlpp.util;
 
+import java.util.List;
+
+import org.apache.asterix.common.metadata.DataverseName;
+
 public class SqlppStatementUtil {
 
     private static final String IF_EXISTS = " IF EXISTS ";
@@ -45,15 +49,15 @@ public class SqlppStatementUtil {
     }
 
     @SuppressWarnings("squid:S1172") // unused variable
-    public static StringBuilder getCreateDataverseStatement(StringBuilder stringBuilder, String dataverseName,
+    public static StringBuilder getCreateDataverseStatement(StringBuilder stringBuilder, DataverseName dataverseName,
             boolean ifNotExists, int version) {
         stringBuilder.append(CREATE_DATAVERSE);
-        enclose(stringBuilder, dataverseName);
+        encloseDataverseName(stringBuilder, dataverseName);
         return ifNotExists(stringBuilder, ifNotExists).append(SEMI_COLON);
     }
 
     @SuppressWarnings("squid:S1172") // unused variable
-    public static StringBuilder getDropDatasetStatement(StringBuilder stringBuilder, String dataverseName,
+    public static StringBuilder getDropDatasetStatement(StringBuilder stringBuilder, DataverseName dataverseName,
             String datasetName, boolean ifExists, int version) {
         stringBuilder.append(DROP_DATASET);
         enclose(stringBuilder, dataverseName, datasetName);
@@ -61,7 +65,7 @@ public class SqlppStatementUtil {
     }
 
     @SuppressWarnings("squid:S1172") // unused variable
-    public static StringBuilder getCreateIndexStatement(StringBuilder stringBuilder, String dataverseName,
+    public static StringBuilder getCreateIndexStatement(StringBuilder stringBuilder, DataverseName dataverseName,
             String datasetName, String indexName, String fields, int version) {
         stringBuilder.append(CREATE_INDEX);
         enclose(stringBuilder, indexName).append(ON);
@@ -69,7 +73,7 @@ public class SqlppStatementUtil {
     }
 
     @SuppressWarnings("squid:S1172") // unused variable
-    public static StringBuilder getCreatePrimaryIndexStatement(StringBuilder stringBuilder, String dataverseName,
+    public static StringBuilder getCreatePrimaryIndexStatement(StringBuilder stringBuilder, DataverseName dataverseName,
             String datasetName, String indexName, int version) {
         stringBuilder.append(CREATE_PRIMARY_INDEX);
         enclose(stringBuilder, indexName).append(ON);
@@ -77,7 +81,7 @@ public class SqlppStatementUtil {
     }
 
     @SuppressWarnings("squid:S1172") // unused variable
-    public static StringBuilder getDropIndexStatement(StringBuilder stringBuilder, String dataverseName,
+    public static StringBuilder getDropIndexStatement(StringBuilder stringBuilder, DataverseName dataverseName,
             String datasetName, String indexName, boolean ifExists, int version) {
         stringBuilder.append(DROP_INDEX);
         enclose(stringBuilder, dataverseName, datasetName, indexName);
@@ -103,30 +107,47 @@ public class SqlppStatementUtil {
     }
 
     /**
-     * Same as {@link SqlppStatementUtil#enclose(StringBuilder, String)} but for a qualified identifier.
+     * Encloses each part of the {@param dataverseName} in back-ticks and concatenates them with
+     * {@link DataverseName#SEPARATOR_CHAR} separator
+     * @param stringBuilder where the dataverse name will be appended
+     * @param dataverseName a dataverse name which could be a valid one or one that needs to be delimited
+     * @return {@param stringBuilder} with the <i>delimited</i> dataverseName appended
+     */
+    public static StringBuilder encloseDataverseName(StringBuilder stringBuilder, DataverseName dataverseName) {
+        List<String> parts = dataverseName.getParts();
+        for (int i = 0, ln = parts.size(); i < ln; i++) {
+            if (i > 0) {
+                stringBuilder.append(DataverseName.SEPARATOR_CHAR);
+            }
+            enclose(stringBuilder, parts.get(i));
+        }
+        return stringBuilder;
+    }
+
+    /**
+     * Encloses a dataverse name and a given idenfitier.
      * @param stringBuilder where the identifier will be appended
-     * @param identifier1 the qualifying identifier
-     * @param identifier2 the qualified identifier
+     * @param dataverseName the dataverse name
+     * @param identifier the identifier
      * @return {@param stringBuilder} with the <i>delimited</i> qualified identifier appended
      */
-    public static StringBuilder enclose(StringBuilder stringBuilder, String identifier1, String identifier2) {
-        return stringBuilder.append(BACK_TICK).append(identifier1).append(BACK_TICK).append(DOT).append(BACK_TICK)
-                .append(identifier2).append(BACK_TICK);
+    public static StringBuilder enclose(StringBuilder stringBuilder, DataverseName dataverseName, String identifier) {
+        encloseDataverseName(stringBuilder, dataverseName).append(DOT);
+        return enclose(stringBuilder, identifier);
     }
 
     /**
      * Same as {@link SqlppStatementUtil#enclose(StringBuilder, String)} but for a double qualified identifier.
      * @param stringBuilder where the identifier will be appended
-     * @param identifier1 the 1st qualifying identifier
-     * @param identifier2 the 2nd qualifying identifier
-     * @param identifier3 the qualified identifier
+     * @param dataverseName the 1st qualifying identifier
+     * @param identifier1 the 2nd qualifying identifier
+     * @param identifier2 the qualified identifier
      * @return {@param stringBuilder} with the <i>delimited</i> qualified identifier appended
      */
-    public static StringBuilder enclose(StringBuilder stringBuilder, String identifier1, String identifier2,
-            String identifier3) {
-        return stringBuilder.append(BACK_TICK).append(identifier1).append(BACK_TICK).append(DOT).append(BACK_TICK)
-                .append(identifier2).append(BACK_TICK).append(DOT).append(BACK_TICK).append(identifier3)
-                .append(BACK_TICK);
+    public static StringBuilder enclose(StringBuilder stringBuilder, DataverseName dataverseName, String identifier1,
+            String identifier2) {
+        enclose(stringBuilder, dataverseName, identifier1).append(DOT);
+        return enclose(stringBuilder, identifier2);
     }
 
     public static String enclose(String identifier) {

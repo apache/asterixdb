@@ -25,5 +25,5 @@ public interface IMetadataEntityTupleTranslatorFactory<T> extends Serializable {
     /**
      * @return an instance of IMetadataEntityTupleTranslator
      */
-    IMetadataEntityTupleTranslator<T> createTupleTranslator();
+    IMetadataEntityTupleTranslator<T> createTupleTranslator(boolean getTuple);
 }

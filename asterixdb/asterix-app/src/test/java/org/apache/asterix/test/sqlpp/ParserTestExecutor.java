@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.test.sqlpp;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -32,6 +33,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
@@ -46,6 +48,7 @@ import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.asterix.lang.sqlpp.rewrites.SqlppRewriterFactory;
 import org.apache.asterix.lang.sqlpp.util.SqlppAstPrintUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
+import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.test.common.ComparisonException;
@@ -127,7 +130,7 @@ public class ParserTestExecutor extends TestExecutor {
         try {
             List<Statement> statements = parser.parse();
             List<FunctionDecl> functions = getDeclaredFunctions(statements);
-            String dvName = getDefaultDataverse(statements);
+            DataverseName dvName = getDefaultDataverse(statements);
             MetadataProvider metadataProvider = mock(MetadataProvider.class);
 
             @SuppressWarnings("unchecked")
@@ -135,13 +138,13 @@ public class ParserTestExecutor extends TestExecutor {
             when(metadataProvider.getDefaultDataverseName()).thenReturn(dvName);
             when(metadataProvider.getConfig()).thenReturn(config);
             when(config.get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS)).thenReturn("true");
-            when(metadataProvider.findDataset(anyString(), anyString())).thenAnswer(new Answer<Dataset>() {
+            when(metadataProvider.findDataset(any(DataverseName.class), anyString())).thenAnswer(new Answer<Dataset>() {
                 @Override
                 public Dataset answer(InvocationOnMock invocation) {
                     Object[] args = invocation.getArguments();
                     final Dataset mockDataset = mock(Dataset.class);
-                    String fullyQualifiedName = args[0] != null ? args[0] + "." + args[1] : (String) args[1];
-                    when(mockDataset.getFullyQualifiedName()).thenReturn(fullyQualifiedName);
+                    when(mockDataset.getDataverseName()).thenReturn((DataverseName) args[0]);
+                    when(mockDataset.getDatasetName()).thenReturn((String) args[1]);
                     return mockDataset;
                 }
             });
@@ -184,14 +187,14 @@ public class ParserTestExecutor extends TestExecutor {
     }
 
     // Gets the default dataverse for the input statements.
-    private String getDefaultDataverse(List<Statement> statements) {
+    private DataverseName getDefaultDataverse(List<Statement> statements) {
         for (Statement st : statements) {
             if (st.getKind() == Statement.Kind.DATAVERSE_DECL) {
                 DataverseDecl dv = (DataverseDecl) st;
-                return dv.getDataverseName().getValue();
+                return dv.getDataverseName();
             }
         }
-        return null;
+        return MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME;
     }
 
     // Rewrite queries.

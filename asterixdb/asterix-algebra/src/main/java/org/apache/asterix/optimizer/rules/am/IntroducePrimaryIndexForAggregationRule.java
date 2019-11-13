@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -163,7 +164,8 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
                 return null;
             }
             String indexName = ConstantExpressionUtil.getStringArgument(functionCallExpression, 0);
-            String dataverseName = ConstantExpressionUtil.getStringArgument(functionCallExpression, 2);
+            DataverseName dataverseName = DataverseName
+                    .createFromCanonicalForm(ConstantExpressionUtil.getStringArgument(functionCallExpression, 2));
             String datasetName = ConstantExpressionUtil.getStringArgument(functionCallExpression, 3);
             Index index = ((MetadataProvider) metadataProvider).getIndex(dataverseName, datasetName, indexName);
             if (!index.isPrimaryIndex()) {
@@ -257,6 +259,7 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
      */
     private Pair<Dataset, Index> findDatasetAndSecondaryPrimaryIndex(AbstractScanOperator scanOperator,
             BTreeJobGenParams originalBTreeParameters, IOptimizationContext context) throws AlgebricksException {
+        MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
         // #1. get the dataset
         Dataset dataset;
         // case 1: dataset scan
@@ -275,12 +278,11 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             if (originalBTreeParameters.isEqCondition()) {
                 return null;
             }
-            dataset = ((MetadataProvider) context.getMetadataProvider())
-                    .findDataset(originalBTreeParameters.getDataverseName(), originalBTreeParameters.getDatasetName());
+            dataset = mp.findDataset(originalBTreeParameters.getDataverseName(),
+                    originalBTreeParameters.getDatasetName());
         }
         // #2. get all indexes and look for the primary one
-        List<Index> indexes = ((MetadataProvider) context.getMetadataProvider())
-                .getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        List<Index> indexes = mp.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
         for (Index index : indexes) {
             if (index.getKeyFieldNames().isEmpty()) {
                 return Pair.of(dataset, index);

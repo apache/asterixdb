@@ -28,6 +28,7 @@ import java.util.Queue;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -90,10 +91,10 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         Dataset dataset = getDataset(op, context);
         List<String> filterFieldName = null;
         ARecordType recType = null;
+        MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
         if (dataset != null && dataset.getDatasetType() == DatasetType.INTERNAL) {
             filterFieldName = DatasetUtil.getFilterField(dataset);
-            IAType itemType = ((MetadataProvider) context.getMetadataProvider())
-                    .findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+            IAType itemType = mp.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
             if (itemType.getTypeTag() == ATypeTag.OBJECT) {
                 recType = (ARecordType) itemType;
             }
@@ -111,8 +112,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         List<IOptimizableFuncExpr> optFuncExprs = new ArrayList<>();
 
         if (!analysisCtx.getMatchedFuncExprs().isEmpty()) {
-            List<Index> datasetIndexes = ((MetadataProvider) context.getMetadataProvider())
-                    .getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+            List<Index> datasetIndexes = mp.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
 
             for (int i = 0; i < analysisCtx.getMatchedFuncExprs().size(); i++) {
                 IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(i);
@@ -417,10 +417,11 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                 if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
                     FunctionIdentifier fid = f.getFunctionIdentifier();
-                    String dataverseName;
+                    DataverseName dataverseName;
                     String datasetName;
                     if (BuiltinFunctions.EXTERNAL_LOOKUP.equals(fid)) {
-                        dataverseName = AccessMethodUtils.getStringConstant(f.getArguments().get(0));
+                        dataverseName = DataverseName
+                                .createFromCanonicalForm(AccessMethodUtils.getStringConstant(f.getArguments().get(0)));
                         datasetName = AccessMethodUtils.getStringConstant(f.getArguments().get(1));
                     } else if (fid.equals(BuiltinFunctions.INDEX_SEARCH)) {
                         AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();

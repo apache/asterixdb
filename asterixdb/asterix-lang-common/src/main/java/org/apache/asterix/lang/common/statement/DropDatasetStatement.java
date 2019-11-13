@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -26,11 +27,11 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class DropDatasetStatement extends AbstractStatement {
 
-    private final Identifier dataverseName;
+    private final DataverseName dataverseName;
     private final Identifier datasetName;
     private boolean ifExists;
 
-    public DropDatasetStatement(Identifier dataverseName, Identifier datasetName, boolean ifExists) {
+    public DropDatasetStatement(DataverseName dataverseName, Identifier datasetName, boolean ifExists) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.ifExists = ifExists;
@@ -41,7 +42,7 @@ public class DropDatasetStatement extends AbstractStatement {
         return Statement.Kind.DATASET_DROP;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 

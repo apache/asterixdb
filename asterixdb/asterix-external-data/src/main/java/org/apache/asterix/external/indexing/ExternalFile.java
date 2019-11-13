@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.Objects;
 
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import org.apache.asterix.common.metadata.DataverseName;
 
 public class ExternalFile implements Serializable, Comparable<ExternalFile> {
 
@@ -33,7 +34,7 @@ public class ExternalFile implements Serializable, Comparable<ExternalFile> {
      */
     private static final long serialVersionUID = 1L;
 
-    private String dataverseName;
+    private DataverseName dataverseName;
     private String datasetName;
     private Date lastModefiedTime;
     private long size;
@@ -42,7 +43,7 @@ public class ExternalFile implements Serializable, Comparable<ExternalFile> {
     private ExternalFilePendingOp pendingOp;
 
     public ExternalFile() {
-        this.dataverseName = "";
+        this.dataverseName = null;
         this.datasetName = "";
         this.fileNumber = -1;
         this.fileName = "";
@@ -51,7 +52,7 @@ public class ExternalFile implements Serializable, Comparable<ExternalFile> {
         this.pendingOp = ExternalFilePendingOp.NO_OP;
     }
 
-    public ExternalFile(String dataverseName, String datasetName, int fileNumber, String fileName,
+    public ExternalFile(DataverseName dataverseName, String datasetName, int fileNumber, String fileName,
             Date lastModefiedTime, long size, ExternalFilePendingOp pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
@@ -62,11 +63,11 @@ public class ExternalFile implements Serializable, Comparable<ExternalFile> {
         this.setPendingOp(pendingOp);
     }
 
-    public String getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
-    public void setDataverseName(String dataverseName) {
+    public void setDataverseName(DataverseName dataverseName) {
         this.dataverseName = dataverseName;
     }
 

@@ -19,18 +19,14 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.DataOutput;
-import java.rmi.RemoteException;
 import java.util.Calendar;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -51,7 +47,6 @@ import org.apache.asterix.om.types.AbstractComplexType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -61,15 +56,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Datatype metadata entity to an ITupleReference and vice versa.
  */
 public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
-    private static final long serialVersionUID = -2324433490801381399L;
 
-    // Field indexes of serialized Dataset in a tuple.
-    // First key field.
-    public static final int DATATYPE_DATAVERSENAME_TUPLE_FIELD_INDEX = 0;
-    // Second key field.
-    public static final int DATATYPE_DATATYPE_TUPLE_FIELD_INDEX = 1;
     // Payload field containing serialized Datatype.
-    public static final int DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX = 2;
+    private static final int DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
     public enum DerivedTypeTag {
         RECORD,
@@ -77,34 +66,21 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         ORDEREDLIST
     }
 
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes =
-            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(MetadataRecordTypes.DATATYPE_RECORDTYPE);
-    private final MetadataNode metadataNode;
-    private final TxnId txnId;
+    protected final MetadataNode metadataNode;
+    protected final TxnId txnId;
 
     protected DatatypeTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.DATATYPE_DATASET.getFieldCount());
+        super(getTuple, MetadataPrimaryIndexes.DATATYPE_DATASET, DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
         this.txnId = txnId;
         this.metadataNode = metadataNode;
     }
 
     @Override
-    public Datatype getMetadataEntityFromTuple(ITupleReference frameTuple)
-            throws AlgebricksException, HyracksDataException {
-        byte[] serRecord = frameTuple.getFieldData(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordStartOffset = frameTuple.getFieldStart(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordLength = frameTuple.getFieldLength(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
-        ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
-        DataInput in = new DataInputStream(stream);
-        ARecord datatypeRecord = recordSerDes.deserialize(in);
-        return createDataTypeFromARecord(datatypeRecord);
-    }
-
-    private Datatype createDataTypeFromARecord(ARecord datatypeRecord) throws AlgebricksException {
-        String dataverseName =
+    protected Datatype createMetadataEntityFromARecord(ARecord datatypeRecord) throws AlgebricksException {
+        String dataverseCanonicalName =
                 ((AString) datatypeRecord.getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DATAVERSENAME_FIELD_INDEX))
                         .getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String datatypeName =
                 ((AString) datatypeRecord.getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DATATYPENAME_FIELD_INDEX))
                         .getStringValue();
@@ -123,8 +99,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                     ARecord recordType = (ARecord) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_RECORD_FIELD_INDEX);
                     boolean isOpen = ((ABoolean) recordType
-                            .getValueByPos(MetadataRecordTypes.RECORDTYPE_ARECORD_ISOPEN_FIELD_INDEX)).getBoolean()
-                                    .booleanValue();
+                            .getValueByPos(MetadataRecordTypes.RECORDTYPE_ARECORD_ISOPEN_FIELD_INDEX)).getBoolean();
                     int numberOfFields = ((AOrderedList) recordType
                             .getValueByPos(MetadataRecordTypes.RECORDTYPE_ARECORD_FIELDS_FIELD_INDEX)).size();
                     IACursor cursor = ((AOrderedList) recordType
@@ -142,8 +117,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                                 ((AString) field.getValueByPos(MetadataRecordTypes.FIELD_ARECORD_FIELDTYPE_FIELD_INDEX))
                                         .getStringValue();
                         boolean isNullable = ((ABoolean) field
-                                .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_ISNULLABLE_FIELD_INDEX)).getBoolean()
-                                        .booleanValue();
+                                .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_ISNULLABLE_FIELD_INDEX)).getBoolean();
                         fieldTypes[fieldId] = BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName,
                                 fieldTypeName, isNullable);
                         fieldId++;
@@ -177,11 +151,12 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Datatype dataType)
-            throws HyracksDataException, AlgebricksException {
+    public ITupleReference getTupleFromMetadataEntity(Datatype dataType) throws HyracksDataException {
+        String dataverseCanonicalName = dataType.getDataverseName().getCanonicalForm();
+
         // write the key in the first two fields of the tuple
         tupleBuilder.reset();
-        aString.setValue(dataType.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
         aString.setValue(dataType.getDatatypeName());
@@ -193,7 +168,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
 
         // write field 0
         fieldValue.reset();
-        aString.setValue(dataType.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_DATAVERSENAME_FIELD_INDEX, fieldValue);
 
@@ -232,7 +207,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
 
     private void writeDerivedTypeRecord(Datatype type, AbstractComplexType derivedDatatype, DataOutput out)
             throws HyracksDataException {
-        DerivedTypeTag tag = null;
+        DerivedTypeTag tag;
         IARecordBuilder derivedRecordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         switch (derivedDatatype.getTypeTag()) {
@@ -308,7 +283,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         ARecordType recType = (ARecordType) type;
         OrderedListBuilder listBuilder = new OrderedListBuilder();
         listBuilder.reset(new AOrderedListType(MetadataRecordTypes.FIELD_RECORDTYPE, null));
-        IAType fieldType = null;
+        IAType fieldType;
 
         for (int i = 0; i < recType.getFieldNames().length; i++) {
             fieldType = recType.getFieldTypes()[i];
@@ -365,7 +340,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     }
 
     private String handleNestedDerivedType(String typeName, AbstractComplexType nestedType, Datatype topLevelType,
-            String dataverseName, String datatypeName) throws HyracksDataException {
+            DataverseName dataverseName, String datatypeName) throws HyracksDataException {
         try {
             metadataNode.addDatatype(txnId, new Datatype(dataverseName, typeName, nestedType, true));
         } catch (AlgebricksException e) {
@@ -380,11 +355,6 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                     throw hde;
                 }
             }
-        } catch (RemoteException e) {
-            // TODO: This should not be a HyracksDataException. Can't
-            // fix this currently because of BTree exception model whose
-            // fixes must get in.
-            throw HyracksDataException.create(e);
         }
         return typeName;
     }

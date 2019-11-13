@@ -33,6 +33,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -83,13 +84,9 @@ public class FeedUtils {
     private FeedUtils() {
     }
 
-    private static String prepareDataverseFeedName(String dataverseName, String feedName) {
-        return dataverseName + File.separator + feedName;
-    }
-
-    public static FileSplit splitsForAdapter(String dataverseName, String feedName, String nodeName,
+    public static FileSplit splitsForAdapter(DataverseName dataverseName, String feedName, String nodeName,
             ClusterPartition partition) {
-        File relPathFile = new File(prepareDataverseFeedName(dataverseName, feedName));
+        String relPathFile = dataverseName.getCanonicalForm() + File.separator + feedName; //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
         String storagePartitionPath = StoragePathUtil.prepareStoragePartitionPath(partition.getPartitionId());
         // Note: feed adapter instances in a single node share the feed logger
         // format: 'storage dir name'/partition_#/dataverse/feed/node
@@ -97,8 +94,8 @@ public class FeedUtils {
         return StoragePathUtil.getFileSplitForClusterPartition(partition, f.getPath());
     }
 
-    public static FileSplit[] splitsForAdapter(ICcApplicationContext appCtx, String dataverseName, String feedName,
-            AlgebricksPartitionConstraint partitionConstraints) throws AsterixException {
+    public static FileSplit[] splitsForAdapter(ICcApplicationContext appCtx, DataverseName dataverseName,
+            String feedName, AlgebricksPartitionConstraint partitionConstraints) throws AsterixException {
         if (partitionConstraints.getPartitionConstraintType() == PartitionConstraintType.COUNT) {
             throw new AsterixException("Can't create file splits for adapter with count partitioning constraints");
         }

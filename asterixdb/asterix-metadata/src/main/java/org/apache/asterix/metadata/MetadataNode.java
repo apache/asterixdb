@@ -32,6 +32,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.ITransactionContext;
@@ -82,6 +83,7 @@ import org.apache.asterix.metadata.entitytupletranslators.LibraryTupleTranslator
 import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
 import org.apache.asterix.metadata.entitytupletranslators.NodeGroupTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.NodeTupleTranslator;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.valueextractors.MetadataEntityValueExtractor;
 import org.apache.asterix.metadata.valueextractors.TupleCopyValueExtractor;
 import org.apache.asterix.om.base.AInt32;
@@ -98,6 +100,7 @@ import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexModif
 import org.apache.asterix.transaction.management.opcallbacks.UpsertOperationCallback;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -166,14 +169,14 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void beginTransaction(TxnId transactionId) throws RemoteException {
+    public void beginTransaction(TxnId transactionId) {
         TransactionOptions options = new TransactionOptions(AtomicityLevel.ATOMIC);
         transactionSubsystem.getTransactionManager().beginTransaction(transactionId, options);
     }
 
     @SuppressWarnings("squid:S1181")
     @Override
-    public void commitTransaction(TxnId txnId) throws RemoteException {
+    public void commitTransaction(TxnId txnId) {
         try {
             transactionSubsystem.getTransactionManager().commitTransaction(txnId);
         } catch (Throwable th) {
@@ -185,7 +188,7 @@ public class MetadataNode implements IMetadataNode {
 
     @SuppressWarnings("squid:S1181")
     @Override
-    public void abortTransaction(TxnId txnId) throws RemoteException {
+    public void abortTransaction(TxnId txnId) {
         try {
             transactionSubsystem.getTransactionManager().abortTransaction(txnId);
         } catch (Throwable th) {
@@ -264,8 +267,7 @@ public class MetadataNode implements IMetadataNode {
      * @throws AlgebricksException
      */
     private <T> List<T> getEntities(TxnId txnId, ITupleReference searchKey,
-            IMetadataEntityTupleTranslator<T> tupleTranslator, IMetadataIndex index)
-            throws AlgebricksException, RemoteException {
+            IMetadataEntityTupleTranslator<T> tupleTranslator, IMetadataIndex index) throws AlgebricksException {
         try {
             IValueExtractor<T> valueExtractor = new MetadataEntityValueExtractor<>(tupleTranslator);
             List<T> results = new ArrayList<>();
@@ -277,52 +279,49 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public <T extends IExtensionMetadataEntity> void addEntity(TxnId txnId, T entity)
-            throws AlgebricksException, RemoteException {
+    public <T extends IExtensionMetadataEntity> void addEntity(TxnId txnId, T entity) throws AlgebricksException {
         ExtensionMetadataDataset<T> index = (ExtensionMetadataDataset<T>) extensionDatasets.get(entity.getDatasetId());
         if (index == null) {
             throw new AlgebricksException("Metadata Extension Index: " + entity.getDatasetId() + " was not found");
         }
-        IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator();
+        IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator(true);
         addEntity(txnId, entity, tupleTranslator, index);
     }
 
     @Override
-    public <T extends IExtensionMetadataEntity> void upsertEntity(TxnId txnId, T entity)
-            throws AlgebricksException, RemoteException {
+    public <T extends IExtensionMetadataEntity> void upsertEntity(TxnId txnId, T entity) throws AlgebricksException {
         ExtensionMetadataDataset<T> index = (ExtensionMetadataDataset<T>) extensionDatasets.get(entity.getDatasetId());
         if (index == null) {
             throw new AlgebricksException("Metadata Extension Index: " + entity.getDatasetId() + " was not found");
         }
-        IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator();
+        IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator(true);
         upsertEntity(txnId, entity, tupleTranslator, index);
     }
 
     @Override
-    public <T extends IExtensionMetadataEntity> void deleteEntity(TxnId txnId, T entity)
-            throws AlgebricksException, RemoteException {
+    public <T extends IExtensionMetadataEntity> void deleteEntity(TxnId txnId, T entity) throws AlgebricksException {
         ExtensionMetadataDataset<T> index = (ExtensionMetadataDataset<T>) extensionDatasets.get(entity.getDatasetId());
         if (index == null) {
             throw new AlgebricksException("Metadata Extension Index: " + entity.getDatasetId() + " was not found");
         }
-        IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator();
+        IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator(true);
         deleteEntity(txnId, entity, tupleTranslator, index);
     }
 
     @Override
     public <T extends IExtensionMetadataEntity> List<T> getEntities(TxnId txnId, IExtensionMetadataSearchKey searchKey)
-            throws AlgebricksException, RemoteException {
+            throws AlgebricksException {
         ExtensionMetadataDataset<T> index =
                 (ExtensionMetadataDataset<T>) extensionDatasets.get(searchKey.getDatasetId());
         if (index == null) {
             throw new AlgebricksException("Metadata Extension Index: " + searchKey.getDatasetId() + " was not found");
         }
-        IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator();
+        IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator(false);
         return getEntities(txnId, searchKey.getSearchKey(), tupleTranslator, index);
     }
 
     @Override
-    public void addDataverse(TxnId txnId, Dataverse dataverse) throws AlgebricksException, RemoteException {
+    public void addDataverse(TxnId txnId, Dataverse dataverse) throws AlgebricksException {
         try {
             DataverseTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDataverseTupleTranslator(true);
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(dataverse);
@@ -338,7 +337,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void addDataset(TxnId txnId, Dataset dataset) throws AlgebricksException, RemoteException {
+    public void addDataset(TxnId txnId, Dataset dataset) throws AlgebricksException {
         try {
             // Insert into the 'dataset' dataset.
             DatasetTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatasetTupleTranslator(true);
@@ -379,7 +378,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void addNode(TxnId txnId, Node node) throws AlgebricksException, RemoteException {
+    public void addNode(TxnId txnId, Node node) throws AlgebricksException {
         try {
             NodeTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getNodeTupleTranslator(true);
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(node);
@@ -394,8 +393,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void modifyNodeGroup(TxnId txnId, NodeGroup nodeGroup, Operation modificationOp)
-            throws AlgebricksException, RemoteException {
+    public void modifyNodeGroup(TxnId txnId, NodeGroup nodeGroup, Operation modificationOp) throws AlgebricksException {
         try {
             NodeGroupTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getNodeGroupTupleTranslator(true);
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(nodeGroup);
@@ -411,7 +409,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void addDatatype(TxnId txnId, Datatype datatype) throws AlgebricksException, RemoteException {
+    public void addDatatype(TxnId txnId, Datatype datatype) throws AlgebricksException {
         try {
             DatatypeTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getDataTypeTupleTranslator(txnId, this, true);
@@ -428,7 +426,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void addFunction(TxnId txnId, Function function) throws AlgebricksException, RemoteException {
+    public void addFunction(TxnId txnId, Function function) throws AlgebricksException {
         try {
             // Insert into the 'function' dataset.
             FunctionTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFunctionTupleTranslator(true);
@@ -514,7 +512,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropDataverse(TxnId txnId, String dataverseName) throws AlgebricksException, RemoteException {
+    public void dropDataverse(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
         try {
             confirmDataverseCanBeDeleted(txnId, dataverseName);
 
@@ -568,7 +566,7 @@ public class MetadataNode implements IMetadataNode {
                 dropFeed(txnId, dataverseName, feed.getFeedName());
             }
 
-            List<FeedPolicyEntity> feedPolicies = getDataversePolicies(txnId, dataverseName);
+            List<FeedPolicyEntity> feedPolicies = getDataverseFeedPolicies(txnId, dataverseName);
             if (feedPolicies != null && !feedPolicies.isEmpty()) {
                 // Drop all feed ingestion policies in this dataverse.
                 for (FeedPolicyEntity feedPolicy : feedPolicies) {
@@ -594,14 +592,12 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropDataset(TxnId txnId, String dataverseName, String datasetName)
-            throws AlgebricksException, RemoteException {
+    public void dropDataset(TxnId txnId, DataverseName dataverseName, String datasetName) throws AlgebricksException {
         dropDataset(txnId, dataverseName, datasetName, false);
     }
 
-    public void dropDataset(TxnId txnId, String dataverseName, String datasetName, boolean force)
-            throws AlgebricksException, RemoteException {
-
+    public void dropDataset(TxnId txnId, DataverseName dataverseName, String datasetName, boolean force)
+            throws AlgebricksException {
         if (!force) {
             confirmDatasetCanBeDeleted(txnId, dataverseName, datasetName);
         }
@@ -655,8 +651,8 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropIndex(TxnId txnId, String dataverseName, String datasetName, String indexName)
-            throws AlgebricksException, RemoteException {
+    public void dropIndex(TxnId txnId, DataverseName dataverseName, String datasetName, String indexName)
+            throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, datasetName, indexName);
             // Searches the index for the tuple to be deleted. Acquires an S
@@ -675,8 +671,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public boolean dropNodegroup(TxnId txnId, String nodeGroupName, boolean failSilently)
-            throws AlgebricksException, RemoteException {
+    public boolean dropNodegroup(TxnId txnId, String nodeGroupName, boolean failSilently) throws AlgebricksException {
         List<String> datasetNames = getDatasetNamesPartitionedOnThisNodeGroup(txnId, nodeGroupName);
         if (!datasetNames.isEmpty()) {
             if (failSilently) {
@@ -709,8 +704,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropDatatype(TxnId txnId, String dataverseName, String datatypeName)
-            throws AlgebricksException, RemoteException {
+    public void dropDatatype(TxnId txnId, DataverseName dataverseName, String datatypeName) throws AlgebricksException {
 
         confirmDatatypeIsUnused(txnId, dataverseName, datatypeName);
 
@@ -739,8 +733,8 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void forceDropDatatype(TxnId txnId, String dataverseName, String datatypeName)
-            throws AlgebricksException, RemoteException {
+    private void forceDropDatatype(TxnId txnId, DataverseName dataverseName, String datatypeName)
+            throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, datatypeName);
             // Searches the index for the tuple to be deleted. Acquires an S
@@ -763,7 +757,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Dataverse> getDataverses(TxnId txnId) throws AlgebricksException, RemoteException {
+    public List<Dataverse> getDataverses(TxnId txnId) throws AlgebricksException {
         try {
             DataverseTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDataverseTupleTranslator(false);
             IValueExtractor<Dataverse> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -776,7 +770,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Dataverse getDataverse(TxnId txnId, String dataverseName) throws AlgebricksException, RemoteException {
+    public Dataverse getDataverse(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName);
             DataverseTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDataverseTupleTranslator(false);
@@ -793,8 +787,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Dataset> getDataverseDatasets(TxnId txnId, String dataverseName)
-            throws AlgebricksException, RemoteException {
+    public List<Dataset> getDataverseDatasets(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName);
             DatasetTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatasetTupleTranslator(false);
@@ -808,7 +801,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Feed> getDataverseFeeds(TxnId txnId, String dataverseName) throws AlgebricksException, RemoteException {
+    public List<Feed> getDataverseFeeds(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName);
             FeedTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedTupleTranslator(false);
@@ -822,8 +815,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Library> getDataverseLibraries(TxnId txnId, String dataverseName)
-            throws AlgebricksException, RemoteException {
+    public List<Library> getDataverseLibraries(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName);
             LibraryTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getLibraryTupleTranslator(false);
@@ -836,8 +828,7 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private List<Datatype> getDataverseDatatypes(TxnId txnId, String dataverseName)
-            throws AlgebricksException, RemoteException {
+    private List<Datatype> getDataverseDatatypes(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName);
             DatatypeTupleTranslator tupleReaderWriter =
@@ -852,8 +843,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Dataset getDataset(TxnId txnId, String dataverseName, String datasetName)
-            throws AlgebricksException, RemoteException {
+    public Dataset getDataset(TxnId txnId, DataverseName dataverseName, String datasetName) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, datasetName);
             DatasetTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatasetTupleTranslator(false);
@@ -869,7 +859,7 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    public List<Dataset> getAllDatasets(TxnId txnId) throws AlgebricksException, RemoteException {
+    public List<Dataset> getAllDatasets(TxnId txnId) throws AlgebricksException {
         try {
             DatasetTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatasetTupleTranslator(false);
             IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -881,7 +871,7 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    public List<Function> getAllFunctions(TxnId txnId) throws AlgebricksException, RemoteException {
+    public List<Function> getAllFunctions(TxnId txnId) throws AlgebricksException {
         try {
             FunctionTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFunctionTupleTranslator(false);
             IValueExtractor<Function> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -893,7 +883,7 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    public List<Datatype> getAllDatatypes(TxnId txnId) throws AlgebricksException, RemoteException {
+    public List<Datatype> getAllDatatypes(TxnId txnId) throws AlgebricksException {
         try {
             DatatypeTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getDataTypeTupleTranslator(txnId, this, false);
@@ -906,8 +896,7 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmDataverseCanBeDeleted(TxnId txnId, String dataverseName)
-            throws AlgebricksException, RemoteException {
+    private void confirmDataverseCanBeDeleted(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
         // If a dataset from a DIFFERENT dataverse
         // uses a type from this dataverse
         // throw an error
@@ -931,33 +920,32 @@ public class MetadataNode implements IMetadataNode {
             if (function.getDataverseName().equals(dataverseName)) {
                 continue;
             }
-            for (List<String> datasetDependency : function.getDependencies().get(0)) {
-                if (datasetDependency.get(0).equals(dataverseName)) {
+            for (Triple<DataverseName, String, String> datasetDependency : function.getDependencies().get(0)) {
+                if (datasetDependency.first.equals(dataverseName)) {
                     throw new AlgebricksException("Cannot drop dataverse. Function " + function.getDataverseName() + "."
                             + function.getName() + "@" + function.getArity() + " depends on dataset "
-                            + datasetDependency.get(0) + "." + datasetDependency.get(1));
+                            + datasetDependency.first + "." + datasetDependency.second);
                 }
             }
-            for (List<String> functionDependency : function.getDependencies().get(1)) {
-                if (functionDependency.get(0).equals(dataverseName)) {
+            for (Triple<DataverseName, String, String> functionDependency : function.getDependencies().get(1)) {
+                if (functionDependency.first.equals(dataverseName)) {
                     throw new AlgebricksException(
                             "Cannot drop dataverse. Function " + function.getDataverseName() + "." + function.getName()
-                                    + "@" + function.getArity() + " depends on function " + functionDependency.get(0)
-                                    + "." + functionDependency.get(1) + "@" + functionDependency.get(2));
+                                    + "@" + function.getArity() + " depends on function " + functionDependency.first
+                                    + "." + functionDependency.second + "@" + functionDependency.third);
                 }
             }
         }
     }
 
-    private void confirmFunctionCanBeDeleted(TxnId txnId, FunctionSignature signature)
-            throws AlgebricksException, RemoteException {
+    private void confirmFunctionCanBeDeleted(TxnId txnId, FunctionSignature signature) throws AlgebricksException {
         // If any other function uses this function, throw an error
         List<Function> functions = getAllFunctions(txnId);
         for (Function function : functions) {
-            for (List<String> functionalDependency : function.getDependencies().get(1)) {
-                if (functionalDependency.get(0).equals(signature.getNamespace())
-                        && functionalDependency.get(1).equals(signature.getName())
-                        && functionalDependency.get(2).equals(Integer.toString(signature.getArity()))) {
+            for (Triple<DataverseName, String, String> functionalDependency : function.getDependencies().get(1)) {
+                if (functionalDependency.first.equals(signature.getDataverseName())
+                        && functionalDependency.second.equals(signature.getName())
+                        && functionalDependency.third.equals(Integer.toString(signature.getArity()))) {
                     throw new AlgebricksException("Cannot drop function " + signature + " being used by function "
                             + function.getDataverseName() + "." + function.getName() + "@" + function.getArity());
                 }
@@ -965,14 +953,15 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmDatasetCanBeDeleted(TxnId txnId, String dataverseName, String datasetName)
-            throws AlgebricksException, RemoteException {
+    private void confirmDatasetCanBeDeleted(TxnId txnId, DataverseName dataverseName, String datasetName)
+            throws AlgebricksException {
         // If any function uses this type, throw an error
         List<Function> functions = getAllFunctions(txnId);
         for (Function function : functions) {
-            for (List<String> datasetDependency : function.getDependencies().get(0)) {
-                if (datasetDependency.get(0).equals(dataverseName) && datasetDependency.get(1).equals(datasetName)) {
-                    throw new AlgebricksException("Cannot drop dataset " + dataverseName + "." + datasetName
+            for (Triple<DataverseName, String, String> datasetDependency : function.getDependencies().get(0)) {
+                if (datasetDependency.first.equals(dataverseName) && datasetDependency.second.equals(datasetName)) {
+                    throw new AlgebricksException("Cannot drop dataset "
+                            + DatasetUtil.getFullyQualifiedDisplayName(dataverseName, datasetName)
                             + " being used by function " + function.getDataverseName() + "." + function.getName() + "@"
                             + function.getArity());
                 }
@@ -980,14 +969,14 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmDatatypeIsUnused(TxnId txnId, String dataverseName, String datatypeName)
-            throws AlgebricksException, RemoteException {
+    private void confirmDatatypeIsUnused(TxnId txnId, DataverseName dataverseName, String datatypeName)
+            throws AlgebricksException {
         confirmDatatypeIsUnusedByDatatypes(txnId, dataverseName, datatypeName);
         confirmDatatypeIsUnusedByDatasets(txnId, dataverseName, datatypeName);
     }
 
-    private void confirmDatatypeIsUnusedByDatasets(TxnId txnId, String dataverseName, String datatypeName)
-            throws AlgebricksException, RemoteException {
+    private void confirmDatatypeIsUnusedByDatasets(TxnId txnId, DataverseName dataverseName, String datatypeName)
+            throws AlgebricksException {
         // If any dataset uses this type, throw an error
         List<Dataset> datasets = getAllDatasets(txnId);
         for (Dataset set : datasets) {
@@ -998,8 +987,8 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmDatatypeIsUnusedByDatatypes(TxnId txnId, String dataverseName, String datatypeName)
-            throws AlgebricksException, RemoteException {
+    private void confirmDatatypeIsUnusedByDatatypes(TxnId txnId, DataverseName dataverseName, String datatypeName)
+            throws AlgebricksException {
         // If any datatype uses this type, throw an error
         // TODO: Currently this loads all types into memory. This will need to be fixed
         // for large numbers of types
@@ -1021,8 +1010,8 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private List<String> getNestedComplexDatatypeNamesForThisDatatype(TxnId txnId, String dataverseName,
-            String datatypeName) throws AlgebricksException, RemoteException {
+    private List<String> getNestedComplexDatatypeNamesForThisDatatype(TxnId txnId, DataverseName dataverseName,
+            String datatypeName) throws AlgebricksException {
         // Return all field types that aren't builtin types
         Datatype parentType = getDatatype(txnId, dataverseName, datatypeName);
 
@@ -1047,7 +1036,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private List<String> getDatasetNamesPartitionedOnThisNodeGroup(TxnId txnId, String nodegroup)
-            throws AlgebricksException, RemoteException {
+            throws AlgebricksException {
         // this needs to scan the datasets and return the datasets that use this
         // nodegroup
         List<String> nodeGroupDatasets = new ArrayList<>();
@@ -1062,8 +1051,8 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Index getIndex(TxnId txnId, String dataverseName, String datasetName, String indexName)
-            throws AlgebricksException, RemoteException {
+    public Index getIndex(TxnId txnId, DataverseName dataverseName, String datasetName, String indexName)
+            throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, datasetName, indexName);
             IndexTupleTranslator tupleReaderWriter =
@@ -1081,8 +1070,8 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Index> getDatasetIndexes(TxnId txnId, String dataverseName, String datasetName)
-            throws AlgebricksException, RemoteException {
+    public List<Index> getDatasetIndexes(TxnId txnId, DataverseName dataverseName, String datasetName)
+            throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, datasetName);
             IndexTupleTranslator tupleReaderWriter =
@@ -1097,8 +1086,8 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Datatype getDatatype(TxnId txnId, String dataverseName, String datatypeName)
-            throws AlgebricksException, RemoteException {
+    public Datatype getDatatype(TxnId txnId, DataverseName dataverseName, String datatypeName)
+            throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, datatypeName);
             DatatypeTupleTranslator tupleReaderWriter =
@@ -1116,7 +1105,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public NodeGroup getNodeGroup(TxnId txnId, String nodeGroupName) throws AlgebricksException, RemoteException {
+    public NodeGroup getNodeGroup(TxnId txnId, String nodeGroupName) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(nodeGroupName);
             NodeGroupTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getNodeGroupTupleTranslator(false);
@@ -1133,10 +1122,9 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Function getFunction(TxnId txnId, FunctionSignature functionSignature)
-            throws AlgebricksException, RemoteException {
+    public Function getFunction(TxnId txnId, FunctionSignature functionSignature) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(functionSignature.getNamespace(), functionSignature.getName(),
+            ITupleReference searchKey = createTuple(functionSignature.getDataverseName(), functionSignature.getName(),
                     Integer.toString(functionSignature.getArity()));
             FunctionTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFunctionTupleTranslator(false);
             List<Function> results = new ArrayList<>();
@@ -1152,7 +1140,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Function> getFunctions(TxnId txnId, String dataverseName) throws AlgebricksException, RemoteException {
+    public List<Function> getDataverseFunctions(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName);
             FunctionTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFunctionTupleTranslator(false);
@@ -1166,13 +1154,12 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropFunction(TxnId txnId, FunctionSignature functionSignature)
-            throws AlgebricksException, RemoteException {
+    public void dropFunction(TxnId txnId, FunctionSignature functionSignature) throws AlgebricksException {
         dropFunction(txnId, functionSignature, false);
     }
 
     private void dropFunction(TxnId txnId, FunctionSignature functionSignature, boolean force)
-            throws AlgebricksException, RemoteException {
+            throws AlgebricksException {
         if (!force) {
             confirmFunctionCanBeDeleted(txnId, functionSignature);
         }
@@ -1183,7 +1170,7 @@ public class MetadataNode implements IMetadataNode {
         }
         try {
             // Delete entry from the 'function' dataset.
-            ITupleReference searchKey = createTuple(functionSignature.getNamespace(), functionSignature.getName(),
+            ITupleReference searchKey = createTuple(functionSignature.getDataverseName(), functionSignature.getName(),
                     Integer.toString(functionSignature.getArity()));
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'function' dataset.
@@ -1202,7 +1189,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private ITupleReference getTupleToBeDeleted(TxnId txnId, IMetadataIndex metadataIndex, ITupleReference searchKey)
-            throws AlgebricksException, HyracksDataException, RemoteException {
+            throws AlgebricksException, HyracksDataException {
         IValueExtractor<ITupleReference> valueExtractor = new TupleCopyValueExtractor(metadataIndex.getTypeTraits());
         List<ITupleReference> results = new ArrayList<>();
         searchIndex(txnId, metadataIndex, searchKey, valueExtractor, results);
@@ -1287,8 +1274,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private <T> void searchIndex(TxnId txnId, IMetadataIndex index, ITupleReference searchKey,
-            IValueExtractor<T> valueExtractor, List<T> results)
-            throws AlgebricksException, HyracksDataException, RemoteException {
+            IValueExtractor<T> valueExtractor, List<T> results) throws AlgebricksException, HyracksDataException {
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
         if (index.getFile() == null) {
             throw new AlgebricksException("No file for Index " + index.getDataverseName() + "." + index.getIndexName());
@@ -1316,8 +1302,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private <T> void search(IIndexAccessor indexAccessor, RangePredicate rangePred, List<T> results,
-            IValueExtractor<T> valueExtractor, TxnId txnId)
-            throws HyracksDataException, RemoteException, AlgebricksException {
+            IValueExtractor<T> valueExtractor, TxnId txnId) throws HyracksDataException, AlgebricksException {
         IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
         try {
             indexAccessor.search(rangeCursor, rangePred);
@@ -1338,7 +1323,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void initializeDatasetIdFactory(TxnId txnId) throws AlgebricksException, RemoteException {
+    public void initializeDatasetIdFactory(TxnId txnId) throws AlgebricksException {
         int mostRecentDatasetId;
         try {
             String resourceName = MetadataPrimaryIndexes.DATASET_DATASET.getFile().getRelativePath();
@@ -1356,7 +1341,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private int getMostRecentDatasetIdFromStoredDatasetIndex(IIndex indexInstance, TxnId txnId)
-            throws HyracksDataException, RemoteException, AlgebricksException {
+            throws HyracksDataException, AlgebricksException {
         DatasetTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatasetTupleTranslator(false);
         IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
         RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
@@ -1389,43 +1374,41 @@ public class MetadataNode implements IMetadataNode {
         return mostRecentDatasetId;
     }
 
-    public static ITupleReference createTuple(String... fields) {
-        ISerializerDeserializer<AString> stringSerde =
-                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
-        AMutableString aString = new AMutableString("");
-        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fields.length);
-        for (String s : fields) {
-            aString.setValue(s);
-            try {
-                stringSerde.serialize(aString, tupleBuilder.getDataOutput());
-            } catch (HyracksDataException e) {
-                // This should never happen
-                throw new IllegalStateException("Failed to create search tuple!!!! This should never happen", e);
-            }
+    public static ITupleReference createTuple(DataverseName dataverseName, String... rest) {
+        return createTuple(dataverseName.getCanonicalForm(), rest);
+    }
+
+    public static ITupleReference createTuple(String first, String... rest) {
+        try {
+            ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(1 + rest.length);
+            ISerializerDeserializer<AString> stringSerde =
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+            AMutableString aString = new AMutableString(first);
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
             tupleBuilder.addFieldEndOffset();
+            for (String s : rest) {
+                aString.setValue(s);
+                stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+                tupleBuilder.addFieldEndOffset();
+            }
+            ArrayTupleReference tuple = new ArrayTupleReference();
+            tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
+            return tuple;
+        } catch (HyracksDataException e) {
+            // This should never happen
+            throw new IllegalStateException("Failed to create search tuple", e);
         }
+    }
+
+    public static ITupleReference createTuple() {
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(0);
         ArrayTupleReference tuple = new ArrayTupleReference();
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
         return tuple;
     }
 
     @Override
-    public List<Function> getDataverseFunctions(TxnId txnId, String dataverseName)
-            throws AlgebricksException, RemoteException {
-        try {
-            ITupleReference searchKey = createTuple(dataverseName);
-            FunctionTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFunctionTupleTranslator(false);
-            IValueExtractor<Function> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
-            List<Function> results = new ArrayList<>();
-            searchIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, searchKey, valueExtractor, results);
-            return results;
-        } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
-        }
-    }
-
-    @Override
-    public void addAdapter(TxnId txnId, DatasourceAdapter adapter) throws AlgebricksException, RemoteException {
+    public void addAdapter(TxnId txnId, DatasourceAdapter adapter) throws AlgebricksException {
         try {
             // Insert into the 'Adapter' dataset.
             DatasourceAdapterTupleTranslator tupleReaderWriter =
@@ -1435,7 +1418,8 @@ public class MetadataNode implements IMetadataNode {
         } catch (HyracksDataException e) {
             if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
                 throw new AlgebricksException("A adapter with this name " + adapter.getAdapterIdentifier().getName()
-                        + " already exists in dataverse '" + adapter.getAdapterIdentifier().getNamespace() + "'.", e);
+                        + " already exists in dataverse '" + adapter.getAdapterIdentifier().getDataverseName() + "'.",
+                        e);
             } else {
                 throw new AlgebricksException(e);
             }
@@ -1443,8 +1427,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropAdapter(TxnId txnId, String dataverseName, String adapterName)
-            throws AlgebricksException, RemoteException {
+    public void dropAdapter(TxnId txnId, DataverseName dataverseName, String adapterName) throws AlgebricksException {
         DatasourceAdapter adapter = getAdapter(txnId, dataverseName, adapterName);
         if (adapter == null) {
             throw new AlgebricksException("Cannot drop adapter '" + adapter + "' because it doesn't exist.");
@@ -1468,8 +1451,8 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public DatasourceAdapter getAdapter(TxnId txnId, String dataverseName, String adapterName)
-            throws AlgebricksException, RemoteException {
+    public DatasourceAdapter getAdapter(TxnId txnId, DataverseName dataverseName, String adapterName)
+            throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, adapterName);
             DatasourceAdapterTupleTranslator tupleReaderWriter =
@@ -1487,8 +1470,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void addCompactionPolicy(TxnId txnId, CompactionPolicy compactionPolicy)
-            throws AlgebricksException, RemoteException {
+    public void addCompactionPolicy(TxnId txnId, CompactionPolicy compactionPolicy) throws AlgebricksException {
         try {
             // Insert into the 'CompactionPolicy' dataset.
             CompactionPolicyTupleTranslator tupleReaderWriter =
@@ -1506,10 +1488,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public CompactionPolicy getCompactionPolicy(TxnId txnId, String dataverse, String policyName)
-            throws AlgebricksException, RemoteException {
+    public CompactionPolicy getCompactionPolicy(TxnId txnId, DataverseName dataverseName, String policyName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverse, policyName);
+            ITupleReference searchKey = createTuple(dataverseName, policyName);
             CompactionPolicyTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getCompactionPolicyTupleTranslator(false);
             List<CompactionPolicy> results = new ArrayList<>();
@@ -1525,8 +1507,8 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<DatasourceAdapter> getDataverseAdapters(TxnId txnId, String dataverseName)
-            throws AlgebricksException, RemoteException {
+    public List<DatasourceAdapter> getDataverseAdapters(TxnId txnId, DataverseName dataverseName)
+            throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName);
             DatasourceAdapterTupleTranslator tupleReaderWriter =
@@ -1541,7 +1523,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void addLibrary(TxnId txnId, Library library) throws AlgebricksException, RemoteException {
+    public void addLibrary(TxnId txnId, Library library) throws AlgebricksException {
         try {
             // Insert into the 'Library' dataset.
             LibraryTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getLibraryTupleTranslator(true);
@@ -1559,8 +1541,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropLibrary(TxnId txnId, String dataverseName, String libraryName)
-            throws AlgebricksException, RemoteException {
+    public void dropLibrary(TxnId txnId, DataverseName dataverseName, String libraryName) throws AlgebricksException {
         Library library = getLibrary(txnId, dataverseName, libraryName);
         if (library == null) {
             throw new AlgebricksException("Cannot drop library '" + library + "' because it doesn't exist.");
@@ -1584,8 +1565,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Library getLibrary(TxnId txnId, String dataverseName, String libraryName)
-            throws AlgebricksException, RemoteException {
+    public Library getLibrary(TxnId txnId, DataverseName dataverseName, String libraryName) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, libraryName);
             LibraryTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getLibraryTupleTranslator(false);
@@ -1607,7 +1587,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void addFeedPolicy(TxnId txnId, FeedPolicyEntity feedPolicy) throws AlgebricksException, RemoteException {
+    public void addFeedPolicy(TxnId txnId, FeedPolicyEntity feedPolicy) throws AlgebricksException {
         try {
             // Insert into the 'FeedPolicy' dataset.
             FeedPolicyTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedPolicyTupleTranslator(true);
@@ -1624,10 +1604,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public FeedPolicyEntity getFeedPolicy(TxnId txnId, String dataverse, String policyName)
-            throws AlgebricksException, RemoteException {
+    public FeedPolicyEntity getFeedPolicy(TxnId txnId, DataverseName dataverseName, String policyName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverse, policyName);
+            ITupleReference searchKey = createTuple(dataverseName, policyName);
             FeedPolicyTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedPolicyTupleTranslator(false);
             List<FeedPolicyEntity> results = new ArrayList<>();
             IValueExtractor<FeedPolicyEntity> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -1644,7 +1624,8 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void addFeedConnection(TxnId txnId, FeedConnection feedConnection) throws AlgebricksException {
         try {
-            FeedConnectionTupleTranslator tupleReaderWriter = new FeedConnectionTupleTranslator(true);
+            FeedConnectionTupleTranslator tupleReaderWriter =
+                    tupleTranslatorProvider.getFeedConnectionTupleTranslator(true);
             ITupleReference feedConnTuple = tupleReaderWriter.getTupleFromMetadataEntity(feedConnection);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, feedConnTuple);
         } catch (HyracksDataException e) {
@@ -1653,11 +1634,12 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<FeedConnection> getFeedConnections(TxnId txnId, String dataverseName, String feedName)
-            throws AlgebricksException, RemoteException {
+    public List<FeedConnection> getFeedConnections(TxnId txnId, DataverseName dataverseName, String feedName)
+            throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, feedName);
-            FeedConnectionTupleTranslator tupleReaderWriter = new FeedConnectionTupleTranslator(false);
+            FeedConnectionTupleTranslator tupleReaderWriter =
+                    tupleTranslatorProvider.getFeedConnectionTupleTranslator(false);
             List<FeedConnection> results = new ArrayList<>();
             IValueExtractor<FeedConnection> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
             searchIndex(txnId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, searchKey, valueExtractor, results);
@@ -1668,11 +1650,12 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public FeedConnection getFeedConnection(TxnId txnId, String dataverseName, String feedName, String datasetName)
-            throws AlgebricksException, RemoteException {
+    public FeedConnection getFeedConnection(TxnId txnId, DataverseName dataverseName, String feedName,
+            String datasetName) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, feedName, datasetName);
-            FeedConnectionTupleTranslator tupleReaderWriter = new FeedConnectionTupleTranslator(false);
+            FeedConnectionTupleTranslator tupleReaderWriter =
+                    tupleTranslatorProvider.getFeedConnectionTupleTranslator(false);
             List<FeedConnection> results = new ArrayList<>();
             IValueExtractor<FeedConnection> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
             searchIndex(txnId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, searchKey, valueExtractor, results);
@@ -1686,8 +1669,8 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropFeedConnection(TxnId txnId, String dataverseName, String feedName, String datasetName)
-            throws AlgebricksException, RemoteException {
+    public void dropFeedConnection(TxnId txnId, DataverseName dataverseName, String feedName, String datasetName)
+            throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, feedName, datasetName);
             ITupleReference tuple =
@@ -1699,7 +1682,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void addFeed(TxnId txnId, Feed feed) throws AlgebricksException, RemoteException {
+    public void addFeed(TxnId txnId, Feed feed) throws AlgebricksException {
         try {
             // Insert into the 'Feed' dataset.
             FeedTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedTupleTranslator(true);
@@ -1716,9 +1699,9 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Feed getFeed(TxnId txnId, String dataverse, String feedName) throws AlgebricksException, RemoteException {
+    public Feed getFeed(TxnId txnId, DataverseName dataverseName, String feedName) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverse, feedName);
+            ITupleReference searchKey = createTuple(dataverseName, feedName);
             FeedTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedTupleTranslator(false);
             List<Feed> results = new ArrayList<>();
             IValueExtractor<Feed> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -1733,9 +1716,9 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Feed> getFeeds(TxnId txnId, String dataverse) throws AlgebricksException, RemoteException {
+    public List<Feed> getFeeds(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverse);
+            ITupleReference searchKey = createTuple(dataverseName);
             FeedTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedTupleTranslator(false);
             List<Feed> results = new ArrayList<>();
             IValueExtractor<Feed> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -1747,9 +1730,9 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropFeed(TxnId txnId, String dataverse, String feedName) throws AlgebricksException, RemoteException {
+    public void dropFeed(TxnId txnId, DataverseName dataverseName, String feedName) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverse, feedName);
+            ITupleReference searchKey = createTuple(dataverseName, feedName);
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'nodegroup' dataset.
             ITupleReference tuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.FEED_DATASET, searchKey);
@@ -1765,8 +1748,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropFeedPolicy(TxnId txnId, String dataverseName, String policyName)
-            throws AlgebricksException, RemoteException {
+    public void dropFeedPolicy(TxnId txnId, DataverseName dataverseName, String policyName) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, policyName);
             ITupleReference tuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.FEED_POLICY_DATASET, searchKey);
@@ -1782,10 +1764,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<FeedPolicyEntity> getDataversePolicies(TxnId txnId, String dataverse)
-            throws AlgebricksException, RemoteException {
+    public List<FeedPolicyEntity> getDataverseFeedPolicies(TxnId txnId, DataverseName dataverseName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverse);
+            ITupleReference searchKey = createTuple(dataverseName);
             FeedPolicyTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedPolicyTupleTranslator(false);
             IValueExtractor<FeedPolicyEntity> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
             List<FeedPolicyEntity> results = new ArrayList<>();
@@ -1797,7 +1779,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void addExternalFile(TxnId txnId, ExternalFile externalFile) throws AlgebricksException, RemoteException {
+    public void addExternalFile(TxnId txnId, ExternalFile externalFile) throws AlgebricksException {
         try {
             // Insert into the 'externalFiles' dataset.
             ExternalFileTupleTranslator tupleReaderWriter =
@@ -1816,8 +1798,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<ExternalFile> getExternalFiles(TxnId txnId, Dataset dataset)
-            throws AlgebricksException, RemoteException {
+    public List<ExternalFile> getExternalFiles(TxnId txnId, Dataset dataset) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(dataset.getDataverseName(), dataset.getDatasetName());
             ExternalFileTupleTranslator tupleReaderWriter =
@@ -1832,8 +1813,8 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropExternalFile(TxnId txnId, String dataverseName, String datasetName, int fileNumber)
-            throws AlgebricksException, RemoteException {
+    public void dropExternalFile(TxnId txnId, DataverseName dataverseName, String datasetName, int fileNumber)
+            throws AlgebricksException {
         try {
             // Delete entry from the 'ExternalFile' dataset.
             ITupleReference searchKey = createExternalFileSearchTuple(dataverseName, datasetName, fileNumber);
@@ -1853,7 +1834,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropExternalFiles(TxnId txnId, Dataset dataset) throws AlgebricksException, RemoteException {
+    public void dropExternalFiles(TxnId txnId, Dataset dataset) throws AlgebricksException {
         List<ExternalFile> files = getExternalFiles(txnId, dataset);
         // loop through files and delete them
         for (int i = 0; i < files.size(); i++) {
@@ -1864,8 +1845,8 @@ public class MetadataNode implements IMetadataNode {
 
     // This method is used to create a search tuple for external data file since the
     // search tuple has an int value
-    public ITupleReference createExternalFileSearchTuple(String dataverseName, String datasetName, int fileNumber)
-            throws HyracksDataException {
+    public ITupleReference createExternalFileSearchTuple(DataverseName dataverseName, String datasetName,
+            int fileNumber) throws HyracksDataException {
         ISerializerDeserializer<AString> stringSerde =
                 SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
         ISerializerDeserializer<AInt32> intSerde =
@@ -1875,7 +1856,7 @@ public class MetadataNode implements IMetadataNode {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(3);
 
         // dataverse field
-        aString.setValue(dataverseName);
+        aString.setValue(dataverseName.getCanonicalForm());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
@@ -1894,8 +1875,8 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public ExternalFile getExternalFile(TxnId txnId, String dataverseName, String datasetName, Integer fileNumber)
-            throws AlgebricksException, RemoteException {
+    public ExternalFile getExternalFile(TxnId txnId, DataverseName dataverseName, String datasetName,
+            Integer fileNumber) throws AlgebricksException {
         try {
             ITupleReference searchKey = createExternalFileSearchTuple(dataverseName, datasetName, fileNumber);
             ExternalFileTupleTranslator tupleReaderWriter =
@@ -1913,12 +1894,11 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void updateDataset(TxnId txnId, Dataset dataset) throws AlgebricksException, RemoteException {
+    public void updateDataset(TxnId txnId, Dataset dataset) throws AlgebricksException {
         try {
             // This method will delete previous entry of the dataset and insert the new one
             // Delete entry from the 'datasets' dataset.
-            ITupleReference searchKey;
-            searchKey = createTuple(dataset.getDataverseName(), dataset.getDatasetName());
+            ITupleReference searchKey = createTuple(dataset.getDataverseName(), dataset.getDatasetName());
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'dataset' dataset.
             ITupleReference datasetTuple =

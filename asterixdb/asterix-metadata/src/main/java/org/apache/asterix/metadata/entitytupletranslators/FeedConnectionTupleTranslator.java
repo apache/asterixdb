@@ -19,16 +19,13 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.FeedConnection;
@@ -39,136 +36,124 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AUnorderedListType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedConnection> {
-    private static final long serialVersionUID = -1798961999812829511L;
 
-    public static final int FEED_CONN_DATAVERSE_NAME_FIELD_INDEX = 0;
-    public static final int FEED_CONN_FEED_NAME_FIELD_INDEX = 1;
-    public static final int FEED_CONN_DATASET_NAME_FIELD_INDEX = 2;
-
-    public static final int FEED_CONN_PAYLOAD_TUPLE_FIELD_INDEX = 3;
-
-    protected final transient ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage();
-
-    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(MetadataRecordTypes.FEED_CONNECTION_RECORDTYPE);
+    // Payload field containing serialized ExternalFile.
+    private static final int FEED_CONNECTION_PAYLOAD_TUPLE_FIELD_INDEX = 3;
 
     public FeedConnectionTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET.getFieldCount());
+        super(getTuple, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, FEED_CONNECTION_PAYLOAD_TUPLE_FIELD_INDEX);
     }
 
     @Override
-    public FeedConnection getMetadataEntityFromTuple(ITupleReference frameTuple)
-            throws AlgebricksException, HyracksDataException {
-        byte[] serRecord = frameTuple.getFieldData(FEED_CONN_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordStartOffset = frameTuple.getFieldStart(FEED_CONN_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordLength = frameTuple.getFieldLength(FEED_CONN_PAYLOAD_TUPLE_FIELD_INDEX);
-        ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
-        DataInput in = new DataInputStream(stream);
-        ARecord feedConnRecord = recordSerDes.deserialize(in);
-        return createFeedConnFromRecord(feedConnRecord);
-    }
-
-    private FeedConnection createFeedConnFromRecord(ARecord feedConnRecord) {
-        String dataverseName =
-                ((AString) feedConnRecord.getValueByPos(MetadataRecordTypes.FEED_CONN_DATAVERSE_NAME_FIELD_INDEX))
+    protected FeedConnection createMetadataEntityFromARecord(ARecord feedConnectionRecord) {
+        String dataverseCanonicalName =
+                ((AString) feedConnectionRecord.getValueByPos(MetadataRecordTypes.FEED_CONN_DATAVERSE_NAME_FIELD_INDEX))
                         .getStringValue();
-        String feedName = ((AString) feedConnRecord.getValueByPos(MetadataRecordTypes.FEED_CONN_FEED_NAME_FIELD_INDEX))
-                .getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        String feedName =
+                ((AString) feedConnectionRecord.getValueByPos(MetadataRecordTypes.FEED_CONN_FEED_NAME_FIELD_INDEX))
+                        .getStringValue();
         String datasetName =
-                ((AString) feedConnRecord.getValueByPos(MetadataRecordTypes.FEED_CONN_DATASET_NAME_FIELD_INDEX))
+                ((AString) feedConnectionRecord.getValueByPos(MetadataRecordTypes.FEED_CONN_DATASET_NAME_FIELD_INDEX))
                         .getStringValue();
-        String outputType = ((AString) feedConnRecord.getValueByPos(MetadataRecordTypes.FEED_CONN_OUTPUT_TYPE_INDEX))
-                .getStringValue();
-        String policyName = ((AString) feedConnRecord.getValueByPos(MetadataRecordTypes.FEED_CONN_POLICY_FIELD_INDEX))
-                .getStringValue();
-        ArrayList<FunctionSignature> appliedFunctions = null;
-        Object o = feedConnRecord.getValueByPos(MetadataRecordTypes.FEED_CONN_APPLIED_FUNCTIONS_FIELD_INDEX);
+        String outputType =
+                ((AString) feedConnectionRecord.getValueByPos(MetadataRecordTypes.FEED_CONN_OUTPUT_TYPE_INDEX))
+                        .getStringValue();
+        String policyName =
+                ((AString) feedConnectionRecord.getValueByPos(MetadataRecordTypes.FEED_CONN_POLICY_FIELD_INDEX))
+                        .getStringValue();
+        List<FunctionSignature> appliedFunctions = null;
+        Object o = feedConnectionRecord.getValueByPos(MetadataRecordTypes.FEED_CONN_APPLIED_FUNCTIONS_FIELD_INDEX);
         IACursor cursor;
 
         if (!(o instanceof ANull) && !(o instanceof AMissing)) {
             appliedFunctions = new ArrayList<>();
-            FunctionSignature functionSignature;
-            cursor = ((AUnorderedList) feedConnRecord
-                    .getValueByPos(MetadataRecordTypes.FEED_CONN_APPLIED_FUNCTIONS_FIELD_INDEX)).getCursor();
+            AUnorderedList afList = (AUnorderedList) feedConnectionRecord
+                    .getValueByPos(MetadataRecordTypes.FEED_CONN_APPLIED_FUNCTIONS_FIELD_INDEX);
+            cursor = afList.getCursor();
             while (cursor.next()) {
-                String[] functionFullName = ((AString) cursor.get()).getStringValue().split("\\.");
-                functionSignature = new FunctionSignature(functionFullName[0], functionFullName[1], 1);
+                String afValue = ((AString) cursor.get()).getStringValue();
+                int pos = afValue.lastIndexOf('.'); //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
+                String afDataverseCanonicalName = afValue.substring(0, pos);
+                String afName = afValue.substring(pos + 1);
+                DataverseName afDataverseName = DataverseName.createFromCanonicalForm(afDataverseCanonicalName);
+                FunctionSignature functionSignature = new FunctionSignature(afDataverseName, afName, 1);
                 appliedFunctions.add(functionSignature);
             }
         }
 
-        int whereClauseIdx = feedConnRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_WHERE_CLAUSE);
-        String whereClauseBody =
-                whereClauseIdx >= 0 ? ((AString) feedConnRecord.getValueByPos(whereClauseIdx)).getStringValue() : "";
+        int whereClauseIdx = feedConnectionRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_WHERE_CLAUSE);
+        String whereClauseBody = whereClauseIdx >= 0
+                ? ((AString) feedConnectionRecord.getValueByPos(whereClauseIdx)).getStringValue() : "";
 
         return new FeedConnection(dataverseName, feedName, datasetName, appliedFunctions, policyName, whereClauseBody,
                 outputType);
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(FeedConnection me)
-            throws AlgebricksException, HyracksDataException {
+    public ITupleReference getTupleFromMetadataEntity(FeedConnection feedConnection) throws HyracksDataException {
+        String dataverseCanonicalName = feedConnection.getDataverseName().getCanonicalForm();
+
         tupleBuilder.reset();
 
         // key: dataverse
-        aString.setValue(me.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
         // key: feedName
-        aString.setValue(me.getFeedName());
+        aString.setValue(feedConnection.getFeedName());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
         // key: dataset
-        aString.setValue(me.getDatasetName());
+        aString.setValue(feedConnection.getDatasetName());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
         recordBuilder.reset(MetadataRecordTypes.FEED_CONNECTION_RECORDTYPE);
+
         // field dataverse
         fieldValue.reset();
-        aString.setValue(me.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.FEED_CONN_DATAVERSE_NAME_FIELD_INDEX, fieldValue);
 
         // field: feedId
         fieldValue.reset();
-        aString.setValue(me.getFeedName());
+        aString.setValue(feedConnection.getFeedName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.FEED_CONN_FEED_NAME_FIELD_INDEX, fieldValue);
 
         // field: dataset
         fieldValue.reset();
-        aString.setValue(me.getDatasetName());
+        aString.setValue(feedConnection.getDatasetName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.FEED_CONN_DATASET_NAME_FIELD_INDEX, fieldValue);
 
         // field: outputType
         fieldValue.reset();
-        aString.setValue(me.getOutputType());
+        aString.setValue(feedConnection.getOutputType());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.FEED_CONN_OUTPUT_TYPE_INDEX, fieldValue);
 
         // field: appliedFunctions
         fieldValue.reset();
-        writeAppliedFunctionsField(recordBuilder, me, fieldValue);
+        writeAppliedFunctionsField(recordBuilder, feedConnection, fieldValue);
 
         // field: policyName
         fieldValue.reset();
-        aString.setValue(me.getPolicyName());
+        aString.setValue(feedConnection.getPolicyName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.FEED_CONN_POLICY_FIELD_INDEX, fieldValue);
 
-        // field: whereClauseBody
-        writeOpenPart(me);
+        // write open fields
+        writeOpenFields(feedConnection);
 
         recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();
@@ -177,13 +162,18 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
         return tuple;
     }
 
-    protected void writeOpenPart(FeedConnection fc) throws HyracksDataException {
-        if (fc.getWhereClauseBody() != null && fc.getWhereClauseBody().length() > 0) {
+    protected void writeOpenFields(FeedConnection feedConnection) throws HyracksDataException {
+        writeWhereClauseBody(feedConnection);
+    }
+
+    private void writeWhereClauseBody(FeedConnection feedConnection) throws HyracksDataException {
+        // field: whereClauseBody
+        if (feedConnection.getWhereClauseBody() != null && feedConnection.getWhereClauseBody().length() > 0) {
             fieldName.reset();
             aString.setValue(MetadataRecordTypes.FIELD_NAME_WHERE_CLAUSE);
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
-            aString.setValue(fc.getWhereClauseBody());
+            aString.setValue(feedConnection.getWhereClauseBody());
             stringSerde.serialize(aString, fieldValue.getDataOutput());
             recordBuilder.addField(fieldName, fieldValue);
         }
@@ -200,7 +190,7 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
             List<FunctionSignature> appliedFunctions = fc.getAppliedFunctions();
             for (FunctionSignature af : appliedFunctions) {
                 listEleBuffer.reset();
-                aString.setValue(af.getNamespace() + "." + af.getName());
+                aString.setValue(af.getDataverseName().getCanonicalForm() + '.' + af.getName()); //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
                 stringSerde.serialize(aString, listEleBuffer.getDataOutput());
                 listBuilder.addItem(listEleBuffer);
             }

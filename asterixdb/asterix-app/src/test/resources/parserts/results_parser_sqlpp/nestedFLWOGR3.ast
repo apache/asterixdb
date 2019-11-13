@@ -19,7 +19,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Event]
+    LiteralExpr [STRING] [Default.Event]
   ]
   AS Variable [ Name=$event ]
 ,
@@ -105,7 +105,7 @@ Let Variable [ Name=$by_chapter ]
     ]
     ]
     FROM [      FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [es]
+        LiteralExpr [STRING] [Default.es]
       ]
       AS Variable [ Name=$e ]
     ]

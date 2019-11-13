@@ -19,60 +19,34 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.util.Calendar;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<DatasourceAdapter> {
-    private static final long serialVersionUID = 6183434454125673504L;
-
-    // Field indexes of serialized Adapter in a tuple.
-    // First key field.
-    public static final int ADAPTER_DATAVERSENAME_TUPLE_FIELD_INDEX = 0;
-    // Second key field.
-    public static final int ADAPTER_NAME_TUPLE_FIELD_INDEX = 1;
 
     // Payload field containing serialized Adapter.
-    public static final int ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX = 2;
-
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE);
+    private static final int ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
     protected DatasourceAdapterTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET.getFieldCount());
+        super(getTuple, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX);
     }
 
     @Override
-    public DatasourceAdapter getMetadataEntityFromTuple(ITupleReference tuple)
-            throws AlgebricksException, HyracksDataException {
-        byte[] serRecord = tuple.getFieldData(ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordStartOffset = tuple.getFieldStart(ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordLength = tuple.getFieldLength(ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX);
-        ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
-        DataInput in = new DataInputStream(stream);
-        ARecord adapterRecord = recordSerDes.deserialize(in);
-        return createAdapterFromARecord(adapterRecord);
-    }
-
-    private DatasourceAdapter createAdapterFromARecord(ARecord adapterRecord) {
-        String dataverseName = ((AString) adapterRecord
+    protected DatasourceAdapter createMetadataEntityFromARecord(ARecord adapterRecord) {
+        String dataverseCanonicalName = ((AString) adapterRecord
                 .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_DATAVERSENAME_FIELD_INDEX))
                         .getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String adapterName =
                 ((AString) adapterRecord.getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_NAME_FIELD_INDEX))
                         .getStringValue();
@@ -86,14 +60,17 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(DatasourceAdapter adapter)
-            throws HyracksDataException, AlgebricksException {
+    public ITupleReference getTupleFromMetadataEntity(DatasourceAdapter adapter) throws HyracksDataException {
+        AdapterIdentifier adapterIdentifier = adapter.getAdapterIdentifier();
+        String dataverseCanonicalName = adapterIdentifier.getDataverseName().getCanonicalForm();
+
         // write the key in the first 2 fields of the tuple
         tupleBuilder.reset();
-        aString.setValue(adapter.getAdapterIdentifier().getNamespace());
+
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
-        aString.setValue(adapter.getAdapterIdentifier().getName());
+        aString.setValue(adapterIdentifier.getName());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
@@ -103,13 +80,13 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
 
         // write field 0
         fieldValue.reset();
-        aString.setValue(adapter.getAdapterIdentifier().getNamespace());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_DATAVERSENAME_FIELD_INDEX, fieldValue);
 
         // write field 1
         fieldValue.reset();
-        aString.setValue(adapter.getAdapterIdentifier().getName());
+        aString.setValue(adapterIdentifier.getName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_NAME_FIELD_INDEX, fieldValue);
 
@@ -138,5 +115,4 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
         return tuple;
     }
-
 }

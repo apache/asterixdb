@@ -20,7 +20,6 @@
 package org.apache.asterix.metadata.api;
 
 import java.io.IOException;
-import java.rmi.RemoteException;
 
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -47,5 +46,5 @@ public interface IValueExtractor<T> {
      * @throws HyracksDataException
      * @throws IOException
      */
-    T getValue(TxnId txnId, ITupleReference tuple) throws AlgebricksException, HyracksDataException, RemoteException;
+    T getValue(TxnId txnId, ITupleReference tuple) throws AlgebricksException, HyracksDataException;
 }

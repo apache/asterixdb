@@ -27,6 +27,7 @@ import java.util.Set;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
 import org.apache.asterix.om.types.IAType;
@@ -99,13 +100,6 @@ public abstract class FunctionDataSource extends DataSource {
     }
 
     protected static DataSourceId createDataSourceId(FunctionIdentifier fid, String... parameters) {
-        int paramCount = parameters != null ? parameters.length : 0;
-        String[] components = new String[paramCount + 2];
-        components[0] = fid.getNamespace();
-        components[1] = fid.getName();
-        if (paramCount > 0) {
-            System.arraycopy(parameters, 0, components, 2, paramCount);
-        }
-        return new DataSourceId(components);
+        return new DataSourceId(FunctionSignature.getDataverseName(fid), fid.getName(), parameters);
     }
 }

@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -118,7 +119,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws AlgebricksException
      *             For example, if the dataverse does not exist.
      */
-    Dataverse getDataverse(MetadataTransactionContext ctx, String dataverseName) throws AlgebricksException;
+    Dataverse getDataverse(MetadataTransactionContext ctx, DataverseName dataverseName) throws AlgebricksException;
 
     /**
      * Retrieves all datasets belonging to the given dataverse.
@@ -131,7 +132,8 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws AlgebricksException
      *             For example, if the dataverse does not exist.
      */
-    List<Dataset> getDataverseDatasets(MetadataTransactionContext ctx, String dataverseName) throws AlgebricksException;
+    List<Dataset> getDataverseDatasets(MetadataTransactionContext ctx, DataverseName dataverseName)
+            throws AlgebricksException;
 
     /**
      * Deletes the dataverse with given name, and all it's associated datasets,
@@ -139,11 +141,12 @@ public interface IMetadataManager extends IMetadataBootstrap {
      *
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
-     * @return A list of dataset instances.
+     * @param dataverseName
+     *            Name of the dataverse to drop.
      * @throws AlgebricksException
      *             For example, if the dataverse does not exist.
      */
-    void dropDataverse(MetadataTransactionContext ctx, String dataverseName) throws AlgebricksException;
+    void dropDataverse(MetadataTransactionContext ctx, DataverseName dataverseName) throws AlgebricksException;
 
     /**
      * Inserts a new dataset into the metadata.
@@ -170,7 +173,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws AlgebricksException
      *             For example, if the dataset does not exist.
      */
-    Dataset getDataset(MetadataTransactionContext ctx, String dataverseName, String datasetName)
+    Dataset getDataset(MetadataTransactionContext ctx, DataverseName dataverseName, String datasetName)
             throws AlgebricksException;
 
     /**
@@ -186,7 +189,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws AlgebricksException
      *             For example, if the dataset and/or dataverse does not exist.
      */
-    List<Index> getDatasetIndexes(MetadataTransactionContext ctx, String dataverseName, String datasetName)
+    List<Index> getDatasetIndexes(MetadataTransactionContext ctx, DataverseName dataverseName, String datasetName)
             throws AlgebricksException;
 
     /**
@@ -201,7 +204,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws AlgebricksException
      *             For example, if the dataset and/or dataverse does not exist.
      */
-    void dropDataset(MetadataTransactionContext ctx, String dataverseName, String datasetName)
+    void dropDataset(MetadataTransactionContext ctx, DataverseName dataverseName, String datasetName)
             throws AlgebricksException;
 
     /**
@@ -232,7 +235,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws AlgebricksException
      *             For example, if the index does not exist.
      */
-    Index getIndex(MetadataTransactionContext ctx, String dataverseName, String datasetName, String indexName)
+    Index getIndex(MetadataTransactionContext ctx, DataverseName dataverseName, String datasetName, String indexName)
             throws AlgebricksException;
 
     /**
@@ -249,7 +252,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws AlgebricksException
      *             For example, if the index does not exist.
      */
-    void dropIndex(MetadataTransactionContext ctx, String dataverseName, String datasetName, String indexName)
+    void dropIndex(MetadataTransactionContext ctx, DataverseName dataverseName, String datasetName, String indexName)
             throws AlgebricksException;
 
     /**
@@ -277,7 +280,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws AlgebricksException
      *             For example, if the datatype does not exist.
      */
-    Datatype getDatatype(MetadataTransactionContext ctx, String dataverseName, String datatypeName)
+    Datatype getDatatype(MetadataTransactionContext ctx, DataverseName dataverseName, String datatypeName)
             throws AlgebricksException;
 
     /**
@@ -293,7 +296,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      *             For example, if there are still datasets using the type to be
      *             deleted.
      */
-    void dropDatatype(MetadataTransactionContext ctx, String dataverseName, String datatypeName)
+    void dropDatatype(MetadataTransactionContext ctx, DataverseName dataverseName, String datatypeName)
             throws AlgebricksException;
 
     /**
@@ -375,14 +378,10 @@ public interface IMetadataManager extends IMetadataBootstrap {
      *            MetadataTransactionContext of an active metadata transaction.
      * @param functionSignature
      *            the functions signature (unique to the function)
-     * @return
      * @throws AlgebricksException
      */
-
     Function getFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature)
             throws AlgebricksException;
-
-    List<Function> getFunctions(MetadataTransactionContext ctx, String dataverseName) throws AlgebricksException;
 
     /**
      * @param ctx
@@ -392,6 +391,20 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws AlgebricksException
      */
     void dropFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature) throws AlgebricksException;
+
+    /**
+     * Retrieves all functions belonging to the given dataverse.
+     *
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            Name of the dataverse of which to find all functions.
+     * @return A list of function instances.
+     * @throws AlgebricksException
+     *             For example, if the dataverse does not exist.
+     */
+    List<Function> getDataverseFunctions(MetadataTransactionContext ctx, DataverseName dataverseName)
+            throws AlgebricksException;
 
     /**
      * @param mdTxnCtx
@@ -410,10 +423,9 @@ public interface IMetadataManager extends IMetadataBootstrap {
      *            the dataverse associated with the adapter being searched
      * @param name
      *            name of the adapter
-     * @return
      * @throws AlgebricksException
      */
-    DatasourceAdapter getAdapter(MetadataTransactionContext ctx, String dataverseName, String name)
+    DatasourceAdapter getAdapter(MetadataTransactionContext ctx, DataverseName dataverseName, String name)
             throws AlgebricksException;
 
     /**
@@ -425,17 +437,17 @@ public interface IMetadataManager extends IMetadataBootstrap {
      *            name of the adapter
      * @throws AlgebricksException
      */
-    void dropAdapter(MetadataTransactionContext ctx, String dataverseName, String name) throws AlgebricksException;
+    void dropAdapter(MetadataTransactionContext ctx, DataverseName dataverseName, String name)
+            throws AlgebricksException;
 
     /**
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
      *            the dataverse whose associated adapters are being requested
-     * @return
      * @throws AlgebricksException
      */
-    List<DatasourceAdapter> getDataverseAdapters(MetadataTransactionContext ctx, String dataverseName)
+    List<DatasourceAdapter> getDataverseAdapters(MetadataTransactionContext ctx, DataverseName dataverseName)
             throws AlgebricksException;
 
     /**
@@ -452,16 +464,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @return
      * @throws AlgebricksException
      */
-    CompactionPolicy getCompactionPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
-            throws AlgebricksException;
-
-    /**
-     * @param ctx
-     * @param dataverseName
-     * @return
-     * @throws AlgebricksException
-     */
-    List<Function> getDataverseFunctions(MetadataTransactionContext ctx, String dataverseName)
+    CompactionPolicy getCompactionPolicy(MetadataTransactionContext ctx, DataverseName dataverse, String policyName)
             throws AlgebricksException;
 
     /**
@@ -473,14 +476,15 @@ public interface IMetadataManager extends IMetadataBootstrap {
 
     /**
      * @param ctx
-     * @param dataverse
+     * @param dataverseName
      * @param feedName
      * @return
      * @throws AlgebricksException
      */
-    Feed getFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws AlgebricksException;
+    Feed getFeed(MetadataTransactionContext ctx, DataverseName dataverseName, String feedName)
+            throws AlgebricksException;
 
-    List<Feed> getFeeds(MetadataTransactionContext ctx, String dataverse) throws AlgebricksException;
+    List<Feed> getFeeds(MetadataTransactionContext ctx, DataverseName dataverseName) throws AlgebricksException;
 
     /**
      * @param ctx
@@ -488,7 +492,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @param feedName
      * @throws AlgebricksException
      */
-    void dropFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws AlgebricksException;
+    void dropFeed(MetadataTransactionContext ctx, DataverseName dataverse, String feedName) throws AlgebricksException;
 
     /**
      * @param ctx
@@ -499,20 +503,24 @@ public interface IMetadataManager extends IMetadataBootstrap {
 
     /**
      * @param ctx
-     * @param dataverse
+     * @param dataverseName
      * @param policyName
      * @throws AlgebricksException
      */
-    void dropFeedPolicy(MetadataTransactionContext ctx, String dataverse, String policyName) throws AlgebricksException;
+    void dropFeedPolicy(MetadataTransactionContext ctx, DataverseName dataverseName, String policyName)
+            throws AlgebricksException;
 
     /**
      * @param ctx
-     * @param dataverse
+     * @param dataverseName
      * @param policyName
      * @return
      * @throws AlgebricksException
      */
-    FeedPolicyEntity getFeedPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
+    FeedPolicyEntity getFeedPolicy(MetadataTransactionContext ctx, DataverseName dataverseName, String policyName)
+            throws AlgebricksException;
+
+    List<FeedPolicyEntity> getDataverseFeedPolicies(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName)
             throws AlgebricksException;
 
     void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws AlgebricksException;
@@ -532,7 +540,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      *            the library does not exists.
      * @throws AlgebricksException
      */
-    void dropLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
+    void dropLibrary(MetadataTransactionContext ctx, DataverseName dataverseName, String libraryName)
             throws AlgebricksException;
 
     /**
@@ -558,7 +566,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    Library getLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
+    Library getLibrary(MetadataTransactionContext ctx, DataverseName dataverseName, String libraryName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -571,7 +579,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @return Library
      * @throws AlgebricksException
      */
-    List<Library> getDataverseLibraries(MetadataTransactionContext ctx, String dataverseName)
+    List<Library> getDataverseLibraries(MetadataTransactionContext ctx, DataverseName dataverseName)
             throws AlgebricksException;
 
     /**
@@ -625,7 +633,7 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @return
      * @throws AlgebricksException
      */
-    ExternalFile getExternalFile(MetadataTransactionContext mdTxnCtx, String dataverseName, String datasetName,
+    ExternalFile getExternalFile(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName, String datasetName,
             Integer fileNumber) throws AlgebricksException;
 
     /**
@@ -696,13 +704,13 @@ public interface IMetadataManager extends IMetadataBootstrap {
      */
     void addFeedConnection(MetadataTransactionContext ctx, FeedConnection feedConnection) throws AlgebricksException;
 
-    void dropFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName, String datasetName)
-            throws AlgebricksException;
-
-    FeedConnection getFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName,
+    void dropFeedConnection(MetadataTransactionContext ctx, DataverseName dataverseName, String feedName,
             String datasetName) throws AlgebricksException;
 
-    List<FeedConnection> getFeedConections(MetadataTransactionContext ctx, String dataverseName, String feedName)
+    FeedConnection getFeedConnection(MetadataTransactionContext ctx, DataverseName dataverseName, String feedName,
+            String datasetName) throws AlgebricksException;
+
+    List<FeedConnection> getFeedConections(MetadataTransactionContext ctx, DataverseName dataverseName, String feedName)
             throws AlgebricksException;
 
     long getMaxTxnId();

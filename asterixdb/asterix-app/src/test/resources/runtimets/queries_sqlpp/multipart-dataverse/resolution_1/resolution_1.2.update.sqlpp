@@ -1,0 +1,30 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description: name resolution for a dataverse with a multipart name
+ */
+
+use sales.east;
+
+insert into orders ({'oid' : 100, 'pid': 0,  'amount': 1, 'east': [11, 111], 'x': { 'y': {'z': 11 } } });
+insert into orders ({'oid' : 101, 'pid': 1,  'amount': 2, 'east': [22, 222], 'x': { 'y': {'z': 22 } } });
+insert into orders ({'oid' : 102, 'pid': 2,  'amount': 3, 'east': [33, 333], 'x': { 'y': {'z': 33 } } });
+insert into orders ({'oid' : 103, 'pid': 1,  'amount': 4, 'east': [44, 444], 'x': { 'y': {'z': 44 } } });
+insert into orders ({'oid' : 104, 'pid': 0,  'amount': 6, 'east': [66, 666], 'x': { 'y': {'z': 66 } } });
+

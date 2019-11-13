@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -46,34 +47,34 @@ public class MetadataManagerUtil {
         throw new AssertionError("This util class should not be initialized.");
     }
 
-    public static IAType findType(MetadataTransactionContext mdTxnCtx, String dataverse, String typeName)
+    public static IAType findType(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName, String typeName)
             throws AlgebricksException {
-        if (dataverse == null || typeName == null) {
+        if (dataverseName == null || typeName == null) {
             return null;
         }
-        Datatype type = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverse, typeName);
+        Datatype type = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
         if (type == null) {
-            throw new AlgebricksException("Type name '" + typeName + "' unknown in dataverse '" + dataverse + "'");
+            throw new AlgebricksException("Type name '" + typeName + "' unknown in dataverse '" + dataverseName + "'");
         }
         return type.getDatatype();
     }
 
-    public static ARecordType findOutputRecordType(MetadataTransactionContext mdTxnCtx, String dataverse,
+    public static ARecordType findOutputRecordType(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
             String outputRecordType) throws AlgebricksException {
         if (outputRecordType == null) {
             return null;
         }
-        if (dataverse == null) {
+        if (dataverseName == null) {
             throw new AlgebricksException("Cannot declare output-record-type with no dataverse!");
         }
-        IAType type = findType(mdTxnCtx, dataverse, outputRecordType);
+        IAType type = findType(mdTxnCtx, dataverseName, outputRecordType);
         if (!(type instanceof ARecordType)) {
             throw new AlgebricksException("Type " + outputRecordType + " is not a record type!");
         }
         return (ARecordType) type;
     }
 
-    public static DatasourceAdapter getAdapter(MetadataTransactionContext mdTxnCtx, String dataverseName,
+    public static DatasourceAdapter getAdapter(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
             String adapterName) throws AlgebricksException {
         DatasourceAdapter adapter;
         // search in default namespace (built-in adapter)
@@ -86,12 +87,12 @@ public class MetadataManagerUtil {
         return adapter;
     }
 
-    public static Dataset findDataset(MetadataTransactionContext mdTxnCtx, String dataverse, String dataset)
+    public static Dataset findDataset(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName, String dataset)
             throws AlgebricksException {
-        return MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverse, dataset);
+        return MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, dataset);
     }
 
-    public static Dataset findExistingDataset(MetadataTransactionContext mdTxnCtx, String dataverseName,
+    public static Dataset findExistingDataset(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
             String datasetName) throws AlgebricksException {
         Dataset dataset = findDataset(mdTxnCtx, dataverseName, datasetName);
         if (dataset == null) {
@@ -118,22 +119,22 @@ public class MetadataManagerUtil {
         return MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroupName).getNodeNames();
     }
 
-    public static Feed findFeed(MetadataTransactionContext mdTxnCtx, String dataverse, String feedName)
+    public static Feed findFeed(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName, String feedName)
             throws AlgebricksException {
-        return MetadataManager.INSTANCE.getFeed(mdTxnCtx, dataverse, feedName);
+        return MetadataManager.INSTANCE.getFeed(mdTxnCtx, dataverseName, feedName);
     }
 
-    public static FeedConnection findFeedConnection(MetadataTransactionContext mdTxnCtx, String dataverse,
+    public static FeedConnection findFeedConnection(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
             String feedName, String datasetName) throws AlgebricksException {
-        return MetadataManager.INSTANCE.getFeedConnection(mdTxnCtx, dataverse, feedName, datasetName);
+        return MetadataManager.INSTANCE.getFeedConnection(mdTxnCtx, dataverseName, feedName, datasetName);
     }
 
-    public static FeedPolicyEntity findFeedPolicy(MetadataTransactionContext mdTxnCtx, String dataverse,
+    public static FeedPolicyEntity findFeedPolicy(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
             String policyName) throws AlgebricksException {
-        return MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverse, policyName);
+        return MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverseName, policyName);
     }
 
-    public static List<Index> getDatasetIndexes(MetadataTransactionContext mdTxnCtx, String dataverseName,
+    public static List<Index> getDatasetIndexes(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
             String datasetName) throws AlgebricksException {
         return MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
     }
@@ -144,17 +145,17 @@ public class MetadataManagerUtil {
     }
 
     public static DataSource lookupSourceInMetadata(IClusterStateManager clusterStateManager,
-            MetadataTransactionContext mdTxnCtx, DataSourceId aqlId) throws AlgebricksException {
-        Dataset dataset = findDataset(mdTxnCtx, aqlId.getDataverseName(), aqlId.getDatasourceName());
+            MetadataTransactionContext mdTxnCtx, DataSourceId id) throws AlgebricksException {
+        Dataset dataset = findDataset(mdTxnCtx, id.getDataverseName(), id.getDatasourceName());
         if (dataset == null) {
-            throw new AlgebricksException("Datasource with id " + aqlId + " was not found.");
+            throw new AlgebricksException("Datasource with id " + id + " was not found.");
         }
         IAType itemType = findType(mdTxnCtx, dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         IAType metaItemType = findType(mdTxnCtx, dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         INodeDomain domain = findNodeDomain(clusterStateManager, mdTxnCtx, dataset.getNodeGroupName());
         byte datasourceType = dataset.getDatasetType().equals(DatasetType.EXTERNAL) ? DataSource.Type.EXTERNAL_DATASET
                 : DataSource.Type.INTERNAL_DATASET;
-        return new DatasetDataSource(aqlId, dataset, itemType, metaItemType, datasourceType,
-                dataset.getDatasetDetails(), domain);
+        return new DatasetDataSource(id, dataset, itemType, metaItemType, datasourceType, dataset.getDatasetDetails(),
+                domain);
     }
 }

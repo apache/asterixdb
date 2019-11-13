@@ -21,6 +21,7 @@ package org.apache.asterix.app.function;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -44,7 +45,7 @@ public class DatasetResourcesRewriter extends FunctionRewriter {
     public DatasetResourcesDatasource toDatasource(IOptimizationContext context, AbstractFunctionCallExpression f)
             throws AlgebricksException {
         final SourceLocation loc = f.getSourceLocation();
-        String dataverseName = getString(loc, f.getArguments(), 0);
+        DataverseName dataverseName = getDataverseName(loc, f.getArguments(), 0);
         String datasetName = getString(loc, f.getArguments(), 1);
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);

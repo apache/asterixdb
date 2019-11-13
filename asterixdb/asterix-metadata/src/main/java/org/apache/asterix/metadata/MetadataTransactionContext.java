@@ -20,8 +20,10 @@
 package org.apache.asterix.metadata;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
@@ -116,24 +118,23 @@ public class MetadataTransactionContext extends MetadataCache {
     public void addCompactionPolicy(CompactionPolicy compactionPolicy) {
         droppedCache.dropCompactionPolicy(compactionPolicy);
         logAndApply(new MetadataLogicalOperation(compactionPolicy, true));
-
     }
 
-    public void dropDataset(String dataverseName, String datasetName) {
+    public void dropDataset(DataverseName dataverseName, String datasetName) {
         Dataset dataset = new Dataset(dataverseName, datasetName, null, null, null, null, null, null, null, null, -1,
                 MetadataUtil.PENDING_NO_OP);
         droppedCache.addDatasetIfNotExists(dataset);
         logAndApply(new MetadataLogicalOperation(dataset, false));
     }
 
-    public void dropIndex(String dataverseName, String datasetName, String indexName) {
+    public void dropIndex(DataverseName dataverseName, String datasetName, String indexName) {
         Index index = new Index(dataverseName, datasetName, indexName, null, null, null, null, false, false, false,
                 MetadataUtil.PENDING_NO_OP);
         droppedCache.addIndexIfNotExists(index);
         logAndApply(new MetadataLogicalOperation(index, false));
     }
 
-    public void dropDataverse(String dataverseName) {
+    public void dropDataverse(DataverseName dataverseName) {
         Dataverse dataverse = new Dataverse(dataverseName, null, MetadataUtil.PENDING_NO_OP);
         droppedCache.addDataverseIfNotExists(dataverse);
         logAndApply(new MetadataLogicalOperation(dataverse, false));
@@ -144,7 +145,7 @@ public class MetadataTransactionContext extends MetadataCache {
         logAndApply(new MetadataLogicalOperation(library, true));
     }
 
-    public void dropDataDatatype(String dataverseName, String datatypeName) {
+    public void dropDataDatatype(DataverseName dataverseName, String datatypeName) {
         Datatype datatype = new Datatype(dataverseName, datatypeName, null, false);
         droppedCache.addDatatypeIfNotExists(datatype);
         logAndApply(new MetadataLogicalOperation(datatype, false));
@@ -162,14 +163,14 @@ public class MetadataTransactionContext extends MetadataCache {
         logAndApply(new MetadataLogicalOperation(function, false));
     }
 
-    public void dropAdapter(String dataverseName, String adapterName) {
+    public void dropAdapter(DataverseName dataverseName, String adapterName) {
         AdapterIdentifier adapterIdentifier = new AdapterIdentifier(dataverseName, adapterName);
         DatasourceAdapter adapter = new DatasourceAdapter(adapterIdentifier, null, null);
         droppedCache.addAdapterIfNotExists(adapter);
         logAndApply(new MetadataLogicalOperation(adapter, false));
     }
 
-    public void dropLibrary(String dataverseName, String libraryName) {
+    public void dropLibrary(DataverseName dataverseName, String libraryName) {
         Library library = new Library(dataverseName, libraryName);
         droppedCache.addLibraryIfNotExists(library);
         logAndApply(new MetadataLogicalOperation(library, false));
@@ -180,18 +181,18 @@ public class MetadataTransactionContext extends MetadataCache {
         doOperation(op);
     }
 
-    public boolean dataverseIsDropped(String dataverseName) {
+    public boolean dataverseIsDropped(DataverseName dataverseName) {
         return droppedCache.getDataverse(dataverseName) != null;
     }
 
-    public boolean datasetIsDropped(String dataverseName, String datasetName) {
+    public boolean datasetIsDropped(DataverseName dataverseName, String datasetName) {
         if (droppedCache.getDataverse(dataverseName) != null) {
             return true;
         }
         return droppedCache.getDataset(dataverseName, datasetName) != null;
     }
 
-    public boolean indexIsDropped(String dataverseName, String datasetName, String indexName) {
+    public boolean indexIsDropped(DataverseName dataverseName, String datasetName, String indexName) {
         if (droppedCache.getDataverse(dataverseName) != null) {
             return true;
         }
@@ -201,7 +202,7 @@ public class MetadataTransactionContext extends MetadataCache {
         return droppedCache.getIndex(dataverseName, datasetName, indexName) != null;
     }
 
-    public boolean datatypeIsDropped(String dataverseName, String datatypeName) {
+    public boolean datatypeIsDropped(DataverseName dataverseName, String datatypeName) {
         if (droppedCache.getDataverse(dataverseName) != null) {
             return true;
         }
@@ -216,7 +217,7 @@ public class MetadataTransactionContext extends MetadataCache {
         return droppedCache.getFunction(functionSignature) != null;
     }
 
-    public ArrayList<MetadataLogicalOperation> getOpLog() {
+    public List<MetadataLogicalOperation> getOpLog() {
         return opLog;
     }
 
@@ -241,7 +242,7 @@ public class MetadataTransactionContext extends MetadataCache {
         logAndApply(new MetadataLogicalOperation(feedConnection, true));
     }
 
-    public void dropFeedConnection(String dataverseName, String feedName, String datasetName) {
+    public void dropFeedConnection(DataverseName dataverseName, String feedName, String datasetName) {
         FeedConnection feedConnection =
                 new FeedConnection(dataverseName, feedName, datasetName, null, null, null, null);
         droppedCache.addFeedConnectionIfNotExists(feedConnection);
@@ -254,5 +255,4 @@ public class MetadataTransactionContext extends MetadataCache {
         droppedCache.clear();
         opLog.clear();
     }
-
 }

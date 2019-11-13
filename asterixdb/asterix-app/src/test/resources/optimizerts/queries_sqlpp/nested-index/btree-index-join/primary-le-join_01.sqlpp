@@ -45,7 +45,7 @@ create  dataset test1.DsTwo(TestType) primary key nested.key1;
 
 write output to asterix_nc1:"rttest/btree-index-join_primary-le-join_01.adm";
 select element x
-from  `test1.DsOne` as x,
-      `test1.DsTwo` as y
+from  test1.DsOne as x,
+      test1.DsTwo as y
 where (x.nested.key1 /*+ indexnl */  <= y.nested.key2)
 ;

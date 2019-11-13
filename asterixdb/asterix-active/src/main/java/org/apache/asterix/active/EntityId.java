@@ -21,25 +21,27 @@ package org.apache.asterix.active;
 import java.io.Serializable;
 import java.util.Objects;
 
+import org.apache.asterix.common.metadata.DataverseName;
+
 /**
  * A unique identifier for a data feed.
  */
 public class EntityId implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final String extensionName;
-    private final String dataverse;
+    private final DataverseName dataverseName;
     private final String entityName;
 
-    public EntityId(String extentionName, String dataverse, String entityName) {
+    public EntityId(String extentionName, DataverseName dataverseName, String entityName) {
         this.extensionName = extentionName;
-        this.dataverse = dataverse;
+        this.dataverseName = dataverseName;
         this.entityName = entityName;
     }
 
-    public String getDataverse() {
-        return dataverse;
+    public DataverseName getDataverseName() {
+        return dataverseName;
     }
 
     public String getEntityName() {
@@ -55,18 +57,18 @@ public class EntityId implements Serializable {
             return true;
         }
         EntityId other = (EntityId) o;
-        return Objects.equals(other.dataverse, dataverse) && Objects.equals(other.entityName, entityName)
+        return Objects.equals(other.dataverseName, dataverseName) && Objects.equals(other.entityName, entityName)
                 && Objects.equals(other.extensionName, extensionName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dataverse, entityName, extensionName);
+        return Objects.hash(dataverseName, entityName, extensionName);
     }
 
     @Override
     public String toString() {
-        return dataverse + "." + entityName + "(" + extensionName + ")";
+        return dataverseName + "." + entityName + "(" + extensionName + ")";
     }
 
     public String getExtensionName() {

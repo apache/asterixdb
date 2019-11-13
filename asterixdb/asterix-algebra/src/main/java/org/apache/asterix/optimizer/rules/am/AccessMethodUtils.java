@@ -1764,7 +1764,7 @@ public class AccessMethodUtils {
         context.computeAndSetTypeEnvironmentForOperator(order);
         List<Mutable<ILogicalExpression>> externalLookupArgs = new ArrayList<>();
         //Add dataverse to the arguments
-        AccessMethodUtils.addStringArg(dataset.getDataverseName(), externalLookupArgs);
+        AccessMethodUtils.addStringArg(dataset.getDataverseName().getCanonicalForm(), externalLookupArgs);
         //Add dataset to the arguments
         AccessMethodUtils.addStringArg(dataset.getDatasetName(), externalLookupArgs);
         //Add PK vars to the arguments

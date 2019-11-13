@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.annotations.TypeDataGen;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.TypeDecl;
@@ -46,15 +47,14 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
     }
 
     public void translate() throws AlgebricksException {
-        String defaultDataverse = getDefaultDataverse();
+        DataverseName defaultDataverse = getDefaultDataverse();
         types = new HashMap<>();
         typeDataGenMap = new HashMap<>();
 
         for (Statement stmt : statements) {
             if (stmt.getKind() == Statement.Kind.TYPE_DECL) {
                 TypeDecl td = (TypeDecl) stmt;
-                String typeDataverse =
-                        td.getDataverseName() == null ? defaultDataverse : td.getDataverseName().getValue();
+                DataverseName typeDataverse = td.getDataverseName() == null ? defaultDataverse : td.getDataverseName();
 
                 Map<TypeSignature, IAType> typeInStmt = TypeTranslator.computeTypes(mdTxnCtx, td.getTypeDef(),
                         td.getIdent().getValue(), typeDataverse, types);
@@ -69,10 +69,10 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
         }
     }
 
-    private String getDefaultDataverse() {
+    private DataverseName getDefaultDataverse() {
         for (Statement stmt : statements) {
             if (stmt.getKind() == Statement.Kind.DATAVERSE_DECL) {
-                return ((DataverseDecl) stmt).getDataverseName().getValue();
+                return ((DataverseDecl) stmt).getDataverseName();
             }
         }
         return null;

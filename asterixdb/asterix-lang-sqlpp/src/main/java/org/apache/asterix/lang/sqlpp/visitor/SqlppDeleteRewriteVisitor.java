@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
@@ -31,7 +32,6 @@ import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
@@ -41,6 +41,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppAstVisitor;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 
 /**
@@ -49,15 +50,22 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
  */
 public class SqlppDeleteRewriteVisitor extends AbstractSqlppAstVisitor<Void, Void> {
 
+    private final MetadataProvider metadataProvider;
+
+    public SqlppDeleteRewriteVisitor(MetadataProvider metadataProvider) {
+        this.metadataProvider = metadataProvider;
+    }
+
     @Override
     public Void visit(DeleteStatement deleteStmt, Void visitArg) {
         List<Expression> arguments = new ArrayList<>();
-        Identifier dataverseName = deleteStmt.getDataverseName();
-        Identifier datasetName = deleteStmt.getDatasetName();
-        String arg = dataverseName == null ? datasetName.getValue()
-                : dataverseName.getValue() + "." + datasetName.getValue();
-        LiteralExpr argumentLiteral = new LiteralExpr(new StringLiteral(arg));
-        arguments.add(argumentLiteral);
+        DataverseName dataverseName = deleteStmt.getDataverseName();
+        if (dataverseName == null) {
+            dataverseName = metadataProvider.getDefaultDataverseName();
+        }
+        String datasetName = deleteStmt.getDatasetName();
+        arguments.add(new LiteralExpr(new StringLiteral(dataverseName.getCanonicalForm())));
+        arguments.add(new LiteralExpr(new StringLiteral(datasetName)));
         CallExpr callExpression = new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), arguments);
         callExpression.setSourceLocation(deleteStmt.getSourceLocation());
 

@@ -287,6 +287,23 @@ public class JSONUtil {
         elements.forEach(o.putArray(name)::add);
     }
 
+    public static void putArrayOrScalar(ObjectNode o, String name, List<String> elements) {
+        switch (elements.size()) {
+            case 0:
+                o.putNull(name);
+                break;
+            case 1:
+                o.put(name, elements.get(0));
+                break;
+            default:
+                ArrayNode arrayNode = o.putArray(name);
+                for (String item : elements) {
+                    arrayNode.add(item);
+                }
+                break;
+        }
+    }
+
     public static ObjectNode createObject() {
         return OBJECT_MAPPER.createObjectNode();
     }

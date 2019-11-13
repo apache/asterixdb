@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IReturningStatement;
@@ -33,14 +34,14 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class InsertStatement extends AbstractStatement implements IReturningStatement {
 
-    private final Identifier dataverseName;
+    private final DataverseName dataverseName;
     private final Identifier datasetName;
     private final Query query;
     private final VariableExpr var;
     private Expression returnExpression;
     private int varCounter;
 
-    public InsertStatement(Identifier dataverseName, Identifier datasetName, Query query, int varCounter,
+    public InsertStatement(DataverseName dataverseName, Identifier datasetName, Query query, int varCounter,
             VariableExpr var, Expression returnExpression) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
@@ -55,12 +56,12 @@ public class InsertStatement extends AbstractStatement implements IReturningStat
         return Statement.Kind.INSERT;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
-    public Identifier getDatasetName() {
-        return datasetName;
+    public String getDatasetName() {
+        return datasetName.getValue();
     }
 
     public Query getQuery() {

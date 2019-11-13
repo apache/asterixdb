@@ -65,6 +65,12 @@ public class BaseRequest implements IServletRequest {
     }
 
     @Override
+    public List<String> getParameterValues(CharSequence name) {
+        List<String> values = parameters.get(String.valueOf(name));
+        return values != null ? Collections.unmodifiableList(values) : null;
+    }
+
+    @Override
     public Set<String> getParameterNames() {
         return Collections.unmodifiableSet(parameters.keySet());
     }

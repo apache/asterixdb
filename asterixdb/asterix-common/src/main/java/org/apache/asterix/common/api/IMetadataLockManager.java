@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.api;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
@@ -33,7 +34,7 @@ public interface IMetadataLockManager {
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDataverseReadLock(LockList locks, String dataverseName) throws AlgebricksException;
+    void acquireDataverseReadLock(LockList locks, DataverseName dataverseName) throws AlgebricksException;
 
     /**
      * Acquire write lock on the dataverse
@@ -45,55 +46,67 @@ public interface IMetadataLockManager {
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDataverseWriteLock(LockList locks, String dataverseName) throws AlgebricksException;
+    void acquireDataverseWriteLock(LockList locks, DataverseName dataverseName) throws AlgebricksException;
 
     /**
      * Acquire read lock on the dataset (for queries)
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param datasetFullyQualifiedName
-     *            the fully qualified name of the dataset
+     * @param dataverseName
+     *            the dataverse name
+     * @param datasetName
+     *            the name of the dataset in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDatasetReadLock(LockList locks, String datasetFullyQualifiedName) throws AlgebricksException;
+    void acquireDatasetReadLock(LockList locks, DataverseName dataverseName, String datasetName)
+            throws AlgebricksException;
 
     /**
      * Acquire write lock on the dataset (for dataset create, dataset drop, and index drop)
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param datasetFullyQualifiedName
-     *            the fully qualified name of the dataset
+     * @param dataverseName
+     *            the dataverse name
+     * @param datasetName
+     *            the name of the dataset in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDatasetWriteLock(LockList locks, String datasetFullyQualifiedName) throws AlgebricksException;
+    void acquireDatasetWriteLock(LockList locks, DataverseName dataverseName, String datasetName)
+            throws AlgebricksException;
 
     /**
      * Acquire modify lock on the dataset (for inserts, upserts, deletes) Mutually exclusive with create index lock
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param datasetFullyQualifiedName
-     *            the fully qualified name of the dataset
+     * @param dataverseName
+     *            the dataverse name
+     * @param datasetName
+     *            the name of the dataset in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDatasetModifyLock(LockList locks, String datasetFullyQualifiedName) throws AlgebricksException;
+    void acquireDatasetModifyLock(LockList locks, DataverseName dataverseName, String datasetName)
+            throws AlgebricksException;
 
     /**
      * Acquire create index lock on the dataset (for index creation) Mutually exclusive with modify lock
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param datasetFullyQualifiedName
-     *            the fully qualified name of the dataset
+     * @param dataverseName
+     *            the dataverse name
+     * @param datasetName
+     *            the name of the dataset in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDatasetCreateIndexLock(LockList locks, String datasetFullyQualifiedName) throws AlgebricksException;
+    void acquireDatasetCreateIndexLock(LockList locks, DataverseName dataverseName, String datasetName)
+            throws AlgebricksException;
 
     /**
      * Acquire exclusive modify lock on the dataset. only a single thread can acquire this lock and it is mutually
@@ -101,12 +114,14 @@ public interface IMetadataLockManager {
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param datasetFullyQualifiedName
-     *            the fully qualified name of the dataset
+     * @param dataverseName
+     *            the dataverse name
+     * @param datasetName
+     *            the name of the dataset in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDatasetExclusiveModificationLock(LockList locks, String datasetFullyQualifiedName)
+    void acquireDatasetExclusiveModificationLock(LockList locks, DataverseName dataverseName, String datasetName)
             throws AlgebricksException;
 
     /**
@@ -114,24 +129,30 @@ public interface IMetadataLockManager {
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param functionFullyQualifiedName
-     *            the fully qualified name of the function
+     * @param dataverseName
+     *            the dataverse name
+     * @param functionName
+     *            the name of the function in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireFunctionReadLock(LockList locks, String functionFullyQualifiedName) throws AlgebricksException;
+    void acquireFunctionReadLock(LockList locks, DataverseName dataverseName, String functionName)
+            throws AlgebricksException;
 
     /**
      * Acquire write lock on the function
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param functionFullyQualifiedName
-     *            the fully qualified name of the function
+     * @param dataverseName
+     *            the dataverse name
+     * @param functionName
+     *            the name of the function in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireFunctionWriteLock(LockList locks, String functionFullyQualifiedName) throws AlgebricksException;
+    void acquireFunctionWriteLock(LockList locks, DataverseName dataverseName, String functionName)
+            throws AlgebricksException;
 
     /**
      * Acquire read lock on the node group
@@ -162,96 +183,114 @@ public interface IMetadataLockManager {
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param entityFullyQualifiedName
-     *            the fully qualified name of the active entity
+     * @param dataverseName
+     *            the dataverse name
+     * @param entityName
+     *            the name of the active entity in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireActiveEntityReadLock(LockList locks, String entityFullyQualifiedName) throws AlgebricksException;
+    void acquireActiveEntityReadLock(LockList locks, DataverseName dataverseName, String entityName)
+            throws AlgebricksException;
 
     /**
      * Acquire write lock on the active entity
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param entityFullyQualifiedName
-     *            the fully qualified name of the active entity
+     * @param dataverseName
+     *            the dataverse name
+     * @param entityName
+     *            the name of the active entity in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireActiveEntityWriteLock(LockList locks, String entityFullyQualifiedName) throws AlgebricksException;
+    void acquireActiveEntityWriteLock(LockList locks, DataverseName dataverseName, String entityName)
+            throws AlgebricksException;
 
     /**
      * Acquire read lock on the feed policy
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param feedPolicyFullyQualifiedName
-     *            the fully qualified name of the feed policy
+     * @param dataverseName
+     *            the dataverse name
+     * @param feedPolicyName
+     *            the name of the feed policy in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireFeedPolicyWriteLock(LockList locks, String feedPolicyFullyQualifiedName) throws AlgebricksException;
+    void acquireFeedPolicyWriteLock(LockList locks, DataverseName dataverseName, String feedPolicyName)
+            throws AlgebricksException;
 
     /**
      * Acquire write lock on the feed policy
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param feedPolicyFullyQualifiedName
-     *            the fully qualified name of the feed policy
+     * @param dataverseName
+     *            the dataverse name
+     * @param feedPolicyName
+     *            the name of the feed policy in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireFeedPolicyReadLock(LockList locks, String feedPolicyFullyQualifiedName) throws AlgebricksException;
+    void acquireFeedPolicyReadLock(LockList locks, DataverseName dataverseName, String feedPolicyName)
+            throws AlgebricksException;
 
     /**
      * Acquire read lock on the merge policy
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param mergePolicyFullyQualifiedName
-     *            the fully qualified name of the merge policy
+     * @param mergePolicyName
+     *            the name of the merge policy in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireMergePolicyReadLock(LockList locks, String mergePolicyFullyQualifiedName) throws AlgebricksException;
+    void acquireMergePolicyReadLock(LockList locks, String mergePolicyName) throws AlgebricksException;
 
     /**
      * Acquire write lock on the merge policy
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param mergePolicyFullyQualifiedName
-     *            the fully qualified name of the merge policy
+     * @param mergePolicyName
+     *            the name of the merge policy in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireMergePolicyWriteLock(LockList locks, String mergePolicyFullyQualifiedName) throws AlgebricksException;
+    void acquireMergePolicyWriteLock(LockList locks, String mergePolicyName) throws AlgebricksException;
 
     /**
      * Acquire read lock on the data type
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param datatypeFullyQualifiedName
-     *            the fully qualified name of the data type
+     * @param dataverseName
+     *            the dataverse name
+     * @param datatypeName
+     *            the name of the data type in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDataTypeReadLock(LockList locks, String datatypeFullyQualifiedName) throws AlgebricksException;
+    void acquireDataTypeReadLock(LockList locks, DataverseName dataverseName, String datatypeName)
+            throws AlgebricksException;
 
     /**
      * Acquire write lock on the data type
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param datatypeFullyQualifiedName
-     *            the fully qualified name of the data type
+     * @param dataverseName
+     *            the dataverse name
+     * @param datatypeName
+     *            the name of the data type in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDataTypeWriteLock(LockList locks, String datatypeFullyQualifiedName) throws AlgebricksException;
+    void acquireDataTypeWriteLock(LockList locks, DataverseName dataverseName, String datatypeName)
+            throws AlgebricksException;
 
     /**
      * Acquire read lock on the extension entity
@@ -260,13 +299,15 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param extension
      *            the extension key
-     * @param extensionEntityFullyQualifiedName
-     *            the fully qualified name of the extension entity
+     * @param dataverseName
+     *            the dataverse name
+     * @param extensionEntityName
+     *            the name of the extension entity in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireExtensionReadLock(LockList locks, String extension, String extensionEntityFullyQualifiedName)
-            throws AlgebricksException;
+    void acquireExtensionEntityReadLock(LockList locks, String extension, DataverseName dataverseName,
+            String extensionEntityName) throws AlgebricksException;
 
     /**
      * Acquire write lock on the extension entity
@@ -275,36 +316,43 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param extension
      *            the extension key
-     * @param extensionEntityFullyQualifiedName
-     *            the fully qualified name of the extension entity
+     * @param dataverseName
+     *            the dataverse name
+     * @param extensionEntityName
+     *            the name of the extension entity in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireExtensionWriteLock(LockList locks, String extension, String extensionEntityFullyQualifiedName)
-            throws AlgebricksException;
+    void acquireExtensionEntityWriteLock(LockList locks, String extension, DataverseName dataverseName,
+            String extensionEntityName) throws AlgebricksException;
 
     /**
      * Upgrade a previously acquired exclusive modification lock on the dataset to a write lock
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param datasetFullyQualifiedName
-     *            the fully qualified name of the dataset
+     * @param dataverseName
+     *            the dataverse name
+     * @param datasetName
+     *            the name of the dataset in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be upgraded
      */
-    void upgradeDatasetLockToWrite(LockList locks, String datasetFullyQualifiedName) throws AlgebricksException;
+    void upgradeDatasetLockToWrite(LockList locks, DataverseName dataverseName, String datasetName)
+            throws AlgebricksException;
 
     /**
      * Downgrade an upgraded dataset write lock to an exclusive modification lock
      *
      * @param locks
      *            the lock list to add the new lock to
-     * @param datasetFullyQualifiedName
-     *            the fully qualified name of the dataset
+     * @param dataverseName
+     *            the dataverse name
+     * @param datasetName
+     *            the name of the dataset in the given dataverse
      * @throws AlgebricksException
      *             if lock couldn't be downgraded
      */
-    void downgradeDatasetLockToExclusiveModify(LockList locks, String datasetFullyQualifiedName)
+    void downgradeDatasetLockToExclusiveModify(LockList locks, DataverseName dataverseName, String datasetName)
             throws AlgebricksException;
 }

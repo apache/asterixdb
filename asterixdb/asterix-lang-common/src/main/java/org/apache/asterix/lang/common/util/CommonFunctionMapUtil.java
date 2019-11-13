@@ -165,10 +165,10 @@ public class CommonFunctionMapUtil {
         String lowerCaseName = name.toLowerCase();
         String mappedName = getFunctionMapping(lowerCaseName);
         if (mappedName != null) {
-            return new FunctionSignature(fs.getNamespace(), mappedName, fs.getArity());
+            return new FunctionSignature(fs.getDataverseName(), mappedName, fs.getArity());
         }
         String understoreName = lowerCaseName.replace('_', '-');
-        FunctionSignature newFs = new FunctionSignature(fs.getNamespace(), understoreName, fs.getArity());
+        FunctionSignature newFs = new FunctionSignature(fs.getDataverseName(), understoreName, fs.getArity());
         return BuiltinFunctions.isBuiltinCompilerFunction(newFs, true) ? newFs : fs;
     }
 

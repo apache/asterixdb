@@ -19,9 +19,6 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,20 +26,16 @@ import java.util.Map;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
-import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AUnorderedListType;
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -51,73 +44,46 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Dataset metadata entity to an ITupleReference and vice versa.
  */
 public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolicyEntity> {
-    private static final long serialVersionUID = 826298425589924684L;
-
-    // Field indexes of serialized FeedPolicy in a tuple.
-    // Key field.
-    public static final int FEED_POLICY_DATAVERSE_NAME_FIELD_INDEX = 0;
-
-    public static final int FEED_POLICY_POLICY_NAME_FIELD_INDEX = 1;
 
     // Payload field containing serialized feedPolicy.
-    public static final int FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX = 2;
+    private static final int FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(MetadataRecordTypes.FEED_POLICY_RECORDTYPE);
-    protected ISerializerDeserializer<AInt32> aInt32Serde;
-
-    @SuppressWarnings("unchecked")
     protected FeedPolicyTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.FEED_POLICY_DATASET.getFieldCount());
-        aInt32Serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
+        super(getTuple, MetadataPrimaryIndexes.FEED_POLICY_DATASET, FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
     }
 
     @Override
-    public FeedPolicyEntity getMetadataEntityFromTuple(ITupleReference frameTuple) throws HyracksDataException {
-        byte[] serRecord = frameTuple.getFieldData(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordStartOffset = frameTuple.getFieldStart(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordLength = frameTuple.getFieldLength(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
-        ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
-        DataInput in = new DataInputStream(stream);
-        ARecord feedPolicyRecord = recordSerDes.deserialize(in);
-        return createFeedPolicyFromARecord(feedPolicyRecord);
-    }
-
-    private FeedPolicyEntity createFeedPolicyFromARecord(ARecord feedPolicyRecord) {
-        FeedPolicyEntity feedPolicy = null;
-        String dataverseName = ((AString) feedPolicyRecord
+    protected FeedPolicyEntity createMetadataEntityFromARecord(ARecord feedPolicyRecord) {
+        String dataverseCanonicalName = ((AString) feedPolicyRecord
                 .getValueByPos(MetadataRecordTypes.FEED_POLICY_ARECORD_DATAVERSE_NAME_FIELD_INDEX)).getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String policyName = ((AString) feedPolicyRecord
                 .getValueByPos(MetadataRecordTypes.FEED_POLICY_ARECORD_POLICY_NAME_FIELD_INDEX)).getStringValue();
-
         String description = ((AString) feedPolicyRecord
                 .getValueByPos(MetadataRecordTypes.FEED_POLICY_ARECORD_DESCRIPTION_FIELD_INDEX)).getStringValue();
 
         IACursor cursor = ((AUnorderedList) feedPolicyRecord
                 .getValueByPos(MetadataRecordTypes.FEED_POLICY_ARECORD_PROPERTIES_FIELD_INDEX)).getCursor();
         Map<String, String> policyParamters = new HashMap<>();
-        String key;
-        String value;
         while (cursor.next()) {
             ARecord field = (ARecord) cursor.get();
-            key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX)).getStringValue();
-            value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX)).getStringValue();
+            String key =
+                    ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX)).getStringValue();
+            String value =
+                    ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX)).getStringValue();
             policyParamters.put(key, value);
         }
 
-        feedPolicy = new FeedPolicyEntity(dataverseName, policyName, description, policyParamters);
-        return feedPolicy;
+        return new FeedPolicyEntity(dataverseName, policyName, description, policyParamters);
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(FeedPolicyEntity feedPolicy)
-            throws HyracksDataException, AlgebricksException {
-        // write the key in the first three fields of the tuple
-        ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
+    public ITupleReference getTupleFromMetadataEntity(FeedPolicyEntity feedPolicy) throws HyracksDataException {
+        String dataverseCanonicalName = feedPolicy.getDataverseName().getCanonicalForm();
 
+        // write the key in the first three fields of the tuple
         tupleBuilder.reset();
-        aString.setValue(feedPolicy.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
@@ -129,7 +95,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
 
         // write field 0
         fieldValue.reset();
-        aString.setValue(feedPolicy.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.FEED_POLICY_ARECORD_DATAVERSE_NAME_FIELD_INDEX, fieldValue);
 
@@ -150,6 +116,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
         UnorderedListBuilder listBuilder = new UnorderedListBuilder();
         listBuilder.reset((AUnorderedListType) MetadataRecordTypes.FEED_POLICY_RECORDTYPE
                 .getFieldTypes()[MetadataRecordTypes.FEED_POLICY_ARECORD_PROPERTIES_FIELD_INDEX]);
+        ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         for (Map.Entry<String, String> property : properties.entrySet()) {
             String name = property.getKey();
             String value = property.getValue();
@@ -169,13 +136,11 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
         return tuple;
     }
 
-    public void writePropertyTypeRecord(String name, String value, DataOutput out) throws HyracksDataException {
+    private void writePropertyTypeRecord(String name, String value, DataOutput out) throws HyracksDataException {
         IARecordBuilder propertyRecordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         propertyRecordBuilder.reset(MetadataRecordTypes.POLICY_PARAMS_RECORDTYPE);
         AMutableString aString = new AMutableString("");
-        ISerializerDeserializer<AString> stringSerde =
-                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
         // write field 0
         fieldValue.reset();

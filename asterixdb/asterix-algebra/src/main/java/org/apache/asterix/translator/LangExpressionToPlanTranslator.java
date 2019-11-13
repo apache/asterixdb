@@ -38,6 +38,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -651,7 +652,7 @@ class LangExpressionToPlanTranslator
         return distResultOperator;
     }
 
-    private DatasetDataSource validateDatasetInfo(MetadataProvider metadataProvider, String dataverseName,
+    private DatasetDataSource validateDatasetInfo(MetadataProvider metadataProvider, DataverseName dataverseName,
             String datasetName, SourceLocation sourceLoc) throws AlgebricksException {
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
@@ -887,7 +888,7 @@ class LangExpressionToPlanTranslator
     private AbstractFunctionCallExpression lookupUserDefinedFunction(FunctionSignature signature,
             List<Mutable<ILogicalExpression>> args, SourceLocation sourceLoc) throws CompilationException {
         try {
-            if (signature.getNamespace() == null) {
+            if (signature.getDataverseName() == null) {
                 return null;
             }
             Function function =

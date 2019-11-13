@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -37,7 +38,7 @@ public class RTreeJobGenParams extends AccessMethodJobGenParams {
     public RTreeJobGenParams() {
     }
 
-    public RTreeJobGenParams(String indexName, IndexType indexType, String dataverseName, String datasetName,
+    public RTreeJobGenParams(String indexName, IndexType indexType, DataverseName dataverseName, String datasetName,
             boolean retainInput, boolean requiresBroadcast) {
         super(indexName, indexType, dataverseName, datasetName, retainInput, requiresBroadcast);
     }

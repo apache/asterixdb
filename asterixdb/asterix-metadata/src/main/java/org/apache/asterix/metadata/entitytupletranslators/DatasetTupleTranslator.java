@@ -19,9 +19,6 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -37,7 +34,7 @@ import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.TransactionState;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -67,8 +64,6 @@ import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.compression.CompressionManager;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -77,51 +72,36 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Dataset metadata entity to an ITupleReference and vice versa.
  */
 public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
-    private static final long serialVersionUID = 1L;
+
     // Payload field containing serialized Dataset.
-    public static final int DATASET_PAYLOAD_TUPLE_FIELD_INDEX = 2;
+    private static final int DATASET_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
-    @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<ARecord> recordSerDes =
-            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(MetadataRecordTypes.DATASET_RECORDTYPE);
-    protected final transient AMutableInt32 aInt32;
-    protected final transient ISerializerDeserializer<AInt32> aInt32Serde;
-    protected final transient AMutableInt64 aBigInt;
-    protected final transient ISerializerDeserializer<AInt64> aBigIntSerde;
-    protected final transient ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage();
+    protected AMutableInt32 aInt32;
+    protected AMutableInt64 aInt64;
 
-    @SuppressWarnings("unchecked")
     protected DatasetTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.DATASET_DATASET.getFieldCount());
-        aInt32 = new AMutableInt32(-1);
-        aBigInt = new AMutableInt64(-1);
-        aInt32Serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
-        aBigIntSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
+        super(getTuple, MetadataPrimaryIndexes.DATASET_DATASET, DATASET_PAYLOAD_TUPLE_FIELD_INDEX);
+        if (getTuple) {
+            aInt32 = new AMutableInt32(-1);
+            aInt64 = new AMutableInt64(-1);
+        }
     }
 
     @Override
-    public Dataset getMetadataEntityFromTuple(ITupleReference frameTuple) throws HyracksDataException {
-        byte[] serRecord = frameTuple.getFieldData(DATASET_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordStartOffset = frameTuple.getFieldStart(DATASET_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordLength = frameTuple.getFieldLength(DATASET_PAYLOAD_TUPLE_FIELD_INDEX);
-        ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
-        DataInput in = new DataInputStream(stream);
-        ARecord datasetRecord = recordSerDes.deserialize(in);
-        return createDatasetFromARecord(datasetRecord);
-    }
-
-    protected Dataset createDatasetFromARecord(ARecord datasetRecord) throws HyracksDataException {
-        String dataverseName =
+    protected Dataset createMetadataEntityFromARecord(ARecord datasetRecord) {
+        String dataverseCanonicalName =
                 ((AString) datasetRecord.getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATAVERSENAME_FIELD_INDEX))
                         .getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String datasetName =
                 ((AString) datasetRecord.getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATASETNAME_FIELD_INDEX))
                         .getStringValue();
         String typeName =
                 ((AString) datasetRecord.getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATATYPENAME_FIELD_INDEX))
                         .getStringValue();
-        String typeDataverseName = ((AString) datasetRecord
+        String typeDataverseCanonicalName = ((AString) datasetRecord
                 .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATATYPEDATAVERSENAME_FIELD_INDEX)).getStringValue();
+        DataverseName typeDataverseName = DataverseName.createFromCanonicalForm(typeDataverseCanonicalName);
         DatasetType datasetType = DatasetType.valueOf(
                 ((AString) datasetRecord.getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATASETTYPE_FIELD_INDEX))
                         .getStringValue());
@@ -141,12 +121,12 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX))
                         .getCursor();
         Map<String, String> compactionPolicyProperties = new LinkedHashMap<>();
-        String key;
-        String value;
         while (cursor.next()) {
             ARecord field = (ARecord) cursor.get();
-            key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX)).getStringValue();
-            value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX)).getStringValue();
+            String key =
+                    ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX)).getStringValue();
+            String value =
+                    ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX)).getStringValue();
             compactionPolicyProperties.put(key, value);
         }
         switch (datasetType) {
@@ -165,9 +145,8 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 List<List<String>> partitioningKey = new ArrayList<>();
                 List<IAType> partitioningKeyType = new ArrayList<>();
 
-                AOrderedList fieldNameList;
                 while (cursor.next()) {
-                    fieldNameList = (AOrderedList) cursor.get();
+                    AOrderedList fieldNameList = (AOrderedList) cursor.get();
                     IACursor nestedFieldNameCursor = (fieldNameList.getCursor());
                     List<String> nestedFieldName = new ArrayList<>();
                     while (nestedFieldNameCursor.next()) {
@@ -226,9 +205,9 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 Map<String, String> properties = new HashMap<>();
                 while (cursor.next()) {
                     ARecord field = (ARecord) cursor.get();
-                    key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX))
+                    String key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX))
                             .getStringValue();
-                    value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX))
+                    String value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX))
                             .getStringValue();
                     properties.put(key, value);
                 }
@@ -247,13 +226,14 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
         Map<String, String> hints = getDatasetHints(datasetRecord);
 
-        String metaTypeDataverseName = null;
+        DataverseName metaTypeDataverseName = null;
         String metaTypeName = null;
         int metaTypeDataverseNameIndex =
-                datasetRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_METADATA_DATAVERSE);
+                datasetRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_METATYPE_DATAVERSE_NAME);
         if (metaTypeDataverseNameIndex >= 0) {
-            metaTypeDataverseName =
+            String metaTypeDataverseCanonicalName =
                     ((AString) datasetRecord.getValueByPos(metaTypeDataverseNameIndex)).getStringValue();
+            metaTypeDataverseName = DataverseName.createFromCanonicalForm(metaTypeDataverseCanonicalName);
             int metaTypeNameIndex = datasetRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_METATYPE_NAME);
             metaTypeName = ((AString) datasetRecord.getValueByPos(metaTypeNameIndex)).getStringValue();
         }
@@ -289,13 +269,14 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Dataset dataset)
-            throws HyracksDataException, AlgebricksException {
+    public ITupleReference getTupleFromMetadataEntity(Dataset dataset) throws HyracksDataException {
         OrderedListBuilder listBuilder = new OrderedListBuilder();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
+        String dataverseCanonicalName = dataset.getDataverseName().getCanonicalForm();
+
         // write the key in the first 2 fields of the tuple
         tupleBuilder.reset();
-        aString.setValue(dataset.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
         aString.setValue(dataset.getDatasetName());
@@ -308,7 +289,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
         // write field 0
         fieldValue.reset();
-        aString.setValue(dataset.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_DATAVERSENAME_FIELD_INDEX, fieldValue);
 
@@ -320,7 +301,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
         // write field 2
         fieldValue.reset();
-        aString.setValue(dataset.getItemTypeDataverseName());
+        aString.setValue(dataset.getItemTypeDataverseName().getCanonicalForm());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_DATATYPEDATAVERSENAME_FIELD_INDEX, fieldValue);
 
@@ -394,13 +375,13 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         // write field 12
         fieldValue.reset();
         aInt32.setValue(dataset.getDatasetId());
-        aInt32Serde.serialize(aInt32, fieldValue.getDataOutput());
+        int32Serde.serialize(aInt32, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_DATASETID_FIELD_INDEX, fieldValue);
 
         // write field 13
         fieldValue.reset();
         aInt32.setValue(dataset.getPendingOp());
-        aInt32Serde.serialize(aInt32, fieldValue.getDataOutput());
+        int32Serde.serialize(aInt32, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_PENDINGOP_FIELD_INDEX, fieldValue);
 
         // write open fields
@@ -416,9 +397,6 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
     /**
      * Keep protected to allow other extensions to add additional fields
-     *
-     * @param dataset
-     * @throws HyracksDataException
      */
     protected void writeOpenFields(Dataset dataset) throws HyracksDataException {
         writeMetaPart(dataset);
@@ -430,10 +408,10 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         if (dataset.hasMetaPart()) {
             // write open field 1, the meta item type Dataverse name.
             fieldName.reset();
-            aString.setValue(MetadataRecordTypes.FIELD_NAME_METADATA_DATAVERSE);
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_METATYPE_DATAVERSE_NAME);
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
-            aString.setValue(dataset.getMetaItemTypeDataverseName());
+            aString.setValue(dataset.getMetaItemTypeDataverseName().getCanonicalForm());
             stringSerde.serialize(aString, fieldValue.getDataOutput());
             recordBuilder.addField(fieldName, fieldValue);
 
@@ -477,16 +455,15 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             aString.setValue(MetadataRecordTypes.DATASET_ARECORD_REBALANCE_FIELD_NAME);
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
-            aBigInt.setValue(dataset.getRebalanceCount());
-            aBigIntSerde.serialize(aBigInt, fieldValue.getDataOutput());
+            aInt64.setValue(dataset.getRebalanceCount());
+            int64Serde.serialize(aInt64, fieldValue.getDataOutput());
             recordBuilder.addField(fieldName, fieldValue);
         }
     }
 
     protected void writeDatasetDetailsRecordType(IARecordBuilder recordBuilder, Dataset dataset, DataOutput dataOutput)
             throws HyracksDataException {
-
-        dataset.getDatasetDetails().writeDatasetDetailsRecordType(fieldValue.getDataOutput());
+        dataset.getDatasetDetails().writeDatasetDetailsRecordType(dataOutput);
         switch (dataset.getDatasetType()) {
             case INTERNAL:
                 recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_INTERNALDETAILS_FIELD_INDEX, fieldValue);
@@ -514,14 +491,11 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         return hints;
     }
 
-    @SuppressWarnings("unchecked")
     protected void writeDatasetHintRecord(String name, String value, DataOutput out) throws HyracksDataException {
         IARecordBuilder propertyRecordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         propertyRecordBuilder.reset(MetadataRecordTypes.DATASET_HINTS_RECORDTYPE);
         AMutableString aString = new AMutableString("");
-        ISerializerDeserializer<AString> stringSerde =
-                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
         // write field 0
         fieldValue.reset();
@@ -537,5 +511,4 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
         propertyRecordBuilder.write(out, true);
     }
-
 }

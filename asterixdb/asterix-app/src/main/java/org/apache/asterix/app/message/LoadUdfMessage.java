@@ -21,13 +21,14 @@ package org.apache.asterix.app.message;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.hyracks.util.file.FileUtil;
 
 public class LoadUdfMessage extends AbstractUdfMessage {
 
     private static final long serialVersionUID = 2L;
 
-    public LoadUdfMessage(String dataverseName, String libraryName, long reqId) {
+    public LoadUdfMessage(DataverseName dataverseName, String libraryName, long reqId) {
         super(dataverseName, libraryName, reqId);
     }
 
@@ -35,6 +36,6 @@ public class LoadUdfMessage extends AbstractUdfMessage {
     protected void handleAction(ILibraryManager mgr, boolean isMdNode, INcApplicationContext appCtx) throws Exception {
         ExternalLibraryUtils.setUpExternaLibrary(mgr, isMdNode,
                 FileUtil.joinPath(appCtx.getServiceContext().getServerCtx().getBaseDir().getAbsolutePath(),
-                        "applications", dataverseName + "." + libraryName));
+                        "applications", dataverseName.getCanonicalForm() + "." + libraryName)); //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
     }
 }

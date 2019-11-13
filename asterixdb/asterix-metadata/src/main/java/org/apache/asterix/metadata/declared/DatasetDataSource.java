@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataManager;
@@ -116,7 +117,7 @@ public class DatasetDataSource extends DataSource {
                 return metadataProvider.buildExternalDatasetDataScannerRuntime(jobSpec, itemType, adapterFactory);
             case INTERNAL:
                 DataSourceId id = getId();
-                String dataverseName = id.getDataverseName();
+                DataverseName dataverseName = id.getDataverseName();
                 String datasetName = id.getDatasourceName();
                 Index primaryIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
                         dataverseName, datasetName, datasetName);

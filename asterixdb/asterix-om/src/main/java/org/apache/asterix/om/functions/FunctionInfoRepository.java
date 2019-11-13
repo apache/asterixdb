@@ -32,17 +32,19 @@ public class FunctionInfoRepository {
         functionMap = new ConcurrentHashMap<>();
     }
 
-    public IFunctionInfo get(String namespace, String name, int arity) {
-        FunctionSignature functionSignature = new FunctionSignature(namespace, name, arity);
+    private IFunctionInfo get(FunctionSignature functionSignature) {
         return functionMap.get(functionSignature);
     }
 
+    private void put(FunctionSignature functionSignature, IFunctionInfo fInfo) {
+        functionMap.put(functionSignature, fInfo);
+    }
+
     public IFunctionInfo get(FunctionIdentifier fid) {
-        return get(fid.getNamespace(), fid.getName(), fid.getArity());
+        return get(new FunctionSignature(fid));
     }
 
     public void put(FunctionIdentifier fid, IFunctionInfo fInfo) {
-        FunctionSignature functionSignature = new FunctionSignature(fid);
-        functionMap.put(functionSignature, fInfo);
+        put(new FunctionSignature(fid), fInfo);
     }
 }

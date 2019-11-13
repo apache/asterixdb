@@ -23,17 +23,18 @@ import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppDeleteRewriteVisitor;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 
 class SqlppStatementRewriter implements IStatementRewriter {
 
     @Override
-    public void rewrite(Statement stmt) throws CompilationException {
-        rewriteDeleteStatement(stmt);
+    public void rewrite(Statement stmt, MetadataProvider metadataProvider) throws CompilationException {
+        rewriteDeleteStatement(stmt, metadataProvider);
     }
 
-    private void rewriteDeleteStatement(Statement stmt) throws CompilationException {
+    private void rewriteDeleteStatement(Statement stmt, MetadataProvider metadataProvider) throws CompilationException {
         if (stmt != null) {
-            SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor();
+            SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor(metadataProvider);
             stmt.accept(visitor, null);
         }
     }

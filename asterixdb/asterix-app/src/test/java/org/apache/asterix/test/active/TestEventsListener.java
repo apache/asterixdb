@@ -31,6 +31,7 @@ import org.apache.asterix.app.active.ActiveEntityEventsListener;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.metadata.LockList;
+import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.translator.IStatementExecutor;
@@ -112,8 +113,8 @@ public class TestEventsListener extends ActiveEntityEventsListener {
     protected JobId compileAndStartJob(MetadataProvider metadataProvider) throws HyracksDataException {
         step(onStart);
         try {
-            metadataProvider.getApplicationContext().getMetadataLockManager()
-                    .acquireDatasetReadLock(metadataProvider.getLocks(), "Default.type");
+            metadataProvider.getApplicationContext().getMetadataLockManager().acquireDatasetReadLock(
+                    metadataProvider.getLocks(), MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, "type");
         } catch (AlgebricksException e) {
             throw HyracksDataException.create(e);
         }
@@ -207,8 +208,8 @@ public class TestEventsListener extends ActiveEntityEventsListener {
         try {
             IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
             LockList locks = metadataProvider.getLocks();
-            lockManager.acquireDataverseReadLock(locks, entityId.getDataverse());
-            lockManager.acquireActiveEntityWriteLock(locks, entityId.getDataverse() + '.' + entityId.getEntityName());
+            lockManager.acquireDataverseReadLock(locks, entityId.getDataverseName());
+            lockManager.acquireActiveEntityWriteLock(locks, entityId.getDataverseName(), entityId.getEntityName());
             // persist entity
         } catch (Throwable th) {
             // This failure puts the system in a bad state.

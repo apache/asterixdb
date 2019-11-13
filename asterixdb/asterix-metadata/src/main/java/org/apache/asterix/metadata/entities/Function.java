@@ -19,23 +19,25 @@
 package org.apache.asterix.metadata.entities;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 
 public class Function implements IMetadataEntity<Function> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     public static final String LANGUAGE_AQL = "AQL";
     public static final String LANGUAGE_SQLPP = "SQLPP";
     public static final String LANGUAGE_JAVA = "JAVA";
 
     public static final String RETURNTYPE_VOID = "VOID";
-    public static final String NOT_APPLICABLE = "N/A";
 
     private final FunctionSignature signature;
-    private final List<List<List<String>>> dependencies;
+    private final List<List<Triple<DataverseName, String, String>>> dependencies;
     private final List<String> arguments;
     private final String body;
     private final String returnType;
@@ -43,7 +45,7 @@ public class Function implements IMetadataEntity<Function> {
     private final String kind;
 
     public Function(FunctionSignature signature, List<String> arguments, String returnType, String functionBody,
-            String language, String functionKind, List<List<List<String>>> dependencies) {
+            String language, String functionKind, List<List<Triple<DataverseName, String, String>>> dependencies) {
         this.signature = signature;
         this.arguments = arguments;
         this.body = functionBody;
@@ -51,9 +53,9 @@ public class Function implements IMetadataEntity<Function> {
         this.language = language;
         this.kind = functionKind;
         if (dependencies == null) {
-            this.dependencies = new ArrayList<>();
-            this.dependencies.add(new ArrayList<>());
-            this.dependencies.add(new ArrayList<>());
+            this.dependencies = new ArrayList<>(2);
+            this.dependencies.add(Collections.emptyList());
+            this.dependencies.add(Collections.emptyList());
         } else {
             this.dependencies = dependencies;
         }
@@ -63,8 +65,8 @@ public class Function implements IMetadataEntity<Function> {
         return signature;
     }
 
-    public String getDataverseName() {
-        return signature.getNamespace();
+    public DataverseName getDataverseName() {
+        return signature.getDataverseName();
     }
 
     public String getName() {
@@ -79,7 +81,7 @@ public class Function implements IMetadataEntity<Function> {
         return arguments;
     }
 
-    public List<List<List<String>>> getDependencies() {
+    public List<List<Triple<DataverseName, String, String>>> getDependencies() {
         return dependencies;
     }
 

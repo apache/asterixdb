@@ -22,6 +22,7 @@ package org.apache.asterix.metadata.entities;
 import java.util.Map;
 
 import org.apache.asterix.active.EntityId;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -30,7 +31,7 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
  * Feed POJO
  */
 public class Feed implements IMetadataEntity<Feed>, IFeed {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     public static final String EXTENSION_NAME = "Feed";
 
     /** A unique identifier for the feed */
@@ -40,7 +41,7 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
     /** Feed configurations */
     private Map<String, String> feedConfiguration;
 
-    public Feed(String dataverseName, String feedName, Map<String, String> feedConfiguration) {
+    public Feed(DataverseName dataverseName, String feedName, Map<String, String> feedConfiguration) {
         this.feedId = new EntityId(EXTENSION_NAME, dataverseName, feedName);
         this.displayName = "(" + feedId + ")";
         this.feedConfiguration = feedConfiguration;
@@ -52,8 +53,8 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
     }
 
     @Override
-    public String getDataverseName() {
-        return feedId.getDataverse();
+    public DataverseName getDataverseName() {
+        return feedId.getDataverseName();
     }
 
     @Override

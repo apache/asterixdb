@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.bootstrap;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.MetadataConstants;
@@ -27,7 +28,7 @@ import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 
 public class MetadataBuiltinEntities {
     //--------------------------------------- Dataverses ----------------------------------------//
-    public static final String DEFAULT_DATAVERSE_NAME = "Default";
+    public static final DataverseName DEFAULT_DATAVERSE_NAME = DataverseName.createBuiltinDataverseName("Default");
     public static final Dataverse DEFAULT_DATAVERSE =
             new Dataverse(DEFAULT_DATAVERSE_NAME, NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP);
     //--------------------------------------- Datatypes -----------------------------------------//

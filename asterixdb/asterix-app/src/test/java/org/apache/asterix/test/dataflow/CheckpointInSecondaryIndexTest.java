@@ -36,6 +36,7 @@ import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.IndexCheckpoint;
@@ -107,7 +108,7 @@ public class CheckpointInSecondaryIndexTest {
     private static final List<Integer> KEY_INDICATORS_LIST = Collections.singletonList(Index.RECORD_INDICATOR);
     private static final int RECORDS_PER_COMPONENT = 500;
     private static final int DATASET_ID = 101;
-    private static final String DATAVERSE_NAME = "TestDV";
+    private static final DataverseName DATAVERSE_NAME = DataverseName.createSinglePartName("TestDV");
     private static final String DATASET_NAME = "TestDS";
     private static final String INDEX_NAME = "TestIdx";
     private static final String DATA_TYPE_NAME = "DUMMY";

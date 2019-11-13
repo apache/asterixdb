@@ -36,6 +36,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.external.library.ExternalLibrary;
@@ -64,7 +65,7 @@ public class ExternalLibraryUtils {
     public static void setUpExternaLibrary(ILibraryManager externalLibraryManager, boolean isMetadataNode,
             String libraryPath) throws Exception {
         // start by un-installing removed libraries (Metadata Node only)
-        Map<String, List<String>> uninstalledLibs = null;
+        Map<DataverseName, List<String>> uninstalledLibs = null;
         if (isMetadataNode) {
             uninstalledLibs = uninstallLibraries();
         }
@@ -72,7 +73,7 @@ public class ExternalLibraryUtils {
         // get the directory of the to be installed libraries
         String[] pathSplit = libraryPath.split("\\.");
         String[] dvSplit = pathSplit[pathSplit.length - 2].split("/");
-        String dataverse = dvSplit[dvSplit.length - 1];
+        DataverseName dataverse = DataverseName.createSinglePartName(dvSplit[dvSplit.length - 1]); //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
         String name = pathSplit[pathSplit.length - 1].trim();
         File installLibDir = new File(libraryPath);
 
@@ -104,8 +105,8 @@ public class ExternalLibraryUtils {
      * @return a map from dataverse -> list of uninstalled libraries.
      * @throws Exception
      */
-    private static Map<String, List<String>> uninstallLibraries() throws Exception {
-        Map<String, List<String>> uninstalledLibs = new HashMap<>();
+    private static Map<DataverseName, List<String>> uninstallLibraries() throws Exception {
+        Map<DataverseName, List<String>> uninstalledLibs = new HashMap<>();
         // get the directory of the un-install libraries
         File uninstallLibDir = getLibraryUninstallDir();
         String[] uninstallLibNames;
@@ -116,7 +117,7 @@ public class ExternalLibraryUtils {
             for (String uninstallLibName : uninstallLibNames) {
                 // Get the <dataverse name - library name> pair
                 String[] components = uninstallLibName.split("\\.");
-                String dataverse = components[0];
+                DataverseName dataverse = DataverseName.createSinglePartName(components[0]); //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
                 String libName = components[1];
                 // un-install
                 uninstallLibrary(dataverse, libName);
@@ -147,7 +148,7 @@ public class ExternalLibraryUtils {
      * @throws RemoteException
      * @throws ACIDException
      */
-    public static boolean uninstallLibrary(String dataverse, String libraryName)
+    public static boolean uninstallLibrary(DataverseName dataverse, String libraryName)
             throws AsterixException, RemoteException, ACIDException {
         MetadataTransactionContext mdTxnCtx = null;
         try {
@@ -194,7 +195,7 @@ public class ExternalLibraryUtils {
         return true;
     }
 
-    private static void addLibraryToMetadata(Map<String, List<String>> uninstalledLibs, String dataverse,
+    private static void addLibraryToMetadata(Map<DataverseName, List<String>> uninstalledLibs, DataverseName dataverse,
             String libraryName, ExternalLibrary library) throws ACIDException, RemoteException {
         // Modify metadata accordingly
         List<String> uninstalledLibsInDv = uninstalledLibs.get(dataverse);
@@ -283,8 +284,9 @@ public class ExternalLibraryUtils {
      * failure in installing an element does not effect installation of other
      * libraries.
      */
-    protected static void configureLibrary(ILibraryManager libraryManager, String dataverse, String libraryName,
-            final File libraryDir, Map<String, List<String>> uninstalledLibs, boolean isMetadataNode) throws Exception {
+    protected static void configureLibrary(ILibraryManager libraryManager, DataverseName dataverse, String libraryName,
+            final File libraryDir, Map<DataverseName, List<String>> uninstalledLibs, boolean isMetadataNode)
+            throws Exception {
 
         String[] libraryDescriptors = libraryDir.list((dir, name) -> name.endsWith(".xml"));
 
@@ -318,8 +320,8 @@ public class ExternalLibraryUtils {
      * @param libraryPath
      * @throws Exception
      */
-    protected static void registerClassLoader(ILibraryManager externalLibraryManager, String dataverse, String name,
-            String libraryPath) throws Exception {
+    protected static void registerClassLoader(ILibraryManager externalLibraryManager, DataverseName dataverse,
+            String name, String libraryPath) throws Exception {
         // get the class loader
         URLClassLoader classLoader = getLibraryClassLoader(dataverse, name, libraryPath);
         // register it with the external library manager
@@ -343,12 +345,12 @@ public class ExternalLibraryUtils {
     /**
      * Get the class loader for the library
      *
-     * @param libraryPath
      * @param dataverse
+     * @param libraryPath
      * @return
      * @throws Exception
      */
-    private static URLClassLoader getLibraryClassLoader(String dataverse, String name, String libraryPath)
+    private static URLClassLoader getLibraryClassLoader(DataverseName dataverse, String name, String libraryPath)
             throws Exception {
         // Get a reference to the library directory
         File installDir = new File(libraryPath);

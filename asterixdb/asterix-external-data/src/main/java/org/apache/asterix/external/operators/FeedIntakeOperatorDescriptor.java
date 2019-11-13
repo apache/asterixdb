@@ -105,7 +105,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         INcApplicationContext runtimeCtx =
                 (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
         ILibraryManager libraryManager = runtimeCtx.getLibraryManager();
-        ClassLoader classLoader = libraryManager.getLibraryClassLoader(feedId.getDataverse(), adaptorLibraryName);
+        ClassLoader classLoader = libraryManager.getLibraryClassLoader(feedId.getDataverseName(), adaptorLibraryName);
         if (classLoader != null) {
             try {
                 adapterFactory = (IAdapterFactory) (classLoader.loadClass(adaptorFactoryClassName).newInstance());
@@ -117,7 +117,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         } else {
             RuntimeDataException err = new RuntimeDataException(
                     ErrorCode.OPERATORS_FEED_INTAKE_OPERATOR_DESCRIPTOR_CLASSLOADER_NOT_CONFIGURED, adaptorLibraryName,
-                    feedId.getDataverse());
+                    feedId.getDataverseName());
             LOGGER.error(err.getMessage());
             throw err;
         }

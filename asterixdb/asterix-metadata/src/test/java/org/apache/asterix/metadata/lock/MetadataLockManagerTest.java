@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.hyracks.api.util.SingleThreadEventProcessor;
 import org.junit.Assert;
@@ -49,13 +50,15 @@ public class MetadataLockManagerTest {
         }
 
         private final Statement statement;
-        private final String dataset;
+        private final DataverseName dataverseName;
+        private final String datasetName;
         private boolean done;
         private int step = 0;
 
-        public Request(Statement statement, String dataset) {
+        public Request(Statement statement, DataverseName dataverseName, String datasetName) {
             this.statement = statement;
-            this.dataset = dataset;
+            this.dataverseName = dataverseName;
+            this.datasetName = datasetName;
             done = false;
         }
 
@@ -63,8 +66,12 @@ public class MetadataLockManagerTest {
             return statement;
         }
 
+        DataverseName dataverse() {
+            return dataverseName;
+        }
+
         String dataset() {
-            return dataset;
+            return datasetName;
         }
 
         synchronized void complete() {
@@ -115,28 +122,28 @@ public class MetadataLockManagerTest {
                 step.acquire();
                 switch (req.statement()) {
                     case INDEX:
-                        lockManager.acquireDatasetCreateIndexLock(locks, req.dataset());
+                        lockManager.acquireDatasetCreateIndexLock(locks, req.dataverse(), req.dataset());
                         break;
                     case MODIFY:
-                        lockManager.acquireDatasetModifyLock(locks, req.dataset());
+                        lockManager.acquireDatasetModifyLock(locks, req.dataverse(), req.dataset());
                         break;
                     case EXCLUSIVE_MODIFY:
-                        lockManager.acquireDatasetExclusiveModificationLock(locks, req.dataset());
+                        lockManager.acquireDatasetExclusiveModificationLock(locks, req.dataverse(), req.dataset());
                         break;
                     case EXCLUSIVE_MODIFY_UPGRADE:
-                        lockManager.acquireDatasetExclusiveModificationLock(locks, req.dataset());
+                        lockManager.acquireDatasetExclusiveModificationLock(locks, req.dataverse(), req.dataset());
                         req.step();
                         step.acquire();
-                        lockManager.upgradeDatasetLockToWrite(locks, req.dataset());
+                        lockManager.upgradeDatasetLockToWrite(locks, req.dataverse(), req.dataset());
                         break;
                     case EXCLUSIVE_MODIFY_UPGRADE_DOWNGRADE:
-                        lockManager.acquireDatasetExclusiveModificationLock(locks, req.dataset());
+                        lockManager.acquireDatasetExclusiveModificationLock(locks, req.dataverse(), req.dataset());
                         req.step();
                         step.acquire();
-                        lockManager.upgradeDatasetLockToWrite(locks, req.dataset());
+                        lockManager.upgradeDatasetLockToWrite(locks, req.dataverse(), req.dataset());
                         req.step();
                         step.acquire();
-                        lockManager.downgradeDatasetLockToExclusiveModify(locks, req.dataset());
+                        lockManager.downgradeDatasetLockToExclusiveModify(locks, req.dataverse(), req.dataset());
                         break;
                     default:
                         break;
@@ -155,13 +162,14 @@ public class MetadataLockManagerTest {
     @Test
     public void testDatasetLockMultipleIndexBuildsSingleModifier() throws Exception {
         MetadataLockManager lockManager = new MetadataLockManager();
-        String dataset = "Dataset";
+        DataverseName dataverseName = DataverseName.createSinglePartName("Dataverse");
+        String datasetName = "Dataset";
         User till = new User("till", lockManager);
-        Request tReq = new Request(Request.Statement.INDEX, dataset);
+        Request tReq = new Request(Request.Statement.INDEX, dataverseName, datasetName);
         User dmitry = new User("dmitry", lockManager);
-        Request dReq = new Request(Request.Statement.INDEX, dataset);
+        Request dReq = new Request(Request.Statement.INDEX, dataverseName, datasetName);
         User mike = new User("mike", lockManager);
-        Request mReq = new Request(Request.Statement.MODIFY, dataset);
+        Request mReq = new Request(Request.Statement.MODIFY, dataverseName, datasetName);
         // Till builds an index
         till.add(tReq);
         // Dmitry builds an index
@@ -202,13 +210,14 @@ public class MetadataLockManagerTest {
     @Test
     public void testDatasetLockMultipleModifiersSingleIndexBuilder() throws Exception {
         MetadataLockManager lockManager = new MetadataLockManager();
-        String dataset = "Dataset";
+        DataverseName dataverseName = DataverseName.createSinglePartName("Dataverse");
+        String datasetName = "Dataset";
         User till = new User("till", lockManager);
-        Request tReq = new Request(Request.Statement.MODIFY, dataset);
+        Request tReq = new Request(Request.Statement.MODIFY, dataverseName, datasetName);
         User dmitry = new User("dmitry", lockManager);
-        Request dReq = new Request(Request.Statement.MODIFY, dataset);
+        Request dReq = new Request(Request.Statement.MODIFY, dataverseName, datasetName);
         User mike = new User("mike", lockManager);
-        Request mReq = new Request(Request.Statement.INDEX, dataset);
+        Request mReq = new Request(Request.Statement.INDEX, dataverseName, datasetName);
         // Till modifies
         till.add(tReq);
         // Dmitry modifies
@@ -249,13 +258,14 @@ public class MetadataLockManagerTest {
     @Test
     public void testDatasetLockMultipleModifiersSingleExclusiveModifier() throws Exception {
         MetadataLockManager lockManager = new MetadataLockManager();
-        String dataset = "Dataset";
+        DataverseName dataverseName = DataverseName.createSinglePartName("Dataverse");
+        String datasetName = "Dataset";
         User till = new User("till", lockManager);
-        Request tReq = new Request(Request.Statement.MODIFY, dataset);
+        Request tReq = new Request(Request.Statement.MODIFY, dataverseName, datasetName);
         User dmitry = new User("dmitry", lockManager);
-        Request dReq = new Request(Request.Statement.MODIFY, dataset);
+        Request dReq = new Request(Request.Statement.MODIFY, dataverseName, datasetName);
         User mike = new User("mike", lockManager);
-        Request mReq = new Request(Request.Statement.EXCLUSIVE_MODIFY, dataset);
+        Request mReq = new Request(Request.Statement.EXCLUSIVE_MODIFY, dataverseName, datasetName);
         // Till starts
         till.add(tReq);
         till.step();
@@ -280,7 +290,7 @@ public class MetadataLockManagerTest {
         // Ensure that Mike got the lock
         mReq.await(1);
         // Till submits another request
-        tReq = new Request(Request.Statement.MODIFY, dataset);
+        tReq = new Request(Request.Statement.MODIFY, dataverseName, datasetName);
         till.add(tReq);
         till.step();
         // Ensure that Till didn't get the lock

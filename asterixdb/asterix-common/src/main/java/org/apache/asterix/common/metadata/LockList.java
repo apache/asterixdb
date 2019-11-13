@@ -21,6 +21,7 @@ package org.apache.asterix.common.metadata;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -33,7 +34,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
  */
 public class LockList {
     private final List<MutablePair<IMetadataLock, IMetadataLock.Mode>> locks = new ArrayList<>();
-    private final HashMap<String, Integer> indexes = new HashMap<>();
+    private final Map<IMetadataLock.LockKey, Integer> indexes = new HashMap<>();
     private boolean lockPhase = true;
 
     /**

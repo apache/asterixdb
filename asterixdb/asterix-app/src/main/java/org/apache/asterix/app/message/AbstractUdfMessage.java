@@ -23,20 +23,21 @@ import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.messaging.CcIdentifiedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractUdfMessage extends CcIdentifiedMessage implements INcAddressedMessage {
 
-    protected final String dataverseName;
+    protected final DataverseName dataverseName;
     protected final String libraryName;
     protected static final Logger LOGGER = LogManager.getLogger();
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     private final long reqId;
 
-    public AbstractUdfMessage(String dataverseName, String libraryName, long reqId) {
+    public AbstractUdfMessage(DataverseName dataverseName, String libraryName, long reqId) {
         this.dataverseName = dataverseName;
         this.libraryName = libraryName;
         this.reqId = reqId;

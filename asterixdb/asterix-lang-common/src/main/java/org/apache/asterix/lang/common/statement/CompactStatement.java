@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -26,10 +27,10 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class CompactStatement extends AbstractStatement {
 
-    private final Identifier dataverseName;
+    private final DataverseName dataverseName;
     private final Identifier datasetName;
 
-    public CompactStatement(Identifier dataverseName, Identifier datasetName) {
+    public CompactStatement(DataverseName dataverseName, Identifier datasetName) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
     }
@@ -39,7 +40,7 @@ public class CompactStatement extends AbstractStatement {
         return Statement.Kind.COMPACT;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 

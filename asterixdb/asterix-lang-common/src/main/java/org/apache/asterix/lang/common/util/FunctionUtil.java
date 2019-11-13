@@ -20,27 +20,30 @@
 package org.apache.asterix.lang.common.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.expression.CallExpr;
-import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Function;
-import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.utils.ConstantExpressionUtil;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
@@ -50,12 +53,17 @@ public class FunctionUtil {
 
     public static final String IMPORT_PRIVATE_FUNCTIONS = "import-private-functions";
 
+    private static final DataverseName FN_DATASET_DATAVERSE_NAME =
+            FunctionSignature.getDataverseName(BuiltinFunctions.DATASET);
+
+    private static final String FN_DATASET_NAME = BuiltinFunctions.DATASET.getName();
+
     public static IFunctionInfo getFunctionInfo(FunctionIdentifier fi) {
         return BuiltinFunctions.getAsterixFunctionInfo(fi);
     }
 
     public static IFunctionInfo getFunctionInfo(FunctionSignature fs) {
-        return getFunctionInfo(new FunctionIdentifier(fs.getNamespace(), fs.getName(), fs.getArity()));
+        return getFunctionInfo(fs.createFunctionIdentifier());
     }
 
     public static IFunctionInfo getBuiltinFunctionInfo(String functionName, int arity) {
@@ -112,21 +120,21 @@ public class FunctionUtil {
             return functionDecls;
         }
         String value = (String) metadataProvider.getConfig().get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS);
-        boolean includePrivateFunctions = (value != null) ? Boolean.valueOf(value.toLowerCase()) : false;
+        boolean includePrivateFunctions = (value != null) && Boolean.parseBoolean(value.toLowerCase());
         Set<CallExpr> functionCalls = functionCollector.getFunctionCalls(expression);
         for (CallExpr functionCall : functionCalls) {
             FunctionSignature signature = functionCall.getFunctionSignature();
             if (declaredFunctions != null && declaredFunctions.contains(signature)) {
                 continue;
             }
-            if (signature.getNamespace() == null) {
-                signature.setNamespace(metadataProvider.getDefaultDataverseName());
+            if (signature.getDataverseName() == null) {
+                signature.setDataverseName(metadataProvider.getDefaultDataverseName());
             }
-            String namespace = signature.getNamespace();
+            DataverseName namespace = signature.getDataverseName();
             // Checks the existence of the referred dataverse.
             try {
-                if (!namespace.equals(FunctionConstants.ASTERIX_NS)
-                        && !namespace.equals(AlgebricksBuiltinFunctions.ALGEBRICKS_NS)
+                if (!namespace.equals(FunctionConstants.ASTERIX_DV)
+                        && !namespace.equals(FunctionConstants.ALGEBRICKS_DV)
                         && metadataProvider.findDataverse(namespace) == null) {
                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, functionCall.getSourceLocation(),
                             "In function call \"" + namespace + "." + signature.getName() + "(...)\", the dataverse \""
@@ -177,30 +185,25 @@ public class FunctionUtil {
         return functionDecls;
     }
 
-    public static List<List<List<String>>> getFunctionDependencies(IQueryRewriter rewriter, Expression expression,
-            MetadataProvider metadataProvider) throws CompilationException {
+    public static List<List<Triple<DataverseName, String, String>>> getFunctionDependencies(IQueryRewriter rewriter,
+            Expression expression, MetadataProvider metadataProvider) throws CompilationException {
         Set<CallExpr> functionCalls = rewriter.getFunctionCalls(expression);
         //Get the List of used functions and used datasets
-        List<List<String>> datasourceDependencies = new ArrayList<>();
-        List<List<String>> functionDependencies = new ArrayList<>();
+        List<Triple<DataverseName, String, String>> datasourceDependencies = new ArrayList<>();
+        List<Triple<DataverseName, String, String>> functionDependencies = new ArrayList<>();
         for (CallExpr functionCall : functionCalls) {
             FunctionSignature signature = functionCall.getFunctionSignature();
-            FunctionIdentifier fid =
-                    new FunctionIdentifier(signature.getNamespace(), signature.getName(), signature.getArity());
-            if (fid.equals(BuiltinFunctions.DATASET)) {
-                Pair<String, String> path = DatasetUtil.getDatasetInfo(metadataProvider,
-                        ((LiteralExpr) functionCall.getExprList().get(0)).getValue().getStringValue());
-                datasourceDependencies.add(Arrays.asList(path.first, path.second));
-            }
-
-            else if (BuiltinFunctions.isBuiltinCompilerFunction(signature, false)) {
-                continue;
-            } else {
-                functionDependencies.add(Arrays.asList(signature.getNamespace(), signature.getName(),
+            if (isBuiltinDatasetFunction(signature)) {
+                Pair<DataverseName, String> datasetReference = parseDatasetFunctionArguments(functionCall.getExprList(),
+                        metadataProvider.getDefaultDataverseName(), functionCall.getSourceLocation(),
+                        ExpressionUtils::getStringLiteral);
+                datasourceDependencies.add(new Triple<>(datasetReference.first, datasetReference.second, null));
+            } else if (!BuiltinFunctions.isBuiltinCompilerFunction(signature, false)) {
+                functionDependencies.add(new Triple<>(signature.getDataverseName(), signature.getName(),
                         Integer.toString(signature.getArity())));
             }
         }
-        List<List<List<String>>> dependencies = new ArrayList<>();
+        List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>(2);
         dependencies.add(datasourceDependencies);
         dependencies.add(functionDependencies);
         return dependencies;
@@ -208,10 +211,67 @@ public class FunctionUtil {
 
     private static Function lookupUserDefinedFunctionDecl(MetadataTransactionContext mdTxnCtx,
             FunctionSignature signature) throws AlgebricksException {
-        if (signature.getNamespace() == null) {
+        if (signature.getDataverseName() == null) {
             return null;
         }
         return MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
     }
 
+    public static boolean isBuiltinDatasetFunction(FunctionSignature fs) {
+        return Objects.equals(FN_DATASET_DATAVERSE_NAME, fs.getDataverseName())
+                && Objects.equals(FN_DATASET_NAME, fs.getName());
+    }
+
+    public static Pair<DataverseName, String> parseDatasetFunctionArguments(
+            List<Mutable<ILogicalExpression>> datasetFnArgs, DataverseName defaultDataverseName,
+            SourceLocation sourceLoc) throws CompilationException {
+        return parseDatasetFunctionArguments(datasetFnArgs, defaultDataverseName, sourceLoc,
+                FunctionUtil::getStringConstant);
+    }
+
+    public static <T> Pair<DataverseName, String> parseDatasetFunctionArguments(List<T> datasetFnArgs,
+            DataverseName defaultDataverseName, SourceLocation sourceLoc,
+            java.util.function.Function<T, String> argExtractFunction) throws CompilationException {
+        DataverseName dataverseName;
+        String datasetName;
+        switch (datasetFnArgs.size()) {
+            case 1: // AQL BACK-COMPAT case
+                String datasetArgBackCompat = argExtractFunction.apply(datasetFnArgs.get(0));
+                if (datasetArgBackCompat == null) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                            "Invalid argument to dataset()");
+                }
+                int pos = datasetArgBackCompat.indexOf('.');
+                if (pos > 0 && pos < datasetArgBackCompat.length() - 1) {
+                    dataverseName = DataverseName.createSinglePartName(datasetArgBackCompat.substring(0, pos)); // AQL BACK-COMPAT
+                    datasetName = datasetArgBackCompat.substring(pos + 1);
+                } else {
+                    dataverseName = defaultDataverseName;
+                    datasetName = datasetArgBackCompat;
+                }
+                break;
+            case 2:
+                String dataverseNameArg = argExtractFunction.apply(datasetFnArgs.get(0));
+                if (dataverseNameArg == null) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                            "Invalid argument to dataset()");
+                }
+                dataverseName = DataverseName.createFromCanonicalForm(dataverseNameArg);
+
+                datasetName = argExtractFunction.apply(datasetFnArgs.get(1));
+                if (datasetName == null) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                            "Invalid argument to dataset()");
+                }
+                break;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                        "Invalid number of arguments to dataset()");
+        }
+        return new Pair<>(dataverseName, datasetName);
+    }
+
+    private static String getStringConstant(Mutable<ILogicalExpression> arg) {
+        return ConstantExpressionUtil.getStringConstant(arg.getValue());
+    }
 }

@@ -19,15 +19,11 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.NodeGroup;
@@ -36,8 +32,6 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AUnorderedListType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -47,31 +41,22 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  */
 public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup> {
 
-    private static final long serialVersionUID = 1L;
-    // Field indexes of serialized NodeGroup in a tuple.
-    // First key field.
-    public static final int NODEGROUP_NODEGROUPNAME_TUPLE_FIELD_INDEX = 0;
     // Payload field containing serialized NodeGroup.
-    public static final int NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX = 1;
+    private static final int NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX = 1;
 
-    private transient UnorderedListBuilder listBuilder = new UnorderedListBuilder();
-    private transient ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes =
-            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(MetadataRecordTypes.NODEGROUP_RECORDTYPE);
+    protected UnorderedListBuilder listBuilder;
+    protected ArrayBackedValueStorage itemValue;
 
     protected NodeGroupTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.NODEGROUP_DATASET.getFieldCount());
+        super(getTuple, MetadataPrimaryIndexes.NODEGROUP_DATASET, NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX);
+        if (getTuple) {
+            listBuilder = new UnorderedListBuilder();
+            itemValue = new ArrayBackedValueStorage();
+        }
     }
 
     @Override
-    public NodeGroup getMetadataEntityFromTuple(ITupleReference frameTuple) throws HyracksDataException {
-        byte[] serRecord = frameTuple.getFieldData(NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordStartOffset = frameTuple.getFieldStart(NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordLength = frameTuple.getFieldLength(NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX);
-        ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
-        DataInput in = new DataInputStream(stream);
-        ARecord nodeGroupRecord = recordSerDes.deserialize(in);
+    protected NodeGroup createMetadataEntityFromARecord(ARecord nodeGroupRecord) {
         String gpName =
                 ((AString) nodeGroupRecord.getValueByPos(MetadataRecordTypes.NODEGROUP_ARECORD_GROUPNAME_FIELD_INDEX))
                         .getStringValue();
@@ -85,8 +70,7 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(NodeGroup instance)
-            throws HyracksDataException, AlgebricksException {
+    public ITupleReference getTupleFromMetadataEntity(NodeGroup instance) throws HyracksDataException {
         // write the key in the first field of the tuple
         tupleBuilder.reset();
         aString.setValue(instance.getNodeGroupName());

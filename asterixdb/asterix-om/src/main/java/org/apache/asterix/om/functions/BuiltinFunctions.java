@@ -508,7 +508,8 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier STRING_SPLIT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "split", 2);
 
-    public static final FunctionIdentifier DATASET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dataset", 1);
+    public static final FunctionIdentifier DATASET =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dataset", FunctionIdentifier.VARARGS); // 1 or 2
     public static final FunctionIdentifier FEED_COLLECT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "feed-collect", 6);
     public static final FunctionIdentifier FEED_INTERCEPT =
@@ -1563,6 +1564,9 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier META_KEY =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "meta-key", FunctionIdentifier.VARARGS);
 
+    public static final FunctionIdentifier DECODE_DATAVERSE_NAME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "decode-dataverse-name", 1);
+
     public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
         return registeredFunctions.get(fid);
     }
@@ -2313,6 +2317,8 @@ public class BuiltinFunctions {
         // meta() function
         addFunction(META, OpenARecordTypeComputer.INSTANCE, true);
         addPrivateFunction(META_KEY, AnyTypeComputer.INSTANCE, false);
+
+        addFunction(DECODE_DATAVERSE_NAME, OrderedListOfAStringTypeComputer.INSTANCE, true);
 
         addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE, true);
 

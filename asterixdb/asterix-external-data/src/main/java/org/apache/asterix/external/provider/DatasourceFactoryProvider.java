@@ -32,6 +32,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IInputStreamFactory;
@@ -67,7 +68,7 @@ public class DatasourceFactoryProvider {
             Map<String, String> configuration) throws HyracksDataException {
         IInputStreamFactory streamSourceFactory;
         if (ExternalDataUtils.isExternal(streamSource)) {
-            String dataverse = ExternalDataUtils.getDataverse(configuration);
+            DataverseName dataverse = ExternalDataUtils.getDataverse(configuration);
             streamSourceFactory =
                     ExternalDataUtils.createExternalInputStreamFactory(libraryManager, dataverse, streamSource);
         } else {

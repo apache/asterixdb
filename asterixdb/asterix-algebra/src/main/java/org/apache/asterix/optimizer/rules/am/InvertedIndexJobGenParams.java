@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexAccessMethod.SearchModifierType;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -56,8 +57,8 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
     public InvertedIndexJobGenParams() {
     }
 
-    public InvertedIndexJobGenParams(String indexName, IndexType indexType, String dataverseName, String datasetName,
-            boolean retainInput, boolean requiresBroadcast) {
+    public InvertedIndexJobGenParams(String indexName, IndexType indexType, DataverseName dataverseName,
+            String datasetName, boolean retainInput, boolean requiresBroadcast) {
         super(indexName, indexType, dataverseName, datasetName, retainInput, requiresBroadcast);
     }
 

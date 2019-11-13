@@ -18,22 +18,23 @@
  */
 package org.apache.asterix.metadata.entities;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 
 public class Library implements IMetadataEntity<Library> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private final String dataverse;
+    private final DataverseName dataverse;
     private final String name;
 
-    public Library(String dataverseName, String libraryName) {
+    public Library(DataverseName dataverseName, String libraryName) {
         this.dataverse = dataverseName;
         this.name = libraryName;
     }
 
-    public String getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverse;
     }
 

@@ -19,16 +19,12 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Node;
-import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.om.base.ARecord;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -36,30 +32,21 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Node metadata entity to an ITupleReference and vice versa.
  */
 public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
-    private static final long serialVersionUID = -5257435809246039182L;
 
-    // Field indexes of serialized Node in a tuple.
-    // First key field.
-    public static final int NODE_NODENAME_TUPLE_FIELD_INDEX = 0;
     // Payload field containing serialized Node.
-    public static final int NODE_PAYLOAD_TUPLE_FIELD_INDEX = 1;
+    private static final int NODE_PAYLOAD_TUPLE_FIELD_INDEX = 1;
 
-    private transient AMutableInt64 aInt64 = new AMutableInt64(-1);
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AInt64> int64Serde =
-            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
-
-    // @SuppressWarnings("unchecked")
-    // private ISerializerDeserializer<ARecord> recordSerDes =
-    // NonTaggedSerializerDeserializerProvider.INSTANCE
-    // .getSerializerDeserializer(recordType);
+    protected AMutableInt64 aInt64;
 
     protected NodeTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.NODE_DATASET.getFieldCount());
+        super(getTuple, MetadataPrimaryIndexes.NODE_DATASET, NODE_PAYLOAD_TUPLE_FIELD_INDEX);
+        if (getTuple) {
+            aInt64 = new AMutableInt64(-1);
+        }
     }
 
     @Override
-    public Node getMetadataEntityFromTuple(ITupleReference frameTuple) {
+    protected Node createMetadataEntityFromARecord(ARecord nodeRecord) {
         throw new NotImplementedException();
         // TODO: Implement this.
         // try {
@@ -85,7 +72,7 @@ public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Node instance) throws HyracksDataException, AlgebricksException {
+    public ITupleReference getTupleFromMetadataEntity(Node instance) throws HyracksDataException {
         // write the key in the first field of the tuple
         tupleBuilder.reset();
         aString.setValue(instance.getNodeName());

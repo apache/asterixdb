@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
 import org.apache.asterix.lang.aql.visitor.base.AbstractAqlAstVisitor;
@@ -34,20 +35,27 @@ import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 
 public class AqlDeleteRewriteVisitor extends AbstractAqlAstVisitor<Void, Void> {
 
+    private final MetadataProvider metadataProvider;
+
+    public AqlDeleteRewriteVisitor(MetadataProvider metadataProvider) {
+        this.metadataProvider = metadataProvider;
+    }
+
     @Override
     public Void visit(DeleteStatement deleteStmt, Void visitArg) {
         List<Expression> arguments = new ArrayList<>();
-        Identifier dataverseName = deleteStmt.getDataverseName();
-        Identifier datasetName = deleteStmt.getDatasetName();
-        String arg = dataverseName == null ? datasetName.getValue()
-                : dataverseName.getValue() + "." + datasetName.getValue();
-        LiteralExpr argumentLiteral = new LiteralExpr(new StringLiteral(arg));
-        arguments.add(argumentLiteral);
+        DataverseName dataverseName = deleteStmt.getDataverseName();
+        if (dataverseName == null) {
+            dataverseName = metadataProvider.getDefaultDataverseName();
+        }
+        String datasetName = deleteStmt.getDatasetName();
+        arguments.add(new LiteralExpr(new StringLiteral(dataverseName.getCanonicalForm())));
+        arguments.add(new LiteralExpr(new StringLiteral(datasetName)));
         CallExpr callExpression = new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), arguments);
 
         List<Clause> clauseList = new ArrayList<>();

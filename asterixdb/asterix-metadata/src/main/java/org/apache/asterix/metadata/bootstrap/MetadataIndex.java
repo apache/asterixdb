@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ImmutableDatasetId;
@@ -182,7 +183,7 @@ public class MetadataIndex implements IMetadataIndex {
     }
 
     @Override
-    public String getDataverseName() {
+    public DataverseName getDataverseName() {
         return MetadataConstants.METADATA_DATAVERSE_NAME;
     }
 

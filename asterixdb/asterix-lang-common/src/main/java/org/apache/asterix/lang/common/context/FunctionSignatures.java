@@ -22,16 +22,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 
 public class FunctionSignatures {
     private final Map<FunctionSignature, FunctionExpressionMap> functionMap;
 
     public FunctionSignatures() {
-        functionMap = new HashMap<FunctionSignature, FunctionExpressionMap>();
+        functionMap = new HashMap<>();
     }
 
-    public FunctionSignature get(String dataverse, String name, int arity) {
-        FunctionSignature fid = new FunctionSignature(dataverse, name, arity);
+    public FunctionSignature get(DataverseName dataverseName, String name, int arity) {
+        FunctionSignature fid = new FunctionSignature(dataverseName, name, arity);
         FunctionExpressionMap possibleFD = functionMap.get(fid);
         if (possibleFD == null) {
             return null;

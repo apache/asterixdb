@@ -104,17 +104,7 @@
 
       <xs:complexType>
          <xs:sequence>
-            <xs:element name="test-case" type="test:test-case" minOccurs="0" maxOccurs="unbounded">
-               <xs:unique name="unique-expected-error">
-                  <xs:selector xpath=".//test:expected-error"/>
-                  <xs:field xpath="."/>
-               </xs:unique>
-               <xs:unique name="unique-expected-warn">
-                  <xs:selector xpath=".//test:expected-warn"/>
-                  <xs:field xpath="."/>
-               </xs:unique>
-            </xs:element>
-
+            <xs:element name="test-case" type="test:test-case" minOccurs="0" maxOccurs="unbounded" />
             <xs:element ref="test:test-group" minOccurs="0" maxOccurs="unbounded"/>
          </xs:sequence>
          <xs:attribute name="name" type="xs:string" use="required"/>
@@ -173,6 +163,16 @@
                      </xs:annotation>
                   </xs:element>
 
+                  <!-- Zero or more expected warnings for this test -->
+
+                  <xs:element name="expected-warn" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+                     <xs:annotation>
+                        <xs:documentation>
+                           Zero or more expected warnings for this query.
+                        </xs:documentation>
+                     </xs:annotation>
+                  </xs:element>
+
                   <!-- Whether the source location is expected in the error message -->
 
                   <xs:element name="source-location" type="xs:boolean" minOccurs="0">
@@ -180,16 +180,6 @@
                         <xs:documentation>
                            Whether to expect a source location in the error message
                            (default is defined by the test-suite element)
-                        </xs:documentation>
-                     </xs:annotation>
-                  </xs:element>
-
-                  <!-- Zero or more expected warnings for this test -->
-
-                  <xs:element name="expected-warn" type="xs:string" minOccurs="0" maxOccurs="unbounded">
-                     <xs:annotation>
-                        <xs:documentation>
-                           Zero or more expected warnings for this query.
                         </xs:documentation>
                      </xs:annotation>
                   </xs:element>

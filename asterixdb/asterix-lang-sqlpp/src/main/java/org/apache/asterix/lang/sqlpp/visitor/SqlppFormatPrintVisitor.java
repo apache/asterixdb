@@ -330,7 +330,7 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
     @Override
     public Void visit(WindowExpression windowExpr, Integer step) throws CompilationException {
         out.print(skip(step) + "window ");
-        out.print(generateFullName(windowExpr.getFunctionSignature().getNamespace(),
+        out.print(generateFullName(windowExpr.getFunctionSignature().getDataverseName(),
                 windowExpr.getFunctionSignature().getName()) + "(");
         printDelimitedExpressions(windowExpr.getExprList(), COMMA, step);
         out.print(")");

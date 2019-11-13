@@ -21,6 +21,7 @@ package org.apache.asterix.app.active;
 import java.util.concurrent.Callable;
 
 import org.apache.asterix.active.ActivityState;
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IRetryPolicyFactory;
 import org.apache.asterix.active.NoRetryPolicyFactory;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
@@ -29,7 +30,6 @@ import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.MetadataLockUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -173,12 +173,13 @@ public class RecoveryTask {
     }
 
     protected void acquireRecoveryLocks(IMetadataLockManager lockManager) throws AlgebricksException {
-        lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(),
-                listener.getEntityId().getDataverse() + '.' + listener.getEntityId().getEntityName());
+        EntityId entityId = listener.getEntityId();
+        lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(), entityId.getDataverseName(),
+                entityId.getEntityName());
         for (Dataset dataset : listener.getDatasets()) {
             lockManager.acquireDataverseReadLock(metadataProvider.getLocks(), dataset.getDataverseName());
-            lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(),
-                    DatasetUtil.getFullyQualifiedName(dataset));
+            lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), dataset.getDataverseName(),
+                    dataset.getDatasetName());
         }
     }
 
@@ -187,11 +188,12 @@ public class RecoveryTask {
     }
 
     protected void acquirePostRecoveryLocks(IMetadataLockManager lockManager) throws AlgebricksException {
-        lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(),
-                listener.getEntityId().getDataverse() + '.' + listener.getEntityId().getEntityName());
+        EntityId entityId = listener.getEntityId();
+        lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(), entityId.getDataverseName(),
+                entityId.getEntityName());
         for (Dataset dataset : listener.getDatasets()) {
-            MetadataLockUtil.modifyDatasetBegin(lockManager, metadataProvider.getLocks(), dataset.getDatasetName(),
-                    DatasetUtil.getFullyQualifiedName(dataset));
+            MetadataLockUtil.modifyDatasetBegin(lockManager, metadataProvider.getLocks(), dataset.getDataverseName(),
+                    dataset.getDatasetName());
         }
     }
 

@@ -19,8 +19,6 @@
 
 package org.apache.asterix.metadata.valueextractors;
 
-import java.rmi.RemoteException;
-
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.api.IMetadataEntityTupleTranslator;
 import org.apache.asterix.metadata.api.IValueExtractor;
@@ -39,8 +37,7 @@ public class MetadataEntityValueExtractor<T> implements IValueExtractor<T> {
     }
 
     @Override
-    public T getValue(TxnId txnId, ITupleReference tuple)
-            throws AlgebricksException, HyracksDataException, RemoteException {
+    public T getValue(TxnId txnId, ITupleReference tuple) throws AlgebricksException, HyracksDataException {
         return tupleReaderWriter.getMetadataEntityFromTuple(tuple);
     }
 }

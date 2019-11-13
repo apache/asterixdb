@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -63,13 +64,13 @@ public class StoragePathUtil {
                 .toString();
     }
 
-    public static String prepareDataverseIndexName(String dataverseName, String datasetName, String idxName,
+    public static String prepareDataverseIndexName(DataverseName dataverseName, String datasetName, String idxName,
             long rebalanceCount) {
         return prepareDataverseIndexName(dataverseName, prepareFullIndexName(datasetName, idxName, rebalanceCount));
     }
 
-    public static String prepareDataverseIndexName(String dataverseName, String fullIndexName) {
-        return dataverseName + File.separator + fullIndexName;
+    public static String prepareDataverseIndexName(DataverseName dataverseName, String fullIndexName) {
+        return dataverseName.getCanonicalForm() + File.separator + fullIndexName; //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
     }
 
     private static String prepareFullIndexName(String datasetName, String idxName, long rebalanceCount) {

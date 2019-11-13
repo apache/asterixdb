@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -31,7 +32,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class ConnectFeedStatement extends AbstractStatement {
 
-    private final Identifier dataverseName;
+    private final DataverseName dataverseName;
     private final Identifier datasetName;
     private final String feedName;
     private final String policy;
@@ -39,14 +40,14 @@ public class ConnectFeedStatement extends AbstractStatement {
     private int varCounter;
     private final List<FunctionSignature> appliedFunctions;
 
-    public ConnectFeedStatement(Pair<Identifier, Identifier> feedNameCmp, Pair<Identifier, Identifier> datasetNameCmp,
-            List<FunctionSignature> appliedFunctions, String policy, String whereClauseBody, int varCounter) {
+    public ConnectFeedStatement(Pair<DataverseName, Identifier> feedNameCmp,
+            Pair<DataverseName, Identifier> datasetNameCmp, List<FunctionSignature> appliedFunctions, String policy,
+            String whereClauseBody, int varCounter) {
         if (feedNameCmp.first != null && datasetNameCmp.first != null
-                && !feedNameCmp.first.getValue().equals(datasetNameCmp.first.getValue())) {
+                && !feedNameCmp.first.equals(datasetNameCmp.first)) {
             throw new IllegalArgumentException("Dataverse for source feed and target dataset do not match");
         }
-        this.dataverseName = feedNameCmp.first != null ? feedNameCmp.first
-                : datasetNameCmp.first != null ? datasetNameCmp.first : null;
+        this.dataverseName = feedNameCmp.first != null ? feedNameCmp.first : datasetNameCmp.first;
         this.datasetName = datasetNameCmp.second;
         this.feedName = feedNameCmp.second.getValue();
         this.policy = policy != null ? policy : BuiltinFeedPolicies.DEFAULT_POLICY.getPolicyName();
@@ -55,7 +56,7 @@ public class ConnectFeedStatement extends AbstractStatement {
         this.appliedFunctions = appliedFunctions;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 

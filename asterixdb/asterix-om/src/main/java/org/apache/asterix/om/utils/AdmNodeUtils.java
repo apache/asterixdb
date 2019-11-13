@@ -31,6 +31,13 @@ import org.apache.asterix.object.base.AdmNullNode;
 import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.object.base.IAdmNode;
+import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.ADouble;
+import org.apache.asterix.om.base.AInt64;
+import org.apache.asterix.om.base.AOrderedList;
+import org.apache.asterix.om.base.ARecord;
+import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.pointables.nonvisitor.AListPointable;
 import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -55,6 +62,49 @@ public class AdmNodeUtils {
             map.put(recPointable.getOpenFieldName(recordType, i), getOpenField(recPointable, recordType, i));
         }
         return map;
+    }
+
+    public static Map<String, IAdmNode> getOpenFields(ARecord record, ARecordType recordType) {
+        Map<String, IAdmNode> map = Collections.emptyMap();
+        for (String fieldName : record.getType().getFieldNames()) {
+            if (recordType.isClosedField(fieldName)) {
+                continue;
+            }
+            if (map.isEmpty()) {
+                map = new HashMap<>();
+            }
+            IAObject value = record.getValueByPos(record.getType().getFieldIndex(fieldName));
+            map.put(fieldName, getAsAdmNode(value));
+        }
+        return map;
+    }
+
+    public static IAdmNode getAsAdmNode(IAObject value) {
+        ATypeTag tag = value.getType().getTypeTag();
+        switch (tag) {
+            case ARRAY:
+                AOrderedList inList = (AOrderedList) value;
+                int ln = inList.size();
+                AdmArrayNode outList = new AdmArrayNode(ln);
+                for (int i = 0; i < ln; i++) {
+                    outList.add(getAsAdmNode(inList.getItem(i)));
+                }
+                return outList;
+            case BIGINT:
+                return new AdmBigIntNode(((AInt64) value).getLongValue());
+            case BOOLEAN:
+                return AdmBooleanNode.get(((ABoolean) value).getBoolean());
+            case DOUBLE:
+                return new AdmDoubleNode(((ADouble) value).getDoubleValue());
+            case NULL:
+                return AdmNullNode.INSTANCE;
+            case OBJECT:
+                return new AdmObjectNode(getOpenFields((ARecord) value, RecordUtil.FULLY_OPEN_RECORD_TYPE));
+            case STRING:
+                return new AdmStringNode(((AString) value).getStringValue());
+            default:
+                throw new UnsupportedOperationException("Unsupported item type: " + tag);
+        }
     }
 
     public static IAdmNode getAsAdmNode(IPointable pointable) throws IOException {

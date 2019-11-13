@@ -28,6 +28,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IDataSourceAdapter.AdapterType;
@@ -62,9 +63,9 @@ public class FeedMetadataUtil {
     private FeedMetadataUtil() {
     }
 
-    public static Dataset validateIfDatasetExists(MetadataProvider metadataProvider, String dataverse,
+    public static Dataset validateIfDatasetExists(MetadataProvider metadataProvider, DataverseName dataverseName,
             String datasetName) throws AlgebricksException {
-        Dataset dataset = metadataProvider.findDataset(dataverse, datasetName);
+        Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
             throw new CompilationException("Unknown target dataset :" + datasetName);
         }
@@ -76,18 +77,18 @@ public class FeedMetadataUtil {
         return dataset;
     }
 
-    public static Feed validateIfFeedExists(String dataverse, String feedName, MetadataTransactionContext ctx)
-            throws AlgebricksException {
-        Feed feed = MetadataManager.INSTANCE.getFeed(ctx, dataverse, feedName);
+    public static Feed validateIfFeedExists(DataverseName dataverseName, String feedName,
+            MetadataTransactionContext ctx) throws AlgebricksException {
+        Feed feed = MetadataManager.INSTANCE.getFeed(ctx, dataverseName, feedName);
         if (feed == null) {
             throw new CompilationException("Unknown source feed: " + feedName);
         }
         return feed;
     }
 
-    public static FeedPolicyEntity validateIfPolicyExists(String dataverse, String policyName,
+    public static FeedPolicyEntity validateIfPolicyExists(DataverseName dataverseName, String policyName,
             MetadataTransactionContext ctx) throws AlgebricksException {
-        FeedPolicyEntity feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(ctx, dataverse, policyName);
+        FeedPolicyEntity feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(ctx, dataverseName, policyName);
         if (feedPolicy == null) {
             feedPolicy =
                     MetadataManager.INSTANCE.getFeedPolicy(ctx, MetadataConstants.METADATA_DATAVERSE_NAME, policyName);
@@ -276,31 +277,17 @@ public class FeedMetadataUtil {
     }
 
     public static ARecordType getOutputType(IFeed feed, String fqOutputType) throws AlgebricksException {
-        ARecordType outputType = null;
-
         if (fqOutputType == null) {
             return null;
         }
-        String[] dataverseAndType = fqOutputType.split("[.]");
-        String dataverseName;
-        String datatypeName;
 
-        if (dataverseAndType.length == 1) {
-            datatypeName = dataverseAndType[0];
-            dataverseName = feed.getDataverseName();
-        } else if (dataverseAndType.length == 2) {
-            dataverseName = dataverseAndType[0];
-            datatypeName = dataverseAndType[1];
-        } else {
-            throw new IllegalArgumentException("Invalid parameter value " + fqOutputType);
-        }
-
+        ARecordType outputType = null;
         MetadataTransactionContext ctx = null;
         try {
             ctx = MetadataManager.INSTANCE.beginTransaction();
-            Datatype t = MetadataManager.INSTANCE.getDatatype(ctx, dataverseName, datatypeName);
+            Datatype t = MetadataManager.INSTANCE.getDatatype(ctx, feed.getDataverseName(), fqOutputType);
             if (t == null || t.getDatatype().getTypeTag() != ATypeTag.OBJECT) {
-                throw new MetadataException(ErrorCode.FEED_METADATA_UTIL_UNEXPECTED_FEED_DATATYPE, datatypeName);
+                throw new MetadataException(ErrorCode.FEED_METADATA_UTIL_UNEXPECTED_FEED_DATATYPE, fqOutputType);
             }
             outputType = (ARecordType) t.getDatatype();
             MetadataManager.INSTANCE.commitTransaction(ctx);
@@ -311,7 +298,7 @@ public class FeedMetadataUtil {
                 } catch (ACIDException | RemoteException e2) {
                     e.addSuppressed(e2);
                 }
-                throw new MetadataException(ErrorCode.FEED_CREATE_FEED_DATATYPE_ERROR, e, datatypeName);
+                throw new MetadataException(ErrorCode.FEED_CREATE_FEED_DATATYPE_ERROR, e, fqOutputType);
             }
         }
         return outputType;

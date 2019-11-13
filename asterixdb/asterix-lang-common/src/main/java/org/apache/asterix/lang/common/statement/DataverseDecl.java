@@ -19,20 +19,20 @@
 package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class DataverseDecl extends AbstractStatement {
 
-    private Identifier dataverseName;
+    private DataverseName dataverseName;
 
-    public DataverseDecl(Identifier dataverseName) {
+    public DataverseDecl(DataverseName dataverseName) {
         this.dataverseName = dataverseName;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 

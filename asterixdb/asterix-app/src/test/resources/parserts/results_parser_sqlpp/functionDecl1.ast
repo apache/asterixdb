@@ -107,7 +107,7 @@ Let Variable [ Name=$result ]
       Variable [ Name=$e ]
       ]
       FROM [        FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [Events]
+          LiteralExpr [STRING] [Default.Events]
         ]
         AS Variable [ Name=$e ]
       ]

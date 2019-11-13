@@ -25,6 +25,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IInputStreamFactory;
@@ -117,7 +118,7 @@ public class ExternalDataUtils {
                 && (aString.trim().length() > 1));
     }
 
-    public static ClassLoader getClassLoader(ILibraryManager libraryManager, String dataverse, String library) {
+    public static ClassLoader getClassLoader(ILibraryManager libraryManager, DataverseName dataverse, String library) {
         return libraryManager.getLibraryClassLoader(dataverse, library);
     }
 
@@ -129,8 +130,8 @@ public class ExternalDataUtils {
         return aString.trim().split(FeedConstants.NamingConstants.LIBRARY_NAME_SEPARATOR)[1];
     }
 
-    public static IInputStreamFactory createExternalInputStreamFactory(ILibraryManager libraryManager, String dataverse,
-            String stream) throws HyracksDataException {
+    public static IInputStreamFactory createExternalInputStreamFactory(ILibraryManager libraryManager,
+            DataverseName dataverse, String stream) throws HyracksDataException {
         try {
             String libraryName = getLibraryName(stream);
             String className = getExternalClassName(stream);
@@ -141,8 +142,8 @@ public class ExternalDataUtils {
         }
     }
 
-    public static String getDataverse(Map<String, String> configuration) {
-        return configuration.get(ExternalDataConstants.KEY_DATAVERSE);
+    public static DataverseName getDataverse(Map<String, String> configuration) {
+        return DataverseName.createFromCanonicalForm(configuration.get(ExternalDataConstants.KEY_DATAVERSE));
     }
 
     public static String getRecordFormat(Map<String, String> configuration) {
@@ -220,7 +221,7 @@ public class ExternalDataUtils {
             throw new AsterixException("to use " + ExternalDataConstants.EXTERNAL + " reader, the parameter "
                     + ExternalDataConstants.KEY_READER_FACTORY + " must be specified.");
         }
-        String[] libraryAndFactory = readerFactory.split(ExternalDataConstants.EXTERNAL_LIBRARY_SEPARATOR);
+        String[] libraryAndFactory = readerFactory.split(ExternalDataConstants.EXTERNAL_LIBRARY_SEPARATOR); //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
         if (libraryAndFactory.length != 2) {
             throw new AsterixException("The parameter " + ExternalDataConstants.KEY_READER_FACTORY
                     + " must follow the format \"DataverseName.LibraryName#ReaderFactoryFullyQualifiedName\"");
@@ -230,8 +231,9 @@ public class ExternalDataUtils {
             throw new AsterixException("The parameter " + ExternalDataConstants.KEY_READER_FACTORY
                     + " must follow the format \"DataverseName.LibraryName#ReaderFactoryFullyQualifiedName\"");
         }
-
-        ClassLoader classLoader = libraryManager.getLibraryClassLoader(dataverseAndLibrary[0], dataverseAndLibrary[1]);
+        DataverseName dataverseName = DataverseName.createSinglePartName(dataverseAndLibrary[0]); //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
+        String libraryName = dataverseAndLibrary[1];
+        ClassLoader classLoader = libraryManager.getLibraryClassLoader(dataverseName, libraryName);
         try {
             return (IRecordReaderFactory<?>) classLoader.loadClass(libraryAndFactory[1]).newInstance();
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
@@ -239,8 +241,8 @@ public class ExternalDataUtils {
         }
     }
 
-    public static IDataParserFactory createExternalParserFactory(ILibraryManager libraryManager, String dataverse,
-            String parserFactoryName) throws AsterixException {
+    public static IDataParserFactory createExternalParserFactory(ILibraryManager libraryManager,
+            DataverseName dataverse, String parserFactoryName) throws AsterixException {
         try {
             String library = parserFactoryName.substring(0,
                     parserFactoryName.indexOf(ExternalDataConstants.EXTERNAL_LIBRARY_SEPARATOR));
@@ -262,11 +264,11 @@ public class ExternalDataUtils {
         }
     }
 
-    public static void prepareFeed(Map<String, String> configuration, String dataverseName, String feedName) {
+    public static void prepareFeed(Map<String, String> configuration, DataverseName dataverseName, String feedName) {
         if (!configuration.containsKey(ExternalDataConstants.KEY_IS_FEED)) {
             configuration.put(ExternalDataConstants.KEY_IS_FEED, ExternalDataConstants.TRUE);
         }
-        configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataverseName);
+        configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataverseName.getCanonicalForm());
         configuration.put(ExternalDataConstants.KEY_FEED_NAME, feedName);
     }
 

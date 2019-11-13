@@ -9,7 +9,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [SIGroup]
+    LiteralExpr [STRING] [Default.SIGroup]
   ]
   AS Variable [ Name=$sig ]
 ]
@@ -29,7 +29,7 @@ Let Variable [ Name=$similar_sigs ]
     ]
     ]
     FROM [      FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [SIGroup]
+        LiteralExpr [STRING] [Default.SIGroup]
       ]
       AS Variable [ Name=$similar_sig ]
     ]

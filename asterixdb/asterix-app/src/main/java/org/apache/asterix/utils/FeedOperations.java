@@ -39,6 +39,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
@@ -186,6 +187,10 @@ public class FeedOperations {
                 argExprs.add(new LiteralExpr(new StringLiteral((String) arg)));
             } else if (arg instanceof Expression) {
                 argExprs.add((Expression) arg);
+            } else if (arg instanceof DataverseName) {
+                argExprs.add(new LiteralExpr(new StringLiteral(((DataverseName) arg).getCanonicalForm())));
+            } else {
+                throw new IllegalArgumentException();
             }
         }
         return argExprs;
@@ -240,12 +245,12 @@ public class FeedOperations {
         Query feedConnQuery = makeConnectionQuery(feedConn);
         CompiledStatements.ICompiledDmlStatement clfrqs;
         if (insertFeed) {
-            InsertStatement stmtUpsert = new InsertStatement(new Identifier(feedConn.getDataverseName()),
+            InsertStatement stmtUpsert = new InsertStatement(feedConn.getDataverseName(),
                     new Identifier(feedConn.getDatasetName()), feedConnQuery, -1, null, null);
             clfrqs = new CompiledStatements.CompiledInsertStatement(feedConn.getDataverseName(),
                     feedConn.getDatasetName(), feedConnQuery, stmtUpsert.getVarCounter(), null, null);
         } else {
-            UpsertStatement stmtUpsert = new UpsertStatement(new Identifier(feedConn.getDataverseName()),
+            UpsertStatement stmtUpsert = new UpsertStatement(feedConn.getDataverseName(),
                     new Identifier(feedConn.getDatasetName()), feedConnQuery, -1, null, null);
             clfrqs = new CompiledStatements.CompiledUpsertStatement(feedConn.getDataverseName(),
                     feedConn.getDatasetName(), feedConnQuery, stmtUpsert.getVarCounter(), null, null);

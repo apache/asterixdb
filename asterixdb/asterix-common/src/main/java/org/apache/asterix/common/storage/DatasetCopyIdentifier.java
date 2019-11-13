@@ -21,20 +21,22 @@ package org.apache.asterix.common.storage;
 import java.io.Serializable;
 import java.util.Objects;
 
+import org.apache.asterix.common.metadata.DataverseName;
+
 public class DatasetCopyIdentifier implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    private final DataverseName dataverse;
     private final String dataset;
-    private final String dataverse;
     private final String rebalance;
 
-    private DatasetCopyIdentifier(String dataverse, String datasetName, String rebalance) {
+    private DatasetCopyIdentifier(DataverseName dataverse, String datasetName, String rebalance) {
         this.dataverse = dataverse;
         this.dataset = datasetName;
         this.rebalance = rebalance;
     }
 
-    public static DatasetCopyIdentifier of(String dataverse, String datasetName, String rebalance) {
+    public static DatasetCopyIdentifier of(DataverseName dataverse, String datasetName, String rebalance) {
         return new DatasetCopyIdentifier(dataverse, datasetName, rebalance);
     }
 
@@ -64,13 +66,13 @@ public class DatasetCopyIdentifier implements Serializable {
         return Objects.hash(dataverse, dataset, rebalance);
     }
 
-    public String getDataverse() {
+    public DataverseName getDataverse() {
         return dataverse;
     }
 
     public boolean isMatch(ResourceReference resourceReference) {
-        return resourceReference.getDataverse().equals(dataverse) && resourceReference.getDataset().equals(dataset)
-                && resourceReference.getRebalance().equals(rebalance);
+        return resourceReference.getDataverse().equals(dataverse.getCanonicalForm())
+                && resourceReference.getDataset().equals(dataset) && resourceReference.getRebalance().equals(rebalance);
     }
 
     @Override

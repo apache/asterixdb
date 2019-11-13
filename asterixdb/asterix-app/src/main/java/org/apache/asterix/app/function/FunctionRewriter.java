@@ -25,12 +25,15 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
+import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.constants.AsterixConstantValue;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.exceptions.UnsupportedTypeException;
 import org.apache.asterix.om.functions.IFunctionToDataSourceRewriter;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.rules.UnnestToDataScanRule;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -40,8 +43,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
@@ -96,17 +97,43 @@ public abstract class FunctionRewriter implements IFunctionToDataSourceRewriter 
 
     protected String getString(SourceLocation loc, List<Mutable<ILogicalExpression>> args, int i)
             throws AlgebricksException {
-        ConstantExpression ce = (ConstantExpression) args.get(i).getValue();
-        IAlgebricksConstantValue acv = ce.getValue();
-        if (!(acv instanceof AsterixConstantValue)) {
+        IAObject iaObject = ConstantExpressionUtil.getConstantIaObject(args.get(i).getValue(), null);
+        if (iaObject == null) {
             throw new CompilationException(EXPECTED_CONSTANT_VALUE, loc);
         }
-        AsterixConstantValue acv2 = (AsterixConstantValue) acv;
-        final ATypeTag typeTag = acv2.getObject().getType().getTypeTag();
-        if (typeTag != ATypeTag.STRING) {
-            throw new UnsupportedTypeException(loc, functionId, typeTag);
+        ATypeTag tt = iaObject.getType().getTypeTag();
+        if (tt != ATypeTag.STRING) {
+            throw new UnsupportedTypeException(loc, functionId, tt);
         }
-        return ((AString) acv2.getObject()).getStringValue();
+        return ((AString) iaObject).getStringValue();
     }
 
+    protected DataverseName getDataverseName(SourceLocation loc, List<Mutable<ILogicalExpression>> args, int i)
+            throws AlgebricksException {
+        IAObject iaObject = ConstantExpressionUtil.getConstantIaObject(args.get(i).getValue(), null);
+        if (iaObject == null) {
+            throw new CompilationException(EXPECTED_CONSTANT_VALUE, loc);
+        }
+        ATypeTag tt = iaObject.getType().getTypeTag();
+        switch (tt) {
+            case STRING:
+                AString str = (AString) iaObject;
+                return DataverseName.createSinglePartName(str.getStringValue());
+            case ARRAY:
+                AOrderedList list = ((AOrderedList) iaObject);
+                int ln = list.size();
+                List<String> parts = new ArrayList<>(ln);
+                for (int j = 0; j < ln; j++) {
+                    IAObject item = list.getItem(j);
+                    ATypeTag itt = item.getType().getTypeTag();
+                    if (itt != ATypeTag.STRING) {
+                        throw new UnsupportedTypeException(loc, functionId, itt);
+                    }
+                    parts.add(((AString) item).getStringValue());
+                }
+                return DataverseName.create(parts);
+            default:
+                throw new UnsupportedTypeException(loc, functionId, tt);
+        }
+    }
 }

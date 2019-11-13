@@ -37,11 +37,13 @@ import java.util.concurrent.Future;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.rebalance.NoOpDatasetRebalanceCallback;
 import org.apache.asterix.utils.RebalanceUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -66,7 +68,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  */
 public class RebalanceApiServlet extends AbstractServlet {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String METADATA = "Metadata";
     private final ICcApplicationContext appCtx;
 
     // One-at-a-time thread executor, for rebalance tasks.
@@ -103,7 +104,7 @@ public class RebalanceApiServlet extends AbstractServlet {
     protected void post(IServletRequest request, IServletResponse response) {
         try {
             // Gets dataverse, dataset, and target nodes for rebalance.
-            String dataverseName = request.getParameter("dataverseName");
+            DataverseName dataverseName = ServletUtil.getDataverseName(request, "dataverseName");
             String datasetName = request.getParameter("datasetName");
             String nodes = request.getParameter("nodes");
 
@@ -127,7 +128,7 @@ public class RebalanceApiServlet extends AbstractServlet {
             }
 
             // Does not allow rebalancing a metadata dataset.
-            if (METADATA.equals(dataverseName)) {
+            if (MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName)) {
                 sendResponse(response, HttpResponseStatus.BAD_REQUEST, "cannot rebalance a metadata dataset");
                 return;
             }
@@ -154,7 +155,7 @@ public class RebalanceApiServlet extends AbstractServlet {
     }
 
     // Schedules a rebalance task.
-    private synchronized CountDownLatch scheduleRebalance(String dataverseName, String datasetName,
+    private synchronized CountDownLatch scheduleRebalance(DataverseName dataverseName, String datasetName,
             String[] targetNodes, IServletResponse response) {
         CountDownLatch terminated = new CountDownLatch(1);
         Future<Void> task =
@@ -165,8 +166,8 @@ public class RebalanceApiServlet extends AbstractServlet {
     }
 
     // Performs the actual rebalance.
-    private Void doRebalance(String dataverseName, String datasetName, String[] targetNodes, IServletResponse response,
-            CountDownLatch terminated) {
+    private Void doRebalance(DataverseName dataverseName, String datasetName, String[] targetNodes,
+            IServletResponse response, CountDownLatch terminated) {
         try {
             // Sets the content type.
             HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
@@ -204,7 +205,7 @@ public class RebalanceApiServlet extends AbstractServlet {
     }
 
     // Lists all datasets that should be rebalanced in a given datavserse.
-    private List<Dataset> getAllDatasetsForRebalance(String dataverseName) throws Exception {
+    private List<Dataset> getAllDatasetsForRebalance(DataverseName dataverseName) throws Exception {
         List<Dataset> datasets;
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         try {
@@ -235,14 +236,15 @@ public class RebalanceApiServlet extends AbstractServlet {
     }
 
     // Gets all datasets in a dataverse for the rebalance operation, with a given metadata transaction context.
-    private List<Dataset> getDatasetsInDataverseForRebalance(String dvName, MetadataTransactionContext mdTxnCtx)
+    private List<Dataset> getDatasetsInDataverseForRebalance(DataverseName dvName, MetadataTransactionContext mdTxnCtx)
             throws Exception {
-        return METADATA.equals(dvName) ? Collections.emptyList()
+        return MetadataConstants.METADATA_DATAVERSE_NAME.equals(dvName) ? Collections.emptyList()
                 : MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dvName);
     }
 
     // Rebalances a given dataset.
-    private void rebalanceDataset(String dataverseName, String datasetName, String[] targetNodes) throws Exception {
+    private void rebalanceDataset(DataverseName dataverseName, String datasetName, String[] targetNodes)
+            throws Exception {
         IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
         MetadataProvider metadataProvider = new MetadataProvider(appCtx, null);
         try {
@@ -251,8 +253,8 @@ public class RebalanceApiServlet extends AbstractServlet {
             activeNotificationHandler.suspend(metadataProvider);
             try {
                 IMetadataLockManager lockManager = appCtx.getMetadataLockManager();
-                lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(),
-                        dataverseName + '.' + datasetName);
+                lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), dataverseName,
+                        datasetName);
                 RebalanceUtil.rebalance(dataverseName, datasetName, new LinkedHashSet<>(Arrays.asList(targetNodes)),
                         metadataProvider, hcc, NoOpDatasetRebalanceCallback.INSTANCE);
             } finally {
