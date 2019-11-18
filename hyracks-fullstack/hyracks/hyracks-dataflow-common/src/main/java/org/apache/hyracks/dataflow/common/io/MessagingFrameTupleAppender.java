@@ -110,6 +110,7 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
 
     @Override
     public void write(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
+        failIfInterrupted();
         if (!initialized) {
             init();
         }
