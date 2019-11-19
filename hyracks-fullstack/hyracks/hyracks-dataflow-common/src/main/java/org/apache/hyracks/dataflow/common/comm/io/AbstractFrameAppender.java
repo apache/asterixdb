@@ -89,6 +89,7 @@ public class AbstractFrameAppender implements IFrameAppender {
 
     @Override
     public void write(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
+        failIfInterrupted();
         getBuffer().clear();
         outWriter.nextFrame(getBuffer());
         if (clearFrame) {
@@ -124,6 +125,12 @@ public class AbstractFrameAppender implements IFrameAppender {
             flush(writer);
         } finally {
             tracer.durationE(tid, traceCategory, args);
+        }
+    }
+
+    protected void failIfInterrupted() throws HyracksDataException {
+        if (Thread.currentThread().isInterrupted()) {
+            throw HyracksDataException.create(new InterruptedException());
         }
     }
 }
