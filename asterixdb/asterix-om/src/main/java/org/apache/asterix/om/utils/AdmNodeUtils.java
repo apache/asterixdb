@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.asterix.object.base.AdmArrayNode;
 import org.apache.asterix.object.base.AdmBigIntNode;
@@ -249,5 +250,17 @@ public class AdmNodeUtils {
         int len = listPointable.getItemSize(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE, i);
         pointable.set(listPointable.getByteArray(), offset, len);
         return getAsAdmNode(pointable);
+    }
+
+    public static String toString(AdmArrayNode nodeList, Function<IAdmNode, String> nodeToStringFunction,
+            String separator) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0, ln = nodeList.size(); i < ln; i++) {
+            if (i > 0) {
+                sb.append(separator);
+            }
+            sb.append(nodeToStringFunction.apply(nodeList.get(i)));
+        }
+        return sb.toString();
     }
 }

@@ -19,40 +19,40 @@
 <test-group name="async-deferred">
     <test-case FilePath="async-deferred">
         <compilation-unit name="async-failed">
-            <output-dir compare="Text">async-failed</output-dir>
+            <output-dir compare="Clean-JSON">async-failed</output-dir>
             <expected-error>Injected failure in inject-failure</expected-error>
         </compilation-unit>
     </test-case>
     <test-case FilePath="async-deferred">
         <compilation-unit name="async-compilation-failed">
-            <output-dir compare="Text">async-compilation-failed</output-dir>
+            <output-dir compare="Clean-JSON">async-compilation-failed</output-dir>
             <expected-error>Cannot find dataset gargel</expected-error>
         </compilation-unit>
     </test-case>
     <test-case FilePath="async-deferred">
         <compilation-unit name="deferred">
-            <output-dir compare="Text">deferred</output-dir>
+            <output-dir compare="Clean-JSON">deferred</output-dir>
         </compilation-unit>
     </test-case>
     <test-case FilePath="async-deferred">
         <compilation-unit name="async">
-            <output-dir compare="Text">async</output-dir>
+            <output-dir compare="Clean-JSON">async</output-dir>
         </compilation-unit>
     </test-case>
     <test-case FilePath="async-deferred">
         <compilation-unit name="async-repeated">
-            <output-dir compare="Text">async-repeated</output-dir>
+            <output-dir compare="Clean-JSON">async-repeated</output-dir>
         </compilation-unit>
     </test-case>
     <test-case FilePath="async-deferred">
         <compilation-unit name="async-running">
-            <output-dir compare="Text">async-running</output-dir>
+            <output-dir compare="Clean-JSON">async-running</output-dir>
         </compilation-unit>
     </test-case>
     <test-case FilePath="async-deferred">
         <compilation-unit name="async-exhausted-result">
-            <output-dir compare="Text">async-exhausted-result</output-dir>
-            <expected-error>HYR0093</expected-error>
+            <output-dir compare="Clean-JSON">async-exhausted-result</output-dir>
+            <expected-error>Premature end of chunk</expected-error> <!--TODO:REVISIT -->
             <source-location>false</source-location>
         </compilation-unit>
     </test-case>

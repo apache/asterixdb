@@ -27,6 +27,7 @@ import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.net.ssl.SSLEngine;
@@ -65,6 +66,17 @@ public class NetworkUtil {
 
     public static URI toUri(HttpHost host, String path) throws URISyntaxException {
         return builderFrom(host).setPath(path).build();
+    }
+
+    public static URI appendUriPath(URI uri, String... pathSegments) throws URISyntaxException {
+        URIBuilder builder = new URIBuilder(uri);
+        List<String> path = builder.getPathSegments();
+        if (path.isEmpty()) {
+            path = new ArrayList<>(pathSegments.length);
+        }
+        Collections.addAll(path, pathSegments);
+        builder.setPathSegments(path);
+        return builder.build();
     }
 
     public static URIBuilder builderFrom(HttpHost host) {

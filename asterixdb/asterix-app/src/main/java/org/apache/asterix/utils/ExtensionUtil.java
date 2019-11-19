@@ -103,7 +103,7 @@ public class ExtensionUtil {
     }
 
     /**
-     * Validate no extension conflict and extends tuple translator provider
+     * Validates no extension conflict and extends tuple translator provider
      *
      * @param metadataExtension
      *            place holder for tuple translator provider extension
@@ -120,5 +120,25 @@ public class ExtensionUtil {
                     mde.getId(), IMetadataExtension.class.getSimpleName());
         }
         return mde.getMetadataTupleTranslatorProvider() == null ? null : mde;
+    }
+
+    /**
+     * Validates no extension conflict and extends metadata provider factory
+     *
+     * @param metadataExtension
+     *            place holder for metadata provider factory
+     * @param mde
+     *            user defined metadata extension
+     * @return the metadata extension if the extension defines a metadata provider factory, null otherwise
+     * @throws RuntimeDataException
+     *             if an extension conflict was detected
+     */
+    public static IMetadataExtension extendMetadataProviderFactory(IMetadataExtension metadataExtension,
+            IMetadataExtension mde) throws RuntimeDataException {
+        if (metadataExtension != null) {
+            throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, metadataExtension.getId(),
+                    mde.getId(), IMetadataExtension.class.getSimpleName());
+        }
+        return mde.getMetadataProviderFactory() == null ? null : mde;
     }
 }

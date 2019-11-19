@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -69,6 +70,7 @@ import org.apache.asterix.formats.nontagged.LinearizeComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.api.ICCExtensionManager;
 import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -173,9 +175,16 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private Map<String, Integer> externalDataLocks;
     private boolean blockingOperatorDisabled = false;
 
-    public MetadataProvider(ICcApplicationContext appCtx, Dataverse defaultDataverse) {
+    public static MetadataProvider create(ICcApplicationContext appCtx, Dataverse defaultDataverse) {
+        Function<ICcApplicationContext, IMetadataProvider<?, ?>> factory =
+                ((ICCExtensionManager) appCtx.getExtensionManager()).getMetadataProviderFactory();
+        MetadataProvider mp = factory != null ? (MetadataProvider) factory.apply(appCtx) : new MetadataProvider(appCtx);
+        mp.setDefaultDataverse(defaultDataverse);
+        return mp;
+    }
+
+    protected MetadataProvider(ICcApplicationContext appCtx) {
         this.appCtx = appCtx;
-        setDefaultDataverse(defaultDataverse);
         this.storageComponentProvider = appCtx.getStorageComponentProvider();
         storageProperties = appCtx.getStorageProperties();
         functionManager = ((IFunctionExtensionManager) appCtx.getExtensionManager()).getFunctionManager();

@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.algebra.base.ILangExtension.Language;
@@ -31,19 +32,22 @@ import org.apache.asterix.common.api.IExtension;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.hyracks.bootstrap.GlobalRecoveryManager;
-import org.apache.asterix.om.functions.IFunctionExtensionManager;
+import org.apache.asterix.metadata.api.ICCExtensionManager;
+import org.apache.asterix.metadata.api.IMetadataExtension;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.runtime.functions.FunctionCollection;
 import org.apache.asterix.runtime.functions.FunctionManager;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.utils.ExtensionUtil;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -52,14 +56,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * AsterixDB's implementation of {@code IAlgebraExtensionManager} and {@code IFunctionExtensionManager}
  * which takes care of initializing extensions for App and Compilation purposes
  */
-public class CCExtensionManager implements IFunctionExtensionManager {
+public class CCExtensionManager implements ICCExtensionManager {
 
     private final IStatementExecutorExtension statementExecutorExtension;
     private final ILangCompilationProvider aqlCompilationProvider;
     private final ILangCompilationProvider sqlppCompilationProvider;
     private final IFunctionManager functionManager;
     private final IGlobalRecoveryExtension globalRecoveryExtension;
-    private transient IStatementExecutorFactory statementExecutorFactory;
+    private final Function<ICcApplicationContext, IMetadataProvider<?, ?>> metadataProviderFactory;
+    private IStatementExecutorFactory statementExecutorFactory;
 
     /**
      * Initialize {@link org.apache.asterix.app.cc.CCExtensionManager} from configuration
@@ -78,6 +83,7 @@ public class CCExtensionManager implements IFunctionExtensionManager {
         Pair<ExtensionId, IFunctionManager> fm = null;
         IStatementExecutorExtension see = null;
         IGlobalRecoveryExtension gre = null;
+        IMetadataExtension mpfe = null;
         if (list != null) {
             Set<ExtensionId> extensionIds = new HashSet<>();
             for (AsterixExtension extensionConf : list) {
@@ -99,7 +105,9 @@ public class CCExtensionManager implements IFunctionExtensionManager {
                     case RECOVERY:
                         gre = (IGlobalRecoveryExtension) extension;
                         break;
-                    default:
+                    case METADATA:
+                        IMetadataExtension mde = (IMetadataExtension) extension;
+                        mpfe = ExtensionUtil.extendMetadataProviderFactory(mpfe, mde);
                         break;
                 }
             }
@@ -110,6 +118,7 @@ public class CCExtensionManager implements IFunctionExtensionManager {
         this.functionManager =
                 fm == null ? new FunctionManager(FunctionCollection.createDefaultFunctionCollection()) : fm.second;
         this.globalRecoveryExtension = gre;
+        this.metadataProviderFactory = mpfe != null ? mpfe.getMetadataProviderFactory() : null;
     }
 
     /** @deprecated use getStatementExecutorFactory instead */
@@ -149,5 +158,10 @@ public class CCExtensionManager implements IFunctionExtensionManager {
     @Override
     public IFunctionManager getFunctionManager() {
         return functionManager;
+    }
+
+    @Override
+    public Function<ICcApplicationContext, IMetadataProvider<?, ?>> getMetadataProviderFactory() {
+        return metadataProviderFactory;
     }
 }

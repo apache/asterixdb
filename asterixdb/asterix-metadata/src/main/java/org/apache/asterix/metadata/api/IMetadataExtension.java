@@ -21,10 +21,13 @@ package org.apache.asterix.metadata.api;
 
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.function.Function;
 
 import org.apache.asterix.common.api.IExtension;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -59,4 +62,11 @@ public interface IMetadataExtension extends IExtension {
      */
     void initializeMetadata(INCServiceContext ncServiceCtx) throws HyracksDataException, RemoteException, ACIDException;
 
+    /**
+     * Returns a factory for {@link org.apache.asterix.metadata.declared.MetadataProvider},
+     * or {@code null} if this extension doesn't define this factory.
+     */
+    default Function<ICcApplicationContext, IMetadataProvider<?, ?>> getMetadataProviderFactory() {
+        return null;
+    }
 }

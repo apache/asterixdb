@@ -143,7 +143,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
     private MetadataTransactionContext recoverDatasets(ICcApplicationContext appCtx,
             MetadataTransactionContext mdTxnCtx, Dataverse dataverse) throws Exception {
         if (!dataverse.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
-            MetadataProvider metadataProvider = new MetadataProvider(appCtx, dataverse);
+            MetadataProvider metadataProvider = MetadataProvider.create(appCtx, dataverse);
             try {
                 List<Dataset> datasets =
                         MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dataverse.getDataverseName());

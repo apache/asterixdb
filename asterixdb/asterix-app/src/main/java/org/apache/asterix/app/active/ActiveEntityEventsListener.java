@@ -113,7 +113,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         this.statementExecutor = statementExecutor;
         this.appCtx = appCtx;
         this.clusterStateManager = appCtx.getClusterStateManager();
-        this.metadataProvider = new MetadataProvider(appCtx, null);
+        this.metadataProvider = MetadataProvider.create(appCtx, null);
         this.hcc = hcc;
         this.entityId = entityId;
         this.datasets = datasets;

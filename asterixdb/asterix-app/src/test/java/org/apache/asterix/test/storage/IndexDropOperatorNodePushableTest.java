@@ -147,7 +147,7 @@ public class IndexDropOperatorNodePushableTest {
             final MetadataTransactionContext mdTxn = MetadataManager.INSTANCE.beginTransaction();
             ICcApplicationContext appCtx = (ICcApplicationContext) ExecutionTestUtil.integrationUtil
                     .getClusterControllerService().getApplicationContext();
-            MetadataProvider metadataProver = new MetadataProvider(appCtx, null);
+            MetadataProvider metadataProver = MetadataProvider.create(appCtx, null);
             metadataProver.setMetadataTxnContext(mdTxn);
             final DataverseName defaultDv = MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDataverseName();
             final Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxn, defaultDv, datasetName);

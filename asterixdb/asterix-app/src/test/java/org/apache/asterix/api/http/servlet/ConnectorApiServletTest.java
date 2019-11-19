@@ -181,8 +181,8 @@ public class ConnectorApiServletTest {
     private ARecordType getMetadataRecordType(DataverseName dataverseName, String datasetName) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         // Retrieves file splits of the dataset.
-        MetadataProvider metadataProvider = new MetadataProvider(
-                (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), null);
+        MetadataProvider metadataProvider = MetadataProvider
+                .create((ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), null);
         try {
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);

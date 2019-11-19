@@ -298,7 +298,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     sessionOutput.out().println(ApiServlet.HTML_STATEMENT_SEPARATOR);
                 }
                 validateOperation(appCtx, activeDataverse, stmt);
-                MetadataProvider metadataProvider = new MetadataProvider(appCtx, activeDataverse);
+                MetadataProvider metadataProvider = MetadataProvider.create(appCtx, activeDataverse);
                 metadataProvider.getConfig().putAll(config);
                 metadataProvider.setWriterFactory(writerFactory);
                 metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);

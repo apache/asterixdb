@@ -93,7 +93,7 @@ public class ConnectorApiServlet extends AbstractServlet {
             MetadataManager.INSTANCE.init();
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             // Retrieves file splits of the dataset.
-            MetadataProvider metadataProvider = new MetadataProvider(appCtx, null);
+            MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
             try {
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
                 Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);

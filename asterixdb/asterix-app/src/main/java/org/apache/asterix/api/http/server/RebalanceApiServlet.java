@@ -246,7 +246,7 @@ public class RebalanceApiServlet extends AbstractServlet {
     private void rebalanceDataset(DataverseName dataverseName, String datasetName, String[] targetNodes)
             throws Exception {
         IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
-        MetadataProvider metadataProvider = new MetadataProvider(appCtx, null);
+        MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
         try {
             ActiveNotificationHandler activeNotificationHandler =
                     (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();

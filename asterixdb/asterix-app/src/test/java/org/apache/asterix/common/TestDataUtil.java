@@ -158,7 +158,7 @@ public class TestDataUtil {
             String datasetName, String[] targetNodes) throws Exception {
         ICcApplicationContext ccAppCtx =
                 (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
-        MetadataProvider metadataProvider = new MetadataProvider(ccAppCtx, null);
+        MetadataProvider metadataProvider = MetadataProvider.create(ccAppCtx, null);
         try {
             ActiveNotificationHandler activeNotificationHandler =
                     (ActiveNotificationHandler) ccAppCtx.getActiveNotificationHandler();
@@ -190,7 +190,7 @@ public class TestDataUtil {
             throws AlgebricksException, RemoteException {
         final ICcApplicationContext appCtx =
                 (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
-        final MetadataProvider metadataProvider = new MetadataProvider(appCtx, null);
+        final MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
         final MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         Dataset dataset;

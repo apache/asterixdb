@@ -16,13 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.metadata.api;
 
-import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
+import java.util.function.Function;
 
-public interface INCExtensionManager {
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.om.functions.IFunctionExtensionManager;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+
+public interface ICCExtensionManager extends IFunctionExtensionManager {
     /**
-     * @return the metadata tuple translator provider
+     * Returns a factory for {@link org.apache.asterix.metadata.declared.MetadataProvider}
+     * or {@code null} if the default implementation should be used.
      */
-    MetadataTupleTranslatorProvider getMetadataTupleTranslatorProvider();
+    Function<ICcApplicationContext, IMetadataProvider<?, ?>> getMetadataProviderFactory();
 }

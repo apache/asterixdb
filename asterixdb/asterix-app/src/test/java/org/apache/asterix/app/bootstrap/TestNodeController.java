@@ -223,7 +223,7 @@ public class TestNodeController {
             throws AlgebricksException, HyracksDataException, RemoteException, ACIDException {
         CcApplicationContext appCtx =
                 (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
-        MetadataProvider mdProvider = new MetadataProvider(appCtx, null);
+        MetadataProvider mdProvider = MetadataProvider.create(appCtx, null);
         try {
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
@@ -330,7 +330,7 @@ public class TestNodeController {
             throws AlgebricksException, HyracksDataException, RemoteException, ACIDException {
         CcApplicationContext appCtx =
                 (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
-        MetadataProvider mdProvider = new MetadataProvider(appCtx, null);
+        MetadataProvider mdProvider = MetadataProvider.create(appCtx, null);
         try {
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
@@ -458,7 +458,7 @@ public class TestNodeController {
         Index index = primaryIndexInfo.getIndex();
         CcApplicationContext appCtx =
                 (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
-        MetadataProvider mdProvider = new MetadataProvider(appCtx, dataverse);
+        MetadataProvider mdProvider = MetadataProvider.create(appCtx, dataverse);
         try {
             return dataset.getResourceFactory(mdProvider, index, primaryIndexInfo.recordType, primaryIndexInfo.metaType,
                     primaryIndexInfo.mergePolicyFactory, primaryIndexInfo.mergePolicyProperties);
@@ -479,7 +479,7 @@ public class TestNodeController {
                 mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
         Dataverse dataverse = new Dataverse(dataset.getDataverseName(), NonTaggedDataFormat.class.getName(),
                 MetadataUtil.PENDING_NO_OP);
-        MetadataProvider mdProvider = new MetadataProvider(
+        MetadataProvider mdProvider = MetadataProvider.create(
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), dataverse);
         try {
             IResourceFactory resourceFactory = dataset.getResourceFactory(mdProvider, primaryIndexInfo.index,
@@ -505,7 +505,7 @@ public class TestNodeController {
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         Dataverse dataverse = new Dataverse(primaryIndexInfo.dataset.getDataverseName(),
                 NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP);
-        MetadataProvider mdProvider = new MetadataProvider(
+        MetadataProvider mdProvider = MetadataProvider.create(
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), dataverse);
         SecondaryIndexInfo secondaryIndexInfo = new SecondaryIndexInfo(primaryIndexInfo, secondaryIndex);
         try {
@@ -780,7 +780,7 @@ public class TestNodeController {
             int[] keyIndexes, List<Integer> keyIndicators, StorageComponentProvider storageComponentProvider,
             IFrameOperationCallbackFactory frameOpCallbackFactory, boolean hasSecondaries) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        MetadataProvider mdProvider = new MetadataProvider(
+        MetadataProvider mdProvider = MetadataProvider.create(
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(),
                 MetadataBuiltinEntities.DEFAULT_DATAVERSE);
         org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
