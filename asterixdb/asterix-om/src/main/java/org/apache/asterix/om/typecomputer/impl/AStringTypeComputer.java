@@ -27,17 +27,18 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class AStringTypeComputer extends AbstractResultTypeComputer {
 
-    public static final AStringTypeComputer INSTANCE = new AStringTypeComputer(false);
-    public static final AStringTypeComputer INSTANCE_NULLABLE = new AStringTypeComputer(true);
+    public static final AStringTypeComputer INSTANCE = new AStringTypeComputer(BuiltinType.ASTRING);
+    public static final AStringTypeComputer INSTANCE_NULLABLE =
+            new AStringTypeComputer(AUnionType.createNullableType(BuiltinType.ASTRING));
 
-    private final boolean nullable;
+    private final IAType outputType;
 
-    private AStringTypeComputer(boolean nullable) {
-        this.nullable = nullable;
+    private AStringTypeComputer(IAType outputType) {
+        this.outputType = outputType;
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return nullable ? AUnionType.createNullableType(BuiltinType.ASTRING) : BuiltinType.ASTRING;
+        return outputType;
     }
 }

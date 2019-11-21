@@ -94,6 +94,7 @@ import org.apache.asterix.om.typecomputer.impl.IfMissingTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.IfNanOrInfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.IfNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.Int64ArrayToStringTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.LocalAvgTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.LocalSingleVarStatisticsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.MinMaxAggTypeComputer;
@@ -127,7 +128,6 @@ import org.apache.asterix.om.typecomputer.impl.ScalarVersionOfAggregateResultTyp
 import org.apache.asterix.om.typecomputer.impl.SleepTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.StringJoinTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.SubsetCollectionTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.SubstringTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.SwitchCaseComputer;
 import org.apache.asterix.om.typecomputer.impl.ToArrayTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ToBigIntTypeComputer;
@@ -1709,14 +1709,14 @@ public class BuiltinFunctions {
         addFunction(IS_BIT_SET_WITH_ALL_FLAG, BitValuePositionFlagTypeComputer.INSTANCE_TEST_WITH_FLAG, true);
 
         // string functions
-        addFunction(STRING_CONSTRUCTOR, AStringTypeComputer.INSTANCE, true); // TODO
+        addFunction(STRING_CONSTRUCTOR, AStringTypeComputer.INSTANCE, true); // TODO(ali)
         addFunction(STRING_LIKE, BooleanFunctionTypeComputer.INSTANCE, true);
         addFunction(STRING_CONTAINS, UniformInputTypeComputer.STRING_BOOLEAN_INSTANCE, true);
         addFunction(STRING_TO_CODEPOINT, UniformInputTypeComputer.STRING_INT64_LIST_INSTANCE, true);
-        addFunction(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE, true); // TODO
-        addFunction(STRING_CONCAT, ConcatTypeComputer.INSTANCE_STRING, true); // TODO
-        addFunction(SUBSTRING, SubstringTypeComputer.INSTANCE, true); // TODO
-        addFunction(SUBSTRING_OFFSET_1, SubstringTypeComputer.INSTANCE, true); // TODO
+        addFunction(CODEPOINT_TO_STRING, Int64ArrayToStringTypeComputer.INSTANCE, true);
+        addFunction(STRING_CONCAT, ConcatTypeComputer.INSTANCE_STRING, true);
+        addFunction(SUBSTRING, AStringTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(SUBSTRING_OFFSET_1, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(SUBSTRING2, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(SUBSTRING2_OFFSET_1, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_LENGTH, UniformInputTypeComputer.STRING_INT64_INSTANCE, true);

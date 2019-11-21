@@ -19,34 +19,36 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
+import static org.apache.asterix.om.types.ATypeTag.ARRAY;
+import static org.apache.asterix.om.types.ATypeTag.BIGINT;
+
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
-public class ConcatTypeComputer extends AbstractResultTypeComputer {
+/**
+ * For function signature: string fun([int64])
+ */
+public class Int64ArrayToStringTypeComputer extends AbstractResultTypeComputer {
 
-    public static final ConcatTypeComputer INSTANCE_STRING = new ConcatTypeComputer(BuiltinType.ASTRING);
+    public static final Int64ArrayToStringTypeComputer INSTANCE = new Int64ArrayToStringTypeComputer();
 
-    public static final ConcatTypeComputer INSTANCE_BINARY = new ConcatTypeComputer(BuiltinType.ABINARY);
-
-    private final IAType resultType;
-
-    private ConcatTypeComputer(IAType resultType) {
-        this.resultType = resultType;
+    private Int64ArrayToStringTypeComputer() {
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         IAType argType = strippedInputTypes[0];
-        IAType outputType = resultType;
-        if (!argType.getTypeTag().isListType()
-                || ((AbstractCollectionType) argType).getItemType().getTypeTag() != outputType.getTypeTag()) {
-            outputType = AUnionType.createUnknownableType(outputType);
-        }
-        return outputType;
+        return isValid(argType) ? BuiltinType.ASTRING : AUnionType.createUnknownableType(BuiltinType.ASTRING);
+    }
+
+    private static boolean isValid(IAType argType) {
+        return argType.getTypeTag() == ARRAY
+                && ATypeHierarchy.canPromote(((AbstractCollectionType) argType).getItemType().getTypeTag(), BIGINT);
     }
 }

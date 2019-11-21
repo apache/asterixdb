@@ -25,15 +25,13 @@ import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -50,12 +48,7 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new StringConcatDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = StringConcatDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -79,6 +72,8 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private ISerializerDeserializer<AMissing> missingSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
                     private final byte[] tempLengthArray = new byte[5];
+                    private final byte[] expectedTypes = new byte[] { ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
+                            ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG };
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -95,14 +90,16 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
 
                             if (listBytes[listOffset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                     && listBytes[listOffset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, listBytes[listOffset],
-                                        ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
-                                        ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
+                                PointableHelper.setNull(result);
+                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), listBytes[listOffset],
+                                        0, expectedTypes);
+                                return;
                             }
                             listAccessor.reset(listBytes, listOffset);
                             // calculate length first
                             int utf8Len = 0;
                             boolean itemIsNull = false;
+                            ATypeTag unsupportedType = null;
                             for (int i = 0; i < listAccessor.size(); i++) {
                                 int itemOffset = listAccessor.getItemOffset(i);
                                 ATypeTag itemType = listAccessor.getItemType(itemOffset);
@@ -121,14 +118,19 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                         result.set(resultStorage);
                                         return;
                                     }
-                                    throw new UnsupportedItemTypeException(sourceLoc, getIdentifier(),
-                                            itemType.serialize());
+                                    if (unsupportedType == null) {
+                                        unsupportedType = itemType;
+                                    }
                                 }
                                 utf8Len += UTF8StringUtil.getUTFLength(listBytes, itemOffset);
                             }
-                            if (itemIsNull) {
+                            if (itemIsNull || unsupportedType != null) {
                                 nullSerde.serialize(ANull.NULL, out);
                                 result.set(resultStorage);
+                                if (unsupportedType != null) {
+                                    ExceptionUtil.warnUnsupportedType(ctx, sourceLoc, getIdentifier().getName(),
+                                            unsupportedType);
+                                }
                                 return;
                             }
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);

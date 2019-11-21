@@ -22,9 +22,10 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
+import org.apache.asterix.om.base.AMutableInt32;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.evaluators.common.ArgumentUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -44,9 +45,10 @@ class SubstringEval extends AbstractScalarEval {
 
     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final DataOutput out = resultStorage.getDataOutput();
-    private IPointable argString = new VoidPointable();
-    private IPointable argStart = new VoidPointable();
-    private IPointable argLen = new VoidPointable();
+    private final IPointable argString = new VoidPointable();
+    private final IPointable argStart = new VoidPointable();
+    private final IPointable argLen = new VoidPointable();
+    private final IEvaluatorContext ctx;
     private final IScalarEvaluator evalString;
     private final IScalarEvaluator evalStart;
     private final IScalarEvaluator evalLen;
@@ -55,11 +57,12 @@ class SubstringEval extends AbstractScalarEval {
     private final GrowableArray array = new GrowableArray();
     private final UTF8StringBuilder builder = new UTF8StringBuilder();
     private final UTF8StringPointable string = new UTF8StringPointable();
+    private final AMutableInt32 mutableInt32 = new AMutableInt32(0);
 
     SubstringEval(IEvaluatorContext ctx, IScalarEvaluatorFactory[] args, FunctionIdentifier functionIdentifier,
             SourceLocation sourceLoc, int baseOffset) throws HyracksDataException {
         super(sourceLoc, functionIdentifier);
-
+        this.ctx = ctx;
         evalString = args[0].createScalarEvaluator(ctx);
         evalStart = args[1].createScalarEvaluator(ctx);
         evalLen = args[2].createScalarEvaluator(ctx);
@@ -80,18 +83,27 @@ class SubstringEval extends AbstractScalarEval {
 
         byte[] bytes = argStart.getByteArray();
         int offset = argStart.getStartOffset();
-        int start = ATypeHierarchy.getIntegerValue(functionIdentifier.getName(), 0, bytes, offset);
+        if (!ArgumentUtils.checkWarnOrSetInteger(ctx, sourceLoc, functionIdentifier, 1, bytes, offset, mutableInt32)) {
+            PointableHelper.setNull(result);
+            return;
+        }
+        int start = mutableInt32.getIntegerValue();
 
         bytes = argLen.getByteArray();
         offset = argLen.getStartOffset();
-        int len = ATypeHierarchy.getIntegerValue(functionIdentifier.getName(), 1, bytes, offset);
+        if (!ArgumentUtils.checkWarnOrSetInteger(ctx, sourceLoc, functionIdentifier, 2, bytes, offset, mutableInt32)) {
+            PointableHelper.setNull(result);
+            return;
+        }
+        int len = mutableInt32.getIntegerValue();
 
         bytes = argString.getByteArray();
         offset = argString.getStartOffset();
         int length = argString.getLength();
         if (bytes[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, functionIdentifier, 0, bytes[offset],
-                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            PointableHelper.setNull(result);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, functionIdentifier, bytes[offset], 0, ATypeTag.STRING);
+            return;
         }
         string.set(bytes, offset + 1, length - 1);
         array.reset();

@@ -116,15 +116,18 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
         listBuilder.write(out, false);
     }
 
+    /** {@code serOrderedList} is untagged. {@code offset} points to the list value (first byte is the item tag) */
     public static int getOrderedListLength(byte[] serOrderedList, int offset) {
         return AInt32SerializerDeserializer.getInt(serOrderedList, offset + 1);
     }
 
+    /** {@code serOrderedList} is tagged. {@code offset} points to the list tag */
     public static int getNumberOfItems(byte[] serOrderedList, int offset) {
         // 6 = tag (1) + itemTag (1) + list size (4)
         return AInt32SerializerDeserializer.getInt(serOrderedList, offset + 6);
     }
 
+    /** {@code serOrderedList} is tagged. {@code offset} points to the list tag */
     public static int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws HyracksDataException {
         return SerializerDeserializerUtil.getItemOffset(serOrderedList, offset, itemIndex);
     }

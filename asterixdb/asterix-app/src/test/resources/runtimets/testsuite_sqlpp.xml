@@ -13606,5 +13606,30 @@
         <expected-warn>Invalid value: function substring expects its 2nd input parameter to be an integer value, got Infinity (in line 34, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
+      <compilation-unit name="string_fun_004">
+        <output-dir compare="Text">string_fun_004</output-dir>
+        <expected-warn>Unsupported type: string-concat cannot process input type tinyint (in line 30, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function substring expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string (in line 32, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function substring expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 33, at column 1)</expected-warn>
+        <expected-warn>Unsupported type: string-concat cannot process input type bigint (in line 31, at column 7)</expected-warn>
+        <expected-warn>Type mismatch: function codepoint-to-string expects its 1st input parameter to be of type array, but the actual input type is string (in line 34, at column 1)</expected-warn>
+        <expected-warn>Unsupported type: codepoint-to-string cannot process input type string (in line 35, at column 1)</expected-warn>
+
+        <expected-warn>Unsupported type: string-concat cannot process input type tinyint (in line 30, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function substring expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string (in line 32, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function substring expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 33, at column 1)</expected-warn>
+        <expected-warn>Unsupported type: string-concat cannot process input type bigint (in line 31, at column 7)</expected-warn>
+        <expected-warn>Type mismatch: function codepoint-to-string expects its 1st input parameter to be of type array, but the actual input type is string (in line 34, at column 1)</expected-warn>
+        <expected-warn>Unsupported type: codepoint-to-string cannot process input type string (in line 35, at column 1)</expected-warn>
+
+        <expected-warn>Unsupported type: string-concat cannot process input type bigint (in line 30, at column 1)</expected-warn>
+        <expected-warn>Unsupported type: string-concat cannot process input type tinyint (in line 31, at column 7)</expected-warn>
+        <expected-warn>Type mismatch: function substring expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 32, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function codepoint-to-string expects its 1st input parameter to be of type array, but the actual input type is string (in line 33, at column 1)</expected-warn>
+        <expected-warn>Unsupported type: codepoint-to-string cannot process input type string (in line 34, at column 1)</expected-warn>
+        <expected-warn>Unsupported type: codepoint-to-string cannot process input type double (in line 35, at column 1)</expected-warn>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

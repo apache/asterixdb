@@ -18,19 +18,23 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import static org.apache.asterix.om.types.ATypeTag.BIGINT;
+import static org.apache.asterix.om.types.ATypeTag.MISSING;
+import static org.apache.asterix.om.types.ATypeTag.NULL;
+import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
+
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -46,12 +50,7 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new CodePointToStringDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = CodePointToStringDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -63,20 +62,21 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-                    private IScalarEvaluatorFactory listEvalFactory = args[0];
-                    private IPointable inputArgList = new VoidPointable();
-                    private IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
-
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IScalarEvaluatorFactory listEvalFactory = args[0];
+                    private final IPointable inputArgList = new VoidPointable();
+                    private final IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
                     private final byte[] currentUTF8 = new byte[6];
                     private final byte[] tempStoreForLength = new byte[5];
-                    private final byte stringTypeTag = ATypeTag.SERIALIZED_STRING_TYPE_TAG;
+                    private final FunctionIdentifier fid = getIdentifier();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
                             resultStorage.reset();
+                            Arrays.fill(tempStoreForLength, (byte) 0);
+                            Arrays.fill(currentUTF8, (byte) 0);
                             evalList.evaluate(tuple, inputArgList);
 
                             if (PointableHelper.checkAndSetMissingOrNull(result, inputArgList)) {
@@ -85,45 +85,63 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
 
                             byte[] serOrderedList = inputArgList.getByteArray();
                             int offset = inputArgList.getStartOffset();
-                            int size;
-
-                            if (ATypeTag.VALUE_TYPE_MAPPING[serOrderedList[offset]] != ATypeTag.ARRAY) {
-                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, serOrderedList[offset]);
-                            } else {
-                                switch (ATypeTag.VALUE_TYPE_MAPPING[serOrderedList[offset + 1]]) {
-                                    case TINYINT:
-                                    case SMALLINT:
-                                    case INTEGER:
-                                    case BIGINT:
-                                    case FLOAT:
-                                    case DOUBLE:
-                                    case ANY:
-                                        size = AOrderedListSerializerDeserializer.getNumberOfItems(serOrderedList,
-                                                offset);
-                                        break;
-                                    default:
-                                        throw new UnsupportedTypeException(sourceLoc, getIdentifier(),
-                                                serOrderedList[offset]);
-                                }
+                            if (serOrderedList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                                PointableHelper.setNull(result);
+                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, fid, serOrderedList[offset], 0,
+                                        ATypeTag.ARRAY);
+                                return;
                             }
+                            int itemTagPosition = offset + 1;
+                            ATypeTag itemTag = VALUE_TYPE_MAPPING[serOrderedList[itemTagPosition]];
+                            boolean isItemTagged = itemTag == ATypeTag.ANY;
+                            int size = AOrderedListSerializerDeserializer.getNumberOfItems(serOrderedList, offset);
                             // calculate length first
                             int utf_8_len = 0;
+                            boolean returnNull = false;
+                            ATypeTag invalidTag = null;
                             for (int i = 0; i < size; i++) {
                                 int itemOffset =
                                         AOrderedListSerializerDeserializer.getItemOffset(serOrderedList, offset, i);
-                                int codePoint = 0;
-                                codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
-                                        getIdentifier().getName(), 0, serOrderedList, itemOffset, offset + 1);
-                                utf_8_len += UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
+                                if (isItemTagged) {
+                                    itemTag = VALUE_TYPE_MAPPING[serOrderedList[itemOffset]];
+                                    itemTagPosition = itemOffset;
+                                    itemOffset++;
+                                }
+                                if (itemTag == MISSING) {
+                                    PointableHelper.setMissing(result);
+                                    return;
+                                }
+                                if (itemTag == NULL) {
+                                    returnNull = true;
+                                    invalidTag = null;
+                                } else if (!returnNull && !ATypeHierarchy.canPromote(itemTag, BIGINT)) {
+                                    returnNull = true;
+                                    invalidTag = itemTag;
+                                }
+                                if (!returnNull) {
+                                    int codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
+                                            fid.getName(), 0, serOrderedList, itemOffset, itemTagPosition);
+                                    utf_8_len += UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
+                                }
                             }
-                            out.writeByte(stringTypeTag);
+                            if (returnNull) {
+                                PointableHelper.setNull(result);
+                                if (invalidTag != null) {
+                                    ExceptionUtil.warnUnsupportedType(ctx, sourceLoc, fid.getName(), invalidTag);
+                                }
+                                return;
+                            }
+                            out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             UTF8StringUtil.writeUTF8Length(utf_8_len, tempStoreForLength, out);
                             for (int i = 0; i < size; i++) {
                                 int itemOffset =
                                         AOrderedListSerializerDeserializer.getItemOffset(serOrderedList, offset, i);
-                                int codePoint = 0;
-                                codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
-                                        getIdentifier().getName(), 0, serOrderedList, itemOffset, offset + 1);
+                                if (isItemTagged) {
+                                    itemTagPosition = itemOffset;
+                                    itemOffset++;
+                                }
+                                int codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
+                                        fid.getName(), 0, serOrderedList, itemOffset, itemTagPosition);
                                 utf_8_len = UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
                                 for (int j = 0; j < utf_8_len; j++) {
                                     out.writeByte(currentUTF8[j]);
@@ -143,5 +161,4 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.CODEPOINT_TO_STRING;
     }
-
 }

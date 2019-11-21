@@ -103,6 +103,7 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                             int concatLength = 0;
                             boolean itemIsNull = false;
                             for (int i = 0; i < listAccessor.size(); i++) {
+                                // TODO(ali): itemOffset should be adjusted if list is heterogeneous like string_concat
                                 int itemOffset = listAccessor.getItemOffset(i);
                                 ATypeTag itemType = listAccessor.getItemType(itemOffset);
                                 if (itemType != ATypeTag.BINARY) {
