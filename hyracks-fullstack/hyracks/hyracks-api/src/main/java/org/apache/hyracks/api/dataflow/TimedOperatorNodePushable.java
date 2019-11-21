@@ -33,7 +33,7 @@ public class TimedOperatorNodePushable extends TimedFrameWriter implements IOper
     HashMap<Integer, IFrameWriter> inputs;
     long frameStart;
 
-    TimedOperatorNodePushable(IOperatorNodePushable op, IStatsCollector collector) throws HyracksDataException {
+    private TimedOperatorNodePushable(IOperatorNodePushable op, IStatsCollector collector) {
         super(null, collector, op.getDisplayName());
         this.op = op;
         inputs = new HashMap<>();
@@ -41,20 +41,16 @@ public class TimedOperatorNodePushable extends TimedFrameWriter implements IOper
 
     @Override
     public void initialize() throws HyracksDataException {
-        synchronized (collector) {
-            startClock();
-            op.initialize();
-            stopClock();
-        }
+        startClock();
+        op.initialize();
+        stopClock();
     }
 
     @Override
     public void deinitialize() throws HyracksDataException {
-        synchronized (collector) {
-            startClock();
-            op.deinitialize();
-            stopClock();
-        }
+        startClock();
+        op.deinitialize();
+        stopClock();
     }
 
     @Override
@@ -83,15 +79,19 @@ public class TimedOperatorNodePushable extends TimedFrameWriter implements IOper
     }
 
     private void stopClock() {
-        pause();
-        collector.giveClock(this);
+        synchronized (collector) {
+            pause();
+            collector.giveClock(this);
+        }
     }
 
     private void startClock() {
-        if (frameStart > 0) {
-            return;
+        synchronized (collector) {
+            if (frameStart > 0) {
+                return;
+            }
+            frameStart = collector.takeClock(this);
         }
-        frameStart = collector.takeClock(this);
     }
 
     @Override
@@ -113,11 +113,11 @@ public class TimedOperatorNodePushable extends TimedFrameWriter implements IOper
         }
     }
 
-    public static IOperatorNodePushable time(IOperatorNodePushable op, IHyracksTaskContext ctx)
-            throws HyracksDataException {
+    public static IOperatorNodePushable time(IOperatorNodePushable op, IHyracksTaskContext ctx) {
         if (!(op instanceof TimedOperatorNodePushable) && !(op instanceof SuperActivityOperatorNodePushable)) {
             return new TimedOperatorNodePushable(op, ctx.getStatsCollector());
         }
         return op;
     }
+
 }
