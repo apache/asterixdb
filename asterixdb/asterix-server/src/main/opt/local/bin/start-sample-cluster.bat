@@ -108,7 +108,7 @@ start /MIN "red-nc" cmd /c "echo See output in %LOGSDIR%\red-service.log && "%IN
 start /MIN "cc" cmd /c "echo See output in %LOGSDIR%\cc.log && "%INSTALLDIR%\bin\${CC_COMMAND}" -config-file "%CLUSTERDIR%\conf\cc.conf" >>"%LOGSDIR%\cc.log" 2>&1"
 
 echo.
-call "%INSTALLDIR%\bin\${HELPER_COMMAND}" wait_for_cluster -timeout 30
+call "%INSTALLDIR%\bin\${HELPER_COMMAND}" wait_for_cluster -timeout 90
 if %ERRORLEVEL% EQU 0 (
   goto :END
 )
