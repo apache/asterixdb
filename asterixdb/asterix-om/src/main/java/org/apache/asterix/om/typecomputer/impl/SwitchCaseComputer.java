@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import static org.apache.asterix.om.types.BuiltinType.ANULL;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,12 +47,11 @@ public class SwitchCaseComputer implements IResultTypeComputer {
         AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
         String funcName = fce.getFunctionIdentifier().getName();
 
-        int argNumber = fce.getArguments().size();
-        if (argNumber < 3) {
-            throw new CompilationException(ErrorCode.COMPILATION_INVALID_PARAMETER_NUMBER, fce.getSourceLocation(),
-                    funcName, argNumber);
-        }
         int argSize = fce.getArguments().size();
+        if (argSize < 3) {
+            throw new CompilationException(ErrorCode.COMPILATION_INVALID_PARAMETER_NUMBER, fce.getSourceLocation(),
+                    funcName, argSize);
+        }
         List<IAType> types = new ArrayList<>();
         // Collects different branches' return types.
         // The last return expression is from the ELSE branch and it is optional.
@@ -58,6 +59,15 @@ public class SwitchCaseComputer implements IResultTypeComputer {
             IAType type = (IAType) env.getType(fce.getArguments().get(argIndex).getValue());
             types.add(type);
         }
+        // TODO(ali): investigate if needed for CASE. assumption seems to be that CASE is always rewritten with default
+        if (addDefaultNull(argSize)) {
+            types.add(ANULL);
+        }
         return TypeResolverUtil.resolve(types);
+    }
+
+    private boolean addDefaultNull(int argSize) {
+        // null is the default value for odd arg size (e.g. fun(cond_exp, exp1, res1))
+        return argSize % 2 != 0;
     }
 }

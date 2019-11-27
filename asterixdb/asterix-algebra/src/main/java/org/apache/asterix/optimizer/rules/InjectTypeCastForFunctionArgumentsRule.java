@@ -24,15 +24,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.IntBinaryOperator;
-import java.util.function.IntPredicate;
 
 import org.apache.asterix.dataflow.data.common.TypeResolverUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -56,9 +53,10 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  */
 public class InjectTypeCastForFunctionArgumentsRule implements IAlgebraicRewriteRule {
 
-    private static final Map<FunctionIdentifier, IntPredicate> FUN_TO_ARG_CHECKER = new HashMap<>();
+    private static final Map<FunctionIdentifier, BiIntPredicate> FUN_TO_ARG_CHECKER = new HashMap<>();
 
     static {
+        addFunctionAndArgChecker(BuiltinFunctions.SWITCH_CASE, InjectTypeCastForFunctionArgumentsRule::switchResultArg);
         addFunctionAndArgChecker(BuiltinFunctions.IF_MISSING, null);
         addFunctionAndArgChecker(BuiltinFunctions.IF_NULL, null);
         addFunctionAndArgChecker(BuiltinFunctions.IF_MISSING_OR_NULL, null);
@@ -66,7 +64,7 @@ public class InjectTypeCastForFunctionArgumentsRule implements IAlgebraicRewrite
     }
 
     // allows the rule to check other functions in addition to the ones specified here
-    public static void addFunctionAndArgChecker(FunctionIdentifier function, IntPredicate argChecker) {
+    public static void addFunctionAndArgChecker(FunctionIdentifier function, BiIntPredicate argChecker) {
         FUN_TO_ARG_CHECKER.put(function, argChecker);
     }
 
@@ -89,7 +87,7 @@ public class InjectTypeCastForFunctionArgumentsRule implements IAlgebraicRewrite
 
     // Injects type casts to cast return expressions' return types to a generalized type that conforms to every
     // return type.
-    private boolean injectTypeCast(ILogicalOperator op, Mutable<ILogicalExpression> exprRef,
+    private static boolean injectTypeCast(ILogicalOperator op, Mutable<ILogicalExpression> exprRef,
             IOptimizationContext context) throws AlgebricksException {
         ILogicalExpression expr = exprRef.getValue();
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
@@ -105,36 +103,29 @@ public class InjectTypeCastForFunctionArgumentsRule implements IAlgebraicRewrite
             }
         }
         FunctionIdentifier funcId = func.getFunctionIdentifier();
-        if (funcId.equals(BuiltinFunctions.SWITCH_CASE)) {
-            rewritten |= rewriteFunction(op, func, null, context, 2,
-                    InjectTypeCastForFunctionArgumentsRule::switchIncrement);
-        } else if (FUN_TO_ARG_CHECKER.containsKey(funcId)) {
-            rewritten |= rewriteFunction(op, func, FUN_TO_ARG_CHECKER.get(funcId), context, 0,
-                    InjectTypeCastForFunctionArgumentsRule::increment);
+        if (FUN_TO_ARG_CHECKER.containsKey(funcId)) {
+            rewritten |= rewriteFunction(op, func, FUN_TO_ARG_CHECKER.get(funcId), context);
         }
         return rewritten;
     }
 
     // Injects casts that cast types for all function parameters
-    private boolean rewriteFunction(ILogicalOperator op, AbstractFunctionCallExpression func, IntPredicate argChecker,
-            IOptimizationContext context, int argStartIdx, IntBinaryOperator increment) throws AlgebricksException {
+    private static boolean rewriteFunction(ILogicalOperator op, AbstractFunctionCallExpression func,
+            BiIntPredicate argChecker, IOptimizationContext context) throws AlgebricksException {
         IVariableTypeEnvironment env = op.computeInputTypeEnvironment(context);
         IAType producedType = (IAType) env.getType(func);
-        if (!argumentsNeedCasting(producedType)) {
-            return false;
-        }
         List<Mutable<ILogicalExpression>> argRefs = func.getArguments();
         int argSize = argRefs.size();
         boolean rewritten = false;
-        for (int argIndex = argStartIdx; argIndex < argSize; argIndex += increment.applyAsInt(argIndex, argSize)) {
-            if (argChecker == null || argChecker.test(argIndex)) {
+        for (int argIndex = 0; argIndex < argSize; argIndex++) {
+            if (argChecker == null || argChecker.test(argIndex, argSize)) {
                 rewritten |= rewriteFunctionArgument(argRefs.get(argIndex), producedType, env);
             }
         }
         return rewritten;
     }
 
-    private boolean rewriteFunctionArgument(Mutable<ILogicalExpression> argRef, IAType funcOutputType,
+    private static boolean rewriteFunctionArgument(Mutable<ILogicalExpression> argRef, IAType funcOutputType,
             IVariableTypeEnvironment env) throws AlgebricksException {
         ILogicalExpression argExpr = argRef.getValue();
         IAType type = (IAType) env.getType(argExpr);
@@ -152,17 +143,13 @@ public class InjectTypeCastForFunctionArgumentsRule implements IAlgebraicRewrite
         return false;
     }
 
-    private static boolean argumentsNeedCasting(IAType functionProducedType) {
-        ATypeTag functionProducedTag = TypeComputeUtils.getActualType(functionProducedType).getTypeTag();
-        return functionProducedTag == ATypeTag.ANY || functionProducedTag.isDerivedType();
+    public static boolean switchResultArg(int argIdx, int numArguments) {
+        // e.g. switch(cond, exp1, res1, exp2, res2, def_res)
+        return argIdx > 1 && (argIdx % 2 == 0 || argIdx == numArguments - 1);
     }
 
-    private static int switchIncrement(int currentArgIndex, int numArguments) {
-        return currentArgIndex + 2 == numArguments ? 1 : 2;
-    }
-
-    @SuppressWarnings("squid:S1172") // unused parameter
-    private static int increment(int currentArgIndex, int numArguments) {
-        return 1;
+    @FunctionalInterface
+    public interface BiIntPredicate {
+        boolean test(int argIndex, int numArguments);
     }
 }
