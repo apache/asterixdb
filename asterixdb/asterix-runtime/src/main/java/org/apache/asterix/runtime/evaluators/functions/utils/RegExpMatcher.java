@@ -152,6 +152,16 @@ public class RegExpMatcher {
     }
 
     /**
+     * Returns the matched string. This should be called after checking that the find()
+     * method returns true.
+     *
+     * @return The matched string
+     */
+    public String group() {
+        return matcher.group();
+    }
+
+    /**
      * @return the first matched position of the regular expression pattern in the source string.
      */
     public int position() {

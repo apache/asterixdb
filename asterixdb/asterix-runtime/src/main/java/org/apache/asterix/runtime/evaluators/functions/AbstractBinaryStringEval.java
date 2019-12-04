@@ -46,8 +46,8 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
     // Argument pointables.
     private final IPointable argPtrLeft = new VoidPointable();
     private final IPointable argPtrSecond = new VoidPointable();
-    private final UTF8StringPointable leftPtr = new UTF8StringPointable();
-    private final UTF8StringPointable rightPtr = new UTF8StringPointable();
+    private final UTF8StringPointable leftStringPointable = new UTF8StringPointable();
+    private final UTF8StringPointable rightStringPointable = new UTF8StringPointable();
 
     // For results.
     protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -100,12 +100,12 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
         }
 
         // Sets StringUTF8Pointables.
-        leftPtr.set(bytes0, offset0 + 1, len0 - 1);
-        rightPtr.set(bytes1, offset1 + 1, len1 - 1);
+        leftStringPointable.set(bytes0, offset0 + 1, len0 - 1);
+        rightStringPointable.set(bytes1, offset1 + 1, len1 - 1);
 
         // The actual processing.
         try {
-            process(leftPtr, rightPtr, resultPointable);
+            process(leftStringPointable, rightStringPointable, resultPointable);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

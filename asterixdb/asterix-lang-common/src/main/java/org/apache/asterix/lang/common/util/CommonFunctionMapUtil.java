@@ -70,6 +70,8 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("regex_position1", "regexp-position1");
         addFunctionMapping("regexp_pos1", "regexp-position1");
         addFunctionMapping("regex_replace", "regexp-replace");
+        addFunctionMapping("regex_matches", "regexp-matches");
+        addFunctionMapping("regex_split", "regexp-split");
 
         // Type functions.
         addFunctionMapping("isnull", "is-null"); // isnull, internal: is-null

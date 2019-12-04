@@ -440,6 +440,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-replace", 3);
     public static final FunctionIdentifier STRING_REGEXP_REPLACE_WITH_FLAG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-replace", 4);
+    public static final FunctionIdentifier STRING_REGEXP_MATCHES =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-matches", 2);
+    public static final FunctionIdentifier STRING_REGEXP_SPLIT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-split", 2);
     public static final FunctionIdentifier STRING_LOWERCASE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "lowercase", 1);
     public static final FunctionIdentifier STRING_UPPERCASE =
@@ -1744,6 +1748,8 @@ public class BuiltinFunctions {
         addFunction(STRING_REGEXP_REPLACE, UniformInputTypeComputer.STRING_STRING_INSTANCE, true);
         addFunction(STRING_REGEXP_REPLACE_WITH_FLAG, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_REPLACE, UniformInputTypeComputer.STRING_STRING_INSTANCE, true);
+        addFunction(STRING_REGEXP_MATCHES, UniformInputTypeComputer.STRING_STRING_LIST_INSTANCE, true);
+        addFunction(STRING_REGEXP_SPLIT, UniformInputTypeComputer.STRING_STRING_LIST_INSTANCE, true);
         addFunction(STRING_REPLACE_WITH_LIMIT, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_REVERSE, UniformInputTypeComputer.STRING_STRING_INSTANCE, true);
         addFunction(SUBSTRING_BEFORE, UniformInputTypeComputer.STRING_STRING_INSTANCE, true);

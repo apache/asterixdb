@@ -45,6 +45,9 @@ public class UTF8CharSequence implements CharSequence {
         if (end != start) {
             carSeq.buf = new char[carSeq.length];
             System.arraycopy(buf, start, carSeq.buf, 0, carSeq.length);
+        } else {
+            // subSequence with start = end will return an empty char[]
+            carSeq.buf = new char[0];
         }
         return carSeq;
     }

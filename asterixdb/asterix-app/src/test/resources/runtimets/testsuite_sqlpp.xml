@@ -9213,6 +9213,26 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="regexp_matches/001">
+        <output-dir compare="Text">regexp_matches/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_matches/002">
+        <output-dir compare="Text">regexp_matches/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_matches/003">
+        <output-dir compare="Text">regexp_matches/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_matches/004">
+        <output-dir compare="Text">regexp_matches/004</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="regexp_position/offset0/regexp_position">
         <output-dir compare="Text">regexp_position/offset0/regexp_position</output-dir>
       </compilation-unit>
@@ -9330,6 +9350,26 @@
     <test-case FilePath="string">
       <compilation-unit name="regexp_position_with_flag/offset1/regex_pos1_with_flag">
         <output-dir compare="Text">regexp_position_with_flag/offset1/regex_pos1_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_split/001">
+        <output-dir compare="Text">regexp_split/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_split/002">
+        <output-dir compare="Text">regexp_split/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_split/003">
+        <output-dir compare="Text">regexp_split/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_split/004">
+        <output-dir compare="Text">regexp_split/004</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
