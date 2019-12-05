@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.util;
 
+@FunctionalInterface
 public interface ComputingAction<T> {
     @SuppressWarnings("squid:S00112")
     T compute() throws Throwable;
