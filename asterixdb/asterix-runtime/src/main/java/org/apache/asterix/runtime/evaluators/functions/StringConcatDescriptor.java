@@ -18,31 +18,16 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.om.base.AMissing;
-import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.util.string.UTF8StringUtil;
 
 @MissingNullInOutFunction
 public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -57,98 +42,31 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                return new IScalarEvaluator() {
-
-                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private final ListAccessor listAccessor = new ListAccessor();
-                    private final DataOutput out = resultStorage.getDataOutput();
-                    private final IScalarEvaluatorFactory listEvalFactory = args[0];
-                    private final IPointable inputArgList = new VoidPointable();
-                    private final IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde =
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AMissing> missingSerde =
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
-                    private final byte[] tempLengthArray = new byte[5];
-                    private final byte[] expectedTypes = new byte[] { ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
-                            ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG };
+                return new AbstractConcatStringEval(args, ctx, sourceLoc, getIdentifier(),
+                        AbstractConcatStringEval.NO_SEPARATOR_POSITION) {
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-                        resultStorage.reset();
-                        try {
-                            evalList.evaluate(tuple, inputArgList);
+                    protected boolean isAcceptedType(ATypeTag typeTag) {
+                        return typeTag.isListType();
+                    }
 
-                            if (PointableHelper.checkAndSetMissingOrNull(result, inputArgList)) {
-                                return;
-                            }
+                    @Override
+                    protected byte[] getExpectedType() {
+                        return STRING_TYPE;
+                    }
 
-                            byte[] listBytes = inputArgList.getByteArray();
-                            int listOffset = inputArgList.getStartOffset();
-
-                            if (listBytes[listOffset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
-                                    && listBytes[listOffset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                                PointableHelper.setNull(result);
-                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), listBytes[listOffset],
-                                        0, expectedTypes);
-                                return;
-                            }
-                            listAccessor.reset(listBytes, listOffset);
-                            // calculate length first
-                            int utf8Len = 0;
-                            boolean itemIsNull = false;
-                            ATypeTag unsupportedType = null;
-                            for (int i = 0; i < listAccessor.size(); i++) {
-                                int itemOffset = listAccessor.getItemOffset(i);
-                                ATypeTag itemType = listAccessor.getItemType(itemOffset);
-                                // Increase the offset by 1 if the give list has heterogeneous elements,
-                                // since the item itself has a typetag.
-                                if (listAccessor.itemsAreSelfDescribing()) {
-                                    itemOffset += 1;
-                                }
-                                if (itemType != ATypeTag.STRING) {
-                                    if (itemType == ATypeTag.NULL) {
-                                        itemIsNull = true;
-                                        continue;
-                                    }
-                                    if (itemType == ATypeTag.MISSING) {
-                                        missingSerde.serialize(AMissing.MISSING, out);
-                                        result.set(resultStorage);
-                                        return;
-                                    }
-                                    if (unsupportedType == null) {
-                                        unsupportedType = itemType;
-                                    }
-                                }
-                                utf8Len += UTF8StringUtil.getUTFLength(listBytes, itemOffset);
-                            }
-                            if (itemIsNull || unsupportedType != null) {
-                                nullSerde.serialize(ANull.NULL, out);
-                                result.set(resultStorage);
-                                if (unsupportedType != null) {
-                                    ExceptionUtil.warnUnsupportedType(ctx, sourceLoc, getIdentifier().getName(),
-                                            unsupportedType);
-                                }
-                                return;
-                            }
-                            out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                            int cbytes = UTF8StringUtil.encodeUTF8Length(utf8Len, tempLengthArray, 0);
-                            out.write(tempLengthArray, 0, cbytes);
-                            for (int i = 0; i < listAccessor.size(); i++) {
-                                int itemOffset = listAccessor.getItemOffset(i);
-                                if (listAccessor.itemsAreSelfDescribing()) {
-                                    itemOffset += 1;
-                                }
-                                utf8Len = UTF8StringUtil.getUTFLength(listBytes, itemOffset);
-                                out.write(listBytes, UTF8StringUtil.getNumBytesToStoreLength(utf8Len) + itemOffset,
-                                        utf8Len);
-                            }
-                        } catch (IOException e) {
-                            throw HyracksDataException.create(e);
-                        }
-                        result.set(resultStorage);
+                    /**
+                     * This function has its arguments converted into a single list of arguments, the inner index
+                     * can be used to point to the correct argument for user perspective.
+                     *
+                     * @param outArgumentIndex outer argument index
+                     * @param innerArgumentIndex inner argument index (inside a list)
+                     *
+                     * @return the actual index of the current argument
+                     */
+                    @Override
+                    int getActualArgumentIndex(int outArgumentIndex, int innerArgumentIndex) {
+                        return innerArgumentIndex;
                     }
                 };
             }

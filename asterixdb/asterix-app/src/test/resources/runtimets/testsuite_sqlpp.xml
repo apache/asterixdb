@@ -8921,33 +8921,54 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="concat_01">
-        <output-dir compare="Text">concat_01</output-dir>
+      <compilation-unit name="concat/001">
+        <output-dir compare="Text">concat/001</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="concat_02">
-        <output-dir compare="Text">concat_02</output-dir>
+      <compilation-unit name="concat/002">
+        <output-dir compare="Text">concat/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string" check-warnings="true">
+      <compilation-unit name="concat/003">
+        <output-dir compare="Text">concat/003</output-dir>
+        <expected-warn>Type mismatch: function string-concat expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 26, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="concat_03">
-        <output-dir compare="Text">concat_03</output-dir>
+      <compilation-unit name="concat/004">
+        <output-dir compare="Text">concat/004</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="concat_pipe">
-        <output-dir compare="Text">concat_03</output-dir>
+      <compilation-unit name="concat/005">
+        <output-dir compare="Text">concat/005</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="concat_pipe_multi">
-        <output-dir compare="Text">concat_pipe_multi</output-dir>
+      <compilation-unit name="concat/006">
+        <output-dir compare="Text">concat/006</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="concat_func">
-        <output-dir compare="Text">concat_03</output-dir>
+      <compilation-unit name="concat/007">
+        <output-dir compare="Text">concat/007</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="concat/008">
+        <output-dir compare="Text">concat/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="concat/concat_pipe">
+        <output-dir compare="Text">concat/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="concat/concat_pipe_multi">
+        <output-dir compare="Text">concat/concat_pipe_multi</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -9013,6 +9034,43 @@
     <test-case FilePath="string">
       <compilation-unit name="initcap">
         <output-dir compare="Text">initcap</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="join/000">
+        <output-dir compare="Text">join/000</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string" check-warnings="true">
+      <compilation-unit name="join/001">
+        <output-dir compare="Text">join/001</output-dir>
+        <expected-warn>Type mismatch: function string-join expects its 2nd input parameter to be of type string, but the actual input type is bigint (in line 24, at column 15)</expected-warn>
+        <expected-warn>Type mismatch: function string-join expects its 1st input parameter to be of type array, but the actual input type is bigint (in line 24, at column 15)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="join/002">
+        <output-dir compare="Text">join/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string" check-warnings="true">
+      <compilation-unit name="join/003">
+        <output-dir compare="Text">join/003</output-dir>
+        <expected-warn>Type mismatch: function string-join expects its 2nd input parameter to be of type string, but the actual input type is bigint (in line 23, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function string-join expects its 2nd input parameter to be of type string, but the actual input type is bigint (in line 30, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function string-join expects its 1st input parameter to be of type array, but the actual input type is bigint (in line 33, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function string-join expects its 1st input parameter to be of type array, but the actual input type is bigint (in line 26, at column 1)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string" check-warnings="true">
+      <compilation-unit name="join/004">
+        <output-dir compare="Text">join/004</output-dir>
+        <expected-warn>Type mismatch: function string-join expects its 2nd input parameter to be of type string, but the actual input type is bigint (in line 26, at column 1)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string" check-warnings="true">
+      <compilation-unit name="join/005">
+        <output-dir compare="Text">join/005</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -9448,26 +9506,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="strconcat01">
-        <output-dir compare="Text">strconcat01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="strconcat02">
-        <output-dir compare="Text">strconcat02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="string-concat1">
-        <output-dir compare="Text">string-concat1</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="string-concat2">
-        <output-dir compare="Text">string-concat2</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
       <compilation-unit name="string-equal1">
         <output-dir compare="Text">string-equal1</output-dir>
       </compilation-unit>
@@ -9485,11 +9523,6 @@
     <test-case FilePath="string">
       <compilation-unit name="string-equal4">
         <output-dir compare="Text">string-equal4</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="string-join1">
-        <output-dir compare="Text">string-join1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -13649,22 +13682,22 @@
     <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
       <compilation-unit name="string_fun_004">
         <output-dir compare="Text">string_fun_004</output-dir>
-        <expected-warn>Unsupported type: string-concat cannot process input type tinyint (in line 30, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function string-concat expects its 2nd input parameter to be of type string, but the actual input type is tinyint (in line 30, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function substring expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string (in line 32, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function substring expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 33, at column 1)</expected-warn>
-        <expected-warn>Unsupported type: string-concat cannot process input type bigint (in line 31, at column 7)</expected-warn>
+        <expected-warn>Type mismatch: function string-concat expects its 2nd input parameter to be of type string, but the actual input type is bigint (in line 31, at column 7)</expected-warn>
         <expected-warn>Type mismatch: function codepoint-to-string expects its 1st input parameter to be of type array, but the actual input type is string (in line 34, at column 1)</expected-warn>
         <expected-warn>Unsupported type: codepoint-to-string cannot process input type string (in line 35, at column 1)</expected-warn>
 
-        <expected-warn>Unsupported type: string-concat cannot process input type tinyint (in line 30, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function string-concat expects its 2nd input parameter to be of type string, but the actual input type is tinyint (in line 30, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function substring expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string (in line 32, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function substring expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 33, at column 1)</expected-warn>
-        <expected-warn>Unsupported type: string-concat cannot process input type bigint (in line 31, at column 7)</expected-warn>
+        <expected-warn>Type mismatch: function string-concat expects its 2nd input parameter to be of type string, but the actual input type is bigint (in line 31, at column 7)</expected-warn>
         <expected-warn>Type mismatch: function codepoint-to-string expects its 1st input parameter to be of type array, but the actual input type is string (in line 34, at column 1)</expected-warn>
         <expected-warn>Unsupported type: codepoint-to-string cannot process input type string (in line 35, at column 1)</expected-warn>
 
-        <expected-warn>Unsupported type: string-concat cannot process input type bigint (in line 30, at column 1)</expected-warn>
-        <expected-warn>Unsupported type: string-concat cannot process input type tinyint (in line 31, at column 7)</expected-warn>
+        <expected-warn>Type mismatch: function string-concat expects its 2nd input parameter to be of type string, but the actual input type is bigint (in line 30, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function string-concat expects its 2nd input parameter to be of type string, but the actual input type is tinyint (in line 31, at column 7)</expected-warn>
         <expected-warn>Type mismatch: function substring expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 32, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function codepoint-to-string expects its 1st input parameter to be of type array, but the actual input type is string (in line 33, at column 1)</expected-warn>
         <expected-warn>Unsupported type: codepoint-to-string cannot process input type string (in line 34, at column 1)</expected-warn>

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Collection;
@@ -28,6 +30,7 @@ import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
@@ -164,20 +167,46 @@ public class PointableHelper {
         pointable.set(MISSING_BYTES, 0, MISSING_BYTES.length);
     }
 
-    // checkAndSetMissingOrNull with 1 argument
-    public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1) {
-        return checkAndSetMissingOrNull(result, pointable1, null, null, null);
+    // 1 pointable check
+    public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1)
+            throws HyracksDataException {
+        return checkAndSetMissingOrNull(result, null, pointable1, null, null, null);
     }
 
-    // checkAndSetMissingOrNull with 2 arguments
-    public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1, IPointable pointable2) {
-        return checkAndSetMissingOrNull(result, pointable1, pointable2, null, null);
+    // 2 pointables check
+    public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1, IPointable pointable2)
+            throws HyracksDataException {
+        return checkAndSetMissingOrNull(result, null, pointable1, pointable2, null, null);
     }
 
-    // checkAndSetMissingOrNull with 3 arguments
+    // 3 pointables check
     public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1, IPointable pointable2,
-            IPointable pointable3) {
-        return checkAndSetMissingOrNull(result, pointable1, pointable2, pointable3, null);
+            IPointable pointable3) throws HyracksDataException {
+        return checkAndSetMissingOrNull(result, null, pointable1, pointable2, pointable3, null);
+    }
+
+    // 4 pointables check
+    public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1, IPointable pointable2,
+            IPointable pointable3, IPointable pointable4) throws HyracksDataException {
+        return checkAndSetMissingOrNull(result, null, pointable1, pointable2, pointable3, pointable4);
+    }
+
+    // 1 pointable check (check list members for missing values)
+    public static boolean checkAndSetMissingOrNull(IPointable result, ListAccessor listAccessor, IPointable pointable1)
+            throws HyracksDataException {
+        return checkAndSetMissingOrNull(result, listAccessor, pointable1, null, null, null);
+    }
+
+    // 2 pointables check (check list members for missing values)
+    public static boolean checkAndSetMissingOrNull(IPointable result, ListAccessor listAccessor, IPointable pointable1,
+            IPointable pointable2) throws HyracksDataException {
+        return checkAndSetMissingOrNull(result, listAccessor, pointable1, pointable2, null, null);
+    }
+
+    // 3 pointables check (check list members for missing values)
+    public static boolean checkAndSetMissingOrNull(IPointable result, ListAccessor listAccessor, IPointable pointable1,
+            IPointable pointable2, IPointable pointable3) throws HyracksDataException {
+        return checkAndSetMissingOrNull(result, listAccessor, pointable1, pointable2, pointable3, null);
     }
 
     /**
@@ -188,7 +217,12 @@ public class PointableHelper {
      * As the missing encounter has a higher priority than the null, the method will keep checking if any missing has
      * been encountered first, if not, it will do a null check at the end.
      *
+     * If the listAccessor is passed, this method will also go through any list pointable elements and search for
+     * a missing value to give it a higher priority over null values. If {@code null} is passed for the listAccessor,
+     * the list element check will be skipped.
+     *
      * @param result the result pointable that will hold the data
+     * @param listAccessor list accessor to use for check list elements.
      * @param pointable1 the first pointable to be checked
      * @param pointable2 the second pointable to be checked
      * @param pointable3 the third pointable to be checked
@@ -196,13 +230,13 @@ public class PointableHelper {
      *
      * @return {@code true} if the pointable value is missing or null, {@code false} otherwise.
      */
-    public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1, IPointable pointable2,
-            IPointable pointable3, IPointable pointable4) {
+    public static boolean checkAndSetMissingOrNull(IPointable result, ListAccessor listAccessor, IPointable pointable1,
+            IPointable pointable2, IPointable pointable3, IPointable pointable4) throws HyracksDataException {
 
         // this flag will keep an eye on whether a null value is encountered or not
         boolean isMeetNull = false;
 
-        switch (getPointableValueState(pointable1)) {
+        switch (getPointableValueState(pointable1, listAccessor)) {
             case MISSING:
                 setMissing(result);
                 return true;
@@ -212,7 +246,7 @@ public class PointableHelper {
         }
 
         if (pointable2 != null) {
-            switch (getPointableValueState(pointable2)) {
+            switch (getPointableValueState(pointable2, listAccessor)) {
                 case MISSING:
                     setMissing(result);
                     return true;
@@ -223,7 +257,7 @@ public class PointableHelper {
         }
 
         if (pointable3 != null) {
-            switch (getPointableValueState(pointable3)) {
+            switch (getPointableValueState(pointable3, listAccessor)) {
                 case MISSING:
                     setMissing(result);
                     return true;
@@ -234,7 +268,7 @@ public class PointableHelper {
         }
 
         if (pointable4 != null) {
-            switch (getPointableValueState(pointable4)) {
+            switch (getPointableValueState(pointable4, listAccessor)) {
                 case MISSING:
                     setMissing(result);
                     return true;
@@ -257,23 +291,51 @@ public class PointableHelper {
     /**
      * This method checks and returns the pointable value state.
      *
+     * If a ListAccessor is passed to this function, it will check if the passed pointable is a list, and if so, it
+     * will search for a missing value inside the list before checking for null values. If the listAccessor value is
+     * null, no list elements check will be performed.
+     *
      * @param pointable the pointable to be checked
+     * @param listAccessor list accessor used to check the list elements.
      *
      * @return the pointable value state for the passed pointable
      */
-    private static PointableValueState getPointableValueState(IPointable pointable) {
+    private static PointableValueState getPointableValueState(IPointable pointable, ListAccessor listAccessor)
+            throws HyracksDataException {
         if (pointable.getLength() == 0) {
             return PointableValueState.EMPTY_POINTABLE;
         }
 
         byte[] bytes = pointable.getByteArray();
         int offset = pointable.getStartOffset();
+        ATypeTag typeTag = ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
 
-        if (bytes[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+        if (typeTag == ATypeTag.MISSING) {
             return PointableValueState.MISSING;
         }
 
-        if (bytes[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+        if (typeTag == ATypeTag.NULL) {
+            return PointableValueState.NULL;
+        }
+
+        boolean isNull = false;
+
+        // Check the list elements first as it may have a missing that needs to be reported first
+        if (listAccessor != null && typeTag.isListType()) {
+            listAccessor.reset(bytes, offset);
+
+            for (int i = 0; i < listAccessor.size(); i++) {
+                if (listAccessor.getItemType(listAccessor.getItemOffset(i)) == ATypeTag.MISSING) {
+                    return PointableValueState.MISSING;
+                }
+
+                if (listAccessor.getItemType(listAccessor.getItemOffset(i)) == ATypeTag.NULL) {
+                    isNull = true;
+                }
+            }
+        }
+
+        if (isNull) {
             return PointableValueState.NULL;
         }
 

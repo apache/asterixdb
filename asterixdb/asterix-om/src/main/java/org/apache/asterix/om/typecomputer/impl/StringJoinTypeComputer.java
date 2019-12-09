@@ -40,7 +40,7 @@ public class StringJoinTypeComputer extends AbstractResultTypeComputer {
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return validArgs(strippedInputTypes) ? ASTRING : AUnionType.createNullableType(ASTRING);
+        return validArgs(strippedInputTypes) ? ASTRING : AUnionType.createUnknownableType(ASTRING);
     }
 
     private static boolean validArgs(IAType... strippedInputTypes) {
