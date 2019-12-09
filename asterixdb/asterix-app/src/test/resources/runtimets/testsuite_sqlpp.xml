@@ -6106,6 +6106,21 @@
   </test-group>
   <test-group name="misc">
     <test-case FilePath="misc">
+      <compilation-unit name="big_in_list/000">
+        <output-dir compare="Text">big_in_list/000</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="big_in_list/001">
+        <output-dir compare="Text">big_in_list/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="multiple_and/000">
+        <output-dir compare="Text">multiple_and/000</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="record-serialization-ASTERIXDB-2567">
         <output-dir compare="Text">record-serialization-ASTERIXDB-2567</output-dir>
       </compilation-unit>
