@@ -442,6 +442,12 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                 if (isLeftOuter && pReader != null) {
                                     appendNullToProbeTuples(pReader);
                                 }
+                                if (bReader != null) {
+                                    bReader.close();
+                                }
+                                if (pReader != null) {
+                                    pReader.close();
+                                }
                                 continue;
                             }
                             int bSize = state.hybridHJ.getBuildPartitionSizeInTup(pid);
@@ -637,6 +643,12 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                         // For the outer join, we don't reverse the role.
                                         appendNullToProbeTuples(rprfw);
                                     }
+                                    if (rbrfw != null) {
+                                        rbrfw.close();
+                                    }
+                                    if (rprfw != null) {
+                                        rprfw.close();
+                                    }
                                     continue;
                                 }
 
@@ -660,6 +672,12 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                     if (isLeftOuter && rprfw != null) {
                                         // For the outer join, we don't reverse the role.
                                         appendNullToProbeTuples(rprfw);
+                                    }
+                                    if (rbrfw != null) {
+                                        rbrfw.close();
+                                    }
+                                    if (rprfw != null) {
+                                        rprfw.close();
                                     }
                                     continue;
                                 }
