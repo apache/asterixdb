@@ -41,6 +41,7 @@ import org.apache.asterix.common.config.ActiveProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.external.feed.watch.WaitForStateSubscriber;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.api.ICCExtensionManager;
@@ -49,6 +50,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.lock.MetadataLockManager;
+import org.apache.asterix.metadata.utils.MetadataLockUtil;
 import org.apache.asterix.runtime.functions.FunctionCollection;
 import org.apache.asterix.runtime.functions.FunctionManager;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
@@ -94,6 +96,7 @@ public class ActiveEventsListenerTest {
     static IStorageComponentProvider componentProvider;
     static JobIdFactory jobIdFactory;
     static IMetadataLockManager lockManager = new MetadataLockManager();
+    static IMetadataLockUtil lockUtil = new MetadataLockUtil();
     static AlgebricksAbsolutePartitionConstraint locations;
     static ExecutorService executor;
 
@@ -122,6 +125,7 @@ public class ActiveEventsListenerTest {
         hcc = Mockito.mock(IHyracksClientConnection.class);
         Mockito.when(appCtx.getActiveNotificationHandler()).thenReturn(handler);
         Mockito.when(appCtx.getMetadataLockManager()).thenReturn(lockManager);
+        Mockito.when(appCtx.getMetadataLockUtil()).thenReturn(lockUtil);
         Mockito.when(appCtx.getServiceContext()).thenReturn(ccServiceCtx);
         Mockito.when(appCtx.getClusterStateManager()).thenReturn(clusterStateManager);
         Mockito.when(appCtx.getActiveProperties()).thenReturn(Mockito.mock(ActiveProperties.class));

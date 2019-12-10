@@ -22,9 +22,7 @@ import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * An interface that provides an extension mechanism to extend a language with additional statements
@@ -45,10 +43,8 @@ public abstract class ExtensionStatement extends AbstractStatement {
      * @param requestParameters
      * @param metadataProvider
      * @param resultSetId
-     * @throws HyracksDataException
-     * @throws AlgebricksException
+     * @throws Exception
      */
     public abstract void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
-            IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId)
-            throws HyracksDataException, AlgebricksException;
+            IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId) throws Exception;
 }

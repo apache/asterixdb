@@ -26,22 +26,24 @@ import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.metadata.api.IActiveEntityController;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtil;
-import org.apache.asterix.metadata.utils.MetadataLockUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class TestUserActor extends Actor {
 
     private TestClusterControllerActor clusterController;
     private IMetadataLockManager lockManager;
+    private IMetadataLockUtil lockUtil;
 
     public TestUserActor(String name, MetadataProvider metadataProvider, TestClusterControllerActor clusterController) {
         super(name, metadataProvider);
         this.clusterController = clusterController;
         this.lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
+        this.lockUtil = metadataProvider.getApplicationContext().getMetadataLockUtil();
     }
 
     public Action startActivity(IActiveEntityController actionListener) {
@@ -54,8 +56,8 @@ public class TestUserActor extends Actor {
                     lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), dataverseName, entityName);
                     List<Dataset> datasets = actionListener.getDatasets();
                     for (Dataset dataset : datasets) {
-                        MetadataLockUtil.modifyDatasetBegin(lockManager, mdProvider.getLocks(),
-                                dataset.getDataverseName(), dataset.getDatasetName());
+                        lockUtil.modifyDatasetBegin(lockManager, mdProvider.getLocks(), dataset.getDataverseName(),
+                                dataset.getDatasetName());
                     }
                     actionListener.start(mdProvider);
                 } finally {
@@ -77,8 +79,8 @@ public class TestUserActor extends Actor {
                     lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), dataverseName, entityName);
                     List<Dataset> datasets = actionListener.getDatasets();
                     for (Dataset dataset : datasets) {
-                        MetadataLockUtil.modifyDatasetBegin(lockManager, mdProvider.getLocks(),
-                                dataset.getDataverseName(), dataset.getDatasetName());
+                        lockUtil.modifyDatasetBegin(lockManager, mdProvider.getLocks(), dataset.getDataverseName(),
+                                dataset.getDatasetName());
                     }
                     actionListener.stop(mdProvider);
                 } finally {
@@ -197,7 +199,7 @@ public class TestUserActor extends Actor {
                 DataverseName dataverseName = dataset.getDataverseName();
                 String datasetName = dataset.getDatasetName();
                 try {
-                    MetadataLockUtil.createIndexBegin(lockManager, mdProvider.getLocks(), dataverseName, datasetName);
+                    lockUtil.createIndexBegin(lockManager, mdProvider.getLocks(), dataverseName, datasetName);
                     if (actionListener.isActive()) {
                         throw new RuntimeDataException(ErrorCode.CANNOT_ADD_INDEX_TO_DATASET_CONNECTED_TO_ACTIVE_ENTITY,
                                 DatasetUtil.getFullyQualifiedDisplayName(dataverseName, datasetName) + ".index",
@@ -219,7 +221,7 @@ public class TestUserActor extends Actor {
                 DataverseName dataverseName = dataset.getDataverseName();
                 String datasetName = dataset.getDatasetName();
                 try {
-                    MetadataLockUtil.dropIndexBegin(lockManager, mdProvider.getLocks(), dataverseName, datasetName);
+                    lockUtil.dropIndexBegin(lockManager, mdProvider.getLocks(), dataverseName, datasetName);
                     if (actionListener.isActive()) {
                         throw new RuntimeDataException(
                                 ErrorCode.CANNOT_REMOVE_INDEX_FROM_DATASET_CONNECTED_TO_ACTIVE_ENTITY,

@@ -28,9 +28,9 @@ import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.utils.MetadataLockUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.IRetryPolicy;
@@ -156,8 +156,9 @@ public class RecoveryTask {
             }
         }
         IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
+        IMetadataLockUtil lockUtil = metadataProvider.getApplicationContext().getMetadataLockUtil();
         try {
-            acquirePostRecoveryLocks(lockManager);
+            acquirePostRecoveryLocks(lockManager, lockUtil);
             synchronized (listener) {
                 if (!cancelRecovery && listener.getState() == ActivityState.TEMPORARILY_FAILED) {
                     LOGGER.warn("Recovery for {} permanently failed", listener.getEntityId());
@@ -187,12 +188,13 @@ public class RecoveryTask {
         metadataProvider.getLocks().reset();
     }
 
-    protected void acquirePostRecoveryLocks(IMetadataLockManager lockManager) throws AlgebricksException {
+    protected void acquirePostRecoveryLocks(IMetadataLockManager lockManager, IMetadataLockUtil lockUtil)
+            throws AlgebricksException {
         EntityId entityId = listener.getEntityId();
         lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(), entityId.getDataverseName(),
                 entityId.getEntityName());
         for (Dataset dataset : listener.getDatasets()) {
-            MetadataLockUtil.modifyDatasetBegin(lockManager, metadataProvider.getLocks(), dataset.getDataverseName(),
+            lockUtil.modifyDatasetBegin(lockManager, metadataProvider.getLocks(), dataset.getDataverseName(),
                     dataset.getDatasetName());
         }
     }

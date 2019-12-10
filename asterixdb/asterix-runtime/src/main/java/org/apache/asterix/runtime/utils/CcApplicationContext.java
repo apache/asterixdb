@@ -47,6 +47,7 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
+import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.IResourceIdManager;
@@ -91,6 +92,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private INcLifecycleCoordinator ftStrategy;
     private IJobLifecycleListener activeLifeCycleListener;
     private IMetadataLockManager mdLockManager;
+    private IMetadataLockUtil mdLockUtil;
     private IClusterStateManager clusterStateManager;
     private final INodeJobTracker nodeJobTracker;
     private final ITxnIdFactory txnIdFactory;
@@ -103,7 +105,7 @@ public class CcApplicationContext implements ICcApplicationContext {
             ILibraryManager libraryManager, Supplier<IMetadataBootstrap> metadataBootstrapSupplier,
             IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator ftStrategy,
             IJobLifecycleListener activeLifeCycleListener, IStorageComponentProvider storageComponentProvider,
-            IMetadataLockManager mdLockManager, IReceptionistFactory receptionistFactory,
+            IMetadataLockManager mdLockManager, IMetadataLockUtil mdLockUtil, IReceptionistFactory receptionistFactory,
             IConfigValidatorFactory configValidatorFactory, Object extensionManager)
             throws AlgebricksException, IOException {
         this.ccServiceCtx = ccServiceCtx;
@@ -130,6 +132,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         this.globalRecoveryManager = globalRecoveryManager;
         this.storageComponentProvider = storageComponentProvider;
         this.mdLockManager = mdLockManager;
+        this.mdLockUtil = mdLockUtil;
         clusterStateManager = new ClusterStateManager();
         clusterStateManager.setCcAppCtx(this);
         this.resourceIdManager = new ResourceIdManager(clusterStateManager);
@@ -265,6 +268,11 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public IMetadataLockManager getMetadataLockManager() {
         return mdLockManager;
+    }
+
+    @Override
+    public IMetadataLockUtil getMetadataLockUtil() {
+        return mdLockUtil;
     }
 
     @Override

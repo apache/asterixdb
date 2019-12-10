@@ -27,6 +27,7 @@ import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
+import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.IResourceIdManager;
@@ -90,6 +91,11 @@ public interface ICcApplicationContext extends IApplicationContext {
      * @return the metadata lock manager
      */
     IMetadataLockManager getMetadataLockManager();
+
+    /**
+     * @return the metadata lock utility
+     */
+    IMetadataLockUtil getMetadataLockUtil();
 
     /**
      * @return the metadata bootstrap
