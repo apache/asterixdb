@@ -16,7 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-"的"="离";
-"و"="ن"
-;
+["的"="离", "و"="ن"];
