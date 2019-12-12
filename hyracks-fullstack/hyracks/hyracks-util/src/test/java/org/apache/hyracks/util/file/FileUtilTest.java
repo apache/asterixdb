@@ -41,4 +41,27 @@ public class FileUtilTest {
                 joinPath('\\', "\\\\myserver\\tmp\\\\far\\baz\\\\\\\\lala"));
         Assert.assertEquals("C:\\temp\\far\\baz\\lala", joinPath('\\', "C:\\temp\\\\far\\baz\\\\\\\\lala\\"));
     }
+
+    @Test
+    public void testCanonicalize() {
+        Assert.assertEquals("bat.txt", FileUtil.canonicalize("foo/../bat.txt"));
+        Assert.assertEquals("bat.txt", FileUtil.canonicalize("foo/bar/../../bat.txt"));
+        Assert.assertEquals("foo/", FileUtil.canonicalize("foo/bar/../"));
+        Assert.assertEquals("foo", FileUtil.canonicalize("foo/bar/.."));
+        Assert.assertEquals("../bat.txt", FileUtil.canonicalize("../bat.txt"));
+        Assert.assertEquals("/bat.txt", FileUtil.canonicalize("/foo/bar/../../bat.txt"));
+        Assert.assertEquals("/bar/bat.txt", FileUtil.canonicalize("/foo/../bar/bat.txt"));
+    }
+
+    @Test
+    public void testCanonicalizeWindoze() {
+        Assert.assertEquals("bat.txt", FileUtil.canonicalize("foo\\..\\bat.txt"));
+        Assert.assertEquals("bat.txt", FileUtil.canonicalize("foo\\bar\\..\\..\\bat.txt"));
+        Assert.assertEquals("foo\\", FileUtil.canonicalize("foo\\bar\\..\\"));
+        Assert.assertEquals("foo", FileUtil.canonicalize("foo\\bar\\.."));
+        Assert.assertEquals("..\\bat.txt", FileUtil.canonicalize("..\\bat.txt"));
+        Assert.assertEquals("\\bat.txt", FileUtil.canonicalize("\\foo\\bar\\..\\..\\bat.txt"));
+        Assert.assertEquals("\\bar\\bat.txt", FileUtil.canonicalize("\\foo\\..\\bar\\bat.txt"));
+        Assert.assertEquals("C:\\bar\\bat.txt", FileUtil.canonicalize("C:\\foo\\..\\bar\\bat.txt"));
+    }
 }

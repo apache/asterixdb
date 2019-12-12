@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Path;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
@@ -31,6 +32,7 @@ import org.apache.logging.log4j.Logger;
 public class FileUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final Pattern PARENT_DIR = Pattern.compile("([/\\\\]|^)[^./\\\\]+[/\\\\]\\.\\.([/\\\\]|$)");
     private static final Object LOCK = new Object();
     private static final int MAX_COPY_ATTEMPTS = 3;
 
@@ -94,5 +96,23 @@ public class FileUtil {
             raf.write(data);
             raf.getChannel().force(true);
         }
+    }
+
+    public static String canonicalize(CharSequence path) {
+        String newPath = path.toString();
+        Matcher matcher = PARENT_DIR.matcher(newPath);
+        while (matcher.find()) {
+            // TODO(mblow): use StringBuilder once Java 8 is no longer supported (requires >=9)
+            StringBuffer sb = new StringBuffer();
+            matcher.appendReplacement(sb, matcher.group(2).isEmpty() ? "" : matcher.group(1).replace("\\", "\\\\"));
+            matcher.appendTail(sb);
+            newPath = sb.toString();
+            matcher.reset(newPath);
+        }
+        return newPath;
+    }
+
+    public static File canonicalize(File file) {
+        return new File(canonicalize(file.getPath()));
     }
 }
