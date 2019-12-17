@@ -124,6 +124,14 @@ public final class ExceptionUtil {
         }
     }
 
+    public static void warnIncomparableTypes(IEvaluatorContext ctx, SourceLocation srcLoc, ATypeTag type1,
+            ATypeTag type2) {
+        IWarningCollector warningCollector = ctx.getWarningCollector();
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(srcLoc, ErrorCode.INCOMPARABLE_TYPES, type1, type2));
+        }
+    }
+
     /** For functions that accept an integer value (no fractions) of any numeric type including double & float */
     public static void warnNonInteger(IEvaluatorContext ctx, SourceLocation srcLoc, FunctionIdentifier fid, int argIdx,
             double argValue) {

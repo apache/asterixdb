@@ -70,19 +70,21 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
     protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     protected final DataOutput out = resultStorage.getDataOutput();
     protected final TaggedValuePointable argLeft = TaggedValuePointable.FACTORY.createPointable();
-    private final TaggedValuePointable argRight = TaggedValuePointable.FACTORY.createPointable();
+    protected final TaggedValuePointable argRight = TaggedValuePointable.FACTORY.createPointable();
+    protected final SourceLocation sourceLoc;
+    protected final IEvaluatorContext ctx;
     private final TaggedValueReference leftVal = new TaggedValueReference();
     private final TaggedValueReference rightVal = new TaggedValueReference();
     private final IScalarEvaluator evalLeft;
     private final IScalarEvaluator evalRight;
-    protected final SourceLocation sourceLoc;
     private final ILogicalBinaryComparator logicalComparator;
-    private IAObject leftConstant;
-    private IAObject rightConstant;
+    private final IAObject leftConstant;
+    private final IAObject rightConstant;
 
-    public AbstractComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory, IAType leftType,
+    AbstractComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory, IAType leftType,
             IScalarEvaluatorFactory evalRightFactory, IAType rightType, IEvaluatorContext ctx, SourceLocation sourceLoc,
             boolean isEquality) throws HyracksDataException {
+        this.ctx = ctx;
         this.evalLeft = evalLeftFactory.createScalarEvaluator(ctx);
         this.evalRight = evalRightFactory.createScalarEvaluator(ctx);
         this.sourceLoc = sourceLoc;
@@ -91,11 +93,8 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
         rightConstant = getValueOfConstantEval(evalRightFactory);
     }
 
-    private IAObject getValueOfConstantEval(IScalarEvaluatorFactory factory) {
-        if (factory instanceof ConstantEvalFactory) {
-            return getConstantValue(((ConstantEvalFactory) factory).getValue());
-        }
-        return null;
+    private static IAObject getValueOfConstantEval(IScalarEvaluatorFactory factory) {
+        return factory instanceof ConstantEvalFactory ? getConstant(((ConstantEvalFactory) factory).getValue()) : null;
     }
 
     @Override
@@ -118,20 +117,11 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
 
     final Result compare() throws HyracksDataException {
         if (leftConstant != null) {
-            if (rightConstant != null) {
-                // both are constants
-                return logicalComparator.compare(leftConstant, rightConstant);
-            } else {
-                // left is constant, right isn't
-                return logicalComparator.compare(leftConstant, rightVal);
-            }
+            return rightConstant != null ? logicalComparator.compare(leftConstant, rightConstant)
+                    : logicalComparator.compare(leftConstant, rightVal);
         } else {
-            if (rightConstant != null) {
-                // right is constant, left isn't
-                return logicalComparator.compare(leftVal, rightConstant);
-            } else {
-                return logicalComparator.compare(leftVal, rightVal);
-            }
+            return rightConstant != null ? logicalComparator.compare(leftVal, rightConstant)
+                    : logicalComparator.compare(leftVal, rightVal);
         }
     }
 
@@ -147,7 +137,7 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
         result.set(resultStorage);
     }
 
-    private IAObject getConstantValue(byte[] bytes) {
+    private static IAObject getConstant(byte[] bytes) {
         int start = 0;
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[start]);
         if (typeTag == null) {

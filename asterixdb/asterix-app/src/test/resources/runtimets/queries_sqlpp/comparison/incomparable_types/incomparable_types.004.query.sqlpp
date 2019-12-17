@@ -16,14 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : a test case for inequality comparisons of duration
- * Expected Res : Failure
- * Date         : 9 May 2013
- * Issue        : 363
- */
- 
-let $v1 := duration("P300Y6M3DT9H5M2.348S")
-let $dv1 := duration("P3Y6M3DT9H5M2.348S")
 
-return { "duration0":  $v1 > $dv1, "duration1": $dv1 < $v1, "duration2":  $v1 >= $dv1, "duration3": $dv1 <= $v1 }
+-- param max-warnings:string=10
+
+from [
+[1,2] < 4,
+point('0.0,0.0') < point('0.0,1.0')
+] as data
+select data;

@@ -36,6 +36,7 @@ public abstract class AbstractIfEqualsEvaluator extends AbstractComparisonEvalua
 
     @Override
     protected void evaluateImpl(IPointable result) throws HyracksDataException {
+        // TODO(ali): revisit this for the cases of MISSING/NULL/INCOMPARABLE
         switch (compare()) {
             case MISSING:
                 writeMissing(result);

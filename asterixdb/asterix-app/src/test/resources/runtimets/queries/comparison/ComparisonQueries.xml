@@ -175,41 +175,6 @@
     </compilation-unit>
   </test-case>
   <test-case FilePath="comparison">
-    <compilation-unit name="issue363_inequality_duration">
-      <output-dir compare="Text">issue363_inequality_duration</output-dir>
-    </compilation-unit>
-  </test-case>
-  <test-case FilePath="comparison">
-    <compilation-unit name="issue363_inequality_interval">
-      <output-dir compare="Text">issue363_inequality_interval</output-dir>
-    </compilation-unit>
-  </test-case>
-  <test-case FilePath="comparison">
-    <compilation-unit name="issue363_inequality_point">
-      <output-dir compare="Text">issue363_inequality_point</output-dir>
-    </compilation-unit>
-  </test-case>
-  <test-case FilePath="comparison">
-    <compilation-unit name="issue363_inequality_line">
-      <output-dir compare="Text">issue363_inequality_line</output-dir>
-    </compilation-unit>
-  </test-case>
-  <test-case FilePath="comparison">
-    <compilation-unit name="issue363_inequality_polygon">
-      <output-dir compare="Text">issue363_inequality_polygon</output-dir>
-    </compilation-unit>
-  </test-case>
-  <test-case FilePath="comparison">
-    <compilation-unit name="issue363_inequality_rectangle">
-      <output-dir compare="Text">issue363_inequality_rectangle</output-dir>
-    </compilation-unit>
-  </test-case>
-  <test-case FilePath="comparison">
-    <compilation-unit name="issue363_inequality_circle">
-      <output-dir compare="Text">issue363_inequality_circle</output-dir>
-    </compilation-unit>
-  </test-case>
-  <test-case FilePath="comparison">
     <compilation-unit name="binary">
       <output-dir compare="Text">binary</output-dir>
     </compilation-unit>

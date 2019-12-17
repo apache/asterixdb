@@ -19,9 +19,12 @@
 
 package org.apache.asterix.runtime.evaluators.comparisons;
 
+import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
+
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.Result;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
@@ -50,12 +53,16 @@ public abstract class AbstractValueComparisonEvaluator extends AbstractCompariso
                 writeMissing(result);
                 break;
             case NULL:
+                writeNull(result);
+                break;
             case INCOMPARABLE:
+                ExceptionUtil.warnIncomparableTypes(ctx, sourceLoc, VALUE_TYPE_MAPPING[argLeft.getTag()],
+                        VALUE_TYPE_MAPPING[argRight.getTag()]);
                 writeNull(result);
                 break;
             default:
                 resultStorage.reset();
-                ABoolean b = getComparisonResult(comparisonResult) ? ABoolean.TRUE : ABoolean.FALSE;
+                ABoolean b = ABoolean.valueOf(getComparisonResult(comparisonResult));
                 serde.serialize(b, out);
                 result.set(resultStorage);
         }

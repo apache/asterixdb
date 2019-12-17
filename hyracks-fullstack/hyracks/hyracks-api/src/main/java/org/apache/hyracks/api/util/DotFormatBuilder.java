@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package org.apache.hyracks.algebricks.core.utils;
+package org.apache.hyracks.api.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -164,6 +164,11 @@ public class DotFormatBuilder {
             return this;
         }
 
+        public Edge setDashed() {
+            attributes.put(Attribute.STYLE, Style.DASHED);
+            return this;
+        }
+
         @Override
         public boolean equals(Object other) {
             if (!(other instanceof Edge)) {
@@ -231,6 +236,7 @@ public class DotFormatBuilder {
     public static final class Color extends AttributeValue {
         public static final Color RED = new Color("red");
         public static final Color SKYBLUE = new Color("skyblue");
+        public static final Color BLUE = new Color("blue");
 
         // no instantiation
         private Color(String color) {
@@ -238,9 +244,19 @@ public class DotFormatBuilder {
         }
     }
 
-    private class Attribute {
+    public static final class Style extends AttributeValue {
+        public static final Style DASHED = new Style("dashed");
+
+        // no instantiation
+        private Style(String style) {
+            super(style);
+        }
+    }
+
+    private static final class Attribute {
         private static final String COLOR = "color";
         private static final String LABEL = "label";
+        private static final String STYLE = "style";
 
         // no instantiation
         private Attribute() {

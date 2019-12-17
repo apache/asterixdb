@@ -3367,6 +3367,14 @@
         <output-dir compare="Text">circle-point</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="comparison" check-warnings="true">
+      <compilation-unit name="incomparable_types">
+        <output-dir compare="Text">incomparable_types</output-dir>
+          <expected-warn>Incomparable input types: string and bigint (in line 25, at column 13)</expected-warn>
+          <expected-warn>Incomparable input types: array and bigint (in line 23, at column 7)</expected-warn>
+          <expected-warn>Incomparable input types: point and point (in line 24, at column 18)</expected-warn>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="constructor">
     <test-case FilePath="constructor">

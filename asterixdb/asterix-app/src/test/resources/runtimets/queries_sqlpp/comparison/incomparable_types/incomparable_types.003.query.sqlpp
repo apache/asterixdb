@@ -16,9 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : a test case for inequality comparisons of line
- * Expected Res : Failure
- * Date         : 9 May 2013
- * Issue        : 363
- */
+
+-- param max-warnings:string=10
+
+use test;
+
+from ds1 join ds2 on ds1.f /*+ hash-bcast */ = ds2.f
+where ds1.f > 1
+select ds1.f;
