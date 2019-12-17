@@ -359,14 +359,14 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_mixed">
-        <output-dir compare="Text">sum_mixed</output-dir>
+      <compilation-unit name="sum/sum_mixed">
+        <output-dir compare="Text">sum/sum_mixed</output-dir>
         <expected-error>Invalid item type: function agg-sum cannot process item type string in an input array</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_mixed">
-        <output-dir compare="Text">serial_sum_mixed</output-dir>
+      <compilation-unit name="sum/serial_sum_mixed">
+        <output-dir compare="Text">sum/serial_sum_mixed</output-dir>
         <expected-error>Invalid item type: function agg-sum cannot process item type string in an input array</expected-error>
       </compilation-unit>
     </test-case>
@@ -434,13 +434,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="issue425_sum_hetero_list_1">
-        <output-dir compare="Text">issue425_sum_hetero_list_1</output-dir>
+      <compilation-unit name="sum/issue425_sum_hetero_list_1">
+        <output-dir compare="Text">sum/issue425_sum_hetero_list_1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="issue425_sum_hetero_list">
-        <output-dir compare="Text">issue425_sum_hetero_list</output-dir>
+      <compilation-unit name="sum/issue425_sum_hetero_list">
+        <output-dir compare="Text">sum/issue425_sum_hetero_list</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -779,18 +779,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="scalar_sum">
-        <output-dir compare="Text">scalar_sum</output-dir>
+      <compilation-unit name="sum/scalar_sum">
+        <output-dir compare="Text">sum/scalar_sum</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="scalar_sum_empty">
-        <output-dir compare="Text">scalar_sum_empty</output-dir>
+      <compilation-unit name="sum/scalar_sum_empty">
+        <output-dir compare="Text">sum/scalar_sum_empty</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="scalar_sum_null">
-        <output-dir compare="Text">scalar_sum_null</output-dir>
+      <compilation-unit name="sum/scalar_sum_null">
+        <output-dir compare="Text">sum/scalar_sum_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -1004,74 +1004,74 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_double">
-        <output-dir compare="Text">serial_sum_double</output-dir>
+      <compilation-unit name="sum/serial_sum_double">
+        <output-dir compare="Text">sum/serial_sum_double</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_double_null">
-        <output-dir compare="Text">serial_sum_double_null</output-dir>
+      <compilation-unit name="sum/serial_sum_double_null">
+        <output-dir compare="Text">sum/serial_sum_double_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_empty">
-        <output-dir compare="Text">serial_sum_empty</output-dir>
+      <compilation-unit name="sum/serial_sum_empty">
+        <output-dir compare="Text">sum/serial_sum_empty</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_float">
-        <output-dir compare="Text">serial_sum_float</output-dir>
+      <compilation-unit name="sum/serial_sum_float">
+        <output-dir compare="Text">sum/serial_sum_float</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_float_null">
-        <output-dir compare="Text">serial_sum_float_null</output-dir>
+      <compilation-unit name="sum/serial_sum_float_null">
+        <output-dir compare="Text">sum/serial_sum_float_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_int16">
-        <output-dir compare="Text">serial_sum_int16</output-dir>
+      <compilation-unit name="sum/serial_sum_int16">
+        <output-dir compare="Text">sum/serial_sum_int16</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_int16_null">
-        <output-dir compare="Text">serial_sum_int16_null</output-dir>
+      <compilation-unit name="sum/serial_sum_int16_null">
+        <output-dir compare="Text">sum/serial_sum_int16_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_int32">
-        <output-dir compare="Text">serial_sum_int32</output-dir>
+      <compilation-unit name="sum/serial_sum_int32">
+        <output-dir compare="Text">sum/serial_sum_int32</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_int32_null">
-        <output-dir compare="Text">serial_sum_int32_null</output-dir>
+      <compilation-unit name="sum/serial_sum_int32_null">
+        <output-dir compare="Text">sum/serial_sum_int32_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_int64">
-        <output-dir compare="Text">serial_sum_int64</output-dir>
+      <compilation-unit name="sum/serial_sum_int64">
+        <output-dir compare="Text">sum/serial_sum_int64</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_int64_null">
-        <output-dir compare="Text">serial_sum_int64_null</output-dir>
+      <compilation-unit name="sum/serial_sum_int64_null">
+        <output-dir compare="Text">sum/serial_sum_int64_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_int64_overflow">
-        <output-dir compare="Text">serial_sum_int64_overflow</output-dir>
+      <compilation-unit name="sum/serial_sum_int64_overflow">
+        <output-dir compare="Text">sum/serial_sum_int64_overflow</output-dir>
         <expected-error>Overflow in agg-sum</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_int8">
-        <output-dir compare="Text">serial_sum_int8</output-dir>
+      <compilation-unit name="sum/serial_sum_int8">
+        <output-dir compare="Text">sum/serial_sum_int8</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="serial_sum_int8_null">
-        <output-dir compare="Text">serial_sum_int8_null</output-dir>
+      <compilation-unit name="sum/serial_sum_int8_null">
+        <output-dir compare="Text">sum/serial_sum_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -1300,99 +1300,99 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_double">
-        <output-dir compare="Text">sum_double</output-dir>
+      <compilation-unit name="sum/sum_double">
+        <output-dir compare="Text">sum/sum_double</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_double_null">
-        <output-dir compare="Text">sum_double_null</output-dir>
+      <compilation-unit name="sum/sum_double_null">
+        <output-dir compare="Text">sum/sum_double_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_empty_01">
-        <output-dir compare="Text">sum_empty_01</output-dir>
+      <compilation-unit name="sum/sum_empty_01">
+        <output-dir compare="Text">sum/sum_empty_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_empty_02">
-        <output-dir compare="Text">sum_empty_02</output-dir>
+      <compilation-unit name="sum/sum_empty_02">
+        <output-dir compare="Text">sum/sum_empty_02</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_float">
-        <output-dir compare="Text">sum_float</output-dir>
+      <compilation-unit name="sum/sum_float">
+        <output-dir compare="Text">sum/sum_float</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_float_null">
-        <output-dir compare="Text">sum_float_null</output-dir>
+      <compilation-unit name="sum/sum_float_null">
+        <output-dir compare="Text">sum/sum_float_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_int16">
-        <output-dir compare="Text">sum_int16</output-dir>
+      <compilation-unit name="sum/sum_int16">
+        <output-dir compare="Text">sum/sum_int16</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_int16_null">
-        <output-dir compare="Text">sum_int16_null</output-dir>
+      <compilation-unit name="sum/sum_int16_null">
+        <output-dir compare="Text">sum/sum_int16_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_int32">
-        <output-dir compare="Text">sum_int32</output-dir>
+      <compilation-unit name="sum/sum_int32">
+        <output-dir compare="Text">sum/sum_int32</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_int32_null">
-        <output-dir compare="Text">sum_int32_null</output-dir>
+      <compilation-unit name="sum/sum_int32_null">
+        <output-dir compare="Text">sum/sum_int32_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_int64">
-        <output-dir compare="Text">sum_int64</output-dir>
+      <compilation-unit name="sum/sum_int64">
+        <output-dir compare="Text">sum/sum_int64</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_int64_null">
-        <output-dir compare="Text">sum_int64_null</output-dir>
+      <compilation-unit name="sum/sum_int64_null">
+        <output-dir compare="Text">sum/sum_int64_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_int64_null">
-        <output-dir compare="Text">sum_int64_null</output-dir>
+      <compilation-unit name="sum/sum_int64_null">
+        <output-dir compare="Text">sum/sum_int64_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_int64_overflow">
-        <output-dir compare="Text">sum_int64_overflow</output-dir>
+      <compilation-unit name="sum/sum_int64_overflow">
+        <output-dir compare="Text">sum/sum_int64_overflow</output-dir>
         <expected-error>Overflow in agg-sum</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_int8">
-        <output-dir compare="Text">sum_int8</output-dir>
+      <compilation-unit name="sum/sum_int8">
+        <output-dir compare="Text">sum/sum_int8</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_int8_null">
-        <output-dir compare="Text">sum_int8_null</output-dir>
+      <compilation-unit name="sum/sum_int8_null">
+        <output-dir compare="Text">sum/sum_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_null-with-pred">
-        <output-dir compare="Text">sum_null-with-pred</output-dir>
+      <compilation-unit name="sum/sum_null-with-pred">
+        <output-dir compare="Text">sum/sum_null-with-pred</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_numeric_null">
-        <output-dir compare="Text">sum_numeric_null</output-dir>
+      <compilation-unit name="sum/sum_numeric_null">
+        <output-dir compare="Text">sum/sum_numeric_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
-      <compilation-unit name="sum_distinct">
-        <output-dir compare="Text">sum_distinct</output-dir>
+      <compilation-unit name="sum/sum_distinct">
+        <output-dir compare="Text">sum/sum_distinct</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -1553,14 +1553,14 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_mixed">
-        <output-dir compare="Text">sum_mixed</output-dir>
+      <compilation-unit name="sum/sum_mixed">
+        <output-dir compare="Text">sum/sum_mixed</output-dir>
         <expected-error>Invalid item type: function agg-sum cannot process item type string in an input array</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_mixed">
-        <output-dir compare="Text">serial_sum_mixed</output-dir>
+      <compilation-unit name="sum/serial_sum_mixed">
+        <output-dir compare="Text">sum/serial_sum_mixed</output-dir>
         <expected-error>Invalid item type: function agg-sum cannot process item type string in an input array</expected-error>
       </compilation-unit>
     </test-case>
@@ -1616,13 +1616,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="issue425_sum_hetero_list_1">
-        <output-dir compare="Text">issue425_sum_hetero_list_1</output-dir>
+      <compilation-unit name="sum/issue425_sum_hetero_list_1">
+        <output-dir compare="Text">sum/issue425_sum_hetero_list_1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="issue425_sum_hetero_list">
-        <output-dir compare="Text">issue425_sum_hetero_list</output-dir>
+      <compilation-unit name="sum/issue425_sum_hetero_list">
+        <output-dir compare="Text">sum/issue425_sum_hetero_list</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1971,18 +1971,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="scalar_sum">
-        <output-dir compare="Text">scalar_sum</output-dir>
+      <compilation-unit name="sum/scalar_sum">
+        <output-dir compare="Text">sum/scalar_sum</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="scalar_sum_empty">
-        <output-dir compare="Text">scalar_sum_empty</output-dir>
+      <compilation-unit name="sum/scalar_sum_empty">
+        <output-dir compare="Text">sum/scalar_sum_empty</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="scalar_sum_null">
-        <output-dir compare="Text">scalar_sum_null</output-dir>
+      <compilation-unit name="sum/scalar_sum_null">
+        <output-dir compare="Text">sum/scalar_sum_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -2196,74 +2196,74 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_double">
-        <output-dir compare="Text">serial_sum_double</output-dir>
+      <compilation-unit name="sum/serial_sum_double">
+        <output-dir compare="Text">sum/serial_sum_double</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_double_null">
-        <output-dir compare="Text">serial_sum_double_null</output-dir>
+      <compilation-unit name="sum/serial_sum_double_null">
+        <output-dir compare="Text">sum/serial_sum_double_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_empty">
-        <output-dir compare="Text">serial_sum_empty</output-dir>
+      <compilation-unit name="sum/serial_sum_empty">
+        <output-dir compare="Text">sum/serial_sum_empty</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_float">
-        <output-dir compare="Text">serial_sum_float</output-dir>
+      <compilation-unit name="sum/serial_sum_float">
+        <output-dir compare="Text">sum/serial_sum_float</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_float_null">
-        <output-dir compare="Text">serial_sum_float_null</output-dir>
+      <compilation-unit name="sum/serial_sum_float_null">
+        <output-dir compare="Text">sum/serial_sum_float_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_int16">
-        <output-dir compare="Text">serial_sum_int16</output-dir>
+      <compilation-unit name="sum/serial_sum_int16">
+        <output-dir compare="Text">sum/serial_sum_int16</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_int16_null">
-        <output-dir compare="Text">serial_sum_int16_null</output-dir>
+      <compilation-unit name="sum/serial_sum_int16_null">
+        <output-dir compare="Text">sum/serial_sum_int16_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_int32">
-        <output-dir compare="Text">serial_sum_int32</output-dir>
+      <compilation-unit name="sum/serial_sum_int32">
+        <output-dir compare="Text">sum/serial_sum_int32</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_int32_null">
-        <output-dir compare="Text">serial_sum_int32_null</output-dir>
+      <compilation-unit name="sum/serial_sum_int32_null">
+        <output-dir compare="Text">sum/serial_sum_int32_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_int64">
-        <output-dir compare="Text">serial_sum_int64</output-dir>
+      <compilation-unit name="sum/serial_sum_int64">
+        <output-dir compare="Text">sum/serial_sum_int64</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_int64_null">
-        <output-dir compare="Text">serial_sum_int64_null</output-dir>
+      <compilation-unit name="sum/serial_sum_int64_null">
+        <output-dir compare="Text">sum/serial_sum_int64_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_int64_overflow">
-        <output-dir compare="Text">serial_sum_int64_overflow</output-dir>
+      <compilation-unit name="sum/serial_sum_int64_overflow">
+        <output-dir compare="Text">sum/serial_sum_int64_overflow</output-dir>
         <expected-error>Overflow in agg-sum</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_int8">
-        <output-dir compare="Text">serial_sum_int8</output-dir>
+      <compilation-unit name="sum/serial_sum_int8">
+        <output-dir compare="Text">sum/serial_sum_int8</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_sum_int8_null">
-        <output-dir compare="Text">serial_sum_int8_null</output-dir>
+      <compilation-unit name="sum/serial_sum_int8_null">
+        <output-dir compare="Text">sum/serial_sum_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -2492,94 +2492,94 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_double">
-        <output-dir compare="Text">sum_double</output-dir>
+      <compilation-unit name="sum/sum_double">
+        <output-dir compare="Text">sum/sum_double</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_double_null">
-        <output-dir compare="Text">sum_double_null</output-dir>
+      <compilation-unit name="sum/sum_double_null">
+        <output-dir compare="Text">sum/sum_double_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_empty_01">
-        <output-dir compare="Text">sum_empty_01</output-dir>
+      <compilation-unit name="sum/sum_empty_01">
+        <output-dir compare="Text">sum/sum_empty_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_empty_02">
-        <output-dir compare="Text">sum_empty_02</output-dir>
+      <compilation-unit name="sum/sum_empty_02">
+        <output-dir compare="Text">sum/sum_empty_02</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_float">
-        <output-dir compare="Text">sum_float</output-dir>
+      <compilation-unit name="sum/sum_float">
+        <output-dir compare="Text">sum/sum_float</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_float_null">
-        <output-dir compare="Text">sum_float_null</output-dir>
+      <compilation-unit name="sum/sum_float_null">
+        <output-dir compare="Text">sum/sum_float_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_int16">
-        <output-dir compare="Text">sum_int16</output-dir>
+      <compilation-unit name="sum/sum_int16">
+        <output-dir compare="Text">sum/sum_int16</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_int16_null">
-        <output-dir compare="Text">sum_int16_null</output-dir>
+      <compilation-unit name="sum/sum_int16_null">
+        <output-dir compare="Text">sum/sum_int16_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_int32">
-        <output-dir compare="Text">sum_int32</output-dir>
+      <compilation-unit name="sum/sum_int32">
+        <output-dir compare="Text">sum/sum_int32</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_int32_null">
-        <output-dir compare="Text">sum_int32_null</output-dir>
+      <compilation-unit name="sum/sum_int32_null">
+        <output-dir compare="Text">sum/sum_int32_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_int64">
-        <output-dir compare="Text">sum_int64</output-dir>
+      <compilation-unit name="sum/sum_int64">
+        <output-dir compare="Text">sum/sum_int64</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_int64_null">
-        <output-dir compare="Text">sum_int64_null</output-dir>
+      <compilation-unit name="sum/sum_int64_null">
+        <output-dir compare="Text">sum/sum_int64_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_int64_overflow">
-        <output-dir compare="Text">sum_int64_overflow</output-dir>
+      <compilation-unit name="sum/sum_int64_overflow">
+        <output-dir compare="Text">sum/sum_int64_overflow</output-dir>
         <expected-error>Overflow in agg-sum</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_int8">
-        <output-dir compare="Text">sum_int8</output-dir>
+      <compilation-unit name="sum/sum_int8">
+        <output-dir compare="Text">sum/sum_int8</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_int8_null">
-        <output-dir compare="Text">sum_int8_null</output-dir>
+      <compilation-unit name="sum/sum_int8_null">
+        <output-dir compare="Text">sum/sum_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_null-with-pred">
-        <output-dir compare="Text">sum_null-with-pred</output-dir>
+      <compilation-unit name="sum/sum_null-with-pred">
+        <output-dir compare="Text">sum/sum_null-with-pred</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_numeric_null">
-        <output-dir compare="Text">sum_numeric_null</output-dir>
+      <compilation-unit name="sum/sum_numeric_null">
+        <output-dir compare="Text">sum/sum_numeric_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="sum_distinct">
-        <output-dir compare="Text">sum_distinct</output-dir>
+      <compilation-unit name="sum/sum_distinct">
+        <output-dir compare="Text">sum/sum_distinct</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
