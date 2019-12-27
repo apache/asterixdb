@@ -36,6 +36,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.http.server.HttpServerConfigBuilder;
 
 public class HttpServerRecordReaderFactory implements IRecordReaderFactory<char[]> {
+    private static final long serialVersionUID = -66399726369366305L;
 
     private static final String KEY_CONFIGURATION_ADDRESSES = "addresses";
     private static final String KEY_CONFIGURATION_PATH = "path";

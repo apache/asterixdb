@@ -24,6 +24,7 @@ import java.io.Serializable;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public abstract class SqlppToken implements Serializable {
+    private static final long serialVersionUID = -2974917383986695694L;
 
     public SourceLocation sourceLocation;
 

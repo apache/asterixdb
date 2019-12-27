@@ -31,6 +31,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @MissingNullInOutFunction
 public class BitOrDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = 3096119314615759635L;
 
     public static final IFunctionDescriptorFactory FACTORY = BitOrDescriptor::new;
 

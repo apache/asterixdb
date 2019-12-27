@@ -36,6 +36,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 
 @MissingNullInOutFunction
 public class BitCountDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = -6355679338952487274L;
 
     public static final IFunctionDescriptorFactory FACTORY = BitCountDescriptor::new;
 

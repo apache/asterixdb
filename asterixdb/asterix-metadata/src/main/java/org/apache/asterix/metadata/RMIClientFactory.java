@@ -28,6 +28,7 @@ import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
 public class RMIClientFactory implements RMIClientSocketFactory, Serializable {
+    private static final long serialVersionUID = -3874278041718817394L;
 
     private final boolean sslEnabled;
 

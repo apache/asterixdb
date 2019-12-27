@@ -49,6 +49,7 @@ public class ProfilePrinter implements IResponseFieldPrinter {
                 pw.print("\t\"" + FIELD_NAME + "\" : ");
                 ObjectMapper om = new ObjectMapper();
                 om.disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
+                @SuppressWarnings("serial")
                 DefaultIndenter ind = new DefaultIndenter("\t", DefaultIndenter.SYS_LF) {
                     @Override
                     public void writeIndentation(JsonGenerator jg, int level) throws IOException {
