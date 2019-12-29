@@ -31,6 +31,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @MissingNullInOutFunction
 public class BitShiftWithRotateFlagDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = -2277131079446466053L;
 
     public static final IFunctionDescriptorFactory FACTORY = BitShiftWithRotateFlagDescriptor::new;
 

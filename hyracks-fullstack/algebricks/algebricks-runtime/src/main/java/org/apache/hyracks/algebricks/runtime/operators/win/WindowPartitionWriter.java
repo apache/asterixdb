@@ -104,7 +104,7 @@ final class WindowPartitionWriter {
             copyToFrame(frameBuffer, writerFrame);
         } else {
             if (fileWriter == null) {
-                FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(fileNamePrefix);
+                FileReference file = ctx.createManagedWorkspaceFile(fileNamePrefix);
                 fileWriter = new RunFileWriter(file, ctx.getIoManager());
                 fileWriter.open();
             }

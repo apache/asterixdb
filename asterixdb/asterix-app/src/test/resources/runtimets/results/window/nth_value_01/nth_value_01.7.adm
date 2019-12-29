@@ -1,0 +1,10 @@
+{ "n_3p_1p_r": null, "n_3p_1p_i": null, "n_3p_cr_r": null, "n_3p_cr_i": null, "n_3p_1f_r": "a", "n_3p_1f_i": null, "n_3p_uf_r": "b", "n_3p_uf_i": "b", "x": "a", "y": 1, "p": 0 }
+{ "n_3p_1p_r": null, "n_3p_1p_i": null, "n_3p_cr_r": "a", "n_3p_cr_i": null, "n_3p_1f_i": null, "n_3p_uf_r": "b", "n_3p_uf_i": "b", "y": 2, "p": 0 }
+{ "n_3p_1p_r": "a", "n_3p_1p_i": null, "n_3p_cr_i": null, "n_3p_1f_r": null, "n_3p_1f_i": "a", "n_3p_uf_r": "b", "n_3p_uf_i": "b", "x": null, "y": 3, "p": 0 }
+{ "n_3p_1p_i": null, "n_3p_cr_r": null, "n_3p_cr_i": "a", "n_3p_1f_r": "b", "n_3p_1f_i": "b", "n_3p_uf_r": "b", "n_3p_uf_i": "b", "x": "b", "y": 4, "p": 0 }
+{ "n_3p_1p_r": null, "n_3p_1p_i": null, "n_3p_cr_r": "b", "n_3p_cr_i": "b", "n_3p_1f_r": "b", "n_3p_1f_i": "b", "n_3p_uf_r": "b", "n_3p_uf_i": "b", "x": "c", "y": 5, "p": 0 }
+{ "n_3p_1p_r": null, "n_3p_1p_i": null, "n_3p_cr_r": null, "n_3p_cr_i": null, "n_3p_1f_r": "a", "n_3p_1f_i": null, "n_3p_uf_r": "b", "n_3p_uf_i": "b", "x": "a", "y": 6, "p": 1 }
+{ "n_3p_1p_r": null, "n_3p_1p_i": null, "n_3p_cr_r": "a", "n_3p_cr_i": null, "n_3p_1f_r": null, "n_3p_1f_i": null, "n_3p_uf_r": "b", "n_3p_uf_i": "b", "x": null, "y": 7, "p": 1 }
+{ "n_3p_1p_r": "a", "n_3p_1p_i": null, "n_3p_cr_r": null, "n_3p_cr_i": null, "n_3p_1f_i": "a", "n_3p_uf_r": "b", "n_3p_uf_i": "b", "y": 8, "p": 1 }
+{ "n_3p_1p_r": null, "n_3p_1p_i": null, "n_3p_cr_i": "a", "n_3p_1f_r": "b", "n_3p_1f_i": "b", "n_3p_uf_r": "b", "n_3p_uf_i": "b", "x": "b", "y": 9, "p": 1 }
+{ "n_3p_1p_i": null, "n_3p_cr_r": "b", "n_3p_cr_i": "b", "n_3p_1f_r": "b", "n_3p_1f_i": "b", "n_3p_uf_r": "b", "n_3p_uf_i": "b", "x": "c", "y": 10, "p": 1 }

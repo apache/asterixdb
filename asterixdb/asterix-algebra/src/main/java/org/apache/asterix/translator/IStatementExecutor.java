@@ -190,6 +190,8 @@ public interface IStatementExecutor {
     }
 
     class Profile implements Serializable {
+        private static final long serialVersionUID = 4813321148252768375L;
+
         private transient ObjectNode profile;
 
         public Profile(ObjectNode profile) {

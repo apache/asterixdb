@@ -29,6 +29,7 @@ import org.apache.hyracks.util.annotations.NotThreadSafe;
  */
 @NotThreadSafe
 public class AlgebricksStringBuilderWriter extends StringBuilderWriter {
+    private static final long serialVersionUID = 61841252848797632L;
 
     public AlgebricksStringBuilderWriter() {
         super();

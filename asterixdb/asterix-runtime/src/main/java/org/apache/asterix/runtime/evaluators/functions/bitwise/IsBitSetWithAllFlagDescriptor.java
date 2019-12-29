@@ -31,6 +31,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @MissingNullInOutFunction
 public class IsBitSetWithAllFlagDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = -2899093161460352528L;
 
     public static final IFunctionDescriptorFactory FACTORY = IsBitSetWithAllFlagDescriptor::new;
 

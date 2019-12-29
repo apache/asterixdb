@@ -27,6 +27,7 @@ import org.apache.hyracks.api.result.IResultMetadata;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ResultMetadata implements IResultMetadata {
+    private static final long serialVersionUID = 1905367559307369034L;
 
     private final SessionConfig.OutputFormat format;
     private long jobDuration;

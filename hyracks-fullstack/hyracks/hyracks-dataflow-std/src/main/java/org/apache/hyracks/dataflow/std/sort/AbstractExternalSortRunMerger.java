@@ -111,7 +111,7 @@ public abstract class AbstractExternalSortRunMerger {
                         } finally {
                             mergeResultWriter.close();
                         }
-                        reader = mergeFileWriter.createReader();
+                        reader = mergeFileWriter.createDeleteOnCloseReader();
                     }
                     runs.add(reader);
 

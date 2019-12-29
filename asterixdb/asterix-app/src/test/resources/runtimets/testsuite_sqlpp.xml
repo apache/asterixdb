@@ -6164,6 +6164,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="join-ASTERIXDB-2686">
+        <output-dir compare="Text">join-ASTERIXDB-2686</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="poll-dynamic">
         <output-dir compare="Text">poll-dynamic</output-dir>
       </compilation-unit>

@@ -1239,8 +1239,16 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             } else if (BuiltinFunctions.NTH_VALUE_IMPL.equals(fi)) {
                 nestedAggFunc = BuiltinFunctions.SCALAR_FIRST_ELEMENT;
                 if (fromLast) {
-                    // reverse order if FROM LAST modifier is present
+                    // if FROM LAST modifier is present
+                    // 1. reverse order
                     reverseOrder(orderExprListOut);
+                    // 2. reverse frame specification
+                    WindowExpression.FrameBoundaryKind tmpFrameStartKind = winFrameStartKind;
+                    Expression tmpFrameStartExpr = winFrameStartExpr;
+                    winFrameStartKind = reverseFrameBoundaryKind(winFrameEndKind);
+                    winFrameStartExpr = winFrameEndExpr;
+                    winFrameEndKind = reverseFrameBoundaryKind(tmpFrameStartKind);
+                    winFrameEndExpr = tmpFrameStartExpr;
                 }
                 if (respectNulls) {
                     winFrameMaxOjbects = 1;
@@ -1733,6 +1741,24 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 return OrderOperator.DESC_ORDER;
             case DESC:
                 return OrderOperator.ASC_ORDER;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR);
+        }
+    }
+
+    private WindowExpression.FrameBoundaryKind reverseFrameBoundaryKind(
+            WindowExpression.FrameBoundaryKind frameBoundaryKind) throws CompilationException {
+        switch (frameBoundaryKind) {
+            case UNBOUNDED_PRECEDING:
+                return WindowExpression.FrameBoundaryKind.UNBOUNDED_FOLLOWING;
+            case BOUNDED_PRECEDING:
+                return WindowExpression.FrameBoundaryKind.BOUNDED_FOLLOWING;
+            case CURRENT_ROW:
+                return WindowExpression.FrameBoundaryKind.CURRENT_ROW;
+            case BOUNDED_FOLLOWING:
+                return WindowExpression.FrameBoundaryKind.BOUNDED_PRECEDING;
+            case UNBOUNDED_FOLLOWING:
+                return WindowExpression.FrameBoundaryKind.UNBOUNDED_PRECEDING;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR);
         }
