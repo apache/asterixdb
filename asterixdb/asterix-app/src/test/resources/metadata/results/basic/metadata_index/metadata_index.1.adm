@@ -12,3 +12,4 @@
 { "DataverseName": "Metadata", "DatasetName": "Library", "IndexName": "Library", "IndexStructure": "BTREE", "SearchKey": [ [ "DataverseName" ], [ "Name" ] ], "IsPrimary": true, "Timestamp": "Fri Oct 21 10:29:21 PDT 2016", "PendingOp": 0 }
 { "DataverseName": "Metadata", "DatasetName": "Node", "IndexName": "Node", "IndexStructure": "BTREE", "SearchKey": [ [ "NodeName" ] ], "IsPrimary": true, "Timestamp": "Fri Oct 21 10:29:21 PDT 2016", "PendingOp": 0 }
 { "DataverseName": "Metadata", "DatasetName": "Nodegroup", "IndexName": "Nodegroup", "IndexStructure": "BTREE", "SearchKey": [ [ "GroupName" ] ], "IsPrimary": true, "Timestamp": "Fri Oct 21 10:29:21 PDT 2016", "PendingOp": 0 }
+{ "DataverseName": "Metadata", "DatasetName": "Synonym", "IndexName": "Synonym", "IndexStructure": "BTREE", "SearchKey": [ [ "DataverseName" ], [ "SynonymName" ] ], "IsPrimary": true, "Timestamp": "Tue Dec 17 10:39:17 PST 2019", "PendingOp": 0 }

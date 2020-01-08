@@ -41,6 +41,7 @@ import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.utils.IndexUtil;
 
 /**
@@ -76,6 +77,8 @@ public class MetadataCache {
     protected final Map<DataverseName, Map<String, CompactionPolicy>> compactionPolicies = new HashMap<>();
     // Key is DataverseName, Key of value map is feedConnectionId
     protected final Map<DataverseName, Map<String, FeedConnection>> feedConnections = new HashMap<>();
+    // Key is synonym dataverse. Key of value map is the synonym name
+    protected final Map<DataverseName, Map<String, Synonym>> synonyms = new HashMap<>();
 
     // Atomically executes all metadata operations in ctx's log.
     public void commit(MetadataTransactionContext ctx) {
@@ -113,15 +116,18 @@ public class MetadataCache {
                                 synchronized (adapters) {
                                     synchronized (libraries) {
                                         synchronized (compactionPolicies) {
-                                            dataverses.clear();
-                                            nodeGroups.clear();
-                                            datasets.clear();
-                                            indexes.clear();
-                                            datatypes.clear();
-                                            functions.clear();
-                                            adapters.clear();
-                                            libraries.clear();
-                                            compactionPolicies.clear();
+                                            synchronized (synonyms) {
+                                                dataverses.clear();
+                                                nodeGroups.clear();
+                                                datasets.clear();
+                                                indexes.clear();
+                                                datatypes.clear();
+                                                functions.clear();
+                                                adapters.clear();
+                                                libraries.clear();
+                                                compactionPolicies.clear();
+                                                synonyms.clear();
+                                            }
                                         }
                                     }
                                 }
@@ -235,23 +241,27 @@ public class MetadataCache {
                                 synchronized (libraries) {
                                     synchronized (feeds) {
                                         synchronized (compactionPolicies) {
-                                            datasets.remove(dataverse.getDataverseName());
-                                            indexes.remove(dataverse.getDataverseName());
-                                            datatypes.remove(dataverse.getDataverseName());
-                                            adapters.remove(dataverse.getDataverseName());
-                                            compactionPolicies.remove(dataverse.getDataverseName());
-                                            List<FunctionSignature> markedFunctionsForRemoval = new ArrayList<>();
-                                            for (FunctionSignature signature : functions.keySet()) {
-                                                if (signature.getDataverseName().equals(dataverse.getDataverseName())) {
-                                                    markedFunctionsForRemoval.add(signature);
+                                            synchronized (synonyms) {
+                                                datasets.remove(dataverse.getDataverseName());
+                                                indexes.remove(dataverse.getDataverseName());
+                                                datatypes.remove(dataverse.getDataverseName());
+                                                adapters.remove(dataverse.getDataverseName());
+                                                compactionPolicies.remove(dataverse.getDataverseName());
+                                                List<FunctionSignature> markedFunctionsForRemoval = new ArrayList<>();
+                                                for (FunctionSignature signature : functions.keySet()) {
+                                                    if (signature.getDataverseName()
+                                                            .equals(dataverse.getDataverseName())) {
+                                                        markedFunctionsForRemoval.add(signature);
+                                                    }
                                                 }
+                                                for (FunctionSignature signature : markedFunctionsForRemoval) {
+                                                    functions.remove(signature);
+                                                }
+                                                libraries.remove(dataverse.getDataverseName());
+                                                feeds.remove(dataverse.getDataverseName());
+                                                synonyms.remove(dataverse.getDataverseName());
+                                                return dataverses.remove(dataverse.getDataverseName());
                                             }
-                                            for (FunctionSignature signature : markedFunctionsForRemoval) {
-                                                functions.remove(signature);
-                                            }
-                                            libraries.remove(dataverse.getDataverseName());
-                                            feeds.remove(dataverse.getDataverseName());
-                                            return dataverses.remove(dataverse.getDataverseName());
                                         }
                                     }
                                 }
@@ -542,6 +552,27 @@ public class MetadataCache {
             Map<String, Feed> feedsInDataverse = feeds.get(feed.getDataverseName());
             if (feedsInDataverse != null) {
                 return feedsInDataverse.remove(feed.getFeedName());
+            }
+            return null;
+        }
+    }
+
+    public Synonym addSynonymIfNotExists(Synonym synonym) {
+        synchronized (synonyms) {
+            Map<String, Synonym> synonymsInDataverse = synonyms.get(synonym.getDataverseName());
+            if (synonymsInDataverse == null) {
+                synonymsInDataverse = new HashMap<>();
+                synonyms.put(synonym.getDataverseName(), synonymsInDataverse);
+            }
+            return synonymsInDataverse.put(synonym.getSynonymName(), synonym);
+        }
+    }
+
+    public Synonym dropSynonym(Synonym synonym) {
+        synchronized (synonyms) {
+            Map<String, Synonym> synonymsInDataverse = synonyms.get(synonym.getDataverseName());
+            if (synonymsInDataverse != null) {
+                return synonymsInDataverse.remove(synonym.getSynonymName());
             }
             return null;
         }

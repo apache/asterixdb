@@ -23,6 +23,7 @@
                                  | TypeSpecification
                                  | DatasetSpecification
                                  | IndexSpecification
+                                 | SynonymSpecification
                                  | FunctionSpecification )
 
     QualifiedName       ::= Identifier ( "." Identifier )?

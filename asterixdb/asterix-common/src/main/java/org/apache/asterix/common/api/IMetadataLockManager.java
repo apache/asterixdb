@@ -293,6 +293,36 @@ public interface IMetadataLockManager {
             throws AlgebricksException;
 
     /**
+     * Acquire read lock on the synonym
+     *
+     * @param locks
+     *            the lock list to add the new lock to
+     * @param dataverseName
+     *            the dataverse name
+     * @param synonymName
+     *            the name of the synonym in the given dataverse
+     * @throws AlgebricksException
+     *             if lock couldn't be acquired
+     */
+    void acquireSynonymReadLock(LockList locks, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException;
+
+    /**
+     * Acquire write lock on the synonym
+     *
+     * @param locks
+     *            the lock list to add the new lock to
+     * @param dataverseName
+     *            the dataverse name
+     * @param synonymName
+     *            the name of the synonym in the given dataverse
+     * @throws AlgebricksException
+     *             if lock couldn't be acquired
+     */
+    void acquireSynonymWriteLock(LockList locks, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException;
+
+    /**
      * Acquire read lock on the extension entity
      *
      * @param locks

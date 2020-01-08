@@ -81,6 +81,7 @@ import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
 import org.apache.asterix.metadata.utils.DatasetUtil;
@@ -327,6 +328,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         this.externalDataLocks = locks;
     }
 
+    private DataverseName getActiveDataverseName(DataverseName dataverseName) {
+        return dataverseName != null ? dataverseName
+                : defaultDataverse != null ? defaultDataverse.getDataverseName() : null;
+    }
+
     /**
      * Retrieve the Output RecordType, as defined by "set output-record-type".
      */
@@ -336,8 +342,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public Dataset findDataset(DataverseName dataverseName, String datasetName) throws AlgebricksException {
-        DataverseName dvName = dataverseName == null
-                ? (defaultDataverse == null ? null : defaultDataverse.getDataverseName()) : dataverseName;
+        DataverseName dvName = getActiveDataverseName(dataverseName);
         if (dvName == null) {
             return null;
         }
@@ -406,6 +411,23 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public List<Index> getDatasetIndexes(DataverseName dataverseName, String datasetName) throws AlgebricksException {
         return MetadataManagerUtil.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
+    }
+
+    public Pair<DataverseName, String> resolveDatasetNameUsingSynonyms(DataverseName dataverseName, String datasetName)
+            throws AlgebricksException {
+        DataverseName dvName = getActiveDataverseName(dataverseName);
+        if (dvName == null) {
+            return null;
+        }
+        while (MetadataManagerUtil.findDataset(mdTxnCtx, dvName, datasetName) == null) {
+            Synonym synonym = MetadataManagerUtil.findSynonym(mdTxnCtx, dvName, datasetName);
+            if (synonym == null) {
+                return null;
+            }
+            dvName = synonym.getObjectDataverseName();
+            datasetName = synonym.getObjectName();
+        }
+        return new Pair<>(dvName, datasetName);
     }
 
     @Override

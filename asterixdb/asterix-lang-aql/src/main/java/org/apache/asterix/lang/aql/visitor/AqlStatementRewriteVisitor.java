@@ -38,16 +38,15 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 
-public class AqlDeleteRewriteVisitor extends AbstractAqlAstVisitor<Void, Void> {
+public class AqlStatementRewriteVisitor extends AbstractAqlAstVisitor<Void, MetadataProvider> {
 
-    private final MetadataProvider metadataProvider;
+    public static final AqlStatementRewriteVisitor INSTANCE = new AqlStatementRewriteVisitor();
 
-    public AqlDeleteRewriteVisitor(MetadataProvider metadataProvider) {
-        this.metadataProvider = metadataProvider;
+    private AqlStatementRewriteVisitor() {
     }
 
     @Override
-    public Void visit(DeleteStatement deleteStmt, Void visitArg) {
+    public Void visit(DeleteStatement deleteStmt, MetadataProvider metadataProvider) {
         List<Expression> arguments = new ArrayList<>();
         DataverseName dataverseName = deleteStmt.getDataverseName();
         if (dataverseName == null) {

@@ -120,7 +120,8 @@ public class MetadataBootstrap {
                     MetadataPrimaryIndexes.FUNCTION_DATASET, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET,
                     MetadataPrimaryIndexes.FEED_DATASET, MetadataPrimaryIndexes.FEED_POLICY_DATASET,
                     MetadataPrimaryIndexes.LIBRARY_DATASET, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET,
-                    MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET };
+                    MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET,
+                    MetadataPrimaryIndexes.SYNONYM_DATASET };
 
     private MetadataBootstrap() {
     }
@@ -352,7 +353,16 @@ public class MetadataBootstrap {
         ILSMPageWriteCallbackFactory pageWriteCallbackFactory = new LSMIndexPageWriteCallbackFactory();
 
         IStorageComponentProvider storageComponentProvider = appContext.getStorageComponentProvider();
+        boolean createMetadataDataset;
+        LocalResource resource;
         if (isNewUniverse()) {
+            resource = null;
+            createMetadataDataset = true;
+        } else {
+            resource = localResourceRepository.get(file.getRelativePath());
+            createMetadataDataset = resource == null;
+        }
+        if (createMetadataDataset) {
             final double bloomFilterFalsePositiveRate =
                     appContext.getStorageProperties().getBloomFilterFalsePositiveRate();
             LSMBTreeLocalResourceFactory lsmBtreeFactory =
@@ -373,13 +383,6 @@ public class MetadataBootstrap {
                     index::getResourceId, file, dsLocalResourceFactory, true);
             indexBuilder.build();
         } else {
-            final LocalResource resource = localResourceRepository.get(file.getRelativePath());
-            if (resource == null) {
-                throw new HyracksDataException("Could not find required metadata indexes. Please delete "
-                        + appContext.getMetadataProperties().getTransactionLogDirs()
-                                .get(appContext.getTransactionSubsystem().getId())
-                        + " to intialize as a new instance. (WARNING: all data will be lost.)");
-            }
             // Why do we care about metadata dataset's resource ids? why not assign them ids
             // similar to other resources?
             if (index.getResourceId() != resource.getId()) {

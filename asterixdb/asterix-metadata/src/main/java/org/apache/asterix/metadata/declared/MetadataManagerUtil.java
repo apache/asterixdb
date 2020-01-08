@@ -34,6 +34,7 @@ import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
@@ -132,6 +133,11 @@ public class MetadataManagerUtil {
     public static FeedPolicyEntity findFeedPolicy(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
             String policyName) throws AlgebricksException {
         return MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverseName, policyName);
+    }
+
+    public static Synonym findSynonym(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
+            String synonymName) throws AlgebricksException {
+        return MetadataManager.INSTANCE.getSynonym(mdTxnCtx, dataverseName, synonymName);
     }
 
     public static List<Index> getDatasetIndexes(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,

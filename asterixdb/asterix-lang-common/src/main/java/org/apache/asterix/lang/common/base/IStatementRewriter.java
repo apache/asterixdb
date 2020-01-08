@@ -24,6 +24,11 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 public interface IStatementRewriter {
 
     /**
+     * Returns {@code true} if given statement kind is handled by this rewriter.
+     */
+    boolean isRewritable(Statement.Kind kind);
+
+    /**
      * @param statement,
      *            a non-query statement.
      * @param metadataProvider

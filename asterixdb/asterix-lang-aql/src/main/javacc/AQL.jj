@@ -1004,7 +1004,7 @@ InsertStatement InsertStatement() throws ParseException:
     {
       checkBindingVariable(returnExpression, var, query);
       query.setTopLevel(true);
-      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), var,
+      return new InsertStatement(nameComponents.first, nameComponents.second.getValue(), query, getVarCounter(), var,
                                  returnExpression);
     }
 }
@@ -1028,7 +1028,7 @@ UpsertStatement UpsertStatement() throws ParseException:
     {
       checkBindingVariable(returnExpression, var, query);
       query.setTopLevel(true);
-      return new UpsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), var,
+      return new UpsertStatement(nameComponents.first, nameComponents.second.getValue(), query, getVarCounter(), var,
                                  returnExpression);
     }
 }
@@ -1048,7 +1048,7 @@ DeleteStatement DeleteStatement() throws ParseException:
   (<WHERE> condition = Expression())?
     {
       // First we get the dataverses and datasets that we want to lock
-      return new DeleteStatement(var, nameComponents.first, nameComponents.second,
+      return new DeleteStatement(var, nameComponents.first, nameComponents.second.getValue(),
           condition, getVarCounter());
     }
 }
@@ -1153,7 +1153,7 @@ LoadStatement LoadStatement() throws ParseException:
     }
   )?
     {
-      return new LoadStatement(dataverseName, datasetName, adapterName, properties, alreadySorted);
+      return new LoadStatement(dataverseName, datasetName.getValue(), adapterName, properties, alreadySorted);
     }
 }
 

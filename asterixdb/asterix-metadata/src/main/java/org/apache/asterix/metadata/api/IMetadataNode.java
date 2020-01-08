@@ -41,6 +41,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
@@ -728,6 +729,63 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws RemoteException
      */
     ExternalFile getExternalFile(TxnId txnId, DataverseName dataverseName, String datasetName, Integer fileNumber)
+            throws AlgebricksException, RemoteException;
+
+    /**
+     * Adds a synonym, acquiring local locks on behalf of the given transaction id.
+     *
+     * @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param synonym
+     *            Synonym to be added
+     * @throws AlgebricksException
+     *             for example, if the synonym is already added.
+     * @throws RemoteException
+     */
+    void addSynonym(TxnId txnId, Synonym synonym) throws AlgebricksException, RemoteException;
+
+    /**
+     * Removes a synonym, acquiring local locks on behalf of the given transaction id.
+     *
+     * @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the synonym that is to be deleted.
+     * @param synonymName
+     *            Name of synonym to be deleted. AlgebricksException for example, if
+     *            the synonym does not exists.
+     * @throws AlgebricksException
+     * @throws RemoteException
+     */
+    void dropSynonym(TxnId txnId, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException, RemoteException;
+
+    /**
+     * @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the synonym that is to be retrieved.
+     * @param synonymName
+     *            name of the synonym that is to be retrieved
+     * @return Synonym
+     * @throws AlgebricksException
+     * @throws RemoteException
+     */
+    Synonym getSynonym(TxnId txnId, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException, RemoteException;
+
+    /**
+     * Retrieve synonyms installed in a given dataverse.
+     *
+     * @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataverseName
+     *            dataverse associated with synonyms that are to be retrieved.
+     * @return list of synonyms
+     * @throws AlgebricksException
+     * @throws RemoteException
+     */
+    List<Synonym> getDataverseSynonyms(TxnId txnId, DataverseName dataverseName)
             throws AlgebricksException, RemoteException;
 
     /**

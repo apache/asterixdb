@@ -1,0 +1,4 @@
+{ "DataverseName": "test", "SynonymName": "TweetMessagesSynonym", "ObjectDataverseName": "test", "ObjectName": "TweetMessages" }
+{ "DataverseName": "test", "SynonymName": "TweetMessagesSynonym2", "ObjectDataverseName": "test", "ObjectName": "TweetMessagesSynonym" }
+{ "DataverseName": "test", "SynonymName": "TwitterUsersSynonym", "ObjectDataverseName": "test", "ObjectName": "TwitterUsers" }
+{ "DataverseName": "test", "SynonymName": "TwitterUsersSynonym2", "ObjectDataverseName": "test", "ObjectName": "TwitterUsersSynonym" }

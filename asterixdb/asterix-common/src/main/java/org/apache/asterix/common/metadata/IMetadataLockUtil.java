@@ -79,6 +79,14 @@ public interface IMetadataLockUtil {
     void dropFunctionBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
             String functionName) throws AlgebricksException;
 
+    // Synonym helpers
+
+    void createSynonymBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
+            String synonymName) throws AlgebricksException;
+
+    void dropSynonymBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
+            String synonymName) throws AlgebricksException;
+
     // Feed helpers
 
     void createFeedPolicyBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,

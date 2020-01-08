@@ -94,17 +94,17 @@ public class MetadataLockManager implements IMetadataLockManager {
     }
 
     @Override
-    public void acquireFunctionReadLock(LockList locks, DataverseName dataverseName, String functionName)
+    public void acquireFunctionReadLock(LockList locks, DataverseName dataverseName, String synonymName)
             throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createFunctionLockKey(dataverseName, functionName);
+        MetadataLockKey key = MetadataLockKey.createFunctionLockKey(dataverseName, synonymName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireFunctionWriteLock(LockList locks, DataverseName dataverseName, String functionName)
+    public void acquireFunctionWriteLock(LockList locks, DataverseName dataverseName, String synonymName)
             throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createFunctionLockKey(dataverseName, functionName);
+        MetadataLockKey key = MetadataLockKey.createFunctionLockKey(dataverseName, synonymName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
@@ -181,6 +181,22 @@ public class MetadataLockManager implements IMetadataLockManager {
     public void acquireDataTypeWriteLock(LockList locks, DataverseName dataverseName, String datatypeName)
             throws AlgebricksException {
         MetadataLockKey key = MetadataLockKey.createDataTypeLockKey(dataverseName, datatypeName);
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
+        locks.add(IMetadataLock.Mode.WRITE, lock);
+    }
+
+    @Override
+    public void acquireSynonymReadLock(LockList locks, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createSynonymLockKey(dataverseName, synonymName);
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
+        locks.add(IMetadataLock.Mode.READ, lock);
+    }
+
+    @Override
+    public void acquireSynonymWriteLock(LockList locks, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createSynonymLockKey(dataverseName, synonymName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }

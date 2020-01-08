@@ -23,7 +23,7 @@ public class MetadataIndexImmutableProperties {
     public static final int FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID = 52;
     public static final int FIRST_AVAILABLE_USER_DATASET_ID = 100;
     public static final int METADATA_DATASETS_PARTITIONS = 1;
-    public static final int METADATA_DATASETS_COUNT = 14;
+    public static final int METADATA_DATASETS_COUNT = 15;
 
     private final String indexName;
     private final int datasetId;

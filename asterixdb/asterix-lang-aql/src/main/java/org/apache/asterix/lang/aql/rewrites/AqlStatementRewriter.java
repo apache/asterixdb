@@ -19,7 +19,7 @@
 package org.apache.asterix.lang.aql.rewrites;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.lang.aql.visitor.AqlDeleteRewriteVisitor;
+import org.apache.asterix.lang.aql.visitor.AqlStatementRewriteVisitor;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -27,14 +27,14 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 class AqlStatementRewriter implements IStatementRewriter {
 
     @Override
-    public void rewrite(Statement stmt, MetadataProvider metadataProvider) throws CompilationException {
-        rewriteDeleteStatement(stmt, metadataProvider);
+    public boolean isRewritable(Statement.Kind kind) {
+        return kind == Statement.Kind.DELETE;
     }
 
-    private void rewriteDeleteStatement(Statement stmt, MetadataProvider metadataProvider) throws CompilationException {
+    @Override
+    public void rewrite(Statement stmt, MetadataProvider metadataProvider) throws CompilationException {
         if (stmt != null) {
-            AqlDeleteRewriteVisitor visitor = new AqlDeleteRewriteVisitor(metadataProvider);
-            stmt.accept(visitor, null);
+            stmt.accept(AqlStatementRewriteVisitor.INSTANCE, metadataProvider);
         }
     }
 

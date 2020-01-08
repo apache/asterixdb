@@ -36,6 +36,9 @@ Inserts are processed transactionally by the system.
 The transactional scope of each insert transaction is the insertion of a single object plus its affiliated secondary index entries (if any).
 If the query part of an insert returns a single object, then the INSERT statement will be a single, atomic transaction.
 If the query part returns multiple objects, each object being inserted will be treated as a separate tranaction.
+
+The target dataset name may be a synonym introduced by CREATE SYNONYM statement.
+
 The following example illustrates a query-based insertion.
 
 ##### Example
@@ -52,6 +55,8 @@ Whereas an INSERT can fail if another object already exists with the specified k
 with that of the new object in such cases. Like the INSERT statement, the system allows the user to manually provide the auto-generated key
 for datasets with an auto-generated key as its primary key. This operation will insert the record if no record with that key already exists, but
 if a record with the key already exists, then the operation will be converted to a replace/update operation.
+
+The target dataset name may be a synonym introduced by CREATE SYNONYM statement.
 
 The following example illustrates a query-based upsert operation.
 
@@ -72,6 +77,8 @@ Deletes are processed transactionally by the system.
 The transactional scope of each delete transaction is the deletion of a single object plus its affiliated secondary index entries (if any).
 If the boolean expression for a delete identifies a single object, then the DELETE statement itself will be a single, atomic transaction.
 If the expression identifies multiple objects, then each object deleted will be handled as a separate transaction.
+
+The target dataset name may be a synonym introduced by CREATE SYNONYM statement.
 
 The following examples illustrate single-object deletions.
 

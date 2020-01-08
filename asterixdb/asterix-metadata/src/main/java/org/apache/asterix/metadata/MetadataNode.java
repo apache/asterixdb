@@ -68,6 +68,7 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.entitytupletranslators.CompactionPolicyTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatasetTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatasourceAdapterTupleTranslator;
@@ -83,6 +84,7 @@ import org.apache.asterix.metadata.entitytupletranslators.LibraryTupleTranslator
 import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
 import org.apache.asterix.metadata.entitytupletranslators.NodeGroupTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.NodeTupleTranslator;
+import org.apache.asterix.metadata.entitytupletranslators.SynonymTupleTranslator;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.valueextractors.MetadataEntityValueExtractor;
 import org.apache.asterix.metadata.valueextractors.TupleCopyValueExtractor;
@@ -1888,6 +1890,78 @@ public class MetadataNode implements IMetadataNode {
                 return null;
             }
             return results.get(0);
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
+        }
+    }
+
+    @Override
+    public void addSynonym(TxnId txnId, Synonym synonym) throws AlgebricksException {
+        try {
+            // Insert into the 'Synonym' dataset.
+            SynonymTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getSynonymTupleTranslator(true);
+            ITupleReference synonymTuple = tupleReaderWriter.getTupleFromMetadataEntity(synonym);
+            insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.SYNONYM_DATASET, synonymTuple);
+        } catch (HyracksDataException e) {
+            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+                throw new AlgebricksException("A synonym with name '" + synonym.getSynonymName() + "' already exists.",
+                        e);
+            } else {
+                throw new AlgebricksException(e);
+            }
+        }
+    }
+
+    @Override
+    public void dropSynonym(TxnId txnId, DataverseName dataverseName, String synonymName) throws AlgebricksException {
+        Synonym synonym = getSynonym(txnId, dataverseName, synonymName);
+        if (synonym == null) {
+            throw new AlgebricksException("Cannot drop synonym '" + synonym + "' because it doesn't exist.");
+        }
+        try {
+            // Delete entry from the 'Synonym' dataset.
+            ITupleReference searchKey = createTuple(dataverseName, synonymName);
+            // Searches the index for the tuple to be deleted. Acquires an S
+            // lock on the 'Synonym' dataset.
+            ITupleReference synonymTuple =
+                    getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.SYNONYM_DATASET, searchKey);
+            deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.SYNONYM_DATASET, synonymTuple);
+        } catch (HyracksDataException e) {
+            if (e.getComponent().equals(ErrorCode.HYRACKS)
+                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                throw new AlgebricksException("Cannot drop synonym '" + synonymName, e);
+            } else {
+                throw new AlgebricksException(e);
+            }
+        }
+    }
+
+    @Override
+    public Synonym getSynonym(TxnId txnId, DataverseName dataverseName, String synonymName) throws AlgebricksException {
+        try {
+            ITupleReference searchKey = createTuple(dataverseName, synonymName);
+            SynonymTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getSynonymTupleTranslator(false);
+            List<Synonym> results = new ArrayList<>();
+            IValueExtractor<Synonym> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            searchIndex(txnId, MetadataPrimaryIndexes.SYNONYM_DATASET, searchKey, valueExtractor, results);
+            if (results.isEmpty()) {
+                return null;
+            }
+            return results.get(0);
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
+        }
+    }
+
+    @Override
+    public List<Synonym> getDataverseSynonyms(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
+        try {
+            ITupleReference searchKey = createTuple(dataverseName);
+            SynonymTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getSynonymTupleTranslator(false);
+            IValueExtractor<Synonym> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            List<Synonym> results = new ArrayList<>();
+            searchIndex(txnId, MetadataPrimaryIndexes.SYNONYM_DATASET, searchKey, valueExtractor, results);
+            return results;
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }

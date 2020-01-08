@@ -26,19 +26,18 @@ import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class DeleteStatement extends AbstractStatement {
 
     private VariableExpr vars;
     private DataverseName dataverseName;
-    private Identifier datasetName;
+    private String datasetName;
     private Expression condition;
     private int varCounter;
     private Query rewrittenQuery;
 
-    public DeleteStatement(VariableExpr vars, DataverseName dataverseName, Identifier datasetName, Expression condition,
+    public DeleteStatement(VariableExpr vars, DataverseName dataverseName, String datasetName, Expression condition,
             int varCounter) {
         this.vars = vars;
         this.dataverseName = dataverseName;
@@ -60,8 +59,16 @@ public class DeleteStatement extends AbstractStatement {
         return dataverseName;
     }
 
+    public void setDataverseName(DataverseName dataverseName) {
+        this.dataverseName = dataverseName;
+    }
+
     public String getDatasetName() {
-        return datasetName.getValue();
+        return datasetName;
+    }
+
+    public void setDatasetName(String datasetName) {
+        this.datasetName = datasetName;
     }
 
     public Expression getCondition() {

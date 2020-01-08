@@ -125,6 +125,20 @@ public class MetadataLockUtil implements IMetadataLockUtil {
     }
 
     @Override
+    public void createSynonymBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String synonymName) throws AlgebricksException {
+        lockMgr.acquireDataverseReadLock(locks, dataverseName);
+        lockMgr.acquireSynonymWriteLock(locks, dataverseName, synonymName);
+    }
+
+    @Override
+    public void dropSynonymBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String synonymName) throws AlgebricksException {
+        lockMgr.acquireDataverseReadLock(locks, dataverseName);
+        lockMgr.acquireSynonymWriteLock(locks, dataverseName, synonymName);
+    }
+
+    @Override
     public void modifyDatasetBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
             String datasetName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);

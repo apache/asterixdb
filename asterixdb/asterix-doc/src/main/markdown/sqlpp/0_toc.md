@@ -89,6 +89,7 @@
            * [Datasets](#Datasets)
            * [Indices](#Indices)
            * [Functions](#Functions)
+           * [Synonyms](#Synonyms)
            * [Removal](#Removal)
            * [Load Statement](#Load_statement)
       * [Modification Statements](#Modification_statements)

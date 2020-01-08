@@ -19,7 +19,7 @@
 
 ### <a id="Functions"> Functions</a>
 
-The create function statement creates a **named** function that can then be used and reused in queries.
+The CREATE FUNCTION statement creates a **named** function that can then be used and reused in queries.
 The body of a function can be any query expression involving the function's parameters.
 
     FunctionSpecification ::= "FUNCTION" FunctionOrTypeName IfNotExists ParameterList "{" Expression "}"
@@ -35,16 +35,35 @@ It differs from that example in that it results in a function that is persistent
          WHERE u.id = userId)[0]
      };
 
+### <a id="Synonyms"> Synonyms</a>
+
+    SynonymSpecification ::= "SYNONYM" QualifiedName "FOR" QualifiedName IfNotExists
+
+The CREATE SYNONYM statement creates a synonym for a given dataset.
+This synonym may be used used instead of the dataset name in SELECT, INSERT, UPSERT, DELETE, and LOAD statements.
+The target dataset does not need to exist when the synonym is created.
+
+##### Example
+
+    CREATE DATASET GleambookUsers(GleambookUserType) PRIMARY KEY id;
+
+    CREATE SYNONYM GleambookUsersSynonym FOR GleambookUsers;
+
+    SELECT * FROM GleambookUsersSynonym;
+
+More information on how synonyms are resolved can be found in the appendix section on Variable Resolution.
+
 ### <a id="Removal"> Removal</a>
 
     DropStatement       ::= "DROP" ( "DATAVERSE" Identifier IfExists
                                    | "TYPE" FunctionOrTypeName IfExists
                                    | "DATASET" QualifiedName IfExists
                                    | "INDEX" DoubleQualifiedName IfExists
+                                   | "SYNONYM" QualifiedName IfExists
                                    | "FUNCTION" FunctionSignature IfExists )
     IfExists            ::= ( "IF" "EXISTS" )?
 
-The DROP statement is the inverse of the CREATE statement. It can be used to drop dataverses, datatypes, datasets, indexes, and functions.
+The DROP statement is the inverse of the CREATE statement. It can be used to drop dataverses, datatypes, datasets, indexes, functions, and synonyms.
 
 The following examples illustrate some uses of the DROP statement.
 
@@ -57,6 +76,8 @@ The following examples illustrate some uses of the DROP statement.
     DROP TYPE TinySocial2.GleambookUserType;
 
     DROP FUNCTION friendInfo@1;
+
+    DROP SYNONYM GleambookUsersSynonym;
 
     DROP DATAVERSE TinySocial;
 
@@ -77,6 +98,8 @@ An appropriate adapter must be selected to handle the nature of the desired exte
 The LOAD statement accepts the same adapters and the same parameters as discussed earlier for External datasets.
 (See the [guide to external data](externaldata.html) for more information on the available adapters.)
 If a dataset has an auto-generated primary key field, the file to be imported should not include that field in it.
+
+The target dataset name may be a synonym introduced by CREATE SYNONYM statement.
 
 The following example shows how to bulk load the GleambookUsers dataset from an external file containing data that has been prepared in ADM (Asterix Data Model) format.
 

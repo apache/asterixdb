@@ -48,16 +48,15 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
  * This class rewrites delete statement to contain a query that specifying
  * what to delete.
  */
-public class SqlppDeleteRewriteVisitor extends AbstractSqlppAstVisitor<Void, Void> {
+public class SqlppDeleteRewriteVisitor extends AbstractSqlppAstVisitor<Void, MetadataProvider> {
 
-    private final MetadataProvider metadataProvider;
+    public static final SqlppDeleteRewriteVisitor INSTANCE = new SqlppDeleteRewriteVisitor();
 
-    public SqlppDeleteRewriteVisitor(MetadataProvider metadataProvider) {
-        this.metadataProvider = metadataProvider;
+    private SqlppDeleteRewriteVisitor() {
     }
 
     @Override
-    public Void visit(DeleteStatement deleteStmt, Void visitArg) {
+    public Void visit(DeleteStatement deleteStmt, MetadataProvider metadataProvider) {
         List<Expression> arguments = new ArrayList<>();
         DataverseName dataverseName = deleteStmt.getDataverseName();
         if (dataverseName == null) {

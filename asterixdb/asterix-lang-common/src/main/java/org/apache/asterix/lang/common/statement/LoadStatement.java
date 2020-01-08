@@ -24,18 +24,17 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class LoadStatement extends AbstractStatement {
 
-    private Identifier datasetName;
     private DataverseName dataverseName;
+    private String datasetName;
     private String adapter;
     private Map<String, String> properties;
     private boolean dataIsLocallySorted;
 
-    public LoadStatement(DataverseName dataverseName, Identifier datasetName, String adapter,
+    public LoadStatement(DataverseName dataverseName, String datasetName, String adapter,
             Map<String, String> propertiees, boolean dataIsLocallySorted) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
@@ -73,8 +72,12 @@ public class LoadStatement extends AbstractStatement {
         return Statement.Kind.LOAD;
     }
 
-    public Identifier getDatasetName() {
+    public String getDatasetName() {
         return datasetName;
+    }
+
+    public void setDatasetName(String datasetName) {
+        this.datasetName = datasetName;
     }
 
     public boolean dataIsAlreadySorted() {
@@ -90,5 +93,4 @@ public class LoadStatement extends AbstractStatement {
     public byte getCategory() {
         return Category.UPDATE;
     }
-
 }

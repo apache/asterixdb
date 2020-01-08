@@ -225,6 +225,12 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     private Dataset findDataset(DataverseName dataverseName, String datasetName, SourceLocation sourceLoc)
             throws CompilationException {
         try {
+            Pair<DataverseName, String> dsName =
+                    metadataProvider.resolveDatasetNameUsingSynonyms(dataverseName, datasetName);
+            if (dsName != null) {
+                dataverseName = dsName.first;
+                datasetName = dsName.second;
+            }
             return metadataProvider.findDataset(dataverseName, datasetName);
         } catch (AlgebricksException e) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());

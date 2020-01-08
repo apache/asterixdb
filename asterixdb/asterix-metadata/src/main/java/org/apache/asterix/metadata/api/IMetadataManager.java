@@ -41,6 +41,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 /**
@@ -635,6 +636,59 @@ public interface IMetadataManager extends IMetadataBootstrap {
      */
     ExternalFile getExternalFile(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName, String datasetName,
             Integer fileNumber) throws AlgebricksException;
+
+    /**
+     * Adds a synonym, acquiring local locks on behalf of the given transaction id.
+     *
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param synonym
+     *            Library to be added
+     * @throws AlgebricksException
+     *             for example, if the synonym is already added.
+     */
+    void addSynonym(MetadataTransactionContext ctx, Synonym synonym) throws AlgebricksException;
+
+    /**
+     * Removes a synonym, acquiring local locks on behalf of the given transaction id.
+     *
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the synonym that is to be deleted.
+     * @param synonymName
+     *            Name of synonym to be deleted. AlgebricksException for example, if
+     *            the synonym does not exists.
+     * @throws AlgebricksException
+     */
+    void dropSynonym(MetadataTransactionContext ctx, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException;
+
+    /**
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the synonym that is to be retrieved.
+     * @param synonymName
+     *            name of the library that is to be retrieved
+     * @return Library
+     * @throws AlgebricksException
+     */
+    Synonym getSynonym(MetadataTransactionContext ctx, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException;
+
+    /**
+     * Retireve synonyms installed in a given dataverse.
+     *
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            dataverse associated with synonyms that are to be retrieved.
+     * @return list of synonyms
+     * @throws AlgebricksException
+     */
+    List<Synonym> getDataverseSynonyms(MetadataTransactionContext ctx, DataverseName dataverseName)
+            throws AlgebricksException;
 
     /**
      * update an existing dataset in metadata.

@@ -195,6 +195,8 @@ public class ErrorCode {
     public static final int OPERATION_NOT_SUPPORTED_ON_PRIMARY_INDEX = 1105;
     public static final int EXPECTED_CONSTANT_VALUE = 1106;
     public static final int UNEXPECTED_HINT = 1107;
+    public static final int SYNONYM_EXISTS = 1108;
+    public static final int UNKNOWN_SYNONYM = 1109;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

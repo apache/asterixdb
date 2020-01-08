@@ -67,7 +67,6 @@ import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
@@ -245,13 +244,13 @@ public class FeedOperations {
         Query feedConnQuery = makeConnectionQuery(feedConn);
         CompiledStatements.ICompiledDmlStatement clfrqs;
         if (insertFeed) {
-            InsertStatement stmtUpsert = new InsertStatement(feedConn.getDataverseName(),
-                    new Identifier(feedConn.getDatasetName()), feedConnQuery, -1, null, null);
+            InsertStatement stmtUpsert = new InsertStatement(feedConn.getDataverseName(), feedConn.getDatasetName(),
+                    feedConnQuery, -1, null, null);
             clfrqs = new CompiledStatements.CompiledInsertStatement(feedConn.getDataverseName(),
                     feedConn.getDatasetName(), feedConnQuery, stmtUpsert.getVarCounter(), null, null);
         } else {
-            UpsertStatement stmtUpsert = new UpsertStatement(feedConn.getDataverseName(),
-                    new Identifier(feedConn.getDatasetName()), feedConnQuery, -1, null, null);
+            UpsertStatement stmtUpsert = new UpsertStatement(feedConn.getDataverseName(), feedConn.getDatasetName(),
+                    feedConnQuery, -1, null, null);
             clfrqs = new CompiledStatements.CompiledUpsertStatement(feedConn.getDataverseName(),
                     feedConn.getDatasetName(), feedConnQuery, stmtUpsert.getVarCounter(), null, null);
         }

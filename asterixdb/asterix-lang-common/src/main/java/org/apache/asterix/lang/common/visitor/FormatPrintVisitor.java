@@ -70,6 +70,7 @@ import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.CreateIndexStatement;
+import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -91,6 +92,7 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
 import org.apache.asterix.lang.common.statement.StopFeedStatement;
+import org.apache.asterix.lang.common.statement.SynonymDropStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
@@ -830,6 +832,22 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
         FunctionSignature funcSignature = del.getFunctionSignature();
         out.print(funcSignature.toString());
         out.println(SEMICOLON);
+        return null;
+    }
+
+    @Override
+    public Void visit(CreateSynonymStatement css, Integer step) throws CompilationException {
+        out.println(skip(step) + "create synonym " + generateFullName(css.getDataverseName(), css.getSynonymName())
+                + generateIfNotExists(css.getIfNotExists()) + " for "
+                + generateFullName(css.getObjectDataverseName(), css.getObjectName()));
+        return null;
+    }
+
+    @Override
+    public Void visit(SynonymDropStatement del, Integer step) throws CompilationException {
+        out.print(skip(step) + "drop synonym ");
+        out.print(generateFullName(del.getDataverseName(), del.getSynonymName()));
+        out.println(generateIfExists(del.getIfExists()) + SEMICOLON);
         return null;
     }
 

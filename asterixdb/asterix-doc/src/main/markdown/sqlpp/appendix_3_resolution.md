@@ -217,9 +217,15 @@ The rules for resolving the leftmost identifier are:
     1.  If the identifier matches a variable-name that is in scope, it resolves to the binding of that variable.
         (Note that in the case of a subquery, an in-scope variable might have been bound in an outer query block; this is called a correlated subquery.)
 
-    2.  Otherwise, if the identifier is the first part of a two-part name like `a.b`, the name is treated as dataverse.dataset.
+    2.  Otherwise, if the identifier is the first part of a two-part name like `a.b`, the name is treated as `dataverse.dataset`.
         If the identifier stands alone as a one-part name, it is treated as the name of a dataset in the default dataverse.
-        An error will result if the designated dataverse or dataset does not exist.
+        If the designated dataset exists then the identifier is resolved to that dataset,
+        otherwise if a synonym with given name exists then the identifier is resolved to the target dataset of that
+        synonym (potentially recursively if this synonym points to another synonym). An error will result if the designated
+        dataset or a synonym with this name does not exist.
+
+        Datasets take precedence over synonyms, so if both a dataset and a synonym have the same name then the
+        resolution is to the dataset.
 
 2.  _Elsewhere in a query block_: In clauses other than FROM, a name typically identifies a field of some object.
     For example, if the expression `a.b` is in a SELECT or WHERE clause, it's likely that `a` represents an object and `b` represents a field in that object.

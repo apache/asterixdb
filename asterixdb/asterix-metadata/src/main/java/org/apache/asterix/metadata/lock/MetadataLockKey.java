@@ -35,7 +35,8 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
         FEED_POLICY,
         FUNCTION,
         MERGE_POLICY,
-        NODE_GROUP
+        NODE_GROUP,
+        SYNONYM
     }
 
     private final EntityKind entityKind;
@@ -111,6 +112,10 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
 
     static MetadataLockKey createFeedPolicyLockKey(DataverseName dataverseName, String feedPolicyName) {
         return new MetadataLockKey(EntityKind.FEED_POLICY, null, dataverseName, feedPolicyName);
+    }
+
+    static MetadataLockKey createSynonymLockKey(DataverseName dataverseName, String synonymName) {
+        return new MetadataLockKey(EntityKind.SYNONYM, null, dataverseName, synonymName);
     }
 
     static MetadataLockKey createExtensionEntityLockKey(String extension, DataverseName dataverseName,

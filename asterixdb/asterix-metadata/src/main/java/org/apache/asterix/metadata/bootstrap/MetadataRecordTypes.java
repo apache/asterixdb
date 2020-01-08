@@ -80,6 +80,8 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_NODE_NAME = "NodeName";
     public static final String FIELD_NAME_NODE_NAMES = "NodeNames";
     public static final String FIELD_NAME_NUMBER_OF_CORES = "NumberOfCores";
+    public static final String FIELD_NAME_OBJECT_DATAVERSE_NAME = "ObjectDataverseName";
+    public static final String FIELD_NAME_OBJECT_NAME = "ObjectName";
     public static final String FIELD_NAME_ORDERED_LIST = "OrderedList";
     public static final String FIELD_NAME_PARAMS = "Params";
     public static final String FIELD_NAME_PARTITIONING_KEY = "PartitioningKey";
@@ -92,6 +94,7 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_RETURN_TYPE = "ReturnType";
     public static final String FIELD_NAME_SEARCH_KEY = "SearchKey";
     public static final String FIELD_NAME_STATUS = "Status";
+    public static final String FIELD_NAME_SYNONYM_NAME = "SynonymName";
     public static final String FIELD_NAME_TAG = "Tag";
     public static final String FIELD_NAME_TIMESTAMP = "Timestamp";
     public static final String FIELD_NAME_TRANSACTION_STATE = "TransactionState";
@@ -465,6 +468,23 @@ public final class MetadataRecordTypes {
             // FieldTypes
             new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32, BuiltinType.ASTRING,
                     BuiltinType.AINT64, BuiltinType.ADATETIME, BuiltinType.AINT32 },
+            //IsOpen?
+            true);
+
+    //-------------------------------------- Synonym ---------------------------------------//
+    public static final String RECORD_NAME_SYNONYM = "SynonymRecordType";
+    public static final int SYNONYM_ARECORD_DATAVERSENAME_FIELD_INDEX = 0;
+    public static final int SYNONYM_ARECORD_SYNONYMNAME_FIELD_INDEX = 1;
+    public static final int SYNONYM_ARECORD_OBJECTDATAVERSENAME_FIELD_INDEX = 2;
+    public static final int SYNONYM_ARECORD_OBJECTNAME_FIELD_INDEX = 3;
+    public static final ARecordType SYNONYM_RECORDTYPE = createRecordType(
+            // RecordTypeName
+            RECORD_NAME_SYNONYM,
+            // FieldNames
+            new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_SYNONYM_NAME, FIELD_NAME_OBJECT_DATAVERSE_NAME,
+                    FIELD_NAME_OBJECT_NAME },
+            // FieldTypes
+            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
             //IsOpen?
             true);
 
