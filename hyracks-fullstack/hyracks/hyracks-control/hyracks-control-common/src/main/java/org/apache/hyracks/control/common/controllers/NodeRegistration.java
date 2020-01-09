@@ -21,6 +21,7 @@ package org.apache.hyracks.control.common.controllers;
 import static org.apache.hyracks.util.MXHelper.osMXBean;
 import static org.apache.hyracks.util.MXHelper.runtimeMXBean;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -31,11 +32,17 @@ import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
 import org.apache.hyracks.util.MXHelper;
 import org.apache.hyracks.util.PidHelper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class NodeRegistration implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final InetSocketAddress ncAddress;
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    private InetSocketAddress ncAddress;
+
+    private NetworkAddress ncPort;
 
     private final String nodeId;
 
@@ -77,9 +84,9 @@ public final class NodeRegistration implements Serializable {
 
     private final NodeCapacity capacity;
 
-    public NodeRegistration(InetSocketAddress ncAddress, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
+    public NodeRegistration(NetworkAddress ncPort, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
             NetworkAddress resultPort, HeartbeatSchema hbSchema, NetworkAddress messagingPort, NodeCapacity capacity) {
-        this.ncAddress = ncAddress;
+        this.ncPort = ncPort;
         this.nodeId = nodeId;
         this.ncConfig = ncConfig;
         this.dataPort = dataPort;
@@ -184,5 +191,22 @@ public final class NodeRegistration implements Serializable {
 
     public int getPid() {
         return pid;
+    }
+
+    private void readObject(java.io.ObjectInputStream ois) throws IOException, ClassNotFoundException {
+        ois.defaultReadObject();
+        if (ncPort == null) {
+            // writer was old; we need to create a NetworkAddress from the InetSocketAddress
+            LOGGER.warn(
+                    "deserializing old NodeRegistration for {}; address may be incorrectly resolved as it was resolved on the NC: {}",
+                    nodeId, ncAddress);
+            ncPort = new NetworkAddress(ncAddress.getHostString(), ncAddress.getPort());
+        }
+    }
+
+    private void writeObject(java.io.ObjectOutputStream oos) throws IOException {
+        // we need to write a resolved InetSocketAddress to keep old readers happy
+        ncAddress = new InetSocketAddress(ncPort.getAddress(), ncPort.getPort());
+        oos.defaultWriteObject();
     }
 }

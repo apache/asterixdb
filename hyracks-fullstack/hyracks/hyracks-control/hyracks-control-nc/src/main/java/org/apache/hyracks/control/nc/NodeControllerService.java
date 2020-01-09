@@ -91,6 +91,7 @@ import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactory;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.MaintainedThreadNameExecutorService;
+import org.apache.hyracks.util.NetworkUtil;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.TraceUtils;
 import org.apache.hyracks.util.trace.Tracer;
@@ -310,11 +311,11 @@ public class NodeControllerService implements IControllerService {
 
     private void initNodeControllerState() {
         // Use "public" versions of network addresses and ports, if defined
-        InetSocketAddress ncAddress;
+        NetworkAddress ncAddress;
         if (ncConfig.getClusterPublicPort() == 0) {
-            ncAddress = ipc.getSocketAddress();
+            ncAddress = new NetworkAddress(ipc.getSocketAddress());
         } else {
-            ncAddress = new InetSocketAddress(ncConfig.getClusterPublicAddress(), ncConfig.getClusterPublicPort());
+            ncAddress = new NetworkAddress(ncConfig.getClusterPublicAddress(), ncConfig.getClusterPublicPort());
         }
         HeartbeatSchema.GarbageCollectorInfo[] gcInfos = new HeartbeatSchema.GarbageCollectorInfo[gcMXBeans.size()];
         for (int i = 0; i < gcInfos.length; ++i) {
