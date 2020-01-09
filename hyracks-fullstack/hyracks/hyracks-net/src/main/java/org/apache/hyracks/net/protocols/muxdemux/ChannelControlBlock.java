@@ -144,7 +144,7 @@ public class ChannelControlBlock implements IChannelControlBlock {
 
     @Override
     public void addPendingCredits(int credit) {
-        cSet.addPendingCredits(channelId, credit);
+        cSet.addPendingCredits(this, credit);
     }
 
     @Override
