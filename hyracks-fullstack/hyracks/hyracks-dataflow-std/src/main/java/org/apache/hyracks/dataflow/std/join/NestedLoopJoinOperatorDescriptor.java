@@ -21,6 +21,7 @@ package org.apache.hyracks.dataflow.std.join;
 
 import java.nio.ByteBuffer;
 
+import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IActivityGraphBuilder;
@@ -31,7 +32,6 @@ import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -114,9 +114,9 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
                 throws HyracksDataException {
+            final IHyracksJobletContext jobletCtx = ctx.getJobletContext();
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(nljAid, 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
-            final ITuplePairComparator comparator = comparatorFactory.createTuplePairComparator(ctx);
             final IPredicateEvaluator predEvaluator =
                     (predEvaluatorFactory != null) ? predEvaluatorFactory.createPredicateEvaluator() : null;
 
@@ -132,17 +132,15 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = new JoinCacheTaskState(ctx.getJobletContext().getJobId(),
-                            new TaskId(getActivityId(), partition));
-
-                    state.joiner = new NestedLoopJoin(ctx, new FrameTupleAccessor(rd0), new FrameTupleAccessor(rd1),
-                            comparator, memSize, predEvaluator, isLeftOuter, nullWriters1);
+                    state = new JoinCacheTaskState(jobletCtx.getJobId(), new TaskId(getActivityId(), partition));
+                    state.joiner = new NestedLoopJoin(jobletCtx, new FrameTupleAccessor(rd0),
+                            new FrameTupleAccessor(rd1), memSize, predEvaluator, isLeftOuter, nullWriters1);
 
                 }
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    ByteBuffer copyBuffer = ctx.allocateFrame(buffer.capacity());
+                    ByteBuffer copyBuffer = jobletCtx.allocateFrame(buffer.capacity());
                     FrameUtils.copyAndFlip(buffer, copyBuffer);
                     state.joiner.cache(copyBuffer);
                 }
@@ -180,6 +178,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                     writer.open();
                     state = (JoinCacheTaskState) ctx.getStateObject(
                             new TaskId(new ActivityId(getOperatorId(), JOIN_CACHE_ACTIVITY_ID), partition));
+                    state.joiner.setComparator(comparatorFactory.createTuplePairComparator(ctx));
                 }
 
                 @Override

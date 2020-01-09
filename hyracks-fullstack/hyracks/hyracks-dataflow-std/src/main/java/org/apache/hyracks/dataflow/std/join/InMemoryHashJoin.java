@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksFrameMgrContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
@@ -49,35 +49,35 @@ public class InMemoryHashJoin {
     private final List<ByteBuffer> buffers;
     private final FrameTupleAccessor accessorBuild;
     private final ITuplePartitionComputer tpcBuild;
-    private IFrameTupleAccessor accessorProbe;
+    private final IFrameTupleAccessor accessorProbe;
     private final ITuplePartitionComputer tpcProbe;
     private final FrameTupleAppender appender;
-    private final ITuplePairComparator tpComparator;
+    private ITuplePairComparator tpComparator;
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder missingTupleBuild;
     private final ISerializableTable table;
     private final TuplePointer storedTuplePointer;
     private final boolean reverseOutputOrder; //Should we reverse the order of tuples, we are writing in output
     private final IPredicateEvaluator predEvaluator;
-    private TupleInFrameListAccessor tupleAccessor;
+    private final TupleInFrameListAccessor tupleAccessor;
     // To release frames
-    ISimpleFrameBufferManager bufferManager;
+    private final ISimpleFrameBufferManager bufferManager;
     private final boolean isTableCapacityNotZero;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public InMemoryHashJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorProbe, ITuplePartitionComputer tpcProbe,
-            FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild, ITuplePartitionComputer tpcBuild,
-            ITuplePairComparator comparator, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
+    public InMemoryHashJoin(IHyracksFrameMgrContext ctx, FrameTupleAccessor accessorProbe,
+            ITuplePartitionComputer tpcProbe, FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild,
+            ITuplePartitionComputer tpcBuild, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
             ISerializableTable table, IPredicateEvaluator predEval, ISimpleFrameBufferManager bufferManager)
             throws HyracksDataException {
-        this(ctx, accessorProbe, tpcProbe, accessorBuild, rDBuild, tpcBuild, comparator, isLeftOuter,
-                missingWritersBuild, table, predEval, false, bufferManager);
+        this(ctx, accessorProbe, tpcProbe, accessorBuild, rDBuild, tpcBuild, isLeftOuter, missingWritersBuild, table,
+                predEval, false, bufferManager);
     }
 
-    public InMemoryHashJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorProbe, ITuplePartitionComputer tpcProbe,
-            FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild, ITuplePartitionComputer tpcBuild,
-            ITuplePairComparator comparator, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
+    public InMemoryHashJoin(IHyracksFrameMgrContext ctx, FrameTupleAccessor accessorProbe,
+            ITuplePartitionComputer tpcProbe, FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild,
+            ITuplePartitionComputer tpcBuild, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
             ISerializableTable table, IPredicateEvaluator predEval, boolean reverse,
             ISimpleFrameBufferManager bufferManager) throws HyracksDataException {
         this.table = table;
@@ -88,7 +88,6 @@ public class InMemoryHashJoin {
         this.accessorProbe = accessorProbe;
         this.tpcProbe = tpcProbe;
         appender = new FrameTupleAppender(new VSizeFrame(ctx));
-        tpComparator = comparator;
         predEvaluator = predEval;
         this.isLeftOuter = isLeftOuter;
         if (isLeftOuter) {
@@ -105,11 +104,7 @@ public class InMemoryHashJoin {
         reverseOutputOrder = reverse;
         this.tupleAccessor = new TupleInFrameListAccessor(rDBuild, buffers);
         this.bufferManager = bufferManager;
-        if (table.getTableSize() != 0) {
-            isTableCapacityNotZero = true;
-        } else {
-            isTableCapacityNotZero = false;
-        }
+        this.isTableCapacityNotZero = table.getTableSize() != 0;
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("InMemoryHashJoin has been created for a table size of " + table.getTableSize()
                     + " for Thread ID " + Thread.currentThread().getId() + ".");
@@ -126,6 +121,7 @@ public class InMemoryHashJoin {
             storedTuplePointer.reset(bIndex, i);
             // If an insertion fails, then tries to insert the same tuple pointer again after compacting the table.
             if (!table.insert(entry, storedTuplePointer)) {
+                // TODO(ali): should check if insertion failed even after compaction and take action
                 compactTableAndInsertAgain(entry, storedTuplePointer);
             }
         }
@@ -149,6 +145,15 @@ public class InMemoryHashJoin {
             return table.collectGarbage(tupleAccessor, tpcBuild);
         }
         return -1;
+    }
+
+    /**
+     * Must be called before starting to join to set the right comparator with the right context.
+     *
+     * @param comparator the comparator to use for comparing the probe tuples against the build tuples
+     */
+    void setComparator(ITuplePairComparator comparator) {
+        tpComparator = comparator;
     }
 
     /**

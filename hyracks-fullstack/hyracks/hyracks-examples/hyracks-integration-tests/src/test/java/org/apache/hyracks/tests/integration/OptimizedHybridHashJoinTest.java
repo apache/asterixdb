@@ -24,7 +24,7 @@ import java.util.Random;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -50,7 +50,7 @@ import org.mockito.Mockito;
 public class OptimizedHybridHashJoinTest {
     int frameSize = 32768;
     int totalNumberOfFrames = 10;
-    IHyracksTaskContext ctx = TestUtils.create(frameSize);
+    IHyracksJobletContext ctx = TestUtils.create(frameSize).getJobletContext();
     OptimizedHybridHashJoin hhj;
     static IBinaryHashFunctionFamily[] propHashFunctionFactories = { MurmurHash3BinaryHashFunctionFamily.INSTANCE };
     static IBinaryHashFunctionFamily[] buildHashFunctionFactories = { MurmurHash3BinaryHashFunctionFamily.INSTANCE };
@@ -150,8 +150,8 @@ public class OptimizedHybridHashJoinTest {
 
     private void testJoin(int memSizeInFrames, int numOfPartitions, VSizeFrame frame) throws HyracksDataException {
 
-        hhj = new OptimizedHybridHashJoin(ctx, memSizeInFrames, numOfPartitions, probeRelName, buildRelName, comparator,
-                probeRd, buildRd, probeHpc, buildHpc, predEval, isLeftOuter, null);
+        hhj = new OptimizedHybridHashJoin(ctx, memSizeInFrames, numOfPartitions, probeRelName, buildRelName, probeRd,
+                buildRd, probeHpc, buildHpc, predEval, isLeftOuter, null);
 
         hhj.initBuild();
 
@@ -184,7 +184,7 @@ public class OptimizedHybridHashJoinTest {
                 //to the in memory joiner. As such, only next frame is important.
             }
         };
-        hhj.initProbe();
+        hhj.initProbe(comparator);
         for (int i = 0; i < totalNumberOfFrames; i++) {
             hhj.probe(frame.getBuffer(), writer);
             checkOneFrameReservedPerSpilledPartitions();

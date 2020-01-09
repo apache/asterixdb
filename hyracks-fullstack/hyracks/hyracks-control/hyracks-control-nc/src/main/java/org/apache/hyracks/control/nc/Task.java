@@ -139,7 +139,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         this.taskAttemptId = taskId;
         this.displayName = displayName;
         this.executorService = executor;
-        fileFactory = new WorkspaceFileFactory(this, joblet.getIOManager());
+        fileFactory = new WorkspaceFileFactory(this, joblet.getIoManager());
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         counterMap = new HashMap<>();
         opEnv = joblet.getEnvironment();
@@ -181,12 +181,12 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     @Override
     public int getInitialFrameSize() {
-        return joblet.getFrameSize();
+        return joblet.getInitialFrameSize();
     }
 
     @Override
     public IIOManager getIoManager() {
-        return joblet.getIOManager();
+        return joblet.getIoManager();
     }
 
     @Override

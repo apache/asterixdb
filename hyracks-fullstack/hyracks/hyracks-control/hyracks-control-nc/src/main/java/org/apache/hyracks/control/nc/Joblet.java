@@ -240,11 +240,13 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         nodeController.getExecutor().execute(() -> deallocatableRegistry.close());
     }
 
-    ByteBuffer allocateFrame() throws HyracksDataException {
+    @Override
+    public ByteBuffer allocateFrame() throws HyracksDataException {
         return frameManager.allocateFrame();
     }
 
-    ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
+    @Override
+    public ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
         if (serviceCtx.getMemoryManager().allocate(bytes)) {
             memoryAllocation.addAndGet(bytes);
             return frameManager.allocateFrame(bytes);
@@ -252,18 +254,21 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         throw new HyracksDataException("Unable to allocate frame: Not enough memory");
     }
 
-    ByteBuffer reallocateFrame(ByteBuffer usedBuffer, int newFrameSizeInBytes, boolean copyOldData)
+    @Override
+    public ByteBuffer reallocateFrame(ByteBuffer usedBuffer, int newFrameSizeInBytes, boolean copyOldData)
             throws HyracksDataException {
         return frameManager.reallocateFrame(usedBuffer, newFrameSizeInBytes, copyOldData);
     }
 
-    void deallocateFrames(int bytes) {
+    @Override
+    public void deallocateFrames(int bytes) {
         memoryAllocation.addAndGet(bytes);
         serviceCtx.getMemoryManager().deallocate(bytes);
         frameManager.deallocateFrames(bytes);
     }
 
-    public final int getFrameSize() {
+    @Override
+    public final int getInitialFrameSize() {
         return frameManager.getInitialFrameSize();
     }
 
@@ -271,7 +276,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return maxWarnings;
     }
 
-    public IIOManager getIOManager() {
+    @Override
+    public IIOManager getIoManager() {
         return serviceCtx.getIoManager();
     }
 

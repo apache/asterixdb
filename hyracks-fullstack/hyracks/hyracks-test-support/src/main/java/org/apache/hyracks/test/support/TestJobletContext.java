@@ -34,31 +34,33 @@ import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
 
 public class TestJobletContext implements IHyracksJobletContext {
-    private final int frameSize;
+
     private final INCServiceContext serviceContext;
     private final FrameManager frameManger;
-    private JobId jobId;
-    private WorkspaceFileFactory fileFactory;
+    private final JobId jobId;
+    private final WorkspaceFileFactory fileFactory;
     private final long jobStartTime;
 
-    public TestJobletContext(int frameSize, INCServiceContext serviceContext, JobId jobId) throws HyracksException {
-        this.frameSize = frameSize;
+    TestJobletContext(int frameSize, INCServiceContext serviceContext, JobId jobId) throws HyracksException {
         this.serviceContext = serviceContext;
         this.jobId = jobId;
-        fileFactory = new WorkspaceFileFactory(this, getIOManager());
+        fileFactory = new WorkspaceFileFactory(this, getIoManager());
         this.frameManger = new FrameManager(frameSize);
         this.jobStartTime = System.currentTimeMillis();
     }
 
-    ByteBuffer allocateFrame() throws HyracksDataException {
+    @Override
+    public ByteBuffer allocateFrame() throws HyracksDataException {
         return frameManger.allocateFrame();
     }
 
+    @Override
     public ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
         return frameManger.allocateFrame(bytes);
     }
 
-    ByteBuffer reallocateFrame(ByteBuffer tobeDeallocate, int newFrameSizeInBytes, boolean copyOldData)
+    @Override
+    public ByteBuffer reallocateFrame(ByteBuffer tobeDeallocate, int newFrameSizeInBytes, boolean copyOldData)
             throws HyracksDataException {
         return frameManger.reallocateFrame(tobeDeallocate, newFrameSizeInBytes, copyOldData);
     }
@@ -67,15 +69,18 @@ public class TestJobletContext implements IHyracksJobletContext {
         return null;
     }
 
-    void deallocateFrames(int bytes) {
+    @Override
+    public void deallocateFrames(int bytes) {
         frameManger.deallocateFrames(bytes);
     }
 
-    public int getFrameSize() {
-        return frameSize;
+    @Override
+    public final int getInitialFrameSize() {
+        return frameManger.getInitialFrameSize();
     }
 
-    public IIOManager getIOManager() {
+    @Override
+    public IIOManager getIoManager() {
         return serviceContext.getIoManager();
     }
 
