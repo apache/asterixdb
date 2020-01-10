@@ -279,8 +279,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     @Override
     public void compileAndExecute(IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
-        validateStatements(statements, requestParameters.isMultiStatement(),
-                requestParameters.getStatementCategoryRestrictionMask());
+        validateStatements(requestParameters);
         trackRequest(requestParameters);
         int resultSetIdCounter = 0;
         FileSplit outputFile = null;
@@ -3085,6 +3084,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void trackRequest(IRequestParameters requestParameters) throws HyracksDataException {
         final IClientRequest clientRequest = appCtx.getReceptionist().requestReceived(requestParameters);
         appCtx.getRequestTracker().track(clientRequest);
+    }
+
+    protected void validateStatements(IRequestParameters requestParameters) throws CompilationException {
+        validateStatements(statements, requestParameters.isMultiStatement(),
+                requestParameters.getStatementCategoryRestrictionMask());
     }
 
     public static void validateStatements(List<Statement> statements, boolean allowMultiStatement,
