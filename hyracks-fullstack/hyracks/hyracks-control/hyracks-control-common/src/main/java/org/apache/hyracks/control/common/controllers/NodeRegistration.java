@@ -22,7 +22,6 @@ import static org.apache.hyracks.util.MXHelper.osMXBean;
 import static org.apache.hyracks.util.MXHelper.runtimeMXBean;
 
 import java.io.Serializable;
-import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,15 +36,17 @@ import org.apache.hyracks.util.MXHelper;
 import org.apache.hyracks.util.PidHelper;
 
 public final class NodeRegistration implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    private final InetSocketAddress ncAddress;
+    private static final long serialVersionUID = 2L;
 
     private final String nodeId;
 
-    private final NetworkAddress dataPort;
+    private final NetworkAddress ncAddress;
 
-    private final NetworkAddress resultPort;
+    private final NetworkAddress dataAddress;
+
+    private final NetworkAddress resultAddress;
+
+    private final NetworkAddress messagingAddress;
 
     private final String osName;
 
@@ -73,22 +74,21 @@ public final class NodeRegistration implements Serializable {
 
     private final HeartbeatSchema hbSchema;
 
-    private final NetworkAddress messagingPort;
-
     private final long pid;
 
     private final NodeCapacity capacity;
 
     private final HashMap<SerializedOption, Object> config;
 
-    public NodeRegistration(InetSocketAddress ncAddress, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
-            NetworkAddress resultPort, HeartbeatSchema hbSchema, NetworkAddress messagingPort, NodeCapacity capacity) {
+    public NodeRegistration(NetworkAddress ncAddress, String nodeId, NCConfig ncConfig, NetworkAddress dataAddress,
+            NetworkAddress resultAddress, HeartbeatSchema hbSchema, NetworkAddress messagingAddress,
+            NodeCapacity capacity) {
         this.ncAddress = ncAddress;
         this.nodeId = nodeId;
-        this.dataPort = dataPort;
-        this.resultPort = resultPort;
+        this.dataAddress = dataAddress;
+        this.resultAddress = resultAddress;
         this.hbSchema = hbSchema;
-        this.messagingPort = messagingPort;
+        this.messagingAddress = messagingAddress;
         this.capacity = capacity;
         this.osName = osMXBean.getName();
         this.arch = osMXBean.getArch();
@@ -110,7 +110,7 @@ public final class NodeRegistration implements Serializable {
         }
     }
 
-    public InetSocketAddress getNodeControllerAddress() {
+    public NetworkAddress getNodeControllerAddress() {
         return ncAddress;
     }
 
@@ -126,12 +126,12 @@ public final class NodeRegistration implements Serializable {
         return config;
     }
 
-    public NetworkAddress getDataPort() {
-        return dataPort;
+    public NetworkAddress getDataAddress() {
+        return dataAddress;
     }
 
-    public NetworkAddress getResultPort() {
-        return resultPort;
+    public NetworkAddress getResultAddress() {
+        return resultAddress;
     }
 
     public String getOSName() {
@@ -186,8 +186,8 @@ public final class NodeRegistration implements Serializable {
         return systemProperties;
     }
 
-    public NetworkAddress getMessagingPort() {
-        return messagingPort;
+    public NetworkAddress getMessagingAddress() {
+        return messagingAddress;
     }
 
     public long getPid() {

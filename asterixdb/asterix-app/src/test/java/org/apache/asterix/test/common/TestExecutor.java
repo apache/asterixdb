@@ -19,6 +19,7 @@
 package org.apache.asterix.test.common;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.hyracks.util.file.FileUtil.canonicalize;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -259,7 +260,7 @@ public class TestExecutor {
 
     public void runScriptAndCompareWithResult(File scriptFile, File expectedFile, File actualFile,
             ComparisonEnum compare, Charset actualEncoding, String statement) throws Exception {
-        LOGGER.info("Expected results file: {} ", expectedFile);
+        LOGGER.info("Expected results file: {} ", canonicalize(expectedFile));
         boolean regex = false;
         if (expectedFile.getName().endsWith(".ignore")) {
             return; //skip the comparison
@@ -331,7 +332,11 @@ public class TestExecutor {
                 throw createLineChangedException(scriptFile, "<EOF>", lineActual, num);
             }
         } catch (Exception e) {
-            LOGGER.info("Actual results file: {} encoding: {}", actualFile, actualEncoding);
+            if (!actualEncoding.equals(UTF_8)) {
+                LOGGER.info("Actual results file: {} encoding: {}", canonicalize(actualFile), actualEncoding);
+            } else {
+                LOGGER.info("Actual results file: {}", canonicalize(actualFile));
+            }
             throw e;
         }
 
@@ -339,8 +344,8 @@ public class TestExecutor {
 
     private ComparisonException createLineChangedException(File scriptFile, String lineExpected, String lineActual,
             int num) {
-        return new ComparisonException("Result for " + scriptFile + " changed at line " + num + ":\nexpected < "
-                + truncateIfLong(lineExpected) + "\nactual   > " + truncateIfLong(lineActual));
+        return new ComparisonException("Result for " + canonicalize(scriptFile) + " changed at line " + num
+                + ":\nexpected < " + truncateIfLong(lineExpected) + "\nactual   > " + truncateIfLong(lineActual));
     }
 
     private String truncateIfLong(String string) {
@@ -482,7 +487,7 @@ public class TestExecutor {
             if (match && !negate || negate && !match) {
                 continue;
             }
-            throw new Exception("Result for " + scriptFile + ": expected pattern '" + expression
+            throw new Exception("Result for " + canonicalize(scriptFile) + ": expected pattern '" + expression
                     + "' not found in result: " + actual);
         }
     }
@@ -511,7 +516,8 @@ public class TestExecutor {
                 }
                 endOfMatch = matcher.end();
             }
-            throw new Exception("Result for " + scriptFile + ": actual file did not match expected result");
+            throw new Exception(
+                    "Result for " + canonicalize(scriptFile) + ": actual file did not match expected result");
         }
     }
 

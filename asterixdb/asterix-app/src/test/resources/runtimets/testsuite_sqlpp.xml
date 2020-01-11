@@ -3373,6 +3373,7 @@
           <expected-warn>Incomparable input types: string and bigint (in line 25, at column 13)</expected-warn>
           <expected-warn>Incomparable input types: array and bigint (in line 23, at column 7)</expected-warn>
           <expected-warn>Incomparable input types: point and point (in line 24, at column 18)</expected-warn>
+          <expected-warn>Incomparable input types: bigint and string (in line 24, at column 46)</expected-warn>
       </compilation-unit>
     </test-case>
   </test-group>

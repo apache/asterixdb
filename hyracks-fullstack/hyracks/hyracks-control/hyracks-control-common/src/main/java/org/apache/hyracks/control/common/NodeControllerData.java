@@ -47,11 +47,11 @@ public class NodeControllerData {
 
     private final Map<SerializedOption, Object> config;
 
-    private final NetworkAddress dataPort;
+    private final NetworkAddress dataAddress;
 
-    private final NetworkAddress resultPort;
+    private final NetworkAddress resultAddress;
 
-    private final NetworkAddress messagingPort;
+    private final NetworkAddress messagingAddress;
 
     private final Set<JobId> activeJobIds;
 
@@ -151,9 +151,9 @@ public class NodeControllerData {
         nodeId = reg.getNodeId();
         config = Collections.unmodifiableMap(reg.getConfig());
 
-        dataPort = reg.getDataPort();
-        resultPort = reg.getResultPort();
-        messagingPort = reg.getMessagingPort();
+        dataAddress = reg.getDataAddress();
+        resultAddress = reg.getResultAddress();
+        messagingAddress = reg.getMessagingAddress();
         activeJobIds = new HashSet<>();
 
         osName = reg.getOSName();
@@ -265,16 +265,16 @@ public class NodeControllerData {
         return activeJobIds;
     }
 
-    public NetworkAddress getDataPort() {
-        return dataPort;
+    public NetworkAddress getDataAddress() {
+        return dataAddress;
     }
 
-    public NetworkAddress getResultPort() {
-        return resultPort;
+    public NetworkAddress getResultAddress() {
+        return resultAddress;
     }
 
-    public NetworkAddress getMessagingPort() {
-        return messagingPort;
+    public NetworkAddress getMessagingAddress() {
+        return messagingAddress;
     }
 
     public NodeCapacity getCapacity() {

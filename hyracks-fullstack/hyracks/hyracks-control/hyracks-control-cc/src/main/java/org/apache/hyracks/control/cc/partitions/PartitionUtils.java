@@ -38,7 +38,7 @@ public class PartitionUtils {
         INodeManager nodeManager = ccs.getNodeManager();
         NodeControllerState producerNCS = nodeManager.getNodeControllerState(desc.getNodeId());
         NodeControllerState requestorNCS = nodeManager.getNodeControllerState(req.getNodeId());
-        final NetworkAddress dataport = producerNCS.getDataPort();
+        final NetworkAddress dataport = producerNCS.getDataAddress();
         final INodeController requestorNC = requestorNCS.getNodeController();
         requestorNC.reportPartitionAvailability(pid, dataport);
     }

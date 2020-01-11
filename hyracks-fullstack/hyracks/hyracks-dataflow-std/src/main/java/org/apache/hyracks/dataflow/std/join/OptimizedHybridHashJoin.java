@@ -24,7 +24,7 @@ import java.util.BitSet;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
@@ -62,11 +62,10 @@ public class OptimizedHybridHashJoin {
         PROBE
     }
 
-    private final IHyracksTaskContext ctx;
+    private final IHyracksJobletContext jobletCtx;
 
     private final String buildRelName;
     private final String probeRelName;
-    private final ITuplePairComparator comparator;
     private final ITuplePartitionComputer buildHpc;
     private final ITuplePartitionComputer probeHpc;
     private final RecordDescriptor buildRd;
@@ -95,17 +94,16 @@ public class OptimizedHybridHashJoin {
     private final TuplePointer tempPtr = new TuplePointer();
     private int[] probePSizeInTups;
 
-    public OptimizedHybridHashJoin(IHyracksTaskContext ctx, int memSizeInFrames, int numOfPartitions,
-            String probeRelName, String buildRelName, ITuplePairComparator comparator, RecordDescriptor probeRd,
-            RecordDescriptor buildRd, ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc,
-            IPredicateEvaluator predEval, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1) {
-        this.ctx = ctx;
+    public OptimizedHybridHashJoin(IHyracksJobletContext jobletCtx, int memSizeInFrames, int numOfPartitions,
+            String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
+            ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator predEval,
+            boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1) {
+        this.jobletCtx = jobletCtx;
         this.memSizeInFrames = memSizeInFrames;
         this.buildRd = buildRd;
         this.probeRd = probeRd;
         this.buildHpc = buildHpc;
         this.probeHpc = probeHpc;
-        this.comparator = comparator;
         this.buildRelName = buildRelName;
         this.probeRelName = probeRelName;
         this.numOfPartitions = numOfPartitions;
@@ -127,7 +125,7 @@ public class OptimizedHybridHashJoin {
 
     public void initBuild() throws HyracksDataException {
         IDeallocatableFramePool framePool =
-                new DeallocatableFramePool(ctx, memSizeInFrames * ctx.getInitialFrameSize());
+                new DeallocatableFramePool(jobletCtx, memSizeInFrames * jobletCtx.getInitialFrameSize());
         bufferManagerForHashTable = new FramePoolBackedFrameBufferManager(framePool);
         bufferManager = new VPartitionTupleBufferManager(
                 PreferToSpillFullyOccupiedFramePolicy.createAtMostOneFrameForSpilledPartitionConstrain(spilledStatus),
@@ -177,8 +175,8 @@ public class OptimizedHybridHashJoin {
             int pid) throws HyracksDataException {
         RunFileWriter writer = runFileWriters[pid];
         if (writer == null) {
-            FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(refName);
-            writer = new RunFileWriter(file, ctx.getIoManager());
+            FileReference file = jobletCtx.createManagedWorkspaceFile(refName);
+            writer = new RunFileWriter(file, jobletCtx.getIoManager());
             writer.open();
             runFileWriters[pid] = writer;
         }
@@ -194,10 +192,10 @@ public class OptimizedHybridHashJoin {
         // and tries to bring back as many spilled partitions as possible if there is free space.
         int inMemTupCount = makeSpaceForHashTableAndBringBackSpilledPartitions();
 
-        ISerializableTable table = new SerializableHashTable(inMemTupCount, ctx, bufferManagerForHashTable);
-        this.inMemJoiner = new InMemoryHashJoin(ctx, new FrameTupleAccessor(probeRd), probeHpc,
-                new FrameTupleAccessor(buildRd), buildRd, buildHpc, comparator, isLeftOuter, nonMatchWriters, table,
-                predEvaluator, isReversed, bufferManagerForHashTable);
+        ISerializableTable table = new SerializableHashTable(inMemTupCount, jobletCtx, bufferManagerForHashTable);
+        this.inMemJoiner = new InMemoryHashJoin(jobletCtx, new FrameTupleAccessor(probeRd), probeHpc,
+                new FrameTupleAccessor(buildRd), buildRd, buildHpc, isLeftOuter, nonMatchWriters, table, predEvaluator,
+                isReversed, bufferManagerForHashTable);
 
         buildHashTable();
     }
@@ -250,7 +248,7 @@ public class OptimizedHybridHashJoin {
      * @throws HyracksDataException
      */
     private int makeSpaceForHashTableAndBringBackSpilledPartitions() throws HyracksDataException {
-        int frameSize = ctx.getInitialFrameSize();
+        int frameSize = jobletCtx.getInitialFrameSize();
         long freeSpace = (long) (memSizeInFrames - spilledStatus.cardinality()) * frameSize;
 
         int inMemTupCount = 0;
@@ -356,7 +354,7 @@ public class OptimizedHybridHashJoin {
      * @return partition id of selected partition to reload
      */
     private int selectAPartitionToReload(long freeSpace, int pid, int inMemTupCount) {
-        int frameSize = ctx.getInitialFrameSize();
+        int frameSize = jobletCtx.getInitialFrameSize();
         // Add one frame to freeSpace to consider the one frame reserved for the spilled partition
         long totalFreeSpace = freeSpace + frameSize;
         if (totalFreeSpace > 0) {
@@ -379,7 +377,7 @@ public class OptimizedHybridHashJoin {
         try {
             r.open();
             if (reloadBuffer == null) {
-                reloadBuffer = new VSizeFrame(ctx);
+                reloadBuffer = new VSizeFrame(jobletCtx);
             }
             while (r.nextFrame(reloadBuffer)) {
                 accessorBuild.reset(reloadBuffer.getBuffer());
@@ -430,8 +428,9 @@ public class OptimizedHybridHashJoin {
         }
     }
 
-    public void initProbe() {
+    public void initProbe(ITuplePairComparator comparator) {
         probePSizeInTups = new int[numOfPartitions];
+        inMemJoiner.setComparator(comparator);
         bufferManager.setConstrain(VPartitionTupleBufferManager.NO_CONSTRAIN);
     }
 
@@ -465,7 +464,7 @@ public class OptimizedHybridHashJoin {
                     VPartitionTupleBufferManager.calculateActualSize(null, accessorProbe.getTupleLength(tupleId));
             // If the partition is at least half-full and insertion fails, that partition is preferred to get
             // spilled, otherwise the biggest partition gets chosen as the victim.
-            boolean modestCase = recordSize <= (ctx.getInitialFrameSize() / 2);
+            boolean modestCase = recordSize <= (jobletCtx.getInitialFrameSize() / 2);
             int victim = (modestCase && bufferManager.getNumTuples(pid) > 0) ? pid
                     : spillPolicy.findSpilledPartitionWithMaxMemoryUsage();
             // This method is called for the spilled partitions, so we know that this tuple is going to get written to
@@ -493,7 +492,7 @@ public class OptimizedHybridHashJoin {
     private void flushBigProbeObjectToDisk(int pid, FrameTupleAccessor accessorProbe, int i)
             throws HyracksDataException {
         if (bigProbeFrameAppender == null) {
-            bigProbeFrameAppender = new FrameTupleAppender(new VSizeFrame(ctx));
+            bigProbeFrameAppender = new FrameTupleAppender(new VSizeFrame(jobletCtx));
         }
         RunFileWriter runFileWriter = getSpillWriterOrCreateNewOneIfNotExist(probeRFWriters, probeRelName, pid);
         if (!bigProbeFrameAppender.append(accessorProbe, i)) {

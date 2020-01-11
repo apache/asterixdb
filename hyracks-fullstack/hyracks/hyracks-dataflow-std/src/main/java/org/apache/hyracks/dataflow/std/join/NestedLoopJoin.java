@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
@@ -46,7 +46,7 @@ public class NestedLoopJoin {
     private final FrameTupleAccessor accessorInner;
     private final FrameTupleAccessor accessorOuter;
     private final FrameTupleAppender appender;
-    private final ITuplePairComparator tpComparator;
+    private ITuplePairComparator tpComparator;
     private final IFrame outBuffer;
     private final IFrame innerBuffer;
     private final VariableFrameMemoryManager outerBufferMngr;
@@ -55,24 +55,23 @@ public class NestedLoopJoin {
     private final ArrayTupleBuilder missingTupleBuilder;
     private final IPredicateEvaluator predEvaluator;
     private boolean isReversed; //Added for handling correct calling for predicate-evaluator upon recursive calls (in OptimizedHybridHashJoin) that cause role-reversal
-    private BufferInfo tempInfo = new BufferInfo(null, -1, -1);
+    private final BufferInfo tempInfo = new BufferInfo(null, -1, -1);
 
-    public NestedLoopJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorOuter, FrameTupleAccessor accessorInner,
-            ITuplePairComparator comparatorsOuter2Inner, int memSize, IPredicateEvaluator predEval, boolean isLeftOuter,
+    public NestedLoopJoin(IHyracksJobletContext jobletContext, FrameTupleAccessor accessorOuter,
+            FrameTupleAccessor accessorInner, int memSize, IPredicateEvaluator predEval, boolean isLeftOuter,
             IMissingWriter[] missingWriters) throws HyracksDataException {
         this.accessorInner = accessorInner;
         this.accessorOuter = accessorOuter;
         this.appender = new FrameTupleAppender();
-        this.tpComparator = comparatorsOuter2Inner;
-        this.outBuffer = new VSizeFrame(ctx);
-        this.innerBuffer = new VSizeFrame(ctx);
+        this.outBuffer = new VSizeFrame(jobletContext);
+        this.innerBuffer = new VSizeFrame(jobletContext);
         this.appender.reset(outBuffer, true);
         if (memSize < 3) {
             throw new HyracksDataException("Not enough memory is available for Nested Loop Join");
         }
-        this.outerBufferMngr =
-                new VariableFrameMemoryManager(new VariableFramePool(ctx, ctx.getInitialFrameSize() * (memSize - 2)),
-                        FrameFreeSlotPolicyFactory.createFreeSlotPolicy(EnumFreeSlotPolicy.LAST_FIT, memSize - 2));
+        this.outerBufferMngr = new VariableFrameMemoryManager(
+                new VariableFramePool(jobletContext, jobletContext.getInitialFrameSize() * (memSize - 2)),
+                FrameFreeSlotPolicyFactory.createFreeSlotPolicy(EnumFreeSlotPolicy.LAST_FIT, memSize - 2));
 
         this.predEvaluator = predEval;
         this.isReversed = false;
@@ -91,13 +90,22 @@ public class NestedLoopJoin {
         }
 
         FileReference file =
-                ctx.getJobletContext().createManagedWorkspaceFile(this.getClass().getSimpleName() + this.toString());
-        runFileWriter = new RunFileWriter(file, ctx.getIoManager());
+                jobletContext.createManagedWorkspaceFile(this.getClass().getSimpleName() + this.toString());
+        runFileWriter = new RunFileWriter(file, jobletContext.getIoManager());
         runFileWriter.open();
     }
 
     public void cache(ByteBuffer buffer) throws HyracksDataException {
         runFileWriter.nextFrame(buffer);
+    }
+
+    /**
+     * Must be called before starting to join to set the right comparator with the right context.
+     *
+     * @param comparator the comparator to use for comparing the probe tuples against the build tuples
+     */
+    void setComparator(ITuplePairComparator comparator) {
+        tpComparator = comparator;
     }
 
     public void join(ByteBuffer outerBuffer, IFrameWriter writer) throws HyracksDataException {
@@ -131,7 +139,7 @@ public class NestedLoopJoin {
         for (int i = 0; i < tupleCount0; ++i) {
             boolean matchFound = false;
             for (int j = 0; j < tupleCount1; ++j) {
-                int c = compare(accessorOuter, i, accessorInner, j);
+                int c = tpComparator.compare(accessorOuter, i, accessorInner, j);
                 boolean prdEval = evaluatePredicate(i, j);
                 if (c == 0 && prdEval) {
                     matchFound = true;
@@ -193,15 +201,6 @@ public class NestedLoopJoin {
 
     public void releaseMemory() throws HyracksDataException {
         outerBufferMngr.reset();
-    }
-
-    private int compare(FrameTupleAccessor accessor0, int tIndex0, FrameTupleAccessor accessor1, int tIndex1)
-            throws HyracksDataException {
-        int c = tpComparator.compare(accessor0, tIndex0, accessor1, tIndex1);
-        if (c != 0) {
-            return c;
-        }
-        return 0;
     }
 
     public void setIsReversed(boolean b) {

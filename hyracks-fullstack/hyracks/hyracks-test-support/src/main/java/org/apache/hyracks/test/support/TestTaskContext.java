@@ -85,12 +85,12 @@ public class TestTaskContext implements IHyracksTaskContext {
 
     @Override
     public int getInitialFrameSize() {
-        return jobletContext.getFrameSize();
+        return jobletContext.getInitialFrameSize();
     }
 
     @Override
     public IIOManager getIoManager() {
-        return jobletContext.getIOManager();
+        return jobletContext.getIoManager();
     }
 
     @Override

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.test.sqlpp;
 
+import static org.apache.hyracks.util.file.FileUtil.canonicalize;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -85,7 +86,7 @@ public class ParserTestExecutor extends TestExecutor {
                 try {
                     if (queryCount >= expectedResultFileCtxs.size()
                             && !cUnit.getOutputDir().getValue().equals("none")) {
-                        throw new ComparisonException("no result file for " + testFile.toString() + "; queryCount: "
+                        throw new ComparisonException("no result file for " + canonicalize(testFile) + "; queryCount: "
                                 + queryCount + ", filectxs.size: " + expectedResultFileCtxs.size());
                     }
 
@@ -99,21 +100,21 @@ public class ParserTestExecutor extends TestExecutor {
                             "[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " PASSED ");
                     queryCount++;
                 } catch (Exception e) {
-                    System.err.println("testFile " + testFile.toString() + " raised an exception: " + e);
+                    System.err.println("testFile " + canonicalize(testFile) + " raised an exception: " + e);
                     if (cUnit.getExpectedError().isEmpty()) {
                         e.printStackTrace();
                         System.err.println("...Unexpected!");
                         if (failedGroup != null) {
                             failedGroup.getTestCase().add(testCaseCtx.getTestCase());
                         }
-                        throw new Exception("Test \"" + testFile + "\" FAILED!", e);
+                        throw new Exception("Test \"" + canonicalize(testFile) + "\" FAILED!", e);
                     } else {
                         // must compare with the expected failure message
                         if (e instanceof ComparisonException) {
                             throw e;
                         }
-                        LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
-                                + " failed as expected: " + e.getMessage());
+                        LOGGER.info("[TEST]: " + canonicalize(testCaseCtx.getTestCase().getFilePath()) + "/"
+                                + cUnit.getName() + " failed as expected: " + e.getMessage());
                         System.err.println("...but that was expected.");
                     }
                 }
@@ -168,7 +169,7 @@ public class ParserTestExecutor extends TestExecutor {
             runScriptAndCompareWithResult(queryFile, expectedFile, actualResultFile, ComparisonEnum.TEXT,
                     StandardCharsets.UTF_8, null);
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.warn("Failed while testing file " + queryFile);
+            GlobalConfig.ASTERIX_LOGGER.warn("Failed while testing file " + canonicalize(queryFile));
             throw e;
         } finally {
             writer.close();

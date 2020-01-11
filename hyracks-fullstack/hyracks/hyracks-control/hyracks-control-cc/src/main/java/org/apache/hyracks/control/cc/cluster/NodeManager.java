@@ -147,9 +147,11 @@ public class NodeManager implements INodeManager {
     @Override
     public Map<String, NodeControllerInfo> getNodeControllerInfoMap() {
         Map<String, NodeControllerInfo> result = new LinkedHashMap<>();
-        nodeRegistry.forEach(
-                (key, ncState) -> result.put(key, new NodeControllerInfo(key, NodeStatus.ACTIVE, ncState.getDataPort(),
-                        ncState.getResultPort(), ncState.getMessagingPort(), ncState.getCapacity().getCores())));
+        nodeRegistry
+                .forEach((key, ncState) -> result.put(key,
+                        new NodeControllerInfo(key, NodeStatus.ACTIVE, ncState.getDataAddress(),
+                                ncState.getResultAddress(), ncState.getMessagingAddress(),
+                                ncState.getCapacity().getCores())));
         return result;
     }
 

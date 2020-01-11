@@ -172,9 +172,9 @@ public class NodeManagerTest {
         NetworkAddress resultAddr = new NetworkAddress(ipAddr, 1002);
         NetworkAddress msgAddr = new NetworkAddress(ipAddr, 1003);
         when(ncState.getCapacity()).thenReturn(new NodeCapacity(NODE_MEMORY_SIZE, NODE_CORES));
-        when(ncState.getDataPort()).thenReturn(dataAddr);
-        when(ncState.getResultPort()).thenReturn(resultAddr);
-        when(ncState.getMessagingPort()).thenReturn(msgAddr);
+        when(ncState.getDataAddress()).thenReturn(dataAddr);
+        when(ncState.getResultAddress()).thenReturn(resultAddr);
+        when(ncState.getMessagingAddress()).thenReturn(msgAddr);
         when(ncState.getConfig())
                 .thenReturn(Collections.singletonMap(NCConfig.Option.DATA_PUBLIC_ADDRESS.toSerializable(), ipAddr));
         Mockito.when(ncState.getNodeController()).thenReturn(ncProxy);

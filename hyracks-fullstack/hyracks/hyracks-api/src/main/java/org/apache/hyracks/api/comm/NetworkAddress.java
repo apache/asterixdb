@@ -23,6 +23,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
 import org.apache.hyracks.api.io.IWritable;
@@ -32,7 +33,9 @@ public final class NetworkAddress implements IWritable, Serializable {
 
     private String address;
     // Cached locally, not serialized
-    private byte[] ipAddress;
+    private volatile byte[] ipAddress;
+    // Cached locally, not serialized
+    private volatile InetSocketAddress inetSocketAddress;
 
     private int port;
 
@@ -52,6 +55,14 @@ public final class NetworkAddress implements IWritable, Serializable {
         ipAddress = null;
     }
 
+    public NetworkAddress(InetSocketAddress socketAddress) {
+        this.address = socketAddress.getHostString();
+        this.port = socketAddress.getPort();
+        if (!socketAddress.isUnresolved()) {
+            ipAddress = socketAddress.getAddress().getAddress();
+        }
+    }
+
     public String getAddress() {
         return address;
     }
@@ -62,6 +73,13 @@ public final class NetworkAddress implements IWritable, Serializable {
             ipAddress = addr.getAddress();
         }
         return ipAddress;
+    }
+
+    public InetSocketAddress resolveInetSocketAddress() {
+        if (inetSocketAddress == null) {
+            inetSocketAddress = new InetSocketAddress(address, port);
+        }
+        return inetSocketAddress;
     }
 
     public int getPort() {

@@ -319,11 +319,11 @@ public class NodeControllerService implements IControllerService {
 
     private void initNodeControllerState() {
         // Use "public" versions of network addresses and ports, if defined
-        InetSocketAddress ncAddress;
+        NetworkAddress ncAddress;
         if (ncConfig.getClusterPublicPort() == 0) {
-            ncAddress = ipc.getSocketAddress();
+            ncAddress = new NetworkAddress(ipc.getSocketAddress());
         } else {
-            ncAddress = new InetSocketAddress(ncConfig.getClusterPublicAddress(), ncConfig.getClusterPublicPort());
+            ncAddress = new NetworkAddress(ncConfig.getClusterPublicAddress(), ncConfig.getClusterPublicPort());
         }
         HeartbeatSchema.GarbageCollectorInfo[] gcInfos = new HeartbeatSchema.GarbageCollectorInfo[gcMXBeans.size()];
         for (int i = 0; i < gcInfos.length; ++i) {
@@ -431,7 +431,7 @@ public class NodeControllerService implements IControllerService {
         NodeParameters nodeParameters = ccc.getNodeParameters();
         // Start heartbeat generator.
         heartbeatManagers.computeIfAbsent(ccId, newCcId -> HeartbeatManager.init(this, ccc, hbTask.getHeartbeatData(),
-                nodeRegistration.getNodeControllerAddress()));
+                nodeRegistration.getNodeControllerAddress().resolveInetSocketAddress()));
         if (!ccTimers.containsKey(ccId) && nodeParameters.getProfileDumpPeriod() > 0) {
             Timer ccTimer = new Timer("Timer-" + ccId, true);
             // Schedule profile dump generator.

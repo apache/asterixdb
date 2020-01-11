@@ -415,7 +415,7 @@ public class JobExecutor {
                     for (int j = 0; j < inPartitionCounts[i]; ++j) {
                         TaskId producerTaskId = new TaskId(producerAid, j);
                         String nodeId = findTaskLocation(producerTaskId);
-                        partitionLocations[i][j] = nodeManager.getNodeControllerState(nodeId).getDataPort();
+                        partitionLocations[i][j] = nodeManager.getNodeControllerState(nodeId).getDataAddress();
                     }
                 }
                 tad.setInputPartitionLocations(partitionLocations);
