@@ -33,7 +33,9 @@ public final class NetworkAddress implements IWritable, Serializable {
 
     private String address;
     // Cached locally, not serialized
-    private byte[] ipAddress;
+    private volatile byte[] ipAddress;
+    // Cached locally, not serialized
+    private volatile InetSocketAddress inetSocketAddress;
 
     private int port;
 
@@ -71,6 +73,13 @@ public final class NetworkAddress implements IWritable, Serializable {
             ipAddress = addr.getAddress();
         }
         return ipAddress;
+    }
+
+    public InetSocketAddress resolveInetSocketAddress() {
+        if (inetSocketAddress == null) {
+            inetSocketAddress = new InetSocketAddress(address, port);
+        }
+        return inetSocketAddress;
     }
 
     public int getPort() {

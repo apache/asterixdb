@@ -51,7 +51,7 @@ public class RegisterNodeWork extends SynchronizableWork {
         String id = reg.getNodeId();
         LOGGER.info("registering node: {}", id);
         NodeControllerRemoteProxy nc = new NodeControllerRemoteProxy(ccs.getCcId(),
-                ccs.getClusterIPC().getReconnectingHandle(reg.getNodeControllerAddress()));
+                ccs.getClusterIPC().getReconnectingHandle(reg.getNodeControllerPort().resolveInetSocketAddress()));
         INodeManager nodeManager = ccs.getNodeManager();
         NodeParameters params = new NodeParameters();
         params.setClusterControllerInfo(ccs.getClusterControllerInfo());

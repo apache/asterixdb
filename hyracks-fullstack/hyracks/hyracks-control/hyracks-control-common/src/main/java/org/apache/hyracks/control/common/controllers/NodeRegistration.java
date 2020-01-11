@@ -44,6 +44,7 @@ public final class NodeRegistration implements Serializable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    @Deprecated
     private InetSocketAddress ncAddress;
 
     private NetworkAddress ncPort;
@@ -117,8 +118,8 @@ public final class NodeRegistration implements Serializable {
         }
     }
 
-    public InetSocketAddress getNodeControllerAddress() {
-        return ncAddress;
+    public NetworkAddress getNodeControllerPort() {
+        return ncPort;
     }
 
     public String getNodeId() {
