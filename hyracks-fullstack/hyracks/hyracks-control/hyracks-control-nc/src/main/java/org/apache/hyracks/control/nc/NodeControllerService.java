@@ -319,11 +319,11 @@ public class NodeControllerService implements IControllerService {
 
     private void initNodeControllerState() {
         // Use "public" versions of network addresses and ports, if defined
-        InetSocketAddress ncAddress;
+        NetworkAddress ncAddress;
         if (ncConfig.getClusterPublicPort() == 0) {
-            ncAddress = ipc.getSocketAddress();
+            ncAddress = new NetworkAddress(ipc.getSocketAddress());
         } else {
-            ncAddress = new InetSocketAddress(ncConfig.getClusterPublicAddress(), ncConfig.getClusterPublicPort());
+            ncAddress = new NetworkAddress(ncConfig.getClusterPublicAddress(), ncConfig.getClusterPublicPort());
         }
         HeartbeatSchema.GarbageCollectorInfo[] gcInfos = new HeartbeatSchema.GarbageCollectorInfo[gcMXBeans.size()];
         for (int i = 0; i < gcInfos.length; ++i) {

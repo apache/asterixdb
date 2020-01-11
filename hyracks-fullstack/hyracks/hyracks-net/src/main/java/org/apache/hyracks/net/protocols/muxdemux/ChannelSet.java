@@ -143,13 +143,15 @@ public class ChannelSet {
         }
     }
 
-    void addPendingCredits(int channelId, int delta) {
+    void addPendingCredits(ChannelControlBlock targetCcb, int delta) {
         if (delta <= 0) {
             return;
         }
         synchronized (mConn) {
+            final int channelId = targetCcb.getChannelId();
             ChannelControlBlock ccb = ccbArray[channelId];
-            if (ccb != null) {
+            // ensure the channel slot id was not recycled and used for a diffierent channel
+            if (ccb == targetCcb) {
                 if (ccb.getRemoteEOS()) {
                     return;
                 }
