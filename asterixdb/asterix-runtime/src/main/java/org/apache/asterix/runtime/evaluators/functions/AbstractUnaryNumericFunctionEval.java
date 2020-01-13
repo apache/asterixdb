@@ -36,9 +36,10 @@ import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.evaluators.common.ArgumentUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -94,12 +95,14 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
     // The function identifier, used for error messages.
     private final FunctionIdentifier funcID;
     private final SourceLocation sourceLoc;
+    private final IEvaluatorContext ctx;
 
-    public AbstractUnaryNumericFunctionEval(IEvaluatorContext context, IScalarEvaluatorFactory argEvalFactory,
+    AbstractUnaryNumericFunctionEval(IEvaluatorContext context, IScalarEvaluatorFactory argEvalFactory,
             FunctionIdentifier funcID, SourceLocation sourceLoc) throws HyracksDataException {
         this.argEval = argEvalFactory.createScalarEvaluator(context);
         this.funcID = funcID;
         this.sourceLoc = sourceLoc;
+        this.ctx = context;
     }
 
     @SuppressWarnings("unchecked")
@@ -134,10 +137,8 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
             double val = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
             processDouble(val, result);
         } else {
-            throw new TypeMismatchException(sourceLoc, funcID, 0, data[offset], ATypeTag.SERIALIZED_INT8_TYPE_TAG,
-                    ATypeTag.SERIALIZED_INT16_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG,
-                    ATypeTag.SERIALIZED_INT64_TYPE_TAG, ATypeTag.SERIALIZED_FLOAT_TYPE_TAG,
-                    ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, data[offset], 0, ArgumentUtils.EXPECTED_NUMERIC);
+            PointableHelper.setNull(result);
         }
     }
 

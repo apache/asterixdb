@@ -1,0 +1,54 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ *  Description: tests reporting invalid argument type for numeric functions
+ */
+// requesttype=application/json
+// param max-warnings:json=1000
+
+use test;
+
+set `import-private-functions` "true";
+
+from ds1 as ds1
+select
+abs(str1) as f1, abs(str2) as f2, abs("text") as f3,
+acos(str1) as f4, acos(str2) as f5, acos("text") as f6,
+asin(str1) as f7, asin(str2) as f8, asin("text") as f9,
+atan(str1) as f10, atan(str2) as f11, atan("text") as f12,
+atan2(str1, str1) as f13, atan2(str2, str2) as f14, atan2("text", "text") as f15,
+degrees(str1) as f16, degrees(str2) as f17, degrees("text") as f18,
+radians(str1) as f19, radians(str2) as f20, radians("text") as f21,
+cos(str1) as f22, cos(str2) as f23, cos("text") as f24,
+cosh(str1) as f25, cosh(str2) as f26, cosh("text") as f27,
+sin(str1) as f28, sin(str2) as f29, sin("text") as f30,
+sinh(str1) as f31, sinh(str2) as f32, sinh("text") as f33,
+tan(str1) as f34, tan(str2) as f35, tan("text") as f36,
+tanh(str1) as f37, tanh(str2) as f38, tanh("text") as f39,
+exp(str1) as f40, exp(str2) as f41, exp("text") as f42,
+ln(str1) as f43, ln(str2) as f44, ln("text") as f45,
+log(str1) as f46, log(str2) as f47, log("text") as f48,
+sqrt(str1) as f49, sqrt(str2) as f50, sqrt("text") as f51,
+sign(str1) as f52, sign(str2) as f53, sign("text") as f54,
+ceil(str1) as f55, ceil(str2) as f56, ceil("text") as f57,
+floor(str1) as f58, floor(str2) as f59, floor("text") as f60,
+`round-half-to-even`(str1) as f61, `round-half-to-even`(str2) as f62, `round-half-to-even`("text") as f63,
+random(str1) as f64, random(str2) as f65, random("text") as f66,
+-str1 as f67, -str2 as f68, -"text" as f69;

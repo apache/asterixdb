@@ -19,7 +19,10 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
+import static org.apache.asterix.runtime.evaluators.common.ArgumentUtils.EXPECTED_NUMERIC;
+
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -82,6 +85,8 @@ public class RandomWithSeedDescriptor extends AbstractScalarFunctionDynamicDescr
                                 randomHelper.nextDouble(resultPointable);
                                 break;
                             default:
+                                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), bytes[offset], 0,
+                                        EXPECTED_NUMERIC);
                                 PointableHelper.setNull(resultPointable);
                                 break;
                         }

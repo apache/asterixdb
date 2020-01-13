@@ -18,11 +18,15 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
+import static org.apache.asterix.runtime.evaluators.common.ArgumentUtils.EXPECTED_NUMERIC;
+
 import java.io.DataOutput;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDouble;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -69,7 +73,8 @@ public class NumericATan2Descriptor extends AbstractScalarFunctionDynamicDescrip
                     private final IPointable rightPtr = new VoidPointable();
                     private final IScalarEvaluator evalLeft = args[0].createScalarEvaluator(ctx);
                     private final IScalarEvaluator evalRight = args[1].createScalarEvaluator(ctx);
-                    private final double[] operands = new double[args.length];
+                    private double operand0;
+                    private double operand1;
 
                     // For the output.
                     private final AMutableDouble aDouble = new AMutableDouble(0.0);
@@ -90,19 +95,33 @@ public class NumericATan2Descriptor extends AbstractScalarFunctionDynamicDescrip
                             return;
                         }
 
-                        for (int i = 0; i < args.length; i++) {
-                            IPointable argPtr = i == 0 ? leftPtr : rightPtr;
-                            byte[] data = argPtr.getByteArray();
-                            int offset = argPtr.getStartOffset();
-                            operands[i] = ATypeHierarchy.getDoubleValue(getIdentifier().getName(), i, data, offset);
+                        if (checkTypeAndWarn(leftPtr, 0) || checkTypeAndWarn(rightPtr, 1)) {
+                            PointableHelper.setNull(result);
+                            return;
                         }
-                        aDouble.setValue(Math.atan2(operands[0], operands[1]));
+                        String funName = getIdentifier().getName();
+                        operand0 = ATypeHierarchy.getDoubleValue(funName, 0, leftPtr.getByteArray(),
+                                leftPtr.getStartOffset());
+                        operand1 = ATypeHierarchy.getDoubleValue(funName, 1, rightPtr.getByteArray(),
+                                rightPtr.getStartOffset());
+                        aDouble.setValue(Math.atan2(operand0, operand1));
                         outputSerde.serialize(aDouble, out);
                         result.set(resultStorage);
+                    }
+
+                    private boolean checkTypeAndWarn(IPointable argPtr, int argIdx) {
+                        byte[] data = argPtr.getByteArray();
+                        int offset = argPtr.getStartOffset();
+                        byte type = data[offset];
+                        if (ATypeHierarchy.getTypeDomain(VALUE_TYPE_MAPPING[type]) != ATypeHierarchy.Domain.NUMERIC) {
+                            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), type, argIdx,
+                                    EXPECTED_NUMERIC);
+                            return true;
+                        }
+                        return false;
                     }
                 };
             }
         };
     }
-
 }

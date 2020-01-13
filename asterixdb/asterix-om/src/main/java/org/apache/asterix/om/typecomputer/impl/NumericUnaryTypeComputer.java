@@ -16,30 +16,40 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
+/*
+ * Numeric Unary Functions like abs
+ * Author : Xiaoyu Ma@UC Irvine
+ * 01/30/2012
+ */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.exceptions.TypeMismatchException;
+import static org.apache.asterix.om.types.BuiltinType.ADOUBLE;
+import static org.apache.asterix.om.types.BuiltinType.AINT8;
+
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public class NumericInt8OutputFunctionTypeComputer extends AbstractResultTypeComputer {
+public class NumericUnaryTypeComputer extends AbstractResultTypeComputer {
 
-    public static final NumericInt8OutputFunctionTypeComputer INSTANCE = new NumericInt8OutputFunctionTypeComputer();
+    public static final NumericUnaryTypeComputer INSTANCE = new NumericUnaryTypeComputer(null);
+    public static final NumericUnaryTypeComputer INSTANCE_INT8 = new NumericUnaryTypeComputer(AINT8);
+    public static final NumericUnaryTypeComputer INSTANCE_DOUBLE = new NumericUnaryTypeComputer(ADOUBLE);
 
-    private NumericInt8OutputFunctionTypeComputer() {
+    // when returnType is null, the function returns the same type as the input argument
+    private final IAType returnType;
+
+    private NumericUnaryTypeComputer(IAType returnType) {
+        this.returnType = returnType;
     }
 
     @Override
-    protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
-            throws AlgebricksException {
-        ATypeTag tag = type.getTypeTag();
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
+        ATypeTag tag = strippedInputTypes[0].getTypeTag();
         switch (tag) {
             case TINYINT:
             case SMALLINT:
@@ -47,15 +57,12 @@ public class NumericInt8OutputFunctionTypeComputer extends AbstractResultTypeCom
             case BIGINT:
             case FLOAT:
             case DOUBLE:
-                break;
+                return returnType == null ? strippedInputTypes[0] : returnType;
+            case ANY:
+                return returnType == null ? BuiltinType.ANY : AUnionType.createUnknownableType(returnType);
             default:
-                throw new TypeMismatchException(sourceLoc, funcId, argIndex, tag, ATypeTag.TINYINT, ATypeTag.SMALLINT,
-                        ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE);
+                // null for all other invalid types
+                return BuiltinType.ANULL;
         }
-    }
-
-    @Override
-    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return BuiltinType.AINT8;
     }
 }
