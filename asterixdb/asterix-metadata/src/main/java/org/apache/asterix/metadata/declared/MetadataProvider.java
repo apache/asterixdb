@@ -420,7 +420,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             return null;
         }
         while (MetadataManagerUtil.findDataset(mdTxnCtx, dvName, datasetName) == null) {
-            Synonym synonym = MetadataManagerUtil.findSynonym(mdTxnCtx, dvName, datasetName);
+            Synonym synonym = findSynonym(dvName, datasetName);
             if (synonym == null) {
                 return null;
             }
@@ -428,6 +428,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             datasetName = synonym.getObjectName();
         }
         return new Pair<>(dvName, datasetName);
+    }
+
+    public Synonym findSynonym(DataverseName dataverseName, String synonymName) throws AlgebricksException {
+        return MetadataManagerUtil.findSynonym(mdTxnCtx, dataverseName, synonymName);
     }
 
     @Override
