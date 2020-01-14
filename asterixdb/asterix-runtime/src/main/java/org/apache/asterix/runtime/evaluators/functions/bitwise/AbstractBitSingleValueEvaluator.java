@@ -85,13 +85,12 @@ abstract class AbstractBitSingleValueEvaluator extends AbstractScalarEval {
 
         // Validity check
         if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
-            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, bytes[startOffset], 0,
-                    ATypeTag.BIGINT);
+            ExceptionUtil.warnTypeMismatch(context, srcLoc, funID, bytes[startOffset], 0, ATypeTag.BIGINT);
             PointableHelper.setNull(result);
             return;
         }
 
-        long longValue = ATypeHierarchy.getLongValue(functionIdentifier.getName(), 0, bytes, startOffset);
+        long longValue = ATypeHierarchy.getLongValue(funID.getName(), 0, bytes, startOffset);
         applyBitwiseOperation(longValue);
 
         writeResult(result);

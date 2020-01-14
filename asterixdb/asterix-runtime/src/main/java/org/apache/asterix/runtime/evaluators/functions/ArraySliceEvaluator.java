@@ -268,12 +268,12 @@ class ArraySliceEvaluator extends AbstractScalarEval {
                 value = ADoubleSerializerDeserializer.getDouble(data, offset);
                 break;
             default:
-                throw new UnsupportedItemTypeException(sourceLoc, functionIdentifier, typeTag.serialize());
+                throw new UnsupportedItemTypeException(srcLoc, funID, typeTag.serialize());
         }
 
         // Values like 1, 2, 3.0 are ok, but 0.3 and 3.5 are not accepted, also handle NaN and INF/-INF
         if (Double.isNaN(value) || Double.isInfinite(value) || value > Math.floor(value)) {
-            throw new InvalidDataFormatException(sourceLoc, functionIdentifier, typeTag.serialize());
+            throw new InvalidDataFormatException(srcLoc, funID, typeTag.serialize());
         }
 
         return (int) value;

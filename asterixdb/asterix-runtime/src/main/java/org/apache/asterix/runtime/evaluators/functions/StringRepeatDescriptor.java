@@ -83,8 +83,7 @@ public class StringRepeatDescriptor extends AbstractScalarFunctionDynamicDescrip
                         // Gets the repeating times.
                         byte[] bytes = argNumber.getByteArray();
                         int offset = argNumber.getStartOffset();
-                        if (!ArgumentUtils.checkWarnOrSetInteger(ctx, sourceLoc, getIdentifier(), 1, bytes, offset,
-                                mutableInt)) {
+                        if (!ArgumentUtils.setInteger(ctx, sourceLoc, getIdentifier(), 1, bytes, offset, mutableInt)) {
                             PointableHelper.setNull(result);
                             return;
                         }

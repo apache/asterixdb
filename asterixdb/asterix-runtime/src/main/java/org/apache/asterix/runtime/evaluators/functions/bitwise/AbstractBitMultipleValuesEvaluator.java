@@ -116,14 +116,13 @@ abstract class AbstractBitMultipleValuesEvaluator extends AbstractScalarEval {
 
         // Type and value validity check
         if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
-            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, bytes[startOffset], 0,
-                    ATypeTag.BIGINT);
+            ExceptionUtil.warnTypeMismatch(context, srcLoc, funID, bytes[startOffset], 0, ATypeTag.BIGINT);
             PointableHelper.setNull(result);
             return;
         }
 
         // Result holder
-        long longResult = ATypeHierarchy.getLongValue(functionIdentifier.getName(), 0, bytes, startOffset);
+        long longResult = ATypeHierarchy.getLongValue(funID.getName(), 0, bytes, startOffset);
 
         // Loop and do the bitwise operation for all the arguments (start from index 1, we did first argument above)
         for (int i = 1; i < argPointables.length; i++) {
@@ -132,13 +131,12 @@ abstract class AbstractBitMultipleValuesEvaluator extends AbstractScalarEval {
 
             // Type and value validity check
             if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
-                ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, bytes[startOffset], i,
-                        ATypeTag.BIGINT);
+                ExceptionUtil.warnTypeMismatch(context, srcLoc, funID, bytes[startOffset], i, ATypeTag.BIGINT);
                 PointableHelper.setNull(result);
                 return;
             }
 
-            long nextValue = ATypeHierarchy.getLongValue(functionIdentifier.getName(), i, bytes, startOffset);
+            long nextValue = ATypeHierarchy.getLongValue(funID.getName(), i, bytes, startOffset);
             longResult = applyBitwiseOperation(longResult, nextValue);
         }
 

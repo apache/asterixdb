@@ -157,15 +157,13 @@ public class ArrayExceptDescriptor extends AbstractScalarFunctionDynamicDescript
             ATypeTag arg2TypeTag = ATYPETAGDESERIALIZER.deserialize(arg2Bytes[arg2StartOffset]);
 
             if (!arg1TypeTag.isListType()) {
-                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, functionIdentifier, arg1Bytes[arg1StartOffset], 0,
-                        ATypeTag.ARRAY);
+                ExceptionUtil.warnTypeMismatch(ctx, srcLoc, funID, arg1Bytes[arg1StartOffset], 0, ATypeTag.ARRAY);
                 PointableHelper.setNull(result);
                 return;
             }
 
             if (!arg2TypeTag.isListType()) {
-                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, functionIdentifier, arg2Bytes[arg2StartOffset], 1,
-                        ATypeTag.ARRAY);
+                ExceptionUtil.warnTypeMismatch(ctx, srcLoc, funID, arg2Bytes[arg2StartOffset], 1, ATypeTag.ARRAY);
                 PointableHelper.setNull(result);
                 return;
             }

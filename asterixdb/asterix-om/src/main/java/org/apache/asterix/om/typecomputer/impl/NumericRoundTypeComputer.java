@@ -32,20 +32,25 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 /**
- * Type computer for round function. This type computer receives 1 or 2 arguments. The 1st argument is the value to
- * round, and the 2nd argument (optional) is the digit to round to. The behavior of the type computer is as follows:
+ * Type computer for round functions. This type computer receives 1 or 2 arguments. The 1st argument is the value to
+ * round, and the 2nd argument (optional) is the digit to round to. The behavior of the type computer is as follows
+ * depending on the instance:
  *
- * - For integer types, the return type is int64.
+ * - For integer types, the return type is int64 or the same integer type.
  * - For float type, the return type is float.
  * - For double type, the return type is double.
  * - For any type, the return type is any.
  * - For all other types, the return type is null.
  */
 
-public class NumericRoundFunctionTypeComputer extends AbstractResultTypeComputer {
-    public static final NumericRoundFunctionTypeComputer INSTANCE = new NumericRoundFunctionTypeComputer();
+public class NumericRoundTypeComputer extends AbstractResultTypeComputer {
+    public static final NumericRoundTypeComputer INSTANCE = new NumericRoundTypeComputer(false);
+    public static final NumericRoundTypeComputer INSTANCE_ROUND_HF_TRUNC = new NumericRoundTypeComputer(true);
 
-    private NumericRoundFunctionTypeComputer() {
+    private final boolean returnSameIntType;
+
+    private NumericRoundTypeComputer(boolean returnSameIntType) {
+        this.returnSameIntType = returnSameIntType;
     }
 
     @Override
@@ -59,7 +64,7 @@ public class NumericRoundFunctionTypeComputer extends AbstractResultTypeComputer
             case SMALLINT:
             case INTEGER:
             case BIGINT:
-                returnType = BuiltinType.AINT64;
+                returnType = returnSameIntType ? strippedInputTypes[0] : BuiltinType.AINT64;
                 break;
             case FLOAT:
             case DOUBLE:

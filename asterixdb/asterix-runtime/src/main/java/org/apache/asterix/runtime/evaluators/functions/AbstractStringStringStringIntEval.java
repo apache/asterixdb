@@ -110,7 +110,7 @@ public abstract class AbstractStringStringStringIntEval implements IScalarEvalua
             return;
         }
         // check that the int argument is numeric without fractions (in case arg is double or float)
-        if (!ArgumentUtils.checkWarnOrSetInteger(ctx, sourceLoc, funcID, 3, bytes3, start3, mutableInt)) {
+        if (!ArgumentUtils.setInteger(ctx, sourceLoc, funcID, 3, bytes3, start3, mutableInt)) {
             PointableHelper.setNull(result);
             return;
         }

@@ -137,7 +137,7 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
             double val = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
             processDouble(val, result);
         } else {
-            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, data[offset], 0, ArgumentUtils.EXPECTED_NUMERIC);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, data[offset], 0, ArgumentUtils.NUMERIC_TYPES);
             PointableHelper.setNull(result);
         }
     }

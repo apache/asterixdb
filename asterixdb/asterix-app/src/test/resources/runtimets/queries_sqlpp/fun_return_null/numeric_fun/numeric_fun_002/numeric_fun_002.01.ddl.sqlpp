@@ -17,18 +17,13 @@
  * under the License.
  */
 
-package org.apache.asterix.runtime.evaluators.functions;
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
-import org.apache.hyracks.api.exceptions.SourceLocation;
+create type t1 as {
+id:   int,
+str1: string
+};
 
-public abstract class AbstractScalarEval implements IScalarEvaluator {
-    protected final SourceLocation srcLoc;
-    protected final FunctionIdentifier funID;
-
-    public AbstractScalarEval(SourceLocation sourceLoc, FunctionIdentifier functionIdentifier) {
-        this.srcLoc = sourceLoc;
-        this.funID = functionIdentifier;
-    }
-}
+create dataset ds1(t1) primary key id;

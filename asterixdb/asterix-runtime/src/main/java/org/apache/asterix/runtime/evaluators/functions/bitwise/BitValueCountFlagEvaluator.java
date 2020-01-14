@@ -116,8 +116,7 @@ class BitValueCountFlagEvaluator extends AbstractScalarEval {
 
         // Type and value validity check
         if (!PointableHelper.isValidLongValue(valueBytes, valueStartOffset, true)) {
-            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, valueBytes[valueStartOffset], 0,
-                    ATypeTag.BIGINT);
+            ExceptionUtil.warnTypeMismatch(context, srcLoc, funID, valueBytes[valueStartOffset], 0, ATypeTag.BIGINT);
             PointableHelper.setNull(result);
             return;
         }
@@ -128,8 +127,7 @@ class BitValueCountFlagEvaluator extends AbstractScalarEval {
 
         // Type and Value validity check
         if (!PointableHelper.isValidLongValue(countBytes, countStartOffset, true)) {
-            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, countBytes[countStartOffset], 1,
-                    ATypeTag.BIGINT);
+            ExceptionUtil.warnTypeMismatch(context, srcLoc, funID, countBytes[countStartOffset], 1, ATypeTag.BIGINT);
             PointableHelper.setNull(result);
             return;
         }
@@ -142,8 +140,7 @@ class BitValueCountFlagEvaluator extends AbstractScalarEval {
             ATypeTag flagTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(flagBytes[flagStartOffset]);
 
             if (flagTypeTag != ATypeTag.BOOLEAN) {
-                ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, flagBytes[flagStartOffset], 2,
-                        ATypeTag.BOOLEAN);
+                ExceptionUtil.warnTypeMismatch(context, srcLoc, funID, flagBytes[flagStartOffset], 2, ATypeTag.BOOLEAN);
                 PointableHelper.setNull(result);
                 return;
             }
@@ -152,8 +149,8 @@ class BitValueCountFlagEvaluator extends AbstractScalarEval {
         }
 
         // Result holder and count
-        long longValue = ATypeHierarchy.getLongValue(functionIdentifier.getName(), 0, valueBytes, valueStartOffset);
-        long count = ATypeHierarchy.getLongValue(functionIdentifier.getName(), 1, countBytes, countStartOffset);
+        long longValue = ATypeHierarchy.getLongValue(funID.getName(), 0, valueBytes, valueStartOffset);
+        long count = ATypeHierarchy.getLongValue(funID.getName(), 1, countBytes, countStartOffset);
 
         // Positive value is left shifting, negative value is right shifting, rotate if needed, do nothing on 0 count
         // Note, when rotating, for each 64 bits, the rotation is repeated, so rotating by 1 is same as rotating by 65,

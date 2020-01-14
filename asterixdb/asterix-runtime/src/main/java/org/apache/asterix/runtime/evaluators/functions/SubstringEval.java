@@ -83,7 +83,7 @@ class SubstringEval extends AbstractScalarEval {
 
         byte[] bytes = argStart.getByteArray();
         int offset = argStart.getStartOffset();
-        if (!ArgumentUtils.checkWarnOrSetInteger(ctx, sourceLoc, functionIdentifier, 1, bytes, offset, mutableInt32)) {
+        if (!ArgumentUtils.setInteger(ctx, srcLoc, funID, 1, bytes, offset, mutableInt32)) {
             PointableHelper.setNull(result);
             return;
         }
@@ -91,7 +91,7 @@ class SubstringEval extends AbstractScalarEval {
 
         bytes = argLen.getByteArray();
         offset = argLen.getStartOffset();
-        if (!ArgumentUtils.checkWarnOrSetInteger(ctx, sourceLoc, functionIdentifier, 2, bytes, offset, mutableInt32)) {
+        if (!ArgumentUtils.setInteger(ctx, srcLoc, funID, 2, bytes, offset, mutableInt32)) {
             PointableHelper.setNull(result);
             return;
         }
@@ -102,7 +102,7 @@ class SubstringEval extends AbstractScalarEval {
         int length = argString.getLength();
         if (bytes[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
             PointableHelper.setNull(result);
-            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, functionIdentifier, bytes[offset], 0, ATypeTag.STRING);
+            ExceptionUtil.warnTypeMismatch(ctx, srcLoc, funID, bytes[offset], 0, ATypeTag.STRING);
             return;
         }
         string.set(bytes, offset + 1, length - 1);

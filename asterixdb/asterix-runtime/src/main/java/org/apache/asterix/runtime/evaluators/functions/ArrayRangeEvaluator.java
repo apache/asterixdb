@@ -98,7 +98,7 @@ public class ArrayRangeEvaluator extends AbstractScalarEval {
             return;
         }
 
-        String n = functionIdentifier.getName();
+        String n = funID.getName();
         ATypeTag startTag = ATYPETAGDESERIALIZER.deserialize(start.getTag());
         ATypeTag endTag = ATYPETAGDESERIALIZER.deserialize(end.getTag());
         ATypeTag stepTag = ATypeTag.INTEGER;

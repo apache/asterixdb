@@ -183,8 +183,7 @@ public abstract class AbstractConcatStringEval extends AbstractScalarEval {
         if (isReturnNull) {
             PointableHelper.setNull(result);
             if (unsupportedType != null && unsupportedType != ATypeTag.NULL) {
-                ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, functionIdentifier, unsupportedType.serialize(),
-                        argIndex, expectedType);
+                ExceptionUtil.warnTypeMismatch(ctx, srcLoc, funID, unsupportedType.serialize(), argIndex, expectedType);
             }
             return;
         }

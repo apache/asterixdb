@@ -19,7 +19,7 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import static org.apache.asterix.om.types.ATypeTag.VALUE_TYPE_MAPPING;
-import static org.apache.asterix.runtime.evaluators.common.ArgumentUtils.EXPECTED_NUMERIC;
+import static org.apache.asterix.runtime.evaluators.common.ArgumentUtils.NUMERIC_TYPES;
 
 import java.io.DataOutput;
 
@@ -115,7 +115,7 @@ public class NumericATan2Descriptor extends AbstractScalarFunctionDynamicDescrip
                         byte type = data[offset];
                         if (ATypeHierarchy.getTypeDomain(VALUE_TYPE_MAPPING[type]) != ATypeHierarchy.Domain.NUMERIC) {
                             ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), type, argIdx,
-                                    EXPECTED_NUMERIC);
+                                    NUMERIC_TYPES);
                             return true;
                         }
                         return false;

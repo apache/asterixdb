@@ -93,7 +93,7 @@ public final class DecodeDataverseNameDescriptor extends AbstractScalarFunctionD
                         // Type check.
                         if (bytes[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                             PointableHelper.setNull(result);
-                            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), bytes[offset], 0,
+                            ExceptionUtil.warnTypeMismatch(ctx, srcLoc, getIdentifier(), bytes[offset], 0,
                                     ATypeTag.STRING);
                             return;
                         }

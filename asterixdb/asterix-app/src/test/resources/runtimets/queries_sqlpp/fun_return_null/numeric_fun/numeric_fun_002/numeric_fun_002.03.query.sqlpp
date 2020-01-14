@@ -17,18 +17,21 @@
  * under the License.
  */
 
-package org.apache.asterix.runtime.evaluators.functions;
+/*
+ *  Description: tests reporting invalid argument type for numeric functions
+ */
+// requesttype=application/json
+// param max-warnings:json=1000
 
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
-import org.apache.hyracks.api.exceptions.SourceLocation;
+use test;
 
-public abstract class AbstractScalarEval implements IScalarEvaluator {
-    protected final SourceLocation srcLoc;
-    protected final FunctionIdentifier funID;
+set `import-private-functions` "true";
 
-    public AbstractScalarEval(SourceLocation sourceLoc, FunctionIdentifier functionIdentifier) {
-        this.srcLoc = sourceLoc;
-        this.funID = functionIdentifier;
-    }
-}
+from ds1 as ds1
+select
+round(str1) as f1, round(str2) as f2, round("text") as f3,
+round(id, str1) as f4, round(id, str2) as f5, round(id, "text") as f6,
+trunc(str1, id) as f7, trunc(str2, id) as f8, trunc("text", id) as f9,
+trunc(id, str1) as f10, trunc(id, str2) as f11, trunc(id, "text") as f12,
+`round-half-to-even`(str1, id) as f13, `round-half-to-even`(str2, id) as f14, `round-half-to-even`("text", id) as f15,
+`round-half-to-even`(id, str1) as f16, `round-half-to-even`(id, str2) as f17, `round-half-to-even`(id, "text") as f18;

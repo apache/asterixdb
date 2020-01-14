@@ -80,8 +80,7 @@ class Substring2Eval extends AbstractScalarEval {
         byte[] bytes = argStart.getByteArray();
         int offset = argStart.getStartOffset();
         // check that the int argument is numeric without fractions (in case arg is double or float)
-        if (!ArgumentUtils.checkWarnOrSetInteger(context, sourceLoc, functionIdentifier, 1, bytes, offset,
-                mutableInt)) {
+        if (!ArgumentUtils.setInteger(context, srcLoc, funID, 1, bytes, offset, mutableInt)) {
             PointableHelper.setNull(result);
             return;
         }
@@ -91,7 +90,7 @@ class Substring2Eval extends AbstractScalarEval {
         int len = argString.getLength();
         if (bytes[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
             PointableHelper.setNull(result);
-            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, bytes[offset], 0, ATypeTag.STRING);
+            ExceptionUtil.warnTypeMismatch(context, srcLoc, funID, bytes[offset], 0, ATypeTag.STRING);
             return;
         }
         string.set(bytes, offset + 1, len - 1);

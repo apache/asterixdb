@@ -38,9 +38,9 @@ import com.google.common.math.DoubleMath;
  */
 public final class ArgumentUtils {
 
-    public static final byte[] EXPECTED_NUMERIC = { ATypeTag.SERIALIZED_INT8_TYPE_TAG,
-            ATypeTag.SERIALIZED_INT16_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG,
-            ATypeTag.SERIALIZED_FLOAT_TYPE_TAG, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG };
+    public static final byte[] NUMERIC_TYPES = { ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
+            ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG, ATypeTag.SERIALIZED_FLOAT_TYPE_TAG,
+            ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG };
     private static final DoubleToInt32TypeConvertComputer LAX_DOUBLE_TO_INT32 =
             DoubleToInt32TypeConvertComputer.getInstance(false);
 
@@ -56,12 +56,11 @@ public final class ArgumentUtils {
      * @param value data to be checked
      * @param outInteger where the integer read from {@code value} will be stored
      */
-    public static boolean checkWarnOrSetInteger(IEvaluatorContext ctx, SourceLocation sourceLoc,
-            FunctionIdentifier funcID, int argIdx, byte[] value, int offset, AMutableInt32 outInteger)
-            throws HyracksDataException {
+    public static boolean setInteger(IEvaluatorContext ctx, SourceLocation sourceLoc, FunctionIdentifier funcID,
+            int argIdx, byte[] value, int offset, AMutableInt32 outInteger) throws HyracksDataException {
         byte type = value[offset];
         if (ATypeHierarchy.getTypeDomain(VALUE_TYPE_MAPPING[type]) != ATypeHierarchy.Domain.NUMERIC) {
-            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, type, argIdx, EXPECTED_NUMERIC);
+            ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcID, type, argIdx, NUMERIC_TYPES);
             return false;
         }
         // deal with NaN, +/-INF

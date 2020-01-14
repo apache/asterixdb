@@ -167,7 +167,7 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
                     else {
                         // Ignore and take left field if ignore duplicate flag is true, otherwise, throw an exception
                         if (!isIgnoreDuplicates) {
-                            throw new RuntimeDataException(ErrorCode.DUPLICATE_FIELD_NAME, functionIdentifier);
+                            throw new RuntimeDataException(ErrorCode.DUPLICATE_FIELD_NAME, funID);
                         }
                     }
                 }

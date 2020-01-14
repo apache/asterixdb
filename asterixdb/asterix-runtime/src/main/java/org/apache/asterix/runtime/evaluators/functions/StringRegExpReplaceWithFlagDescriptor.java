@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import static org.apache.asterix.runtime.evaluators.common.ArgumentUtils.NUMERIC_TYPES;
+
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -80,8 +82,8 @@ public class StringRegExpReplaceWithFlagDescriptor extends AbstractScalarFunctio
                                 case BIGINT:
                                 case FLOAT:
                                 case DOUBLE:
-                                    if (!ArgumentUtils.checkWarnOrSetInteger(ctx, sourceLoc, funcID, argIdx, bytes,
-                                            start, mutableInt)) {
+                                    if (!ArgumentUtils.setInteger(ctx, sourceLoc, funcID, argIdx, bytes, start,
+                                            mutableInt)) {
                                         return false;
                                     }
                                     limit = mutableInt.getIntegerValue();
@@ -104,8 +106,7 @@ public class StringRegExpReplaceWithFlagDescriptor extends AbstractScalarFunctio
 
                     private byte[] getExpectedTypes() {
                         if (expectedTypes == null) {
-                            expectedTypes = Arrays.copyOf(ArgumentUtils.EXPECTED_NUMERIC,
-                                    ArgumentUtils.EXPECTED_NUMERIC.length + 1);
+                            expectedTypes = Arrays.copyOf(NUMERIC_TYPES, NUMERIC_TYPES.length + 1);
                             expectedTypes[expectedTypes.length - 1] = ATypeTag.SERIALIZED_STRING_TYPE_TAG;
                         }
                         return expectedTypes;

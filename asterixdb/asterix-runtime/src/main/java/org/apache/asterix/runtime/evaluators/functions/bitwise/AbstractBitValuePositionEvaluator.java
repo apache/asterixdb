@@ -126,8 +126,7 @@ abstract class AbstractBitValuePositionEvaluator extends AbstractScalarEval {
 
         // Type and value validity check
         if (!PointableHelper.isValidLongValue(valueBytes, valueStartOffset, true)) {
-            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, valueBytes[valueStartOffset], 0,
-                    ATypeTag.BIGINT);
+            ExceptionUtil.warnTypeMismatch(context, srcLoc, funID, valueBytes[valueStartOffset], 0, ATypeTag.BIGINT);
             PointableHelper.setNull(result);
             return;
         }
@@ -140,14 +139,14 @@ abstract class AbstractBitValuePositionEvaluator extends AbstractScalarEval {
 
         // Type validity check (for position argument, array is a valid type as well)
         if (!ATypeHierarchy.canPromote(positionTypeTag, ATypeTag.DOUBLE) && positionTypeTag != ATypeTag.ARRAY) {
-            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, positionBytes[positionStartOffset],
-                    1, secondArgumentExpectedTypes);
+            ExceptionUtil.warnTypeMismatch(context, srcLoc, funID, positionBytes[positionStartOffset], 1,
+                    secondArgumentExpectedTypes);
             PointableHelper.setNull(result);
             return;
         }
 
         // Result long value
-        longResult = ATypeHierarchy.getLongValue(functionIdentifier.getName(), 0, valueBytes, valueStartOffset);
+        longResult = ATypeHierarchy.getLongValue(funID.getName(), 0, valueBytes, valueStartOffset);
 
         // If any operation returns false, the result should be null
         boolean isSuccessfulOperation;
@@ -222,12 +221,11 @@ abstract class AbstractBitValuePositionEvaluator extends AbstractScalarEval {
 
         // Value validity check
         if (!PointableHelper.isValidLongValue(bytes, startOffset, true)) {
-            ExceptionUtil.warnTypeMismatch(context, sourceLoc, functionIdentifier, bytes[startOffset], 1,
-                    ATypeTag.BIGINT);
+            ExceptionUtil.warnTypeMismatch(context, srcLoc, funID, bytes[startOffset], 1, ATypeTag.BIGINT);
             return false;
         }
 
-        long position = ATypeHierarchy.getLongValue(functionIdentifier.getName(), 1, bytes, startOffset);
+        long position = ATypeHierarchy.getLongValue(funID.getName(), 1, bytes, startOffset);
 
         // Ensure the position is between 1 and 64 (int64 has 64 bits)
         if (position < 1 || position > 64) {
@@ -243,7 +241,7 @@ abstract class AbstractBitValuePositionEvaluator extends AbstractScalarEval {
     private void handleOutOfRangeInput(int inputPosition, int startLimit, int endLimit, long actual) {
         IWarningCollector warningCollector = context.getWarningCollector();
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.VALUE_OUT_OF_RANGE, functionIdentifier,
+            warningCollector.warn(WarningUtil.forAsterix(srcLoc, ErrorCode.VALUE_OUT_OF_RANGE, funID,
                     ExceptionUtil.indexToPosition(inputPosition), startLimit, endLimit, actual));
         }
     }

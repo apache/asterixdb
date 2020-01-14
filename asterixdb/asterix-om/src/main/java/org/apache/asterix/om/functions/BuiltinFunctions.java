@@ -106,8 +106,7 @@ import org.apache.asterix.om.typecomputer.impl.NullableDoubleTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericAddSubMulDivTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericBinaryToDoubleTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericDivideTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.NumericRound2TypeComputer;
-import org.apache.asterix.om.typecomputer.impl.NumericRoundFunctionTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.NumericRoundTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericSumAggTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericUnaryTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OpenARecordTypeComputer;
@@ -1681,11 +1680,11 @@ public class BuiltinFunctions {
         addFunction(NUMERIC_SIGN, NumericUnaryTypeComputer.INSTANCE_INT8, true);
         addFunction(NUMERIC_CEILING, NumericUnaryTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_FLOOR, NumericUnaryTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_ROUND, NumericRoundFunctionTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_ROUND_WITH_ROUND_DIGIT, NumericRoundFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ROUND, NumericRoundTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ROUND_WITH_ROUND_DIGIT, NumericRoundTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ROUND_HALF_TO_EVEN, NumericUnaryTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_ROUND_HALF_TO_EVEN2, NumericRound2TypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_TRUNC, NumericRound2TypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ROUND_HALF_TO_EVEN2, NumericRoundTypeComputer.INSTANCE_ROUND_HF_TRUNC, true);
+        addFunction(NUMERIC_TRUNC, NumericRoundTypeComputer.INSTANCE_ROUND_HF_TRUNC, true);
 
         addFunction(BINARY_LENGTH, UnaryBinaryInt64TypeComputer.INSTANCE, true);
         addFunction(PARSE_BINARY, ABinaryTypeComputer.INSTANCE, true);

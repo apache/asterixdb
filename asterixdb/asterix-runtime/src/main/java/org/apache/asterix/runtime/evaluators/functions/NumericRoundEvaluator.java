@@ -19,6 +19,11 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
+import static org.apache.asterix.om.types.ATypeTag.SERIALIZED_INT16_TYPE_TAG;
+import static org.apache.asterix.om.types.ATypeTag.SERIALIZED_INT32_TYPE_TAG;
+import static org.apache.asterix.om.types.ATypeTag.SERIALIZED_INT64_TYPE_TAG;
+import static org.apache.asterix.om.types.ATypeTag.SERIALIZED_INT8_TYPE_TAG;
+
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -29,10 +34,12 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableFloat;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.asterix.runtime.evaluators.common.ArgumentUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -88,6 +95,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 class NumericRoundEvaluator extends AbstractScalarEval {
 
+    private final IEvaluatorContext ctx;
     // Result members
     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private AMutableInt64 aInt64 = new AMutableInt64(0);
@@ -111,10 +119,14 @@ class NumericRoundEvaluator extends AbstractScalarEval {
     protected ISerializerDeserializer doubleSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
 
+    private static final byte[] INT_TYPES = new byte[] { SERIALIZED_INT8_TYPE_TAG, SERIALIZED_INT16_TYPE_TAG,
+            SERIALIZED_INT32_TYPE_TAG, SERIALIZED_INT64_TYPE_TAG };
+
     NumericRoundEvaluator(IEvaluatorContext context, IScalarEvaluatorFactory[] argEvaluatorFactories,
             FunctionIdentifier functionIdentifier, SourceLocation sourceLocation) throws HyracksDataException {
         super(sourceLocation, functionIdentifier);
 
+        ctx = context;
         valueEvaluator = argEvaluatorFactories[0].createScalarEvaluator(context);
         valuePointable = new VoidPointable();
 
@@ -153,6 +165,7 @@ class NumericRoundEvaluator extends AbstractScalarEval {
 
         // Validity of arguments
         if (!ATypeHierarchy.canPromote(valueTypeTag, ATypeTag.DOUBLE)) {
+            ExceptionUtil.warnTypeMismatch(ctx, srcLoc, funID, valueBytes[valueOffset], 0, ArgumentUtils.NUMERIC_TYPES);
             PointableHelper.setNull(result);
             return;
         }
@@ -160,13 +173,14 @@ class NumericRoundEvaluator extends AbstractScalarEval {
         // Validity of arguments
         if (roundingDigitEvaluator != null
                 && !PointableHelper.isValidLongValue(roundingDigitBytes, roundingDigitOffset, true)) {
+            ExceptionUtil.warnTypeMismatch(ctx, srcLoc, funID, roundingDigitBytes[roundingDigitOffset], 1, INT_TYPES);
             PointableHelper.setNull(result);
             return;
         }
 
         // If we don't have the second argument, then rounding digit is 0, otherwise, read it from argument
         long roundingDigit = roundingDigitEvaluator == null ? 0
-                : ATypeHierarchy.getLongValue(functionIdentifier.getName(), 2, roundingDigitBytes, roundingDigitOffset);
+                : ATypeHierarchy.getLongValue(funID.getName(), 2, roundingDigitBytes, roundingDigitOffset);
 
         // Right of decimal
         if (roundingDigit >= 0) {
@@ -203,6 +217,7 @@ class NumericRoundEvaluator extends AbstractScalarEval {
                     doubleSerde.serialize(aDouble, resultStorage.getDataOutput());
                     break;
                 default:
+                    ExceptionUtil.warnUnsupportedType(ctx, srcLoc, funID.getName(), valueTypeTag);
                     PointableHelper.setNull(result);
                     return;
             }
@@ -245,6 +260,7 @@ class NumericRoundEvaluator extends AbstractScalarEval {
                     doubleSerde.serialize(aDouble, resultStorage.getDataOutput());
                     break;
                 default:
+                    ExceptionUtil.warnUnsupportedType(ctx, srcLoc, funID.getName(), valueTypeTag);
                     PointableHelper.setNull(result);
                     return;
             }

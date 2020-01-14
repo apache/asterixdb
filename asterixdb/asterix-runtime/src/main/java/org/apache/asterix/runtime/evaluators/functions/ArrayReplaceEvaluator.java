@@ -136,7 +136,7 @@ public class ArrayReplaceEvaluator extends AbstractScalarEval {
         }
 
         double maxDouble = -1;
-        String name = functionIdentifier.getName();
+        String name = funID.getName();
         if (maxEval != null) {
             maxEval.evaluate(tuple, maxArg);
             ATypeTag maxTag = ATYPETAGDESERIALIZER.deserialize(maxArg.getTag());

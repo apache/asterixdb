@@ -19,7 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import static org.apache.asterix.runtime.evaluators.common.ArgumentUtils.EXPECTED_NUMERIC;
+import static org.apache.asterix.runtime.evaluators.common.ArgumentUtils.NUMERIC_TYPES;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.exceptions.ExceptionUtil;
@@ -86,7 +86,7 @@ public class RandomWithSeedDescriptor extends AbstractScalarFunctionDynamicDescr
                                 break;
                             default:
                                 ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), bytes[offset], 0,
-                                        EXPECTED_NUMERIC);
+                                        NUMERIC_TYPES);
                                 PointableHelper.setNull(resultPointable);
                                 break;
                         }
