@@ -1368,9 +1368,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             jobsToExecute.add(DataverseUtil.dropDataverseJobSpec(dv, metadataProvider));
 
-            // #. gather all synonyms in this dataverse
-            List<Synonym> synonyms = MetadataManager.INSTANCE.getDataverseSynonyms(mdTxnCtx, dataverseName);
-
             // #. mark PendingDropOp on the dataverse record by
             // first, deleting the dataverse record from the DATAVERSE_DATASET
             // second, inserting the dataverse record with the PendingDropOp value into the
@@ -1390,11 +1387,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
-
-            // #. delete synonyms in this dataverse
-            for (Synonym synonym : synonyms) {
-                MetadataManager.INSTANCE.dropSynonym(mdTxnCtx, synonym.getDataverseName(), synonym.getSynonymName());
-            }
 
             // #. finally, delete the dataverse.
             MetadataManager.INSTANCE.dropDataverse(mdTxnCtx, dataverseName);

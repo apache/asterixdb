@@ -518,6 +518,12 @@ public class MetadataNode implements IMetadataNode {
         try {
             confirmDataverseCanBeDeleted(txnId, dataverseName);
 
+            // Drop all synonyms in this dataverse.
+            List<Synonym> dataverseSynonyms = getDataverseSynonyms(txnId, dataverseName);
+            for (Synonym synonym : dataverseSynonyms) {
+                dropSynonym(txnId, dataverseName, synonym.getSynonymName());
+            }
+
             // As a side effect, acquires an S lock on the 'Function' dataset
             // on behalf of txnId.
             List<Function> dataverseFunctions = getDataverseFunctions(txnId, dataverseName);
