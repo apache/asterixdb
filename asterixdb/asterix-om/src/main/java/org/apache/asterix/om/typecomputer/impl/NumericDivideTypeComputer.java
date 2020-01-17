@@ -19,7 +19,6 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.exceptions.IncompatibleTypeException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -27,8 +26,6 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 /**
  * Returns double if both operands are integers
@@ -41,8 +38,6 @@ public class NumericDivideTypeComputer extends AbstractResultTypeComputer {
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-        FunctionIdentifier funcId = funcExpr.getFunctionIdentifier();
         IAType t1 = strippedInputTypes[0];
         IAType t2 = strippedInputTypes[1];
         ATypeTag tag1 = t1.getTypeTag();
@@ -64,7 +59,7 @@ public class NumericDivideTypeComputer extends AbstractResultTypeComputer {
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcId, tag1, tag2);
+                        return BuiltinType.ANULL;
                 }
                 break;
             case FLOAT:
@@ -83,7 +78,7 @@ public class NumericDivideTypeComputer extends AbstractResultTypeComputer {
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcId, tag1, tag2);
+                        return BuiltinType.ANULL;
                 }
                 break;
             case BIGINT:
@@ -105,7 +100,7 @@ public class NumericDivideTypeComputer extends AbstractResultTypeComputer {
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcId, tag1, tag2);
+                        return BuiltinType.ANULL;
                 }
                 break;
             case ANY:
@@ -120,119 +115,11 @@ public class NumericDivideTypeComputer extends AbstractResultTypeComputer {
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcId, tag1, tag2);
-                }
-                break;
-            case DATE:
-                switch (tag2) {
-                    case DATE:
-                        type = BuiltinType.ADURATION;
-                        break;
-                    case YEARMONTHDURATION:
-                    case DAYTIMEDURATION:
-                    case DURATION:
-                        type = BuiltinType.ADATE;
-                        break;
-                    case ANY:
-                        type = BuiltinType.ANY;
-                        break;
-                    default:
-                        throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcId, tag1, tag2);
-                }
-                break;
-            case TIME:
-                switch (tag2) {
-                    case TIME:
-                        type = BuiltinType.ADURATION;
-                        break;
-                    case YEARMONTHDURATION:
-                    case DAYTIMEDURATION:
-                    case DURATION:
-                        type = BuiltinType.ATIME;
-                        break;
-                    case ANY:
-                        type = BuiltinType.ANY;
-                        break;
-                    default:
-                        throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcId, tag1, tag2);
-                }
-                break;
-            case DATETIME:
-                switch (tag2) {
-                    case DATETIME:
-                        type = BuiltinType.ADURATION;
-                        break;
-                    case YEARMONTHDURATION:
-                    case DAYTIMEDURATION:
-                    case DURATION:
-                        type = BuiltinType.ADATETIME;
-                        break;
-                    default:
-                        throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcId, tag1, tag2);
-                }
-                break;
-            case DURATION:
-                switch (tag2) {
-                    case DATE:
-                        type = BuiltinType.ADATE;
-                        break;
-                    case TIME:
-                        type = BuiltinType.ATIME;
-                        break;
-                    case DATETIME:
-                        type = BuiltinType.ADATETIME;
-                        break;
-                    case ANY:
-                        type = BuiltinType.ANY;
-                        break;
-                    default:
-                        throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcId, tag1, tag2);
-                }
-                break;
-            case YEARMONTHDURATION:
-                switch (tag2) {
-                    case DATE:
-                        type = BuiltinType.ADATE;
-                        break;
-                    case TIME:
-                        type = BuiltinType.ATIME;
-                        break;
-                    case DATETIME:
-                        type = BuiltinType.ADATETIME;
-                        break;
-                    case YEARMONTHDURATION:
-                        type = BuiltinType.AYEARMONTHDURATION;
-                        break;
-                    case ANY:
-                        type = BuiltinType.ANY;
-                        break;
-                    default:
-                        throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcId, tag1, tag2);
-                }
-                break;
-            case DAYTIMEDURATION:
-                switch (tag2) {
-                    case DATE:
-                        type = BuiltinType.ADATE;
-                        break;
-                    case TIME:
-                        type = BuiltinType.ATIME;
-                        break;
-                    case DATETIME:
-                        type = BuiltinType.ADATETIME;
-                        break;
-                    case DAYTIMEDURATION:
-                        type = BuiltinType.ADAYTIMEDURATION;
-                        break;
-                    case ANY:
-                        type = BuiltinType.ANY;
-                        break;
-                    default:
-                        throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcId, tag1, tag2);
+                        return BuiltinType.ANULL;
                 }
                 break;
             default:
-                throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcId, tag1, tag2);
+                return BuiltinType.ANULL;
         }
 
         if (type.getTypeTag() != ATypeTag.ANY) {

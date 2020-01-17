@@ -21,13 +21,13 @@ package org.apache.asterix.runtime.evaluators.functions;
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @MissingNullInOutFunction
@@ -67,13 +67,15 @@ public class NumericDivideDescriptor extends AbstractNumericArithmeticEval {
 
     @Override
     protected boolean evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly,
-            AMutableInt64 result) {
-        throw new NotImplementedException("Divide operation is not defined for temporal types");
+            AMutableInt64 result, IEvaluatorContext ctx) throws HyracksDataException {
+        ExceptionUtil.warnUnsupportedType(ctx, sourceLoc, getIdentifier().getName(), ATypeTag.DURATION);
+        return false;
     }
 
     @Override
-    protected boolean evaluateTimeInstanceArithmetic(long chronon0, long chronon1, AMutableInt64 result)
-            throws HyracksDataException {
-        throw new UnsupportedTypeException(sourceLoc, getIdentifier(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
+    protected boolean evaluateTimeInstanceArithmetic(long chronon0, long chronon1, AMutableInt64 result,
+            IEvaluatorContext ctx) throws HyracksDataException {
+        ExceptionUtil.warnUnsupportedType(ctx, sourceLoc, getIdentifier().getName(), ATypeTag.TIME);
+        return false;
     }
 }

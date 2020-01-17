@@ -1594,7 +1594,7 @@ public class BuiltinFunctions {
         addPrivateFunction(AND, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(NEQ, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(OR, BooleanFunctionTypeComputer.INSTANCE, true);
-        addPrivateFunction(NUMERIC_ADD, NumericAddSubMulDivTypeComputer.INSTANCE, true);
+        addPrivateFunction(NUMERIC_ADD, NumericAddSubMulDivTypeComputer.INSTANCE_ADD, true);
 
         // deep equality
         addFunction(DEEP_EQUAL, BooleanFunctionTypeComputer.INSTANCE, true);
@@ -1652,11 +1652,11 @@ public class BuiltinFunctions {
         addPrivateFunction(MAKE_FIELD_NAME_HANDLE, null, true);
 
         addPrivateFunction(NUMERIC_UNARY_MINUS, NumericUnaryTypeComputer.INSTANCE, true);
-        addPrivateFunction(NUMERIC_SUBTRACT, NumericAddSubMulDivTypeComputer.INSTANCE, true);
-        addPrivateFunction(NUMERIC_MULTIPLY, NumericAddSubMulDivTypeComputer.INSTANCE, true);
+        addPrivateFunction(NUMERIC_SUBTRACT, NumericAddSubMulDivTypeComputer.INSTANCE_SUB, true);
+        addPrivateFunction(NUMERIC_MULTIPLY, NumericAddSubMulDivTypeComputer.INSTANCE_MUL_POW, true);
         addPrivateFunction(NUMERIC_DIVIDE, NumericDivideTypeComputer.INSTANCE, true);
-        addPrivateFunction(NUMERIC_MOD, NumericAddSubMulDivTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(NUMERIC_DIV, NumericAddSubMulDivTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(NUMERIC_MOD, NumericAddSubMulDivTypeComputer.INSTANCE_DIV_MOD, true);
+        addPrivateFunction(NUMERIC_DIV, NumericAddSubMulDivTypeComputer.INSTANCE_DIV_MOD, true);
         addFunction(NUMERIC_ABS, NumericUnaryTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ACOS, NumericUnaryTypeComputer.INSTANCE_DOUBLE, true);
         addFunction(NUMERIC_ASIN, NumericUnaryTypeComputer.INSTANCE_DOUBLE, true);
@@ -1675,7 +1675,7 @@ public class BuiltinFunctions {
         addFunction(NUMERIC_LN, NumericUnaryTypeComputer.INSTANCE_DOUBLE, true);
         addFunction(NUMERIC_LOG, NumericUnaryTypeComputer.INSTANCE_DOUBLE, true);
         addFunction(NUMERIC_PI, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_POWER, NumericAddSubMulDivTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_POWER, NumericAddSubMulDivTypeComputer.INSTANCE_MUL_POW, true);
         addFunction(NUMERIC_SQRT, NumericUnaryTypeComputer.INSTANCE_DOUBLE, true);
         addFunction(NUMERIC_SIGN, NumericUnaryTypeComputer.INSTANCE_INT8, true);
         addFunction(NUMERIC_CEILING, NumericUnaryTypeComputer.INSTANCE, true);

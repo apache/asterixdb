@@ -27,6 +27,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.exceptions.OverflowException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @MissingNullInOutFunction
@@ -73,7 +74,7 @@ public class NumericSubDescriptor extends AbstractNumericArithmeticEval {
      */
     @Override
     protected boolean evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly,
-            AMutableInt64 result) throws HyracksDataException {
+            AMutableInt64 result, IEvaluatorContext ctx) throws HyracksDataException {
         long res = DurationArithmeticOperations.addDuration(chronon, -1 * yearMonth, -1 * dayTime, isTimeOnly);
         result.setValue(res);
         return true;
@@ -83,8 +84,8 @@ public class NumericSubDescriptor extends AbstractNumericArithmeticEval {
      * @see org.apache.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateTimeInstanceArithmetic(long, long)
      */
     @Override
-    protected boolean evaluateTimeInstanceArithmetic(long chronon0, long chronon1, AMutableInt64 result)
-            throws HyracksDataException {
+    protected boolean evaluateTimeInstanceArithmetic(long chronon0, long chronon1, AMutableInt64 result,
+            IEvaluatorContext ctx) throws HyracksDataException {
         return evaluateInteger(chronon0, chronon1, result);
     }
 }

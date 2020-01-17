@@ -45,15 +45,14 @@ import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.base.AMutableTime;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.runtime.exceptions.OverflowException;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.runtime.exceptions.UnderflowException;
-import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -75,7 +74,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
      * @param result result holder
      * @return {@code false} if the result is {@code NULL}, otherwise {@code true}
      */
-    abstract protected boolean evaluateInteger(long lhs, long rhs, AMutableInt64 result) throws HyracksDataException;
+    protected abstract boolean evaluateInteger(long lhs, long rhs, AMutableInt64 result) throws HyracksDataException;
 
     /**
      * abstract method for arithmetic operation between two floating point values
@@ -85,7 +84,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
      * @param result result holder
      * @return {@code false} if the result is {@code NULL}, otherwise {@code true}
      */
-    abstract protected boolean evaluateDouble(double lhs, double rhs, AMutableDouble result)
+    protected abstract boolean evaluateDouble(double lhs, double rhs, AMutableDouble result)
             throws HyracksDataException;
 
     /**
@@ -96,10 +95,11 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
      * @param yearMonth year-month component of the second operand
      * @param dayTime day-time component of the second operand
      * @param result result holder
+     * @param ctx evaluator context
      * @return {@code false} if the result is {@code NULL}, otherwise {@code true}
      */
-    abstract protected boolean evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime,
-            boolean isTimeOnly, AMutableInt64 result) throws HyracksDataException;
+    protected abstract boolean evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime,
+            boolean isTimeOnly, AMutableInt64 result, IEvaluatorContext ctx) throws HyracksDataException;
 
     /**
      * abstract method for arithmetic operation between two time instances (date/time/datetime)
@@ -107,10 +107,11 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
      * @param chronon0 first operand
      * @param chronon1 second operand
      * @param result result holder
+     * @param ctx evaluator context
      * @return {@code false} if the result is {@code NULL}, otherwise {@code true}
      */
-    abstract protected boolean evaluateTimeInstanceArithmetic(long chronon0, long chronon1, AMutableInt64 result)
-            throws HyracksDataException;
+    protected abstract boolean evaluateTimeInstanceArithmetic(long chronon0, long chronon1, AMutableInt64 result,
+            IEvaluatorContext ctx) throws HyracksDataException;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -141,6 +142,8 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                     private final AMutableDate aDate = new AMutableDate(0);
                     private final AMutableTime aTime = new AMutableTime(0);
                     private final AMutableDateTime aDatetime = new AMutableDateTime(0);
+
+                    private final FunctionIdentifier funID = getIdentifier();
 
                     @SuppressWarnings("rawtypes")
                     private final ISerializerDeserializer int8Serde =
@@ -175,6 +178,14 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                     @SuppressWarnings("rawtypes")
                     private final ISerializerDeserializer nullSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
+
+                    private final byte[] EXP_TYPES = new byte[] { ATypeTag.SERIALIZED_INT8_TYPE_TAG,
+                            ATypeTag.SERIALIZED_INT16_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG,
+                            ATypeTag.SERIALIZED_INT64_TYPE_TAG, ATypeTag.SERIALIZED_FLOAT_TYPE_TAG,
+                            ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG, ATypeTag.SERIALIZED_DATE_TYPE_TAG,
+                            ATypeTag.SERIALIZED_TIME_TYPE_TAG, ATypeTag.SERIALIZED_DATETIME_TYPE_TAG,
+                            ATypeTag.SERIALIZED_DURATION_TYPE_TAG, ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG,
+                            ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG };
 
                     @Override
                     @SuppressWarnings("unchecked")
@@ -232,19 +243,13 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                 case DURATION:
                                 case YEARMONTHDURATION:
                                 case DAYTIMEDURATION:
-                                    evaluateTemporalArithmeticOperation(typeTag);
+                                    evaluateTemporalArithmeticOperation();
                                     result.set(resultStorage);
                                     return;
                                 default:
-                                    throw new TypeMismatchException(sourceLoc, getIdentifier(), i, bytes[offset],
-                                            ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
-                                            ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG,
-                                            ATypeTag.SERIALIZED_FLOAT_TYPE_TAG, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG,
-                                            ATypeTag.SERIALIZED_DATE_TYPE_TAG, ATypeTag.SERIALIZED_TIME_TYPE_TAG,
-                                            ATypeTag.SERIALIZED_DATETIME_TYPE_TAG,
-                                            ATypeTag.SERIALIZED_DURATION_TYPE_TAG,
-                                            ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG,
-                                            ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG);
+                                    ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funID, bytes[offset], i, EXP_TYPES);
+                                    PointableHelper.setNull(result);
+                                    return;
                             }
 
                             if (i == 0 || currentType.ordinal() > argTypeMax.ordinal()) {
@@ -338,12 +343,13 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                     }
 
                     @SuppressWarnings("unchecked")
-                    private void evaluateTemporalArithmeticOperation(ATypeTag leftType) throws HyracksDataException {
+                    private void evaluateTemporalArithmeticOperation() throws HyracksDataException {
                         byte[] bytes1 = argPtr1.getByteArray();
                         int offset1 = argPtr1.getStartOffset();
                         ATypeTag rightType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
                         byte[] bytes0 = argPtr0.getByteArray();
                         int offset0 = argPtr0.getStartOffset();
+                        ATypeTag leftType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
 
                         if (rightType == leftType) {
                             long leftChronon = 0, rightChronon = 0, dayTime = 0;
@@ -369,7 +375,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                     if (evaluateTimeInstanceArithmetic(
                                             AYearMonthDurationSerializerDeserializer.getYearMonth(bytes0, offset0 + 1),
                                             AYearMonthDurationSerializerDeserializer.getYearMonth(bytes1, offset1 + 1),
-                                            aInt64)) {
+                                            aInt64, ctx)) {
                                         yearMonth = (int) aInt64.getLongValue();
                                     } else {
                                         yearMonthIsNull = true;
@@ -382,10 +388,12 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                             ADayTimeDurationSerializerDeserializer.getDayTime(bytes1, offset1 + 1);
                                     break;
                                 default:
-                                    throw new UnsupportedTypeException(sourceLoc, getIdentifier(), bytes1[offset1]);
+                                    ExceptionUtil.warnUnsupportedType(ctx, sourceLoc, funID.getName(), rightType);
+                                    nullSerde.serialize(ANull.NULL, out);
+                                    return;
                             }
 
-                            if (evaluateTimeInstanceArithmetic(leftChronon, rightChronon, aInt64)) {
+                            if (evaluateTimeInstanceArithmetic(leftChronon, rightChronon, aInt64, ctx)) {
                                 dayTime = aInt64.getLongValue();
                             } else {
                                 dayTimeIsNull = true;
@@ -423,8 +431,10 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                     ADurationSerializerDeserializer.getYearMonth(bytes1, offset1 + 1);
                                             break;
                                         default:
-                                            throw new IncompatibleTypeException(sourceLoc, getIdentifier(),
-                                                    bytes0[offset0], bytes1[offset1]);
+                                            ExceptionUtil.warnIncompatibleType(ctx, sourceLoc, funID.getName(),
+                                                    leftType, rightType);
+                                            nullSerde.serialize(ANull.NULL, out);
+                                            return;
                                     }
                                     break;
                                 case DATE:
@@ -453,8 +463,10 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                     offset1 + 1);
                                             break;
                                         default:
-                                            throw new IncompatibleTypeException(sourceLoc, getIdentifier(),
-                                                    bytes0[offset0], bytes1[offset1]);
+                                            ExceptionUtil.warnIncompatibleType(ctx, sourceLoc, funID.getName(),
+                                                    leftType, rightType);
+                                            nullSerde.serialize(ANull.NULL, out);
+                                            return;
                                     }
                                     break;
                                 case YEARMONTHDURATION:
@@ -473,8 +485,10 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                     * GregorianCalendarSystem.CHRONON_OF_DAY;
                                             break;
                                         default:
-                                            throw new IncompatibleTypeException(sourceLoc, getIdentifier(),
-                                                    bytes0[offset0], bytes1[offset1]);
+                                            ExceptionUtil.warnIncompatibleType(ctx, sourceLoc, funID.getName(),
+                                                    leftType, rightType);
+                                            nullSerde.serialize(ANull.NULL, out);
+                                            return;
                                     }
                                     break;
                                 case DURATION:
@@ -506,16 +520,20 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                 break;
                                             }
                                         default:
-                                            throw new IncompatibleTypeException(sourceLoc, getIdentifier(),
-                                                    bytes0[offset0], bytes1[offset1]);
+                                            ExceptionUtil.warnIncompatibleType(ctx, sourceLoc, funID.getName(),
+                                                    leftType, rightType);
+                                            nullSerde.serialize(ANull.NULL, out);
+                                            return;
                                     }
                                     break;
                                 default:
-                                    throw new IncompatibleTypeException(sourceLoc, getIdentifier(), bytes0[offset0],
-                                            bytes1[offset1]);
+                                    ExceptionUtil.warnIncompatibleType(ctx, sourceLoc, funID.getName(), leftType,
+                                            rightType);
+                                    nullSerde.serialize(ANull.NULL, out);
+                                    return;
                             }
 
-                            if (evaluateTimeDurationArithmetic(chronon, yearMonth, dayTime, isTimeOnly, aInt64)) {
+                            if (evaluateTimeDurationArithmetic(chronon, yearMonth, dayTime, isTimeOnly, aInt64, ctx)) {
                                 chronon = aInt64.getLongValue();
                                 switch (resultType) {
                                     case DATE:
@@ -536,8 +554,10 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                         serde.serialize(aDatetime, out);
                                         break;
                                     default:
-                                        throw new IncompatibleTypeException(sourceLoc, getIdentifier(), bytes0[offset0],
-                                                bytes1[offset1]);
+                                        ExceptionUtil.warnIncompatibleType(ctx, sourceLoc, funID.getName(), leftType,
+                                                rightType);
+                                        nullSerde.serialize(ANull.NULL, out);
+                                        return;
                                 }
                             } else {
                                 nullSerde.serialize(ANull.NULL, out);

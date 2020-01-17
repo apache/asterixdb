@@ -13845,5 +13845,49 @@
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="fun_return_null/numeric_fun" check-warnings="true">
+      <compilation-unit name="numeric_fun_003">
+        <output-dir compare="Text">numeric_fun_003</output-dir>
+        <expected-warn>Type mismatch: function numeric-add expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-divide expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type incompatibility: function numeric-multiply gets incompatible input values: daytimeduration and string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-add expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-subtract expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type incompatibility: function numeric-divide gets incompatible input values: time and string</expected-warn>
+        <expected-warn>Type incompatibility: function numeric-add gets incompatible input values: yearmonthduration and string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-subtract expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-multiply expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type incompatibility: function numeric-add gets incompatible input values: daytimeduration and string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-div expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-subtract expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function power expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-mod expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type incompatibility: function numeric-add gets incompatible input values: time and string</expected-warn>
+        <expected-warn>Type incompatibility: function power gets incompatible input values: yearmonthduration and string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-multiply expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-multiply expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-mod expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-divide expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-div expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type incompatibility: function numeric-multiply gets incompatible input values: date and string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-add expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type incompatibility: function numeric-add gets incompatible input values: duration and string</expected-warn>
+        <expected-warn>Type incompatibility: function numeric-div gets incompatible input values: datetime and string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-mod expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function power expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type incompatibility: function numeric-add gets incompatible input values: date and string</expected-warn>
+        <expected-warn>Type incompatibility: function numeric-mod gets incompatible input values: duration and string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-subtract expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-subtract expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-divide expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-subtract expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-subtract expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-div expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function numeric-subtract expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <expected-warn>Type incompatibility: function numeric-add gets incompatible input values: datetime and string</expected-warn>
+        <expected-warn>Type mismatch: function power expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

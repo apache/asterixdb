@@ -1,0 +1,45 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ *  Description: tests reporting invalid argument type for numeric functions
+ */
+// requesttype=application/json
+// param max-warnings:json=1000
+
+use test;
+
+set `import-private-functions` "true";
+
+from ds1 as ds1
+select
+id + str1 as f1, str2 + id as f2, id + "text" as f3,
+id - str1 as f4, str2 - id as f5, id - "text" as f6,
+id * str1 as f7, str2 * id as f8, id * "text" as f9,
+id / str1 as f10, str2 / id as f11, id / "text" as f12,
+id DIV str1 as f13, str2 DIV id as f14, id DIV "text" as f15,
+id % str1 as f16, str2 % id as f17, id % "text" as f18,
+id ^ str1 as f19, str2 ^ id as f20, id ^ "text" as f21,
+
+d1 + str1 as f22, str2 - d2 as f23, d1 * "text" as f24,
+t1 + str1 as f25, str2 - t2 as f26, t1 / "text" as f27,
+dt1 + str1 as f28, str2 - dt2 as f29, dt1 DIV "text" as f30,
+dur1 + str1 as f31, str2 - dur2 as f32, dur1 % "text" as f33,
+ymd1 + str1 as f34, str2 - ymd2 as f35, ymd1 ^ "text" as f36,
+dtd1 + str1 as f37, str2 - dtd2 as f38, dtd1 * "text" as f39;
