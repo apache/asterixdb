@@ -23,7 +23,7 @@ import java.io.DataOutput;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -32,19 +32,21 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractTypeCheckEvaluator implements IScalarEvaluator {
+    protected static final AObjectSerializerDeserializer aObjectSerializerDeserializer =
+            AObjectSerializerDeserializer.INSTANCE;
 
-    protected enum Value {
-        TRUE,
-        FALSE,
-        MISSING
-    }
-
-    protected static final byte[] MISSING_BYTES = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
     protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     protected final DataOutput out = resultStorage.getDataOutput();
     protected final IPointable argPtr = new VoidPointable();
     protected final IScalarEvaluator eval;
-    protected static final AObjectSerializerDeserializer aObjSerDer = AObjectSerializerDeserializer.INSTANCE;
+    protected ABoolean res;
+
+    private byte acceptedTypeTag;
+
+    public AbstractTypeCheckEvaluator(IScalarEvaluator argEval, byte acceptedTypeTag) {
+        this.acceptedTypeTag = acceptedTypeTag;
+        this.eval = argEval;
+    }
 
     public AbstractTypeCheckEvaluator(IScalarEvaluator argEval) {
         this.eval = argEval;
@@ -53,17 +55,17 @@ public abstract class AbstractTypeCheckEvaluator implements IScalarEvaluator {
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         eval.evaluate(tuple, argPtr);
-        Value match = isMatch(argPtr.getByteArray()[argPtr.getStartOffset()]);
-        if (match == Value.MISSING) {
-            result.set(MISSING_BYTES, 0, MISSING_BYTES.length);
+        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr)) {
             return;
         }
-        ABoolean res = match == Value.TRUE ? ABoolean.TRUE : ABoolean.FALSE;
+
+        res = isMatch(argPtr.getByteArray()[argPtr.getStartOffset()]) ? ABoolean.TRUE : ABoolean.FALSE;
         resultStorage.reset();
-        aObjSerDer.serialize(res, out);
+        aObjectSerializerDeserializer.serialize(res, out);
         result.set(resultStorage);
     }
 
-    protected abstract Value isMatch(byte typeTag);
-
+    protected boolean isMatch(byte typeTag) {
+        return typeTag == acceptedTypeTag;
+    }
 }

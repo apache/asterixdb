@@ -1487,6 +1487,30 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-atomic", 1);
     public static final FunctionIdentifier IS_BOOLEAN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-boolean", 1);
+    public static final FunctionIdentifier IS_BINARY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-binary", 1);
+    public static final FunctionIdentifier IS_POINT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-point", 1);
+    public static final FunctionIdentifier IS_LINE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-line", 1);
+    public static final FunctionIdentifier IS_RECTANGLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-rectangle", 1);
+    public static final FunctionIdentifier IS_CIRCLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-circle", 1);
+    public static final FunctionIdentifier IS_POLYGON =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-polygon", 1);
+    public static final FunctionIdentifier IS_SPATIAL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-spatial", 1);
+    public static final FunctionIdentifier IS_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-date", 1);
+    public static final FunctionIdentifier IS_DATETIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-datetime", 1);
+    public static final FunctionIdentifier IS_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-time", 1);
+    public static final FunctionIdentifier IS_DURATION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-duration", 1);
+    public static final FunctionIdentifier IS_INTERVAL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-interval", 1);
+    public static final FunctionIdentifier IS_TEMPORAL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-temporal", 1);
+    public static final FunctionIdentifier IS_UUID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-uuid", 1);
     public static final FunctionIdentifier IS_NUMBER =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-number", 1);
     public static final FunctionIdentifier IS_STRING =
@@ -1495,6 +1519,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-array", 1);
     public static final FunctionIdentifier IS_OBJECT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-object", 1);
+    public static final FunctionIdentifier IS_MULTISET =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-multiset", 1);
+    public static final FunctionIdentifier GET_TYPE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-type", 1);
 
     public static final FunctionIdentifier IS_SYSTEM_NULL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-system-null", 1);
@@ -1580,11 +1608,28 @@ public class BuiltinFunctions {
         addFunction(IS_SYSTEM_NULL, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_ATOMIC, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_BOOLEAN, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_BINARY, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_POINT, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_LINE, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_RECTANGLE, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_CIRCLE, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_POLYGON, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_SPATIAL, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_DATE, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_DATETIME, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_TIME, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_DURATION, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_INTERVAL, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_TEMPORAL, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_UUID, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_NUMBER, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_STRING, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_ARRAY, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_OBJECT, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_MULTISET, ABooleanTypeComputer.INSTANCE, true);
         addFunction(NOT, ABooleanTypeComputer.INSTANCE, true);
+
+        addFunction(GET_TYPE, AStringTypeComputer.INSTANCE, true);
 
         addPrivateFunction(EQ, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(LE, BooleanFunctionTypeComputer.INSTANCE, true);

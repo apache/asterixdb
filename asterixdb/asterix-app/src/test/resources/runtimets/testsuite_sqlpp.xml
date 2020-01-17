@@ -12527,6 +12527,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="types">
+      <compilation-unit name="gettype">
+        <output-dir compare="Text">gettype</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
       <compilation-unit name="isarray">
         <output-dir compare="Text">isarray</output-dir>
       </compilation-unit>
@@ -12554,6 +12559,86 @@
     <test-case FilePath="types">
       <compilation-unit name="isstring">
         <output-dir compare="Text">isstring</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isbinary">
+        <output-dir compare="Text">isbinary</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="iscircle">
+        <output-dir compare="Text">iscircle</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isdate">
+        <output-dir compare="Text">isdate</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isdatetime">
+        <output-dir compare="Text">isdatetime</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isduration">
+        <output-dir compare="Text">isduration</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isinterval">
+        <output-dir compare="Text">isinterval</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isline">
+        <output-dir compare="Text">isline</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="ismultiset">
+        <output-dir compare="Text">ismultiset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="ispoint">
+        <output-dir compare="Text">ispoint</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="ispolygon">
+        <output-dir compare="Text">ispolygon</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isrectangle">
+        <output-dir compare="Text">isrectangle</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isspatial">
+        <output-dir compare="Text">isspatial</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="istemporal">
+        <output-dir compare="Text">istemporal</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="istime">
+        <output-dir compare="Text">istime</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isuuid">
+        <output-dir compare="Text">isuuid</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="is_all_types">
+        <output-dir compare="Text">is_all_types</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="types">

@@ -20,9 +20,7 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
-import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -32,18 +30,11 @@ import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 @MissingNullInOutFunction
 public class IsAtomicDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    public static final IFunctionDescriptorFactory FACTORY = IsAtomicDescriptor::new;
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new IsAtomicDescriptor();
-        }
-    };
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -52,37 +43,11 @@ public class IsAtomicDescriptor extends AbstractScalarFunctionDynamicDescriptor 
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                return new AbstractTypeCheckEvaluator(eval) {
-
-                    // TODO(Hussain) Consider making a different AbstractTypeCheckEvaluator class for the methods
-                    // that require the Missing/Null checks, that should keep the code cleaner. Currently, this is the
-                    // scenario because some functions require Missing/Null checks while others don't, and they're
-                    // extending the same base class, so the evaluate(...) needs to be overridden
-                    @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-                        eval.evaluate(tuple, argPtr);
-
-                        if (PointableHelper.checkAndSetMissingOrNull(result, argPtr)) {
-                            return;
-                        }
-
-                        Value match = isMatch(argPtr.getByteArray()[argPtr.getStartOffset()]);
-                        if (match == Value.MISSING) {
-                            result.set(MISSING_BYTES, 0, MISSING_BYTES.length);
-                            return;
-                        }
-                        ABoolean res = match == Value.TRUE ? ABoolean.TRUE : ABoolean.FALSE;
-                        resultStorage.reset();
-                        aObjSerDer.serialize(res, out);
-                        result.set(resultStorage);
-                    }
+                return new AbstractTypeCheckEvaluator(args[0].createScalarEvaluator(ctx)) {
 
                     @Override
-                    protected Value isMatch(byte typeTag) {
-                        return EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTag).isDerivedType() ? Value.FALSE
-                                : Value.TRUE;
-
+                    protected boolean isMatch(byte typeTag) {
+                        return !EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTag).isDerivedType();
                     }
                 };
             }

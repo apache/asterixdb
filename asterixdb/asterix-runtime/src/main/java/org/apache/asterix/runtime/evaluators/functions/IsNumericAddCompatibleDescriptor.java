@@ -19,17 +19,19 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.evaluators.common.AbstractTypeCheckEvaluator;
+import org.apache.asterix.runtime.evaluators.common.AbstractMultiTypeCheckEvaluator;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * Returns {@code TRUE} if the argument type is one of the types that are allowed on the left side of
@@ -57,15 +59,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * @see AbstractNumericArithmeticEval
  */
 public class IsNumericAddCompatibleDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
+    public static final IFunctionDescriptorFactory FACTORY = IsNumericAddCompatibleDescriptor::new;
     private static final long serialVersionUID = 1L;
-
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new IsNumericAddCompatibleDescriptor();
-        }
-    };
+    private static final byte[] checkedTypes = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG,
+            ATypeTag.SERIALIZED_NULL_TYPE_TAG, ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
+            ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG, ATypeTag.SERIALIZED_FLOAT_TYPE_TAG,
+            ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG, ATypeTag.SERIALIZED_DATETIME_TYPE_TAG,
+            ATypeTag.SERIALIZED_TIME_TYPE_TAG, ATypeTag.SERIALIZED_DATE_TYPE_TAG,
+            ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG, ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG,
+            ATypeTag.SERIALIZED_DURATION_TYPE_TAG };
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -74,29 +76,14 @@ public class IsNumericAddCompatibleDescriptor extends AbstractScalarFunctionDyna
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new AbstractTypeCheckEvaluator(args[0].createScalarEvaluator(ctx)) {
+                return new AbstractMultiTypeCheckEvaluator(args[0].createScalarEvaluator(ctx), checkedTypes) {
                     @Override
-                    protected Value isMatch(byte typeTag) {
-                        ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[typeTag];
-                        switch (tt) {
-                            case MISSING:
-                            case NULL:
-                            case TINYINT:
-                            case SMALLINT:
-                            case INTEGER:
-                            case BIGINT:
-                            case FLOAT:
-                            case DOUBLE:
-                            case DATE:
-                            case DATETIME:
-                            case TIME:
-                            case DURATION:
-                            case YEARMONTHDURATION:
-                            case DAYTIMEDURATION:
-                                return Value.TRUE;
-                            default:
-                                return Value.FALSE;
-                        }
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+                        eval.evaluate(tuple, argPtr);
+                        res = isMatch(argPtr.getByteArray()[argPtr.getStartOffset()]) ? ABoolean.TRUE : ABoolean.FALSE;
+                        resultStorage.reset();
+                        aObjectSerializerDeserializer.serialize(res, out);
+                        result.set(resultStorage);
                     }
                 };
             }

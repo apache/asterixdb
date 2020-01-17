@@ -74,6 +74,7 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("regex_split", "regexp-split");
 
         // Type functions.
+        addFunctionMapping("gettype", "get-type"); // istype, internal: is-type
         addFunctionMapping("isnull", "is-null"); // isnull, internal: is-null
         addFunctionMapping("ismissing", "is-missing"); // ismissing, internal: is-missing
         addFunctionMapping("isunknown", "is-unknown"); // isunknown, internal: is-unknown
@@ -83,6 +84,24 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("isboolean", "is-boolean"); // isboolean, internal: is-boolean
         addFunctionMapping("isbool", "is-boolean"); // isbool, internal: is-boolean
         addFunctionMapping("is_bool", "is-boolean"); // is_bool, internal: is-boolean
+        addFunctionMapping("isbinary", "is-binary"); // isbinary, internal: is-binary
+        addFunctionMapping("isbin", "is-binary"); // isbin, internal: is-binary
+        addFunctionMapping("is_bin", "is-binary"); // is_bin, internal: is-binary
+        addFunctionMapping("ispoint", "is-point"); // ispoint, internal: is-point
+        addFunctionMapping("isline", "is-line"); // isline, internal: is-line
+        addFunctionMapping("isrectangle", "is-rectangle"); // isrectangle, internal: is-rectangle
+        addFunctionMapping("iscircle", "is-circle"); // iscircle, internal: is-circle
+        addFunctionMapping("ispolygon", "is-polygon"); // ispolygon, internal: is-polygon
+        addFunctionMapping("isspatial", "is-spatial"); // isspatial, internal: is-spatial
+        addFunctionMapping("isdate", "is-date"); // isdate, internal: is-date
+        addFunctionMapping("isdatetime", "is-datetime"); // isdatetime, internal: is-datetime
+        addFunctionMapping("istimestamp", "is-datetime"); // istimestamp, internal: is-datetime
+        addFunctionMapping("is_timestamp", "is-datetime"); // is_timestamp, internal: is-datetime
+        addFunctionMapping("istime", "is-time"); // istime, internal: is-time
+        addFunctionMapping("isduration", "is-duration"); // isduration, internal: is-duration
+        addFunctionMapping("isinterval", "is-interval"); // isinterval, internal: is-interval
+        addFunctionMapping("istemporal", "is-temporal"); // istemporal, internal: is-temporal
+        addFunctionMapping("isuuid", "is-uuid"); // isuuid, internal: is-uuid
         addFunctionMapping("isnumber", "is-number"); // isnumber, internal: is-number
         addFunctionMapping("isnum", "is-number"); // isnum, internal: is-number
         addFunctionMapping("is_num", "is-number"); // is_num, internal: is-number
@@ -90,6 +109,7 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("isstr", "is-string"); // isstr, internal: is-string
         addFunctionMapping("is_str", "is-string"); // is_str, internal: is-string
         addFunctionMapping("isarray", "is-array"); // isarray, internal: is-array
+        addFunctionMapping("ismultiset", "is-multiset"); // ismultiset, internal: is-multiset
         addFunctionMapping("isobject", "is-object"); // isobject, internal: is-object
         addFunctionMapping("isobj", "is-object"); // isobj, internal: is-object
         addFunctionMapping("is_obj", "is-object"); // is_obj, internal: is-object

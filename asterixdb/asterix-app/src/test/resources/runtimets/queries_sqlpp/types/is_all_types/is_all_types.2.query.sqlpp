@@ -1,0 +1,46 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Test variant syntax for dataset access (scan)
+ *              : using parentheses and quotes is optional
+ * Expected Res : Success
+ * Date         : 6th March 2013
+ */
+
+use test;
+
+SELECT VALUE {
+  "t1": is_array(t1),
+  "t2": is_binary(t2),
+  "t3": is_boolean(t3),
+  "t4": is_circle(t4),
+  "t5": is_date(t5),
+  "t6": is_datetime(t6),
+  "t7": is_duration(t7),
+  "t8": is_interval(t8),
+  "t9": is_line(t9),
+  "t10": is_multiset(t10),
+  "t11": is_point(t11),
+  "t12": is_polygon(t12),
+  "t13": is_rectangle(t13),
+  "t14": is_string(t14),
+  "t15": is_time(t15),
+  "t16": is_uuid(t16)
+}
+FROM `All`;

@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -29,15 +29,12 @@ import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class IsNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    public static final IFunctionDescriptorFactory FACTORY = IsNullDescriptor::new;
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new IsNullDescriptor();
-        }
-    };
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -46,15 +43,25 @@ public class IsNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                return new AbstractTypeCheckEvaluator(eval) {
+                return new AbstractTypeCheckEvaluator(args[0].createScalarEvaluator(ctx),
+                        ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                    private final byte[] MISSING_BYTES = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
 
                     @Override
-                    protected Value isMatch(byte typeTag) {
-                        if (typeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
-                            return Value.MISSING;
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+                        eval.evaluate(tuple, argPtr);
+
+                        // We handle the missing case first and separately.
+                        byte tt = argPtr.getByteArray()[argPtr.getStartOffset()];
+                        if (tt == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                            result.set(MISSING_BYTES, 0, MISSING_BYTES.length);
+                            return;
                         }
-                        return typeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG ? Value.TRUE : Value.FALSE;
+
+                        res = isMatch(tt) ? ABoolean.TRUE : ABoolean.FALSE;
+                        resultStorage.reset();
+                        aObjectSerializerDeserializer.serialize(res, out);
+                        result.set(resultStorage);
                     }
                 };
             }

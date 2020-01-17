@@ -18,26 +18,23 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.evaluators.common.AbstractTypeCheckEvaluator;
+import org.apache.asterix.runtime.evaluators.common.AbstractMultiTypeCheckEvaluator;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class IsUnknownDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    public static final IFunctionDescriptorFactory FACTORY = IsUnknownDescriptor::new;
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new IsUnknownDescriptor();
-        }
-    };
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -46,13 +43,16 @@ public class IsUnknownDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                return new AbstractTypeCheckEvaluator(eval) {
+                return new AbstractMultiTypeCheckEvaluator(args[0].createScalarEvaluator(ctx),
+                        ATypeTag.SERIALIZED_NULL_TYPE_TAG, ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
 
                     @Override
-                    protected Value isMatch(byte typeTag) {
-                        return (typeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG
-                                || typeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) ? Value.TRUE : Value.FALSE;
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+                        eval.evaluate(tuple, argPtr);
+                        res = isMatch(argPtr.getByteArray()[argPtr.getStartOffset()]) ? ABoolean.TRUE : ABoolean.FALSE;
+                        resultStorage.reset();
+                        aObjectSerializerDeserializer.serialize(res, out);
+                        result.set(resultStorage);
                     }
                 };
             }
