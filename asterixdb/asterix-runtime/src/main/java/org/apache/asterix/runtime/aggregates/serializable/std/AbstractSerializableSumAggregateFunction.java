@@ -30,12 +30,12 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeseriali
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.exceptions.OverflowException;
-import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -48,6 +48,11 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractSerializableSumAggregateFunction extends AbstractSerializableAggregateFunction {
+
+    private final IEvaluatorContext context;
+
+    // Warning flag to warn only once in case of non-numeric data
+    private boolean isWarned = false;
 
     // Handles evaluating and storing/passing serialized data
     protected static final int AGG_TYPE_OFFSET = 0;
@@ -77,6 +82,7 @@ public abstract class AbstractSerializableSumAggregateFunction extends AbstractS
     public AbstractSerializableSumAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context,
             SourceLocation sourceLoc) throws HyracksDataException {
         super(sourceLoc);
+        this.context = context;
         eval = args[0].createScalarEvaluator(context);
     }
 
@@ -97,6 +103,7 @@ public abstract class AbstractSerializableSumAggregateFunction extends AbstractS
         try {
             state.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
             state.writeLong(0);
+            isWarned = false;
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -114,8 +121,6 @@ public abstract class AbstractSerializableSumAggregateFunction extends AbstractS
         eval.evaluate(tuple, inputVal);
         byte[] bytes = inputVal.getByteArray();
         int offset = inputVal.getStartOffset();
-
-        // Get the data type tag
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
 
         // Handle MISSING and NULL values
@@ -162,7 +167,12 @@ public abstract class AbstractSerializableSumAggregateFunction extends AbstractS
                 processSystemNull();
                 break;
             default:
-                throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.SUM, bytes[offset]);
+                // Issue warning only once and treat current tuple as null
+                if (!isWarned) {
+                    isWarned = true;
+                    ExceptionUtil.warnUnsupportedType(context, sourceLoc, getIdentifier().getName(), typeTag);
+                }
+                processNull(state, start);
         }
     }
 

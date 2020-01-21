@@ -338,16 +338,16 @@
         <expected-error>Type incompatibility: function agg-stddev_pop gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="aggregate">
+    <test-case FilePath="aggregate" check-warnings="true">
       <compilation-unit name="sum_mixed">
         <output-dir compare="Text">sum_mixed</output-dir>
-        <expected-error>Invalid item type: function agg-sum cannot process item type string in an input array</expected-error>
+        <expected-warn>Unsupported type: agg-sum cannot process input type string (in line 27, at column 16)</expected-warn>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="aggregate">
+    <test-case FilePath="aggregate" check-warnings="true">
       <compilation-unit name="serial_sum_mixed">
         <output-dir compare="Text">serial_sum_mixed</output-dir>
-        <expected-error>Invalid item type: function agg-sum cannot process item type string in an input array</expected-error>
+        <expected-warn>Unsupported type: agg-sum cannot process input type string (in line 29, at column 39)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -1532,16 +1532,16 @@
         <expected-error>Type incompatibility: function agg-stddev_pop gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="aggregate-sql">
+    <test-case FilePath="aggregate-sql" check-warnings="true">
       <compilation-unit name="sum_mixed">
         <output-dir compare="Text">sum_mixed</output-dir>
-        <expected-error>Invalid item type: function agg-sum cannot process item type string in an input array</expected-error>
+        <expected-warn>Unsupported type: agg-sum cannot process input type string (in line 27, at column 16)</expected-warn>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="aggregate-sql">
+    <test-case FilePath="aggregate-sql" check-warnings="true">
       <compilation-unit name="serial_sum_mixed">
         <output-dir compare="Text">serial_sum_mixed</output-dir>
-        <expected-error>Invalid item type: function agg-sum cannot process item type string in an input array</expected-error>
+        <expected-warn>Unsupported type: agg-sum cannot process input type string (in line 29, at column 38)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -5233,10 +5233,10 @@
         <output-dir compare="Text">policy-04</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="group-by">
+    <test-case FilePath="group-by" check-warnings="true">
       <compilation-unit name="policy-05">
-        <output-dir compare="Text">none</output-dir>
-        <expected-error>Invalid item type: function agg-sum cannot process item type object in an input array (or multiset)</expected-error>
+        <output-dir compare="Text">policy-05</output-dir>
+        <expected-warn>Unsupported type: agg-sum cannot process input type object (in line 29, at column 23)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
