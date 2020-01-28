@@ -22,6 +22,8 @@
 * Date         : Feb 7th 2014
 */
 
+-- param max-warnings:json=1000
+
 select element array_sum((
     select element x
     from  [float('2.0'),'hello world',93847382783847382,date('2013-01-01')] as x
