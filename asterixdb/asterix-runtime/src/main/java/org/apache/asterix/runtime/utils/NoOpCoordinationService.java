@@ -35,6 +35,11 @@ public class NoOpCoordinationService implements ICoordinationService {
     }
 
     @Override
+    public void putSensitive(String key, byte[] value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Optional<byte[]> get(String key) {
         throw new UnsupportedOperationException();
     }
