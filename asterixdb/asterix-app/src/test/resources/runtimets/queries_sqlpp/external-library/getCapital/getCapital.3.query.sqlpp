@@ -18,4 +18,4 @@
  */
 use externallibtest;
 
-SELECT VALUE testlib#getCapital(country) FROM ["England","Italy","China","United States","India","Jupiter"] as country
+SELECT VALUE getCapital(country) FROM ["England","Italy","China","United States","India","Jupiter"] as country

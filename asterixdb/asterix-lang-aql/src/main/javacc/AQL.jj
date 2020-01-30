@@ -713,14 +713,14 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
 {
   FunctionSignature signature;
   boolean ifNotExists = false;
-  List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
+  List<VarIdentifier> paramList;
   String functionBody;
   VarIdentifier var = null;
   Expression functionBodyExpr;
   Token beginPos;
   Token endPos;
   FunctionName fctName = null;
-
+  List<Pair<VarIdentifier,IndexedTypeExpression>> bodge = new ArrayList<Pair<VarIdentifier,IndexedTypeExpression>>();
   createNewScope();
 }
 {
@@ -739,7 +739,10 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
       signature = new FunctionSignature(fctName.dataverse, fctName.function, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
       removeCurrentScope();
-      return new CreateFunctionStatement(signature, paramList, functionBody, functionBodyExpr, ifNotExists);
+      for(VarIdentifier v: paramList){
+          bodge.add(new Pair<VarIdentifier,IndexedTypeExpression>(v,null));
+      }
+      return new CreateFunctionStatement(signature, bodge, null, functionBody, functionBodyExpr, ifNotExists);
     }
 }
 
@@ -1616,15 +1619,20 @@ FunctionDecl FunctionDeclaration() throws ParseException:
   FunctionDecl funcDecl;
   FunctionSignature signature;
   String functionName;
+  List<VarIdentifier> paramList_typ = new ArrayList<VarIdentifier>();
   List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
   Expression funcBody;
   createNewScope();
 }
 {
   <DECLARE> <FUNCTION> functionName = Identifier()
-  paramList = ParameterList()
+
+  paramList_typ = ParameterList()
   <LEFTBRACE> funcBody = Expression() <RIGHTBRACE>
     {
+      for(VarIdentifier v: paramList_typ){
+            paramList.add(v);
+      }
       signature = new FunctionSignature(defaultDataverse, functionName, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
       funcDecl = new FunctionDecl(signature, paramList, funcBody);

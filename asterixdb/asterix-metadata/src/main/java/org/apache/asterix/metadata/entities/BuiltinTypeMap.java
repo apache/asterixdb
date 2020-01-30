@@ -98,7 +98,9 @@ public class BuiltinTypeMap {
         IAType type = _builtinTypeMap.get(typeName);
         if (type == null) {
             Datatype dt = metadataNode.getDatatype(txnId, dataverseName, typeName);
-            type = dt.getDatatype();
+            if (dt != null) {
+                type = dt.getDatatype();
+            }
         }
         if (optional) {
             type = AUnionType.createUnknownableType(type);

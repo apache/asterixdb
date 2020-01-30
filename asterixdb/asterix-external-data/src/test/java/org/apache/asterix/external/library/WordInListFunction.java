@@ -22,7 +22,7 @@ package org.apache.asterix.external.library;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionHelper;
@@ -33,7 +33,7 @@ public class WordInListFunction implements IExternalScalarFunction {
 
     private ArrayList<String> keywordsList;
     private String dictPath;
-    private List<String> functionParameters;
+    private Map<String, String> functionParameters;
 
     @Override
     public void evaluate(IFunctionHelper functionHelper) throws Exception {
@@ -49,7 +49,7 @@ public class WordInListFunction implements IExternalScalarFunction {
     public void initialize(IFunctionHelper functionHelper) throws Exception {
         keywordsList = new ArrayList<>();
         functionParameters = functionHelper.getParameters();
-        dictPath = functionParameters.get(0);
+        dictPath = functionParameters.get("dictPath");
         Files.lines(Paths.get(dictPath)).forEach(keyword -> keywordsList.add(keyword));
     }
 

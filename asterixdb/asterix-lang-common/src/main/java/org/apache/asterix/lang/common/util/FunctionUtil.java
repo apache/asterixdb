@@ -186,11 +186,13 @@ public class FunctionUtil {
     }
 
     public static List<List<Triple<DataverseName, String, String>>> getFunctionDependencies(IQueryRewriter rewriter,
-            Expression expression, MetadataProvider metadataProvider) throws CompilationException {
+            Expression expression, MetadataProvider metadataProvider, List<Pair<DataverseName, String>> argTypes)
+            throws CompilationException {
         Set<CallExpr> functionCalls = rewriter.getFunctionCalls(expression);
         //Get the List of used functions and used datasets
         List<Triple<DataverseName, String, String>> datasourceDependencies = new ArrayList<>();
         List<Triple<DataverseName, String, String>> functionDependencies = new ArrayList<>();
+        List<Triple<DataverseName, String, String>> typeDependencies = new ArrayList<>();
         for (CallExpr functionCall : functionCalls) {
             FunctionSignature signature = functionCall.getFunctionSignature();
             if (isBuiltinDatasetFunction(signature)) {
@@ -203,9 +205,28 @@ public class FunctionUtil {
                         Integer.toString(signature.getArity())));
             }
         }
-        List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>(2);
+        for (Pair<DataverseName, String> t : argTypes) {
+            typeDependencies.add(new Triple<>(t.getFirst(), t.getSecond(), null));
+        }
+        List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>(3);
         dependencies.add(datasourceDependencies);
         dependencies.add(functionDependencies);
+        dependencies.add(typeDependencies);
+        return dependencies;
+    }
+
+    public static List<List<Triple<DataverseName, String, String>>> getExternalFunctionDependencies(
+            List<Pair<DataverseName, String>> argTypes) {
+        List<Triple<DataverseName, String, String>> datasourceDependencies = new ArrayList<>();
+        List<Triple<DataverseName, String, String>> functionDependencies = new ArrayList<>();
+        List<Triple<DataverseName, String, String>> typeDependencies = new ArrayList<>();
+        for (Pair<DataverseName, String> t : argTypes) {
+            typeDependencies.add(new Triple<>(t.getFirst(), t.getSecond(), null));
+        }
+        List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>(3);
+        dependencies.add(datasourceDependencies);
+        dependencies.add(functionDependencies);
+        dependencies.add(typeDependencies);
         return dependencies;
     }
 

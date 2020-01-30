@@ -18,4 +18,4 @@
  */
 use externallibtest;
 
-testlib#mysum(3,4);
+mysum(3, 4);

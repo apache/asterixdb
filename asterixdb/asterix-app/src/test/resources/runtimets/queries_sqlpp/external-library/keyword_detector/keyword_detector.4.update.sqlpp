@@ -20,9 +20,10 @@
 use test;
 
 insert into Res1(
-select value testlib#fnameDetector(t) from EmpDataset t);
+select value fnameDetector(t) from EmpDataset t);
 
 insert into Res2(
-select value testlib#lnameDetector(t2) from EmpDataset t2);
+select value lnameDetector(t) from EmpDataset t);
+
 
 

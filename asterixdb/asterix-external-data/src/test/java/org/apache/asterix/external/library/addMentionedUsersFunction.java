@@ -34,7 +34,7 @@ public class addMentionedUsersFunction implements IExternalScalarFunction {
     @Override
     public void initialize(IFunctionHelper functionHelper) {
         list = new JUnorderedList(JBuiltinType.JSTRING);
-        textFieldName = functionHelper.getParameters().get(0);
+        textFieldName = functionHelper.getParameters().get("textFieldName");
     }
 
     @Override

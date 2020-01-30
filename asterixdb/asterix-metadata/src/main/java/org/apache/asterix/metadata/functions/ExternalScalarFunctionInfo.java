@@ -19,6 +19,7 @@
 package org.apache.asterix.metadata.functions;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.om.functions.ExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
@@ -30,13 +31,15 @@ public class ExternalScalarFunctionInfo extends ExternalFunctionInfo {
 
     private static final long serialVersionUID = 1L;
 
-    public ExternalScalarFunctionInfo(String namespace, String name, int arity, IAType returnType, String body,
-            String language, List<IAType> argumentTypes, IResultTypeComputer rtc) {
-        this(new FunctionIdentifier(namespace, name, arity), returnType, body, language, argumentTypes, rtc);
+    public ExternalScalarFunctionInfo(String namespace, String library, String name, int arity, IAType returnType,
+            String body, String language, List<IAType> argumentTypes, Map<String, String> params,
+            IResultTypeComputer rtc) {
+        super(namespace, name, arity, FunctionKind.SCALAR, argumentTypes, returnType, rtc, body, language, library,
+                params);
     }
 
     public ExternalScalarFunctionInfo(FunctionIdentifier fid, IAType returnType, String body, String language,
-            List<IAType> argumentTypes, IResultTypeComputer rtc) {
-        super(fid, FunctionKind.SCALAR, argumentTypes, returnType, rtc, body, language);
+            String library, List<IAType> argumentTypes, Map<String, String> params, IResultTypeComputer rtc) {
+        super(fid, FunctionKind.SCALAR, argumentTypes, returnType, rtc, body, language, library, params);
     }
 }

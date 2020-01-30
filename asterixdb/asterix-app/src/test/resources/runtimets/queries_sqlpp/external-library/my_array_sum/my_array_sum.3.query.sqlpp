@@ -18,4 +18,4 @@
  */
 use externallibtest;
 
-testlib#my_array_sum([8.9, 9.7, 1]);
+my_array_sum([8.9, 9.7, 1]);

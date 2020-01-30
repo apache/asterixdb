@@ -23,6 +23,6 @@
  */
 use udfs;
 
-connect feed TweetFeed to dataset ProcessedTweets apply function testlib#addMentionedUsers;
+connect feed TweetFeed to dataset ProcessedTweets apply function addMentionedUsers;
 
 start feed TweetFeed;

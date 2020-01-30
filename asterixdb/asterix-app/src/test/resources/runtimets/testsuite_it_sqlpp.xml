@@ -31,7 +31,7 @@
     <test-case FilePath="external-library">
       <compilation-unit name="mysum">
         <output-dir compare="Text">mysum</output-dir>
-        <expected-error>Type mismatch: function testlib#mysum expects its 1st input parameter to be of type integer</expected-error>
+        <expected-error>ASX1002: Type mismatch: function mysum expects its 1st input parameter to be of type integer, but the actual input type is string (in line 21, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
@@ -40,12 +40,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
-      <compilation-unit name="validate-default-library">
-        <output-dir compare="Text">validate-default-library</output-dir>
+      <compilation-unit name="getCapital">
+        <output-dir compare="Text">getCapital</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
-      <compilation-unit name="getCapital">
+      <compilation-unit name="getCapital_open">
         <output-dir compare="Text">getCapital</output-dir>
       </compilation-unit>
     </test-case>

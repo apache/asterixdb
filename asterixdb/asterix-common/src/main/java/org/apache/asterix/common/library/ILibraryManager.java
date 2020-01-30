@@ -31,6 +31,7 @@ public interface ILibraryManager {
     /**
      * Registers the library class loader with the external library manager.
      * <code>dataverseName</code> and <code>libraryName</code> uniquely identifies a class loader.
+     *
      * @param dataverseName
      * @param libraryName
      * @param classLoader
@@ -41,11 +42,12 @@ public interface ILibraryManager {
     /**
      * @return all registered libraries.
      */
-    List<Pair<String, String>> getAllLibraries();
+    List<Pair<DataverseName, String>> getAllLibraries();
 
     /**
      * De-registers a library class loader.
-     *  @param dataverseName
+     *
+     * @param dataverseName
      * @param libraryName
      */
     void deregisterLibraryClassLoader(DataverseName dataverseName, String libraryName);
@@ -58,21 +60,4 @@ public interface ILibraryManager {
      * @return the library class loader associated with the dataverse and library.
      */
     ClassLoader getLibraryClassLoader(DataverseName dataverseName, String libraryName);
-
-    /**
-     * Add function parameters  to library manager if it exists.
-     * @param dataverseName
-     * @param fullFunctionName
-     * @param parameters
-     */
-
-    void addFunctionParameters(DataverseName dataverseName, String fullFunctionName, List<String> parameters);
-
-    /**
-     * Get a list of parameters.
-     * @param dataverseName
-     * @param fullFunctionName
-     * @return A list contains all pre-specified function parameters.
-     */
-    List<String> getFunctionParameters(DataverseName dataverseName, String fullFunctionName);
 }

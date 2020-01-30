@@ -25,6 +25,7 @@ import org.apache.asterix.external.api.IExternalFunction;
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -35,11 +36,11 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class ExternalFunctionProvider {
 
     public static IExternalFunction getExternalFunctionEvaluator(IExternalFunctionInfo finfo,
-            IScalarEvaluatorFactory[] args, IEvaluatorContext context, IApplicationContext appCtx)
+            IScalarEvaluatorFactory[] args, IAType[] argTypes, IEvaluatorContext context, IApplicationContext appCtx)
             throws HyracksDataException {
         switch (finfo.getKind()) {
             case SCALAR:
-                return new ExternalScalarFunction(finfo, args, context, appCtx);
+                return new ExternalScalarFunction(finfo, args, argTypes, context, appCtx);
             case AGGREGATE:
             case UNNEST:
                 throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND, finfo.getKind());
@@ -51,9 +52,9 @@ public class ExternalFunctionProvider {
 
 class ExternalScalarFunction extends ExternalFunction implements IExternalScalarFunction, IScalarEvaluator {
 
-    public ExternalScalarFunction(IExternalFunctionInfo finfo, IScalarEvaluatorFactory[] args,
+    public ExternalScalarFunction(IExternalFunctionInfo finfo, IScalarEvaluatorFactory[] args, IAType[] argTypes,
             IEvaluatorContext context, IApplicationContext appCtx) throws HyracksDataException {
-        super(finfo, args, context, appCtx);
+        super(finfo, args, argTypes, context, appCtx);
         try {
             initialize(functionHelper);
         } catch (Exception e) {

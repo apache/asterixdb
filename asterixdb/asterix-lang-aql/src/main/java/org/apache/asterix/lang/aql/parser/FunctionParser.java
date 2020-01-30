@@ -46,7 +46,7 @@ public class FunctionParser {
                     function.getLanguage());
         }
         String functionBody = function.getFunctionBody();
-        List<String> arguments = function.getArguments();
+        List<String> arguments = function.getArgNames();
         List<VarIdentifier> varIdentifiers = new ArrayList<VarIdentifier>();
 
         StringBuilder builder = new StringBuilder();

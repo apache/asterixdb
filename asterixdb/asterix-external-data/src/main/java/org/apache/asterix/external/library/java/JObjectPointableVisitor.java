@@ -83,4 +83,15 @@ public class JObjectPointableVisitor implements IVisitablePointableVisitor<IJObj
         return result;
     }
 
+    public IJObject visit(AFlatValuePointable accessor, ATypeTag typeTag, TypeInfo arg) throws HyracksDataException {
+        IJObject result = null;
+        IJObjectAccessor jObjectAccessor = flatJObjectAccessors.get(typeTag);
+        if (jObjectAccessor == null) {
+            jObjectAccessor = JObjectAccessors.createFlatJObjectAccessor(typeTag);
+            flatJObjectAccessors.put(typeTag, jObjectAccessor);
+        }
+        result = jObjectAccessor.access(accessor, arg.getObjectPool());
+        return result;
+    }
+
 }

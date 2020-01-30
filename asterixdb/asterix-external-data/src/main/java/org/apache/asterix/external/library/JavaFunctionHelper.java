@@ -20,7 +20,6 @@ package org.apache.asterix.external.library;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -37,8 +36,11 @@ import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -55,12 +57,12 @@ public class JavaFunctionHelper implements IFunctionHelper {
     private final JObjectPointableVisitor pointableVisitor;
     private final PointableAllocator pointableAllocator;
     private final Map<Integer, TypeInfo> poolTypeInfo;
-    private final List<String> parameters;
+    private final Map<String, String> parameters;
+    private final IAType[] argTypes;
 
     private boolean isValidResult = false;
 
-    public JavaFunctionHelper(IExternalFunctionInfo finfo, IDataOutputProvider outputProvider,
-            List<String> parameters) {
+    public JavaFunctionHelper(IExternalFunctionInfo finfo, IAType[] argTypes, IDataOutputProvider outputProvider) {
         this.finfo = finfo;
         this.outputProvider = outputProvider;
         this.pointableVisitor = new JObjectPointableVisitor();
@@ -72,7 +74,8 @@ public class JavaFunctionHelper implements IFunctionHelper {
         }
         this.resultHolder = objectPool.allocate(finfo.getReturnType());
         this.poolTypeInfo = new HashMap<>();
-        this.parameters = parameters;
+        this.parameters = finfo.getParams();
+        this.argTypes = argTypes;
 
     }
 
@@ -93,6 +96,9 @@ public class JavaFunctionHelper implements IFunctionHelper {
     }
 
     private boolean checkInvalidReturnValueType(IJObject result, IAType expectedType) {
+        if (expectedType.equals(BuiltinType.ANY)) {
+            return false;
+        }
         if (!expectedType.deepEqual(result.getIAType())) {
             return true;
         }
@@ -113,7 +119,7 @@ public class JavaFunctionHelper implements IFunctionHelper {
     public void setArgument(int index, IValueReference valueReference) throws IOException, AsterixException {
         IVisitablePointable pointable = null;
         IJObject jObject = null;
-        IAType type = finfo.getArgumentList().get(index);
+        IAType type = argTypes[index];
         switch (type.getTypeTag()) {
             case OBJECT:
                 pointable = pointableAllocator.allocateRecordValue(type);
@@ -127,8 +133,31 @@ public class JavaFunctionHelper implements IFunctionHelper {
                 jObject = pointableVisitor.visit((AListVisitablePointable) pointable, getTypeInfo(index, type));
                 break;
             case ANY:
-                throw new RuntimeDataException(ErrorCode.LIBRARY_JAVA_FUNCTION_HELPER_CANNOT_HANDLE_ARGU_TYPE,
-                        type.getTypeTag());
+                ATypeTag rtTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                        .deserialize(valueReference.getByteArray()[valueReference.getStartOffset()]);
+                IAType rtType = TypeTagUtil.getBuiltinTypeByTag(rtTypeTag);
+                switch (rtTypeTag) {
+                    case OBJECT:
+                        pointable = pointableAllocator.allocateRecordValue(rtType);
+                        pointable.set(valueReference);
+                        jObject = pointableVisitor.visit((ARecordVisitablePointable) pointable,
+                                getTypeInfo(index, rtType));
+                        break;
+                    case ARRAY:
+                    case MULTISET:
+                        pointable = pointableAllocator.allocateListValue(rtType);
+                        pointable.set(valueReference);
+                        jObject =
+                                pointableVisitor.visit((AListVisitablePointable) pointable, getTypeInfo(index, rtType));
+                        break;
+                    default:
+                        pointable = pointableAllocator.allocateFieldValue(rtType);
+                        pointable.set(valueReference);
+                        jObject = pointableVisitor.visit((AFlatValuePointable) pointable, rtTypeTag,
+                                getTypeInfo(index, rtType));
+                        break;
+                }
+                break;
             default:
                 pointable = pointableAllocator.allocateFieldValue(type);
                 pointable.set(valueReference);
@@ -151,6 +180,14 @@ public class JavaFunctionHelper implements IFunctionHelper {
     public IJObject getResultObject() {
         if (resultHolder == null) {
             resultHolder = objectPool.allocate(finfo.getReturnType());
+        }
+        return resultHolder;
+    }
+
+    @Override
+    public IJObject getResultObject(IAType type) {
+        if (resultHolder == null) {
+            resultHolder = objectPool.allocate(type);
         }
         return resultHolder;
     }
@@ -190,7 +227,7 @@ public class JavaFunctionHelper implements IFunctionHelper {
         objectPool.reset();
     }
 
-    public List<String> getParameters() {
+    public Map<String, String> getParameters() {
         return parameters;
     }
 }

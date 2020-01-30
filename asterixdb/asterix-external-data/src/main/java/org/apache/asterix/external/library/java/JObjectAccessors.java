@@ -91,6 +91,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.util.string.UTF8StringReader;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -178,7 +179,7 @@ public class JObjectAccessors {
     public static class JInt8Accessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -193,7 +194,7 @@ public class JObjectAccessors {
     public static class JInt16Accessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -207,7 +208,7 @@ public class JObjectAccessors {
     public static class JInt32Accessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -221,7 +222,7 @@ public class JObjectAccessors {
     public static class JNullAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objPool)
                 throws HyracksDataException {
             return objPool.allocate(BuiltinType.ANULL);
         }
@@ -230,7 +231,7 @@ public class JObjectAccessors {
     public static class JMissingAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objPool)
                 throws HyracksDataException {
             return objPool.allocate(BuiltinType.AMISSING);
         }
@@ -239,7 +240,7 @@ public class JObjectAccessors {
     public static class JInt64Accessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -253,7 +254,7 @@ public class JObjectAccessors {
     public static class JFloatAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -267,7 +268,7 @@ public class JObjectAccessors {
     public static class JDoubleAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -282,7 +283,7 @@ public class JObjectAccessors {
         private final UTF8StringReader reader = new UTF8StringReader();
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -303,7 +304,7 @@ public class JObjectAccessors {
     public static class JBooleanAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -317,7 +318,7 @@ public class JObjectAccessors {
     public static class JDateAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -331,7 +332,7 @@ public class JObjectAccessors {
     public static class JDateTimeAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -345,7 +346,7 @@ public class JObjectAccessors {
     public static class JDurationAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -361,7 +362,7 @@ public class JObjectAccessors {
     public static class JTimeAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -375,7 +376,7 @@ public class JObjectAccessors {
     public static class JIntervalAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -393,7 +394,7 @@ public class JObjectAccessors {
     public static class JCircleAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -411,7 +412,7 @@ public class JObjectAccessors {
     public static class JPointAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -427,7 +428,7 @@ public class JObjectAccessors {
     public static class JPoint3DAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -443,7 +444,7 @@ public class JObjectAccessors {
     public static class JLineAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -459,7 +460,7 @@ public class JObjectAccessors {
     public static class JPolygonAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -475,7 +476,7 @@ public class JObjectAccessors {
     public static class JRectangleAccessor implements IJObjectAccessor {
 
         @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
+        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -515,15 +516,15 @@ public class JObjectAccessors {
             boolean closedPart;
             try {
                 IJObject fieldObject = null;
-                for (IVisitablePointable fieldPointable : fieldPointables) {
+                for (IPointable fieldPointable : fieldPointables) {
                     closedPart = index < recordType.getFieldTypes().length;
-                    IVisitablePointable tt = fieldTypeTags.get(index);
+                    IPointable tt = fieldTypeTags.get(index);
                     ATypeTag typeTag =
                             EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(tt.getByteArray()[tt.getStartOffset()]);
                     IAType fieldType;
                     fieldType =
                             closedPart ? recordType.getFieldTypes()[index] : TypeTagUtil.getBuiltinTypeByTag(typeTag);
-                    IVisitablePointable fieldName = fieldNames.get(index);
+                    IPointable fieldName = fieldNames.get(index);
                     typeInfo.reset(fieldType, typeTag);
                     switch (typeTag) {
                         case OBJECT:

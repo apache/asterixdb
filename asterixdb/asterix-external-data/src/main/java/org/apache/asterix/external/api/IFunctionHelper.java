@@ -18,9 +18,10 @@
  */
 package org.apache.asterix.external.api;
 
-import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.external.library.java.JTypeTag;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IFunctionHelper {
@@ -33,9 +34,11 @@ public interface IFunctionHelper {
 
     boolean isValidResult();
 
+    IJObject getResultObject(IAType type);
+
     IJObject getObject(JTypeTag jtypeTag) throws HyracksDataException;
 
     void reset();
 
-    List<String> getParameters();
+    Map<String, String> getParameters();
 }

@@ -122,6 +122,7 @@ import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
 import org.apache.asterix.lang.common.statement.StopFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedStatement;
@@ -183,6 +184,7 @@ import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.ExpressionToVariableUtil;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
+import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.commons.lang3.ArrayUtils;
@@ -220,6 +222,13 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String ROWS = "ROWS";
     private static final String TIES = "TIES";
     private static final String UNBOUNDED = "UNBOUNDED";
+    private static final String ACTION = "ACTION";
+    private static final String LANGUAGE = "LANGUAGE";
+    private static final String CALL = "CALL";
+    private static final String DETERMINISTIC = "DETERMINISTIC";
+    private static final String RETURNS = "RETURNS";
+    private static final String INLINE = "INLINE";
+
 
     private static final String INT_TYPE_NAME = "int";
 
@@ -586,6 +595,7 @@ Statement CreateStatement() throws ParseException:
     | stmt = CreateIndexStatement(startToken)
     | stmt = CreateDataverseStatement(startToken)
     | stmt = CreateFunctionStatement(startToken)
+    | stmt = CreateAdapterStatement(startToken)
     | stmt = CreateSynonymStatement(startToken)
     | stmt = CreateFeedStatement(startToken)
     | stmt = CreateFeedPolicyStatement(startToken)
@@ -970,20 +980,89 @@ CreateFunctionStatement CreateFunctionStatement(Token startStmtToken) throws Par
   }
 }
 
+
+CreateAdapterStatement CreateAdapterStatement(Token startStmtToken) throws ParseException:
+{
+  CreateAdapterStatement stmt = null;
+}
+{
+  <ADAPTER> stmt = AdapterSpecification(startStmtToken)
+  {
+    return stmt;
+  }
+}
+
+CreateAdapterStatement AdapterSpecification(Token startStmtToken) throws ParseException:
+{
+  AdapterIdentifier signature = null;
+  Token beginPos;
+  Token endPos;
+  Pair<DataverseName,Identifier> adaptName = null;
+  DataverseName currentDataverse = defaultDataverse;
+  String lang = null;
+  String libName ="";
+  String externalIdent = "";
+  ListConstructor resources = null;
+  boolean ifNotExists = false;
+}
+{
+  adaptName = QualifiedName()
+  <IDENTIFIER> {expectToken(LANGUAGE);} lang = Identifier() <AS> libName = ConstantString() <COMMA>  externalIdent = ConstantString() ifNotExists = IfNotExists()
+    {
+      signature = new AdapterIdentifier(adaptName.getFirst(),adaptName.getSecond().getValue());
+      CreateAdapterStatement stmt =
+        new CreateAdapterStatement(signature, lang, libName, externalIdent,  ifNotExists);
+      return addSourceLocation(stmt, startStmtToken);
+    }
+
+}
+
+
+List<Pair<VarIdentifier,IndexedTypeExpression>> FunctionParameters() :
+{
+    List<Pair<VarIdentifier,IndexedTypeExpression>> paramList = new ArrayList<Pair<VarIdentifier,IndexedTypeExpression>>();
+    Pair<VarIdentifier,IndexedTypeExpression> varPair = new Pair<VarIdentifier,IndexedTypeExpression>(null,null);
+    VarIdentifier var = null;
+    IndexedTypeExpression type = null;
+    boolean typed = false;
+}
+{
+    <LEFTPAREN>( (<IDENTIFIER>
+    {
+        var = SqlppVariableUtil.toInternalVariableIdentifier(token.image);
+        varPair.setFirst(new VarIdentifier(var.toString()));
+        paramList.add(varPair);
+    } (LOOKAHEAD(3)(<COLON>)? type = IndexedTypeExpr() {varPair.setSecond(type);} )? (<COMMA> <IDENTIFIER>{
+        var = SqlppVariableUtil.toInternalVariableIdentifier(token.image);
+        varPair = new Pair<VarIdentifier,IndexedTypeExpression>(null,null);
+        varPair.setFirst(new VarIdentifier(var.toString()));
+        paramList.add(varPair);
+    } (LOOKAHEAD(3)(<COLON>)? type = IndexedTypeExpr() {varPair.setSecond(type);})?)*)? ) <RIGHTPAREN>
+
+    {
+        return paramList;
+    }
+}
+
 CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws ParseException:
 {
-  FunctionSignature signature;
+  FunctionSignature signature = null;
   boolean ifNotExists = false;
-  List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
-  String functionBody;
+  String functionBody = null;
   VarIdentifier var = null;
-  Expression functionBodyExpr;
+  Expression functionBodyExpr = null;
   Token beginPos;
   Token endPos;
   FunctionName fctName = null;
   DataverseName currentDataverse = defaultDataverse;
-
-  createNewScope();
+  IndexedTypeExpression returnType = null;
+  boolean deterministic = false;
+  boolean nullCall = false;
+  String lang = null;
+  String libName ="";
+  String externalIdent = "";
+  List<Pair<VarIdentifier,IndexedTypeExpression>> args = new ArrayList<Pair<VarIdentifier,IndexedTypeExpression>>();
+  RecordConstructor resources = null;
 }
 {
   fctName = FunctionName()
@@ -991,24 +1070,71 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
      defaultDataverse = fctName.dataverse;
   }
   ifNotExists = IfNotExists()
-  paramList = ParameterList()
-  <LEFTBRACE>
-  {
-     beginPos = token;
-  }
-  (functionBodyExpr = SelectExpression(true) | functionBodyExpr = Expression())
-  <RIGHTBRACE>
-  {
-    endPos = token;
-    functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
-    // TODO use fctName.library
-    signature = new FunctionSignature(fctName.dataverse, fctName.function, paramList.size());
-    getCurrentScope().addFunctionDescriptor(signature, false);
-    removeCurrentScope();
-    defaultDataverse = currentDataverse;
-    CreateFunctionStatement stmt = new CreateFunctionStatement(signature, paramList, functionBody, functionBodyExpr, ifNotExists);
-    return addSourceLocation(stmt, startStmtToken);
-  }
+  args = FunctionParameters()
+  ( LOOKAHEAD({laIdentifier(RETURNS)}) <IDENTIFIER> returnType = IndexedTypeExpr() )?
+  (
+    (
+      <LEFTBRACE>
+      {
+          createNewScope();
+          beginPos = token;
+      }
+      (functionBodyExpr = SelectExpression(true) | functionBodyExpr = Expression())
+      <RIGHTBRACE>{
+          endPos = token;
+          functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
+          signature = new FunctionSignature(fctName.dataverse, fctName.function, args.size());
+          getCurrentScope().addFunctionDescriptor(signature, false);
+          removeCurrentScope();
+          defaultDataverse = currentDataverse;
+          CreateFunctionStatement stmt = new CreateFunctionStatement(signature, args, returnType, functionBody, functionBodyExpr, ifNotExists);
+          return addSourceLocation(stmt, startStmtToken);
+        }
+    )
+  |
+     <IDENTIFIER> {expectToken(LANGUAGE);}
+     (
+        LOOKAHEAD({laIdentifier(INLINE)})
+        (
+              <IDENTIFIER> <AS> {
+                  createNewScope();
+                  beginPos = token;
+              }
+              (functionBodyExpr = SelectExpression(true) | functionBodyExpr = Expression())
+              {
+                  endPos = token;
+                  functionBody = extractFragment(beginPos.endLine, beginPos.beginColumn+1, endPos.endLine, endPos.endColumn+1);
+                  signature = new FunctionSignature(fctName.dataverse, fctName.function, args.size());
+                  getCurrentScope().addFunctionDescriptor(signature, false);
+                  removeCurrentScope();
+                  defaultDataverse = currentDataverse;
+                  CreateFunctionStatement stmt = new CreateFunctionStatement(signature, args, returnType, functionBody, functionBodyExpr, ifNotExists);
+                  return addSourceLocation(stmt, startStmtToken);
+              }
+        )
+        |
+        (
+              lang = Identifier()
+              ( (<NOT> <IDENTIFIER> {expectToken(DETERMINISTIC); deterministic = false;}) | (<IDENTIFIER> {expectToken(DETERMINISTIC); deterministic = true;}) )?
+              (<NULL> <IDENTIFIER> { expectToken(CALL); nullCall = true;})?
+              <AS> libName = ConstantString() <COMMA>  externalIdent = ConstantString()
+              (<WITH> resources = RecordConstructor())?
+              {
+                  signature = new FunctionSignature(fctName.dataverse, fctName.function, args.size());
+                  defaultDataverse = currentDataverse;
+                  CreateFunctionStatement stmt = null;
+                  try{
+                      stmt =
+                      new CreateFunctionStatement(signature, args, returnType, deterministic, nullCall,
+                                                   lang, libName, externalIdent, resources,  ifNotExists);
+                  } catch (AlgebricksException e) {
+                      throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
+                  }
+                  return addSourceLocation(stmt, startStmtToken);
+              }
+        )
+     )
+  )
 }
 
 CreateFeedStatement CreateFeedStatement(Token startStmtToken) throws ParseException:
@@ -1083,27 +1209,6 @@ CreateFeedPolicyStatement FeedPolicySpecification(Token startStmtToken) throws P
   }
 }
 
-List<VarIdentifier> ParameterList() throws ParseException:
-{
-  List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
-  VarIdentifier var = null;
-}
-{
-  <LEFTPAREN> (<IDENTIFIER>
-    {
-      var = SqlppVariableUtil.toInternalVariableIdentifier(token.image);
-      paramList.add(var);
-    }
-  (<COMMA> <IDENTIFIER>
-    {
-      var = SqlppVariableUtil.toInternalVariableIdentifier(token.image);
-      paramList.add(var);
-    }
-  )*)? <RIGHTPAREN>
-    {
-      return paramList;
-    }
-}
 
 CreateSynonymStatement CreateSynonymStatement(Token startStmtToken) throws ParseException:
 {
@@ -2234,21 +2339,25 @@ FunctionDecl FunctionDeclaration() throws ParseException:
 {
   Token startToken = null;
   String functionName;
-  List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
+  List<Pair<VarIdentifier,IndexedTypeExpression>> paramList = new ArrayList<Pair<VarIdentifier,IndexedTypeExpression>>();
+  List<VarIdentifier> paramVarOnly = new ArrayList<VarIdentifier>();
   Expression funcBody;
   createNewScope();
 }
 {
   <DECLARE> { startToken = token; } <FUNCTION>
     functionName = Identifier()
-    paramList = ParameterList()
+    paramList = FunctionParameters()
   <LEFTBRACE>
     (funcBody = SelectExpression(true) | funcBody = Expression())
   <RIGHTBRACE>
   {
     FunctionSignature signature = new FunctionSignature(defaultDataverse, functionName, paramList.size());
     getCurrentScope().addFunctionDescriptor(signature, false);
-    FunctionDecl stmt = new FunctionDecl(signature, paramList, funcBody);
+    for(Pair<VarIdentifier,IndexedTypeExpression> p: paramList){
+        paramVarOnly.add(p.getFirst());
+    }
+    FunctionDecl stmt = new FunctionDecl(signature, paramVarOnly, funcBody);
     removeCurrentScope();
     return addSourceLocation(stmt, startToken);
   }
@@ -4058,7 +4167,8 @@ TOKEN_MGR_DECLS:
 <DEFAULT,IN_DBL_BRACE>
 TOKEN [IGNORE_CASE]:
 {
-  <ALL : "all">
+  <ADAPTER: "adapter">
+  | <ALL : "all">
   | <AND : "and">
   | <ANY : "any">
   | <APPLY : "apply">

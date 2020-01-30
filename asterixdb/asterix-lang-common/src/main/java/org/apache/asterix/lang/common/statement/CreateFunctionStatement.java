@@ -18,16 +18,23 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.common.util.ConfigurationUtil;
+import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.asterix.object.base.AdmObjectNode;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class CreateFunctionStatement extends AbstractStatement {
 
@@ -35,22 +42,48 @@ public class CreateFunctionStatement extends AbstractStatement {
     private final String functionBody;
     private final Expression functionBodyExpression;
     private final boolean ifNotExists;
-    private final List<String> paramList;
+
+    IndexedTypeExpression returnType;
+    boolean deterministic;
+    boolean nullCall;
+    String lang;
+    String libName;
+    String externalIdent;
+    List<Pair<VarIdentifier, IndexedTypeExpression>> args;
+    AdmObjectNode resources;
 
     public String getFunctionBody() {
         return functionBody;
     }
 
-    public CreateFunctionStatement(FunctionSignature signature, List<VarIdentifier> parameterList, String functionBody,
-            Expression functionBodyExpression, boolean ifNotExists) {
+    public CreateFunctionStatement(FunctionSignature signature,
+            List<Pair<VarIdentifier, IndexedTypeExpression>> parameterList, IndexedTypeExpression returnType,
+            String functionBody, Expression functionBodyExpression, boolean ifNotExists) {
         this.signature = signature;
         this.functionBody = functionBody;
         this.functionBodyExpression = functionBodyExpression;
         this.ifNotExists = ifNotExists;
-        this.paramList = new ArrayList<String>();
-        for (VarIdentifier varId : parameterList) {
-            this.paramList.add(varId.getValue());
-        }
+        this.args = parameterList;
+        this.returnType = returnType;
+    }
+
+    public CreateFunctionStatement(FunctionSignature signature,
+            List<Pair<VarIdentifier, IndexedTypeExpression>> parameterList, IndexedTypeExpression returnType,
+            boolean deterministic, boolean nullCall, String lang, String libName, String externalIdent,
+            RecordConstructor resources, boolean ifNotExists) throws CompilationException {
+        this.signature = signature;
+        this.args = parameterList;
+        this.returnType = returnType;
+        this.deterministic = deterministic;
+        this.nullCall = nullCall;
+        this.lang = lang;
+        this.libName = libName;
+        this.externalIdent = externalIdent;
+        this.resources = resources == null ? null : ExpressionUtils.toNode(resources);
+        functionBody = null;
+        this.ifNotExists = ifNotExists;
+        this.functionBodyExpression = null;
+
     }
 
     public boolean getIfNotExists() {
@@ -62,16 +95,52 @@ public class CreateFunctionStatement extends AbstractStatement {
         return Statement.Kind.CREATE_FUNCTION;
     }
 
-    public List<String> getParamList() {
-        return paramList;
-    }
-
     public FunctionSignature getFunctionSignature() {
         return signature;
     }
 
     public Expression getFunctionBodyExpression() {
         return functionBodyExpression;
+    }
+
+    public IndexedTypeExpression getReturnType() {
+        return returnType;
+    }
+
+    public boolean isDeterministic() {
+        return deterministic;
+    }
+
+    public boolean isNullCall() {
+        return nullCall;
+    }
+
+    public boolean isExternal() {
+        return externalIdent != null;
+    }
+
+    public boolean isUnknownable() {
+        return returnType == null || returnType.isUnknownable();
+    }
+
+    public String getLang() {
+        return lang;
+    }
+
+    public String getLibName() {
+        return libName;
+    }
+
+    public String getExternalIdent() {
+        return externalIdent;
+    }
+
+    public List<Pair<VarIdentifier, IndexedTypeExpression>> getArgs() {
+        return args;
+    }
+
+    public Map<String, String> getResources() throws CompilationException {
+        return resources != null ? ConfigurationUtil.toProperties(resources) : Collections.EMPTY_MAP;
     }
 
     @Override

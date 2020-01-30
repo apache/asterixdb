@@ -30,11 +30,20 @@ public class DatasourceAdapter implements IMetadataEntity<DatasourceAdapter> {
     private final AdapterIdentifier adapterIdentifier;
     private final String classname;
     private final AdapterType type;
+    private final String library;
 
     public DatasourceAdapter(AdapterIdentifier adapterIdentifier, String classname, AdapterType type) {
         this.adapterIdentifier = adapterIdentifier;
         this.classname = classname;
         this.type = type;
+        this.library = null;
+    }
+
+    public DatasourceAdapter(AdapterIdentifier adapterIdentifier, String classname, AdapterType type, String library) {
+        this.adapterIdentifier = adapterIdentifier;
+        this.classname = classname;
+        this.type = type;
+        this.library = library;
     }
 
     @Override
@@ -57,6 +66,10 @@ public class DatasourceAdapter implements IMetadataEntity<DatasourceAdapter> {
 
     public AdapterType getType() {
         return type;
+    }
+
+    public String getLibrary() {
+        return library;
     }
 
 }

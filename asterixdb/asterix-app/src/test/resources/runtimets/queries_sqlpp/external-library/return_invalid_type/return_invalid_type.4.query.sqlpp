@@ -19,5 +19,5 @@
 
 use externallibtest;
 
-SELECT testlib#addHashTagsInPlace(t) FROM SyntheticTweets t;
+SELECT addHashTagsInPlace(t) FROM SyntheticTweets t;
 

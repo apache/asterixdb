@@ -34,6 +34,8 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
         EXTENSION,
         FEED_POLICY,
         FUNCTION,
+        LIBRARY,
+        ADAPTER,
         MERGE_POLICY,
         NODE_GROUP,
         SYNONYM
@@ -104,6 +106,14 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
 
     static MetadataLockKey createFunctionLockKey(DataverseName dataverseName, String functionName) {
         return new MetadataLockKey(EntityKind.FUNCTION, null, dataverseName, functionName);
+    }
+
+    static MetadataLockKey createLibraryLockKey(DataverseName dataverseName, String libraryName) {
+        return new MetadataLockKey(EntityKind.LIBRARY, null, dataverseName, libraryName);
+    }
+
+    static MetadataLockKey createAdapterLockKey(DataverseName dataverseName, String adapterName) {
+        return new MetadataLockKey(EntityKind.ADAPTER, null, dataverseName, adapterName);
     }
 
     static MetadataLockKey createActiveEntityLockKey(DataverseName dataverseName, String entityName) {

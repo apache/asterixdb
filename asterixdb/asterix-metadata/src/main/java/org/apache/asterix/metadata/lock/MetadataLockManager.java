@@ -110,6 +110,38 @@ public class MetadataLockManager implements IMetadataLockManager {
     }
 
     @Override
+    public void acquireLibraryReadLock(LockList locks, DataverseName dataverseName, String libraryName)
+            throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createLibraryLockKey(dataverseName, libraryName);
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
+        locks.add(IMetadataLock.Mode.READ, lock);
+    }
+
+    @Override
+    public void acquireLibraryWriteLock(LockList locks, DataverseName dataverseName, String libraryName)
+            throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createLibraryLockKey(dataverseName, libraryName);
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
+        locks.add(IMetadataLock.Mode.WRITE, lock);
+    }
+
+    @Override
+    public void acquireAdapterReadLock(LockList locks, DataverseName dataverseName, String adapterName)
+            throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createAdapterLockKey(dataverseName, adapterName);
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
+        locks.add(IMetadataLock.Mode.READ, lock);
+    }
+
+    @Override
+    public void acquireAdapterWriteLock(LockList locks, DataverseName dataverseName, String adapterName)
+            throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createAdapterLockKey(dataverseName, adapterName);
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
+        locks.add(IMetadataLock.Mode.WRITE, lock);
+    }
+
+    @Override
     public void acquireNodeGroupReadLock(LockList locks, String nodeGroupName) throws AlgebricksException {
         MetadataLockKey key = MetadataLockKey.createNodeGroupLockKey(nodeGroupName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);

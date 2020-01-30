@@ -21,6 +21,7 @@ package org.apache.asterix.external.library;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -50,6 +51,7 @@ class ExternalScalarFunctionDescriptor extends AbstractScalarFunctionDynamicDesc
     private final IFunctionInfo finfo;
     private IScalarEvaluatorFactory evaluatorFactory;
     private final transient IApplicationContext appCtx;
+    private IAType[] argTypes;
 
     public ExternalScalarFunctionDescriptor(IFunctionInfo finfo, IApplicationContext appCtx) {
         this.finfo = finfo;
@@ -57,8 +59,17 @@ class ExternalScalarFunctionDescriptor extends AbstractScalarFunctionDynamicDesc
     }
 
     @Override
+    public void setImmutableStates(Object... states) {
+        argTypes = new IAType[states.length];
+        for (int i = 0; i < states.length; i++) {
+            argTypes[i] = (IAType) states[i];
+        }
+    }
+
+    @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) throws AlgebricksException {
-        evaluatorFactory = new ExternalScalarFunctionEvaluatorFactory((IExternalFunctionInfo) finfo, args, appCtx);
+        evaluatorFactory =
+                new ExternalScalarFunctionEvaluatorFactory((IExternalFunctionInfo) finfo, args, argTypes, appCtx);
         return evaluatorFactory;
     }
 

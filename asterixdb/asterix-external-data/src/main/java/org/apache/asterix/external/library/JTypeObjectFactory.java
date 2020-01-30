@@ -128,13 +128,18 @@ public class JTypeObjectFactory implements IObjectFactory<IJObject, IAType> {
                 break;
             case OBJECT:
                 IAType[] fieldTypes = ((ARecordType) type).getFieldTypes();
-                IJObject[] fieldObjects = new IJObject[fieldTypes.length];
-                int index = 0;
-                for (IAType fieldType : fieldTypes) {
-                    fieldObjects[index] = create(fieldType);
-                    index++;
+                IJObject[] fieldObjects = null;
+                if (fieldTypes != null) {
+                    fieldObjects = new IJObject[fieldTypes.length];
+                    int index = 0;
+                    for (IAType fieldType : fieldTypes) {
+                        fieldObjects[index] = create(fieldType);
+                        index++;
+                    }
+                    retValue = new JRecord((ARecordType) type, fieldObjects);
+                } else {
+                    retValue = new JRecord((ARecordType) type, new IJObject[] {});
                 }
-                retValue = new JRecord((ARecordType) type, fieldObjects);
                 break;
             case UNION:
                 AUnionType unionType = (AUnionType) type;

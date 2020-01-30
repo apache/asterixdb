@@ -22,7 +22,7 @@ package org.apache.asterix.external.library;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionHelper;
@@ -34,7 +34,7 @@ public class KeywordsDetectorFunction implements IExternalScalarFunction {
 
     private ArrayList<String> keywordsList;
     private String dictPath, fieldName;
-    private List<String> functionParameters;
+    private Map<String, String> functionParameters;
 
     @Override
     public void evaluate(IFunctionHelper functionHelper) throws Exception {
@@ -57,8 +57,8 @@ public class KeywordsDetectorFunction implements IExternalScalarFunction {
         if (functionParameters.size() < 2) {
             throw new IllegalArgumentException("Expected more parameters. Please check your UDF configuration.");
         }
-        dictPath = functionParameters.get(0);
-        fieldName = functionParameters.get(1);
+        dictPath = functionParameters.get("dictPath");
+        fieldName = functionParameters.get("fieldName");
         Files.lines(Paths.get(dictPath)).forEach(keyword -> keywordsList.add(keyword));
     }
 

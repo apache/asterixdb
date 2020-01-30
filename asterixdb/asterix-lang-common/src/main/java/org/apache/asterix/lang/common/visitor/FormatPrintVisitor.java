@@ -27,12 +27,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -63,8 +65,10 @@ import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.AdapterDropStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedStatement;
@@ -818,7 +822,8 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
         out.print(this.generateFullName(cfs.getFunctionSignature().getDataverseName(),
                 cfs.getFunctionSignature().getName()));
         out.print("(");
-        printDelimitedStrings(cfs.getParamList(), COMMA);
+        printDelimitedStrings(cfs.getArgs().stream().map(v -> v.getFirst().getValue()).collect(Collectors.toList()),
+                COMMA);
         out.println(") {");
         out.println(cfs.getFunctionBody());
         out.println("}" + SEMICOLON);
@@ -830,6 +835,24 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     public Void visit(FunctionDropStatement del, Integer step) throws CompilationException {
         out.print(skip(step) + "drop function ");
         FunctionSignature funcSignature = del.getFunctionSignature();
+        out.print(funcSignature.toString());
+        out.println(SEMICOLON);
+        return null;
+    }
+
+    @Override
+    public Void visit(CreateAdapterStatement cfs, Integer step) throws CompilationException {
+        out.print(skip(step) + CREATE + " adapter");
+        out.print(this.generateFullName(cfs.getAdapterId().getDataverseName(), cfs.getAdapterId().getName()));
+        out.println(SEMICOLON);
+        out.println();
+        return null;
+    }
+
+    @Override
+    public Void visit(AdapterDropStatement del, Integer step) throws CompilationException {
+        out.print(skip(step) + "drop adapter ");
+        AdapterIdentifier funcSignature = del.getAdapterIdentifier();
         out.print(funcSignature.toString());
         out.println(SEMICOLON);
         return null;
@@ -1055,7 +1078,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
         }
     }
 
-    public String revertStringToQuoted(String inputStr) {
+    public static String revertStringToQuoted(String inputStr) {
         int pos = 0;
         int size = inputStr.length();
         StringBuffer result = new StringBuffer();
