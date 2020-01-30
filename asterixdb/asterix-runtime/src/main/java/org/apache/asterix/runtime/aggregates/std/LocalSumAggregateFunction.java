@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -70,9 +71,8 @@ public class LocalSumAggregateFunction extends AbstractSumAggregateFunction {
 
     // Handle NULL finish
     @Override
-    protected void finishNull(IPointable result) throws IOException {
-        resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
-        result.set(resultStorage);
+    protected void finishNull(IPointable result) {
+        PointableHelper.setNull(result);
     }
 
     // Handle SYSTEM_NULL finish

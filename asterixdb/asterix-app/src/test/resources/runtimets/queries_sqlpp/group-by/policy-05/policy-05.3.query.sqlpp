@@ -17,6 +17,8 @@
  * under the License.
  */
 
+-- param max-warnings:json=1000
+
 USE gby;
 
 FROM policies p

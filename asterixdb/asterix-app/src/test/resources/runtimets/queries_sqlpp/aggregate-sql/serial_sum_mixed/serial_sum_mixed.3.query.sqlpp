@@ -22,6 +22,8 @@
  * Date         : March 5th 2018
  */
 
+-- param max-warnings:json=1000
+
 use test;
 
 select gid, array_sum((select value g.valplus from g)) as sum

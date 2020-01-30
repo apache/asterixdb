@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.aggregates.std;
 import java.io.IOException;
 
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -67,9 +68,8 @@ public class IntermediateSqlSumAggregateFunction extends AbstractSumAggregateFun
 
     // Handle NULL finish
     @Override
-    protected void finishNull(IPointable result) throws IOException {
-        resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
-        result.set(resultStorage);
+    protected void finishNull(IPointable result) {
+        PointableHelper.setNull(result);
     }
 
     // Handle SYSTEM_NULL finish
