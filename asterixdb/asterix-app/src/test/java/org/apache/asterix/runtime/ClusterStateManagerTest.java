@@ -32,6 +32,7 @@ import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.utils.NcLocalCounters;
+import org.apache.asterix.hyracks.bootstrap.CCApplication;
 import org.apache.asterix.runtime.transaction.ResourceIdManager;
 import org.apache.asterix.runtime.utils.BulkTxnIdFactory;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
@@ -211,10 +212,13 @@ public class ClusterStateManagerTest {
         final ClusterControllerService ccs = Mockito.mock(ClusterControllerService.class);
         JobIdFactory jobIdFactory = new JobIdFactory(CcId.valueOf(0));
         Mockito.when(ccs.getJobIdFactory()).thenReturn(jobIdFactory);
+        final CCApplication ccApplication = Mockito.mock(CCApplication.class);
+        Mockito.when(ccs.getApplication()).thenReturn(ccApplication);
         Mockito.when(iccServiceContext.getAppConfig()).thenReturn(applicationConfig);
         Mockito.when(iccServiceContext.getControllerService()).thenReturn(ccs);
 
         Mockito.when(ccApplicationContext.getServiceContext()).thenReturn(iccServiceContext);
+        Mockito.when(ccApplication.getGatekeeper()).thenReturn(nodeId -> true);
 
         NcLifecycleCoordinator coordinator =
                 new NcLifecycleCoordinator(ccApplicationContext.getServiceContext(), false);
