@@ -42,7 +42,7 @@ public class AqlCompilationProvider implements ILangCompilationProvider {
 
     @Override
     public IRewriterFactory getRewriterFactory() {
-        return new AQLRewriterFactory();
+        return new AQLRewriterFactory(getParserFactory());
     }
 
     @Override

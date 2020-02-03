@@ -325,6 +325,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
         //st.accept(new SQLPPPrintVisitor(), 0);
     }
 
+    @Override
     public List<Statement> parse() throws CompilationException {
         return parseImpl(new ParseFunction<List<Statement>>() {
             @Override
@@ -345,6 +346,23 @@ class SQLPPParser extends ScopeChecker implements IParser {
 
     private static Expression parseExpression(String text) throws CompilationException {
         return new SQLPPParser(text).parseExpression();
+    }
+
+    @Override
+    public Expression parseFunctionBody(FunctionSignature signature, List<VarIdentifier> paramList)
+      throws CompilationException {
+        return parseImpl(new ParseFunction<Expression>() {
+            @Override
+            public Expression parse() throws ParseException {
+                DataverseName dataverse = defaultDataverse;
+                defaultDataverse = signature.getDataverseName();
+                createNewScope();
+                Expression functionBodyExpr = SQLPPParser.this.FunctionBody();
+                removeCurrentScope();
+                defaultDataverse = dataverse;
+                return functionBodyExpr;
+            }
+        });
     }
 
     private <T> T parseImpl(ParseFunction<T> parseFunction) throws CompilationException {
@@ -1079,7 +1097,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
           createNewScope();
           beginPos = token;
       }
-      (functionBodyExpr = SelectExpression(true) | functionBodyExpr = Expression())
+      functionBodyExpr = FunctionBody()
       <RIGHTBRACE>{
           endPos = token;
           functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
@@ -1096,11 +1114,12 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
      (
         LOOKAHEAD({laIdentifier(INLINE)})
         (
-              <IDENTIFIER> <AS> {
+              <IDENTIFIER> <AS>
+              {
                   createNewScope();
                   beginPos = token;
               }
-              (functionBodyExpr = SelectExpression(true) | functionBodyExpr = Expression())
+              functionBodyExpr = FunctionBody()
               {
                   endPos = token;
                   functionBody = extractFragment(beginPos.endLine, beginPos.beginColumn+1, endPos.endLine, endPos.endColumn+1);
@@ -1135,6 +1154,17 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
         )
      )
   )
+}
+
+Expression FunctionBody() throws ParseException:
+{
+  Expression functionBodyExpr = null;
+}
+{
+  ( functionBodyExpr = SelectExpression(true) | functionBodyExpr = Expression() )
+  {
+    return functionBodyExpr;
+  }
 }
 
 CreateFeedStatement CreateFeedStatement(Token startStmtToken) throws ParseException:

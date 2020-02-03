@@ -18,15 +18,22 @@
  */
 package org.apache.asterix.lang.sqlpp.rewrites;
 
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 
 public class SqlppRewriterFactory implements IRewriterFactory {
 
+    private final IParserFactory parserFactory;
+
+    public SqlppRewriterFactory(IParserFactory parserFactory) {
+        this.parserFactory = parserFactory;
+    }
+
     @Override
     public IQueryRewriter createQueryRewriter() {
-        return new SqlppQueryRewriter();
+        return new SqlppQueryRewriter(parserFactory);
     }
 
     @Override

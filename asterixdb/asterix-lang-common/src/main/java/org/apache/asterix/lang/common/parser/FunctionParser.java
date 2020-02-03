@@ -17,59 +17,51 @@
  * under the License.
  */
 
-package org.apache.asterix.lang.aql.parser;
+package org.apache.asterix.lang.common.parser;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
-import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.metadata.entities.Function;
-import org.apache.commons.io.input.CharSequenceReader;
 
 public class FunctionParser {
 
+    private final String language;
+
     private final IParserFactory parserFactory;
 
-    public FunctionParser(IParserFactory parserFactory) {
+    public FunctionParser(String language, IParserFactory parserFactory) {
+        this.language = language;
         this.parserFactory = parserFactory;
     }
 
     public FunctionDecl getFunctionDecl(Function function) throws CompilationException {
-        if (!function.getLanguage().equals(Function.LANGUAGE_AQL)) {
-            throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, Function.LANGUAGE_AQL,
+        if (!function.getLanguage().equals(language)) {
+            throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, language,
                     function.getLanguage());
         }
-        String functionBody = function.getFunctionBody();
-        List<String> arguments = function.getArgNames();
-        List<VarIdentifier> varIdentifiers = new ArrayList<VarIdentifier>();
 
-        StringBuilder builder = new StringBuilder();
-        builder.append(" use dataverse " + function.getDataverseName() + ";");
-        builder.append(" declare function " + function.getName().split("@")[0]);
-        builder.append("(");
-        boolean first = true;
-        for (String argument : arguments) {
-            VarIdentifier varId = new VarIdentifier(argument);
-            varIdentifiers.add(varId);
-            if (first) {
-                first = false;
-            } else {
-                builder.append(",");
-            }
-            builder.append(argument);
+        FunctionSignature signature = function.getSignature();
+
+        List<String> argNames = function.getArgNames();
+        List<VarIdentifier> paramList = new ArrayList<>(argNames.size());
+        for (String argName : argNames) {
+            paramList.add(new VarIdentifier(argName));
         }
-        builder.append("){\n").append(functionBody).append("\n}");
 
-        IParser parser = parserFactory.createParser(new CharSequenceReader(builder));
-        List<Statement> statements = parser.parse();
-        FunctionDecl decl = (FunctionDecl) statements.get(1);
-        return decl;
+        String functionBody = function.getFunctionBody();
+        IParser parser = parserFactory.createParser(new StringReader(functionBody));
+        Expression functionBodyExpr = parser.parseFunctionBody(signature, paramList);
+
+        return new FunctionDecl(signature, paramList, functionBodyExpr);
     }
-
 }

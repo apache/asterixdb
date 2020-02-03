@@ -18,15 +18,22 @@
  */
 package org.apache.asterix.lang.aql.rewrites;
 
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 
 public class AQLRewriterFactory implements IRewriterFactory {
 
+    private final IParserFactory parserFactory;
+
+    public AQLRewriterFactory(IParserFactory parserFactory) {
+        this.parserFactory = parserFactory;
+    }
+
     @Override
     public IQueryRewriter createQueryRewriter() {
-        return new AqlQueryRewriter();
+        return new AqlQueryRewriter(parserFactory);
     }
 
     @Override

@@ -42,7 +42,7 @@ public class SqlppCompilationProvider implements ILangCompilationProvider {
 
     @Override
     public IRewriterFactory getRewriterFactory() {
-        return new SqlppRewriterFactory();
+        return new SqlppRewriterFactory(getParserFactory());
     }
 
     @Override

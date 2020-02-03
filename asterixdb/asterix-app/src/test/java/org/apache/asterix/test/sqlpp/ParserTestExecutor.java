@@ -69,7 +69,7 @@ import junit.extensions.PA;
 public class ParserTestExecutor extends TestExecutor {
 
     private IParserFactory sqlppParserFactory = new SqlppParserFactory();
-    private IRewriterFactory sqlppRewriterFactory = new SqlppRewriterFactory();
+    private IRewriterFactory sqlppRewriterFactory = new SqlppRewriterFactory(sqlppParserFactory);
 
     @Override
     public void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,

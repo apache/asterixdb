@@ -30,14 +30,13 @@ import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
 import org.apache.asterix.lang.aql.expression.UnionExpr;
-import org.apache.asterix.lang.aql.parser.AQLParserFactory;
-import org.apache.asterix.lang.aql.parser.FunctionParser;
 import org.apache.asterix.lang.aql.rewrites.visitor.AqlBuiltinFunctionRewriteVisitor;
 import org.apache.asterix.lang.aql.visitor.AQLInlineUdfsVisitor;
 import org.apache.asterix.lang.aql.visitor.base.IAQLVisitor;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -45,6 +44,7 @@ import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.parser.FunctionParser;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -53,15 +53,22 @@ import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Function;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 class AqlQueryRewriter implements IQueryRewriter {
 
-    private final FunctionParser functionParser = new FunctionParser(new AQLParserFactory());
+    private final IParserFactory parserFactory;
+    private final FunctionParser functionParser;
     private IReturningStatement topStatement;
     private List<FunctionDecl> declaredFunctions;
     private LangRewritingContext context;
     private MetadataProvider metadataProvider;
+
+    AqlQueryRewriter(IParserFactory parserFactory) {
+        this.parserFactory = parserFactory;
+        functionParser = new FunctionParser(Function.LANGUAGE_AQL, this.parserFactory);
+    }
 
     private void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
             MetadataProvider metadataProvider, LangRewritingContext context) {
@@ -127,8 +134,8 @@ class AqlQueryRewriter implements IQueryRewriter {
             declaredFunctions.addAll(storedFunctionDecls);
         }
         if (!declaredFunctions.isEmpty()) {
-            AQLInlineUdfsVisitor visitor =
-                    new AQLInlineUdfsVisitor(context, new AQLRewriterFactory(), declaredFunctions, metadataProvider);
+            AQLInlineUdfsVisitor visitor = new AQLInlineUdfsVisitor(context, new AQLRewriterFactory(parserFactory),
+                    declaredFunctions, metadataProvider);
             while (topStatement.accept(visitor, declaredFunctions)) {
                 // loop until no more changes
             }

@@ -310,6 +310,26 @@ class AQLParser extends ScopeChecker implements IParser {
         return new AQLParser(text).parseExpression();
     }
 
+    @Override
+    public Expression parseFunctionBody(FunctionSignature signature, List<VarIdentifier> paramList)
+      throws CompilationException {
+        return parseImpl(new ParseFunction<Expression>() {
+            @Override
+            public Expression parse() throws ParseException {
+                DataverseName dataverse = defaultDataverse;
+                defaultDataverse = signature.getDataverseName();
+                createNewScope();
+                for (VarIdentifier var : paramList) {
+                  getCurrentScope().addNewVarSymbolToScope(var);
+                }
+                Expression functionBodyExpr = AQLParser.this.FunctionBody();
+                removeCurrentScope();
+                defaultDataverse = dataverse;
+                return functionBodyExpr;
+            }
+        });
+    }
+
     private <T> T parseImpl(ParseFunction<T> parseFunction) throws CompilationException {
         try {
             return parseFunction.parse();
@@ -731,7 +751,7 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
   {
      beginPos = token;
   }
-  functionBodyExpr = Expression() <RIGHTBRACE>
+  functionBodyExpr = FunctionBody() <RIGHTBRACE>
     {
       endPos = token;
       functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
@@ -744,6 +764,17 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
       }
       return new CreateFunctionStatement(signature, bodge, null, functionBody, functionBodyExpr, ifNotExists);
     }
+}
+
+Expression FunctionBody() throws ParseException:
+{
+  Expression functionBodyExpr = null;
+}
+{
+  functionBodyExpr = Expression()
+  {
+    return functionBodyExpr;
+  }
 }
 
 CreateFeedStatement FeedSpecification() throws ParseException:

@@ -28,11 +28,13 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.parser.FunctionParser;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -56,8 +58,6 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
-import org.apache.asterix.lang.sqlpp.parser.FunctionParser;
-import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.GenerateColumnNameVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineColumnAliasVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineWithExpressionVisitor;
@@ -78,6 +78,7 @@ import org.apache.asterix.lang.sqlpp.util.SqlppAstPrintUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Function;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
@@ -89,13 +90,19 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
     public static final String INLINE_WITH_OPTION = "inline_with";
     private static final boolean INLINE_WITH_OPTION_DEFAULT = true;
-    private final FunctionParser functionRepository = new FunctionParser(new SqlppParserFactory());
+    private final IParserFactory parserFactory;
+    private final FunctionParser functionRepository;
     private IReturningStatement topExpr;
     private List<FunctionDecl> declaredFunctions;
     private LangRewritingContext context;
     private MetadataProvider metadataProvider;
     private Collection<VarIdentifier> externalVars;
     private boolean isLogEnabled;
+
+    public SqlppQueryRewriter(IParserFactory parserFactory) {
+        this.parserFactory = parserFactory;
+        functionRepository = new FunctionParser(Function.LANGUAGE_SQLPP, parserFactory);
+    }
 
     protected void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topExpr,
             MetadataProvider metadataProvider, LangRewritingContext context, Collection<VarIdentifier> externalVars)
@@ -262,7 +269,8 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         declaredFunctions.addAll(usedStoredFunctionDecls);
         if (inlineUdfs && !declaredFunctions.isEmpty()) {
             SqlppInlineUdfsVisitor visitor = new SqlppInlineUdfsVisitor(context,
-                    new SqlppFunctionBodyRewriterFactory() /* the rewriter for function bodies expressions*/,
+                    new SqlppFunctionBodyRewriterFactory(
+                            parserFactory) /* the rewriter for function bodies expressions*/,
                     declaredFunctions, metadataProvider);
             while (rewriteTopExpr(visitor, declaredFunctions)) {
                 // loop until no more changes
