@@ -20,6 +20,7 @@ package org.apache.asterix.app.replication;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,8 +52,9 @@ import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.NodeStatus;
+import org.apache.hyracks.api.control.IGatekeeper;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.logging.log4j.Level;
+import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -61,13 +63,16 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     private static final Logger LOGGER = LogManager.getLogger();
     protected IClusterStateManager clusterManager;
     protected volatile String metadataNodeId;
-    protected Set<String> pendingStartupCompletionNodes = new HashSet<>();
+    protected Set<String> pendingStartupCompletionNodes = Collections.synchronizedSet(new HashSet<>());
     protected final ICCMessageBroker messageBroker;
     private final boolean replicationEnabled;
+    private final IGatekeeper gatekeeper;
 
     public NcLifecycleCoordinator(ICCServiceContext serviceCtx, boolean replicationEnabled) {
         this.messageBroker = (ICCMessageBroker) serviceCtx.getMessageBroker();
         this.replicationEnabled = replicationEnabled;
+        this.gatekeeper =
+                ((ClusterControllerService) serviceCtx.getControllerService()).getApplication().getGatekeeper();
     }
 
     @Override
@@ -120,7 +125,14 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     }
 
     private void process(NCLifecycleTaskReportMessage msg) throws HyracksDataException {
-        pendingStartupCompletionNodes.remove(msg.getNodeId());
+        if (!pendingStartupCompletionNodes.remove(msg.getNodeId())) {
+            LOGGER.warn("Received unexpected startup completion message from node {}", msg.getNodeId());
+        }
+        if (!gatekeeper.isAuthorized(msg.getNodeId())) {
+            LOGGER.warn("Node {} lost authorization before startup completed; ignoring registration result",
+                    msg.getNodeId());
+            return;
+        }
         if (msg.isSuccess()) {
             clusterManager.updateNodeState(msg.getNodeId(), true, msg.getLocalCounters());
             if (msg.getNodeId().equals(metadataNodeId)) {
@@ -128,9 +140,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
             }
             clusterManager.refreshState();
         } else {
-            if (LOGGER.isErrorEnabled()) {
-                LOGGER.log(Level.ERROR, msg.getNodeId() + " failed to complete startup. ", msg.getException());
-            }
+            LOGGER.error("Node {} failed to complete startup", msg.getNodeId(), msg.getException());
         }
     }
 
