@@ -101,7 +101,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
     public SqlppQueryRewriter(IParserFactory parserFactory) {
         this.parserFactory = parserFactory;
-        functionRepository = new FunctionParser(Function.LANGUAGE_SQLPP, parserFactory);
+        functionRepository = new FunctionParser(Function.FunctionLanguage.SQLPP, parserFactory);
     }
 
     protected void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topExpr,

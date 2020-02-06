@@ -18,15 +18,11 @@
  */
 package org.apache.asterix.metadata.functions;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
@@ -55,13 +51,12 @@ public class ExternalFunctionCompilerUtil {
 
     private static IFunctionInfo getScalarFunctionInfo(MetadataTransactionContext txnCtx, Function function)
             throws AlgebricksException {
-        List<IAType> argumentTypes = function.getArguments().stream().map(Pair::getSecond).collect(Collectors.toList());
-        IAType returnType = function.getReturnType().getSecond();
-        IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, argumentTypes);
+        IAType returnType = function.getReturnType();
+        IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, function.getArgTypes());
 
         return new ExternalScalarFunctionInfo(function.getSignature().createFunctionIdentifier(), returnType,
-                function.getFunctionBody(), function.getLanguage(), function.getLibrary(), argumentTypes,
-                function.getParams(), typeComputer);
+                function.getFunctionBody(), function.getLanguage().getName(), function.getLibrary(),
+                function.getArgTypes(), function.getParams(), typeComputer);
     }
 
     private static IFunctionInfo getUnnestFunctionInfo(MetadataTransactionContext txnCtx, Function function) {

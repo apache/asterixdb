@@ -896,21 +896,13 @@ class LangExpressionToPlanTranslator
             if (function == null) {
                 return null;
             }
-            AbstractFunctionCallExpression f;
-            if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_JAVA)) {
-                IFunctionInfo finfo = ExternalFunctionCompilerUtil
-                        .getExternalFunctionInfo(metadataProvider.getMetadataTxnContext(), function);
-                f = new ScalarFunctionCallExpression(finfo, args);
-                f.setSourceLocation(sourceLoc);
-            } else if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)
-                    || function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_SQLPP)) {
-                IFunctionInfo finfo = FunctionUtil.getFunctionInfo(signature);
-                f = new ScalarFunctionCallExpression(finfo, args);
-                f.setSourceLocation(sourceLoc);
-            } else {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        " User defined functions written in " + function.getLanguage() + " are not supported");
-            }
+            IFunctionInfo finfo =
+                    function.getLanguage().isExternal()
+                            ? ExternalFunctionCompilerUtil
+                                    .getExternalFunctionInfo(metadataProvider.getMetadataTxnContext(), function)
+                            : FunctionUtil.getFunctionInfo(signature);
+            AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(finfo, args);
+            f.setSourceLocation(sourceLoc);
             return f;
         } catch (AlgebricksException e) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage(), e);

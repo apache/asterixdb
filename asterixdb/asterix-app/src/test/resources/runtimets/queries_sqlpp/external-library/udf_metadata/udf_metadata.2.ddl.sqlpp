@@ -1,0 +1,54 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use externallibtest;
+
+create function myfn001()
+  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+
+create function myfn002(a)
+  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+
+create function myfn003(a:string, b:[bigint], c:{{boolean}})
+  returns string
+  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+
+create function myfn004(a:CountryCapitalType, b:[CountryCapitalType])
+  returns CountryCapitalType
+  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+
+create function myfn005(a:string?, b:[bigint]?, c:CountryCapitalType?, d:[CountryCapitalType]?)
+  returns string?
+  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+
+create function myfn006(a [string])
+  returns [string]
+  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+
+create function myfn007(a {{string}}?)
+  returns {{string}}?
+  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+
+create function myfn008(a [CountryCapitalType])
+  returns [CountryCapitalType]
+  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+
+create function myfn009(a {{CountryCapitalType}}?)
+  returns {{CountryCapitalType}}?
+  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";

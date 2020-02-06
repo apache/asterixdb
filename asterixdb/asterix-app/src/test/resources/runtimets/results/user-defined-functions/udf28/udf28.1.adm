@@ -1,1 +1,1 @@
-{ "DataverseName": "test", "Name": "f1", "Arity": "0", "ReturnType": "asterix.any", "Definition": "100" }
+{ "DataverseName": "test", "Name": "f1", "Arity": "0", "ReturnType": "any", "Definition": "100" }

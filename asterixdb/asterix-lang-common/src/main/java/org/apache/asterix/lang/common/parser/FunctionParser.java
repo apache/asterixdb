@@ -35,11 +35,11 @@ import org.apache.asterix.metadata.entities.Function;
 
 public class FunctionParser {
 
-    private final String language;
+    private final Function.FunctionLanguage language;
 
     private final IParserFactory parserFactory;
 
-    public FunctionParser(String language, IParserFactory parserFactory) {
+    public FunctionParser(Function.FunctionLanguage language, IParserFactory parserFactory) {
         this.language = language;
         this.parserFactory = parserFactory;
     }

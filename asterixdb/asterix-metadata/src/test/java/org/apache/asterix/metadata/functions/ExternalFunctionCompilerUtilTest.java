@@ -24,13 +24,10 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.entities.Function;
-import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -40,17 +37,15 @@ public class ExternalFunctionCompilerUtilTest {
         // given
         MetadataTransactionContext txnCtx = new MetadataTransactionContext(new TxnId(1));
         FunctionSignature signature = new FunctionSignature(DataverseName.createSinglePartName("test"), "test", 0);
-        Function function = new Function(signature, new LinkedList<>(), new LinkedList<>(),
-                new Pair<>(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME,
-                        new AUnorderedListType(BuiltinType.ASTRING, "foo")),
-                "", "JAVA", false, false, false, "", "SCALAR", null, null);
+        Function function = new Function(signature, new LinkedList<>(), new LinkedList<>(), BuiltinType.ASTRING, "",
+                "SCALAR", Function.FunctionLanguage.JAVA, "", false, false, null, null);
 
         // when
         ExternalScalarFunctionInfo info =
                 (ExternalScalarFunctionInfo) ExternalFunctionCompilerUtil.getExternalFunctionInfo(txnCtx, function);
 
         // then
-        IAType expectedType = new AUnorderedListType(BuiltinType.ASTRING, "AUnorderedList");
+        IAType expectedType = BuiltinType.ASTRING;
         Assert.assertEquals(expectedType, info.getReturnType());
     }
 }

@@ -56,9 +56,8 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
                 TypeDecl td = (TypeDecl) stmt;
                 DataverseName typeDataverse = td.getDataverseName() == null ? defaultDataverse : td.getDataverseName();
 
-                Map<TypeSignature, IAType> typeInStmt = TypeTranslator.computeTypes(mdTxnCtx, td.getTypeDef(),
-                        td.getIdent().getValue(), typeDataverse, types);
-                types.putAll(typeInStmt);
+                TypeTranslator.computeTypes(typeDataverse, td.getIdent().getValue(), td.getTypeDef(), defaultDataverse,
+                        mdTxnCtx, types);
 
                 TypeSignature signature = new TypeSignature(typeDataverse, td.getIdent().getValue());
                 TypeDataGen tdg = td.getDatagenAnnotation();

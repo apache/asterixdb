@@ -67,7 +67,7 @@ class AqlQueryRewriter implements IQueryRewriter {
 
     AqlQueryRewriter(IParserFactory parserFactory) {
         this.parserFactory = parserFactory;
-        functionParser = new FunctionParser(Function.LANGUAGE_AQL, this.parserFactory);
+        functionParser = new FunctionParser(Function.FunctionLanguage.AQL, this.parserFactory);
     }
 
     private void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,

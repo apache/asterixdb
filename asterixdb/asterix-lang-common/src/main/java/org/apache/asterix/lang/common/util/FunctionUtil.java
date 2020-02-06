@@ -19,7 +19,10 @@
 
 package org.apache.asterix.lang.common.util;
 
+import static org.apache.asterix.common.functions.FunctionConstants.ASTERIX_DV;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -32,10 +35,16 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
+import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
+import org.apache.asterix.lang.common.expression.TypeExpression;
+import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
+import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
@@ -73,6 +82,34 @@ public class FunctionUtil {
             fi = getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS, functionName, arity));
         }
         return fi;
+    }
+
+    public static Pair<DataverseName, String> getDependencyFromParameterType(IndexedTypeExpression parameterType,
+            DataverseName defaultDataverse) {
+        Pair<DataverseName, String> typeName =
+                FunctionUtil.extractNestedTypeName(parameterType.getType(), defaultDataverse);
+        return typeName == null || ASTERIX_DV.equals(typeName.getFirst()) ? null : typeName;
+    }
+
+    private static Pair<DataverseName, String> extractNestedTypeName(TypeExpression typeExpr,
+            DataverseName defaultDataverse) {
+        switch (typeExpr.getTypeKind()) {
+            case ORDEREDLIST:
+                return extractNestedTypeName(((OrderedListTypeDefinition) typeExpr).getItemTypeExpression(),
+                        defaultDataverse);
+            case UNORDEREDLIST:
+                return extractNestedTypeName(((UnorderedListTypeDefinition) typeExpr).getItemTypeExpression(),
+                        defaultDataverse);
+            case RECORD:
+                break;
+            case TYPEREFERENCE:
+                TypeReferenceExpression typeRef = ((TypeReferenceExpression) typeExpr);
+                String typeName = typeRef.getIdent().getSecond().toString();
+                DataverseName typeDv = BuiltinTypeMap.getBuiltinType(typeName) != null ? ASTERIX_DV
+                        : typeRef.getIdent().getFirst() != null ? typeRef.getIdent().getFirst() : defaultDataverse;
+                return new Pair<>(typeDv, typeName);
+        }
+        return null;
     }
 
     @FunctionalInterface
@@ -167,8 +204,7 @@ public class FunctionUtil {
                         messageBuilder.toString());
             }
 
-            if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)
-                    || function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_SQLPP)) {
+            if (!function.getLanguage().isExternal()) {
                 FunctionDecl functionDecl = functionParser.getFunctionDecl(function);
                 if (functionDecl != null) {
                     if (functionDecls.contains(functionDecl)) {
@@ -186,7 +222,7 @@ public class FunctionUtil {
     }
 
     public static List<List<Triple<DataverseName, String, String>>> getFunctionDependencies(IQueryRewriter rewriter,
-            Expression expression, MetadataProvider metadataProvider, List<Pair<DataverseName, String>> argTypes)
+            Expression expression, MetadataProvider metadataProvider, Collection<Pair<DataverseName, String>> argTypes)
             throws CompilationException {
         Set<CallExpr> functionCalls = rewriter.getFunctionCalls(expression);
         //Get the List of used functions and used datasets
@@ -216,7 +252,7 @@ public class FunctionUtil {
     }
 
     public static List<List<Triple<DataverseName, String, String>>> getExternalFunctionDependencies(
-            List<Pair<DataverseName, String>> argTypes) {
+            Collection<Pair<DataverseName, String>> argTypes) {
         List<Triple<DataverseName, String, String>> datasourceDependencies = new ArrayList<>();
         List<Triple<DataverseName, String, String>> functionDependencies = new ArrayList<>();
         List<Triple<DataverseName, String, String>> typeDependencies = new ArrayList<>();
