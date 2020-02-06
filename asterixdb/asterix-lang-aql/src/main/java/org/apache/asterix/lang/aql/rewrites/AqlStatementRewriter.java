@@ -22,9 +22,12 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.visitor.AqlStatementRewriteVisitor;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 
 class AqlStatementRewriter implements IStatementRewriter {
+
+    private static final char VAR_PREFIX = '$';
 
     @Override
     public boolean isRewritable(Statement.Kind kind) {
@@ -41,5 +44,14 @@ class AqlStatementRewriter implements IStatementRewriter {
     @Override
     public String toExternalVariableName(String statementParameterName) {
         return null;
+    }
+
+    @Override
+    public String toFunctionParameterName(VarIdentifier paramVar) {
+        String name = paramVar.getValue();
+        if (name.charAt(0) != VAR_PREFIX) {
+            throw new IllegalArgumentException(name);
+        }
+        return name.substring(1);
     }
 }

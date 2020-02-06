@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.base;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 
 public interface IStatementRewriter {
@@ -37,4 +38,6 @@ public interface IStatementRewriter {
     void rewrite(Statement statement, MetadataProvider metadataProvider) throws CompilationException;
 
     String toExternalVariableName(String statementParameterName);
+
+    String toFunctionParameterName(VarIdentifier paramVar);
 }

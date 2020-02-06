@@ -356,7 +356,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleNodegroupDropStatement(metadataProvider, stmt);
                         break;
                     case CREATE_FUNCTION:
-                        handleCreateFunctionStatement(metadataProvider, stmt);
+                        handleCreateFunctionStatement(metadataProvider, stmt, stmtRewriter);
                         break;
                     case CREATE_ADAPTER:
                         handleCreateAdapterStatement(metadataProvider, stmt);
@@ -1761,7 +1761,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleCreateFunctionStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleCreateFunctionStatement(MetadataProvider metadataProvider, Statement stmt,
+            IStatementRewriter stmtRewriter) throws Exception {
         CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
         SourceLocation sourceLoc = cfs.getSourceLocation();
         FunctionSignature signature = cfs.getFunctionSignature();
@@ -1806,7 +1807,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
                 }
                 paramVars.add(argVar);
-                argNames.add(argVar.getValue());
+                argNames.add(stmtRewriter.toFunctionParameterName(argVar));
                 argTypes.add(argType);
             }
 

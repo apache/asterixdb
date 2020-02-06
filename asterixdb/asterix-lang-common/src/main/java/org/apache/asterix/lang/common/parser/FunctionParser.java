@@ -20,17 +20,12 @@
 package org.apache.asterix.lang.common.parser;
 
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
-import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.metadata.entities.Function;
 
 public class FunctionParser {
@@ -46,22 +41,10 @@ public class FunctionParser {
 
     public FunctionDecl getFunctionDecl(Function function) throws CompilationException {
         if (!function.getLanguage().equals(language)) {
-            throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, language,
-                    function.getLanguage());
+            throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, language.getName(),
+                    function.getLanguage().getName());
         }
-
-        FunctionSignature signature = function.getSignature();
-
-        List<String> argNames = function.getArgNames();
-        List<VarIdentifier> paramList = new ArrayList<>(argNames.size());
-        for (String argName : argNames) {
-            paramList.add(new VarIdentifier(argName));
-        }
-
-        String functionBody = function.getFunctionBody();
-        IParser parser = parserFactory.createParser(new StringReader(functionBody));
-        Expression functionBodyExpr = parser.parseFunctionBody(signature, paramList);
-
-        return new FunctionDecl(signature, paramList, functionBodyExpr);
+        IParser parser = parserFactory.createParser(new StringReader(function.getFunctionBody()));
+        return parser.parseFunctionBody(function.getSignature(), function.getArgNames());
     }
 }

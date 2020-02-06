@@ -349,18 +349,22 @@ class SQLPPParser extends ScopeChecker implements IParser {
     }
 
     @Override
-    public Expression parseFunctionBody(FunctionSignature signature, List<VarIdentifier> paramList)
+    public FunctionDecl parseFunctionBody(FunctionSignature signature, List<String> paramNames)
       throws CompilationException {
-        return parseImpl(new ParseFunction<Expression>() {
+        return parseImpl(new ParseFunction<FunctionDecl>() {
             @Override
-            public Expression parse() throws ParseException {
+            public FunctionDecl parse() throws ParseException {
                 DataverseName dataverse = defaultDataverse;
                 defaultDataverse = signature.getDataverseName();
                 createNewScope();
+                List<VarIdentifier> paramVars = new ArrayList<VarIdentifier>(paramNames.size());
+                for (String paramName : paramNames) {
+                    paramVars.add(SqlppVariableUtil.toInternalVariableIdentifier(paramName));
+                }
                 Expression functionBodyExpr = SQLPPParser.this.FunctionBody();
                 removeCurrentScope();
                 defaultDataverse = dataverse;
-                return functionBodyExpr;
+                return new FunctionDecl(signature, paramVars, functionBodyExpr);
             }
         });
     }
