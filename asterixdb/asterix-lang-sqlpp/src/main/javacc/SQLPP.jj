@@ -467,7 +467,13 @@ class SQLPPParser extends ScopeChecker implements IParser {
     }
 
     private SqlppParseException createUnexpectedTokenError() {
-      return new SqlppParseException(getSourceLocation(token), "Unexpected token: " + LogRedactionUtil.userData(token.image));
+      return createUnexpectedTokenError(null);
+    }
+
+    private SqlppParseException createUnexpectedTokenError(String expected) {
+      String message = "Unexpected token: " + LogRedactionUtil.userData(token.image) +
+        (expected == null ? "" : ". Expected: " + LogRedactionUtil.userData(expected));
+      return new SqlppParseException(getSourceLocation(token), message);
     }
 
     private boolean laToken(int idx, int kind, String image) {
@@ -1039,33 +1045,6 @@ CreateAdapterStatement AdapterSpecification(Token startStmtToken) throws ParseEx
 
 }
 
-
-List<Pair<VarIdentifier,IndexedTypeExpression>> FunctionParameters() :
-{
-    List<Pair<VarIdentifier,IndexedTypeExpression>> paramList = new ArrayList<Pair<VarIdentifier,IndexedTypeExpression>>();
-    Pair<VarIdentifier,IndexedTypeExpression> varPair = new Pair<VarIdentifier,IndexedTypeExpression>(null,null);
-    VarIdentifier var = null;
-    IndexedTypeExpression type = null;
-    boolean typed = false;
-}
-{
-    <LEFTPAREN>( (<IDENTIFIER>
-    {
-        var = SqlppVariableUtil.toInternalVariableIdentifier(token.image);
-        varPair.setFirst(new VarIdentifier(var.toString()));
-        paramList.add(varPair);
-    } (LOOKAHEAD(3)(<COLON>)? type = IndexedTypeExpr() {varPair.setSecond(type);} )? (<COMMA> <IDENTIFIER>{
-        var = SqlppVariableUtil.toInternalVariableIdentifier(token.image);
-        varPair = new Pair<VarIdentifier,IndexedTypeExpression>(null,null);
-        varPair.setFirst(new VarIdentifier(var.toString()));
-        paramList.add(varPair);
-    } (LOOKAHEAD(3)(<COLON>)? type = IndexedTypeExpr() {varPair.setSecond(type);})?)*)? ) <RIGHTPAREN>
-
-    {
-        return paramList;
-    }
-}
-
 CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws ParseException:
 {
   FunctionSignature signature = null;
@@ -1083,7 +1062,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
   String lang = null;
   String libName ="";
   String externalIdent = "";
-  List<Pair<VarIdentifier,IndexedTypeExpression>> args = new ArrayList<Pair<VarIdentifier,IndexedTypeExpression>>();
+  List<Pair<VarIdentifier,IndexedTypeExpression>> args = null;
   RecordConstructor resources = null;
 }
 {
@@ -1093,7 +1072,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
   }
   ifNotExists = IfNotExists()
   args = FunctionParameters()
-  ( LOOKAHEAD({laIdentifier(RETURNS)}) <IDENTIFIER> returnType = IndexedTypeExpr() )?
+  returnType = FunctionReturnType()
   (
     (
       <LEFTBRACE>
@@ -1158,6 +1137,49 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
         )
      )
   )
+}
+
+List<Pair<VarIdentifier,IndexedTypeExpression>> FunctionParameters() :
+{
+  List<Pair<VarIdentifier,IndexedTypeExpression>> paramList = Collections.<Pair<VarIdentifier,IndexedTypeExpression>>emptyList();
+}
+{
+  <LEFTPAREN> (paramList = FunctionParameterList())? <RIGHTPAREN>
+  {
+    return paramList;
+  }
+}
+
+List<Pair<VarIdentifier,IndexedTypeExpression>> FunctionParameterList() :
+{
+    List<Pair<VarIdentifier,IndexedTypeExpression>> paramList = new ArrayList<Pair<VarIdentifier,IndexedTypeExpression>>();
+    Pair<VarIdentifier,IndexedTypeExpression> varPair = new Pair<VarIdentifier,IndexedTypeExpression>(null,null);
+    String var = null;
+    IndexedTypeExpression type = null;
+}
+{
+    var = VariableIdentifier() {
+        varPair.setFirst(new VarIdentifier(var));
+        paramList.add(varPair);
+    } (LOOKAHEAD(3)(<COLON>)? type = IndexedTypeExpr() {varPair.setSecond(type);} )? (<COMMA> var = VariableIdentifier() {
+        varPair = new Pair<VarIdentifier,IndexedTypeExpression>(null,null);
+        varPair.setFirst(new VarIdentifier(var));
+        paramList.add(varPair);
+    } (LOOKAHEAD(3)(<COLON>)? type = IndexedTypeExpr() {varPair.setSecond(type);})?)*
+    {
+        return paramList;
+    }
+}
+
+IndexedTypeExpression FunctionReturnType() throws ParseException:
+{
+  IndexedTypeExpression returnType = null;
+}
+{
+  ( LOOKAHEAD({laIdentifier(RETURNS)}) <IDENTIFIER> returnType = IndexedTypeExpr() )?
+  {
+    return returnType;
+  }
 }
 
 Expression FunctionBody() throws ParseException:
@@ -2373,7 +2395,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
 {
   Token startToken = null;
   String functionName;
-  List<Pair<VarIdentifier,IndexedTypeExpression>> paramList = new ArrayList<Pair<VarIdentifier,IndexedTypeExpression>>();
+  List<Pair<VarIdentifier,IndexedTypeExpression>> paramList = Collections.<Pair<VarIdentifier,IndexedTypeExpression>>emptyList();;
   List<VarIdentifier> paramVarOnly = new ArrayList<VarIdentifier>();
   Expression funcBody;
   createNewScope();
@@ -2383,7 +2405,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
     functionName = Identifier()
     paramList = FunctionParameters()
   <LEFTBRACE>
-    (funcBody = SelectExpression(true) | funcBody = Expression())
+    funcBody = FunctionBody()
   <RIGHTBRACE>
   {
     FunctionSignature signature = new FunctionSignature(defaultDataverse, functionName, paramList.size());
@@ -3039,9 +3061,8 @@ VariableExpr VariableRef() throws ParseException:
     String id = null;
 }
 {
-    (<IDENTIFIER> { id = token.image; } | id = QuotedString())
+    id = VariableIdentifier()
     {
-     id = SqlppVariableUtil.toInternalVariableName(id); // Prefix user-defined variables with "$"
      Identifier ident = lookupSymbol(id);
      if (isInForbiddenScopes(id)) {
        throw new SqlppParseException(getSourceLocation(token),
@@ -3063,9 +3084,8 @@ VariableExpr Variable() throws ParseException:
     String id = null;
 }
 {
-    (<IDENTIFIER> { id = token.image; } | id = QuotedString())
+    id = VariableIdentifier()
     {
-     id = SqlppVariableUtil.toInternalVariableName(id); // prefix user-defined variables with "$".
      Identifier ident = lookupSymbol(id);
      VariableExpr varExp = new VariableExpr(new VarIdentifier(id));
      if (ident != null) { // exist such ident
@@ -3073,6 +3093,17 @@ VariableExpr Variable() throws ParseException:
      }
      return addSourceLocation(varExp, token);
     }
+}
+
+String VariableIdentifier() throws ParseException:
+{
+  String id = null;
+}
+{
+  (<IDENTIFIER> { id = token.image; } | id = QuotedString())
+  {
+    return SqlppVariableUtil.toInternalVariableName(id); // prefix user-defined variables with "$".
+  }
 }
 
 Pair<VariableExpr, List<Pair<Expression, Identifier>>> VariableWithFieldMap() throws ParseException:

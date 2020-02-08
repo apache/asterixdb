@@ -1764,16 +1764,27 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleCreateFunctionStatement(MetadataProvider metadataProvider, Statement stmt,
             IStatementRewriter stmtRewriter) throws Exception {
         CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
-        SourceLocation sourceLoc = cfs.getSourceLocation();
         FunctionSignature signature = cfs.getFunctionSignature();
-        DataverseName dataverseName = getActiveDataverseName(signature.getDataverseName());
-        signature.setDataverseName(dataverseName);
+        signature.setDataverseName(getActiveDataverseName(signature.getDataverseName()));
+        String libraryName = cfs.getLibName();
 
+        lockUtil.createFunctionBegin(lockManager, metadataProvider.getLocks(), signature.getDataverseName(),
+                signature.getName(), libraryName);
+        try {
+            doCreateFunction(metadataProvider, cfs, signature, stmtRewriter);
+        } finally {
+            metadataProvider.getLocks().unlock();
+            metadataProvider.setDefaultDataverse(activeDataverse);
+        }
+    }
+
+    protected void doCreateFunction(MetadataProvider metadataProvider, CreateFunctionStatement cfs,
+            FunctionSignature signature, IStatementRewriter stmtRewriter) throws Exception {
+        DataverseName dataverseName = signature.getDataverseName();
+        String libraryName = cfs.getLibName();
+        SourceLocation sourceLoc = cfs.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        String libraryName = cfs.getLibName();
-        lockUtil.createFunctionBegin(lockManager, metadataProvider.getLocks(), dataverseName, signature.getName(),
-                libraryName);
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
             if (dv == null) {
@@ -1872,13 +1883,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             }
-
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
-        } finally {
-            metadataProvider.getLocks().unlock();
-            metadataProvider.setDefaultDataverse(activeDataverse);
         }
     }
 
@@ -1970,13 +1977,22 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void handleFunctionDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         FunctionDropStatement stmtDropFunction = (FunctionDropStatement) stmt;
-        SourceLocation sourceLoc = stmtDropFunction.getSourceLocation();
         FunctionSignature signature = stmtDropFunction.getFunctionSignature();
         signature.setDataverseName(getActiveDataverseName(signature.getDataverseName()));
-        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
         lockUtil.dropFunctionBegin(lockManager, metadataProvider.getLocks(), signature.getDataverseName(),
                 signature.getName());
+        try {
+            doDropFunction(metadataProvider, stmtDropFunction, signature);
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
+    }
+
+    protected void doDropFunction(MetadataProvider metadataProvider, FunctionDropStatement stmtDropFunction,
+            FunctionSignature signature) throws Exception {
+        SourceLocation sourceLoc = stmtDropFunction.getSourceLocation();
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
             // If function == null && stmtDropFunction.getIfExists() == true, commit txn directly.
@@ -1993,8 +2009,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
-        } finally {
-            metadataProvider.getLocks().unlock();
         }
     }
 
