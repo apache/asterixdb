@@ -32,6 +32,7 @@ import org.apache.asterix.common.replication.IReplicationDestination;
 import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
 import org.apache.hyracks.api.network.ISocketChannel;
+import org.apache.hyracks.util.NetworkUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,15 +40,20 @@ public class ReplicationDestination implements IReplicationDestination {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final Set<IPartitionReplica> replicas = new HashSet<>();
-    private final InetSocketAddress location;
+    private final InetSocketAddress inputLocation;
+    private InetSocketAddress resolvedLocation;
     private ISocketChannel logRepChannel;
 
     private ReplicationDestination(InetSocketAddress location) {
-        this.location = location;
+        this.inputLocation = location;
+        this.resolvedLocation = NetworkUtil.ensureResolved(location);
     }
 
     public static ReplicationDestination at(InetSocketAddress location) {
-        return new ReplicationDestination(location);
+        if (!location.isUnresolved()) {
+            throw new IllegalArgumentException("only unresolved addresses are allowed!");
+        }
+        return new ReplicationDestination(new InetSocketAddress(location.getHostString(), location.getPort()));
     }
 
     @Override
@@ -79,11 +85,21 @@ public class ReplicationDestination implements IReplicationDestination {
     public synchronized ISocketChannel getLogReplicationChannel(INcApplicationContext appCtx) {
         try {
             if (!NetworkingUtil.isHealthy(logRepChannel)) {
-                logRepChannel = ReplicationProtocol.establishReplicaConnection(appCtx, location);
+                establishReplicaConnection(appCtx);
             }
             return logRepChannel;
         } catch (IOException e) {
             throw new ReplicationException(e);
+        }
+    }
+
+    protected void establishReplicaConnection(INcApplicationContext appCtx) throws IOException {
+        try {
+            logRepChannel = ReplicationProtocol.establishReplicaConnection(appCtx, resolvedLocation);
+        } catch (Exception e) {
+            // try to re-resolve the address, in case our replica has had his IP address updated
+            resolvedLocation = NetworkUtil.refresh(resolvedLocation);
+            logRepChannel = ReplicationProtocol.establishReplicaConnection(appCtx, resolvedLocation);
         }
     }
 
@@ -101,7 +117,7 @@ public class ReplicationDestination implements IReplicationDestination {
 
     @Override
     public InetSocketAddress getLocation() {
-        return location;
+        return resolvedLocation;
     }
 
     @Override
@@ -113,16 +129,16 @@ public class ReplicationDestination implements IReplicationDestination {
             return false;
         }
         ReplicationDestination that = (ReplicationDestination) o;
-        return Objects.equals(location, that.location);
+        return Objects.equals(inputLocation, that.inputLocation);
     }
 
     @Override
     public String toString() {
-        return location.toString();
+        return resolvedLocation.toString();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(location);
+        return Objects.hash(inputLocation);
     }
 }
