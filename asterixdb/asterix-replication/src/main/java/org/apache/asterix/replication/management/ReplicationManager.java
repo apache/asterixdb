@@ -34,6 +34,7 @@ import org.apache.asterix.common.replication.ReplicationStrategyFactory;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.replication.api.ReplicationDestination;
 import org.apache.hyracks.api.replication.IReplicationJob;
+import org.apache.hyracks.util.NetworkUtil;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,7 +61,7 @@ public class ReplicationManager implements IReplicationManager {
     @Override
     public void register(IPartitionReplica replica) {
         synchronized (dests) {
-            final InetSocketAddress location = replica.getIdentifier().getLocation();
+            final InetSocketAddress location = NetworkUtil.ensureUnresolved(replica.getIdentifier().getLocation());
             final ReplicationDestination replicationDest = dests.computeIfAbsent(location, ReplicationDestination::at);
             replicationDest.add(replica);
             logReplicationManager.register(replicationDest);
@@ -71,7 +72,7 @@ public class ReplicationManager implements IReplicationManager {
     @Override
     public void unregister(IPartitionReplica replica) {
         synchronized (dests) {
-            final InetSocketAddress location = replica.getIdentifier().getLocation();
+            final InetSocketAddress location = NetworkUtil.ensureUnresolved(replica.getIdentifier().getLocation());
             final ReplicationDestination dest = dests.get(location);
             if (dest == null) {
                 LOGGER.warn(() -> "Asked to unregister unknown replica " + replica);

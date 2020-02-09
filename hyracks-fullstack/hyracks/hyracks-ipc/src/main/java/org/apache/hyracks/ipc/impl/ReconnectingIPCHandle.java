@@ -23,6 +23,7 @@ import java.net.InetSocketAddress;
 import org.apache.hyracks.ipc.api.IIPCEventListener;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.exceptions.IPCException;
+import org.apache.hyracks.util.NetworkUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -78,7 +79,7 @@ class ReconnectingIPCHandle implements IIPCHandle {
             }
             LOGGER.warn("ipcHandle {} disconnected; will attempt to reconnect {} times", delegate, reconnectAttempts);
             listener.ipcHandleDisconnected(delegate);
-            delegate = ipc.getHandle(getRemoteAddress(), reconnectAttempts);
+            delegate = ipc.getHandle(NetworkUtil.refresh(getRemoteAddress()), reconnectAttempts);
             LOGGER.warn("ipcHandle {} restored", delegate);
             listener.ipcHandleRestored(delegate);
             return delegate;

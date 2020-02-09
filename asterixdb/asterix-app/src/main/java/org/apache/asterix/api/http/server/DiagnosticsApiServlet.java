@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -75,10 +76,13 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
             response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);
         } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
             response.setStatus(HttpResponseStatus.NOT_FOUND);
+        } catch (RejectedExecutionException e) {
+            // we must be shutting down, return 503
+            LOGGER.info("RejectedExecutionException while servicing request; returning 503", e);
+            sendError(response, HttpResponseStatus.SERVICE_UNAVAILABLE, null);
         } catch (Exception e) {
-            LOGGER.log(Level.INFO, "exception thrown for " + request, e);
-            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            responseWriter.write(e.toString());
+            LOGGER.warn("exception while servicing request; returning 500", e);
+            sendError(response, HttpResponseStatus.INTERNAL_SERVER_ERROR, e.toString());
         }
         responseWriter.flush();
     }

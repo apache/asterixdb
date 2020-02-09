@@ -29,6 +29,7 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import javax.net.ssl.SSLEngine;
 
@@ -141,5 +142,23 @@ public class NetworkUtil {
         src.flip();
         enlargedBuffer.put(src);
         return enlargedBuffer;
+    }
+
+    public static InetSocketAddress ensureUnresolved(InetSocketAddress address) {
+        return address.isUnresolved() ? address
+                : InetSocketAddress.createUnresolved(address.getHostString(), address.getPort());
+    }
+
+    public static InetSocketAddress ensureResolved(InetSocketAddress address) {
+        return address.isUnresolved() ? new InetSocketAddress(address.getHostString(), address.getPort()) : address;
+    }
+
+    public static InetSocketAddress refresh(InetSocketAddress original) {
+        InetSocketAddress refreshed = new InetSocketAddress(original.getHostString(), original.getPort());
+        if (!Objects.equals(original.getAddress(), refreshed.getAddress())) {
+            LOGGER.warn("ip address updated on refresh (was: {}, now: {})", original.getAddress(),
+                    refreshed.getAddress());
+        }
+        return refreshed;
     }
 }

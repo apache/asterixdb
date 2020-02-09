@@ -120,7 +120,6 @@ public interface IClusterStateManager {
 
     /**
      * Register the specified node partitions with the specified nodeId with this cluster state manager
-     * then calls {@link IClusterStateManager#refreshState()}
      *
      * @param nodeId
      * @param nodePartitions
@@ -130,7 +129,6 @@ public interface IClusterStateManager {
 
     /**
      * De-register the specified node's partitions from this cluster state manager
-     * then calls {@link IClusterStateManager#refreshState()}
      *
      * @param nodeId
      * @throws HyracksDataException
