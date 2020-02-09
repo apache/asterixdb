@@ -44,8 +44,7 @@ public class ReplicaSynchronizer {
     }
 
     public void sync() throws IOException {
-        final Object syncLock = appCtx.getReplicaManager().getReplicaSyncLock();
-        synchronized (syncLock) {
+        synchronized (appCtx.getReplicaManager().getReplicaSyncLock()) {
             final ICheckpointManager checkpointManager = appCtx.getTransactionSubsystem().getCheckpointManager();
             try {
                 // suspend checkpointing datasets to prevent async IO operations while sync'ing replicas

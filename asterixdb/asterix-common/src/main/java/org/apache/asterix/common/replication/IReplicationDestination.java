@@ -52,9 +52,9 @@ public interface IReplicationDestination {
     Set<IPartitionReplica> getReplicas();
 
     /**
-     * Gets the location of this {@link IReplicationDestination}
+     * Gets the (resolved) location of this {@link IReplicationDestination}
      *
-     * @return the location
+     * @return the (resolved) location
      */
     InetSocketAddress getLocation();
 }
