@@ -209,6 +209,11 @@ public class ClusterControllerService implements IControllerService {
     }
 
     @Override
+    public String getId() {
+        return "ClusterControllerService";
+    }
+
+    @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting ClusterControllerService: " + this);
         serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.getRootDir()));

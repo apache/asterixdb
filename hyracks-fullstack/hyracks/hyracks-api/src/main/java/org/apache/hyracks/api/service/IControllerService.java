@@ -25,6 +25,8 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.network.INetworkSecurityManager;
 
 public interface IControllerService {
+    String getId();
+
     void start() throws Exception;
 
     void stop() throws Exception;

@@ -69,7 +69,9 @@ public class ClusterShutdownWork extends SynchronizableWork {
              */
             nodeManager.apply(this::shutdownNode);
 
-            ccs.getExecutor().execute(() -> {
+            // complete the rest of the tasks in a separate standalone thread, to better allow our worker & executor
+            // queues to drain during shutdown
+            Thread finalWork = new Thread(() -> {
                 try {
                     /*
                      * wait for all our acks
@@ -88,8 +90,11 @@ public class ClusterShutdownWork extends SynchronizableWork {
                     ExitUtil.exit(cleanShutdown ? EC_NORMAL_TERMINATION : EC_ABNORMAL_TERMINATION);
                 } catch (Exception e) {
                     callback.setException(e);
+                } finally {
+                    shutdownStatus.notifyCcStopComplete();
                 }
-            });
+            }, getClass().getSimpleName() + "-Helper");
+            finalWork.start();
         } catch (Exception e) {
             callback.setException(e);
         }

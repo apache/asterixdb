@@ -104,6 +104,28 @@ public class ExitUtil {
         Runtime.getRuntime().halt(status);
     }
 
+    public static boolean registerShutdownHook(Thread shutdownHook) {
+        try {
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+            LOGGER.info("successfully registered shutdown hook {}", shutdownHook);
+            return true;
+        } catch (Exception e) {
+            LOGGER.warn("unable to register shutdown hook {}", shutdownHook, e);
+            return false;
+        }
+    }
+
+    public static boolean unregisterShutdownHook(Thread shutdownHook) {
+        try {
+            boolean success = Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            LOGGER.info("{}successfully removed shutdown hook {}", success ? "" : "un", shutdownHook);
+            return success;
+        } catch (IllegalStateException e) {
+            LOGGER.log(Level.DEBUG, "ignoring exception while attempting to remove shutdown hook", e);
+            return false;
+        }
+    }
+
     private static class ShutdownWatchdog extends Thread {
 
         private final Semaphore startSemaphore = new Semaphore(0);

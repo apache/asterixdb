@@ -72,7 +72,6 @@ import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.translator.Receptionist;
 import org.apache.asterix.util.MetadataBuiltinFunctions;
-import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.config.IConfigManager;
@@ -94,8 +93,6 @@ import org.apache.logging.log4j.Logger;
 
 public class NCApplication extends BaseNCApplication {
     private static final Logger LOGGER = LogManager.getLogger();
-
-    protected INCServiceContext ncServiceCtx;
     protected NCExtensionManager ncExtensionManager;
     private INcApplicationContext runtimeContext;
     private String nodeId;
@@ -111,7 +108,7 @@ public class NCApplication extends BaseNCApplication {
 
     @Override
     public void init(IServiceContext serviceCtx) throws Exception {
-        ncServiceCtx = (INCServiceContext) serviceCtx;
+        super.init(serviceCtx);
         configureLoggingLevel(ncServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
         // set the node status initially to idle to indicate that it is pending booting
         ((NodeControllerService) serviceCtx.getControllerService()).setNodeStatus(NodeStatus.IDLE);
@@ -240,6 +237,7 @@ public class NCApplication extends BaseNCApplication {
                 LOGGER.info("Duplicate attempt to stop ignored: " + nodeId);
             }
         }
+        super.stop();
     }
 
     @Override
@@ -249,6 +247,7 @@ public class NCApplication extends BaseNCApplication {
 
     @Override
     public synchronized void startupCompleted() throws Exception {
+        super.startupCompleted();
         // configure servlets after joining the cluster, so we can create HyracksClientConnection
         configureServers();
         webManager.start();

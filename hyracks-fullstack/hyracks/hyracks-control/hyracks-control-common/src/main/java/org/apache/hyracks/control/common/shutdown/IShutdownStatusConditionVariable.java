@@ -23,6 +23,5 @@ public interface IShutdownStatusConditionVariable {
      * @return true if all nodes ack shutdown
      * @throws Exception
      */
-    public boolean waitForCompletion() throws Exception;
-
+    boolean waitForCompletion() throws Exception;
 }

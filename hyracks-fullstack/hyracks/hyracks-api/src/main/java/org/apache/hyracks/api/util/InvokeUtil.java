@@ -53,7 +53,7 @@ public class InvokeUtil {
      * completes, the current thread will be re-interrupted, if the original operation was interrupted.
      */
     public static void doUninterruptibly(InterruptibleAction interruptible) {
-        boolean interrupted = false;
+        boolean interrupted = Thread.interrupted();
         try {
             while (true) {
                 try {
@@ -75,7 +75,7 @@ public class InvokeUtil {
      * completes, the current thread will be re-interrupted, if the original operation was interrupted.
      */
     public static void doExUninterruptibly(ThrowingAction interruptible) throws Exception {
-        boolean interrupted = false;
+        boolean interrupted = Thread.interrupted();
         try {
             while (true) {
                 try {
@@ -98,7 +98,7 @@ public class InvokeUtil {
      * @return true if the original operation was interrupted, otherwise false
      */
     public static boolean doUninterruptiblyGet(InterruptibleAction interruptible) {
-        boolean interrupted = false;
+        boolean interrupted = Thread.interrupted();
         while (true) {
             try {
                 interruptible.run();
@@ -117,7 +117,7 @@ public class InvokeUtil {
      * @return true if the original operation was interrupted, otherwise false
      */
     public static boolean doExUninterruptiblyGet(Callable<Void> interruptible) throws Exception {
-        boolean interrupted = false;
+        boolean interrupted = Thread.interrupted();
         boolean success = false;
         while (true) {
             try {
@@ -168,7 +168,7 @@ public class InvokeUtil {
      * the original operation was interrupted.
      */
     public static void doIoUninterruptibly(IOInterruptibleAction interruptible) throws IOException {
-        boolean interrupted = false;
+        boolean interrupted = Thread.interrupted();
         try {
             while (true) {
                 try {
@@ -177,6 +177,7 @@ public class InvokeUtil {
                 } catch (ClosedByInterruptException | InterruptedException e) {
                     LOGGER.error("IO operation Interrupted. Retrying..", e);
                     interrupted = true;
+                    //noinspection ResultOfMethodCallIgnored
                     Thread.interrupted();
                 }
             }

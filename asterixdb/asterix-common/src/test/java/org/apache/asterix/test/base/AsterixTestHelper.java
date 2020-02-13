@@ -88,7 +88,6 @@ public class AsterixTestHelper {
                 deepSelectiveCopy(child, destChild, filter);
             } else if (filter.accept(child)) {
                 FileUtil.safeCopyFile(child, destChild);
-                return;
             }
         }
     }
