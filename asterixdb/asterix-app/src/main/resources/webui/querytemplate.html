@@ -181,14 +181,7 @@ $(document).ready(function() {
                       if (results[iter1].length < 1) {
                         continue;
                       }
-                      var str_obj = results[iter1].replace(/:\s*(\d+)([\s,])/g, ': "#bigint#$1#bigint#"$2');
-                      resultJSON = JSON.parse(str_obj, (key, value) => {
-                          if (/^#bigint#\d+#bigint#/g.test(value)) {
-                            value = value.substring(8, value.length - 8);
-                            return BigInt(value);
-                          }
-                          return value;
-                        });
+                      var resultJSON = $.parseJSON(results[iter1]);
                       $(this).append($('<div/>').attr("id", "json-record"+idx+"-"+iter1));
                       $('#json-record'+idx+"-"+iter1).jsonViewer(resultJSON, {collapsed: true, level: 10});
                     }

@@ -56,7 +56,10 @@
       else
         html += '<span class="json-string">"' + json + '"</span>';
     }
-    else if (typeof json === 'number' || typeof json === 'boolean' || typeof json === 'bigint') {
+    else if (typeof json === 'number') {
+      html += '<span class="json-literal">' + json + '</span>';
+    }
+    else if (typeof json === 'boolean') {
       html += '<span class="json-literal">' + json + '</span>';
     }
     else if (json === null) {
@@ -108,8 +111,6 @@
       else {
         html += '{}';
       }
-    } else {
-        html += '<span class="json-literal">' + json + '</span>';
     }
     return html;
   }
