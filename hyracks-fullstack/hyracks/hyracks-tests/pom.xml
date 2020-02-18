@@ -51,5 +51,6 @@
     <module>hyracks-storage-am-lsm-rtree-test</module>
     <module>hyracks-storage-am-lsm-invertedindex-test</module>
     <module>hyracks-storage-am-bloomfilter-test</module>
+    <module>hyracks-dataflow-common-test</module>
   </modules>
 </project>

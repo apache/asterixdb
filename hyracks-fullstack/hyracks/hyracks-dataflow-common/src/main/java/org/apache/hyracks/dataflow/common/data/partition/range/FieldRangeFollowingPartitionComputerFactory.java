@@ -16,36 +16,43 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.dataflow.common.data.partition.range;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
-import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
+import org.apache.hyracks.api.dataflow.value.ITupleMultiPartitionComputer;
+import org.apache.hyracks.api.dataflow.value.ITupleMultiPartitionComputerFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public final class FieldRangePartitionComputerFactory extends AbstractFieldRangePartitionComputerFactory
-        implements ITuplePartitionComputerFactory {
+public final class FieldRangeFollowingPartitionComputerFactory extends AbstractFieldRangePartitionComputerFactory
+        implements ITupleMultiPartitionComputerFactory {
 
     private static final long serialVersionUID = 1L;
 
     private final int[] rangeFields;
 
-    public FieldRangePartitionComputerFactory(int[] rangeFields, IBinaryComparatorFactory[] comparatorFactories,
-            RangeMapSupplier rangeMapSupplier, SourceLocation sourceLocation) {
+    public FieldRangeFollowingPartitionComputerFactory(int[] rangeFields,
+            IBinaryComparatorFactory[] comparatorFactories, RangeMapSupplier rangeMapSupplier,
+            SourceLocation sourceLocation) {
         super(rangeMapSupplier, comparatorFactories, sourceLocation);
         this.rangeFields = rangeFields;
     }
 
     @Override
-    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext taskContext) {
-        return new AbstractFieldRangeSinglePartitionComputer(taskContext) {
+    public ITupleMultiPartitionComputer createPartitioner(IHyracksTaskContext taskContext) {
+        return new AbstractFieldRangeMultiPartitionComputer(taskContext) {
             @Override
-            protected int computePartition(IFrameTupleAccessor accessor, int tIndex, int nParts)
+            protected int computeStartPartition(IFrameTupleAccessor accessor, int tIndex, int nParts)
                     throws HyracksDataException {
                 return rangeMapPartitionComputer.partition(accessor, tIndex, rangeFields, nParts);
+            }
+
+            @Override
+            protected int computeEndPartition(IFrameTupleAccessor accessor, int tIndex, int nParts) {
+                return nParts - 1;
             }
         };
     }
