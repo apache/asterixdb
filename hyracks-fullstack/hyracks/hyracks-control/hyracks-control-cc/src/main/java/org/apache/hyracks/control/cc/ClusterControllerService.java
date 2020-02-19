@@ -209,11 +209,17 @@ public class ClusterControllerService implements IControllerService {
     }
 
     @Override
+    public String getId() {
+        return "ClusterControllerService";
+    }
+
+    @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting ClusterControllerService: " + this);
         serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.getRootDir()));
         IIPCI ccIPCI = new ClusterControllerIPCI(this);
-        clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.getClusterListenPort()),
+        clusterIPC = new IPCSystem(
+                new InetSocketAddress(ccConfig.getClusterListenAddress(), ccConfig.getClusterListenPort()),
                 networkSecurityManager.getSocketChannelFactory(), ccIPCI, new CCNCFunctions.SerializerDeserializer());
         IIPCI ciIPCI = new ClientInterfaceIPCI(this, jobIdFactory);
         clientIPC =

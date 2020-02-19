@@ -94,13 +94,10 @@ public class ReplicationDestination implements IReplicationDestination {
     }
 
     protected void establishReplicaConnection(INcApplicationContext appCtx) throws IOException {
-        try {
-            logRepChannel = ReplicationProtocol.establishReplicaConnection(appCtx, resolvedLocation);
-        } catch (Exception e) {
-            // try to re-resolve the address, in case our replica has had his IP address updated
-            resolvedLocation = NetworkUtil.refresh(resolvedLocation);
-            logRepChannel = ReplicationProtocol.establishReplicaConnection(appCtx, resolvedLocation);
-        }
+        // try to re-resolve the address, in case our replica has had his IP address updated, and that is why
+        // the connection is unhealthy...
+        resolvedLocation = NetworkUtil.refresh(resolvedLocation);
+        logRepChannel = ReplicationProtocol.establishReplicaConnection(appCtx, resolvedLocation);
     }
 
     private synchronized void closeLogReplicationChannel() {

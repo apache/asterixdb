@@ -106,12 +106,9 @@ public class PartitionReplica implements IPartitionReplica {
     }
 
     private void establishReplicaConnection() throws IOException {
-        try {
-            sc = ReplicationProtocol.establishReplicaConnection(appCtx, id.getLocation());
-        } catch (Exception e) {
-            // try to re-resolve the address, in case our replica has had his IP address updated
-            sc = ReplicationProtocol.establishReplicaConnection(appCtx, id.refreshLocation());
-        }
+        // try to re-resolve the address, in case our replica has had his IP address updated, and that is why the
+        // connection is unhealthy...
+        sc = ReplicationProtocol.establishReplicaConnection(appCtx, id.refreshLocation());
     }
 
     public synchronized void close() {

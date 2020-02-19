@@ -187,8 +187,6 @@ public class NodeControllerService implements IControllerService {
         ExitUtil.init();
     }
 
-    private NCShutdownHook ncShutdownHook;
-
     public NodeControllerService(NCConfig config) throws Exception {
         this(config, getApplication(config));
     }
@@ -210,9 +208,6 @@ public class NodeControllerService implements IControllerService {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Setting uncaught exception handler " + getLifeCycleComponentManager());
         }
-        // Set shutdown hook before so it doesn't have the same uncaught exception handler
-        ncShutdownHook = new NCShutdownHook(this);
-        Runtime.getRuntime().addShutdownHook(ncShutdownHook);
         Thread.currentThread().setUncaughtExceptionHandler(getLifeCycleComponentManager());
         ioManager = new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()),
                 application.getFileDeviceResolver(), ncConfig.getIOParallelism(), ncConfig.getIOQueueSize());
@@ -488,54 +483,47 @@ public class NodeControllerService implements IControllerService {
 
     @Override
     public synchronized void stop() throws Exception {
-        if (shutdownCallStack == null) {
-            shutdownCallStack = new Throwable().getStackTrace();
-            LOGGER.log(Level.INFO, "Stopping NodeControllerService");
-            application.preStop();
-            executor.shutdownNow();
-            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
-                LOGGER.log(Level.ERROR, "Some jobs failed to exit, continuing with abnormal shutdown");
-            }
-            partitionManager.close();
-            resultPartitionManager.close();
-            netManager.stop();
-            resultNetworkManager.stop();
-            if (messagingNetManager != null) {
-                messagingNetManager.stop();
-            }
-            workQueue.stop();
-            application.stop();
-            /*
-             * Stop heartbeats only after NC has stopped to avoid false node failure detection
-             * on CC if an NC takes a long time to stop.
-             */
-            heartbeatManagers.values().parallelStream().forEach(HeartbeatManager::shutdown);
-            synchronized (ccLock) {
-                ccMap.values().parallelStream().forEach(cc -> {
-                    try {
-                        cc.getClusterControllerService().notifyShutdown(id);
-                    } catch (Exception e) {
-                        LOGGER.log(Level.WARN, "Exception notifying CC of shutdown", e);
-                    }
-                });
-            }
-            ipc.stop();
-            ioManager.close();
-            LOGGER.log(Level.INFO, "Stopped NodeControllerService");
-        } else {
-            LOGGER.log(Level.ERROR, "Duplicate shutdown call; original: " + Arrays.toString(shutdownCallStack),
+        if (shutdownCallStack != null) {
+            LOGGER.error("Duplicate shutdown call; original: " + Arrays.toString(shutdownCallStack),
                     new Exception("Duplicate shutdown call"));
+            return;
         }
-        if (ncShutdownHook != null) {
-            try {
-                Runtime.getRuntime().removeShutdownHook(ncShutdownHook);
-                LOGGER.info("removed shutdown hook for {}", id);
-            } catch (IllegalStateException e) {
-                LOGGER.log(Level.DEBUG, "ignoring exception while attempting to remove shutdown hook", e);
-            }
+        shutdownCallStack = new Throwable().getStackTrace();
+        LOGGER.info("Stopping NodeControllerService");
+        application.preStop();
+        executor.shutdownNow();
+        if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+            LOGGER.log(Level.ERROR, "Some jobs failed to exit, continuing with abnormal shutdown");
         }
+        partitionManager.close();
+        resultPartitionManager.close();
+        netManager.stop();
+        resultNetworkManager.stop();
+        if (messagingNetManager != null) {
+            messagingNetManager.stop();
+        }
+        workQueue.stop();
+        application.stop();
+        /*
+         * Stop heartbeats only after NC has stopped to avoid false node failure detection
+         * on CC if an NC takes a long time to stop.
+         */
+        heartbeatManagers.values().parallelStream().forEach(HeartbeatManager::shutdown);
+        synchronized (ccLock) {
+            ccMap.values().parallelStream().forEach(cc -> {
+                try {
+                    cc.getClusterControllerService().notifyShutdown(id);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARN, "Exception notifying CC of shutdown", e);
+                }
+            });
+        }
+        ipc.stop();
+        ioManager.close();
+        LOGGER.info("Stopped NodeControllerService");
     }
 
+    @Override
     public String getId() {
         return id;
     }
