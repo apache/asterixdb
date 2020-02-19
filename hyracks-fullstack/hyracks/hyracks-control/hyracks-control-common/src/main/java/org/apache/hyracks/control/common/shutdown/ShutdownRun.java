@@ -24,11 +24,13 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.hyracks.util.Span;
+
 public class ShutdownRun implements IShutdownStatusConditionVariable {
 
     private final Set<String> shutdownNodeIds = new TreeSet<>();
-    private boolean shutdownSuccess = false;
-    private static final long SHUTDOWN_TIMER_MS = TimeUnit.SECONDS.toMillis(30);
+    private boolean ccStopComplete = false;
+    private static final long SHUTDOWN_TIMEOUT_SECONDS = 60;
 
     public ShutdownRun(Collection<String> nodeIds) {
         shutdownNodeIds.addAll(nodeIds);
@@ -42,26 +44,38 @@ public class ShutdownRun implements IShutdownStatusConditionVariable {
     public synchronized void notifyShutdown(String nodeId) {
         shutdownNodeIds.remove(nodeId);
         if (shutdownNodeIds.isEmpty()) {
-            shutdownSuccess = true;
             notifyAll();
         }
     }
 
     @Override
     public synchronized boolean waitForCompletion() throws Exception {
-        if (shutdownNodeIds.isEmpty()) {
-            shutdownSuccess = true;
-        } else {
+        Span span = Span.start(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        while (!span.elapsed()) {
+            if (shutdownNodeIds.isEmpty()) {
+                return true;
+            }
             /*
-             * Either be woken up when we're done, or default to fail.
+             * Either be woken up when we're done, or after (remaining) timeout has elapsed
              */
-            wait(SHUTDOWN_TIMER_MS);
+            span.wait(this);
         }
-        return shutdownSuccess;
+        return false;
     }
 
     public synchronized Set<String> getRemainingNodes() {
         return shutdownNodeIds;
     }
 
+    public synchronized void notifyCcStopComplete() {
+        ccStopComplete = true;
+        notifyAll();
+    }
+
+    public synchronized boolean waitForCcStopCompletion() throws Exception {
+        while (!ccStopComplete) {
+            wait();
+        }
+        return true;
+    }
 }

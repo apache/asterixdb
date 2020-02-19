@@ -22,6 +22,7 @@ import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 
 import org.apache.hyracks.api.application.INCApplication;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.config.Section;
@@ -29,24 +30,28 @@ import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.api.util.HyracksConstants;
+import org.apache.hyracks.control.common.ControllerShutdownHook;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.LoggingConfigUtil;
 import org.apache.logging.log4j.Level;
 
 public class BaseNCApplication implements INCApplication {
     public static final BaseNCApplication INSTANCE = new BaseNCApplication();
+    protected INCServiceContext ncServiceCtx;
     private ConfigManager configManager;
+    private Thread shutdownHook;
 
     protected BaseNCApplication() {
     }
 
     @Override
     public void init(IServiceContext serviceCtx) throws Exception {
-        // no-op
+        ncServiceCtx = (INCServiceContext) serviceCtx;
     }
 
     @Override
@@ -58,7 +63,7 @@ public class BaseNCApplication implements INCApplication {
 
     @Override
     public void startupCompleted() throws Exception {
-        // no-op
+        installShutdownHook();
     }
 
     @Override
@@ -68,12 +73,27 @@ public class BaseNCApplication implements INCApplication {
 
     @Override
     public void stop() throws Exception {
-        // no-op
+        uninstallShutdownHook();
     }
 
     @Override
     public void preStop() throws Exception {
         // no-op
+    }
+
+    protected Thread createShutdownHook() {
+        return new ControllerShutdownHook(ncServiceCtx);
+    }
+
+    protected void installShutdownHook() {
+        shutdownHook = createShutdownHook();
+        ExitUtil.registerShutdownHook(shutdownHook);
+    }
+
+    protected void uninstallShutdownHook() {
+        if (shutdownHook != null) {
+            ExitUtil.unregisterShutdownHook(shutdownHook);
+        }
     }
 
     @Override

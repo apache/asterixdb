@@ -16,12 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.common.shutdown;
 
-public interface IShutdownStatusConditionVariable {
-    /**
-     * @return true if all nodes ack shutdown
-     * @throws Exception
-     */
-    boolean waitForCompletion() throws Exception;
-}
+from [
+   { "a": 1, "b": [ 10, 20, 30] },
+   { "a": 1, "b": [ 40, 50, 60] },
+   { "a": 1, "b": [ 70, 80, 90] },
+   { "a": 2, "b": [ 100, 200, 300] },
+   { "a": 2, "b": [ 400, 500, 600] },
+   { "a": 2, "b": [ 700, 800, 900] }
+] t
+group by a
+select a, sum( case when some x in b satisfies x >= 50 then 1 else 0 end) as s;

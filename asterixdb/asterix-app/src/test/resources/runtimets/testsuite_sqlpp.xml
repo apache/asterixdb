@@ -8332,6 +8332,11 @@
         <output-dir compare="Text">query-ASTERIXDB-2307</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="query-ASTERIXDB-2696">
+        <output-dir compare="Text">query-ASTERIXDB-2696</output-dir>
+      </compilation-unit>
+    </test-case>
     <!--
         <test-case FilePath="quantifiers">
           <compilation-unit name="everysat_02">

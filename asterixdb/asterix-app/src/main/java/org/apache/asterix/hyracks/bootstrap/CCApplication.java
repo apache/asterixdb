@@ -87,7 +87,6 @@ import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.Receptionist;
 import org.apache.asterix.util.MetadataBuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.config.IConfigManager;
@@ -114,7 +113,6 @@ public class CCApplication extends BaseCCApplication {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static IAsterixStateProxy proxy;
-    protected ICCServiceContext ccServiceCtx;
     protected CCExtensionManager ccExtensionManager;
     protected IStorageComponentProvider componentProvider;
     protected WebManager webManager;
@@ -125,7 +123,6 @@ public class CCApplication extends BaseCCApplication {
     @Override
     public void init(IServiceContext serviceCtx) throws Exception {
         super.init(serviceCtx);
-        ccServiceCtx = (ICCServiceContext) serviceCtx;
         ccServiceCtx.setThreadFactory(
                 new AsterixThreadFactory(ccServiceCtx.getThreadFactory(), new LifeCycleComponentManager()));
         validateEnvironment();

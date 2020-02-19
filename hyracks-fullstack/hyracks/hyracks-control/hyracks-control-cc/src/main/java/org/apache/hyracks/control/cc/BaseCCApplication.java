@@ -21,6 +21,7 @@ package org.apache.hyracks.control.cc;
 import java.util.Arrays;
 
 import org.apache.hyracks.api.application.ICCApplication;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.config.Section;
@@ -29,23 +30,27 @@ import org.apache.hyracks.api.job.resource.DefaultJobCapacityController;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.result.IJobResultCallback;
 import org.apache.hyracks.api.util.HyracksConstants;
+import org.apache.hyracks.control.common.ControllerShutdownHook;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.LoggingConfigUtil;
 import org.apache.logging.log4j.Level;
 
 public class BaseCCApplication implements ICCApplication {
 
     public static final ICCApplication INSTANCE = new BaseCCApplication();
+    protected ICCServiceContext ccServiceCtx;
     private IConfigManager configManager;
+    private Thread shutdownHook;
 
     protected BaseCCApplication() {
     }
 
     @Override
     public void init(IServiceContext serviceCtx) throws Exception {
-        // no-op
+        ccServiceCtx = (ICCServiceContext) serviceCtx;
     }
 
     @Override
@@ -56,13 +61,28 @@ public class BaseCCApplication implements ICCApplication {
     }
 
     @Override
-    public void stop() throws Exception {
-        // no-op
+    public void startupCompleted() throws Exception {
+        installShutdownHook();
     }
 
     @Override
-    public void startupCompleted() throws Exception {
-        // no-op
+    public void stop() throws Exception {
+        uninstallShutdownHook();
+    }
+
+    protected Thread createShutdownHook() {
+        return new ControllerShutdownHook(ccServiceCtx);
+    }
+
+    protected void installShutdownHook() {
+        shutdownHook = createShutdownHook();
+        ExitUtil.registerShutdownHook(shutdownHook);
+    }
+
+    protected void uninstallShutdownHook() {
+        if (shutdownHook != null) {
+            ExitUtil.unregisterShutdownHook(shutdownHook);
+        }
     }
 
     @Override

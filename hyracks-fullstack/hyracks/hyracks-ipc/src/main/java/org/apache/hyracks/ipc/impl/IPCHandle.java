@@ -81,7 +81,7 @@ final class IPCHandle implements IIPCHandle {
             msg.setFlag(Message.NORMAL);
             msg.setPayload(req);
         }
-        system.getConnectionManager().write(msg);
+        system.getConnectionManager().send(msg);
         return mid;
     }
 
