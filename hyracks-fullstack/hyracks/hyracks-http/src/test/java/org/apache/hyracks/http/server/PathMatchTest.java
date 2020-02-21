@@ -24,18 +24,18 @@ import org.junit.Test;
 public class PathMatchTest {
     @Test
     public void test() {
-        Assert.assertTrue(HttpServer.match("/", ""));
+        Assert.assertTrue(ServletRegistry.match("/", ""));
 
-        Assert.assertTrue(HttpServer.match("/", "/"));
-        Assert.assertFalse(HttpServer.match("/", "/a"));
+        Assert.assertTrue(ServletRegistry.match("/", "/"));
+        Assert.assertFalse(ServletRegistry.match("/", "/a"));
 
-        Assert.assertFalse(HttpServer.match("/a", "/"));
-        Assert.assertTrue(HttpServer.match("/a", "/a"));
+        Assert.assertFalse(ServletRegistry.match("/a", "/"));
+        Assert.assertTrue(ServletRegistry.match("/a", "/a"));
 
-        Assert.assertTrue(HttpServer.match("/*", "/"));
-        Assert.assertTrue(HttpServer.match("/*", "/a"));
+        Assert.assertTrue(ServletRegistry.match("/*", "/"));
+        Assert.assertTrue(ServletRegistry.match("/*", "/a"));
 
-        Assert.assertFalse(HttpServer.match("/a/*", "/"));
-        Assert.assertTrue(HttpServer.match("/a/*", "/a"));
+        Assert.assertFalse(ServletRegistry.match("/a/*", "/"));
+        Assert.assertTrue(ServletRegistry.match("/a/*", "/a"));
     }
 }
