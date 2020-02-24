@@ -31,6 +31,7 @@ import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -150,8 +151,7 @@ public class OptimizedHybridHashJoin {
         while (!bufferManager.insertTuple(pid, accessorBuild, tid, tempPtr)) {
             int victimPartition = spillPolicy.selectVictimPartition(pid);
             if (victimPartition < 0) {
-                throw new HyracksDataException(
-                        "No more space left in the memory buffer, please assign more memory to hash-join.");
+                throw HyracksDataException.create(ErrorCode.INSUFFICIENT_MEMORY);
             }
             spillPartition(victimPartition);
         }

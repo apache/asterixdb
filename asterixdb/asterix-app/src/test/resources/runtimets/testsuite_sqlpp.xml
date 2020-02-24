@@ -11538,6 +11538,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="big-object">
+      <compilation-unit name="big_object_join_low_memory_err">
+        <output-dir compare="Text">big_object_join</output-dir>
+        <expected-error>HYR0123: Insufficient memory is provided for the join operators, please increase the join memory budget.</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="big-object">
       <compilation-unit name="big_object_load_20M">
         <output-dir compare="Text">big_object_load_20M</output-dir>
       </compilation-unit>
