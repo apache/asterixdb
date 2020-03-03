@@ -34,14 +34,15 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.CheckNonFunctionalExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 
 public class InlineWithExpressionVisitor extends AbstractSqlppExpressionScopingVisitor {
 
-    private final CheckNonFunctionalExpressionVisitor checkNonFunctionalExpressionVisitor =
-            new CheckNonFunctionalExpressionVisitor();
+    private final CheckNonFunctionalExpressionVisitor checkNonFunctionalExpressionVisitor;
 
-    public InlineWithExpressionVisitor(LangRewritingContext context) {
+    public InlineWithExpressionVisitor(LangRewritingContext context, MetadataProvider metadataProvider) {
         super(context);
+        checkNonFunctionalExpressionVisitor = new CheckNonFunctionalExpressionVisitor(metadataProvider);
     }
 
     @Override

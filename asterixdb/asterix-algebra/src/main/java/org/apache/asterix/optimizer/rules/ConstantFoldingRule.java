@@ -43,10 +43,12 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -75,6 +77,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
@@ -356,6 +359,12 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         }
 
         private boolean canConstantFold(ScalarFunctionCallExpression function) throws AlgebricksException {
+            // skip external functions that are not implemented in Java
+            IFunctionInfo fi = function.getFunctionInfo();
+            if (fi instanceof IExternalFunctionInfo
+                    && !Function.FunctionLanguage.JAVA.name().equals(((IExternalFunctionInfo) fi).getLanguage())) {
+                return false;
+            }
             // skip all functions that would produce records/arrays/multisets (derived types) in their open format
             // this is because constant folding them will make them closed (currently)
             if (function.getFunctionIdentifier().equals(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {

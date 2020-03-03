@@ -41,6 +41,8 @@ import java.util.Map;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
@@ -126,9 +128,12 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEFINITION_FIELD_INDEX)).getStringValue();
         String languageValue = ((AString) functionRecord
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_LANGUAGE_FIELD_INDEX)).getStringValue();
-        Function.FunctionLanguage language = Function.FunctionLanguage.findByName(languageValue);
-        if (language == null) {
-            throw new IllegalStateException(languageValue);
+
+        Function.FunctionLanguage language;
+        try {
+            language = Function.FunctionLanguage.valueOf(languageValue);
+        } catch (IllegalArgumentException e) {
+            throw new AsterixException(ErrorCode.METADATA_ERROR);
         }
         String functionKind =
                 ((AString) functionRecord.getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_KIND_FIELD_INDEX))
@@ -311,7 +316,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
 
         // write field 6
         fieldValue.reset();
-        aString.setValue(function.getLanguage().getName());
+        aString.setValue(function.getLanguage().name());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_LANGUAGE_FIELD_INDEX, fieldValue);
 

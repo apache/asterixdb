@@ -39,10 +39,14 @@ public class FunctionParser {
         this.parserFactory = parserFactory;
     }
 
+    public Function.FunctionLanguage getFunctionLanguage() {
+        return language;
+    }
+
     public FunctionDecl getFunctionDecl(Function function) throws CompilationException {
         if (!function.getLanguage().equals(language)) {
-            throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, language.getName(),
-                    function.getLanguage().getName());
+            throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, language,
+                    function.getLanguage());
         }
         IParser parser = parserFactory.createParser(new StringReader(function.getFunctionBody()));
         return parser.parseFunctionBody(function.getSignature(), function.getArgNames());

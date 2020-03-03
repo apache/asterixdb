@@ -72,7 +72,6 @@ import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.util.RangeMapBuilder;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
-import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
@@ -166,7 +165,7 @@ import org.apache.hyracks.api.result.IResultMetadata;
  * source for the current subtree.
  */
 
-class LangExpressionToPlanTranslator
+abstract class LangExpressionToPlanTranslator
         extends AbstractQueryExpressionVisitor<Pair<ILogicalOperator, LogicalVariable>, Mutable<ILogicalOperator>>
         implements ILangExpressionToPlanTranslator {
 
@@ -885,22 +884,20 @@ class LangExpressionToPlanTranslator
         return f;
     }
 
+    protected abstract Function.FunctionLanguage getFunctionLanguage();
+
     private AbstractFunctionCallExpression lookupUserDefinedFunction(FunctionSignature signature,
             List<Mutable<ILogicalExpression>> args, SourceLocation sourceLoc) throws CompilationException {
         try {
-            if (signature.getDataverseName() == null) {
-                return null;
-            }
             Function function =
-                    MetadataManager.INSTANCE.getFunction(metadataProvider.getMetadataTxnContext(), signature);
+                    FunctionUtil.lookupUserDefinedFunctionDecl(metadataProvider.getMetadataTxnContext(), signature);
             if (function == null) {
                 return null;
             }
             IFunctionInfo finfo =
-                    function.getLanguage().isExternal()
-                            ? ExternalFunctionCompilerUtil
-                                    .getExternalFunctionInfo(metadataProvider.getMetadataTxnContext(), function)
-                            : FunctionUtil.getFunctionInfo(signature);
+                    getFunctionLanguage().equals(function.getLanguage()) ? FunctionUtil.getFunctionInfo(signature)
+                            : ExternalFunctionCompilerUtil
+                                    .getExternalFunctionInfo(metadataProvider.getMetadataTxnContext(), function);
             AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(finfo, args);
             f.setSourceLocation(sourceLoc);
             return f;

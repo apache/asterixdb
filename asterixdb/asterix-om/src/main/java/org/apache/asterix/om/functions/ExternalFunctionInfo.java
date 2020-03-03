@@ -41,16 +41,15 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
 
     public ExternalFunctionInfo(String namespace, String name, int arity, FunctionKind kind, List<IAType> argumentTypes,
             IAType returnType, IResultTypeComputer rtc, String body, String language, String library,
-            Map<String, String> params) {
-        this(new FunctionIdentifier(namespace, name, arity), kind, argumentTypes, returnType, rtc, body, library,
-                language, params);
+            Map<String, String> params, boolean deterministic) {
+        this(new FunctionIdentifier(namespace, name, arity), kind, argumentTypes, returnType, rtc, body, language,
+                library, params, deterministic);
     }
 
     public ExternalFunctionInfo(FunctionIdentifier fid, FunctionKind kind, List<IAType> argumentTypes,
             IAType returnType, IResultTypeComputer rtc, String body, String language, String library,
-            Map<String, String> params) {
-        // TODO: fix CheckNonFunctionalExpressionVisitor once we have non-functional external functions
-        super(fid, true);
+            Map<String, String> params, boolean deterministic) {
+        super(fid, deterministic);
         this.rtc = rtc;
         this.argumentTypes = argumentTypes;
         this.body = body;

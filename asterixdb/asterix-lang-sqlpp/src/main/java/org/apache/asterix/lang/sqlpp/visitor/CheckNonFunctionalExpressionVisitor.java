@@ -20,24 +20,45 @@
 package org.apache.asterix.lang.sqlpp.visitor;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppContainsExpressionVisitor;
+import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Function;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 /**
  * Checks whether given expression is non-functional (i.e. whether it calls a non-functional function)
  */
 public final class CheckNonFunctionalExpressionVisitor extends AbstractSqlppContainsExpressionVisitor<Void> {
+
+    private final MetadataProvider metadataProvider;
+
+    public CheckNonFunctionalExpressionVisitor(MetadataProvider metadataProvider) {
+        this.metadataProvider = metadataProvider;
+    }
+
     @Override
     public Boolean visit(CallExpr callExpr, Void arg) throws CompilationException {
         FunctionSignature fs = callExpr.getFunctionSignature();
         IFunctionInfo fi = FunctionUtil.getBuiltinFunctionInfo(fs.getName(), fs.getArity());
-        // TODO: all external functions are considered functional for now.
-        // we'll need to revisit this code once we enable non-functional in ExternalFunctionInfo
-        if (fi != null && !fi.isFunctional()) {
-            return true;
+        if (fi != null) {
+            if (!fi.isFunctional()) {
+                return true;
+            }
+        } else {
+            try {
+                Function function =
+                        FunctionUtil.lookupUserDefinedFunctionDecl(metadataProvider.getMetadataTxnContext(), fs);
+                if (function != null && function.getDeterministic() != null && !function.getDeterministic()) {
+                    return true;
+                }
+            } catch (AlgebricksException e) {
+                throw new CompilationException(ErrorCode.METADATA_ERROR, e, callExpr.getSourceLocation());
+            }
         }
         return super.visit(callExpr, arg);
     }

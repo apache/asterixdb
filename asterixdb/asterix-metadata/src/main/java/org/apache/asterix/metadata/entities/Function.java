@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -138,30 +137,11 @@ public class Function implements IMetadataEntity<Function> {
         return cache.dropFunction(this);
     }
 
+    // WARNING: These values are stored in function metadata. Do not rename.
     public enum FunctionLanguage {
-        // WARNING: do not change these language names because
-        // these values are stored in function metadata
-        AQL(false),
-        SQLPP(false),
-        JAVA(true),
-        PYTHON(true);
-
-        private final boolean isExternal;
-
-        FunctionLanguage(boolean isExternal) {
-            this.isExternal = isExternal;
-        }
-
-        public boolean isExternal() {
-            return isExternal;
-        }
-
-        public String getName() {
-            return name();
-        }
-
-        public static FunctionLanguage findByName(String name) {
-            return FunctionLanguage.valueOf(name.toUpperCase(Locale.ROOT));
-        }
+        AQL,
+        SQLPP,
+        JAVA,
+        PYTHON
     }
 }

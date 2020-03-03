@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.metadata.functions;
 
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
@@ -51,12 +53,16 @@ public class ExternalFunctionCompilerUtil {
 
     private static IFunctionInfo getScalarFunctionInfo(MetadataTransactionContext txnCtx, Function function)
             throws AlgebricksException {
+        if (function.getDeterministic() == null) {
+            throw new AsterixException(ErrorCode.METADATA_ERROR);
+        }
+
         IAType returnType = function.getReturnType();
         IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, function.getArgTypes());
 
         return new ExternalScalarFunctionInfo(function.getSignature().createFunctionIdentifier(), returnType,
-                function.getFunctionBody(), function.getLanguage().getName(), function.getLibrary(),
-                function.getArgTypes(), function.getParams(), typeComputer);
+                function.getFunctionBody(), function.getLanguage().name(), function.getLibrary(),
+                function.getArgTypes(), function.getParams(), function.getDeterministic(), typeComputer);
     }
 
     private static IFunctionInfo getUnnestFunctionInfo(MetadataTransactionContext txnCtx, Function function) {

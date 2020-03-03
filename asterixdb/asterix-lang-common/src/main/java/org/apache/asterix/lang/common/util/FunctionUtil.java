@@ -40,6 +40,7 @@ import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
+import org.apache.asterix.lang.common.parser.FunctionParser;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -118,11 +119,6 @@ public class FunctionUtil {
     }
 
     @FunctionalInterface
-    public interface IFunctionParser {
-        FunctionDecl getFunctionDecl(Function function) throws CompilationException;
-    }
-
-    @FunctionalInterface
     public interface IFunctionNormalizer {
         FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs, SourceLocation sourceLoc)
                 throws CompilationException;
@@ -149,8 +145,8 @@ public class FunctionUtil {
      */
     public static List<FunctionDecl> retrieveUsedStoredFunctions(MetadataProvider metadataProvider,
             Expression expression, List<FunctionSignature> declaredFunctions, List<FunctionDecl> inputFunctionDecls,
-            IFunctionCollector functionCollector, IFunctionParser functionParser,
-            IFunctionNormalizer functionNormalizer) throws CompilationException {
+            IFunctionCollector functionCollector, FunctionParser functionParser, IFunctionNormalizer functionNormalizer)
+            throws CompilationException {
         List<FunctionDecl> functionDecls =
                 inputFunctionDecls == null ? new ArrayList<>() : new ArrayList<>(inputFunctionDecls);
         if (expression == null) {
@@ -204,7 +200,7 @@ public class FunctionUtil {
                         messageBuilder.toString());
             }
 
-            if (!function.getLanguage().isExternal()) {
+            if (functionParser.getFunctionLanguage().equals(function.getLanguage())) {
                 FunctionDecl functionDecl = functionParser.getFunctionDecl(function);
                 if (functionDecl != null) {
                     if (functionDecls.contains(functionDecl)) {
@@ -266,7 +262,7 @@ public class FunctionUtil {
         return dependencies;
     }
 
-    private static Function lookupUserDefinedFunctionDecl(MetadataTransactionContext mdTxnCtx,
+    public static Function lookupUserDefinedFunctionDecl(MetadataTransactionContext mdTxnCtx,
             FunctionSignature signature) throws AlgebricksException {
         if (signature.getDataverseName() == null) {
             return null;

@@ -91,7 +91,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     public static final String INLINE_WITH_OPTION = "inline_with";
     private static final boolean INLINE_WITH_OPTION_DEFAULT = true;
     private final IParserFactory parserFactory;
-    private final FunctionParser functionRepository;
+    private final FunctionParser functionParser;
     private IReturningStatement topExpr;
     private List<FunctionDecl> declaredFunctions;
     private LangRewritingContext context;
@@ -101,7 +101,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
     public SqlppQueryRewriter(IParserFactory parserFactory) {
         this.parserFactory = parserFactory;
-        functionRepository = new FunctionParser(Function.FunctionLanguage.SQLPP, parserFactory);
+        functionParser = new FunctionParser(Function.FunctionLanguage.SQLPP, parserFactory);
     }
 
     protected void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topExpr,
@@ -196,7 +196,8 @@ public class SqlppQueryRewriter implements IQueryRewriter {
             return;
         }
         // Inlines with expressions.
-        InlineWithExpressionVisitor inlineWithExpressionVisitor = new InlineWithExpressionVisitor(context);
+        InlineWithExpressionVisitor inlineWithExpressionVisitor =
+                new InlineWithExpressionVisitor(context, metadataProvider);
         rewriteTopExpr(inlineWithExpressionVisitor, null);
     }
 
@@ -261,10 +262,10 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
         List<FunctionDecl> usedStoredFunctionDecls = new ArrayList<>();
         for (Expression topLevelExpr : topExpr.getDirectlyEnclosedExpressions()) {
-            usedStoredFunctionDecls.addAll(FunctionUtil.retrieveUsedStoredFunctions(metadataProvider, topLevelExpr,
-                    funIds, null, expr -> getFunctionCalls(expr), func -> functionRepository.getFunctionDecl(func),
-                    (signature, sourceLoc) -> FunctionMapUtil.normalizeBuiltinFunctionSignature(signature, false,
-                            sourceLoc)));
+            usedStoredFunctionDecls
+                    .addAll(FunctionUtil.retrieveUsedStoredFunctions(metadataProvider, topLevelExpr, funIds, null,
+                            expr -> getFunctionCalls(expr), functionParser, (signature, sourceLoc) -> FunctionMapUtil
+                                    .normalizeBuiltinFunctionSignature(signature, false, sourceLoc)));
         }
         declaredFunctions.addAll(usedStoredFunctionDecls);
         if (inlineUdfs && !declaredFunctions.isEmpty()) {

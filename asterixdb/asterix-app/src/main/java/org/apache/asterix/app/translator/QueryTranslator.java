@@ -23,7 +23,6 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -33,12 +32,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
@@ -1840,13 +1839,20 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
             if (cfs.isExternal()) {
-                Function.FunctionLanguage functionLang = Function.FunctionLanguage.findByName(cfs.getLang());
-                if (functionLang == null || !functionLang.isExternal()) {
-                    String expectedExternalLanguages = Arrays.stream(Function.FunctionLanguage.values())
-                            .filter(Function.FunctionLanguage::isExternal).map(Function.FunctionLanguage::getName)
-                            .collect(Collectors.joining(" or "));
+                String lang = cfs.getLang();
+                if (lang == null) {
+                    throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, sourceLoc, "");
+                }
+                Function.FunctionLanguage functionLang;
+                try {
+                    functionLang = Function.FunctionLanguage.valueOf(lang.toUpperCase(Locale.ROOT));
+                } catch (IllegalArgumentException e) {
                     throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, sourceLoc,
-                            expectedExternalLanguages, cfs.getLang());
+                            lang);
+                }
+                if (functionLang.equals(getFunctionLanguage())) {
+                    throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, sourceLoc,
+                            lang);
                 }
                 Library libraryInMetadata = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, dataverseName, libraryName);
                 if (libraryInMetadata == null) {

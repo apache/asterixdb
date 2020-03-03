@@ -59,6 +59,11 @@
         <output-dir compare="Text">upperCase</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="deterministic">
+        <output-dir compare="Text">deterministic</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="feeds">
       <compilation-unit name="feed-with-external-function">
         <output-dir compare="Text">feed-with-external-function</output-dir>

@@ -35,6 +35,7 @@ import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -74,6 +75,11 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
     public AqlExpressionToPlanTranslator(MetadataProvider metadataProvider, Counter currentVarCounter)
             throws AlgebricksException {
         super(metadataProvider, currentVarCounter);
+    }
+
+    @Override
+    protected Function.FunctionLanguage getFunctionLanguage() {
+        return Function.FunctionLanguage.AQL;
     }
 
     @Override
