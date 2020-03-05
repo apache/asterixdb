@@ -200,7 +200,7 @@ public class FunctionUtil {
                         messageBuilder.toString());
             }
 
-            if (functionParser.getFunctionLanguage().equals(function.getLanguage())) {
+            if (functionParser.getLanguage().equals(function.getLanguage())) {
                 FunctionDecl functionDecl = functionParser.getFunctionDecl(function);
                 if (functionDecl != null) {
                     if (functionDecls.contains(functionDecl)) {

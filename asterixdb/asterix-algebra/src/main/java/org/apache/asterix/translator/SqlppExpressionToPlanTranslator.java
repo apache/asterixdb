@@ -82,7 +82,6 @@ import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
-import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
@@ -159,11 +158,6 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         super(metadataProvider, currentVarCounter);
         this.externalVars = externalVars != null ? externalVars : Collections.emptyMap();
         translateInAsOr = metadataProvider.getBooleanProperty(REWRITE_IN_AS_OR_OPTION, REWRITE_IN_AS_OR_OPTION_DEFAULT);
-    }
-
-    @Override
-    protected Function.FunctionLanguage getFunctionLanguage() {
-        return Function.FunctionLanguage.SQLPP;
     }
 
     @Override

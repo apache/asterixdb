@@ -78,7 +78,6 @@ import org.apache.asterix.lang.sqlpp.util.SqlppAstPrintUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
-import org.apache.asterix.metadata.entities.Function;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
@@ -101,7 +100,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
     public SqlppQueryRewriter(IParserFactory parserFactory) {
         this.parserFactory = parserFactory;
-        functionParser = new FunctionParser(Function.FunctionLanguage.SQLPP, parserFactory);
+        functionParser = new FunctionParser(parserFactory);
     }
 
     protected void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topExpr,

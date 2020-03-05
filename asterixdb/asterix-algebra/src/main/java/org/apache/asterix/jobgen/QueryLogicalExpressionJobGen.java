@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.config.CompilerProperties;
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.functions.FunctionDescriptorTag;
 import org.apache.asterix.external.library.ExternalFunctionDescriptorProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -141,8 +140,8 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
         IScalarEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         IFunctionDescriptor fd = null;
         if (expr.getFunctionInfo() instanceof IExternalFunctionInfo) {
-            fd = ExternalFunctionDescriptorProvider.getExternalFunctionDescriptor(
-                    (IExternalFunctionInfo) expr.getFunctionInfo(), (ICcApplicationContext) context.getAppContext());
+            fd = ExternalFunctionDescriptorProvider
+                    .getExternalFunctionDescriptor((IExternalFunctionInfo) expr.getFunctionInfo());
             CompilerProperties props = ((IApplicationContext) context.getAppContext()).getCompilerProperties();
             FunctionTypeInferers.SET_ARGUMENTS_TYPE.infer(expr, fd, env, props);
         } else {

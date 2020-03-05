@@ -1062,6 +1062,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
   String lang = null;
   String libName ="";
   String externalIdent = "";
+  List<String> externalIdentList = null;
   List<Pair<VarIdentifier,IndexedTypeExpression>> args = null;
   RecordConstructor resources = null;
 }
@@ -1119,7 +1120,9 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
               lang = Identifier()
               ( (<NOT> <IDENTIFIER> {expectToken(DETERMINISTIC); deterministic = false;}) | (<IDENTIFIER> {expectToken(DETERMINISTIC); deterministic = true;}) )?
               (<NULL> <IDENTIFIER> { expectToken(CALL); nullCall = true;})?
-              <AS> libName = ConstantString() <COMMA>  externalIdent = ConstantString()
+              <AS> libName = ConstantString()
+              { externalIdentList = new ArrayList<String>(2); }
+              ( <COMMA>  externalIdent = ConstantString() { externalIdentList.add(externalIdent); } )+
               (<WITH> resources = RecordConstructor())?
               {
                   signature = new FunctionSignature(fctName.dataverse, fctName.function, args.size());
@@ -1128,7 +1131,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
                   try{
                       stmt =
                       new CreateFunctionStatement(signature, args, returnType, deterministic, nullCall,
-                                                   lang, libName, externalIdent, resources,  ifNotExists);
+                                                   lang, libName, externalIdentList, resources,  ifNotExists);
                   } catch (AlgebricksException e) {
                       throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
                   }

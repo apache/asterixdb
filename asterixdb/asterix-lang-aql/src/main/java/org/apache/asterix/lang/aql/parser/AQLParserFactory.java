@@ -25,6 +25,9 @@ import org.apache.asterix.lang.common.base.IParserFactory;
 
 public class AQLParserFactory implements IParserFactory {
 
+    // WARNING: This value is stored in function metadata. Do not modify.
+    public static final String AQL = "AQL";
+
     @Override
     public IParser createParser(String query) {
         return new AQLParser(query);
@@ -35,4 +38,8 @@ public class AQLParserFactory implements IParserFactory {
         return new AQLParser(reader);
     }
 
+    @Override
+    public String getLanguage() {
+        return AQL;
+    }
 }

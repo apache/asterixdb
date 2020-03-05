@@ -18,10 +18,16 @@
  */
 package org.apache.asterix.metadata.functions;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.om.functions.ExternalFunctionLanguage;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -54,15 +60,23 @@ public class ExternalFunctionCompilerUtil {
     private static IFunctionInfo getScalarFunctionInfo(MetadataTransactionContext txnCtx, Function function)
             throws AlgebricksException {
         if (function.getDeterministic() == null) {
-            throw new AsterixException(ErrorCode.METADATA_ERROR);
+            throw new AsterixException(ErrorCode.METADATA_ERROR, "");
         }
 
         IAType returnType = function.getReturnType();
         IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, function.getArgTypes());
 
+        ExternalFunctionLanguage lang;
+        try {
+            lang = ExternalFunctionLanguage.valueOf(function.getLanguage());
+        } catch (IllegalArgumentException e) {
+            throw new AsterixException(ErrorCode.METADATA_ERROR, function.getLanguage());
+        }
+        List<String> externalIdentifier = decodeExternalIdentifier(lang, function.getFunctionBody());
+
         return new ExternalScalarFunctionInfo(function.getSignature().createFunctionIdentifier(), returnType,
-                function.getFunctionBody(), function.getLanguage().name(), function.getLibrary(),
-                function.getArgTypes(), function.getParams(), function.getDeterministic(), typeComputer);
+                externalIdentifier, lang, function.getLibrary(), function.getArgTypes(), function.getParams(),
+                function.getDeterministic(), typeComputer);
     }
 
     private static IFunctionInfo getUnnestFunctionInfo(MetadataTransactionContext txnCtx, Function function) {
@@ -77,4 +91,79 @@ public class ExternalFunctionCompilerUtil {
         return null;
     }
 
+    public static String encodeExternalIdentifier(FunctionSignature functionSignature,
+            ExternalFunctionLanguage language, List<String> identList) throws AlgebricksException {
+        switch (language) {
+            case JAVA:
+                // input:
+                // [0] = package.class
+                //
+                // output: package.class
+
+                return identList.get(0);
+
+            case PYTHON:
+                // input: either a method or a top-level function
+                // [0] = package.module(:class)?
+                // [1] = (function_or_method)? - if missing then defaults to declared function name
+                //
+                // output:
+                // case 1 (method): package.module:class.method
+                // case 2 (function): package.module:function
+
+                String ident0 = identList.get(0);
+                String ident1 = identList.size() > 1 ? identList.get(1) : functionSignature.getName();
+                boolean classExists = ident0.indexOf(':') > 0;
+                return ident0 + (classExists ? '.' : ':') + ident1;
+
+            default:
+                throw new AsterixException(ErrorCode.COMPILATION_ERROR, language);
+        }
+    }
+
+    public static List<String> decodeExternalIdentifier(ExternalFunctionLanguage language, String encodedValue)
+            throws AlgebricksException {
+        switch (language) {
+            case JAVA:
+                // input: class
+                //
+                // output:
+                // [0] = class
+                return Collections.singletonList(encodedValue);
+
+            case PYTHON:
+                // input:
+                //  case 1 (method): package.module:class.method
+                //  case 2 (function): package.module:function
+                //
+                // output:
+                //  case 1:
+                //    [0] = package.module
+                //    [1] = class
+                //    [2] = method
+                //  case 2:
+                //    [0] = package.module
+                //    [1] = function
+
+                int d1 = encodedValue.indexOf(':');
+                if (d1 <= 0) {
+                    throw new AsterixException(ErrorCode.COMPILATION_ERROR, encodedValue);
+                }
+                String moduleName = encodedValue.substring(0, d1);
+                int d2 = encodedValue.lastIndexOf('.');
+                if (d2 > d1) {
+                    // class.method
+                    String className = encodedValue.substring(d1 + 1, d2);
+                    String methodName = encodedValue.substring(d2 + 1);
+                    return Arrays.asList(moduleName, className, methodName);
+                } else {
+                    // function
+                    String functionName = encodedValue.substring(d1 + 1);
+                    return Arrays.asList(moduleName, functionName);
+                }
+
+            default:
+                throw new AsterixException(ErrorCode.COMPILATION_ERROR, language);
+        }
+    }
 }

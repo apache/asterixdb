@@ -25,6 +25,9 @@ import org.apache.asterix.lang.common.base.IParserFactory;
 
 public class SqlppParserFactory implements IParserFactory {
 
+    // WARNING: This value is stored in function metadata. Do not modify.
+    public static final String SQLPP = "SQLPP";
+
     @Override
     public IParser createParser(String query) {
         return new SQLPPParser(query);
@@ -33,5 +36,10 @@ public class SqlppParserFactory implements IParserFactory {
     @Override
     public IParser createParser(Reader reader) {
         return new SQLPPParser(reader);
+    }
+
+    @Override
+    public String getLanguage() {
+        return SQLPP;
     }
 }

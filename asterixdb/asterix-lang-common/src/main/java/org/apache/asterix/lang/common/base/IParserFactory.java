@@ -22,8 +22,9 @@ import java.io.Reader;
 
 public interface IParserFactory {
 
-    public IParser createParser(String query);
+    IParser createParser(String query);
 
-    public IParser createParser(Reader reader);
+    IParser createParser(Reader reader);
 
+    String getLanguage();
 }

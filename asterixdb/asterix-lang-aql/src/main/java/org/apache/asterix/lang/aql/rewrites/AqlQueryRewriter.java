@@ -53,7 +53,6 @@ import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
-import org.apache.asterix.metadata.entities.Function;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 class AqlQueryRewriter implements IQueryRewriter {
@@ -67,7 +66,7 @@ class AqlQueryRewriter implements IQueryRewriter {
 
     AqlQueryRewriter(IParserFactory parserFactory) {
         this.parserFactory = parserFactory;
-        functionParser = new FunctionParser(Function.FunctionLanguage.AQL, this.parserFactory);
+        functionParser = new FunctionParser(parserFactory);
     }
 
     private void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,

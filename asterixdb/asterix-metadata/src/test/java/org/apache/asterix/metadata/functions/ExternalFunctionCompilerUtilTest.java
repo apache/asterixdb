@@ -25,6 +25,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.om.functions.ExternalFunctionLanguage;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -38,7 +39,7 @@ public class ExternalFunctionCompilerUtilTest {
         MetadataTransactionContext txnCtx = new MetadataTransactionContext(new TxnId(1));
         FunctionSignature signature = new FunctionSignature(DataverseName.createSinglePartName("test"), "test", 0);
         Function function = new Function(signature, new LinkedList<>(), new LinkedList<>(), BuiltinType.ASTRING, "",
-                "SCALAR", Function.FunctionLanguage.JAVA, "", false, false, null, null);
+                "SCALAR", ExternalFunctionLanguage.JAVA.name(), "", false, false, null, null);
 
         // when
         ExternalScalarFunctionInfo info =

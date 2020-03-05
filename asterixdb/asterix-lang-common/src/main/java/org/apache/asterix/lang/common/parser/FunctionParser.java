@@ -30,22 +30,19 @@ import org.apache.asterix.metadata.entities.Function;
 
 public class FunctionParser {
 
-    private final Function.FunctionLanguage language;
-
     private final IParserFactory parserFactory;
 
-    public FunctionParser(Function.FunctionLanguage language, IParserFactory parserFactory) {
-        this.language = language;
+    public FunctionParser(IParserFactory parserFactory) {
         this.parserFactory = parserFactory;
     }
 
-    public Function.FunctionLanguage getFunctionLanguage() {
-        return language;
+    public String getLanguage() {
+        return parserFactory.getLanguage();
     }
 
     public FunctionDecl getFunctionDecl(Function function) throws CompilationException {
-        if (!function.getLanguage().equals(language)) {
-            throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, language,
+        if (!function.getLanguage().equals(getLanguage())) {
+            throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, getLanguage(),
                     function.getLanguage());
         }
         IParser parser = parserFactory.createParser(new StringReader(function.getFunctionBody()));

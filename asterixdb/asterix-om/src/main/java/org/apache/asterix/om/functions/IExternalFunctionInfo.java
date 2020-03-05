@@ -32,11 +32,11 @@ public interface IExternalFunctionInfo extends IFunctionInfo {
 
     public IAType getReturnType();
 
-    public String getFunctionBody();
+    public List<String> getExternalIdentifier();
 
     public List<IAType> getArgumentList();
 
-    public String getLanguage();
+    public ExternalFunctionLanguage getLanguage();
 
     public FunctionKind getKind();
 

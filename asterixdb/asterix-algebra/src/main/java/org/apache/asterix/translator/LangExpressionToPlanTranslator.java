@@ -884,8 +884,6 @@ abstract class LangExpressionToPlanTranslator
         return f;
     }
 
-    protected abstract Function.FunctionLanguage getFunctionLanguage();
-
     private AbstractFunctionCallExpression lookupUserDefinedFunction(FunctionSignature signature,
             List<Mutable<ILogicalExpression>> args, SourceLocation sourceLoc) throws CompilationException {
         try {
@@ -895,9 +893,10 @@ abstract class LangExpressionToPlanTranslator
                 return null;
             }
             IFunctionInfo finfo =
-                    getFunctionLanguage().equals(function.getLanguage()) ? FunctionUtil.getFunctionInfo(signature)
-                            : ExternalFunctionCompilerUtil
-                                    .getExternalFunctionInfo(metadataProvider.getMetadataTxnContext(), function);
+                    function.isExternal()
+                            ? ExternalFunctionCompilerUtil
+                                    .getExternalFunctionInfo(metadataProvider.getMetadataTxnContext(), function)
+                            : FunctionUtil.getFunctionInfo(signature);
             AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(finfo, args);
             f.setSourceLocation(sourceLoc);
             return f;

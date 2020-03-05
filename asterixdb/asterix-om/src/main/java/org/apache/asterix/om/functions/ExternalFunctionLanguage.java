@@ -1,4 +1,3 @@
-package org.apache.asterix.external.api;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,7 +17,10 @@ package org.apache.asterix.external.api;
  * under the License.
  */
 
-public enum ExternalLanguage {
+package org.apache.asterix.om.functions;
+
+// WARNING: These values are stored in function metadata. Do not rename.
+public enum ExternalFunctionLanguage {
     JAVA,
     PYTHON
 }

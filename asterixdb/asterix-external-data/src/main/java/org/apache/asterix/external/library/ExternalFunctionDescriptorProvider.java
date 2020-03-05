@@ -18,64 +18,24 @@
  */
 package org.apache.asterix.external.library;
 
-import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
-import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
 public class ExternalFunctionDescriptorProvider {
 
-    public static IFunctionDescriptor getExternalFunctionDescriptor(IExternalFunctionInfo finfo,
-            IApplicationContext appCtx) throws AlgebricksException {
+    public static IFunctionDescriptor getExternalFunctionDescriptor(IExternalFunctionInfo finfo)
+            throws AlgebricksException {
         switch (finfo.getKind()) {
             case SCALAR:
-                return new ExternalScalarFunctionDescriptor(finfo, appCtx);
+                return new ExternalScalarFunctionDescriptor(finfo);
             case AGGREGATE:
             case UNNEST:
-                throw new AlgebricksException("Unsupported function kind :" + finfo.getKind());
+                throw new AsterixException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND, finfo.getKind());
             default:
-                break;
-        }
-        return null;
-    }
-
-}
-
-class ExternalScalarFunctionDescriptor extends AbstractScalarFunctionDynamicDescriptor implements IFunctionDescriptor {
-    private static final long serialVersionUID = 1L;
-    private final IFunctionInfo finfo;
-    private IScalarEvaluatorFactory evaluatorFactory;
-    private final transient IApplicationContext appCtx;
-    private IAType[] argTypes;
-
-    public ExternalScalarFunctionDescriptor(IFunctionInfo finfo, IApplicationContext appCtx) {
-        this.finfo = finfo;
-        this.appCtx = appCtx;
-    }
-
-    @Override
-    public void setImmutableStates(Object... states) {
-        argTypes = new IAType[states.length];
-        for (int i = 0; i < states.length; i++) {
-            argTypes[i] = (IAType) states[i];
+                throw new AsterixException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNKNOWN_KIND, finfo.getKind());
         }
     }
-
-    @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) throws AlgebricksException {
-        evaluatorFactory =
-                new ExternalScalarFunctionEvaluatorFactory((IExternalFunctionInfo) finfo, args, argTypes, appCtx);
-        return evaluatorFactory;
-    }
-
-    @Override
-    public FunctionIdentifier getIdentifier() {
-        return finfo.getFunctionIdentifier();
-    }
-
 }

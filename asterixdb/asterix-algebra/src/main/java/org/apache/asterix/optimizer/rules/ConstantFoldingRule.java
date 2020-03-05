@@ -43,11 +43,11 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
 import org.apache.asterix.metadata.declared.MetadataProvider;
-import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.ExternalFunctionLanguage;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
@@ -87,7 +87,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
+import org.apache.hyracks.api.application.IServiceContext;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -167,17 +168,19 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
     }
 
     private class ConstantFoldingVisitor implements ILogicalExpressionVisitor<Pair<Boolean, ILogicalExpression>, Void>,
-            ILogicalExpressionReferenceTransform {
+            ILogicalExpressionReferenceTransform, IEvaluatorContext {
 
         private final IPointable p = VoidPointable.FACTORY.createPointable();
         private final ByteBufferInputStream bbis = new ByteBufferInputStream();
         private final DataInputStream dis = new DataInputStream(bbis);
         private final WarningCollector warningCollector = new WarningCollector();
-        private final IEvaluatorContext evalContext = new EvaluatorContext(warningCollector);
         private IOptimizationContext optContext;
+        private IServiceContext serviceContext;
 
         private void reset(IOptimizationContext context) {
             optContext = context;
+            serviceContext =
+                    ((MetadataProvider) context.getMetadataProvider()).getApplicationContext().getServiceContext();
         }
 
         @Override
@@ -230,7 +233,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                         _emptyTypeEnv, _emptySchemas, jobGenCtx);
 
                 warningCollector.clear();
-                IScalarEvaluator eval = fact.createScalarEvaluator(evalContext);
+                IScalarEvaluator eval = fact.createScalarEvaluator(this);
                 eval.evaluate(null, p);
                 IAType returnType = (IAType) _emptyTypeEnv.getType(expr);
                 ATypeTag runtimeType = PointableHelper.getTypeTag(p);
@@ -362,7 +365,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             // skip external functions that are not implemented in Java
             IFunctionInfo fi = function.getFunctionInfo();
             if (fi instanceof IExternalFunctionInfo
-                    && !Function.FunctionLanguage.JAVA.name().equals(((IExternalFunctionInfo) fi).getLanguage())) {
+                    && !ExternalFunctionLanguage.JAVA.equals(((IExternalFunctionInfo) fi).getLanguage())) {
                 return false;
             }
             // skip all functions that would produce records/arrays/multisets (derived types) in their open format
@@ -397,6 +400,23 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 return canConstantFoldType(((AUnionType) returnType).getActualType());
             }
             return true;
+        }
+
+        // IEvaluatorContext
+
+        @Override
+        public IServiceContext getServiceContext() {
+            return serviceContext;
+        }
+
+        @Override
+        public IHyracksTaskContext getTaskContext() {
+            return null;
+        }
+
+        @Override
+        public IWarningCollector getWarningCollector() {
+            return warningCollector;
         }
     }
 }

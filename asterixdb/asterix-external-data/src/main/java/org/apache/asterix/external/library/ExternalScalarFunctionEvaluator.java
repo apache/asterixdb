@@ -16,9 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.external.library;
 
-import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
@@ -26,30 +28,22 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class ExternalScalarFunctionEvaluatorFactory implements IScalarEvaluatorFactory {
+public abstract class ExternalScalarFunctionEvaluator implements IScalarEvaluator {
 
-    private static final long serialVersionUID = 1L;
-    private final IExternalFunctionInfo finfo;
-    private final IScalarEvaluatorFactory[] args;
-    private final IAType[] argTypes;
+    protected final IExternalFunctionInfo finfo;
+    protected final IScalarEvaluator[] argEvals;
+    protected final IAType[] argTypes;
+    protected final ILibraryManager libraryManager;
 
-    public ExternalScalarFunctionEvaluatorFactory(IExternalFunctionInfo finfo, IScalarEvaluatorFactory[] args,
-            IAType[] argTypes) {
+    public ExternalScalarFunctionEvaluator(IExternalFunctionInfo finfo, IScalarEvaluatorFactory[] args,
+            IAType[] argTypes, IEvaluatorContext context) throws HyracksDataException {
         this.finfo = finfo;
-        this.args = args;
         this.argTypes = argTypes;
-    }
-
-    @Override
-    public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-        switch (finfo.getLanguage()) {
-            case JAVA:
-                return new ExternalScalarJavaFunctionEvaluator(finfo, args, argTypes, ctx);
-            case PYTHON:
-                return new ExternalScalarPythonFunctionEvaluator(finfo, args, argTypes, ctx);
-            default:
-                throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND,
-                        finfo.getLanguage());
+        argEvals = new IScalarEvaluator[args.length];
+        for (int i = 0; i < args.length; i++) {
+            argEvals[i] = args[i].createScalarEvaluator(context);
         }
+        libraryManager =
+                ((IApplicationContext) context.getServiceContext().getApplicationContext()).getLibraryManager();
     }
 }

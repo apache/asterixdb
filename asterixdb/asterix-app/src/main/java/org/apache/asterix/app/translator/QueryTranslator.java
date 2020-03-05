@@ -158,6 +158,7 @@ import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
+import org.apache.asterix.metadata.functions.ExternalFunctionCompilerUtil;
 import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.ExternalIndexingOperations;
@@ -166,6 +167,7 @@ import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.functions.ExternalFunctionLanguage;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -1843,14 +1845,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 if (lang == null) {
                     throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, sourceLoc, "");
                 }
-                Function.FunctionLanguage functionLang;
+                ExternalFunctionLanguage functionLang;
                 try {
-                    functionLang = Function.FunctionLanguage.valueOf(lang.toUpperCase(Locale.ROOT));
+                    functionLang = ExternalFunctionLanguage.valueOf(lang.toUpperCase(Locale.ROOT));
                 } catch (IllegalArgumentException e) {
-                    throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, sourceLoc,
-                            lang);
-                }
-                if (functionLang.equals(getFunctionLanguage())) {
                     throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, sourceLoc,
                             lang);
                 }
@@ -1859,10 +1857,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new CompilationException(ErrorCode.UNKNOWN_LIBRARY, sourceLoc, libraryName);
                 }
                 // Add functions
+                String body = ExternalFunctionCompilerUtil.encodeExternalIdentifier(signature, functionLang,
+                        cfs.getExternalIdentifier());
                 List<List<Triple<DataverseName, String, String>>> dependencies =
                         FunctionUtil.getExternalFunctionDependencies(dependentTypes);
-                Function f = new Function(signature, argNames, argTypes, returnType, cfs.getExternalIdentifier(),
-                        FunctionKind.SCALAR.toString(), functionLang, libraryName, cfs.getNullCall(),
+                Function f = new Function(signature, argNames, argTypes, returnType, body,
+                        FunctionKind.SCALAR.toString(), functionLang.name(), libraryName, cfs.getNullCall(),
                         cfs.getDeterministic(), cfs.getResources(), dependencies);
                 MetadataManager.INSTANCE.addFunction(mdTxnCtx, f);
                 if (LOGGER.isInfoEnabled()) {
@@ -1882,7 +1882,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         FunctionUtil.getFunctionDependencies(rewriterFactory.createQueryRewriter(),
                                 cfs.getFunctionBodyExpression(), metadataProvider, dependentTypes);
                 Function function = new Function(signature, argNames, argTypes, returnType, cfs.getFunctionBody(),
-                        FunctionKind.SCALAR.toString(), getFunctionLanguage(), null, null, null, null, dependencies);
+                        FunctionKind.SCALAR.toString(), compilationProvider.getParserFactory().getLanguage(), null,
+                        null, null, null, dependencies);
                 MetadataManager.INSTANCE.addFunction(mdTxnCtx, function);
                 if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("Installed function: " + signature);
@@ -1946,17 +1947,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throw e;
         } finally {
             metadataProvider.getLocks().unlock();
-        }
-    }
-
-    private Function.FunctionLanguage getFunctionLanguage() {
-        switch (compilationProvider.getLanguage()) {
-            case SQLPP:
-                return Function.FunctionLanguage.SQLPP;
-            case AQL:
-                return Function.FunctionLanguage.AQL;
-            default:
-                throw new IllegalStateException(String.valueOf(compilationProvider.getLanguage()));
         }
     }
 

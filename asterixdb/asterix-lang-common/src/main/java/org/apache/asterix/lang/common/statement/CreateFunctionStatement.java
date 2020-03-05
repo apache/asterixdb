@@ -47,7 +47,7 @@ public class CreateFunctionStatement extends AbstractStatement {
 
     private final String lang;
     private final String libName;
-    private final String externalIdentifier;
+    private final List<String> externalIdentifier;
     private final Boolean deterministic;
     private final Boolean nullCall;
     private final AdmObjectNode resources;
@@ -71,7 +71,7 @@ public class CreateFunctionStatement extends AbstractStatement {
 
     public CreateFunctionStatement(FunctionSignature signature,
             List<Pair<VarIdentifier, IndexedTypeExpression>> parameterList, IndexedTypeExpression returnType,
-            boolean deterministic, boolean nullCall, String lang, String libName, String externalIdentifier,
+            boolean deterministic, boolean nullCall, String lang, String libName, List<String> externalIdentifier,
             RecordConstructor resources, boolean ifNotExists) throws CompilationException {
         this.signature = signature;
         this.ifNotExists = ifNotExists;
@@ -120,7 +120,7 @@ public class CreateFunctionStatement extends AbstractStatement {
         return externalIdentifier != null;
     }
 
-    public String getExternalIdentifier() {
+    public List<String> getExternalIdentifier() {
         return externalIdentifier;
     }
 

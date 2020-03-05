@@ -22,24 +22,33 @@ package org.apache.hyracks.algebricks.runtime.evaluators;
 import java.util.Objects;
 
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public final class EvaluatorContext implements IEvaluatorContext {
+
+    private final IServiceContext serviceContext;
 
     private final IHyracksTaskContext taskContext;
 
     private final IWarningCollector warningCollector;
 
     public EvaluatorContext(IHyracksTaskContext taskContext) {
-        this.taskContext = taskContext;
-        this.warningCollector = taskContext.getWarningCollector();
+        this.taskContext = Objects.requireNonNull(taskContext);
+        this.serviceContext = Objects.requireNonNull(taskContext.getJobletContext().getServiceContext());
+        this.warningCollector = Objects.requireNonNull(taskContext.getWarningCollector());
     }
 
-    public EvaluatorContext(IWarningCollector warningCollector) {
-        Objects.requireNonNull(warningCollector);
+    public EvaluatorContext(IServiceContext serviceContext, IWarningCollector warningCollector) {
         this.taskContext = null;
-        this.warningCollector = warningCollector;
+        this.serviceContext = Objects.requireNonNull(serviceContext);
+        this.warningCollector = Objects.requireNonNull(warningCollector);
+    }
+
+    @Override
+    public IServiceContext getServiceContext() {
+        return serviceContext;
     }
 
     @Override
