@@ -1,0 +1,39 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE bigfun;
+
+INSERT INTO GleambookUsersComposite [
+{"gb": 1, "id": "1", "name": "name1", "user_since": '2010-07-22T00:00:00'},
+{"gb": 1, "id": "2", "name": "name2", "user_since": '2011-07-22T00:00:00'},
+{"gb": 2, "id": "3", "name": "name3", "user_since": '2010-09-22T00:00:00'},
+{"gb": 2, "id": "4", "name": "name4", "user_since": '2010-10-22T00:00:00'},
+{"gb": 3, "id": "5", "name": "name5", "user_since": '2013-07-22T00:00:00'}
+];
+
+INSERT INTO GleambookMessagesComposite [
+{"gb": 1, "message_id": "1", "author_id": "1", "message": "message1_1"},
+{"gb": 1, "message_id": "2", "author_id": "1", "message": "message2_1"},
+{"gb": 1, "message_id": "3", "author_id": "1", "message": "message3_1"},
+{"gb": 2, "message_id": "4", "author_id": "2", "message": "message1_2"},
+{"gb": 2, "message_id": "5", "author_id": "2", "message": "message2_2"},
+{"gb": 3, "message_id": "6", "author_id": "2", "message": "message3_2"},
+{"gb": 3, "message_id": "7", "author_id": "5", "message": "message1_5"},
+{"gb": 3, "message_id": "8", "author_id": "5", "message": "message2_5"}
+];

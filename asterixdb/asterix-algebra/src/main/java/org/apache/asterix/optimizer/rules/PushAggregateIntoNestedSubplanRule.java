@@ -45,13 +45,12 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
+import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule {
@@ -133,8 +132,9 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
         switch (op1.getOperatorTag()) {
             case ASSIGN:
             case SELECT:
+            case WINDOW:
                 boolean found = false;
-                // Do some prefiltering: check if the Assign uses any nsp vars.
+                // Do some pre-filtering: check if the operator uses any nsp vars.
                 for (LogicalVariable v : used) {
                     if (nspListifyVarsCount.get(v) != null) {
                         found = true;
@@ -144,26 +144,19 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                 if (!found) {
                     break;
                 }
-                if (op1.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-                    AssignOperator assign = (AssignOperator) op1;
-                    for (Mutable<ILogicalExpression> exprRef : assign.getExpressions()) {
-                        Pair<Boolean, ILogicalExpression> p =
-                                extractAggFunctionsFromExpression(exprRef, nspWithAgg, aggregateExprToVarExpr, context);
-                        if (p.first) {
-                            change = true;
-                            exprRef.setValue(p.second);
-                        }
-                    }
-                }
-                if (op1.getOperatorTag() == LogicalOperatorTag.SELECT) {
-                    SelectOperator select = (SelectOperator) op1;
-                    Mutable<ILogicalExpression> exprRef = select.getCondition();
+
+                ILogicalExpressionReferenceTransform exprTransform = exprRef -> {
                     Pair<Boolean, ILogicalExpression> p =
                             extractAggFunctionsFromExpression(exprRef, nspWithAgg, aggregateExprToVarExpr, context);
                     if (p.first) {
-                        change = true;
                         exprRef.setValue(p.second);
+                        return true;
+                    } else {
+                        return false;
                     }
+                };
+                if (op1.acceptExpressionTransform(exprTransform)) {
+                    change = true;
                 }
                 used.clear();
                 VariableUtilities.getUsedVariables(op1, used);

@@ -23,6 +23,7 @@ import static org.apache.hyracks.http.server.utils.HttpUtil.X_FORWARDED_PROTO;
 import java.io.IOException;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.function.Consumer;
 
 import org.apache.hyracks.http.api.IChannelClosedHandler;
 import org.apache.hyracks.http.api.IServlet;
@@ -43,6 +44,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpScheme;
 
@@ -119,11 +121,19 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
     }
 
     protected void respond(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus status) {
+        respond(ctx, request, status, null);
+    }
+
+    protected void respond(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus status,
+            Consumer<HttpResponse> beforeWrite) {
         final DefaultHttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), status);
         response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, 0);
         HttpUtil.setConnectionHeader(request, response);
         final ChannelPromise responseCompletionPromise = ctx.newPromise();
         responseCompletionPromise.addListener(this);
+        if (beforeWrite != null) {
+            beforeWrite.accept(response);
+        }
         final ChannelFuture clientChannel = ctx.writeAndFlush(response, responseCompletionPromise);
         if (!io.netty.handler.codec.http.HttpUtil.isKeepAlive(request)) {
             clientChannel.addListener(ChannelFutureListener.CLOSE);
@@ -160,7 +170,8 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("No servlet for " + request.uri());
         }
-        respond(ctx, request, HttpResponseStatus.NOT_FOUND);
+        respond(ctx, request, HttpResponseStatus.NOT_FOUND,
+                response -> response.headers().set(HttpUtil.PERMANENT, "true"));
     }
 
     @Override

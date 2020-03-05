@@ -19,9 +19,7 @@
 package org.apache.hyracks.http.server;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -71,7 +69,7 @@ public class HttpServer {
     private final AtomicInteger threadId = new AtomicInteger();
     private final ConcurrentMap<String, Object> ctx;
     private final LinkedBlockingQueue<Runnable> workQueue;
-    private final List<IServlet> servlets;
+    private final ServletRegistry servlets;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
     private final InetSocketAddress address;
@@ -100,7 +98,7 @@ public class HttpServer {
         this.closedHandler = closeHandler;
         this.config = config;
         ctx = new ConcurrentHashMap<>();
-        servlets = new ArrayList<>();
+        servlets = new ServletRegistry();
         workQueue = new LinkedBlockingQueue<>(config.getRequestQueueSize());
         int numExecutorThreads = config.getThreadCount();
         executor = new ThreadPoolExecutor(numExecutorThreads, numExecutorThreads, 0L, TimeUnit.MILLISECONDS, workQueue,
@@ -219,21 +217,14 @@ public class HttpServer {
     }
 
     public void addServlet(IServlet let) {
-        servlets.add(let);
+        servlets.register(let);
+    }
+
+    public Set<IServlet> getServlets() {
+        return servlets.getServlets();
     }
 
     protected void doStart() throws InterruptedException {
-        /*
-         * This is a hacky way to ensure that IServlets with more specific paths are checked first.
-         * For example:
-         * "/path/to/resource/"
-         * is checked before
-         * "/path/to/"
-         * which in turn is checked before
-         * "/path/"
-         * Note that it doesn't work for the case where multiple paths map to a single IServlet
-         */
-        Collections.sort(servlets, (l1, l2) -> l2.getPaths()[0].length() - l1.getPaths()[0].length());
         channel = bind();
     }
 
@@ -341,44 +332,7 @@ public class HttpServer {
     }
 
     public IServlet getServlet(FullHttpRequest request) {
-        String uri = request.uri();
-        int i = uri.indexOf('?');
-        if (i >= 0) {
-            uri = uri.substring(0, i);
-        }
-        for (IServlet servlet : servlets) {
-            for (String path : servlet.getPaths()) {
-                if (match(path, uri)) {
-                    return servlet;
-                }
-            }
-        }
-        return null;
-    }
-
-    static boolean match(String pathSpec, String path) {
-        char c = pathSpec.charAt(0);
-        if (c == '/') {
-            if (pathSpec.equals(path) || (pathSpec.length() == 1 && path.isEmpty())) {
-                return true;
-            }
-            if (isPathWildcardMatch(pathSpec, path)) {
-                return true;
-            }
-        } else if (c == '*') {
-            return path.regionMatches(path.length() - pathSpec.length() + 1, pathSpec, 1, pathSpec.length() - 1);
-        }
-        return false;
-    }
-
-    static boolean isPathWildcardMatch(String pathSpec, String path) {
-        final int length = pathSpec.length();
-        if (length < 2) {
-            return false;
-        }
-        final int cpl = length - 2;
-        final boolean b = pathSpec.endsWith("/*") && path.regionMatches(0, pathSpec, 0, cpl);
-        return b && (path.length() == cpl || '/' == path.charAt(cpl));
+        return servlets.getServlet(request.uri());
     }
 
     protected HttpServerHandler<? extends HttpServer> createHttpHandler(int chunkSize) {

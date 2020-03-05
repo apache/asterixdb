@@ -1,0 +1,24 @@
+-- DISTRIBUTE_RESULT  |LOCAL|
+  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    -- STREAM_PROJECT  |LOCAL|
+      -- ASSIGN  |LOCAL|
+        -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+          -- STABLE_SORT [$$x(ASC), $$93(ASC)]  |LOCAL|
+            -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+              -- STREAM_PROJECT  |LOCAL|
+                -- WINDOW_STREAM  |LOCAL|
+                  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                    -- STABLE_SORT [$$x(ASC), $$94(ASC)]  |LOCAL|
+                      -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                        -- PRE_CLUSTERED_GROUP_BY[$$96, $$97]  |LOCAL|
+                                {
+                                  -- AGGREGATE  |LOCAL|
+                                    -- AGGREGATE  |LOCAL|
+                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                }
+                          -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                            -- STABLE_SORT [$$96(ASC), $$97(ASC)]  |LOCAL|
+                              -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                -- ASSIGN  |UNPARTITIONED|
+                                  -- UNNEST  |UNPARTITIONED|
+                                    -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

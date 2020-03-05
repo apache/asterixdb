@@ -16,26 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.server;
 
-import org.junit.Assert;
-import org.junit.Test;
+/*
+ * Description: This test case is to verify the fix for ASTERIXDB-2700
+ */
 
-public class PathMatchTest {
-    @Test
-    public void test() {
-        Assert.assertTrue(ServletRegistry.match("/", ""));
+DROP DATAVERSE bigfun IF EXISTS;
+CREATE DATAVERSE bigfun;
+USE bigfun;
 
-        Assert.assertTrue(ServletRegistry.match("/", "/"));
-        Assert.assertFalse(ServletRegistry.match("/", "/a"));
+CREATE TYPE GleambookUserType AS { gb: int32, id: string };
+CREATE TYPE GleambookMessageType AS { gb: int32, message_id: string };
 
-        Assert.assertFalse(ServletRegistry.match("/a", "/"));
-        Assert.assertTrue(ServletRegistry.match("/a", "/a"));
+CREATE DATASET GleambookUsersComposite(GleambookUserType) PRIMARY KEY gb,id;
+CREATE DATASET GleambookMessagesComposite(GleambookMessageType) PRIMARY KEY gb,message_id;
 
-        Assert.assertTrue(ServletRegistry.match("/*", "/"));
-        Assert.assertTrue(ServletRegistry.match("/*", "/a"));
-
-        Assert.assertFalse(ServletRegistry.match("/a/*", "/"));
-        Assert.assertTrue(ServletRegistry.match("/a/*", "/a"));
-    }
-}
+CREATE INDEX usrSinceIx ON GleambookUsersComposite(user_since: string);
+CREATE INDEX authorIdIx ON GleambookMessagesComposite(author_id: string);

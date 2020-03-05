@@ -16,26 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.server;
-
-import org.junit.Assert;
-import org.junit.Test;
-
-public class PathMatchTest {
-    @Test
-    public void test() {
-        Assert.assertTrue(ServletRegistry.match("/", ""));
-
-        Assert.assertTrue(ServletRegistry.match("/", "/"));
-        Assert.assertFalse(ServletRegistry.match("/", "/a"));
-
-        Assert.assertFalse(ServletRegistry.match("/a", "/"));
-        Assert.assertTrue(ServletRegistry.match("/a", "/a"));
-
-        Assert.assertTrue(ServletRegistry.match("/*", "/"));
-        Assert.assertTrue(ServletRegistry.match("/*", "/a"));
-
-        Assert.assertFalse(ServletRegistry.match("/a/*", "/"));
-        Assert.assertTrue(ServletRegistry.match("/a/*", "/a"));
-    }
-}
+/*
+* Description  : Create an external dataset that contains long comments fields, 10% of the records have a 32K size comments.
+*                 This will trigger into the VSizeFrame path
+* Expected Res : Success
+* Date         : Jun 16 2015
+*/

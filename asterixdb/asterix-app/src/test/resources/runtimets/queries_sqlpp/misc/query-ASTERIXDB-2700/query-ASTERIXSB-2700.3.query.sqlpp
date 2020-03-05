@@ -16,26 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.server;
 
-import org.junit.Assert;
-import org.junit.Test;
+USE bigfun;
 
-public class PathMatchTest {
-    @Test
-    public void test() {
-        Assert.assertTrue(ServletRegistry.match("/", ""));
+SET `compiler.sort.parallel` "false";
 
-        Assert.assertTrue(ServletRegistry.match("/", "/"));
-        Assert.assertFalse(ServletRegistry.match("/", "/a"));
-
-        Assert.assertFalse(ServletRegistry.match("/a", "/"));
-        Assert.assertTrue(ServletRegistry.match("/a", "/a"));
-
-        Assert.assertTrue(ServletRegistry.match("/*", "/"));
-        Assert.assertTrue(ServletRegistry.match("/*", "/a"));
-
-        Assert.assertFalse(ServletRegistry.match("/a/*", "/"));
-        Assert.assertTrue(ServletRegistry.match("/a/*", "/a"));
-    }
-}
+FROM (SELECT VALUE u
+      FROM GleambookUsersComposite u
+      WHERE u.user_since >= '2008-07-22T00:00:00'
+      ORDER BY u.id) AS user, GleambookMessagesComposite AS msg
+WHERE msg.author_id /*+ indexnl */ = user.id
+SELECT user.name AS uname, msg.message AS message
+ORDER BY uname, message;;
