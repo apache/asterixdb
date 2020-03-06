@@ -24,14 +24,14 @@ import org.apache.asterix.common.metadata.DataverseName;
 
 public class SqlppStatementUtil {
 
-    private static final String IF_EXISTS = " IF EXISTS ";
-    private static final String IF_NOT_EXISTS = " IF NOT EXISTS ";
-    private static final String CREATE_DATAVERSE = "CREATE DATAVERSE ";
+    public static final String IF_EXISTS = " IF EXISTS ";
+    public static final String IF_NOT_EXISTS = " IF NOT EXISTS ";
+    public static final String CREATE_DATAVERSE = "CREATE DATAVERSE ";
     public static final String CREATE_DATASET = "CREATE DATASET ";
-    private static final String DROP_DATASET = "DROP DATASET ";
-    private static final String CREATE_INDEX = "CREATE INDEX ";
-    private static final String CREATE_PRIMARY_INDEX = "CREATE PRIMARY INDEX ";
-    private static final String DROP_INDEX = "DROP INDEX ";
+    public static final String DROP_DATASET = "DROP DATASET ";
+    public static final String CREATE_INDEX = "CREATE INDEX ";
+    public static final String CREATE_PRIMARY_INDEX = "CREATE PRIMARY INDEX ";
+    public static final String DROP_INDEX = "DROP INDEX ";
     public static final String ON = " ON ";
     public static final String WHERE = " WHERE ";
     public static final char SEMI_COLON = ';';
@@ -42,8 +42,8 @@ public class SqlppStatementUtil {
     public static final char R_PARENTHESIS = ')';
     public static final char L_BRACE = '{';
     public static final char R_BRACE = '}';
-    private static final char QUOTE = '\"';
-    private static final char BACK_TICK = '`';
+    public static final char QUOTE = '\"';
+    public static final char BACK_TICK = '`';
 
     private SqlppStatementUtil() {
     }
