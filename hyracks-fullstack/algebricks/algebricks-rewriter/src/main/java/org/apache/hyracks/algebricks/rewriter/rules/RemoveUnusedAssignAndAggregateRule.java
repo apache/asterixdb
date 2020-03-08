@@ -90,7 +90,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
         // we try to remove these operators if the produced variables from these
         // operators are not used.
         if (!assignedVarMap.isEmpty()) {
-            removeUnusedAssigns(opRef, context);
+            removeUnusedAssigns(opRef, false, null, context);
         }
 
         return isTransformed;
@@ -139,8 +139,19 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
         return assignVarsSetForThisOp;
     }
 
-    private void removeUnusedAssigns(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
-            throws AlgebricksException {
+    /**
+     * Removes the assigned variables of an operator (left-hand side variables) if they are not used. It also removes
+     * the operator altogether when the operator is not assigning any more variables after removal of the variables
+     * (Except for few specific operators which cannot be removed such as UNIONALL).
+     *
+     * @param opRef the operator from which the assigned variables are to be removed.
+     * @param opInSubplan whether the operator is inside a subplan.
+     * @param parentOp the parent operator of {@code opRef} or null if it does not have one.
+     * @param context the optimization context.
+     * @throws AlgebricksException
+     */
+    private void removeUnusedAssigns(Mutable<ILogicalOperator> opRef, boolean opInSubplan, ILogicalOperator parentOp,
+            IOptimizationContext context) throws AlgebricksException {
 
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
@@ -148,8 +159,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
 
         while (removeFromAssigns(op, assignVarsSetForThisOp, context) == 0) {
             // UnionAllOperator cannot be removed since it has two branches.
-            if (op.getOperatorTag() == LogicalOperatorTag.AGGREGATE
-                    || op.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
+            if (!canRemoveOperator(op, opInSubplan, parentOp)) {
                 break;
             }
             op = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
@@ -161,7 +171,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
         Iterator<Mutable<ILogicalOperator>> childIter = op.getInputs().iterator();
         while (childIter.hasNext()) {
             Mutable<ILogicalOperator> cRef = childIter.next();
-            removeUnusedAssigns(cRef, context);
+            removeUnusedAssigns(cRef, opInSubplan, op, context);
         }
 
         if (op.hasNestedPlans()) {
@@ -170,7 +180,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
             while (planIter.hasNext()) {
                 ILogicalPlan p = planIter.next();
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                    removeUnusedAssigns(r, context);
+                    removeUnusedAssigns(r, true, null, context);
                 }
             }
 
@@ -418,6 +428,22 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                 }
             }
         }
+    }
+
+    private static boolean canRemoveOperator(ILogicalOperator op, boolean opInsideSubplan, ILogicalOperator parentOp) {
+        LogicalOperatorTag opTag = op.getOperatorTag();
+        if (opTag == LogicalOperatorTag.AGGREGATE || opTag == LogicalOperatorTag.UNIONALL) {
+            return false;
+        }
+        if (!opInsideSubplan) {
+            // for an operator in the outer plan, do not remove if it's sitting between exchanges or it's root+exchange
+            boolean childIsExchange =
+                    op.hasInputs() && op.getInputs().get(0).getValue().getOperatorTag() == LogicalOperatorTag.EXCHANGE;
+            if (childIsExchange && (parentOp == null || parentOp.getOperatorTag() == LogicalOperatorTag.EXCHANGE)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void clear() {

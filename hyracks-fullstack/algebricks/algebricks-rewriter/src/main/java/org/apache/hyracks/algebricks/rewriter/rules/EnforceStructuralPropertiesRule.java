@@ -50,6 +50,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
@@ -63,6 +64,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractGro
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractPreSortedDistinctByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractStableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AggregatePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AssignPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.BroadcastExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionMergeExchangePOperator;
@@ -284,18 +286,18 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 printOp(op, context);
             }
             changed = true;
-            AbstractLogicalOperator nextOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-            if (nextOp.getOperatorTag() == LogicalOperatorTag.PROJECT) {
-                nextOp = (AbstractLogicalOperator) nextOp.getInputs().get(0).getValue();
-            }
-            opRef.setValue(nextOp);
-            // Now, transfer annotations from the original sort op. to this one.
-            AbstractLogicalOperator transferTo = nextOp;
-            if (transferTo.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
-                // remove duplicate exchange operator
-                transferTo = (AbstractLogicalOperator) transferTo.getInputs().get(0).getValue();
-            }
-            transferTo.getAnnotations().putAll(op.getAnnotations());
+            // replace the sort with empty assign (to handle cases where the sort might be sitting between exchanges)
+            // RemoveUnusedAssignAndAggregateRule should run after and decide whether to remove the assign or keep it
+            AssignOperator assignOperator = new AssignOperator(new ArrayList<>(0), new ArrayList<>(0));
+            AssignPOperator assignPOperator = new AssignPOperator();
+            assignOperator.setSourceLocation(opRef.getValue().getSourceLocation());
+            assignOperator.setPhysicalOperator(assignPOperator);
+            assignOperator.getInputs().addAll(op.getInputs());
+            opRef.setValue(assignOperator);
+            OperatorManipulationUtil.setOperatorMode(assignOperator);
+            OperatorPropertiesUtil.computeSchemaAndPropertiesRecIfNull(assignOperator, context);
+            context.computeAndSetTypeEnvironmentForOperator(assignOperator);
+            PhysicalOptimizationsUtil.computeFDsAndEquivalenceClasses(assignOperator, context);
             physOptimizeOp(opRef, required, nestedPlan, context);
         }
         return changed;

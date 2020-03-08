@@ -53,31 +53,9 @@ public class HttpUtil {
     private static final Charset DEFAULT_RESPONSE_CHARSET = StandardCharsets.UTF_8;
 
     public static final AsciiString X_FORWARDED_PROTO = AsciiString.cached("x-forwarded-proto");
+    public static final AsciiString PERMANENT = AsciiString.cached("permanent");
 
     private HttpUtil() {
-    }
-
-    public static class Encoding {
-        public static final String UTF8 = "utf-8";
-
-        private Encoding() {
-        }
-    }
-
-    public static class ContentType {
-        public static final String ADM = "adm";
-        public static final String JSON = "json";
-        public static final String CSV = "csv";
-        public static final String APPLICATION_ADM = "application/x-adm";
-        public static final String APPLICATION_JSON = "application/json";
-        public static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
-        public static final String TEXT_CSV = "text/csv";
-        public static final String IMG_PNG = "image/png";
-        public static final String TEXT_HTML = "text/html";
-        public static final String TEXT_PLAIN = "text/plain";
-
-        private ContentType() {
-        }
     }
 
     public static String getParameter(Map<String, List<String>> parameters, CharSequence name) {
@@ -199,6 +177,34 @@ public class HttpUtil {
                     return true;
                 }).map(Charset::forName).findFirst();
         return preferredCharset.orElse(defaultCharset);
+    }
+
+    public static String trimQuery(String uri) {
+        int i = uri.indexOf('?');
+        return i < 0 ? uri : uri.substring(0, i);
+    }
+
+    public static class Encoding {
+        public static final String UTF8 = "utf-8";
+
+        private Encoding() {
+        }
+    }
+
+    public static class ContentType {
+        public static final String ADM = "adm";
+        public static final String JSON = "json";
+        public static final String CSV = "csv";
+        public static final String APPLICATION_ADM = "application/x-adm";
+        public static final String APPLICATION_JSON = "application/json";
+        public static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
+        public static final String TEXT_CSV = "text/csv";
+        public static final String IMG_PNG = "image/png";
+        public static final String TEXT_HTML = "text/html";
+        public static final String TEXT_PLAIN = "text/plain";
+
+        private ContentType() {
+        }
     }
 
     private static class WeightedHeaderValue implements Comparable<WeightedHeaderValue> {

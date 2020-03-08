@@ -6458,6 +6458,11 @@
         <output-dir compare="Text">insert_nulls_with_secondary_idx</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-2700">
+        <output-dir compare="Text">query-ASTERIXDB-2700</output-dir>
+      </compilation-unit>
+    </test-case>
     <!--
     <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-1203">
@@ -12364,6 +12369,13 @@
     <test-case FilePath="big-object">
       <compilation-unit name="big_object_join">
         <output-dir compare="Text">big_object_join</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="big-object">
+      <compilation-unit name="big_object_join_low_memory_err">
+        <output-dir compare="Text">big_object_join</output-dir>
+        <expected-error>HYR0123: Insufficient memory is provided for the join operators, please increase the join memory budget.</expected-error>
+        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="big-object">
