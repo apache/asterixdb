@@ -23,4 +23,4 @@
  * Expected Res : Success
  * Date         : Jul, 13, 2016
  */
-install externallibtest testlib target/data/externallib/asterix-external-data-testlib.zip
+install externallibtest testlib admin admin target/data/externallib/asterix-external-data-testlib.zip

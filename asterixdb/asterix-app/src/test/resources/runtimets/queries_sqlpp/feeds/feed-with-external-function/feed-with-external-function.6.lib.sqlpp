@@ -16,4 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-uninstall udfs testlib
+uninstall udfs testlib admin admin

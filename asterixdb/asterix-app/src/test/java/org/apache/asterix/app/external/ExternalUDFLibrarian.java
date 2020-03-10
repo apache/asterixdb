@@ -23,13 +23,22 @@ import java.io.IOException;
 import java.net.URL;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.FileEntity;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksException;
 
 @SuppressWarnings("squid:S134")
@@ -50,11 +59,20 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
     }
 
     @Override
-    public void install(String dataverse, String libName, String libPath) throws Exception {
+    public void install(String dataverse, String libName, String libPath, Pair<String, String> credentials)
+            throws Exception {
         URL url = new URL("http", host, port, "/admin/udf/" + dataverse + "/" + libName);
+        HttpHost h = new HttpHost(host, port, "http");
         HttpPost post = new HttpPost(url.toString());
+        CredentialsProvider cp = new BasicCredentialsProvider();
+        cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(credentials.first, credentials.second));
+        HttpClientContext hcCtx = HttpClientContext.create();
+        hcCtx.setCredentialsProvider(cp);
+        AuthCache ac = new BasicAuthCache();
+        ac.put(h, new BasicScheme());
+        hcCtx.setAuthCache(ac);
         post.setEntity(new FileEntity(new File(libPath), "application/octet-stream"));
-        HttpResponse response = hc.execute(post);
+        HttpResponse response = hc.execute(post, hcCtx);
         response.getEntity().consumeContent();
         if (response.getStatusLine().getStatusCode() != 200) {
             throw new HyracksException(response.getStatusLine().toString());
@@ -62,11 +80,19 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
     }
 
     @Override
-    public void uninstall(String dataverse, String libName)
-            throws IOException, ClientProtocolException, AsterixException {
+    public void uninstall(String dataverse, String libName, Pair<String, String> credentials)
+            throws IOException, AsterixException {
         URL url = new URL("http", host, port, "/admin/udf/" + dataverse + "/" + libName);
+        CredentialsProvider cp = new BasicCredentialsProvider();
+        cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(credentials.first, credentials.second));
+        HttpClientContext hcCtx = HttpClientContext.create();
+        hcCtx.setCredentialsProvider(cp);
+        HttpHost h = new HttpHost(host, port, "http");
+        AuthCache ac = new BasicAuthCache();
+        ac.put(h, new BasicScheme());
+        hcCtx.setAuthCache(ac);
         HttpDelete del = new HttpDelete(url.toString());
-        HttpResponse response = hc.execute(del);
+        HttpResponse response = hc.execute(del, hcCtx);
         response.getEntity().consumeContent();
         if (response.getStatusLine().getStatusCode() != 200) {
             throw new AsterixException(response.getStatusLine().toString());

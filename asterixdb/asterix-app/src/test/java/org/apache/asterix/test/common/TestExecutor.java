@@ -109,6 +109,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.Level;
@@ -1200,19 +1201,21 @@ public class TestExecutor {
                 }
                 String dataverse = command[1];
                 String library = command[2];
+                String username = command[3];
+                String pw = command[4];
                 switch (command[0]) {
                     case "install":
-                        if (command.length != 4) {
+                        if (command.length != 6) {
                             throw new Exception("invalid library format");
                         }
-                        String libPath = command[3];
-                        librarian.install(dataverse, library, libPath);
+                        String libPath = command[5];
+                        librarian.install(dataverse, library, libPath, new Pair(username, pw));
                         break;
                     case "uninstall":
-                        if (command.length != 3) {
+                        if (command.length != 5) {
                             throw new Exception("invalid library format");
                         }
-                        librarian.uninstall(dataverse, library);
+                        librarian.uninstall(dataverse, library, new Pair(username, pw));
                         break;
                     default:
                         throw new Exception("invalid library format");

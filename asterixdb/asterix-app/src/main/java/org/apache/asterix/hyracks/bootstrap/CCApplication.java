@@ -25,10 +25,14 @@ import static org.apache.asterix.api.http.server.ServletConstants.ASTERIX_APP_CO
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
 import static org.apache.asterix.common.api.IClusterManagementWork.ClusterState.SHUTTING_DOWN;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentMap;
 
@@ -86,6 +90,9 @@ import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.Receptionist;
 import org.apache.asterix.util.MetadataBuiltinFunctions;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -181,6 +188,26 @@ public class CCApplication extends BaseCCApplication {
         jobCapacityController = new JobCapacityController(controllerService.getResourceManager());
     }
 
+    private Map<String, String> parseCredentialMap(String credPath) {
+        File credentialFile = new File(credPath);
+        Map<String, String> storedCredentials = new HashMap<>();
+        if (credentialFile.exists()) {
+            try (CSVParser p =
+                    CSVParser.parse(credentialFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withDelimiter(':'))) {
+                List<CSVRecord> recs = p.getRecords();
+                for (CSVRecord r : recs) {
+                    if (r.size() != 2) {
+                        throw new IOException("Passwd file must have exactly two fields.");
+                    }
+                    storedCredentials.put(r.get(0), r.get(1));
+                }
+            } catch (IOException e) {
+                LOGGER.error("Malformed credential file", e);
+            }
+        }
+        return storedCredentials;
+    }
+
     protected ICcApplicationContext createApplicationContext(ILibraryManager libraryManager,
             IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator lifecycleCoordinator,
             IReceptionistFactory receptionistFactory, IConfigValidatorFactory configValidatorFactory,
@@ -250,6 +277,8 @@ public class CCApplication extends BaseCCApplication {
         jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE_ATTR,
                 ccServiceCtx.getControllerService().getExecutor());
         jsonAPIServer.setAttribute(ServletConstants.SERVICE_CONTEXT_ATTR, ccServiceCtx);
+        jsonAPIServer.setAttribute(ServletConstants.CREDENTIAL_MAP,
+                parseCredentialMap(externalProperties.getCredentialFilePath()));
 
         // Other APIs.
         addServlet(jsonAPIServer, Servlets.QUERY_STATUS);

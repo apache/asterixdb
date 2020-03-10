@@ -16,4 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-uninstall externallibtest testlib
+uninstall externallibtest testlib admin admin

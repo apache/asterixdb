@@ -21,10 +21,11 @@ package org.apache.asterix.app.external;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.http.client.ClientProtocolException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public interface IExternalUDFLibrarian {
-    void install(String dataverse, String libName, String libPath) throws Exception;
+    void install(String dataverse, String libName, String libPath, Pair<String, String> credentials) throws Exception;
 
-    void uninstall(String dataverse, String libName) throws IOException, ClientProtocolException, AsterixException;
+    void uninstall(String dataverse, String libName, Pair<String, String> credentials)
+            throws IOException, AsterixException;
 }

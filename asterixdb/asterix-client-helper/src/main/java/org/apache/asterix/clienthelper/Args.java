@@ -46,6 +46,15 @@ public class Args {
     @Option(name = "-quiet", aliases = "-q", usage = "Suppress all normal output")
     protected boolean quiet;
 
+    @Option(name = "-username", aliases = "-u", usage = "Username for credential addition")
+    protected String username;
+
+    @Option(name = "-password", aliases = "-p", usage = "Password for credential addition")
+    protected String password;
+
+    @Option(name = "-credentialpath", aliases = "-cp", usage = "Path to credential file")
+    protected String credentialPath = "./passwd";
+
     @Argument
     protected List<String> arguments = new ArrayList<>();
 
@@ -75,5 +84,17 @@ public class Args {
 
     public String getShutdownPath() {
         return shutdownPath;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getCredentialPath() {
+        return credentialPath;
     }
 }

@@ -23,4 +23,4 @@
  * Expected Res : Success
  * Date         : Jul, 13, 2016
  */
-uninstall externallibtest testlib
+uninstall externallibtest testlib admin admin

@@ -34,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 
-import org.apache.asterix.app.external.ExternalUDFLibrarian;
 import org.apache.asterix.app.io.PersistedResourceRegistry;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -109,7 +108,7 @@ public class AsterixHyracksIntegrationUtil {
         AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
         try {
             integrationUtil.run(Boolean.getBoolean("cleanup.start"), Boolean.getBoolean("cleanup.shutdown"),
-                    System.getProperty("external.lib", ""), System.getProperty("conf.path", DEFAULT_CONF_FILE));
+                    System.getProperty("conf.path", DEFAULT_CONF_FILE));
         } catch (Exception e) {
             LOGGER.fatal("Unexpected exception", e);
             System.exit(1);
@@ -197,7 +196,6 @@ public class AsterixHyracksIntegrationUtil {
 
     public void init(boolean deleteOldInstanceData, String externalLibPath, String confDir) throws Exception {
         List<ILibraryManager> libraryManagers = new ArrayList<>();
-        ExternalUDFLibrarian librarian = new ExternalUDFLibrarian();
         init(deleteOldInstanceData, confDir);
         if (externalLibPath != null && externalLibPath.length() != 0) {
             libraryManagers.add(((ICcApplicationContext) cc.getApplicationContext()).getLibraryManager());
@@ -205,8 +203,6 @@ public class AsterixHyracksIntegrationUtil {
                 INcApplicationContext runtimeCtx = (INcApplicationContext) nc.getApplicationContext();
                 libraryManagers.add(runtimeCtx.getLibraryManager());
             }
-            librarian.install(System.getProperty("external.lib.dataverse", "test"),
-                    System.getProperty("external.lib.libname", "testlib"), externalLibPath);
         }
     }
 
@@ -359,7 +355,7 @@ public class AsterixHyracksIntegrationUtil {
             }
         });
 
-        init(cleanupOnStart, loadExternalLibs, confFile);
+        init(cleanupOnStart, confFile);
         while (true) {
             Thread.sleep(10000);
         }

@@ -271,4 +271,16 @@
       </properties>
     </project>
   </supplement>
+  <supplement>
+    <project>
+      <groupId>org.mindrot</groupId>
+      <artifactId>jbcrypt</artifactId>
+      <licenses>
+        <license>
+          <name>ISC License</name>
+          <url>http://www.mindrot.org/files/jBCrypt/LICENSE</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
 </supplementalDataModels>

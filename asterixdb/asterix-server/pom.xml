@@ -172,6 +172,10 @@
               <gav>io.netty:netty-all:4.1.46.Final</gav>
               <noticeUrl>https://raw.githubusercontent.com/netty/netty/netty-4.1.46.Final/NOTICE.txt</noticeUrl>
             </override>
+            <override>
+              <gav>org.mindrot:jbcrypt:0.4</gav>
+              <url>http://www.mindrot.org/files/jBCrypt/LICENSE</url>
+            </override>
           </overrides>
           <licenses>
             <license>
@@ -253,6 +257,12 @@
               <aliasUrls>
                 <aliasUrl>http://www.opensource.org/licenses/mit-license.php</aliasUrl>
                 <aliasUrl>http://opensource.org/licenses/MIT</aliasUrl>
+              </aliasUrls>
+            </license>
+            <license>
+              <url>https://opensource.org/licenses/isc-license.txt</url>
+              <aliasUrls>
+                <aliasUrl>http://opensource.org/licenses/ISC</aliasUrl>
               </aliasUrls>
             </license>
             <license>

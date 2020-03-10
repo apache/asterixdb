@@ -467,4 +467,5 @@ public class CCConfig extends ControllerConfig {
     public void setTrustStorePath(String trustStorePath) {
         configManager.set(Option.TRUST_STORE_PATH, trustStorePath);
     }
+
 }

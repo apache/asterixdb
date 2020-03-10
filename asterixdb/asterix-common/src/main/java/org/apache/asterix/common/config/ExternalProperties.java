@@ -23,10 +23,15 @@ import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTE
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.control.common.config.OptionTypes.UNSIGNED_INTEGER;
 
+import java.util.function.Function;
+
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.util.StorageUtil;
+import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.Level;
 
 public class ExternalProperties extends AbstractProperties {
@@ -49,7 +54,12 @@ public class ExternalProperties extends AbstractProperties {
                 UNSIGNED_INTEGER,
                 StorageUtil.getIntSizeInBytes(50, StorageUtil.StorageUnit.MEGABYTE),
                 "The maximum accepted web request size in bytes"),
-        REQUESTS_ARCHIVE_SIZE(UNSIGNED_INTEGER, 50, "The maximum number of archived requests to maintain");
+        REQUESTS_ARCHIVE_SIZE(UNSIGNED_INTEGER, 50, "The maximum number of archived requests to maintain"),
+        CREDENTIAL_FILE(
+                STRING,
+                (Function<IApplicationConfig, String>) appConfig -> FileUtil
+                        .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "passwd"),
+                ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -69,6 +79,7 @@ public class ExternalProperties extends AbstractProperties {
                 case API_PORT:
                 case ACTIVE_PORT:
                 case REQUESTS_ARCHIVE_SIZE:
+                case CREDENTIAL_FILE:
                     return Section.CC;
                 case NC_API_PORT:
                     return Section.NC;
@@ -146,5 +157,9 @@ public class ExternalProperties extends AbstractProperties {
 
     public int getRequestsArchiveSize() {
         return accessor.getInt(Option.REQUESTS_ARCHIVE_SIZE);
+    }
+
+    public String getCredentialFilePath() {
+        return accessor.getString(Option.CREDENTIAL_FILE);
     }
 }

@@ -35,6 +35,15 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
+      <compilation-unit name="mysum_bad_credential">
+        <output-dir compare="Text">mysum_bad_credential</output-dir>
+        <expected-error>HTTP/1.1 401 Unauthorized</expected-error>
+        <expected-error>HTTP/1.1 401 Unauthorized</expected-error>
+        <expected-error>HTTP/1.1 401 Unauthorized</expected-error>
+        <expected-error>HTTP/1.1 401 Unauthorized</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
       <compilation-unit name="my_array_sum">
         <output-dir compare="Text">my_array_sum</output-dir>
       </compilation-unit>

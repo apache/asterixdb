@@ -17,4 +17,4 @@
  * under the License.
  */
 
-install externallibtest testlib target/data/externallib/asterix-external-data-testlib.zip
+install externallibtest testlib admin admin target/data/externallib/asterix-external-data-testlib.zip

@@ -17,4 +17,4 @@
  * under the License.
  */
 
-uninstall externallibtest testlib
+uninstall externallibtest testlib admin admin

@@ -16,4 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-install udfs testlib target/data/externallib/asterix-external-data-testlib.zip
+install udfs testlib admin admin target/data/externallib/asterix-external-data-testlib.zip
