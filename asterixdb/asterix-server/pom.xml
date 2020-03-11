@@ -169,8 +169,8 @@
               <url>https://raw.githubusercontent.com/mojohaus/appassembler/appassembler-2.0.0/LICENSE.txt</url>
             </override>
             <override>
-              <gav>io.netty:netty-all:4.1.25.Final</gav>
-              <noticeUrl>https://raw.githubusercontent.com/netty/netty/netty-4.1.25.Final/NOTICE.txt</noticeUrl>
+              <gav>io.netty:netty-all:4.1.46.Final</gav>
+              <noticeUrl>https://raw.githubusercontent.com/netty/netty/netty-4.1.46.Final/NOTICE.txt</noticeUrl>
             </override>
           </overrides>
           <licenses>
