@@ -146,7 +146,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
             HttpScheme scheme =
                     server.getScheme() == HttpScheme.HTTPS || "https".equals(request.headers().get(X_FORWARDED_PROTO))
                             ? HttpScheme.HTTPS : HttpScheme.HTTP;
-            servletRequest = HttpUtil.toServletRequest(ctx, request, scheme);
+            servletRequest = createServletRequest(ctx, request, scheme);
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.WARN, "Failure Decoding Request", e);
             respond(ctx, request, HttpResponseStatus.BAD_REQUEST);
@@ -172,6 +172,11 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
         }
         respond(ctx, request, HttpResponseStatus.NOT_FOUND,
                 response -> response.headers().set(HttpUtil.PERMANENT, "true"));
+    }
+
+    protected IServletRequest createServletRequest(ChannelHandlerContext ctx, FullHttpRequest request,
+            HttpScheme scheme) {
+        return HttpUtil.toServletRequest(ctx, request, scheme);
     }
 
     @Override
