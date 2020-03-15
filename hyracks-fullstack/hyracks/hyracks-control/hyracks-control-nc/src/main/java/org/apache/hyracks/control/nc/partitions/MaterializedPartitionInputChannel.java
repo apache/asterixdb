@@ -99,6 +99,11 @@ public class MaterializedPartitionInputChannel implements IInputChannel {
 
     }
 
+    @Override
+    public void fail() {
+        // do nothing (covered by job lifecycle)
+    }
+
     private class FrameWriter implements IFrameWriter {
         @Override
         public void open() throws HyracksDataException {

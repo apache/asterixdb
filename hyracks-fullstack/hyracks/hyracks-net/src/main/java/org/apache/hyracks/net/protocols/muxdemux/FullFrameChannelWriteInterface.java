@@ -41,7 +41,15 @@ public class FullFrameChannelWriteInterface extends AbstractChannelWriteInterfac
         if (currentWriteBuffer == null) {
             currentWriteBuffer = wiFullQueue.poll();
         }
-        if (currentWriteBuffer != null) {
+        if (!ecodeSent && ecode.get() == REMOTE_ERROR_CODE) {
+            writerState.getCommand().setChannelId(channelId);
+            writerState.getCommand().setCommandType(MuxDemuxCommand.CommandType.ERROR);
+            writerState.getCommand().setData(ecode.get());
+            writerState.reset(null, 0, null);
+            ecodeSent = true;
+            ccb.reportLocalEOS();
+            adjustChannelWritability();
+        } else if (currentWriteBuffer != null) {
             int size = Math.min(currentWriteBuffer.remaining(), credits);
             if (size > 0) {
                 credits -= size;
@@ -55,14 +63,6 @@ public class FullFrameChannelWriteInterface extends AbstractChannelWriteInterfac
             } else {
                 adjustChannelWritability();
             }
-        } else if (ecode.get() == REMOTE_ERROR_CODE && !ecodeSent) {
-            writerState.getCommand().setChannelId(channelId);
-            writerState.getCommand().setCommandType(MuxDemuxCommand.CommandType.ERROR);
-            writerState.getCommand().setData(REMOTE_ERROR_CODE);
-            writerState.reset(null, 0, null);
-            ecodeSent = true;
-            ccb.reportLocalEOS();
-            adjustChannelWritability();
         } else if (isPendingCloseWrite()) {
             writerState.getCommand().setChannelId(channelId);
             writerState.getCommand().setCommandType(MuxDemuxCommand.CommandType.CLOSE_CHANNEL);
