@@ -69,16 +69,18 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
      * index to be applicable.
      *
      * @return boolean
+     * @param index
      */
-    public boolean matchAllIndexExprs();
+    public boolean matchAllIndexExprs(Index index);
 
     /**
      * Indicates whether this index is applicable if only a prefix of the index
      * expressions are matched.
      *
      * @return boolean
+     * @param index
      */
-    public boolean matchPrefixIndexExprs();
+    public boolean matchPrefixIndexExprs(Index index);
 
     /**
      * Applies the plan transformation to use chosenIndex to optimize a selection query.
