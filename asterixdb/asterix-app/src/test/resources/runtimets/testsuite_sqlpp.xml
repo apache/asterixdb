@@ -303,10 +303,16 @@
         <output-dir compare="Text">agg_number_rec</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="aggregate">
+    <test-case FilePath="aggregate" check-warnings="true">
       <compilation-unit name="avg_mixed">
         <output-dir compare="Text">avg_mixed</output-dir>
-        <expected-error>Type incompatibility: function agg-avg gets incompatible input values: string and float</expected-error>
+        <expected-warn>Unsupported type: agg-avg cannot process input type string (in line 26, at column 16)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate" check-warnings="true">
+      <compilation-unit name="serial_avg_mixed">
+        <output-dir compare="Text">serial_avg_mixed</output-dir>
+        <expected-warn>Unsupported type: agg-avg cannot process input type string (in line 29, at column 39)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -786,6 +792,71 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="scalar_var_null">
         <output-dir compare="Text">scalar_var_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_empty">
+        <output-dir compare="Text">serial_avg_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_int8">
+        <output-dir compare="Text">serial_avg_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_int8_null">
+        <output-dir compare="Text">serial_avg_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_int16">
+        <output-dir compare="Text">serial_avg_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_int16_null">
+        <output-dir compare="Text">serial_avg_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_int32">
+        <output-dir compare="Text">serial_avg_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_int32_null">
+        <output-dir compare="Text">serial_avg_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_int64">
+        <output-dir compare="Text">serial_avg_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_int64_null">
+        <output-dir compare="Text">serial_avg_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_float">
+        <output-dir compare="Text">serial_avg_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_float_null">
+        <output-dir compare="Text">serial_avg_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_double">
+        <output-dir compare="Text">serial_avg_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_avg_double_null">
+        <output-dir compare="Text">serial_avg_double_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -1497,10 +1568,16 @@
         <output-dir compare="Text">agg_number_rec</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="aggregate-sql">
+    <test-case FilePath="aggregate-sql" check-warnings="true">
       <compilation-unit name="avg_mixed">
         <output-dir compare="Text">avg_mixed</output-dir>
-        <expected-error>Type incompatibility: function agg-avg gets incompatible input values: string and float</expected-error>
+        <expected-warn>Unsupported type: agg-avg cannot process input type string (in line 26, at column 16)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql" check-warnings="true">
+      <compilation-unit name="serial_avg_mixed">
+        <output-dir compare="Text">serial_avg_mixed</output-dir>
+        <expected-warn>Unsupported type: agg-avg cannot process input type string (in line 29, at column 38)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1978,6 +2055,71 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="scalar_var_null">
         <output-dir compare="Text">scalar_var_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_empty">
+        <output-dir compare="Text">serial_avg_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_int8">
+        <output-dir compare="Text">serial_avg_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_int8_null">
+        <output-dir compare="Text">serial_avg_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_int16">
+        <output-dir compare="Text">serial_avg_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_int16_null">
+        <output-dir compare="Text">serial_avg_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_int32">
+        <output-dir compare="Text">serial_avg_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_int32_null">
+        <output-dir compare="Text">serial_avg_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_int64">
+        <output-dir compare="Text">serial_avg_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_int64_null">
+        <output-dir compare="Text">serial_avg_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_float">
+        <output-dir compare="Text">serial_avg_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_float_null">
+        <output-dir compare="Text">serial_avg_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_double">
+        <output-dir compare="Text">serial_avg_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_avg_double_null">
+        <output-dir compare="Text">serial_avg_double_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">

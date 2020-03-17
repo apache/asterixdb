@@ -16,9 +16,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Run array_avg over an ordered list with mixed types
-* Expected Res : Failure
-* Date         : Feb 7th 2014
-*/
-

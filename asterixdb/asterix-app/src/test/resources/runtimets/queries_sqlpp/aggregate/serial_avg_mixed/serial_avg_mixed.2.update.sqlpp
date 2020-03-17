@@ -16,9 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Run avg over an ordered list with mixed types
-* Expected Res : Failure
-* Date         : Jun 2nd 2013
-*/
 
+use test;
+
+insert into Test
+select element {'id':0,'gid':1,'val':double(4.32),'valplus':float('2.0')};
+insert into Test
+select element {'id':1,'gid':1,'val':double(5.32), 'valplus':int32("15")};
+insert into Test
+select element {'id':2,'gid':1,'val':double(6.32),'valplus':'hello world'};
+insert into Test
+select element {'id':3,'gid':1,'val':double(4.32),'valplus':double('3.0')};

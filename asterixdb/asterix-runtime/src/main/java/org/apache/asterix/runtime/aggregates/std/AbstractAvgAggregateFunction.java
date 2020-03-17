@@ -35,6 +35,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -44,8 +45,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.common.AccessibleByteArrayEval;
 import org.apache.asterix.runtime.evaluators.common.ClosedRecordConstructorEvalFactory.ClosedRecordConstructorEval;
-import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -61,6 +62,11 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractAvgAggregateFunction extends AbstractAggregateFunction {
     private static final int SUM_FIELD_ID = 0;
     private static final int COUNT_FIELD_ID = 1;
+
+    private final IEvaluatorContext context;
+
+    // Warning flag to warn only once in case of non-numeric data
+    private boolean isWarned;
 
     private final ARecordType recType;
 
@@ -95,6 +101,7 @@ public abstract class AbstractAvgAggregateFunction extends AbstractAggregateFunc
     public AbstractAvgAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context,
             SourceLocation sourceLoc) throws HyracksDataException {
         super(sourceLoc);
+        this.context = context;
         eval = args[0].createScalarEvaluator(context);
         recType = new ARecordType(null, new String[] { "sum", "count" },
                 new IAType[] { BuiltinType.ADOUBLE, BuiltinType.AINT64 }, false);
@@ -106,6 +113,7 @@ public abstract class AbstractAvgAggregateFunction extends AbstractAggregateFunc
         aggType = ATypeTag.SYSTEM_NULL;
         sum = 0.0;
         count = 0;
+        isWarned = false;
     }
 
     @Override
@@ -134,15 +142,17 @@ public abstract class AbstractAvgAggregateFunction extends AbstractAggregateFunc
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            if (typeTag.ordinal() > aggType.ordinal()) {
-                throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.AVG, data[offset], aggType.serialize());
-            } else {
-                throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.AVG, aggType.serialize(), data[offset]);
+            // Issue warning only once and treat current tuple as null
+            if (!isWarned) {
+                isWarned = true;
+                ExceptionUtil.warnUnsupportedType(context, sourceLoc, getIdentifier().getName(), typeTag);
             }
+            processNull();
+            return;
         } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
             aggType = typeTag;
         }
-        ++count;
+
         switch (typeTag) {
             case TINYINT: {
                 byte val = AInt8SerializerDeserializer.getByte(data, offset + 1);
@@ -175,9 +185,16 @@ public abstract class AbstractAvgAggregateFunction extends AbstractAggregateFunc
                 break;
             }
             default: {
-                throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.AVG, data[offset]);
+                // Issue warning only once and treat current tuple as null
+                if (!isWarned) {
+                    isWarned = true;
+                    ExceptionUtil.warnUnsupportedType(context, sourceLoc, getIdentifier().getName(), typeTag);
+                }
+                processNull();
+                return;
             }
         }
+        count++;
     }
 
     protected void finishPartialResults(IPointable result) throws HyracksDataException {
@@ -259,4 +276,8 @@ public abstract class AbstractAvgAggregateFunction extends AbstractAggregateFunc
         return false;
     }
 
+    // Function identifier
+    private FunctionIdentifier getIdentifier() {
+        return BuiltinFunctions.AVG;
+    }
 }
