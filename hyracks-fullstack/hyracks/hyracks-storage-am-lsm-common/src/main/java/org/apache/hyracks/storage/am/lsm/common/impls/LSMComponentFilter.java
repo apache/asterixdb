@@ -19,6 +19,8 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -31,6 +33,7 @@ import org.apache.hyracks.storage.common.MultiComparator;
 
 public class LSMComponentFilter implements ILSMComponentFilter {
 
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final IBinaryComparatorFactory[] filterCmpFactories;
     private final ITreeIndexTupleWriter tupleWriter;
 
@@ -55,98 +58,123 @@ public class LSMComponentFilter implements ILSMComponentFilter {
 
     @Override
     public void reset() {
-        minTuple = null;
-        maxTuple = null;
-        minTupleBytes = null;
-        maxTupleBytes = null;
-        minTupleBuf = null;
-        maxTupleBuf = null;
+        lock.writeLock().lock();
+        try {
+            minTuple = null;
+            maxTuple = null;
+            minTupleBytes = null;
+            maxTupleBytes = null;
+            minTupleBuf = null;
+            maxTupleBuf = null;
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
     public void update(ITupleReference tuple, MultiComparator cmp, IExtendedModificationOperationCallback opCallback)
             throws HyracksDataException {
-        boolean logged = false;
-        if (minTuple == null) {
-            int numBytes = tupleWriter.bytesRequired(tuple);
-            minTupleBytes = new byte[numBytes];
-            opCallback.after(tuple);
-            logged = true;
-            tupleWriter.writeTuple(tuple, minTupleBytes, 0);
-            minTupleBuf = ByteBuffer.wrap(minTupleBytes);
-            minTuple = tupleWriter.createTupleReference();
-            ((ITreeIndexTupleReference) minTuple).resetByTupleOffset(minTupleBuf.array(), 0);
-        } else {
-            int c = cmp.compare(tuple, minTuple);
-            if (c < 0) {
+        lock.writeLock().lock();
+        try {
+            boolean logged = false;
+            if (minTuple == null) {
+                int numBytes = tupleWriter.bytesRequired(tuple);
+                minTupleBytes = new byte[numBytes];
                 opCallback.after(tuple);
                 logged = true;
-                int numBytes = tupleWriter.bytesRequired(tuple);
-                if (minTupleBytes.length < numBytes) {
-                    minTupleBytes = new byte[numBytes];
-                    tupleWriter.writeTuple(tuple, minTupleBytes, 0);
-                    minTupleBuf = ByteBuffer.wrap(minTupleBytes);
-                } else {
-                    tupleWriter.writeTuple(tuple, minTupleBytes, 0);
-                }
+                tupleWriter.writeTuple(tuple, minTupleBytes, 0);
+                minTupleBuf = ByteBuffer.wrap(minTupleBytes);
+                minTuple = tupleWriter.createTupleReference();
                 ((ITreeIndexTupleReference) minTuple).resetByTupleOffset(minTupleBuf.array(), 0);
+            } else {
+                int c = cmp.compare(tuple, minTuple);
+                if (c < 0) {
+                    opCallback.after(tuple);
+                    logged = true;
+                    int numBytes = tupleWriter.bytesRequired(tuple);
+                    if (minTupleBytes.length < numBytes) {
+                        minTupleBytes = new byte[numBytes];
+                        tupleWriter.writeTuple(tuple, minTupleBytes, 0);
+                        minTupleBuf = ByteBuffer.wrap(minTupleBytes);
+                    } else {
+                        tupleWriter.writeTuple(tuple, minTupleBytes, 0);
+                    }
+                    ((ITreeIndexTupleReference) minTuple).resetByTupleOffset(minTupleBuf.array(), 0);
+                }
             }
-        }
-        if (maxTuple == null) {
-            int numBytes = tupleWriter.bytesRequired(tuple);
-            maxTupleBytes = new byte[numBytes];
-            if (!logged) {
-                opCallback.after(tuple);
-            }
-            tupleWriter.writeTuple(tuple, maxTupleBytes, 0);
-            maxTupleBuf = ByteBuffer.wrap(maxTupleBytes);
-            maxTuple = tupleWriter.createTupleReference();
-            ((ITreeIndexTupleReference) maxTuple).resetByTupleOffset(maxTupleBuf.array(), 0);
-        } else {
-            int c = cmp.compare(tuple, maxTuple);
-            if (c > 0) {
+            if (maxTuple == null) {
+                int numBytes = tupleWriter.bytesRequired(tuple);
+                maxTupleBytes = new byte[numBytes];
                 if (!logged) {
                     opCallback.after(tuple);
                 }
-                int numBytes = tupleWriter.bytesRequired(tuple);
-                if (maxTupleBytes.length < numBytes) {
-                    maxTupleBytes = new byte[numBytes];
-                    tupleWriter.writeTuple(tuple, maxTupleBytes, 0);
-                    maxTupleBuf = ByteBuffer.wrap(maxTupleBytes);
-                } else {
-                    tupleWriter.writeTuple(tuple, maxTupleBytes, 0);
-                }
+                tupleWriter.writeTuple(tuple, maxTupleBytes, 0);
+                maxTupleBuf = ByteBuffer.wrap(maxTupleBytes);
+                maxTuple = tupleWriter.createTupleReference();
                 ((ITreeIndexTupleReference) maxTuple).resetByTupleOffset(maxTupleBuf.array(), 0);
+            } else {
+                int c = cmp.compare(tuple, maxTuple);
+                if (c > 0) {
+                    if (!logged) {
+                        opCallback.after(tuple);
+                    }
+                    int numBytes = tupleWriter.bytesRequired(tuple);
+                    if (maxTupleBytes.length < numBytes) {
+                        maxTupleBytes = new byte[numBytes];
+                        tupleWriter.writeTuple(tuple, maxTupleBytes, 0);
+                        maxTupleBuf = ByteBuffer.wrap(maxTupleBytes);
+                    } else {
+                        tupleWriter.writeTuple(tuple, maxTupleBytes, 0);
+                    }
+                    ((ITreeIndexTupleReference) maxTuple).resetByTupleOffset(maxTupleBuf.array(), 0);
+                }
             }
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
     @Override
     public ITupleReference getMinTuple() {
-        return minTuple;
+        lock.readLock().lock();
+        try {
+            return minTuple;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public ITupleReference getMaxTuple() {
-        return maxTuple;
+        lock.readLock().lock();
+        try {
+            return maxTuple;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public boolean satisfy(ITupleReference minTuple, ITupleReference maxTuple, MultiComparator filterCmp)
             throws HyracksDataException {
-        if (maxTuple != null && this.minTuple != null) {
-            int c = filterCmp.compare(maxTuple, this.minTuple);
-            if (c < 0) {
-                return false;
+        lock.readLock().lock();
+        try {
+            if (maxTuple != null && this.minTuple != null) {
+                int c = filterCmp.compare(maxTuple, this.minTuple);
+                if (c < 0) {
+                    return false;
+                }
             }
-        }
-        if (minTuple != null && this.maxTuple != null) {
-            int c = filterCmp.compare(minTuple, this.maxTuple);
-            if (c > 0) {
-                return false;
+            if (minTuple != null && this.maxTuple != null) {
+                int c = filterCmp.compare(minTuple, this.maxTuple);
+                if (c > 0) {
+                    return false;
+                }
             }
+            return true;
+        } finally {
+            lock.readLock().unlock();
         }
-        return true;
     }
 
 }
