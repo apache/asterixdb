@@ -95,12 +95,12 @@ public class RTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean matchAllIndexExprs() {
+    public boolean matchAllIndexExprs(Index index) {
         return true;
     }
 
     @Override
-    public boolean matchPrefixIndexExprs() {
+    public boolean matchPrefixIndexExprs(Index index) {
         return false;
     }
 

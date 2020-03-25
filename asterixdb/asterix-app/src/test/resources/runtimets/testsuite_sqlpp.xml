@@ -5554,6 +5554,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-composite-key-04">
+        <output-dir compare="Text">btree-index-composite-key-04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="btree-sec-primary-index">
         <output-dir compare="Text">btree-sec-primary-index</output-dir>
       </compilation-unit>

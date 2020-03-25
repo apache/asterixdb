@@ -16,27 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- /*
-  *  Description     : Testing that creating a nested composite key open index is successful.
-  *                  : Currently this index cannot be used for this query because
-  *                  : the index will not store composite keys where some fields are NULL/MISSING.
-  *  Expected Result : Success
-  */
+/*
+ * Description     : Define BTree index on a composite key (fname,lname?)
+ *                 : Query predicate => where fname="..."
+ *                 : Currently this index cannot be used for this query because
+ *                 : the index will not store composite keys where some fields are NULL/MISSING.
+ * Expected Result : Success
+ */
 
 drop dataverse test if exists;
 create dataverse test;
+
 use test;
 
-
-create type TestOpenType as open {
-  c_id: int64
+create type test.Emp as
+ closed {
+  id : bigint,
+  fname : string,
+  lname : string?
 };
 
-create dataset TestOpen(TestOpenType) primary key c_id;
+create dataset employee(Emp) primary key id;
 
-create index idx_i64 on TestOpen(nested.c_i64:int64, nested.x: string);
+create index idx_employee_f_l_name on employee (fname,lname) type btree;
 
-select t.c_x as res
-from TestOpen t
-where t.nested.c_i64 = 2
-order by t.c_x;
+select id, fname, lname
+from employee
+where fname = "A"
+order by id;

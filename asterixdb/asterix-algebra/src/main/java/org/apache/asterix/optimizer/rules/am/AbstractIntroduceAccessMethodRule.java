@@ -413,12 +413,12 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             }
             // If the access method requires all exprs to be matched but they
             // are not, remove this candidate.
-            if (!allUsed && accessMethod.matchAllIndexExprs()) {
+            if (!allUsed && accessMethod.matchAllIndexExprs(index)) {
                 indexExprAndVarIt.remove();
                 continue;
             }
             // A prefix of the index exprs may have been matched.
-            if (accessMethod.matchPrefixIndexExprs()) {
+            if (accessMethod.matchPrefixIndexExprs(index)) {
                 if (lastFieldMatched < 0) {
                     indexExprAndVarIt.remove();
                     continue;
