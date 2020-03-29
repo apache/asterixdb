@@ -20,12 +20,13 @@ package org.apache.hyracks.maven.license;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.maven.license.project.LicensedProjects;
 import org.apache.hyracks.maven.license.project.Project;
 import org.apache.maven.artifact.Artifact;
@@ -45,6 +46,7 @@ import org.apache.maven.repository.Proxy;
 
 public class SourcePointerResolver {
 
+    private static final String CENTRAL_REPO_ID = "central";
     private final GenerateFileMojo mojo;
 
     private SourcePointerResolver(GenerateFileMojo mojo) {
@@ -56,70 +58,85 @@ public class SourcePointerResolver {
         instance.collectSourcePointers();
     }
 
-    private ArtifactRepository getCentralRepository() {
-        for (ArtifactRepository repo : mojo.getSession().getRequest().getRemoteRepositories()) {
-            if ("central".equals(repo.getId())) {
-                return repo;
+    /**
+     * @return an ArtifactRepository pair representing the {@code central} repository, where the left element is how to
+     *         reach the {@code central} repository, with the right element being the {@code central} repository itself.
+     *         Note that these only differ when using a mirror to access {@code central}
+     */
+    private Pair<ArtifactRepository, ArtifactRepository> getCentralRepository() {
+        for (ArtifactRepository candidate : mojo.getSession().getRequest().getRemoteRepositories()) {
+            if (CENTRAL_REPO_ID.equals(candidate.getId())) {
+                return Pair.of(candidate, candidate);
+            }
+            for (ArtifactRepository mirrored : candidate.getMirroredRepositories()) {
+                if (CENTRAL_REPO_ID.equals(mirrored.getId())) {
+                    return Pair.of(candidate, mirrored);
+                }
             }
         }
-        throw new IllegalStateException("Unable to find 'central' remote repository!");
+        throw new IllegalStateException("Unable to find '" + CENTRAL_REPO_ID + "' remote repository!");
     }
 
     private void collectSourcePointers() throws ProjectBuildingException, IOException {
+        List<Project> cddlProjects = new ArrayList<>();
+        for (LicensedProjects lp : mojo.getLicenseMap().values()) {
+            if (lp.getLicense().getDisplayName() != null
+                    && lp.getLicense().getDisplayName().toLowerCase().contains("cddl")) {
+                cddlProjects.addAll(lp.getProjects());
+            }
+        }
+        if (cddlProjects.isEmpty()) {
+            return;
+        }
         try (StubArtifactRepository stubRepo = new StubArtifactRepository()) {
             DefaultRepositoryRequest rr = new DefaultRepositoryRequest();
             rr.setLocalRepository(stubRepo);
-            ArtifactRepository central = getCentralRepository();
-            rr.setRemoteRepositories(Collections.singletonList(central));
+            Pair<ArtifactRepository, ArtifactRepository> central = getCentralRepository();
+            rr.setRemoteRepositories(Collections.singletonList(central.getLeft()));
             ArtifactResolutionRequest request = new ArtifactResolutionRequest(rr);
-            for (LicensedProjects lp : mojo.getLicenseMap().values()) {
-                if (lp.getLicense().getDisplayName() != null
-                        && lp.getLicense().getDisplayName().toLowerCase().contains("cddl")) {
-                    ensureCDDLSourcesPointer(lp.getProjects(), central, request);
-                }
+            for (Project cddlProject : cddlProjects) {
+                ensureCDDLSourcesPointer(cddlProject, central.getRight(), request);
             }
         }
     }
 
-    private void ensureCDDLSourcesPointer(Collection<Project> projects, ArtifactRepository central,
+    private void ensureCDDLSourcesPointer(Project project, ArtifactRepository central,
             ArtifactResolutionRequest request) throws ProjectBuildingException, IOException {
-        for (Project p : projects) {
-            if (p.getSourcePointer() != null) {
-                continue;
-            }
-            mojo.getLog().debug("finding sources for artifact: " + p);
-            Artifact sourcesArtifact = new DefaultArtifact(p.getGroupId(), p.getArtifactId(), p.getVersion(),
-                    Artifact.SCOPE_COMPILE, "jar", "sources", null);
-            MavenProject mavenProject = mojo.resolveDependency(sourcesArtifact);
-            sourcesArtifact.setArtifactHandler(mavenProject.getArtifact().getArtifactHandler());
-            final ArtifactRepository localRepo = mojo.getSession().getLocalRepository();
-            final File marker = new File(localRepo.getBasedir(), localRepo.pathOf(sourcesArtifact) + ".oncentral");
-            final File antimarker = new File(localRepo.getBasedir(), localRepo.pathOf(sourcesArtifact) + ".nocentral");
-            boolean onCentral;
-            if (marker.exists() || antimarker.exists()) {
-                onCentral = marker.exists();
-            } else {
-                request.setArtifact(sourcesArtifact);
-                ArtifactResolutionResult result = mojo.getArtifactResolver().resolve(request);
-                mojo.getLog().debug("result: " + result);
-                onCentral = result.isSuccess();
-                if (onCentral) {
-                    FileUtils.touch(marker);
-                } else {
-                    FileUtils.touch(antimarker);
-                }
-            }
-            StringBuilder noticeBuilder = new StringBuilder("You may obtain ");
-            noticeBuilder.append(p.getName()).append(" in Source Code form code here:\n");
-            if (onCentral) {
-                noticeBuilder.append(central.getUrl()).append("/").append(central.pathOf(sourcesArtifact));
-            } else {
-                mojo.getLog().warn("Unable to find sources in 'central' for " + p + ", falling back to project url: "
-                        + p.getUrl());
-                noticeBuilder.append(p.getUrl() != null ? p.getUrl() : "MISSING SOURCE POINTER");
-            }
-            p.setSourcePointer(noticeBuilder.toString());
+        if (project.getSourcePointer() != null) {
+            return;
         }
+        mojo.getLog().debug("finding sources for artifact: " + project);
+        Artifact sourcesArtifact = new DefaultArtifact(project.getGroupId(), project.getArtifactId(),
+                project.getVersion(), Artifact.SCOPE_COMPILE, "jar", "sources", null);
+        MavenProject mavenProject = mojo.resolveDependency(sourcesArtifact);
+        sourcesArtifact.setArtifactHandler(mavenProject.getArtifact().getArtifactHandler());
+        final ArtifactRepository localRepo = mojo.getSession().getLocalRepository();
+        final File marker = new File(localRepo.getBasedir(), localRepo.pathOf(sourcesArtifact) + ".oncentral");
+        final File antimarker = new File(localRepo.getBasedir(), localRepo.pathOf(sourcesArtifact) + ".nocentral");
+        boolean onCentral;
+        if (marker.exists() || antimarker.exists()) {
+            onCentral = marker.exists();
+        } else {
+            request.setArtifact(sourcesArtifact);
+            ArtifactResolutionResult result = mojo.getArtifactResolver().resolve(request);
+            mojo.getLog().debug("result: " + result);
+            onCentral = result.isSuccess();
+            if (onCentral) {
+                FileUtils.touch(marker);
+            } else {
+                FileUtils.touch(antimarker);
+            }
+        }
+        StringBuilder noticeBuilder = new StringBuilder("You may obtain ");
+        noticeBuilder.append(project.getName()).append(" in Source Code form code here:\n");
+        if (onCentral) {
+            noticeBuilder.append(central.getUrl()).append("/").append(central.pathOf(sourcesArtifact));
+        } else {
+            mojo.getLog().warn("Unable to find sources on '" + CENTRAL_REPO_ID + "' for " + project
+                    + ", falling back to project url: " + project.getUrl());
+            noticeBuilder.append(project.getUrl() != null ? project.getUrl() : "MISSING SOURCE POINTER");
+        }
+        project.setSourcePointer(noticeBuilder.toString());
     }
 
     private static class StubArtifactRepository implements ArtifactRepository, AutoCloseable {

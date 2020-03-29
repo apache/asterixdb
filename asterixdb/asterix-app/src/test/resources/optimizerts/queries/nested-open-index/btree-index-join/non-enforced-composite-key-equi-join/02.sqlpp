@@ -17,7 +17,9 @@
  * under the License.
  */
 /*
- * Description  : Testing that creating a nested composite key open index is successful and being used.
+ * Description  : Testing that creating a nested composite key open index is successful.
+ *              : Currently this index cannot be used for this query because
+ *              : the index will not store composite keys where some fields are NULL/MISSING.
  * Expected Res : Success
  */
 

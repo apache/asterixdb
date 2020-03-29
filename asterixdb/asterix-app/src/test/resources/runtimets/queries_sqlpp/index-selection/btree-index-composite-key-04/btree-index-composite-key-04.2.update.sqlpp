@@ -16,27 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- /*
-  *  Description     : Testing that creating a nested composite key open index is successful.
-  *                  : Currently this index cannot be used for this query because
-  *                  : the index will not store composite keys where some fields are NULL/MISSING.
-  *  Expected Result : Success
-  */
-
-drop dataverse test if exists;
-create dataverse test;
+/*
+ * Description     : Define BTree index on a composite key (fname,lname?)
+ *                 : Query predicate => where fname="..."
+ *                 : Currently this index cannot be used for this query because
+ *                 : the index will not store composite keys where some fields are NULL/MISSING.
+ * Expected Result : Success
+ */
 use test;
 
-
-create type TestOpenType as open {
-  c_id: int64
-};
-
-create dataset TestOpen(TestOpenType) primary key c_id;
-
-create index idx_i64 on TestOpen(nested.c_i64:int64, nested.x: string);
-
-select t.c_x as res
-from TestOpen t
-where t.nested.c_i64 = 2
-order by t.c_x;
+insert into employee ({
+    "id": 1,
+    "fname": "A",
+    "lname": "X"
+});
+insert into employee ({
+    "id": 2,
+    "fname": "A"
+    /* "lname" is missing */
+});
+insert into employee ({
+    "id": 3,
+    "fname": "B",
+    "lname": "Y"
+});

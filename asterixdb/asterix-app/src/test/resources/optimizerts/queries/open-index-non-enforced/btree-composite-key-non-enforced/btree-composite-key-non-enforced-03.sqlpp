@@ -22,6 +22,8 @@
 *              : fields of a composite index.
 *              : Define the BTree index on a composite key (c_x,c_y,c_z)
 *              : predicate => WHERE c_x = ... and c_z = ...
+*              : Currently this index cannot be used for this query because
+*              : the index will not store composite keys where some fields are NULL/MISSING.
 * Expected Res : Success
 * Date         : 10 Oct 2019
 */
