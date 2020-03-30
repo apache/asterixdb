@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.ActiveSourceOperatorNodePushable;
 import org.apache.asterix.active.EntityId;
-import org.apache.asterix.external.api.IAdapterFactory;
+import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -50,7 +50,7 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
     private final FeedAdapter adapter;
     private boolean poisoned = false;
 
-    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, EntityId feedId, IAdapterFactory adapterFactory,
+    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, EntityId feedId, ITypedAdapterFactory adapterFactory,
             int partition, IRecordDescriptorProvider recordDescProvider,
             FeedIntakeOperatorDescriptor feedIntakeOperatorDescriptor) throws HyracksDataException {
         super(ctx, new ActiveRuntimeId(feedId, FeedIntakeOperatorNodePushable.class.getSimpleName(), partition));

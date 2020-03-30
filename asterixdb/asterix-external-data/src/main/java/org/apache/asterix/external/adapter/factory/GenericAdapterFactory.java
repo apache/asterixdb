@@ -25,14 +25,14 @@ import java.util.Map;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IDataParserFactory;
-import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IIndexibleExternalDataSource;
 import org.apache.asterix.external.api.IIndexingAdapterFactory;
+import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.asterix.external.dataset.adapter.GenericAdapter;
@@ -59,7 +59,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterFactory {
+public class GenericAdapterFactory implements IIndexingAdapterFactory, ITypedAdapterFactory {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LogManager.getLogger();

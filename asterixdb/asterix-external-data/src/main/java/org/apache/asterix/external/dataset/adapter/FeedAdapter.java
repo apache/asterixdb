@@ -21,7 +21,7 @@ package org.apache.asterix.external.dataset.adapter;
 import java.io.Closeable;
 import java.io.IOException;
 
-import org.apache.asterix.external.api.IDataSourceAdapter;
+import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;

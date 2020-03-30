@@ -16,23 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.dataset.adapter;
+package org.apache.asterix.external.adapter.factory;
 
-import org.apache.asterix.common.external.IDataSourceAdapter;
-import org.apache.asterix.external.api.IDataFlowController;
-import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.common.external.IAdapterFactoryService;
+import org.apache.asterix.external.api.ITypedAdapterFactory;
 
-public class GenericAdapter implements IDataSourceAdapter {
+public class AdapterFactoryService implements IAdapterFactoryService {
 
-    private final IDataFlowController controller;
-
-    public GenericAdapter(IDataFlowController controller) {
-        this.controller = controller;
-    }
-
+    /**
+     * Creates and returns an adapter factory
+     *
+     * @return adaptor factory
+     */
     @Override
-    public void start(int partition, IFrameWriter writer) throws HyracksDataException, InterruptedException {
-        controller.start(writer);
+    public ITypedAdapterFactory createAdapterFactory() {
+        return new GenericAdapterFactory();
     }
 }

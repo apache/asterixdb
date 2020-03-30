@@ -44,7 +44,7 @@ public class DatasetDecl extends AbstractStatement {
     protected final DatasetType datasetType;
     protected final IDatasetDetailsDecl datasetDetailsDecl;
     protected final Map<String, String> hints;
-    private final AdmObjectNode withObjectNode;
+    private AdmObjectNode withObjectNode;
     protected final boolean ifNotExists;
 
     public DatasetDecl(Identifier dataverse, Identifier name, Identifier itemTypeDataverse, Identifier itemTypeName,
@@ -67,7 +67,7 @@ public class DatasetDecl extends AbstractStatement {
         }
         this.nodegroupName = nodeGroupName;
         this.hints = hints;
-        this.withObjectNode = DatasetDeclParametersUtil.validateAndGetWithObjectNode(withRecord);
+        this.withObjectNode = DatasetDeclParametersUtil.validateAndGetWithObjectNode(withRecord, datasetType);
         this.ifNotExists = ifNotExists;
         this.datasetType = datasetType;
         this.datasetDetailsDecl = idd;

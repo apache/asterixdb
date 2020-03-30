@@ -16,12 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.api;
+package org.apache.asterix.common.external;
 
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -60,8 +59,8 @@ public interface IAdapterFactory extends Serializable {
     /**
      * Creates an instance of IDatasourceAdapter.
      *
-     * @param HyracksTaskContext
-     * @param partition
+     * @param ctx HyracksTaskContext
+     * @param partition partition number
      * @return An instance of IDatasourceAdapter.
      * @throws Exception
      */
@@ -77,28 +76,4 @@ public interface IAdapterFactory extends Serializable {
      */
     void configure(IServiceContext serviceContext, Map<String, String> configuration)
             throws HyracksDataException, AlgebricksException;
-
-    /**
-     * Set the expected record output type of the adapter
-     *
-     * @param outputType
-     */
-    void setOutputType(ARecordType outputType);
-
-    /**
-     * Set the expected meta output type of the adapter
-     *
-     * @param metaType
-     */
-    void setMetaType(ARecordType metaType);
-
-    /**
-     * @return the adapter record output type
-     */
-    ARecordType getOutputType();
-
-    /**
-     * @return the adapter meta output type
-     */
-    ARecordType getMetaType();
 }

@@ -60,8 +60,11 @@ public class ExternalDataCompatibilityUtils {
     }
 
     public static void prepare(String adapterName, Map<String, String> configuration) {
-        if (!configuration.containsKey(ExternalDataConstants.KEY_READER)) {
-            configuration.put(ExternalDataConstants.KEY_READER, adapterName);
+        // Adapter name in some cases can carry the link name for external datasets, always add it to configuration
+        configuration.put(ExternalDataConstants.KEY_LINK_NAME, adapterName);
+
+        if (!configuration.containsKey(ExternalDataConstants.KEY_READER)) { // SThree
+            configuration.put(ExternalDataConstants.KEY_READER, adapterName); // myAwsLink
         }
         if (!configuration.containsKey(ExternalDataConstants.KEY_PARSER)) {
             if (configuration.containsKey(ExternalDataConstants.KEY_FORMAT)) {

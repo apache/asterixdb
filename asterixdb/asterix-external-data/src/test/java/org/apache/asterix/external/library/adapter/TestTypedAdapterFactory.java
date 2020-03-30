@@ -25,9 +25,9 @@ import java.util.Map;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.external.api.IAdapterFactory;
-import org.apache.asterix.external.api.IDataSourceAdapter;
+import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
+import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.dataflow.TupleForwarder;
 import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.om.types.ARecordType;
@@ -41,7 +41,7 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.std.file.ITupleParser;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
-public class TestTypedAdapterFactory implements IAdapterFactory {
+public class TestTypedAdapterFactory implements ITypedAdapterFactory {
 
     private static final long serialVersionUID = 1L;
 

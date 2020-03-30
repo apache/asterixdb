@@ -16,23 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.dataset.adapter;
 
-import org.apache.asterix.common.external.IDataSourceAdapter;
-import org.apache.asterix.external.api.IDataFlowController;
-import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-public class GenericAdapter implements IDataSourceAdapter {
+drop type test if exists;
+create type test as open {
+};
 
-    private final IDataFlowController controller;
+drop dataset test if exists;
+create external dataset test(test) using S3 (
+("accessKey"="dummyAccessKey"),
+("secretKey"="dummySecretKey"),
+("region"="us-west-2"),
+("serviceEndpoint"="http://localhost:8001"),
+("container"="playground"),
+("definition"="json-data/reviews"),
+("format"="json")
+);
 
-    public GenericAdapter(IDataFlowController controller) {
-        this.controller = controller;
-    }
-
-    @Override
-    public void start(int partition, IFrameWriter writer) throws HyracksDataException, InterruptedException {
-        controller.start(writer);
-    }
-}

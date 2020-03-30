@@ -69,9 +69,11 @@ import org.apache.asterix.common.config.PropertiesAccessor;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.external.IAdapterFactoryService;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.utils.Servlets;
+import org.apache.asterix.external.adapter.factory.AdapterFactoryService;
 import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.messaging.CCMessageBroker;
@@ -154,7 +156,7 @@ public class CCApplication extends BaseCCApplication {
         ccExtensionManager = new CCExtensionManager(new ArrayList<>(getExtensions()));
         IGlobalRecoveryManager globalRecoveryManager = createGlobalRecoveryManager();
         appCtx = createApplicationContext(libraryManager, globalRecoveryManager, lifecycleCoordinator,
-                () -> new Receptionist("CC"), ConfigValidator::new, ccExtensionManager);
+                () -> new Receptionist("CC"), ConfigValidator::new, ccExtensionManager, new AdapterFactoryService());
         final CCConfig ccConfig = controllerService.getCCConfig();
         if (System.getProperty("java.rmi.server.hostname") == null) {
             System.setProperty("java.rmi.server.hostname", ccConfig.getClusterPublicAddress());
@@ -182,10 +184,12 @@ public class CCApplication extends BaseCCApplication {
     protected ICcApplicationContext createApplicationContext(ILibraryManager libraryManager,
             IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator lifecycleCoordinator,
             IReceptionistFactory receptionistFactory, IConfigValidatorFactory configValidatorFactory,
-            CCExtensionManager ccExtensionManager) throws AlgebricksException, IOException {
+            CCExtensionManager ccExtensionManager, IAdapterFactoryService adapterFactoryService)
+            throws AlgebricksException, IOException {
         return new CcApplicationContext(ccServiceCtx, getHcc(), libraryManager, () -> MetadataManager.INSTANCE,
                 globalRecoveryManager, lifecycleCoordinator, new ActiveNotificationHandler(), componentProvider,
-                new MetadataLockManager(), receptionistFactory, configValidatorFactory, ccExtensionManager);
+                new MetadataLockManager(), receptionistFactory, configValidatorFactory, ccExtensionManager,
+                adapterFactoryService);
     }
 
     protected IGlobalRecoveryManager createGlobalRecoveryManager() throws Exception {
