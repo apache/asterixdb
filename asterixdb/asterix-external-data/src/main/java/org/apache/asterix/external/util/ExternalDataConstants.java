@@ -231,16 +231,6 @@ public class ExternalDataConstants {
 
     public static final String ERROR_PARSE_RECORD = "Parser failed to parse record";
 
-    // TODO(Hussain): Move link related items to a different place
-    /**
-     * Common external link fields
-     */
-    public static final String KEY_DATAVERSE_NAME = "dataverseName";
-    public static final String KEY_LINK_NAME = "linkName";
-    public static final String KEY_LINK_TYPE = "linkType";
-    public static final String[] KEY_EXTERNAL_DATASET_REQUIRED_CONNECTION_PARAMETERS =
-            new String[] { KEY_DATAVERSE_NAME, KEY_LINK_NAME, KEY_LINK_TYPE };
-
     public static class AwsS3Constants {
         public static final String REGION_FIELD_NAME = "region";
         public static final String ACCESS_KEY_FIELD_NAME = "accessKey";
