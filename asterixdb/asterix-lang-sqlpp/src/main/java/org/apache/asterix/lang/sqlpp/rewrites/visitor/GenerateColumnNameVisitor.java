@@ -19,7 +19,10 @@
 
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -47,6 +50,8 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  */
 public class GenerateColumnNameVisitor extends AbstractSqlppExpressionScopingVisitor {
 
+    private final Map<Expression, VarIdentifier> gbyKeyExprMap = new HashMap<>();
+
     private final Set<VarIdentifier> gbyKeyVars = new HashSet<>();
 
     public GenerateColumnNameVisitor(LangRewritingContext context) {
@@ -70,24 +75,34 @@ public class GenerateColumnNameVisitor extends AbstractSqlppExpressionScopingVis
 
     @Override
     public Expression visit(GroupbyClause groupbyClause, ILangExpression arg) throws CompilationException {
+        //TODO:FIXME:GBY:REVISIT
+        gbyKeyExprMap.clear();
         gbyKeyVars.clear();
-        for (GbyVariableExpressionPair gbyKeyPair : groupbyClause.getGbyPairList()) {
-            if (gbyKeyPair.getVar() == null) {
-                Expression gbyKeyExpr = gbyKeyPair.getExpr();
-                SourceLocation sourceLoc = gbyKeyExpr.getSourceLocation();
-                VariableExpr varExpr;
-                try {
-                    varExpr = ExpressionToVariableUtil.getGeneratedVariable(gbyKeyExpr, false);
-                } catch (ParseException e) {
-                    throw new CompilationException(ErrorCode.PARSE_ERROR, e, sourceLoc);
+        for (List<GbyVariableExpressionPair> gbyPairList : groupbyClause.getGbyPairList()) {
+            for (GbyVariableExpressionPair gbyKeyPair : gbyPairList) {
+                if (gbyKeyPair.getVar() == null) {
+                    Expression gbyKeyExpr = gbyKeyPair.getExpr();
+                    SourceLocation sourceLoc = gbyKeyExpr.getSourceLocation();
+                    VariableExpr varExpr;
+                    VarIdentifier varId = gbyKeyExprMap.get(gbyKeyExpr);
+                    if (varId == null) {
+                        try {
+                            varExpr = ExpressionToVariableUtil.getGeneratedVariable(gbyKeyExpr, false);
+                        } catch (ParseException e) {
+                            throw new CompilationException(ErrorCode.PARSE_ERROR, e, sourceLoc);
+                        }
+                        if (varExpr == null || gbyKeyVars.contains(varExpr.getVar())) {
+                            varExpr = new VariableExpr(context.newVariable());
+                        }
+                        gbyKeyExprMap.put(gbyKeyExpr, varExpr.getVar());
+                    } else {
+                        varExpr = new VariableExpr(varId);
+                    }
+                    varExpr.setSourceLocation(sourceLoc);
+                    gbyKeyPair.setVar(varExpr);
                 }
-                if (varExpr == null || gbyKeyVars.contains(varExpr.getVar())) {
-                    varExpr = new VariableExpr(context.newVariable());
-                }
-                varExpr.setSourceLocation(sourceLoc);
-                gbyKeyPair.setVar(varExpr);
+                gbyKeyVars.add(gbyKeyPair.getVar().getVar());
             }
-            gbyKeyVars.add(gbyKeyPair.getVar().getVar());
         }
         return super.visit(groupbyClause, arg);
     }

@@ -21,14 +21,12 @@ package org.apache.asterix.lang.common.visitor;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
-import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
@@ -37,7 +35,6 @@ import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.FieldBinding;
-import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.IfExpr;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
 import org.apache.asterix.lang.common.expression.ListConstructor;
@@ -241,42 +238,6 @@ public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<V
         for (int i = 0; i < list.size(); i++) {
             list.get(i).accept(this, step + 1);
             out.println(skip(step + 1) + mlist.get(i).toString());
-        }
-        out.println();
-        return null;
-    }
-
-    @Override
-    public Void visit(GroupbyClause gc, Integer step) throws CompilationException {
-        out.println(skip(step) + "Groupby");
-        for (GbyVariableExpressionPair pair : gc.getGbyPairList()) {
-            if (pair.getVar() != null) {
-                pair.getVar().accept(this, step + 1);
-                out.println(skip(step + 1) + ":=");
-            }
-            pair.getExpr().accept(this, step + 1);
-        }
-        if (gc.hasDecorList()) {
-            out.println(skip(step + 1) + "Decor");
-            for (GbyVariableExpressionPair pair : gc.getDecorPairList()) {
-                if (pair.getVar() != null) {
-                    pair.getVar().accept(this, step + 1);
-                    out.println(skip(step + 1) + ":=");
-                }
-                pair.getExpr().accept(this, step + 1);
-            }
-        }
-        if (gc.hasWithMap()) {
-            out.println(skip(step + 1) + "With");
-            for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
-                Expression key = entry.getKey();
-                VariableExpr value = entry.getValue();
-                key.accept(this, step + 1);
-                if (!key.equals(value)) {
-                    out.println(skip(step + 1) + "AS");
-                    value.accept(this, step + 1);
-                }
-            }
         }
         out.println();
         return null;

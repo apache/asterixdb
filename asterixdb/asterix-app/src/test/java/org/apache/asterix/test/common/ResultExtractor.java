@@ -35,6 +35,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -220,26 +221,25 @@ public class ResultExtractor {
                         } else if (fieldValue.isArray()) {
                             JsonNode oneElement = fieldValue.get(0);
                             if (oneElement.isTextual()) {
-                                resultBuilder.append(
-                                        isJsonFormat ? PP_WRITER.writeValueAsString(oneElement) : oneElement.asText());
+                                resultBuilder.append(isJsonFormat ? prettyPrint(oneElement) : oneElement.asText());
                             } else {
-                                resultBuilder.append(PP_WRITER.writeValueAsString(oneElement));
+                                resultBuilder.append(prettyPrint(oneElement));
                             }
                         } else {
-                            resultBuilder.append(PP_WRITER.writeValueAsString(fieldValue));
+                            resultBuilder.append(prettyPrint(fieldValue));
                         }
                     } else {
                         JsonNode[] fields = Iterators.toArray(fieldValue.elements(), JsonNode.class);
                         if (isJsonFormat) {
                             for (JsonNode f : fields) {
-                                resultBuilder.append(PP_WRITER.writeValueAsString(f)).append('\n');
+                                resultBuilder.append(prettyPrint(f)).append('\n');
                             }
                         } else {
                             for (JsonNode f : fields) {
                                 if (f.isValueNode()) {
                                     resultBuilder.append(f.asText());
                                 } else {
-                                    resultBuilder.append(PP_WRITER.writeValueAsString(f)).append('\n');
+                                    resultBuilder.append(prettyPrint(f)).append('\n');
                                 }
                             }
                         }
@@ -273,6 +273,10 @@ public class ResultExtractor {
         }
         extractedResult.setResult(IOUtils.toInputStream(resultBuilder, resultCharset));
         return extractedResult;
+    }
+
+    public static String prettyPrint(JsonNode node) throws JsonProcessingException {
+        return PP_WRITER.writeValueAsString(node);
     }
 
     private static void checkForErrors(ObjectNode result) throws Exception {

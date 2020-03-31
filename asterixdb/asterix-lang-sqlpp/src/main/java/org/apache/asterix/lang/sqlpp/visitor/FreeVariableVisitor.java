@@ -274,8 +274,10 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
     @Override
     public Void visit(GroupbyClause gc, Collection<VariableExpr> freeVars) throws CompilationException {
         // Puts all group-by variables into the symbol set of the new scope.
-        for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
-            gbyVarExpr.getExpr().accept(this, freeVars);
+        for (List<GbyVariableExpressionPair> gbyPairList : gc.getGbyPairList()) {
+            for (GbyVariableExpressionPair gbyVarExpr : gbyPairList) {
+                gbyVarExpr.getExpr().accept(this, freeVars);
+            }
         }
         if (gc.hasDecorList()) {
             for (GbyVariableExpressionPair decorVarExpr : gc.getDecorPairList()) {

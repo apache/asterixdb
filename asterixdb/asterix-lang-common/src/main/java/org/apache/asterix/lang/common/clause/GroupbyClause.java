@@ -34,7 +34,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class GroupbyClause extends AbstractClause {
 
-    private List<GbyVariableExpressionPair> gbyPairList;
+    private List<List<GbyVariableExpressionPair>> gbyPairList;
     private List<GbyVariableExpressionPair> decorPairList;
     private Map<Expression, VariableExpr> withVarMap;
     private VariableExpr groupVar;
@@ -46,15 +46,16 @@ public class GroupbyClause extends AbstractClause {
         // Default constructor.
     }
 
-    public GroupbyClause(List<GbyVariableExpressionPair> gbyPairList, List<GbyVariableExpressionPair> decorPairList,
-            Map<Expression, VariableExpr> withVarList, VariableExpr groupVarExpr,
-            List<Pair<Expression, Identifier>> groupFieldList, boolean hashGroupByHint) {
+    public GroupbyClause(List<List<GbyVariableExpressionPair>> gbyPairList,
+            List<GbyVariableExpressionPair> decorPairList, Map<Expression, VariableExpr> withVarList,
+            VariableExpr groupVarExpr, List<Pair<Expression, Identifier>> groupFieldList, boolean hashGroupByHint) {
         this(gbyPairList, decorPairList, withVarList, groupVarExpr, groupFieldList, hashGroupByHint, false);
     }
 
-    public GroupbyClause(List<GbyVariableExpressionPair> gbyPairList, List<GbyVariableExpressionPair> decorPairList,
-            Map<Expression, VariableExpr> withVarList, VariableExpr groupVarExpr,
-            List<Pair<Expression, Identifier>> groupFieldList, boolean hashGroupByHint, boolean groupAll) {
+    public GroupbyClause(List<List<GbyVariableExpressionPair>> gbyPairList,
+            List<GbyVariableExpressionPair> decorPairList, Map<Expression, VariableExpr> withVarList,
+            VariableExpr groupVarExpr, List<Pair<Expression, Identifier>> groupFieldList, boolean hashGroupByHint,
+            boolean groupAll) {
         this.gbyPairList = gbyPairList;
         this.decorPairList = decorPairList;
         this.withVarMap = withVarList;
@@ -66,11 +67,11 @@ public class GroupbyClause extends AbstractClause {
         this.groupAll = groupAll;
     }
 
-    public List<GbyVariableExpressionPair> getGbyPairList() {
+    public List<List<GbyVariableExpressionPair>> getGbyPairList() {
         return gbyPairList;
     }
 
-    public void setGbyPairList(List<GbyVariableExpressionPair> vePairList) {
+    public void setGbyPairList(List<List<GbyVariableExpressionPair>> vePairList) {
         this.gbyPairList = vePairList;
     }
 

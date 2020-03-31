@@ -1,0 +1,97 @@
+DataverseUse test
+Query:
+SELECT [
+Variable [ Name=$two ]
+two
+Variable [ Name=$four ]
+four
+Variable [ Name=$ten ]
+ten
+Variable [ Name=#2 ]
+grp
+FunctionCall asterix.sql-sum@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#3 ]
+        Field=tenk
+      ]
+      Field=twenty
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#3 ]
+    ]
+  )
+]
+agg_sum
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.tenk]
+  ]
+  AS Variable [ Name=$tenk ]
+]
+Groupby
+  GROUPING SET (
+    Variable [ Name=$two ]
+    :=
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=two
+    ]
+    Variable [ Name=$four ]
+    :=
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=four
+    ]
+    Variable [ Name=$ten ]
+    :=
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=ten
+    ]
+  )
+  GROUPING SET (
+    Variable [ Name=$two ]
+    :=
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=two
+    ]
+    Variable [ Name=$four ]
+    :=
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=four
+    ]
+  ),
+  GROUPING SET (
+    Variable [ Name=$two ]
+    :=
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=two
+    ]
+  ),
+  GROUP AS Variable [ Name=#1 ]
+  (
+    tenk:=Variable [ Name=$tenk ]
+  )
+
+Let Variable [ Name=#2 ]
+  :=
+  FunctionCall test.grouping@3[
+    Variable [ Name=$two ]
+    Variable [ Name=$four ]
+    Variable [ Name=$ten ]
+  ]
+Orderby
+  Variable [ Name=$two ]
+  ASC
+  Variable [ Name=$four ]
+  ASC
+  Variable [ Name=$ten ]
+  ASC
+

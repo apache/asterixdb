@@ -178,6 +178,11 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
+import org.apache.asterix.lang.sqlpp.parser.SqlppGroupingSetsParser;
+import org.apache.asterix.lang.sqlpp.parser.SqlppGroupingSetsParser.GroupingElement;
+import org.apache.asterix.lang.sqlpp.parser.SqlppGroupingSetsParser.GroupingSet;
+import org.apache.asterix.lang.sqlpp.parser.SqlppGroupingSetsParser.GroupingSets;
+import org.apache.asterix.lang.sqlpp.parser.SqlppGroupingSetsParser.RollupCube;
 import org.apache.asterix.lang.sqlpp.parser.SqlppHint;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -204,10 +209,12 @@ import org.apache.hyracks.util.StringUtil;
 class SQLPPParser extends ScopeChecker implements IParser {
 
     // tokens parsed as identifiers
+    private static final String CUBE = "CUBE";
     private static final String CURRENT = "CURRENT";
     private static final String EXCLUDE = "EXCLUDE";
     private static final String FIRST = "FIRST";
     private static final String FOLLOWING = "FOLLOWING";
+    private static final String GROUPING = "GROUPING";
     private static final String GROUPS = "GROUPS";
     private static final String IGNORE = "IGNORE";
     private static final String LAST = "LAST";
@@ -218,8 +225,10 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String PRECEDING = "PRECEDING";
     private static final String RANGE = "RANGE";
     private static final String RESPECT = "RESPECT";
+    private static final String ROLLUP = "ROLLUP";
     private static final String ROW = "ROW";
     private static final String ROWS = "ROWS";
+    private static final String SETS = "SETS";
     private static final String TIES = "TIES";
     private static final String UNBOUNDED = "UNBOUNDED";
     private static final String ACTION = "ACTION";
@@ -238,6 +247,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private int externalVarCounter;
 
     private DataverseName defaultDataverse;
+
+    private SqlppGroupingSetsParser groupingSetsParser;
 
     private final WarningCollector warningCollector = new WarningCollector();
 
@@ -474,6 +485,11 @@ class SQLPPParser extends ScopeChecker implements IParser {
       String message = "Unexpected token: " + LogRedactionUtil.userData(token.image) +
         (expected == null ? "" : ". Expected: " + LogRedactionUtil.userData(expected));
       return new SqlppParseException(getSourceLocation(token), message);
+    }
+
+    private boolean laToken(int idx, int kind) {
+      Token t = getToken(idx);
+      return t.kind == kind;
     }
 
     private boolean laToken(int idx, int kind, String image) {
@@ -4039,59 +4055,44 @@ GroupbyClause GroupbyClause()throws ParseException :
 {
     Token startToken = null;
     GroupbyClause gbc = new GroupbyClause();
-    List<GbyVariableExpressionPair> vePairList = new ArrayList<GbyVariableExpressionPair>();
-    VariableExpr var = null;
-    Expression expr = null;
-    VariableExpr decorVar = null;
-    Expression decorExpr = null;
+    List<List<GbyVariableExpressionPair>> gbyList = null;
+    List<GroupingElement> groupingElementList = null;
     Pair<VariableExpr, List<Pair<Expression, Identifier>>> groupVarWithFieldList = null;
     VariableExpr groupVar = null;
     List<Pair<Expression, Identifier>> groupFieldList = null;
 }
 {
-      {
-        Scope newScope = extendCurrentScopeNoPush(true);
-        // extendCurrentScope(true);
-      }
+    {
+      Scope newScope = extendCurrentScopeNoPush(true);
+      // extendCurrentScope(true);
+    }
     <GROUP>
-      {
-         startToken = token;
-         Token hintToken = fetchHint(token, SqlppHint.HASH_GROUP_BY_HINT);
-         if (hintToken != null) {
-            gbc.setHashGroupByHint(true);
-         }
+    {
+      startToken = token;
+      Token hintToken = fetchHint(token, SqlppHint.HASH_GROUP_BY_HINT);
+      if (hintToken != null) {
+        gbc.setHashGroupByHint(true);
       }
-    <BY> (
-       expr = Expression()
-       (LOOKAHEAD(1) (<AS>)?
-        var = Variable()
-        )?
-        {
-            GbyVariableExpressionPair pair1 = new GbyVariableExpressionPair(var, expr);
-            vePairList.add(pair1);
-        }
-       ( LOOKAHEAD(1) <COMMA>
-         {
-            var = null;
-         }
-         expr = Expression()
-         (LOOKAHEAD(1)  (<AS>)?
-         var = Variable()
-         )?
-         {
-             GbyVariableExpressionPair pair2 = new GbyVariableExpressionPair(var, expr);
-             vePairList.add(pair2);
-         }
-        )*
-    )
-    (<GROUP> <AS> groupVarWithFieldList = VariableWithFieldMap()
+    }
+    <BY> groupingElementList = GroupingElementList()
+    (
+      <GROUP> <AS> groupVarWithFieldList = VariableWithFieldMap()
       {
         groupVar = groupVarWithFieldList.first;
         groupFieldList = groupVarWithFieldList.second;
       }
     )?
     {
-      gbc.setGbyPairList(vePairList);
+      if (groupingSetsParser == null) {
+        groupingSetsParser = new SqlppGroupingSetsParser();
+      }
+      SourceLocation sourceLoc = getSourceLocation(startToken);
+      try {
+        gbyList = groupingSetsParser.parse(groupingElementList, sourceLoc);
+      } catch (CompilationException e) {
+        throw new SqlppParseException(sourceLoc, e.getMessage());
+      }
+      gbc.setGbyPairList(gbyList);
       gbc.setDecorPairList(new ArrayList<GbyVariableExpressionPair>());
       gbc.setWithVarMap(new HashMap<Expression, VariableExpr>());
       gbc.setGroupVar(groupVar);
@@ -4099,6 +4100,114 @@ GroupbyClause GroupbyClause()throws ParseException :
       replaceCurrentScope(newScope);
       return addSourceLocation(gbc, startToken);
     }
+}
+
+List<GroupingElement> GroupingElementList() throws ParseException:
+{
+  List<GroupingElement> groupingElementList = new ArrayList<GroupingElement>();
+  GroupingElement groupingElement = null;
+}
+{
+  groupingElement = GroupingElement() { groupingElementList.add(groupingElement); }
+  ( LOOKAHEAD(1) <COMMA> groupingElement = GroupingElement() { groupingElementList.add(groupingElement); } )*
+  {
+    return groupingElementList;
+  }
+}
+
+GroupingElement GroupingElement() throws ParseException:
+{
+  GroupingElement groupingElement = null;
+  List<GroupingSet> groupingSets = null;
+  List<GroupingElement> groupingElements = null;
+}
+{
+  (
+    LOOKAHEAD(2)
+    <LEFTPAREN> <RIGHTPAREN>
+    {
+      groupingElement = GroupingSet.EMPTY;
+    }
+    |
+    LOOKAHEAD({ laIdentifier(ROLLUP) && laToken(2, LEFTPAREN) })
+    <IDENTIFIER> { expectToken(ROLLUP); }
+    <LEFTPAREN> groupingSets = OrdinaryGroupingSetList() <RIGHTPAREN>
+    {
+      groupingElement = new RollupCube(groupingSets, false);
+    }
+    |
+    LOOKAHEAD({ laIdentifier(CUBE) && laToken(2, LEFTPAREN) })
+    <IDENTIFIER> { expectToken(CUBE); }
+    <LEFTPAREN> groupingSets = OrdinaryGroupingSetList() <RIGHTPAREN>
+    {
+      groupingElement = new RollupCube(groupingSets, true);
+    }
+    |
+    LOOKAHEAD({ laIdentifier(GROUPING) && laIdentifier(2, SETS) && laToken(3, LEFTPAREN) })
+    <IDENTIFIER> { expectToken(GROUPING); } <IDENTIFIER> { expectToken(SETS); }
+    <LEFTPAREN> groupingElements = GroupingElementList() <RIGHTPAREN>
+    {
+      groupingElement = new GroupingSets(groupingElements);
+    }
+    |
+    groupingElement = OrdinaryGroupingSet()
+  )
+  {
+    return groupingElement;
+  }
+}
+
+GroupingSet OrdinaryGroupingSet() throws ParseException:
+{
+  GbyVariableExpressionPair gbyExprPair = null;
+  List<GbyVariableExpressionPair> items = null;
+}
+{
+  (
+    LOOKAHEAD(1) <LEFTPAREN> items = GbyVariableExpressionPairList() <RIGHTPAREN>
+    | gbyExprPair = GbyVariableExpressionPair() { items = Collections.singletonList(gbyExprPair); }
+  )
+  {
+    return new GroupingSet(items);
+  }
+}
+
+List<GroupingSet> OrdinaryGroupingSetList() throws ParseException:
+{
+  GroupingSet groupingSet = null;
+  List<GroupingSet> items = new ArrayList<GroupingSet>();
+}
+{
+  groupingSet = OrdinaryGroupingSet() { items.add(groupingSet); }
+  ( LOOKAHEAD(1) <COMMA> groupingSet = OrdinaryGroupingSet() { items.add(groupingSet); } )*
+  {
+    return items;
+  }
+}
+
+List<GbyVariableExpressionPair> GbyVariableExpressionPairList() throws ParseException:
+{
+  GbyVariableExpressionPair gbyExprPair = null;
+  List<GbyVariableExpressionPair> items = new ArrayList<GbyVariableExpressionPair>();
+}
+{
+  gbyExprPair = GbyVariableExpressionPair() { items.add(gbyExprPair); }
+  ( LOOKAHEAD(1) <COMMA> gbyExprPair = GbyVariableExpressionPair() { items.add(gbyExprPair); } )*
+  {
+    return items;
+  }
+}
+
+GbyVariableExpressionPair GbyVariableExpressionPair() throws ParseException:
+{
+  Expression expr = null;
+  VariableExpr var = null;
+}
+{
+  expr = Expression() ( (<AS>)? var = Variable() )?
+  {
+    return new GbyVariableExpressionPair(var, expr);
+  }
 }
 
 HavingClause HavingClause() throws ParseException:

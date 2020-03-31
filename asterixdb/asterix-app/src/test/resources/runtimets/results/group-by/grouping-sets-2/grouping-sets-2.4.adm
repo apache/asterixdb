@@ -1,0 +1,7 @@
+{ "v2": null, "v4": null, "grp": 3, "agg_sum": 45000 }
+{ "v2": 0, "v4": null, "grp": 1, "agg_sum": 20000 }
+{ "v2": 0, "v4": 0, "grp": 0, "agg_sum": 10000 }
+{ "v2": 0, "v4": 2, "grp": 0, "agg_sum": 10000 }
+{ "v2": 1, "v4": null, "grp": 1, "agg_sum": 25000 }
+{ "v2": 1, "v4": 1, "grp": 0, "agg_sum": 12500 }
+{ "v2": 1, "v4": 3, "grp": 0, "agg_sum": 12500 }

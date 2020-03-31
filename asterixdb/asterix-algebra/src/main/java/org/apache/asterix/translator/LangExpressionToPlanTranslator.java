@@ -967,14 +967,26 @@ abstract class LangExpressionToPlanTranslator
             topOp = new MutableObject<>(groupRecordVarAssignOp);
         }
 
+        boolean propagateHashHint = true;
+
         GroupByOperator gOp = new GroupByOperator();
-        for (GbyVariableExpressionPair ve : gc.getGbyPairList()) {
-            VariableExpr vexpr = ve.getVar();
-            LogicalVariable v = vexpr == null ? context.newVar() : context.newVarFromExpression(vexpr);
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(ve.getExpr(), topOp);
-            gOp.addGbyExpression(v, eo.first);
-            topOp = eo.second;
+        if (!gc.isGroupAll()) {
+            List<GbyVariableExpressionPair> groupingSet = getSingleGroupingSet(gc);
+            if (groupingSet.isEmpty()) {
+                gOp.addGbyExpression(context.newVar(), ConstantExpression.TRUE);
+                propagateHashHint = false;
+            } else {
+                for (GbyVariableExpressionPair ve : groupingSet) {
+                    VariableExpr vexpr = ve.getVar();
+                    LogicalVariable v = vexpr == null ? context.newVar() : context.newVarFromExpression(vexpr);
+                    Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo =
+                            langExprToAlgExpression(ve.getExpr(), topOp);
+                    gOp.addGbyExpression(v, eo.first);
+                    topOp = eo.second;
+                }
+            }
         }
+
         if (gc.hasDecorList()) {
             for (GbyVariableExpressionPair ve : gc.getDecorPairList()) {
                 VariableExpr vexpr = ve.getVar();
@@ -1017,9 +1029,21 @@ abstract class LangExpressionToPlanTranslator
         }
 
         gOp.setGroupAll(gc.isGroupAll());
-        gOp.getAnnotations().put(OperatorAnnotations.USE_HASH_GROUP_BY, gc.hasHashGroupByHint());
+        if (propagateHashHint) {
+            gOp.getAnnotations().put(OperatorAnnotations.USE_HASH_GROUP_BY, gc.hasHashGroupByHint());
+        }
         gOp.setSourceLocation(sourceLoc);
         return new Pair<>(gOp, null);
+    }
+
+    protected List<GbyVariableExpressionPair> getSingleGroupingSet(GroupbyClause gby) throws CompilationException {
+        List<List<GbyVariableExpressionPair>> groupingSetList = gby.getGbyPairList();
+        if (groupingSetList.size() != 1) {
+            // should've been rewritten by SqlppGroupingSetsVisitor
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, gby.getSourceLocation(),
+                    String.valueOf(groupingSetList.size()));
+        }
+        return groupingSetList.get(0);
     }
 
     protected AbstractFunctionCallExpression createRecordConstructor(List<Pair<Expression, Identifier>> fieldList,

@@ -198,6 +198,9 @@ public class ErrorCode {
     public static final int SYNONYM_EXISTS = 1108;
     public static final int UNKNOWN_SYNONYM = 1109;
     public static final int UNKNOWN_LIBRARY = 1110;
+    public static final int COMPILATION_GROUPING_SETS_OVERFLOW = 1111;
+    public static final int COMPILATION_GROUPING_OPERATION_INVALID_ARG = 1112;
+    public static final int COMPILATION_UNEXPECTED_ALIAS = 1113;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

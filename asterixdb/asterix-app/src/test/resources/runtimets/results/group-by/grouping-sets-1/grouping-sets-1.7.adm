@@ -1,0 +1,7 @@
+{ "two": null, "four": null, "grp": 3, "agg_sum": 45000 }
+{ "two": 0, "four": null, "grp": 1, "agg_sum": 20000 }
+{ "two": 0, "four": 0, "grp": 0, "agg_sum": 10000 }
+{ "two": 0, "four": 2, "grp": 0, "agg_sum": 10000 }
+{ "two": 1, "four": null, "grp": 1, "agg_sum": 25000 }
+{ "two": 1, "four": 1, "grp": 0, "agg_sum": 12500 }
+{ "two": 1, "four": 3, "grp": 0, "agg_sum": 12500 }

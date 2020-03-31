@@ -77,25 +77,66 @@ public class UnionAllOperator extends AbstractLogicalOperator {
 
     @Override
     public void recomputeSchema() {
-        schema = new ArrayList<LogicalVariable>();
-        for (LogicalVariable v1 : inputs.get(0).getValue().getSchema()) {
-            for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : varMap) {
-                if (t.first.equals(v1)) {
-                    schema.add(t.third);
-                } else {
-                    schema.add(v1);
-                }
+        // Assume input schemas are
+        // input0 = [a,b,c]
+        // input1 = [d,e,f,g,h]
+        // and
+        // UNION ALL mapping is
+        // [a,d -> X], [c,f -> Y]
+        //
+        // In order to compute the output schema we need to pick a larger input
+        // out of these two and replace variables there using UNION ALL mappings.
+        // Therefore in this example we'll pick input1 and the output schema will be
+        // [X,e,Y,g,h]
+        //
+        // Note that all input variables are out of scope after UNION ALL
+        // therefore it's ok return them in the output schema because
+        // no parent operator will refer to them.
+        // Also note the all UNION ALL operators in the final optimized plan
+        // will have input schemas that exactly match their mappings.
+        // This is guaranteed by InsertProjectBeforeUnionRule.
+        // In this example in the final optimized plan
+        // input0 schema will be [a,c]
+        // input1 schema will be [d,f]
+
+        List<LogicalVariable> inputSchema0 = inputs.get(0).getValue().getSchema();
+        List<LogicalVariable> inputSchema1 = inputs.get(1).getValue().getSchema();
+
+        List<LogicalVariable> inputSchema;
+        int inputSchemaIdx;
+        if (inputSchema0.size() >= inputSchema1.size()) {
+            inputSchema = inputSchema0;
+            inputSchemaIdx = 0;
+        } else {
+            inputSchema = inputSchema1;
+            inputSchemaIdx = 1;
+        }
+
+        schema = new ArrayList<>(inputSchema.size());
+        for (LogicalVariable inVar : inputSchema) {
+            LogicalVariable outVar = findOutputVar(inVar, inputSchemaIdx);
+            schema.add(outVar != null ? outVar : inVar);
+        }
+    }
+
+    private LogicalVariable findOutputVar(LogicalVariable inputVar, int inputIdx) {
+        for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : varMap) {
+            LogicalVariable testVar;
+            switch (inputIdx) {
+                case 0:
+                    testVar = t.first;
+                    break;
+                case 1:
+                    testVar = t.second;
+                    break;
+                default:
+                    throw new IllegalArgumentException(String.valueOf(inputIdx));
+            }
+            if (inputVar.equals(testVar)) {
+                return t.third;
             }
         }
-        for (LogicalVariable v2 : inputs.get(1).getValue().getSchema()) {
-            for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : varMap) {
-                if (t.second.equals(v2)) {
-                    schema.add(t.third);
-                } else {
-                    schema.add(v2);
-                }
-            }
-        }
+        return null;
     }
 
     @Override

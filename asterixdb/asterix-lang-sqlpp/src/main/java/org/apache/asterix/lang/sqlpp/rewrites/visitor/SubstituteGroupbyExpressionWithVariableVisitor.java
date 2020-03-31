@@ -20,6 +20,7 @@
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -54,10 +55,12 @@ public class SubstituteGroupbyExpressionWithVariableVisitor extends AbstractSqlp
     public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
         if (selectBlock.hasGroupbyClause()) {
             Map<Expression, Expression> map = new HashMap<>();
-            for (GbyVariableExpressionPair gbyKeyPair : selectBlock.getGroupbyClause().getGbyPairList()) {
-                Expression gbyKeyExpr = gbyKeyPair.getExpr();
-                if (gbyKeyExpr.getKind() != Kind.VARIABLE_EXPRESSION) {
-                    map.put(gbyKeyExpr, gbyKeyPair.getVar());
+            for (List<GbyVariableExpressionPair> gbyPairList : selectBlock.getGroupbyClause().getGbyPairList()) {
+                for (GbyVariableExpressionPair gbyKeyPair : gbyPairList) {
+                    Expression gbyKeyExpr = gbyKeyPair.getExpr();
+                    if (gbyKeyExpr.getKind() != Kind.VARIABLE_EXPRESSION) {
+                        map.putIfAbsent(gbyKeyExpr, gbyKeyPair.getVar());
+                    }
                 }
             }
 

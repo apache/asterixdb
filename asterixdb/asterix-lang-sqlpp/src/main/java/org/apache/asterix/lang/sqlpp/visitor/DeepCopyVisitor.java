@@ -283,11 +283,17 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public GroupbyClause visit(GroupbyClause gc, Void arg) throws CompilationException {
-        List<GbyVariableExpressionPair> gbyPairList = new ArrayList<>();
-        for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
-            VariableExpr var = gbyVarExpr.getVar();
-            gbyPairList.add(new GbyVariableExpressionPair(var == null ? null : (VariableExpr) var.accept(this, arg),
-                    (Expression) gbyVarExpr.getExpr().accept(this, arg)));
+        List<List<GbyVariableExpressionPair>> gbyList = gc.getGbyPairList();
+        List<List<GbyVariableExpressionPair>> newGbyList = new ArrayList<>(gbyList.size());
+        for (List<GbyVariableExpressionPair> gbyPairList : gbyList) {
+            List<GbyVariableExpressionPair> newGbyPairList = new ArrayList<>(gbyPairList.size());
+            for (GbyVariableExpressionPair gbyVarExpr : gbyPairList) {
+                VariableExpr var = gbyVarExpr.getVar();
+                newGbyPairList
+                        .add(new GbyVariableExpressionPair(var == null ? null : (VariableExpr) var.accept(this, arg),
+                                (Expression) gbyVarExpr.getExpr().accept(this, arg)));
+            }
+            newGbyList.add(newGbyPairList);
         }
         List<GbyVariableExpressionPair> decorPairList = new ArrayList<>();
         if (gc.hasDecorList()) {
@@ -310,7 +316,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
             groupVarExpr = (VariableExpr) gc.getGroupVar().accept(this, arg);
         }
         List<Pair<Expression, Identifier>> groupFieldList = copyFieldList(gc.getGroupFieldList(), arg);
-        GroupbyClause copy = new GroupbyClause(gbyPairList, decorPairList, withVarMap, groupVarExpr, groupFieldList,
+        GroupbyClause copy = new GroupbyClause(newGbyList, decorPairList, withVarMap, groupVarExpr, groupFieldList,
                 gc.hasHashGroupByHint(), gc.isGroupAll());
         copy.setSourceLocation(gc.getSourceLocation());
         return copy;

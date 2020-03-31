@@ -187,8 +187,10 @@ class AqlQueryRewriter implements IQueryRewriter {
 
         @Override
         public Void visit(GroupbyClause gc, Void arg) throws CompilationException {
-            for (GbyVariableExpressionPair p : gc.getGbyPairList()) {
-                p.getExpr().accept(this, arg);
+            for (List<GbyVariableExpressionPair> gbyPairList : gc.getGbyPairList()) {
+                for (GbyVariableExpressionPair p : gbyPairList) {
+                    p.getExpr().accept(this, arg);
+                }
             }
             if (gc.hasDecorList()) {
                 for (GbyVariableExpressionPair p : gc.getDecorPairList()) {

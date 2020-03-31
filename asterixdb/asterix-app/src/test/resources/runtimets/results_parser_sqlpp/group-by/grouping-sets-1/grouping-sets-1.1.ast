@@ -1,0 +1,22 @@
+DataverseUse test
+TypeDecl tenkType [
+  closed RecordType {
+    unique1 : integer,
+    unique2 : integer,
+    two : integer,
+    four : integer,
+    ten : integer,
+    twenty : integer,
+    hundred : integer,
+    thousand : integer,
+    twothousand : integer,
+    fivethous : integer,
+    tenthous : integer,
+    odd100 : integer,
+    even100 : integer,
+    stringu1 : string,
+    stringu2 : string,
+    string4 : string
+  }
+]
+DatasetDecl tenk(tenkType) partitioned by [[unique2]]

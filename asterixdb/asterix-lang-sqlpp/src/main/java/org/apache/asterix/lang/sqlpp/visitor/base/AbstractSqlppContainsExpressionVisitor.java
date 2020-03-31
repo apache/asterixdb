@@ -20,6 +20,7 @@
 package org.apache.asterix.lang.sqlpp.visitor.base;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -256,9 +257,11 @@ public abstract class AbstractSqlppContainsExpressionVisitor<T>
 
     @Override
     public Boolean visit(GroupbyClause gc, T arg) throws CompilationException {
-        for (GbyVariableExpressionPair key : gc.getGbyPairList()) {
-            if (visit(key.getExpr(), arg)) {
-                return true;
+        for (List<GbyVariableExpressionPair> gbyPairList : gc.getGbyPairList()) {
+            for (GbyVariableExpressionPair key : gbyPairList) {
+                if (visit(key.getExpr(), arg)) {
+                    return true;
+                }
             }
         }
         if (gc.hasDecorList()) {

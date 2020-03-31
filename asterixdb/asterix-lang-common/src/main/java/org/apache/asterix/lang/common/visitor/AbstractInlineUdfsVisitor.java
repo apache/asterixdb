@@ -208,9 +208,15 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
 
     @Override
     public Boolean visit(GroupbyClause gc, List<FunctionDecl> arg) throws CompilationException {
-        Pair<Boolean, List<GbyVariableExpressionPair>> p1 = inlineUdfsInGbyPairList(gc.getGbyPairList(), arg);
-        gc.setGbyPairList(p1.second);
-        boolean changed = p1.first;
+        boolean changed = false;
+        List<List<GbyVariableExpressionPair>> gbyList = gc.getGbyPairList();
+        List<List<GbyVariableExpressionPair>> newGbyList = new ArrayList<>(gbyList.size());
+        for (List<GbyVariableExpressionPair> gbyPairList : gbyList) {
+            Pair<Boolean, List<GbyVariableExpressionPair>> p1 = inlineUdfsInGbyPairList(gbyPairList, arg);
+            newGbyList.add(p1.second);
+            changed |= p1.first;
+        }
+        gc.setGbyPairList(newGbyList);
         if (gc.hasDecorList()) {
             Pair<Boolean, List<GbyVariableExpressionPair>> p2 = inlineUdfsInGbyPairList(gc.getDecorPairList(), arg);
             gc.setDecorPairList(p2.second);

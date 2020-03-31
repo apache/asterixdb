@@ -258,7 +258,21 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
             out.println(skip(step) + "/* +hash */");
         }
         out.print(skip(step) + "group by ");
-        printDelimitedGbyExpressions(gc.getGbyPairList(), step + 2);
+        List<List<GbyVariableExpressionPair>> gbyList = gc.getGbyPairList();
+        if (gbyList.size() == 1) {
+            printDelimitedGbyExpressions(gbyList.get(0), step + 2);
+        } else {
+            out.print("grouping sets (");
+            for (int i = 0, n = gbyList.size(); i < n; i++) {
+                if (i > 0) {
+                    out.print(COMMA);
+                }
+                out.print("(");
+                printDelimitedGbyExpressions(gbyList.get(i), step + 2);
+                out.print(")");
+            }
+            out.print(")");
+        }
         out.println();
         return null;
     }

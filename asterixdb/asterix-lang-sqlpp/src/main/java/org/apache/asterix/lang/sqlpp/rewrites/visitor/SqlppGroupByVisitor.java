@@ -23,34 +23,38 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
+import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.clause.SelectClause;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.CheckSql92AggregateVisitor;
-import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * A pre-processor that
  * <ul>
- *     <li>adds the group variable as well as its group field
- *         list into the AST. e.g., GROUP AS eis(e AS e, i AS i, s AS s)</li>
- *     <li>adds group by clause if select block contains SQL-92 agregate function but there's no group by clause</li>
+ * <li>adds the group variable as well as its group field
+ * list into the AST. e.g., GROUP AS eis(e AS e, i AS i, s AS s)</li>
+ * <li>adds group by clause if select block contains SQL-92 aggregate function but there's no group by clause</li>
+ * <li>extracts GROUPING(...) operations into LET clauses</li>
  * </ul>
  */
-public class SqlppGroupByVisitor extends AbstractSqlppSimpleExpressionVisitor {
-
-    private final LangRewritingContext context;
+public class SqlppGroupByVisitor extends AbstractSqlppExpressionExtractionVisitor {
 
     public SqlppGroupByVisitor(LangRewritingContext context) {
-        this.context = context;
+        super(context);
     }
 
     @Override
@@ -92,7 +96,7 @@ public class SqlppGroupByVisitor extends AbstractSqlppSimpleExpressionVisitor {
     private void rewriteSelectWithoutGroupBy(SelectBlock selectBlock) throws CompilationException {
         if (hasSql92Aggregate(selectBlock)) {
             // Adds an implicit group-by clause for SQL-92 global aggregate.
-            List<GbyVariableExpressionPair> gbyPairList = new ArrayList<>();
+            List<List<GbyVariableExpressionPair>> gbyPairList = new ArrayList<>();
             List<GbyVariableExpressionPair> decorPairList = new ArrayList<>();
             VariableExpr groupVar = new VariableExpr(context.newVariable());
             groupVar.setSourceLocation(selectBlock.getSourceLocation());
@@ -131,5 +135,38 @@ public class SqlppGroupByVisitor extends AbstractSqlppSimpleExpressionVisitor {
         for (VariableExpr varExpr : varList) {
             SqlppVariableUtil.addToFieldVariableList(varExpr, outFieldList);
         }
+    }
+
+    // AbstractSqlppExpressionExtractionVisitor
+
+    @Override
+    public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
+        Expression resultExpr = super.visit(callExpr, arg);
+        if (isGroupingOperation(resultExpr)) {
+            StackElement stackElement = stack.peek();
+            if (stackElement != null && stackElement.getSelectBlock().hasGroupbyClause()) {
+                VarIdentifier v = stackElement.addPendingLetClause(resultExpr);
+                VariableExpr vExpr = new VariableExpr(v);
+                vExpr.setSourceLocation(callExpr.getSourceLocation());
+                resultExpr = vExpr;
+            }
+        }
+        return resultExpr;
+    }
+
+    static boolean isGroupingOperation(Expression expr) {
+        if (expr.getKind() == Expression.Kind.CALL_EXPRESSION) {
+            CallExpr callExpr = (CallExpr) expr;
+            FunctionSignature fs = callExpr.getFunctionSignature();
+            return BuiltinFunctions.GROUPING.getName().equalsIgnoreCase(fs.getName());
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    void handleUnsupportedClause(FromClause clause) throws CompilationException {
+        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_USE_OF_IDENTIFIER, clause.getSourceLocation(),
+                BuiltinFunctions.GROUPING.getName());
     }
 }

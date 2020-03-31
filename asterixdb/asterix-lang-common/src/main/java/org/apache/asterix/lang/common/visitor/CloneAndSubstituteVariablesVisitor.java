@@ -83,8 +83,11 @@ public class CloneAndSubstituteVariablesVisitor extends
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(GroupbyClause gc,
             VariableSubstitutionEnvironment env) throws CompilationException {
         VariableSubstitutionEnvironment newSubs = env;
-        List<GbyVariableExpressionPair> newGbyList =
-                VariableCloneAndSubstitutionUtil.substInVarExprPair(context, gc.getGbyPairList(), newSubs, this);
+        List<List<GbyVariableExpressionPair>> gbyList = gc.getGbyPairList();
+        List<List<GbyVariableExpressionPair>> newGbyList = new ArrayList<>(gbyList.size());
+        for (List<GbyVariableExpressionPair> gbyPairList : gbyList) {
+            newGbyList.add(VariableCloneAndSubstitutionUtil.substInVarExprPair(context, gbyPairList, newSubs, this));
+        }
         List<GbyVariableExpressionPair> newDecorList = gc.hasDecorList()
                 ? VariableCloneAndSubstitutionUtil.substInVarExprPair(context, gc.getDecorPairList(), newSubs, this)
                 : new ArrayList<>();

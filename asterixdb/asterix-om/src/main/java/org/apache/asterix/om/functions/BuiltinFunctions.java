@@ -198,6 +198,8 @@ public class BuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "ordered-list-constructor", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier UNORDERED_LIST_CONSTRUCTOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "unordered-list-constructor", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier GROUPING =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "grouping", FunctionIdentifier.VARARGS);
 
     public static final FunctionIdentifier DEEP_EQUAL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "deep-equal", 2);
@@ -1650,6 +1652,7 @@ public class BuiltinFunctions {
         addFunction(BOOLEAN_CONSTRUCTOR, ABooleanTypeComputer.INSTANCE, true);
         addFunction(CIRCLE_CONSTRUCTOR, ACircleTypeComputer.INSTANCE, true);
         addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE, true);
+        addFunction(GROUPING, AInt64TypeComputer.INSTANCE, true);
 
         addPrivateFunction(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addPrivateFunction(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);

@@ -51,14 +51,18 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Group-by core rewrites
         rewriteGroupBys();
 
-        // Window expression core rewrites.
-        rewriteWindowExpressions();
-
         // Rewrites set operations.
         rewriteSetOperations();
 
         // Inlines column aliases.
         inlineColumnAlias();
+
+        // Window expression core rewrites.
+        rewriteWindowExpressions();
+
+        // Rewrites Group-By clauses with multiple grouping sets into UNION ALL
+        // Must run after rewriteSetOperations() and before variableCheckAndRewrite()
+        rewriteGroupingSets();
 
         // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
         variableCheckAndRewrite();

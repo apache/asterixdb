@@ -849,8 +849,13 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     // Generates all field bindings according to the from clause.
     private void getGroupBindings(GroupbyClause groupbyClause, List<FieldBinding> outFieldBindings,
             Set<String> outFieldNames) throws CompilationException {
-        for (GbyVariableExpressionPair pair : groupbyClause.getGbyPairList()) {
-            outFieldBindings.add(getFieldBinding(pair.getVar(), outFieldNames));
+        Set<VariableExpr> gbyKeyVars = new HashSet<>();
+        List<GbyVariableExpressionPair> groupingSet = getSingleGroupingSet(groupbyClause);
+        for (GbyVariableExpressionPair pair : groupingSet) {
+            VariableExpr var = pair.getVar();
+            if (gbyKeyVars.add(var)) {
+                outFieldBindings.add(getFieldBinding(var, outFieldNames));
+            }
         }
         if (groupbyClause.hasGroupVar()) {
             outFieldBindings.add(getFieldBinding(groupbyClause.getGroupVar(), outFieldNames));

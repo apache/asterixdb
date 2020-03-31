@@ -40,8 +40,16 @@ public class SetOperationInput {
         return selectBlock;
     }
 
+    public void setSelectBlock(SelectBlock selectBlock) {
+        this.selectBlock = selectBlock;
+    }
+
     public SelectExpression getSubquery() {
         return subquery;
+    }
+
+    public void setSubquery(SelectExpression subquery) {
+        this.subquery = subquery;
     }
 
     public boolean selectBlock() {

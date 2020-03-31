@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -237,11 +239,14 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // or an outer scope query) should still be visible.
         Scope newScope = new Scope(scopeChecker, scopeChecker.getPrecedingScope());
         // Puts all group-by variables into the symbol set of the new scope.
-        for (GbyVariableExpressionPair gbyKeyVarExpr : gc.getGbyPairList()) {
-            gbyKeyVarExpr.setExpr(visit(gbyKeyVarExpr.getExpr(), gc));
-            VariableExpr gbyKeyVar = gbyKeyVarExpr.getVar();
-            if (gbyKeyVar != null) {
-                addNewVarSymbolToScope(newScope, gbyKeyVar.getVar(), gbyKeyVar.getSourceLocation());
+        Set<VariableExpr> gbyKeyVars = new HashSet<>(); // bindings from prior grouping sets //TODO:FIXME:GBY:REVISIT
+        for (List<GbyVariableExpressionPair> gbyPairList : gc.getGbyPairList()) {
+            for (GbyVariableExpressionPair gbyKeyVarExpr : gbyPairList) {
+                gbyKeyVarExpr.setExpr(visit(gbyKeyVarExpr.getExpr(), gc));
+                VariableExpr gbyKeyVar = gbyKeyVarExpr.getVar();
+                if (gbyKeyVar != null && gbyKeyVars.add(gbyKeyVar)) {
+                    addNewVarSymbolToScope(newScope, gbyKeyVar.getVar(), gbyKeyVar.getSourceLocation());
+                }
             }
         }
         if (gc.hasGroupFieldList()) {

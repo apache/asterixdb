@@ -19,6 +19,7 @@
 
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -34,7 +35,6 @@ import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 /**
@@ -88,8 +88,30 @@ public final class SqlppWindowRewriteVisitor extends AbstractSqlppExpressionExtr
         return winExpr;
     }
 
-    @Override
-    protected boolean isExtractableExpression(Expression expr) {
+    private List<Expression> extractExpressions(List<Expression> exprList, int limit) {
+        StackElement stackElement = stack.peek();
+        if (stackElement == null) {
+            return null;
+        }
+        int n = exprList.size();
+        List<Expression> newExprList = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            Expression expr = exprList.get(i);
+            Expression newExpr;
+            if (i < limit && isExtractableExpression(expr)) {
+                VarIdentifier v = stackElement.addPendingLetClause(expr);
+                VariableExpr vExpr = new VariableExpr(v);
+                vExpr.setSourceLocation(expr.getSourceLocation());
+                newExpr = vExpr;
+            } else {
+                newExpr = expr;
+            }
+            newExprList.add(newExpr);
+        }
+        return newExprList;
+    }
+
+    private boolean isExtractableExpression(Expression expr) {
         switch (expr.getKind()) {
             case LITERAL_EXPRESSION:
             case VARIABLE_EXPRESSION:
@@ -100,8 +122,7 @@ public final class SqlppWindowRewriteVisitor extends AbstractSqlppExpressionExtr
     }
 
     @Override
-    void handleUnsupportedClause(FromClause clause, List<Pair<Expression, VarIdentifier>> extractionList)
-            throws CompilationException {
+    void handleUnsupportedClause(FromClause clause) throws CompilationException {
         throw new CompilationException(ErrorCode.COMPILATION_UNEXPECTED_WINDOW_EXPRESSION, clause.getSourceLocation());
     }
 

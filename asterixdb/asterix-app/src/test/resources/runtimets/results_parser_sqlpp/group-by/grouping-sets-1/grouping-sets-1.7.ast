@@ -1,0 +1,74 @@
+DataverseUse test
+Query:
+SELECT [
+Variable [ Name=$two ]
+two
+Variable [ Name=$four ]
+four
+Variable [ Name=#2 ]
+grp
+FunctionCall asterix.sql-sum@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#3 ]
+        Field=tenk
+      ]
+      Field=ten
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#3 ]
+    ]
+  )
+]
+agg_sum
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.tenk]
+  ]
+  AS Variable [ Name=$tenk ]
+]
+Groupby
+  GROUPING SET (
+    Variable [ Name=$two ]
+    :=
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=two
+    ]
+    Variable [ Name=$four ]
+    :=
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=four
+    ]
+  )
+  GROUPING SET (
+    Variable [ Name=$two ]
+    :=
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=two
+    ]
+  ),
+  GROUPING SET (
+  ),
+  GROUP AS Variable [ Name=#1 ]
+  (
+    tenk:=Variable [ Name=$tenk ]
+  )
+
+Let Variable [ Name=#2 ]
+  :=
+  FunctionCall test.grouping@2[
+    Variable [ Name=$two ]
+    Variable [ Name=$four ]
+  ]
+Orderby
+  Variable [ Name=$two ]
+  ASC
+  Variable [ Name=$four ]
+  ASC
+

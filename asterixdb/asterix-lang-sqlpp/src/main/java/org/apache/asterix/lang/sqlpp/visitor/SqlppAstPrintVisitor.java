@@ -275,23 +275,23 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
             out.println(skip(step) + "Group All");
         } else {
             out.println(skip(step) + "Groupby");
-            for (GbyVariableExpressionPair pair : gc.getGbyPairList()) {
-                if (pair.getVar() != null) {
-                    pair.getVar().accept(this, step + 1);
-                    out.println(skip(step + 1) + ":=");
+            List<List<GbyVariableExpressionPair>> gbyList = gc.getGbyPairList();
+            if (gbyList.size() == 1 && !gbyList.get(0).isEmpty()) {
+                // simplified format for the most common case
+                printGroupByPairList(gbyList.get(0), step + 1);
+            } else {
+                String sep = "";
+                for (List<GbyVariableExpressionPair> groupingSet : gbyList) {
+                    out.println(skip(step + 1) + "GROUPING SET (");
+                    printGroupByPairList(groupingSet, step + 2);
+                    out.println(skip(step + 1) + ")" + sep);
+                    sep = ",";
                 }
-                pair.getExpr().accept(this, step + 1);
             }
         }
         if (gc.hasDecorList()) {
             out.println(skip(step + 1) + "DECOR");
-            for (GbyVariableExpressionPair pair : gc.getDecorPairList()) {
-                if (pair.getVar() != null) {
-                    pair.getVar().accept(this, step + 1);
-                    out.println(skip(step + 1) + ":=");
-                }
-                pair.getExpr().accept(this, step + 1);
-            }
+            printGroupByPairList(gc.getDecorPairList(), step + 1);
         }
         if (gc.hasGroupVar()) {
             out.print(skip(step + 1) + "GROUP AS ");
@@ -310,6 +310,17 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
         }
         out.println();
         return null;
+    }
+
+    private void printGroupByPairList(List<GbyVariableExpressionPair> gbyPairList, Integer step)
+            throws CompilationException {
+        for (GbyVariableExpressionPair pair : gbyPairList) {
+            if (pair.getVar() != null) {
+                pair.getVar().accept(this, step);
+                out.println(skip(step) + ":=");
+            }
+            pair.getExpr().accept(this, step);
+        }
     }
 
     @Override

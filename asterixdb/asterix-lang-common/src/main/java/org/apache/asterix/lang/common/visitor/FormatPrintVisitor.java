@@ -37,7 +37,6 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
-import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
@@ -110,7 +109,7 @@ import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 
-public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
+public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
 
     protected final static String COMMA = ",";
     protected final static String SEMICOLON = ";";
@@ -306,39 +305,6 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     public Void visit(OrderbyClause oc, Integer step) throws CompilationException {
         out.print(skip(step) + "order by ");
         printDelimitedObyExpressions(oc.getOrderbyList(), oc.getModifierList(), step);
-        out.println();
-        return null;
-    }
-
-    @Override
-    public Void visit(GroupbyClause gc, Integer step) throws CompilationException {
-        if (gc.hasHashGroupByHint()) {
-            out.println(skip(step) + "/* +hash */");
-        }
-        out.print(skip(step) + "group by ");
-        printDelimitedGbyExpressions(gc.getGbyPairList(), step + 2);
-        if (gc.hasDecorList()) {
-            out.print(" decor ");
-            printDelimitedGbyExpressions(gc.getDecorPairList(), step + 2);
-        }
-        if (gc.hasWithMap()) {
-            out.print(" with ");
-            Map<Expression, VariableExpr> withVarMap = gc.getWithVarMap();
-            int index = 0;
-            int size = withVarMap.size();
-            for (Entry<Expression, VariableExpr> entry : withVarMap.entrySet()) {
-                Expression key = entry.getKey();
-                VariableExpr value = entry.getValue();
-                key.accept(this, step + 2);
-                if (!key.equals(value)) {
-                    out.print(" as ");
-                    value.accept(this, step + 2);
-                }
-                if (++index < size) {
-                    out.print(COMMA);
-                }
-            }
-        }
         out.println();
         return null;
     }

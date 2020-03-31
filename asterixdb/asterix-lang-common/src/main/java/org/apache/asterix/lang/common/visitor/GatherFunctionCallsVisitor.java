@@ -20,6 +20,7 @@
 package org.apache.asterix.lang.common.visitor;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -75,8 +76,10 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
 
     @Override
     public Void visit(GroupbyClause gc, Void arg) throws CompilationException {
-        for (GbyVariableExpressionPair p : gc.getGbyPairList()) {
-            p.getExpr().accept(this, arg);
+        for (List<GbyVariableExpressionPair> gbyPairList : gc.getGbyPairList()) {
+            for (GbyVariableExpressionPair p : gbyPairList) {
+                p.getExpr().accept(this, arg);
+            }
         }
         if (gc.hasDecorList()) {
             for (GbyVariableExpressionPair p : gc.getDecorPairList()) {

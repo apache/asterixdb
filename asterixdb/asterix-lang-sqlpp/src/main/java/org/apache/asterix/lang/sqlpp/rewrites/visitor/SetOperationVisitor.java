@@ -87,16 +87,7 @@ public class SetOperationVisitor extends AbstractSqlppExpressionScopingVisitor {
         // Wraps the set operation part with a subquery.
         SelectExpression nestedSelectExpression = new SelectExpression(null, selectSetOperation, null, null, true);
         nestedSelectExpression.setSourceLocation(sourceLoc);
-        VariableExpr newBindingVar = new VariableExpr(context.newVariable()); // Binding variable for the subquery.
-        newBindingVar.setSourceLocation(sourceLoc);
-        FromTerm newFromTerm = new FromTerm(nestedSelectExpression, newBindingVar, null, null);
-        newFromTerm.setSourceLocation(sourceLoc);
-        FromClause newFromClause = new FromClause(new ArrayList<>(Collections.singletonList(newFromTerm)));
-        newFromClause.setSourceLocation(sourceLoc);
-        SelectClause selectClause = new SelectClause(new SelectElement(newBindingVar), null, false);
-        selectClause.setSourceLocation(sourceLoc);
-        SelectBlock selectBlock = new SelectBlock(selectClause, newFromClause, null, null, null);
-        selectBlock.setSourceLocation(sourceLoc);
+        SelectBlock selectBlock = createSelectBlock(nestedSelectExpression, context);
         SelectSetOperation newSelectSetOperation =
                 new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
         newSelectSetOperation.setSourceLocation(sourceLoc);
@@ -107,4 +98,18 @@ public class SetOperationVisitor extends AbstractSqlppExpressionScopingVisitor {
         return super.visit(newSelectExpression, arg);
     }
 
+    static SelectBlock createSelectBlock(Expression inputExpr, LangRewritingContext context) {
+        SourceLocation sourceLoc = inputExpr.getSourceLocation();
+        VariableExpr newBindingVar = new VariableExpr(context.newVariable()); // Binding variable for the subquery.
+        newBindingVar.setSourceLocation(sourceLoc);
+        FromTerm newFromTerm = new FromTerm(inputExpr, newBindingVar, null, null);
+        newFromTerm.setSourceLocation(sourceLoc);
+        FromClause newFromClause = new FromClause(new ArrayList<>(Collections.singletonList(newFromTerm)));
+        newFromClause.setSourceLocation(sourceLoc);
+        SelectClause selectClause = new SelectClause(new SelectElement(newBindingVar), null, false);
+        selectClause.setSourceLocation(sourceLoc);
+        SelectBlock selectBlock = new SelectBlock(selectClause, newFromClause, null, null, null);
+        selectBlock.setSourceLocation(sourceLoc);
+        return selectBlock;
+    }
 }

@@ -5382,6 +5382,29 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
+      <compilation-unit name="grouping-sets-1">
+        <output-dir compare="Text">grouping-sets-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="grouping-sets-2">
+        <output-dir compare="Text">grouping-sets-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="grouping-sets-3-negative">
+        <output-dir compare="Text">grouping-sets-2</output-dir>
+        <expected-error>ASX1113: Unexpected alias: v21</expected-error>
+        <expected-error>ASX1113: Unexpected alias: v22</expected-error>
+        <expected-error>ASX1113: Unexpected alias: v23</expected-error>
+        <expected-error>ASX1087: Invalid number of arguments for function grouping</expected-error>
+        <expected-error>ASX1112: Invalid argument to grouping() function</expected-error>
+        <expected-error>ASX1112: Invalid argument to grouping() function</expected-error>
+        <expected-error>ASX1112: Invalid argument to grouping() function</expected-error>
+        <expected-error>ASX1111: Too many grouping sets in group by clause: 512. Maximum allowed: 128.</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
       <compilation-unit name="having">
         <output-dir compare="Text">core-02</output-dir>
       </compilation-unit>
@@ -11266,107 +11289,6 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="window">
-    <test-case FilePath="window">
-      <compilation-unit name="cume_dist_01">
-        <output-dir compare="Text">cume_dist_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="dense_rank_01">
-        <output-dir compare="Text">dense_rank_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="first_value_01">
-        <output-dir compare="Text">first_value_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="lag_01">
-        <output-dir compare="Text">lag_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="last_value_01">
-        <output-dir compare="Text">last_value_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="lead_01">
-        <output-dir compare="Text">lead_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="misc_01">
-        <output-dir compare="Text">misc_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="nth_value_01">
-        <output-dir compare="Text">nth_value_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="ntile_01">
-        <output-dir compare="Text">ntile_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="percent_rank_01">
-        <output-dir compare="Text">percent_rank_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="pg_win">
-        <output-dir compare="Text">pg_win</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="rank_01">
-        <output-dir compare="Text">rank_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="ratio_to_report_01">
-        <output-dir compare="Text">ratio_to_report_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="row_number_01">
-        <output-dir compare="Text">row_number_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="win_negative">
-        <output-dir compare="Text">misc_01</output-dir>
-        <expected-error>ASX0002: Type mismatch</expected-error>
-        <expected-error>ASX1104: Invalid modifier FROM FIRST/LAST for function</expected-error>
-        <expected-error>ASX1037: Invalid query parameter compiler.windowmemory</expected-error>
-        <expected-error>ASX1102: Expected window or aggregate function, got: unknown_func</expected-error>
-        <expected-error>ASX1079: Compilation error: count is a SQL-92 aggregate function</expected-error>
-        <expected-error>ASX1104: Invalid modifier RESPECT/IGNORE NULLS for function</expected-error>
-        <expected-error>ASX1104: Invalid modifier RESPECT/IGNORE NULLS for function</expected-error>
-        <expected-error>ASX1104: Invalid modifier FROM FIRST/LAST for function</expected-error>
-        <source-location>false</source-location>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="win_null_missing">
-        <output-dir compare="Text">win_null_missing</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="win_opt_01">
-        <output-dir compare="Text">win_opt_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="window">
-      <compilation-unit name="win_opt_02">
-        <output-dir compare="Text">win_opt_02</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
   <test-group name="writers">
     <test-case FilePath="writers">
       <compilation-unit name="print_01">
@@ -13999,6 +13921,107 @@
         <expected-warn>Type incompatibility: function numeric-add gets incompatible input values: datetime and string</expected-warn>
         <expected-warn>Type mismatch: function power expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
         <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="window">
+    <test-case FilePath="window">
+      <compilation-unit name="cume_dist_01">
+        <output-dir compare="Text">cume_dist_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="dense_rank_01">
+        <output-dir compare="Text">dense_rank_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="first_value_01">
+        <output-dir compare="Text">first_value_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="lag_01">
+        <output-dir compare="Text">lag_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="last_value_01">
+        <output-dir compare="Text">last_value_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="lead_01">
+        <output-dir compare="Text">lead_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="misc_01">
+        <output-dir compare="Text">misc_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="nth_value_01">
+        <output-dir compare="Text">nth_value_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="ntile_01">
+        <output-dir compare="Text">ntile_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="percent_rank_01">
+        <output-dir compare="Text">percent_rank_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="pg_win">
+        <output-dir compare="Text">pg_win</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="rank_01">
+        <output-dir compare="Text">rank_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="ratio_to_report_01">
+        <output-dir compare="Text">ratio_to_report_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="row_number_01">
+        <output-dir compare="Text">row_number_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="win_negative">
+        <output-dir compare="Text">misc_01</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+        <expected-error>ASX1104: Invalid modifier FROM FIRST/LAST for function</expected-error>
+        <expected-error>ASX1037: Invalid query parameter compiler.windowmemory</expected-error>
+        <expected-error>ASX1102: Expected window or aggregate function, got: unknown_func</expected-error>
+        <expected-error>ASX1079: Compilation error: count is a SQL-92 aggregate function</expected-error>
+        <expected-error>ASX1104: Invalid modifier RESPECT/IGNORE NULLS for function</expected-error>
+        <expected-error>ASX1104: Invalid modifier RESPECT/IGNORE NULLS for function</expected-error>
+        <expected-error>ASX1104: Invalid modifier FROM FIRST/LAST for function</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="win_null_missing">
+        <output-dir compare="Text">win_null_missing</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="win_opt_01">
+        <output-dir compare="Text">win_opt_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="win_opt_02">
+        <output-dir compare="Text">win_opt_02</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

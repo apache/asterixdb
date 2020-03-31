@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
@@ -327,7 +328,13 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
             out.println(skip(step) + "/* +hash */");
         }
         out.print(skip(step) + "group by ");
-        printDelimitedGbyExpressions(gc.getGbyPairList(), step + 2);
+        List<List<GbyVariableExpressionPair>> gbyList = gc.getGbyPairList();
+        if (gbyList.size() == 1) {
+            printDelimitedGbyExpressions(gbyList.get(0), step + 2);
+        } else {
+            // AQL does not support grouping sets
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, gc.getSourceLocation(), "");
+        }
         out.println();
         return null;
     }
@@ -404,9 +411,11 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
 
     // Collects produced variables from group-by.
     private List<VariableExpr> collectProducedVariablesFromGroupby(GroupbyClause gbyClause) {
-        List<VariableExpr> producedVars = new ArrayList<VariableExpr>();
-        for (GbyVariableExpressionPair keyPair : gbyClause.getGbyPairList()) {
-            producedVars.add(keyPair.getVar());
+        List<VariableExpr> producedVars = new ArrayList<>();
+        for (List<GbyVariableExpressionPair> gbyPairList : gbyClause.getGbyPairList()) {
+            for (GbyVariableExpressionPair keyPair : gbyPairList) {
+                producedVars.add(keyPair.getVar());
+            }
         }
         if (gbyClause.hasDecorList()) {
             for (GbyVariableExpressionPair keyPair : gbyClause.getDecorPairList()) {

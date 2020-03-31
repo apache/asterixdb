@@ -19,14 +19,21 @@
 package org.apache.asterix.lang.aql.visitor;
 
 import java.io.PrintWriter;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
 import org.apache.asterix.lang.aql.expression.UnionExpr;
 import org.apache.asterix.lang.aql.visitor.base.IAQLVisitor;
 import org.apache.asterix.lang.common.base.Clause;
+import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.clause.GroupbyClause;
+import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
+import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.FormatPrintVisitor;
 
 public class AQLFormatPrintVisitor extends FormatPrintVisitor implements IAQLVisitor<Void, Integer> {
@@ -69,6 +76,45 @@ public class AQLFormatPrintVisitor extends FormatPrintVisitor implements IAQLVis
     public Void visit(DistinctClause dc, Integer step) throws CompilationException {
         out.print(skip(step) + "distinct by ");
         printDelimitedExpressions(dc.getDistinctByExpr(), COMMA, step + 2);
+        out.println();
+        return null;
+    }
+
+    @Override
+    public Void visit(GroupbyClause gc, Integer step) throws CompilationException {
+        if (gc.hasHashGroupByHint()) {
+            out.println(skip(step) + "/* +hash */");
+        }
+        out.print(skip(step) + "group by ");
+        List<List<GbyVariableExpressionPair>> gbyList = gc.getGbyPairList();
+        if (gbyList.size() == 1) {
+            printDelimitedGbyExpressions(gbyList.get(0), step + 2);
+        } else {
+            // AQL does not support grouping sets
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, gc.getSourceLocation(), "");
+        }
+        if (gc.hasDecorList()) {
+            out.print(" decor ");
+            printDelimitedGbyExpressions(gc.getDecorPairList(), step + 2);
+        }
+        if (gc.hasWithMap()) {
+            out.print(" with ");
+            Map<Expression, VariableExpr> withVarMap = gc.getWithVarMap();
+            int index = 0;
+            int size = withVarMap.size();
+            for (Map.Entry<Expression, VariableExpr> entry : withVarMap.entrySet()) {
+                Expression key = entry.getKey();
+                VariableExpr value = entry.getValue();
+                key.accept(this, step + 2);
+                if (!key.equals(value)) {
+                    out.print(" as ");
+                    value.accept(this, step + 2);
+                }
+                if (++index < size) {
+                    out.print(COMMA);
+                }
+            }
+        }
         out.println();
         return null;
     }

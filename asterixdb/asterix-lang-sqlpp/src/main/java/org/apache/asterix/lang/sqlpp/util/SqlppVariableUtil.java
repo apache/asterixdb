@@ -161,10 +161,13 @@ public class SqlppVariableUtil {
         if (gbyClause == null) {
             return bindingVars;
         }
-        for (GbyVariableExpressionPair gbyKey : gbyClause.getGbyPairList()) {
-            VariableExpr var = gbyKey.getVar();
-            if (var != null) {
-                bindingVars.add(var);
+        Set<VariableExpr> gbyKeyVars = new HashSet<>();
+        for (List<GbyVariableExpressionPair> gbyPairList : gbyClause.getGbyPairList()) {
+            for (GbyVariableExpressionPair gbyKey : gbyPairList) {
+                VariableExpr var = gbyKey.getVar();
+                if (var != null && gbyKeyVars.add(var)) {
+                    bindingVars.add(var);
+                }
             }
         }
         if (gbyClause.hasDecorList()) {

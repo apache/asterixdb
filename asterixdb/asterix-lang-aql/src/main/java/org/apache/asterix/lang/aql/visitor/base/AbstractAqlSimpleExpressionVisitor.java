@@ -108,8 +108,10 @@ public class AbstractAqlSimpleExpressionVisitor extends AbstractAqlQueryExpressi
 
     @Override
     public Expression visit(GroupbyClause gc, ILangExpression arg) throws CompilationException {
-        for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
-            gbyVarExpr.setExpr(visit(gbyVarExpr.getExpr(), gc));
+        for (List<GbyVariableExpressionPair> gbyPairList : gc.getGbyPairList()) {
+            for (GbyVariableExpressionPair gbyVarExpr : gbyPairList) {
+                gbyVarExpr.setExpr(visit(gbyVarExpr.getExpr(), gc));
+            }
         }
         return null;
     }

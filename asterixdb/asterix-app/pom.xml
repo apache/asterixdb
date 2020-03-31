@@ -158,6 +158,7 @@
           <ignoredUnusedDeclaredDependencies>
             <ignoredUnusedDeclaredDependency>org.apache.asterix:asterix-external-data:zip:*</ignoredUnusedDeclaredDependency>
             <ignoredUnusedDeclaredDependency>org.apache.asterix:asterix-external-data:test-jar:*</ignoredUnusedDeclaredDependency>
+            <ignoredUnusedDeclaredDependency>org.postgresql:postgresql:jar:*</ignoredUnusedDeclaredDependency>
           </ignoredUnusedDeclaredDependencies>
         </configuration>
       </plugin>
@@ -326,6 +327,14 @@
       </properties>
     </profile>
     <profile>
+      <id>asterix-gerrit-asterix-app-sql-rqg</id>
+      <properties>
+        <test.excludes>**/*.java</test.excludes>
+        <itest.includes>**/SqlppRQG*IT.java</itest.includes>
+        <failIfNoTests>false</failIfNoTests>
+      </properties>
+    </profile>
+    <profile>
       <id>asterix-gerrit-ssl-compression</id>
       <properties>
         <test.includes>**/*Compression*Test.java,**/*Ssl*Test.java</test.includes>
@@ -337,7 +346,7 @@
       <id>asterix-gerrit-verify-asterix-app</id>
       <properties>
         <test.includes>**/AqlExecutionTest.java</test.includes>
-        <itest.excludes>**/SqlppExecution*IT.java,**/RebalanceWithCancellationIT.java</itest.excludes>
+        <itest.excludes>**/SqlppExecution*IT.java,**/SqlppRQG*IT.java,**/RebalanceWithCancellationIT.java</itest.excludes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
     </profile>
@@ -675,6 +684,16 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.teradata.tpcds</groupId>

@@ -6713,4 +6713,16 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="group-by">
+    <test-case FilePath="group-by">
+      <compilation-unit name="grouping-sets-1">
+        <output-dir compare="AST">grouping-sets-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="grouping-sets-2">
+        <output-dir compare="AST">grouping-sets-2</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>
