@@ -25,6 +25,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
+import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.util.ConfigurationUtil;
 import org.apache.asterix.lang.common.util.DatasetDeclParametersUtil;
@@ -36,10 +37,8 @@ import org.apache.asterix.runtime.compression.CompressionManager;
 public class DatasetDecl extends AbstractStatement {
     protected final Identifier name;
     protected final Identifier dataverse;
-    protected final Identifier itemTypeDataverse;
-    protected final Identifier itemTypeName;
-    protected final Identifier metaItemTypeDataverse;
-    protected final Identifier metaItemTypeName;
+    protected final TypeExpression itemType;
+    protected final TypeExpression metaItemType;
     protected final Identifier nodegroupName;
     protected final DatasetType datasetType;
     protected final IDatasetDetailsDecl datasetDetailsDecl;
@@ -47,24 +46,13 @@ public class DatasetDecl extends AbstractStatement {
     private AdmObjectNode withObjectNode;
     protected final boolean ifNotExists;
 
-    public DatasetDecl(Identifier dataverse, Identifier name, Identifier itemTypeDataverse, Identifier itemTypeName,
-            Identifier metaItemTypeDataverse, Identifier metaItemTypeName, Identifier nodeGroupName,
-            Map<String, String> hints, DatasetType datasetType, IDatasetDetailsDecl idd, RecordConstructor withRecord,
-            boolean ifNotExists) throws CompilationException {
+    public DatasetDecl(Identifier dataverse, Identifier name, TypeExpression itemType, TypeExpression metaItemType,
+            Identifier nodeGroupName, Map<String, String> hints, DatasetType datasetType, IDatasetDetailsDecl idd,
+            RecordConstructor withRecord, boolean ifNotExists) throws CompilationException {
         this.dataverse = dataverse;
         this.name = name;
-        this.itemTypeName = itemTypeName;
-        if (itemTypeDataverse.getValue() == null) {
-            this.itemTypeDataverse = dataverse;
-        } else {
-            this.itemTypeDataverse = itemTypeDataverse;
-        }
-        this.metaItemTypeName = metaItemTypeName;
-        if (metaItemTypeDataverse == null || metaItemTypeDataverse.getValue() == null) {
-            this.metaItemTypeDataverse = dataverse;
-        } else {
-            this.metaItemTypeDataverse = metaItemTypeDataverse;
-        }
+        this.itemType = itemType;
+        this.metaItemType = metaItemType;
         this.nodegroupName = nodeGroupName;
         this.hints = hints;
         this.withObjectNode = DatasetDeclParametersUtil.validateAndGetWithObjectNode(withRecord, datasetType);
@@ -85,40 +73,12 @@ public class DatasetDecl extends AbstractStatement {
         return name;
     }
 
-    public Identifier getItemTypeName() {
-        return itemTypeName;
+    public TypeExpression getItemType() {
+        return itemType;
     }
 
-    public Identifier getItemTypeDataverse() {
-        return itemTypeDataverse;
-    }
-
-    public String getQualifiedTypeName() {
-        if (itemTypeDataverse == dataverse) {
-            return itemTypeName.getValue();
-        } else {
-            return itemTypeDataverse.getValue() + "." + itemTypeName.getValue();
-        }
-    }
-
-    public Identifier getMetaName() {
-        return name;
-    }
-
-    public Identifier getMetaItemTypeName() {
-        return metaItemTypeName == null ? new Identifier() : metaItemTypeName;
-    }
-
-    public Identifier getMetaItemTypeDataverse() {
-        return metaItemTypeDataverse == null ? new Identifier() : metaItemTypeDataverse;
-    }
-
-    public String getQualifiedMetaTypeName() {
-        if (metaItemTypeDataverse == dataverse) {
-            return metaItemTypeName.getValue();
-        } else {
-            return metaItemTypeDataverse.getValue() + "." + metaItemTypeName.getValue();
-        }
+    public TypeExpression getMetaItemType() {
+        return metaItemType;
     }
 
     public Identifier getNodegroupName() {

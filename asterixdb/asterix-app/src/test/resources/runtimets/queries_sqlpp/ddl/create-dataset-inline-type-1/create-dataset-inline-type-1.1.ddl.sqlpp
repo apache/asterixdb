@@ -1,0 +1,141 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
+
+/* Metadata test function */
+
+CREATE FUNCTION listMetadata() {
+  SELECT "Dataset" AS en, d.DatasetName, d.DatatypeDataverseName, d.DatatypeName,
+    d.MetatypeDataverseName, d.MetatypeName
+  FROM Metadata.`Dataset` d
+  WHERE d.DataverseName = "test"
+  UNION ALL
+  SELECT "Datatype" AS en, dt.DatatypeName, dt.Derived
+  FROM Metadata.`Datatype` dt
+  WHERE dt.DataverseName = "test"
+  ORDER BY en, DatasetName, DatatypeName
+};
+
+/* Internal datasets */
+
+CREATE DATASET A_Customers_Default_Closed(
+  c_custkey integer not null,
+  c_name string not null,
+  c_phone string,
+  c_comment string
+) PRIMARY KEY c_custkey ;
+
+CREATE DATASET A_Customers_Closed(
+  c_custkey integer not null,
+  c_name string not null,
+  c_phone string,
+  c_comment string
+) CLOSED TYPE PRIMARY KEY c_custkey;
+
+CREATE DATASET A_Customers_Open(
+  c_custkey integer not null,
+  c_name string not null,
+  c_phone string,
+  c_comment string
+) OPEN TYPE PRIMARY KEY c_custkey;
+
+/* External datasets */
+
+CREATE EXTERNAL DATASET B_Orders_Default_Closed(
+    o_orderkey integer not null,
+    o_custkey integer not null,
+    o_orderstatus string not null,
+    o_totalprice double not null,
+    o_orderdate string not null,
+    o_orderpriority string not null,
+    o_clerk string not null,
+    o_shippriority integer not null,
+    o_comment string
+)
+USING `localfs`
+((`path`=`asterix_nc1://data/tpch0.001/orders.tbl`),
+(`input-format`=`text-input-format`),(`format`=`delimited-text`),(`delimiter`=`|`));
+
+CREATE EXTERNAL DATASET B_Orders_Closed(
+    o_orderkey integer not null,
+    o_custkey integer not null,
+    o_orderstatus string not null,
+    o_totalprice double not null,
+    o_orderdate string not null,
+    o_orderpriority string not null,
+    o_clerk string not null,
+    o_shippriority integer not null,
+    o_comment string
+) CLOSED TYPE
+USING `localfs`
+((`path`=`asterix_nc1://data/tpch0.001/orders.tbl`),
+(`input-format`=`text-input-format`),(`format`=`delimited-text`),(`delimiter`=`|`));
+
+CREATE EXTERNAL DATASET B_Orders_Open(
+    o_orderkey integer not null,
+    o_custkey integer not null,
+    o_orderstatus string not null,
+    o_totalprice double not null,
+    o_orderdate string not null,
+    o_orderpriority string not null,
+    o_clerk string not null,
+    o_shippriority integer not null,
+    o_comment string
+) OPEN TYPE
+USING `localfs`
+((`path`=`asterix_nc1://data/tpch0.001/orders.tbl`),
+(`input-format`=`text-input-format`),(`format`=`delimited-text`),(`delimiter`=`|`));
+
+/* Internal datasets with inline META type */
+
+CREATE DATASET C_Customers_Meta_Default_Closed(
+  c_custkey integer not null,
+  c_name string not null,
+  c_phone string,
+  c_comment string
+)
+WITH META(c_x integer not null, c_y integer)
+PRIMARY KEY c_custkey ;
+
+CREATE DATASET C_Customers_Meta_Closed(
+  c_custkey integer not null,
+  c_name string not null,
+  c_phone string,
+  c_comment string
+) CLOSED TYPE
+WITH META(
+  c_x integer not null,
+  c_y integer
+) CLOSED TYPE
+PRIMARY KEY c_custkey;
+
+CREATE DATASET C_Customers_Meta_Open(
+  c_custkey integer not null,
+  c_name string not null,
+  c_phone string,
+  c_comment string
+) OPEN TYPE
+WITH META(
+  c_x integer not null,
+  c_y integer
+) OPEN TYPE
+PRIMARY KEY c_custkey;

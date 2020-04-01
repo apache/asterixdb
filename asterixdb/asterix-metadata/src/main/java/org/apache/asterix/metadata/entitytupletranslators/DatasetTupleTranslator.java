@@ -250,7 +250,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         String metaTypeDataverseName = null;
         String metaTypeName = null;
         int metaTypeDataverseNameIndex =
-                datasetRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_METADATA_DATAVERSE);
+                datasetRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_METATYPE_DATAVERSE);
         if (metaTypeDataverseNameIndex >= 0) {
             metaTypeDataverseName =
                     ((AString) datasetRecord.getValueByPos(metaTypeDataverseNameIndex)).getStringValue();
@@ -430,7 +430,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         if (dataset.hasMetaPart()) {
             // write open field 1, the meta item type Dataverse name.
             fieldName.reset();
-            aString.setValue(MetadataRecordTypes.FIELD_NAME_METADATA_DATAVERSE);
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_METATYPE_DATAVERSE);
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
             aString.setValue(dataset.getMetaItemTypeDataverseName());

@@ -17,7 +17,7 @@ TypeDecl tchrType [
     dept : string
   }
 ]
-DatasetDecl ugdstd(stdType) partitioned by [[id]]
-DatasetDecl gdstd(stdType) partitioned by [[id]]
+DatasetDecl ugdstd(student.stdType) partitioned by [[id]]
+DatasetDecl gdstd(student.stdType) partitioned by [[id]]
 DatasetDecl prof(tchrType) partitioned by [[id]]
 DatasetDecl pstdoc(tchrType) partitioned by [[id]]
