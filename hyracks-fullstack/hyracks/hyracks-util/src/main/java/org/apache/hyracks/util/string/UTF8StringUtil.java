@@ -324,6 +324,20 @@ public class UTF8StringUtil {
         return builder;
     }
 
+    // Different from the above toString() methods, here we assume the byte[] doesn't contain NumBytesToStoreLength
+    // In fact, this is used for string tokenizer: get "hello" and "world" from the bytes of "hello world"
+    public static String getUTF8StringInArray(byte[] b, int start, int len) {
+        StringBuilder builder = new StringBuilder();
+
+        for (int i = start; i < start + len;) {
+            char c = UTF8StringUtil.charAt(b, i);
+            builder.append(c);
+            i += UTF8StringUtil.charSize(b, i);
+        }
+
+        return builder.toString();
+    }
+
     public static void printUTF8StringWithQuotes(byte[] b, int s, int l, OutputStream os) throws IOException {
         printUTF8String(b, s, l, os, true);
     }

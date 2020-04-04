@@ -31,6 +31,7 @@ import static org.apache.hyracks.util.string.UTF8StringUtil.compareTo;
 import static org.apache.hyracks.util.string.UTF8StringUtil.getModifiedUTF8Len;
 import static org.apache.hyracks.util.string.UTF8StringUtil.getNumBytesToStoreLength;
 import static org.apache.hyracks.util.string.UTF8StringUtil.getStringLength;
+import static org.apache.hyracks.util.string.UTF8StringUtil.getUTF8StringInArray;
 import static org.apache.hyracks.util.string.UTF8StringUtil.getUTFLength;
 import static org.apache.hyracks.util.string.UTF8StringUtil.hash;
 import static org.apache.hyracks.util.string.UTF8StringUtil.lowerCaseCompareTo;
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -151,6 +153,27 @@ public class UTF8StringUtilTest {
         int familyOne = hash(buffer, 0, 7, 297);
         int familyTwo = hash(buffer, 0, 8, 297);
         assertTrue(familyOne != familyTwo);
+    }
+
+    @Test
+    public void testGetUTF8StringInArray() {
+        String str = null;
+        byte[] bytes = null;
+        List<String> answer = null;
+
+        str = "database group at university of California, Irvine 23333";
+        bytes = writeStringToBytes(str);
+        // First byte in bytes is for the number of bytes of the entire string,
+        // and it should be skipped in getUTF8StringInArray
+        assertEquals("database", getUTF8StringInArray(bytes, 1, 8));
+        assertEquals("at", getUTF8StringInArray(bytes, 16, 2));
+        // test upper case
+        assertEquals("California", getUTF8StringInArray(bytes, 33, 10));
+        // test non-english char
+        assertEquals(",", getUTF8StringInArray(bytes, 43, 1));
+        assertEquals("Irvine", getUTF8StringInArray(bytes, 45, 6));
+        // test number
+        assertEquals("23333", getUTF8StringInArray(bytes, 52, 5));
     }
 
 }
