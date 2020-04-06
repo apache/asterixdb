@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.algebra.operators.physical.ExternalDataLookupPOperator;
@@ -1887,7 +1886,7 @@ public class AccessMethodUtils {
         // may not be equal to the actual value in the record. (e.g., INT index and BIGINT value in the actual record)
         // Since index-only plan doesn't access the primary index, we can't get the actual value in this case.
         // Also, if no-index-only option is given, we stop here to honor that request.
-        boolean noIndexOnlyPlanOption = getNoIndexOnlyOption(context);
+        boolean noIndexOnlyPlanOption = !context.getPhysicalOptimizationConfig().isIndexOnly();
         // TODO: For the inverted index access-method cases only:
         // Since an inverted index can contain multiple secondary key entries per one primary key,
         // Index-only plan can't be applied. For example, suppose there are two entries (SK1, SK2) for one PK.
@@ -1898,9 +1897,9 @@ public class AccessMethodUtils {
         // Even if the above is resolved, if a secondary key field is used after
         // SELECT or JOIN operator, this can't be qualified as an index-only plan since
         // an inverted index contains a part of a field value, not all of it.
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL || chosenIndex.isPrimaryIndex()
-                || chosenIndex.isOverridingKeyFieldTypes() || chosenIndex.isEnforced() || isInvertedIndex(chosenIndex)
-                || noIndexOnlyPlanOption) {
+        if (noIndexOnlyPlanOption || dataset.getDatasetType() == DatasetType.EXTERNAL || chosenIndex.isPrimaryIndex()
+                || chosenIndex.isOverridingKeyFieldTypes() || chosenIndex.isEnforced()
+                || isInvertedIndex(chosenIndex)) {
             indexOnlyPlanInfo.setFirst(false);
             return;
         }
@@ -2647,22 +2646,6 @@ public class AccessMethodUtils {
             }
         }
         return false;
-    }
-
-    /**
-     * Gets the specified no-index-only option in a query.
-     *
-     * @param context
-     * @return true if no-index-only plan is true.
-     *         false otherwise.
-     */
-    public static boolean getNoIndexOnlyOption(IOptimizationContext context) {
-        Map<String, Object> config = context.getMetadataProvider().getConfig();
-        if (config.containsKey(AbstractIntroduceAccessMethodRule.NO_INDEX_ONLY_PLAN_OPTION)) {
-            return Boolean
-                    .parseBoolean((String) config.get(AbstractIntroduceAccessMethodRule.NO_INDEX_ONLY_PLAN_OPTION));
-        }
-        return AbstractIntroduceAccessMethodRule.NO_INDEX_ONLY_PLAN_OPTION_DEFAULT_VALUE;
     }
 
     /**

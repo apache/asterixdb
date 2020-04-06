@@ -10,6 +10,7 @@
     "active\.suspend\.timeout" : 3600,
     "compiler\.framesize" : 32768,
     "compiler\.groupmemory" : 163840,
+    "compiler\.indexonly" : true,
     "compiler\.joinmemory" : 262144,
     "compiler\.parallelism" : 3,
     "compiler\.sort\.parallel" : true,

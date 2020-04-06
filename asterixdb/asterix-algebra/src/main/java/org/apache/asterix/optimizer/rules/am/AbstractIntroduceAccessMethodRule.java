@@ -87,9 +87,6 @@ import com.google.common.collect.ImmutableSet;
  * methods.
  */
 public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRewriteRule {
-    // When this option is set to true before executing a query, we don't apply the index-only plan.
-    public final static String NO_INDEX_ONLY_PLAN_OPTION = "noindexonly";
-    public final static boolean NO_INDEX_ONLY_PLAN_OPTION_DEFAULT_VALUE = false;
 
     protected MetadataProvider metadataProvider;
 

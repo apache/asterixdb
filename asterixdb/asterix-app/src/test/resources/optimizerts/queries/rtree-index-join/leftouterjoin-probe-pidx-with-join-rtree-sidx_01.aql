@@ -56,7 +56,7 @@ create index msgCountAIx on TweetMessages(countA) type btree;
 create index msgCountBIx on TweetMessages(countB) type btree;
 create index msgTextIx on TweetMessages(message-text) type keyword;
 
-set noindexonly 'true';
+set 'compiler.indexonly' "false";
 
 for $t1 in dataset('TweetMessages')
 let $n :=  create-circle($t1.sender-location, 0.5)

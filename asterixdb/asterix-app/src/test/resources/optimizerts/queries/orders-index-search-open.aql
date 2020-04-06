@@ -42,7 +42,7 @@ create dataset Orders(OrderType)
 
 create index idx_Orders_Custkey on Orders(o_custkey);
 
-set noindexonly 'true';
+set 'compiler.indexonly' "false";
 
 for $o in dataset('Orders')
 where

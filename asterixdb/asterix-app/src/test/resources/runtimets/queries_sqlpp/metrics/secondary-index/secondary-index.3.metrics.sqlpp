@@ -24,7 +24,7 @@
 
 use test;
 
-set noindexonly 'true';
+set `compiler.indexonly` "false";
 
 select count(*) from Customers
 where name = "Marvella Loud";

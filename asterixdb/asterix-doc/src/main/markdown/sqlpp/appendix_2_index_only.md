@@ -27,11 +27,11 @@ Since an index-only plan only searches a secondary-index to answer a query, it i
 a non-index-only plan that needs to search the primary index.
 However, this index-only plan can be turned off per query by setting the following parameter.
 
-*  **noindexonly**: if this is set to true, the index-only-plan will not be applied; the default value is false.
+*  **compiler.indexonly**: if this is set to false, the index-only-plan will not be applied; the default value is true.
 
 ##### Example
 
-    SET noindexonly 'true';
+    set `compiler.indexonly` "false";
 
     SELECT m.message AS message
     FROM GleambookMessages m where m.message = " love product-b its shortcut-menu is awesome:)";

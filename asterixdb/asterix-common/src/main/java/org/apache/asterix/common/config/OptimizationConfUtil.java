@@ -59,6 +59,7 @@ public class OptimizationConfUtil {
         int textSearchFrameLimit = getTextSearchNumFrames(compilerProperties, querySpecificConfig, sourceLoc);
         int sortNumSamples = getSortSamples(compilerProperties, querySpecificConfig, sourceLoc);
         boolean fullParallelSort = getSortParallel(compilerProperties, querySpecificConfig);
+        boolean indexOnly = isIndexOnly(compilerProperties, querySpecificConfig);
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -69,7 +70,7 @@ public class OptimizationConfUtil {
         physOptConf.setMaxFramesForTextSearch(textSearchFrameLimit);
         physOptConf.setSortParallel(fullParallelSort);
         physOptConf.setSortSamples(sortNumSamples);
-
+        physOptConf.setIndexOnly(indexOnly);
         return physOptConf;
     }
 
@@ -128,5 +129,13 @@ public class OptimizationConfUtil {
             throw AsterixException.create(ErrorCode.COMPILATION_BAD_QUERY_PARAMETER_VALUE, sourceLoc,
                     CompilerProperties.COMPILER_SORT_SAMPLES_KEY, 1, "samples");
         }
+    }
+
+    private static boolean isIndexOnly(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig) {
+        String valueInQuery = (String) querySpecificConfig.get(CompilerProperties.COMPILER_INDEXONLY_KEY);
+        if (valueInQuery != null) {
+            return OptionTypes.BOOLEAN.parse(valueInQuery);
+        }
+        return compilerProperties.isIndexOnly();
     }
 }

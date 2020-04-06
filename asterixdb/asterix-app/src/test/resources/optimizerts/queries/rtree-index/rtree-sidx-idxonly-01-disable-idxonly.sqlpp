@@ -26,7 +26,7 @@
  *                      ... -> unnest-map (sidx) -> split -> unnest-map (pidx) -> select -> union -> ...
  *                  : The right path:
  *                      ... -> unnest-map (sidx) -> split ->                                union -> ...
- *                  : However, we set the "noindexonly" option to true. So, the index-only plan should not be triggered.
+ *                  : However, we set the `compiler.indexonly` option to false. So, the index-only plan should not be triggered.
  *  Expected Result : Success
  *
 */
@@ -105,7 +105,7 @@ create index rtree_index_rec on MyData(rec) type rtree;
 create index ngram_index_title on MyData(title) type ngram(3);
 create index keyword_index_title on MyData(title) type keyword;
 
-set noindexonly 'true';
+set `compiler.indexonly` "false";
 
 select count(*) from (
 select x.location

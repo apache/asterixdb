@@ -1,5 +1,5 @@
 DataverseUse test
-Set noindexonly=false
+Set compiler.indexonly=false
 Query:
 SELECT [
 FieldAccessor [

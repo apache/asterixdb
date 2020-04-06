@@ -24,7 +24,7 @@
 
 use test;
 
-set noindexonly "true";
+set `compiler.indexonly` "false";
 
 select t1.tweetid as tweetid1, t1.countA as count1, t2.tweetid as tweetid2, t2.countB as count2
 from  TweetMessages as t1 left outer join TweetMessages as t2 on t1.countA /*+ indexnl */ = t2.countB
