@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -32,6 +34,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -45,6 +48,7 @@ import org.apache.hyracks.api.job.IJobSerializerDeserializer;
 import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.common.context.ServerContext;
+import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -241,12 +245,25 @@ public class DeploymentUtils {
         throw HyracksException.create(trace);
     }
 
-    public static void unzip(String sourceFile, String outputDir) throws IOException {
+    public static void unzip(String sourceFile, String outputDirName) throws IOException {
         try (ZipFile zipFile = new ZipFile(sourceFile)) {
+            Path outputPath = Paths.get(FilenameUtils.normalize(outputDirName));
+            File outputDir = outputPath.toFile();
+            if (!outputDir.exists()) {
+                throw new IOException("Output path doesn't exist");
+            }
+            if (!outputDir.isDirectory()) {
+                throw new IOException("Output path is not a directory");
+            }
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             List<File> createdFiles = new ArrayList<>();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
+                String normalizedPath = FilenameUtils.normalize(FileUtil.joinPath(outputDirName, entry.getName()));
+                Path candidatePath = Paths.get(normalizedPath);
+                if (!candidatePath.startsWith(outputPath)) {
+                    throw new IOException("Malformed ZIP archive");
+                }
                 File entryDestination = new File(outputDir, entry.getName());
                 if (!entry.isDirectory()) {
                     entryDestination.getParentFile().mkdirs();
