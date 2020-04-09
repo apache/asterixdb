@@ -22,7 +22,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.base.AGeometry;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -72,5 +74,25 @@ public class AGeometrySerializerDeserializer implements ISerializerDeserializer<
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    public static int getAGeometrySizeOffset() throws HyracksDataException {
+        return 0;
+    }
+
+    public static AGeometry getAGeometryObject(byte[] bytes, int startOffset) throws HyracksDataException {
+        // Size of the AGeometry object is stored in bytes in the first 32 bits
+        // See serialize method
+        int size = AInt32SerializerDeserializer.getInt(bytes, startOffset);
+
+        if (bytes.length < startOffset + size + 4)
+            throw HyracksDataException.create(ErrorCode.VALUE_OUT_OF_RANGE);
+
+        // Skip the size of the geometry in first 4 bytes
+        byte[] bytes1 = Arrays.copyOfRange(bytes, startOffset + 4, startOffset + size + 4);
+        ByteBuffer buffer = ByteBuffer.wrap(bytes1);
+        OGCGeometry geometry = OGCGeometry.createFromOGCStructure(
+                OperatorImportFromWkb.local().executeOGC(WkbImportFlags.wkbImportDefaults, buffer, null), DEFAULT_CRS);
+        return new AGeometry(geometry);
     }
 }

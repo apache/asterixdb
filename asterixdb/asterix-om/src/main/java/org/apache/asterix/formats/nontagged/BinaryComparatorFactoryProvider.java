@@ -26,6 +26,7 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.ACirclePartialBina
 import org.apache.asterix.dataflow.data.nontagged.comparators.ADurationPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AGenericAscBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AGenericDescBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AGeometryPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalAscPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalDescPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ALinePartialBinaryComparatorFactory;
@@ -157,6 +158,8 @@ public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactory
                 return addOffset(ALinePartialBinaryComparatorFactory.INSTANCE, ascending);
             case POLYGON:
                 return addOffset(APolygonPartialBinaryComparatorFactory.INSTANCE, ascending);
+            case GEOMETRY:
+                return addOffset(AGeometryPartialBinaryComparatorFactory.INSTANCE, ascending);
             case DURATION:
                 return addOffset(ADurationPartialBinaryComparatorFactory.INSTANCE, ascending);
             case INTERVAL:

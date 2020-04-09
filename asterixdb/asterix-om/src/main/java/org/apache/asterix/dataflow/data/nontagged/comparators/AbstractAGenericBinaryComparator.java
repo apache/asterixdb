@@ -131,6 +131,8 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
                 return ALinePartialBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
             case POLYGON:
                 return APolygonPartialBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
+            case GEOMETRY:
+                return AGeometryPartialBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
             case DURATION:
                 return ADurationPartialBinaryComparatorFactory.compare(b1, s1, l1, b2, s2, l2);
             case INTERVAL:

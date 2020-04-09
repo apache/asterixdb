@@ -216,6 +216,7 @@ public final class NonTaggedFormatUtil {
             case POLYGON:
             case CIRCLE:
             case RECTANGLE:
+            case GEOMETRY:
                 return 2;
             case POINT3D:
                 return 3;
@@ -232,6 +233,7 @@ public final class NonTaggedFormatUtil {
             case POLYGON:
             case CIRCLE:
             case RECTANGLE:
+            case GEOMETRY:
                 return BuiltinType.ADOUBLE;
             default:
                 throw new NotImplementedException(typeTag + " is not a supported spatial data type.");

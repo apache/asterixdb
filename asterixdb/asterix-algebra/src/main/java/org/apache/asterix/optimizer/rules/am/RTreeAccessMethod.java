@@ -72,8 +72,17 @@ public class RTreeAccessMethod implements IAccessMethod {
     // In R-Tree case, depending on the parameters of the SPATIAL_INTERSECT function, it may/may not produce
     // false positive results. Thus, we need to have one more step to check whether the SPATIAL_INTERSECT generates
     // false positive results or not.
+    // In R-Tree case with geometry, the functions to be considered to check for false positive results are:
+    // ST_INTERSECTS, ST_CONTAINS, ST_CROSSES, ST_OVERLAPS, ST_TOUCHES, ST_WITHIN, ST_DISJOINT.
     private static final List<Pair<FunctionIdentifier, Boolean>> FUNC_IDENTIFIERS = Collections.unmodifiableList(
-            Arrays.asList(new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.SPATIAL_INTERSECT, true)));
+            Arrays.asList(new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.SPATIAL_INTERSECT, true),
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_INTERSECTS, true),
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_CONTAINS, true),
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_CROSSES, true),
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_OVERLAPS, true),
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_TOUCHES, true),
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_WITHIN, true),
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_DISJOINT, true)));
 
     public static final RTreeAccessMethod INSTANCE = new RTreeAccessMethod();
 

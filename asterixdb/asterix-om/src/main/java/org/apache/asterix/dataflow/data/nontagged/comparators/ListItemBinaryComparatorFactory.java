@@ -78,6 +78,8 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                     APoint3DPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascPolygonComp =
                     APolygonPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            final IBinaryComparator ascGeometryComp =
+                    AGeometryPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascUUIDComp = AUUIDPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascByteArrayComp =
                     ByteArrayBinaryComparatorFactory.INSTANCE.createBinaryComparator();
@@ -164,6 +166,9 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                     }
                     case POLYGON: {
                         return ascPolygonComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
+                    }
+                    case GEOMETRY: {
+                        return ascGeometryComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
                     }
                     case DURATION: {
                         return ascDurationComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);

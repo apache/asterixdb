@@ -23,6 +23,11 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="geojson">
+        <compilation-unit name="index">
+            <output-dir compare="Text">index</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="geojson">
         <compilation-unit name="single-method">
             <output-dir compare="Text">single-method</output-dir>
         </compilation-unit>

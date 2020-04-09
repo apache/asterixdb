@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
@@ -44,6 +45,8 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+
+import com.esri.core.geometry.Envelope;
 
 public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
 
@@ -253,6 +256,28 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
                                     }
                                 }
                                 break;
+                            case GEOMETRY:
+                                Envelope record = new Envelope();
+                                AGeometrySerializerDeserializer.getAGeometryObject(data0, startOffset0 + 1)
+                                        .getGeometry().getEsriGeometry().queryEnvelope(record);
+                                switch (coordinate) {
+                                    case 0:
+                                        value = record.getXMin();
+                                        break;
+                                    case 1:
+                                        value = record.getYMin();
+                                        break;
+                                    case 2:
+                                        value = record.getXMax();
+                                        break;
+                                    case 3:
+                                        value = record.getYMax();
+                                        break;
+                                    default:
+                                        throw new NotImplementedException(
+                                                coordinate + "is not a valid coordinate option");
+                                }
+                                break;
                             case CIRCLE:
                                 switch (coordinate) {
                                     case 0: {
@@ -336,7 +361,7 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
                                 throw new TypeMismatchException(BuiltinFunctions.CREATE_MBR, 0, data0[startOffset0],
                                         ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
                                         ATypeTag.SERIALIZED_POLYGON_TYPE_TAG, ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
-                                        ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
+                                        ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG, ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
                         }
                     } else {
                         throw new NotImplementedException(dimension + "D is not supported");

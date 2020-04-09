@@ -121,6 +121,7 @@ public class ATypeHierarchy {
         hierarchyDomains.put(ATypeTag.CIRCLE, Domain.SPATIAL);
         hierarchyDomains.put(ATypeTag.POLYGON, Domain.SPATIAL);
         hierarchyDomains.put(ATypeTag.RECTANGLE, Domain.SPATIAL);
+        hierarchyDomains.put(ATypeTag.GEOMETRY, Domain.SPATIAL);
         hierarchyDomains.put(ATypeTag.TINYINT, Domain.NUMERIC);
         hierarchyDomains.put(ATypeTag.SMALLINT, Domain.NUMERIC);
         hierarchyDomains.put(ATypeTag.INTEGER, Domain.NUMERIC);

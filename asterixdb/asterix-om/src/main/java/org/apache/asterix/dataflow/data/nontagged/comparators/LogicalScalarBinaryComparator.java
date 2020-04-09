@@ -126,6 +126,10 @@ public final class LogicalScalarBinaryComparator implements ILogicalBinaryCompar
                 result = APolygonPartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
                         rightStart, rightLen);
                 break;
+            case GEOMETRY:
+                result = AGeometryPartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
+                        rightStart, rightLen);
+                break;
             case DURATION:
                 result = ADurationPartialBinaryComparatorFactory.compare(leftBytes, leftStart, leftLen, rightBytes,
                         rightStart, rightLen);

@@ -244,6 +244,7 @@ public class ValidateUtil {
                         case RECTANGLE:
                         case CIRCLE:
                         case POLYGON:
+                        case GEOMETRY:
                         case UNION:
                             break;
                         default:

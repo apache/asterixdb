@@ -40,6 +40,7 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.ACirclePartialBina
 import org.apache.asterix.dataflow.data.nontagged.comparators.ADurationPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AGenericAscBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AGenericDescBinaryComparatorFactory;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AGeometryPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalAscPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalDescPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ALinePartialBinaryComparatorFactory;
@@ -194,6 +195,7 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         registeredClasses.put("AsterixVirtualBufferCacheProvider", AsterixVirtualBufferCacheProvider.class);
 
         // IBinaryComparatorFactory
+        registeredClasses.put("AGeometryPartialBinaryComparatorFactory", AGeometryPartialBinaryComparatorFactory.class);
         registeredClasses.put("ACirclePartialBinaryComparatorFactory", ACirclePartialBinaryComparatorFactory.class);
         registeredClasses.put("ADurationPartialBinaryComparatorFactory", ADurationPartialBinaryComparatorFactory.class);
         registeredClasses.put("AIntervalAscPartialBinaryComparatorFactory",
