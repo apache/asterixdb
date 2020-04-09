@@ -195,7 +195,6 @@
             <exclude>**/*.json</exclude>
             <exclude>**/*.adm</exclude>
             <exclude>**/*.template</exclude>
-            <exclude>**/.SpiderSilkWorkingDirectory/**</exclude>
             <exclude>asterix-installer/**</exclude> <!-- in case -DskipInstaller -->
           </excludes>
         </configuration>
