@@ -628,7 +628,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IAType itemType;
             switch (itemTypeExpr.getTypeKind()) {
                 case TYPEREFERENCE:
-                    itemType = metadataProvider.findType(itemTypeDataverseName, itemTypeName);
+                    Datatype itemTypeEntity = metadataProvider.findTypeEntity(itemTypeDataverseName, itemTypeName);
+                    if (itemTypeEntity == null || itemTypeEntity.getIsAnonymous()) {
+                        // anonymous types cannot be referred from CREATE DATASET
+                        throw new AsterixException(ErrorCode.UNKNOWN_TYPE, sourceLoc,
+                                itemTypeDataverseName + "." + itemTypeName);
+                    }
+                    itemType = itemTypeEntity.getDatatype();
                     break;
                 case RECORD:
                     itemTypeDataverseName = dataverseName;
@@ -664,7 +670,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     if (metaItemTypeExpr != null) {
                         switch (metaItemTypeExpr.getTypeKind()) {
                             case TYPEREFERENCE:
-                                metaItemType = metadataProvider.findType(metaItemTypeDataverseName, metaItemTypeName);
+                                Datatype metaItemTypeEntity =
+                                        metadataProvider.findTypeEntity(metaItemTypeDataverseName, metaItemTypeName);
+                                if (metaItemTypeEntity == null || metaItemTypeEntity.getIsAnonymous()) {
+                                    // anonymous types cannot be referred from CREATE DATASET
+                                    throw new AsterixException(ErrorCode.UNKNOWN_TYPE, sourceLoc,
+                                            metaItemTypeDataverseName + "." + metaItemTypeName);
+                                }
+                                metaItemType = metaItemTypeEntity.getDatatype();
                                 if (metaItemType.getTypeTag() != ATypeTag.OBJECT) {
                                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                                             "Dataset meta type has to be a record type.");

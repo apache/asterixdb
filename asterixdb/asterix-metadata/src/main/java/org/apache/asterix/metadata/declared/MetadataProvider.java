@@ -72,6 +72,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
+import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Feed;
@@ -343,6 +344,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public List<String> findNodes(String nodeGroupName) throws AlgebricksException {
         return MetadataManagerUtil.findNodes(mdTxnCtx, nodeGroupName);
+    }
+
+    public Datatype findTypeEntity(String dataverse, String typeName) throws AlgebricksException {
+        return MetadataManagerUtil.findTypeEntity(mdTxnCtx, dataverse, typeName);
     }
 
     public IAType findType(String dataverse, String typeName) throws AlgebricksException {
