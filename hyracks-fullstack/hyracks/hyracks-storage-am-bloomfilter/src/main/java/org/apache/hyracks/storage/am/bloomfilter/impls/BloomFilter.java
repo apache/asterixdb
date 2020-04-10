@@ -124,15 +124,23 @@ public class BloomFilter {
     }
 
     public boolean contains(ITupleReference tuple, long[] hashes) throws HyracksDataException {
+        computeHashes(tuple, hashes);
+        return contains(hashes);
+    }
+
+    public boolean contains(long[] hashes) throws HyracksDataException {
         if (numPages == 0) {
             return false;
         }
-        MurmurHash128Bit.hash3_x64_128(tuple, keyFields, SEED, hashes);
         if (version == BLOCKED_BLOOM_FILTER_VERSION) {
             return blockContains(hashes);
         } else {
             return legacyContains(hashes);
         }
+    }
+
+    public void computeHashes(ITupleReference tuple, long[] hashes) {
+        MurmurHash128Bit.hash3_x64_128(tuple, keyFields, SEED, hashes);
     }
 
     private boolean blockContains(long[] hashes) throws HyracksDataException {

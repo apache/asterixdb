@@ -38,6 +38,7 @@ import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
+import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
@@ -77,7 +78,6 @@ public class DiskBTree extends BTree {
         ctx.reset();
         ctx.setPred((RangePredicate) searchPred);
         ctx.setCursor(cursor);
-        // simple index scan
         if (ctx.getPred().getLowKeyComparator() == null) {
             ctx.getPred().setLowKeyComparator(ctx.getCmp());
         }
@@ -87,87 +87,52 @@ public class DiskBTree extends BTree {
         cursor.setBufferCache(bufferCache);
         cursor.setFileId(getFileId());
 
-        DiskBTreeRangeSearchCursor diskCursor = (DiskBTreeRangeSearchCursor) cursor;
-
-        if (diskCursor.numSearchPages() == 0) {
-            // we have to search from root to leaf
-            ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), rootPage), false);
-            diskCursor.addSearchPage(rootPage);
-            searchDown(rootNode, rootPage, ctx, diskCursor);
-        } else {
-            // we first check whether the leaf page matches because page may be shifted during cursor.hasNext
-            if (ctx.getLeafFrame().getPage() != diskCursor.getPage()) {
-                ctx.getLeafFrame().setPage(diskCursor.getPage());
-                ctx.getCursorInitialState().setPage(diskCursor.getPage());
-                ctx.getCursorInitialState().setPageId(diskCursor.getPageId());
-            }
-
-            if (fitInPage(ctx.getPred().getLowKey(), ctx.getPred().getLowKeyComparator(), ctx.getLeafFrame())) {
-                // the input still falls into the previous search leaf
-                diskCursor.open(ctx.getCursorInitialState(), searchPred);
-            } else {
-                // unpin the previous leaf page
-                bufferCache.unpin(ctx.getLeafFrame().getPage());
-                diskCursor.removeLastSearchPage();
-
-                ICachedPage page = searchUp(ctx, diskCursor);
-                int pageId = diskCursor.getLastSearchPage();
-
-                searchDown(page, pageId, ctx, diskCursor);
+        if (cursor instanceof DiskBTreePointSearchCursor) {
+            DiskBTreePointSearchCursor pointCursor = (DiskBTreePointSearchCursor) cursor;
+            int lastPageId = pointCursor.getLastPageId();
+            if (lastPageId != BufferCache.INVALID_PAGEID) {
+                // check whether the last leaf page contains this key
+                ICachedPage lastPage =
+                        bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), lastPageId), false);
+                ctx.getLeafFrame().setPage(lastPage);
+                if (fitInPage(ctx.getPred().getLowKey(), ctx.getPred().getLowKeyComparator(), ctx.getLeafFrame())) {
+                    // use this page
+                    ctx.getCursorInitialState().setPage(lastPage);
+                    ctx.getCursorInitialState().setPageId(lastPageId);
+                    pointCursor.open(ctx.getCursorInitialState(), searchPred);
+                    return;
+                } else {
+                    // release the last page and clear the states of this cursor
+                    // then retry the search from root to leaf
+                    bufferCache.unpin(lastPage);
+                    pointCursor.clearSearchState();
+                }
             }
         }
-    }
-
-    private ICachedPage searchUp(BTreeOpContext ctx, DiskBTreeRangeSearchCursor cursor) throws HyracksDataException {
-        int index = cursor.numSearchPages() - 1;
-        // no need to check root page
-        for (; index >= 0; index--) {
-            int pageId = cursor.getLastSearchPage();
-            ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
-            ctx.getInteriorFrame().setPage(page);
-            if (index == 0 || fitInPage(ctx.getPred().getLowKey(), ctx.getPred().getLowKeyComparator(),
-                    ctx.getInteriorFrame())) {
-                // we've found the right page
-                return page;
-            } else {
-                // unpin the current page
-                bufferCache.unpin(page);
-                cursor.removeLastSearchPage();
-            }
-        }
-
-        // if no page is available (which is the case for single-level BTree)
-        // we simply return the root page
-        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), rootPage), false);
-        cursor.addSearchPage(rootPage);
-        return page;
+        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), rootPage), false);
+        searchDown(rootNode, rootPage, ctx, cursor);
     }
 
     private boolean fitInPage(ITupleReference key, MultiComparator comparator, IBTreeFrame frame)
             throws HyracksDataException {
+        // assume that search keys are sorted (non-decreasing)
         ITupleReference rightmostTuple = frame.getRightmostTuple();
         int cmp = comparator.compare(key, rightmostTuple);
-        if (cmp > 0) {
-            return false;
-        }
-        ITupleReference leftmostTuple = frame.getLeftmostTuple();
-        return comparator.compare(key, leftmostTuple) >= 0;
+        return cmp <= 0;
     }
 
-    private void searchDown(ICachedPage page, int pageId, BTreeOpContext ctx, DiskBTreeRangeSearchCursor cursor)
+    private void searchDown(ICachedPage page, int pageId, BTreeOpContext ctx, ITreeIndexCursor cursor)
             throws HyracksDataException {
         ICachedPage currentPage = page;
         ctx.getInteriorFrame().setPage(currentPage);
-
         try {
             int childPageId = pageId;
             while (!ctx.getInteriorFrame().isLeaf()) {
                 // walk down the tree until we find the leaf
                 childPageId = ctx.getInteriorFrame().getChildPageId(ctx.getPred());
-
-                // save the child page tuple index
-                cursor.addSearchPage(childPageId);
                 bufferCache.unpin(currentPage);
+                pageId = childPageId;
+
                 currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), childPageId), false);
                 ctx.getInteriorFrame().setPage(currentPage);
             }
@@ -233,9 +198,9 @@ public class DiskBTree extends BTree {
         }
 
         @Override
-        public BTreeRangeSearchCursor createPointCursor(boolean exclusive) {
+        public BTreeRangeSearchCursor createPointCursor(boolean exclusive, boolean stateful) {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
-            return new DiskBTreePointSearchCursor(leafFrame, exclusive);
+            return new DiskBTreePointSearchCursor(leafFrame, exclusive, stateful);
         }
 
         @Override

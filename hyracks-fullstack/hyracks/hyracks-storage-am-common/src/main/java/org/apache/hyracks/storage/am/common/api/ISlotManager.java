@@ -29,6 +29,9 @@ public interface ISlotManager {
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
             FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) throws HyracksDataException;
 
+    public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
+            int startIndex) throws HyracksDataException;
+
     public int getGreatestKeyIndicator();
 
     public int getErrorIndicator();

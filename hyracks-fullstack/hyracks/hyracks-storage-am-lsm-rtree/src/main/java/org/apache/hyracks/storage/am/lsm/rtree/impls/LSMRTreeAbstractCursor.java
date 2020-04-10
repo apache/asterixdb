@@ -132,7 +132,7 @@ public abstract class LSMRTreeAbstractCursor extends EnforcedIndexCursor impleme
             }
             if (btreeCursors[i] == null) {
                 // need to create a new one
-                btreeCursors[i] = btreeAccessors[i].createPointCursor(false);
+                btreeCursors[i] = btreeAccessors[i].createPointCursor(false, false);
             } else {
                 // close
                 btreeCursors[i].close();

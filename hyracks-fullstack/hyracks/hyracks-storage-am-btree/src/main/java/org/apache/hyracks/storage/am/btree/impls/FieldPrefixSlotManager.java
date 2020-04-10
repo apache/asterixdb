@@ -44,19 +44,23 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
     private BTreeFieldPrefixNSMLeafFrame frame;
     private MultiComparator cmp;
 
+    @Override
     public int decodeFirstSlotField(int slot) {
         return (slot & 0xFF000000) >>> 24;
     }
 
+    @Override
     public int decodeSecondSlotField(int slot) {
         return slot & 0x00FFFFFF;
     }
 
+    @Override
     public int encodeSlotFields(int firstField, int secondField) {
         return ((firstField & 0x000000FF) << 24) | (secondField & 0x00FFFFFF);
     }
 
     // returns prefix slot number, or TUPLE_UNCOMPRESSED of no match was found
+    @Override
     public int findPrefix(ITupleReference tuple, ITreeIndexTupleReference framePrefixTuple)
             throws HyracksDataException {
         int prefixMid;
@@ -194,30 +198,37 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
         }
     }
 
+    @Override
     public int getPrefixSlotStartOff() {
         return buf.capacity() - slotSize;
     }
 
+    @Override
     public int getPrefixSlotEndOff() {
         return buf.capacity() - slotSize * frame.getPrefixTupleCount();
     }
 
+    @Override
     public int getTupleSlotStartOff() {
         return getPrefixSlotEndOff() - slotSize;
     }
 
+    @Override
     public int getTupleSlotEndOff() {
         return buf.capacity() - slotSize * (frame.getPrefixTupleCount() + frame.getTupleCount());
     }
 
+    @Override
     public int getSlotSize() {
         return slotSize;
     }
 
+    @Override
     public void setSlot(int offset, int value) {
         frame.getBuffer().putInt(offset, value);
     }
 
+    @Override
     public int insertSlot(int slot, int tupleOff) {
         int slotNum = decodeSecondSlotField(slot);
         if (slotNum == ERROR_INDICATOR) {
@@ -241,14 +252,17 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
         }
     }
 
+    @Override
     public int getPrefixSlotOff(int tupleIndex) {
         return getPrefixSlotStartOff() - tupleIndex * slotSize;
     }
 
+    @Override
     public int getTupleSlotOff(int tupleIndex) {
         return getTupleSlotStartOff() - tupleIndex * slotSize;
     }
 
+    @Override
     public void setPrefixSlot(int tupleIndex, int slot) {
         buf.putInt(getPrefixSlotOff(tupleIndex), slot);
     }
@@ -276,6 +290,12 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
     }
 
     @Override
+    public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
+            int startIndex) throws HyracksDataException {
+        throw new UnsupportedOperationException("Not implemented.");
+    }
+
+    @Override
     public int getSlotStartOff() {
         throw new UnsupportedOperationException("Not implemented.");
     }
@@ -295,7 +315,9 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
         throw new UnsupportedOperationException("Not implemented.");
     }
 
+    @Override
     public void setMultiComparator(MultiComparator cmp) {
         this.cmp = cmp;
     }
+
 }

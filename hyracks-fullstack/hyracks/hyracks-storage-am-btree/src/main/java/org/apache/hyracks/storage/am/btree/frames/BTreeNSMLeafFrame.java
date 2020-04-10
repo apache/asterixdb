@@ -313,6 +313,12 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
+    public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
+            int startIndex) throws HyracksDataException {
+        return slotManager.findTupleIndex(searchKey, pageTuple, cmp, startIndex);
+    }
+
+    @Override
     public void setMultiComparator(MultiComparator cmp) {
         this.cmp = cmp;
     }

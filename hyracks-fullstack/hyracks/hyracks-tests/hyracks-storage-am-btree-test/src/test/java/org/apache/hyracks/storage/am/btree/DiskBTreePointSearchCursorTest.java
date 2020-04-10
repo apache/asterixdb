@@ -101,6 +101,6 @@ public class DiskBTreePointSearchCursorTest extends IIndexCursorTest {
 
     @Override
     protected IIndexCursor createCursor(IIndexAccessor accessor) {
-        return ((BTreeAccessor) accessor).createPointCursor(false);
+        return ((BTreeAccessor) accessor).createPointCursor(false, false);
     }
 }

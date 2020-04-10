@@ -25,13 +25,27 @@ import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.buffercache.BufferCache;
 
 public class DiskBTreePointSearchCursor extends DiskBTreeRangeSearchCursor {
+    /**
+     * A stateful cursor keeps the search state (last search page Id + index) across multiple searches
+     * until {@link #clearSearchState()} is called explicity
+     */
+    private final boolean stateful;
 
     private boolean nextHasBeenCalled;
 
-    public DiskBTreePointSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes) {
+    private int lastPageId = BufferCache.INVALID_PAGEID;
+    private int lastTupleIndex = 0;
+
+    public DiskBTreePointSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes, boolean stateful) {
         super(frame, exclusiveLatchNodes);
+        this.stateful = stateful;
+    }
+
+    public DiskBTreePointSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes) {
+        this(frame, exclusiveLatchNodes, false);
     }
 
     @Override
@@ -71,6 +85,32 @@ public class DiskBTreePointSearchCursor extends DiskBTreeRangeSearchCursor {
 
         // only get the low key position
         tupleIndex = getLowKeyIndex();
+        if (stateful) {
+            lastPageId = pageId;
+            if (tupleIndex >= 0) {
+                lastTupleIndex = tupleIndex;
+            } else {
+                lastTupleIndex = -tupleIndex - 1;
+            }
+        }
+    }
+
+    public int getLastPageId() {
+        return lastPageId;
+    }
+
+    @Override
+    protected int getLowKeyIndex() throws HyracksDataException {
+        if (stateful) {
+            return frame.findTupleIndex(lowKey, frameTuple, lowKeyCmp, lastTupleIndex);
+        } else {
+            return super.getLowKeyIndex();
+        }
+    }
+
+    public void clearSearchState() {
+        this.lastPageId = BufferCache.INVALID_PAGEID;
+        this.lastTupleIndex = 0;
     }
 
 }

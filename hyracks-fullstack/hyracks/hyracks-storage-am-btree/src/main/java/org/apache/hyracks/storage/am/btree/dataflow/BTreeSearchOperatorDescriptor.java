@@ -38,8 +38,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
     protected final int[] highKeyFields;
     protected final boolean lowKeyInclusive;
     protected final boolean highKeyInclusive;
-    private final int[] minFilterFieldIndexes;
-    private final int[] maxFilterFieldIndexes;
+    protected final int[] minFilterFieldIndexes;
+    protected final int[] maxFilterFieldIndexes;
     protected final IIndexDataflowHelperFactory indexHelperFactory;
     protected final boolean retainInput;
     protected final boolean retainMissing;

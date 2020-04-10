@@ -148,6 +148,7 @@ import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeBatchPointSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import org.apache.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
@@ -499,7 +500,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             boolean retainMissing, Dataset dataset, String indexName, int[] lowKeyFields, int[] highKeyFields,
             boolean lowKeyInclusive, boolean highKeyInclusive, boolean propagateFilter, int[] minFilterFieldIndexes,
             int[] maxFilterFieldIndexes, ITupleFilterFactory tupleFilterFactory, long outputLimit,
-            boolean isIndexOnlyPlan) throws AlgebricksException {
+            boolean isIndexOnlyPlan, boolean isPrimaryIndexPointSearch) throws AlgebricksException {
         boolean isSecondary = true;
         Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                 dataset.getDatasetName(), dataset.getDatasetName());
@@ -540,11 +541,16 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         BTreeSearchOperatorDescriptor btreeSearchOp;
 
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-            btreeSearchOp = new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields, highKeyFields,
-                    lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput, retainMissing,
-                    context.getMissingWriterFactory(), searchCallbackFactory, minFilterFieldIndexes,
-                    maxFilterFieldIndexes, propagateFilter, tupleFilterFactory, outputLimit, proceedIndexOnlyPlan,
-                    failValueForIndexOnlyPlan, successValueForIndexOnlyPlan);
+            btreeSearchOp = !isSecondary && isPrimaryIndexPointSearch
+                    ? new LSMBTreeBatchPointSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields,
+                            highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput,
+                            retainMissing, context.getMissingWriterFactory(), searchCallbackFactory,
+                            minFilterFieldIndexes, maxFilterFieldIndexes, tupleFilterFactory, outputLimit)
+                    : new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields, highKeyFields,
+                            lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput, retainMissing,
+                            context.getMissingWriterFactory(), searchCallbackFactory, minFilterFieldIndexes,
+                            maxFilterFieldIndexes, propagateFilter, tupleFilterFactory, outputLimit,
+                            proceedIndexOnlyPlan, failValueForIndexOnlyPlan, successValueForIndexOnlyPlan);
         } else {
             btreeSearchOp = new ExternalBTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields,
                     highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput, retainMissing,

@@ -44,23 +44,24 @@ import org.apache.hyracks.storage.common.ISearchPredicate;
 
 public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements ILSMIndexCursor {
 
-    private ITreeIndexCursor[] btreeCursors;
-    private final ILSMIndexOperationContext opCtx;
-    private ISearchOperationCallback searchCallback;
-    private RangePredicate predicate;
-    private boolean includeMutableComponent;
-    private int numBTrees;
+    protected ITreeIndexCursor[] btreeCursors;
+    protected final ILSMIndexOperationContext opCtx;
+    protected ISearchOperationCallback searchCallback;
+    protected RangePredicate predicate;
+    protected boolean includeMutableComponent;
+    protected int numBTrees;
     private BTreeAccessor[] btreeAccessors;
-    private BloomFilter[] bloomFilters;
-    private ILSMHarness lsmHarness;
+    protected BloomFilter[] bloomFilters;
+    protected ILSMHarness lsmHarness;
     private boolean nextHasBeenCalled;
-    private boolean foundTuple;
-    private int foundIn = -1;
-    private ITupleReference frameTuple;
-    private List<ILSMComponent> operationalComponents;
-    private boolean resultOfSearchCallbackProceed = false;
+    protected boolean foundTuple;
+    protected int foundIn = -1;
+    protected ITupleReference frameTuple;
+    protected List<ILSMComponent> operationalComponents;
+    protected boolean resultOfSearchCallbackProceed = false;
 
-    private final long[] hashes = BloomFilter.createHashArray();
+    protected final long[] hashes = BloomFilter.createHashArray();
+    protected boolean hashComputed = false;
 
     public LSMBTreePointSearchCursor(ILSMIndexOperationContext opCtx) {
         this.opCtx = opCtx;
@@ -73,9 +74,10 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
         } else if (foundTuple) {
             return true;
         }
+        hashComputed = false;
         boolean reconciled = false;
         for (int i = 0; i < numBTrees; ++i) {
-            if (bloomFilters[i] != null && !bloomFilters[i].contains(predicate.getLowKey(), hashes)) {
+            if (!isSearchCandidate(i)) {
                 continue;
             }
             btreeAccessors[i].search(btreeCursors[i], predicate);
@@ -141,12 +143,27 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
         return false;
     }
 
+    protected boolean isSearchCandidate(int componentIndex) throws HyracksDataException {
+        if (bloomFilters[componentIndex] != null) {
+            if (!hashComputed) {
+                // all bloom filters share the same hash function
+                // only compute it once for better performance
+                bloomFilters[componentIndex].computeHashes(predicate.getLowKey(), hashes);
+                hashComputed = true;
+            }
+            return bloomFilters[componentIndex].contains(hashes);
+        } else {
+            return true;
+        }
+    }
+
     @Override
     public void doClose() throws HyracksDataException {
         try {
             closeCursors();
             nextHasBeenCalled = false;
             foundTuple = false;
+            hashComputed = false;
         } finally {
             if (lsmHarness != null) {
                 lsmHarness.endSearch(opCtx);
@@ -196,7 +213,7 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
 
             if (btreeAccessors[i] == null) {
                 btreeAccessors[i] = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-                btreeCursors[i] = btreeAccessors[i].createPointCursor(false);
+                btreeCursors[i] = btreeAccessors[i].createPointCursor(false, false);
             } else {
                 // re-use
                 btreeAccessors[i].reset(btree, NoOpIndexAccessParameters.INSTANCE);
@@ -205,6 +222,7 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
         }
         nextHasBeenCalled = false;
         foundTuple = false;
+        hashComputed = false;
     }
 
     private void destroyAndNullifyCursorAtIndex(int i) throws HyracksDataException {
@@ -259,7 +277,7 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
         return null;
     }
 
-    private void closeCursors() throws HyracksDataException {
+    protected void closeCursors() throws HyracksDataException {
         if (btreeCursors != null) {
             for (int i = 0; i < numBTrees; ++i) {
                 if (btreeCursors[i] != null) {

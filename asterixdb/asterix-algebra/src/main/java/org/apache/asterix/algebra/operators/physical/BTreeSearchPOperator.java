@@ -50,6 +50,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty.PropertyType;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -138,7 +139,8 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
                 builder.getJobSpec(), opSchema, typeEnv, context, jobGenParams.getRetainInput(), retainMissing, dataset,
                 jobGenParams.getIndexName(), lowKeyIndexes, highKeyIndexes, jobGenParams.isLowKeyInclusive(),
                 jobGenParams.isHighKeyInclusive(), propagateFilter, minFilterFieldIndexes, maxFilterFieldIndexes,
-                tupleFilterFactory, outputLimit, unnestMap.getGenerateCallBackProceedResultVar());
+                tupleFilterFactory, outputLimit, unnestMap.getGenerateCallBackProceedResultVar(),
+                isPrimaryIndexPointSearch(op));
         IOperatorDescriptor opDesc = btreeSearch.first;
         opDesc.setSourceLocation(unnestMap.getSourceLocation());
 
@@ -147,6 +149,32 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
 
         ILogicalOperator srcExchange = unnestMap.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, unnestMap, 0);
+    }
+
+    private boolean isPrimaryIndexPointSearch(ILogicalOperator op) {
+        if (!isEqCondition || !isPrimaryIndex || !lowKeyVarList.equals(highKeyVarList)) {
+            return false;
+        }
+        Index searchIndex = ((DataSourceIndex) idx).getIndex();
+        int numberOfKeyFields = searchIndex.getKeyFieldNames().size();
+
+        if (lowKeyVarList.size() != numberOfKeyFields || highKeyVarList.size() != numberOfKeyFields) {
+            return false;
+        }
+
+        IPhysicalPropertiesVector vector = op.getInputs().get(0).getValue().getDeliveredPhysicalProperties();
+        if (vector != null) {
+            for (ILocalStructuralProperty property : vector.getLocalProperties()) {
+                if (property.getPropertyType() == PropertyType.LOCAL_ORDER_PROPERTY) {
+                    LocalOrderProperty orderProperty = (LocalOrderProperty) property;
+                    if (orderProperty.getColumns().equals(lowKeyVarList)
+                            && orderProperty.getOrders().stream().allMatch(o -> o.equals(OrderKind.ASC))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     @Override

@@ -90,6 +90,12 @@ public class UnorderedSlotManager extends AbstractSlotManager {
     }
 
     @Override
+    public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
+            int startIndex) {
+        throw new UnsupportedOperationException("Stateful search is not supported by UnorderedSlotManager");
+    }
+
+    @Override
     public int insertSlot(int tupleIndex, int tupleOff) {
         int slotOff = getSlotEndOff() - slotSize;
         setSlot(slotOff, tupleOff);

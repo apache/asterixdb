@@ -19,25 +19,20 @@
 
 package org.apache.hyracks.storage.am.btree.impls;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.common.IIndexCursorStats;
+import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class DiskBTreeRangeSearchCursor extends BTreeRangeSearchCursor {
 
-    // keep track of the pages (root -> leaf) we've searched
-    protected final List<Integer> searchPages = new ArrayList<>(5);
-
     public DiskBTreeRangeSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes) {
-        super(frame, exclusiveLatchNodes);
+        this(frame, exclusiveLatchNodes, NoOpIndexCursorStats.INSTANCE);
     }
 
-    public DiskBTreeRangeSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes, IIndexCursorStats stats) {
+    protected DiskBTreeRangeSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes, IIndexCursorStats stats) {
         super(frame, exclusiveLatchNodes, stats);
     }
 
@@ -50,7 +45,6 @@ public class DiskBTreeRangeSearchCursor extends BTreeRangeSearchCursor {
                 fetchNextLeafPage(nextLeafPage);
                 tupleIndex = 0;
                 // update page ids and positions
-                searchPages.set(searchPages.size() - 1, nextLeafPage);
                 stopTupleIndex = getHighKeyIndex();
                 if (stopTupleIndex < 0) {
                     return false;
@@ -65,28 +59,6 @@ public class DiskBTreeRangeSearchCursor extends BTreeRangeSearchCursor {
 
         frameTuple.resetByTupleIndex(frame, tupleIndex);
         return true;
-    }
-
-    @Override
-    protected void resetBeforeOpen() throws HyracksDataException {
-        // do nothing
-        // we allow a disk btree range cursor be stateful, that is, the next search can be based on the previous search
-    }
-
-    public int numSearchPages() {
-        return searchPages.size();
-    }
-
-    public void addSearchPage(int page) {
-        searchPages.add(page);
-    }
-
-    public int getLastSearchPage() {
-        return searchPages.get(searchPages.size() - 1);
-    }
-
-    public int removeLastSearchPage() {
-        return searchPages.remove(searchPages.size() - 1);
     }
 
     public ICachedPage getPage() {
@@ -104,9 +76,4 @@ public class DiskBTreeRangeSearchCursor extends BTreeRangeSearchCursor {
         return bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
     }
 
-    @Override
-    public void doClose() throws HyracksDataException {
-        super.doClose();
-        searchPages.clear();
-    }
 }

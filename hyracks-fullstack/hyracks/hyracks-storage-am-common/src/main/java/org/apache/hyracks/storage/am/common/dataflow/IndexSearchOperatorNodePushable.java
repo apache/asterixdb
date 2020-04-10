@@ -92,7 +92,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected ArrayTupleBuilder nonFilterTupleBuild;
     protected final ISearchOperationCallbackFactory searchCallbackFactory;
     protected boolean failed = false;
-    private IOperatorStats stats;
+    protected IOperatorStats stats;
 
     // Used when the result of the search operation callback needs to be passed.
     protected boolean appendSearchCallbackProceedResult;
@@ -341,7 +341,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         }
     }
 
-    private void writeTupleToOutput(ITupleReference tuple) throws IOException {
+    protected void writeTupleToOutput(ITupleReference tuple) throws IOException {
         try {
             for (int i = 0; i < tuple.getFieldCount(); i++) {
                 dos.write(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
@@ -393,7 +393,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
      * is used by ITupleFilter
      *
      */
-    private static class ReferenceFrameTupleReference implements IFrameTupleReference {
+    protected static class ReferenceFrameTupleReference implements IFrameTupleReference {
         private ITupleReference tuple;
 
         public IFrameTupleReference reset(ITupleReference tuple) {

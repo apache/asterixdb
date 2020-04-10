@@ -105,20 +105,22 @@ public class DiskBTreeSearchCursorTest extends BTreeSearchCursorTest {
         insertBTree(keys, btree);
 
         // forward searches
-        Assert.assertTrue(performBatchLookups(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey));
+        Assert.assertTrue(
+                performBatchLookups(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false));
+        Assert.assertTrue(performBatchLookups(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true));
 
         btree.deactivate();
         btree.destroy();
     }
 
     private boolean performBatchLookups(ArrayList<Integer> keys, BTree btree, IBTreeLeafFrame leafFrame,
-            IBTreeInteriorFrame interiorFrame, int minKey, int maxKey) throws Exception {
+            IBTreeInteriorFrame interiorFrame, int minKey, int maxKey, boolean stateful) throws Exception {
 
         ArrayList<Integer> results = new ArrayList<>();
         ArrayList<Integer> expectedResults = new ArrayList<>();
         BTreeAccessor indexAccessor = btree.createAccessor(
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE));
-        IIndexCursor pointCursor = indexAccessor.createPointCursor(false);
+        IIndexCursor pointCursor = indexAccessor.createPointCursor(false, stateful);
         try {
             for (int i = minKey; i < maxKey; i++) {
                 results.clear();
@@ -144,18 +146,18 @@ public class DiskBTreeSearchCursorTest extends BTreeSearchCursorTest {
                 if (results.size() == expectedResults.size()) {
                     for (int k = 0; k < results.size(); k++) {
                         if (!results.get(k).equals(expectedResults.get(k))) {
-                            if (LOGGER.isInfoEnabled()) {
-                                LOGGER.info("DIFFERENT RESULTS AT: i=" + i + " k=" + k);
-                                LOGGER.info(results.get(k) + " " + expectedResults.get(k));
+                            if (LOGGER.isErrorEnabled()) {
+                                LOGGER.error("DIFFERENT RESULTS AT: i=" + i + " k=" + k);
+                                LOGGER.error(results.get(k) + " " + expectedResults.get(k));
                             }
                             return false;
                         }
                     }
                 } else {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info("UNEQUAL NUMBER OF RESULTS AT: i=" + i);
-                        LOGGER.info("RESULTS: " + results.size());
-                        LOGGER.info("EXPECTED RESULTS: " + expectedResults.size());
+                    if (LOGGER.isErrorEnabled()) {
+                        LOGGER.error("UNEQUAL NUMBER OF RESULTS AT: i=" + i);
+                        LOGGER.error("RESULTS: " + results.size());
+                        LOGGER.error("EXPECTED RESULTS: " + expectedResults.size());
                     }
                     return false;
                 }

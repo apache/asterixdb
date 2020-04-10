@@ -769,6 +769,12 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
+    public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
+            int startIndex) throws HyracksDataException {
+        throw new UnsupportedOperationException("Stateful search is not supported by BTreeFieldPrefixNSMLeafFrame");
+    }
+
+    @Override
     public int getPageHeaderSize() {
         return NEXT_LEAF_OFFSET;
     }

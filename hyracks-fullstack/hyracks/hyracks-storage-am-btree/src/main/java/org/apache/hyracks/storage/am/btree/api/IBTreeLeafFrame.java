@@ -32,6 +32,9 @@ public interface IBTreeLeafFrame extends IBTreeFrame {
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
             FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) throws HyracksDataException;
 
+    public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
+            int startIndex) throws HyracksDataException;
+
     public int findUpdateTupleIndex(ITupleReference tuple) throws HyracksDataException;
 
     public int findUpsertTupleIndex(ITupleReference tuple) throws HyracksDataException;

@@ -104,6 +104,71 @@ public class OrderedSlotManager extends AbstractSlotManager {
     }
 
     @Override
+    public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
+            int startIndex) throws HyracksDataException {
+        int tupleCount = frame.getTupleCount();
+        if (tupleCount == 0) {
+            return -1;
+        } else if (startIndex >= tupleCount) {
+            return -tupleCount - 1;
+        }
+
+        int step = 1;
+        int index = startIndex;
+        int prevIndex = index;
+
+        // now we have key index < tupleCount - 1
+        // use exponential search to locate the key range that contains the search key
+        // https://en.wikipedia.org/wiki/Exponential_search
+        while (index < tupleCount) {
+            frameTuple.resetByTupleIndex(frame, index);
+            int cmp = multiCmp.compare(searchKey, frameTuple);
+            if (cmp == 0) {
+                return index;
+            } else if (cmp > 0) {
+                prevIndex = index;
+                if (index + step < tupleCount) {
+                    index = index + step;
+                    step = step << 1;
+                } else {
+                    if (index == tupleCount - 1) {
+                        // we've already reached the last tuple
+                        return -tupleCount - 1;
+                    } else {
+                        index = tupleCount - 1;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        if (index == startIndex) {
+            return -index - 1;
+        }
+
+        // perform binary search between prevPosition and position
+        // we must have prevIndex < keyIndex < index
+        // adopted from Collections.binarySearch
+        int low = prevIndex + 1;
+        int high = index - 1;
+
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            frameTuple.resetByTupleIndex(frame, mid);
+            int cmp = multiCmp.compare(searchKey, frameTuple);
+            if (cmp < 0) {
+                high = mid - 1;
+            } else if (cmp > 0) {
+                low = mid + 1;
+            } else {
+                return mid;
+            }
+        }
+        return -low - 1;
+    }
+
+    @Override
     public int insertSlot(int tupleIndex, int tupleOff) {
         int slotOff = getSlotOff(tupleIndex);
         if (tupleIndex == GREATEST_KEY_INDICATOR) {
