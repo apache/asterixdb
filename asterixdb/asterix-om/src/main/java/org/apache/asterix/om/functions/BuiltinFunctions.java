@@ -1326,13 +1326,22 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier ST_LENGTH =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-length", 1);
     public static final FunctionIdentifier SCALAR_ST_UNION_AGG =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-union", 1);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st_union", 1);
     public static final FunctionIdentifier SCALAR_ST_UNION_AGG_DISTINCT =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-union-distinct", 1);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st_union-distinct", 1);
     public static final FunctionIdentifier ST_UNION_AGG =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-union-agg", 1);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-st_union", 1);
     public static final FunctionIdentifier ST_UNION_AGG_DISTINCT =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-union-agg-distinct", 1);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-st_union-distinct", 1);
+    public static final FunctionIdentifier SCALAR_ST_UNION_SQL_AGG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-st_union", 1);
+    public static final FunctionIdentifier SCALAR_ST_UNION_SQL_AGG_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-st_union-distinct", 1);
+    public static final FunctionIdentifier ST_UNION_SQL_AGG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-st_union", 1);
+    public static final FunctionIdentifier ST_UNION_SQL_AGG_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-st_union-distinct", 1);
+
     public static final FunctionIdentifier ST_GEOM_FROM_TEXT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-geom-from-text", 1);
     public static final FunctionIdentifier ST_GEOM_FROM_TEXT_SRID =
@@ -2207,7 +2216,10 @@ public class BuiltinFunctions {
         addFunction(ST_SYM_DIFFERENCE, AGeometryTypeComputer.INSTANCE, true);
         addFunction(SCALAR_ST_UNION_AGG, AGeometryTypeComputer.INSTANCE, true);
         addFunction(SCALAR_ST_UNION_AGG_DISTINCT, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_ST_UNION_SQL_AGG, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_ST_UNION_SQL_AGG_DISTINCT, AGeometryTypeComputer.INSTANCE, true);
         addPrivateFunction(ST_UNION_AGG, AGeometryTypeComputer.INSTANCE, true);
+        addPrivateFunction(ST_UNION_SQL_AGG, AGeometryTypeComputer.INSTANCE, true);
         addFunction(ST_POLYGONIZE, AGeometryTypeComputer.INSTANCE, true);
 
         // Binary functions
@@ -3011,6 +3023,14 @@ public class BuiltinFunctions {
         addScalarAgg(ST_UNION_AGG, SCALAR_ST_UNION_AGG);
         addDistinctAgg(ST_UNION_AGG_DISTINCT, ST_UNION_AGG);
         addScalarAgg(ST_UNION_AGG_DISTINCT, SCALAR_ST_UNION_AGG_DISTINCT);
+
+        addAgg(ST_UNION_SQL_AGG);
+        addLocalAgg(ST_UNION_SQL_AGG, ST_UNION_SQL_AGG);
+        addIntermediateAgg(ST_UNION_SQL_AGG, ST_UNION_SQL_AGG);
+        addGlobalAgg(ST_UNION_SQL_AGG, ST_UNION_SQL_AGG);
+        addScalarAgg(ST_UNION_SQL_AGG, SCALAR_ST_UNION_SQL_AGG);
+        addDistinctAgg(ST_UNION_SQL_AGG_DISTINCT, ST_UNION_SQL_AGG);
+        addScalarAgg(ST_UNION_SQL_AGG_DISTINCT, SCALAR_ST_UNION_SQL_AGG_DISTINCT);
     }
 
     interface BuiltinFunctionProperty {
