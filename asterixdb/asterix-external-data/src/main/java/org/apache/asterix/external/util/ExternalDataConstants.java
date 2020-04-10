@@ -246,8 +246,5 @@ public class ExternalDataConstants {
         public static final String CONTAINER_NAME_FIELD_NAME = "container";
         public static final String DEFINITION_FIELD_NAME = "definition";
         public static final String SERVICE_END_POINT_FIELD_NAME = "serviceEndpoint";
-        public static final String[] REQUIRED_LINK_PARAMETERS =
-                new String[] { ACCESS_KEY_FIELD_NAME, SECRET_KEY_FIELD_NAME, REGION_FIELD_NAME };
-        public static final String[] OPTIONAL_LINK_PARAMETERS = new String[] { SERVICE_END_POINT_FIELD_NAME };
     }
 }
