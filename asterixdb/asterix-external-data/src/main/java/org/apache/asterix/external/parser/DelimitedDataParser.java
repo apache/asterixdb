@@ -57,9 +57,9 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     private ArrayBackedValueStorage[] nameBuffers;
     private boolean areAllNullFields;
 
-    public DelimitedDataParser(IValueParserFactory[] valueParserFactories, char fieldDelimter, char quote,
+    public DelimitedDataParser(IValueParserFactory[] valueParserFactories, char fieldDelimiter, char quote,
             boolean hasHeader, ARecordType recordType, boolean isStreamParser) throws HyracksDataException {
-        this.fieldDelimiter = fieldDelimter;
+        this.fieldDelimiter = fieldDelimiter;
         this.quote = quote;
         this.hasHeader = hasHeader;
         this.recordType = recordType;
@@ -98,7 +98,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
             }
         }
         if (!isStreamParser) {
-            cursor = new FieldCursorForDelimitedDataParser(null, fieldDelimiter, quote);
+            cursor = new FieldCursorForDelimitedDataParser(null, this.fieldDelimiter, quote);
         }
     }
 
@@ -134,25 +134,23 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
             fieldValueBuffer.reset();
 
             try {
-                if (cursor.fStart == cursor.fEnd && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.STRING
+                if (cursor.isFieldEmpty() && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.STRING
                         && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.NULL) {
                     // if the field is empty and the type is optional, insert
                     // NULL. Note that string type can also process empty field as an
                     // empty string
                     if (!NonTaggedFormatUtil.isOptional(recordType.getFieldTypes()[i])) {
-                        throw new RuntimeDataException(ErrorCode.PARSER_DELIMITED_NONOPTIONAL_NULL, cursor.recordCount,
-                                cursor.fieldCount);
+                        throw new RuntimeDataException(ErrorCode.PARSER_DELIMITED_NONOPTIONAL_NULL,
+                                cursor.getRecordCount(), cursor.getFieldCount());
                     }
                     fieldValueBufferOutput.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                 } else {
                     fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
-                    // Eliminate doule quotes in the field that we are going to parse
-                    if (cursor.isDoubleQuoteIncludedInThisField) {
-                        cursor.eliminateDoubleQuote(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart);
-                        cursor.fEnd -= cursor.doubleQuoteCount;
-                        cursor.isDoubleQuoteIncludedInThisField = false;
+                    // Eliminate double quotes in the field that we are going to parse
+                    if (cursor.fieldHasDoubleQuote()) {
+                        cursor.eliminateDoubleQuote();
                     }
-                    valueParsers[i].parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart,
+                    valueParsers[i].parse(cursor.getBuffer(), cursor.getFieldStart(), cursor.getFieldLength(),
                             fieldValueBufferOutput);
                     areAllNullFields = false;
                 }
@@ -165,15 +163,14 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                 throw HyracksDataException.create(e);
             }
         }
+        if (valueParsers.length != cursor.getFieldCount()) {
+            throw new HyracksDataException("Record #" + cursor.getRecordCount() + " is missing some fields");
+        }
     }
 
     @Override
     public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
-        try {
-            cursor.nextRecord(record.get(), record.size());
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
-        }
+        cursor.nextRecord(record.get(), record.size());
         parseRecord();
         if (!areAllNullFields) {
             recBuilder.write(out, true);

@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.util;
 
-import java.util.Map;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
@@ -29,6 +27,9 @@ import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.record.converter.IRecordConverterFactory;
 
 public class ExternalDataCompatibilityUtils {
+
+    private ExternalDataCompatibilityUtils() {
+    }
 
     public static void validateCompatibility(IExternalDataSourceFactory dataSourceFactory,
             IDataParserFactory dataParserFactory) throws AsterixException {
@@ -56,18 +57,6 @@ public class ExternalDataCompatibilityUtils {
                     "datasource converter-record parser mismatch. converter produces records of type "
                             + converterFactory.getOutputClass() + " and parser expects records of type "
                             + recordParserFactory.getRecordClass());
-        }
-    }
-
-    public static void prepare(String adapterName, Map<String, String> configuration) {
-        if (!configuration.containsKey(ExternalDataConstants.KEY_READER)) {
-            configuration.put(ExternalDataConstants.KEY_READER, adapterName);
-        }
-        if (!configuration.containsKey(ExternalDataConstants.KEY_PARSER)) {
-            if (configuration.containsKey(ExternalDataConstants.KEY_FORMAT)) {
-                configuration.put(ExternalDataConstants.KEY_PARSER,
-                        configuration.get(ExternalDataConstants.KEY_FORMAT));
-            }
         }
     }
 }

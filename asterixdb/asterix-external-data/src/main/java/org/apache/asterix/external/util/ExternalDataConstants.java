@@ -19,6 +19,10 @@
 package org.apache.asterix.external.util;
 
 public class ExternalDataConstants {
+
+    private ExternalDataConstants() {
+    }
+
     // TODO: Remove unused variables.
     /**
      * Keys
@@ -62,6 +66,7 @@ public class ExternalDataConstants {
     public static final String KEY_LOCAL_SOCKET_PATH = "local-socket-path";
     public static final String KEY_FORMAT = "format";
     public static final String KEY_QUOTE = "quote";
+    public static final String KEY_QUOTE_ESCAPE = "quote-escape";
     public static final String KEY_PARSER = "parser";
     public static final String KEY_DATASET_RECORD = "dataset-record";
     public static final String KEY_HIVE_SERDE = "hive-serde";
@@ -188,6 +193,8 @@ public class ExternalDataConstants {
      */
     public static final String TRUE = "true";
     public static final String FALSE = "false";
+    public static final String TAB_STR = "\t";
+    public static final String NULL_STR = "\0";
 
     /**
      * Constant characters
@@ -228,6 +235,7 @@ public class ExternalDataConstants {
     public static final String KEY_READER_FACTORY = "reader-factory";
     public static final String READER_RSS = "rss_feed";
     public static final String FORMAT_CSV = "csv";
+    public static final String FORMAT_TSV = "tsv";
 
     public static final String ERROR_PARSE_RECORD = "Parser failed to parse record";
 

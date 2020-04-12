@@ -1,0 +1,28 @@
+{ "f1": 11, "f2": 55, "f3": "text field wih , charrrrrrrrrrr", "f4": true, "f5": 90, "f6": 0.666666667 }
+{ "f1": 12, "f2": 55, "f3": "text field with \" charrrrrrrrrr", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 14, "f2": 55, "f3": "text field with ' charrrrrrrrrr", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 15, "f2": 55, "f3": "text field with \\ charrrrrrrrrr", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 16, "f2": 55, "f3": "text field wih \\, char         ", "f4": true, "f5": 90, "f6": 0.666666667 }
+{ "f1": 17, "f2": 55, "f3": "text field with \\\" charrrrrrrrr", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 18, "f2": 55, "f3": "text field with \\' charrrrrrrrr", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 19, "f2": 55, "f3": "text field with \\\\ charrrrrrrrr", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 20, "f2": 55, "f3": "text field ending with  charr ,", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 21, "f2": 55, "f3": "text field ending with  charr \"", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 22, "f2": 55, "f3": "text field ending with  charr '", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 23, "f2": 55, "f3": "text field ending with  charr \\", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 24, "f2": 55, "f3": "text field ending with charr \\,", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 25, "f2": 55, "f3": "text field ending with charr \\\"", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 26, "f2": 55, "f3": "text field ending with charr \\'", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 27, "f2": 55, "f3": "text field ending with charr \\\\", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 28, "f2": 55, "f3": ",text field starting with charr", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 29, "f2": 55, "f3": "\"text field starting with charr", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 30, "f2": 55, "f3": "'text field starting with charr", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 31, "f2": 55, "f3": "\\text field starting with charr", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 32, "f2": 55, "f3": "\\,text field starting with char", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 33, "f2": 55, "f3": "\\\"text field starting with char", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 34, "f2": 55, "f3": "\\'text field starting with char", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 35, "f2": 55, "f3": "\\\\text field starting with char", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 36, "f2": 55, "f3": "\"text field inside   with char\"", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 37, "f2": 55, "f3": "  text field with charrrrrrrrr ", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 38, "f2": 55, "f3": "text field with \"\" charrrrrrrrr", "f4": false, "f5": 90, "f6": 0.666666667 }
+{ "f1": 39, "f2": 55, "f3": "text field \"with\" charrrrrrrrrr", "f4": false, "f5": 90, "f6": 0.666666667 }
