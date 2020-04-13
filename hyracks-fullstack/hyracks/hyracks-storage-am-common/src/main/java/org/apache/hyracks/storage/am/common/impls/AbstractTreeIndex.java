@@ -288,13 +288,17 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
             // Unlatch and unpin pages that weren't in the queue to avoid leaking memory.
             compressedPageWriter.abort();
             for (NodeFrontier nodeFrontier : nodeFrontiers) {
-                ICachedPage frontierPage = nodeFrontier.page;
-                if (frontierPage.confiscated()) {
-                    bufferCache.returnPage(frontierPage, false);
+                if (nodeFrontier != null && nodeFrontier.page != null) {
+                    ICachedPage frontierPage = nodeFrontier.page;
+                    if (frontierPage.confiscated()) {
+                        bufferCache.returnPage(frontierPage, false);
+                    }
                 }
             }
             for (ICachedPage pageToDiscard : pagesToWrite) {
-                bufferCache.returnPage(pageToDiscard, false);
+                if (pageToDiscard != null) {
+                    bufferCache.returnPage(pageToDiscard, false);
+                }
             }
             releasedLatches = true;
         }
