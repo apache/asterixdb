@@ -22,7 +22,6 @@ package org.apache.asterix.fuzzyjoin.similarity;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.asterix.fuzzyjoin.tokenizer.Tokenizer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ISequenceIterator;
 
@@ -82,24 +81,4 @@ public class SimilarityMetricJaccard extends SimilarityMetric implements IGeneri
         return (float) intersectionSize / (totalSize - intersectionSize);
     }
 
-    @Override
-    public float getSimilarity(int[] tokensX, int[] tokensY) {
-        return getSimilarity(tokensX, 0, tokensX.length, tokensY, 0, tokensY.length);
-    }
-
-    @Override
-    public float getSimilarity(String stringX, String stringY, Tokenizer tokenizer) {
-        Set<String> setX = new TreeSet<String>();
-        for (String token : tokenizer.tokenize(stringX)) {
-            setX.add(token);
-        }
-        Set<String> setY = new TreeSet<String>();
-        for (String token : tokenizer.tokenize(stringY)) {
-            setY.add(token);
-        }
-        int lengthX = setX.size();
-        int lengthY = setY.size();
-        setX.retainAll(setY);
-        return ((float) setX.size()) / (lengthX + lengthY - setX.size());
-    }
 }

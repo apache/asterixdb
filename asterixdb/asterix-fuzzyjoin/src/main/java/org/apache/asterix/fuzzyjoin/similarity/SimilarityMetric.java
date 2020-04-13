@@ -19,7 +19,6 @@
 
 package org.apache.asterix.fuzzyjoin.similarity;
 
-import org.apache.asterix.fuzzyjoin.tokenizer.Tokenizer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ISequenceIterator;
 
@@ -118,7 +117,4 @@ public abstract class SimilarityMetric {
 
     public abstract float getSimilarity(int[] tokensX, int startX, int lengthX, int[] tokensY, int startY, int lengthY);
 
-    public abstract float getSimilarity(int[] tokensX, int[] tokensY);
-
-    public abstract float getSimilarity(String stringX, String stringY, Tokenizer tokenizer);
 }
