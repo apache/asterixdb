@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -77,25 +78,34 @@ public class UnionAllOperator extends AbstractLogicalOperator {
 
     @Override
     public void recomputeSchema() {
-        schema = new ArrayList<LogicalVariable>();
-        for (LogicalVariable v1 : inputs.get(0).getValue().getSchema()) {
-            for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : varMap) {
-                if (t.first.equals(v1)) {
-                    schema.add(t.third);
-                } else {
-                    schema.add(v1);
-                }
+        LinkedHashSet<LogicalVariable> outVarSet = new LinkedHashSet<>();
+        for (int i = 0, ln = inputs.size(); i < ln; i++) {
+            for (LogicalVariable inVar : inputs.get(i).getValue().getSchema()) {
+                LogicalVariable outVar = findOutputVar(inVar, i);
+                outVarSet.add(outVar != null ? outVar : inVar);
             }
         }
-        for (LogicalVariable v2 : inputs.get(1).getValue().getSchema()) {
-            for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : varMap) {
-                if (t.second.equals(v2)) {
-                    schema.add(t.third);
-                } else {
-                    schema.add(v2);
-                }
+        schema = new ArrayList<>(outVarSet);
+    }
+
+    private LogicalVariable findOutputVar(LogicalVariable inputVar, int inputIdx) {
+        for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : varMap) {
+            LogicalVariable testVar;
+            switch (inputIdx) {
+                case 0:
+                    testVar = t.first;
+                    break;
+                case 1:
+                    testVar = t.second;
+                    break;
+                default:
+                    throw new IllegalArgumentException(String.valueOf(inputIdx));
+            }
+            if (inputVar.equals(testVar)) {
+                return t.third;
             }
         }
+        return null;
     }
 
     @Override

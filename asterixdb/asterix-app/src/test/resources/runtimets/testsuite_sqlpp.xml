@@ -12349,6 +12349,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="union">
+      <compilation-unit name="union_nested">
+        <output-dir compare="Text">union_nested</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
       <compilation-unit name="union_orderby">
         <output-dir compare="Text">union_orderby</output-dir>
       </compilation-unit>
