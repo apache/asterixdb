@@ -30,26 +30,29 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8Strin
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8NGramTokenFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8WordTokenFactory;
 
+// ToDo: maybe we can make the constructor method of the tokenizers private so that tokenizers have to be generated via this provider
+// Currently, different call sites of tokenizers use **different parameters**, and this can be error-prone
+// A centralized provider can avoid the bugs due to different parameters.
 public class BinaryTokenizerFactoryProvider implements IBinaryTokenizerFactoryProvider {
 
     public static final BinaryTokenizerFactoryProvider INSTANCE = new BinaryTokenizerFactoryProvider();
 
-    private static final IBinaryTokenizerFactory aqlStringTokenizer =
+    private static final IBinaryTokenizerFactory stringTokenizerFactory =
             new DelimitedUTF8StringBinaryTokenizerFactory(true, true,
                     new UTF8WordTokenFactory(ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG));
 
-    private static final IBinaryTokenizerFactory aqlStringNoTypeTagTokenizer =
+    private static final IBinaryTokenizerFactory stringNoTypeTagTokenizerFactory =
             new DelimitedUTF8StringBinaryTokenizerFactory(true, false,
                     new UTF8WordTokenFactory(ATypeTag.STRING.serialize(), ATypeTag.INTEGER.serialize()));
 
-    private static final IBinaryTokenizerFactory aqlHashingStringTokenizer =
+    private static final IBinaryTokenizerFactory stringHashingTokenizerFactory =
             new DelimitedUTF8StringBinaryTokenizerFactory(true, true, new HashedUTF8WordTokenFactory(
                     ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG));
 
-    private static final IBinaryTokenizerFactory orderedListTokenizer =
+    private static final IBinaryTokenizerFactory orderedListTokenizerFactory =
             new AOrderedListBinaryTokenizerFactory(new AListElementTokenFactory());
 
-    private static final IBinaryTokenizerFactory unorderedListTokenizer =
+    private static final IBinaryTokenizerFactory unorderedListTokenizerFactory =
             new AUnorderedListBinaryTokenizerFactory(new AListElementTokenFactory());
 
     @Override
@@ -58,16 +61,16 @@ public class BinaryTokenizerFactoryProvider implements IBinaryTokenizerFactoryPr
         switch (typeTag) {
             case STRING:
                 if (hashedTokens) {
-                    return aqlHashingStringTokenizer;
+                    return stringHashingTokenizerFactory;
                 } else if (!typeTageAlreadyRemoved) {
-                    return aqlStringTokenizer;
+                    return stringTokenizerFactory;
                 } else {
-                    return aqlStringNoTypeTagTokenizer;
+                    return stringNoTypeTagTokenizerFactory;
                 }
             case ARRAY:
-                return orderedListTokenizer;
+                return orderedListTokenizerFactory;
             case MULTISET:
-                return unorderedListTokenizer;
+                return unorderedListTokenizerFactory;
             default:
                 return null;
         }
@@ -86,9 +89,9 @@ public class BinaryTokenizerFactoryProvider implements IBinaryTokenizerFactoryPr
                                     ATypeTag.SERIALIZED_INT32_TYPE_TAG));
                 }
             case ARRAY:
-                return orderedListTokenizer;
+                return orderedListTokenizerFactory;
             case MULTISET:
-                return unorderedListTokenizer;
+                return unorderedListTokenizerFactory;
             default:
                 return null;
         }
