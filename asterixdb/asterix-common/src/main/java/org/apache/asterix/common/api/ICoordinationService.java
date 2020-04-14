@@ -35,6 +35,18 @@ public interface ICoordinationService {
     void put(String key, byte[] value) throws HyracksDataException;
 
     /**
+     * Adds or updates the property with the name {@code key}
+     * with {@code value}, and indicates that values associated with
+     * this key should be treated as sensitive (e.g. not logged). Once a
+     * key is considered sensitive, it remains sensitive until deleted.
+     *
+     * @param key
+     * @param value
+     * @throws HyracksDataException
+     */
+    void putSensitive(String key, byte[] value) throws HyracksDataException;
+
+    /**
      * Gets the value of the property with name {@code key} if exists.
      *
      * @param key

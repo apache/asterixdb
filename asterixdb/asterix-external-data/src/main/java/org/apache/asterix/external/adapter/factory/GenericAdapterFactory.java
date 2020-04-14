@@ -25,14 +25,15 @@ import java.util.Map;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IDataParserFactory;
-import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IIndexibleExternalDataSource;
 import org.apache.asterix.external.api.IIndexingAdapterFactory;
+import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.asterix.external.dataset.adapter.GenericAdapter;
@@ -59,7 +60,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterFactory {
+public class GenericAdapterFactory implements IIndexingAdapterFactory, ITypedAdapterFactory {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LogManager.getLogger();
@@ -122,7 +123,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     private void restoreExternalObjects(IServiceContext serviceContext, ILibraryManager libraryManager)
             throws HyracksDataException, AlgebricksException {
         if (dataSourceFactory == null) {
-            dataSourceFactory = DatasourceFactoryProvider.getExternalDataSourceFactory(libraryManager, configuration);
+            dataSourceFactory = createExternalDataSourceFactory(configuration, libraryManager);
             // create and configure parser factory
             if (dataSourceFactory.isIndexible() && (files != null)) {
                 ((IIndexibleExternalDataSource) dataSourceFactory).setSnapshot(files, indexingOp);
@@ -131,7 +132,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         }
         if (dataParserFactory == null) {
             // create and configure parser factory
-            dataParserFactory = ParserFactoryProvider.getDataParserFactory(libraryManager, configuration);
+            dataParserFactory = createDataParserFactory(configuration, libraryManager);
             dataParserFactory.setRecordType(recordType);
             dataParserFactory.setMetaType(metaType);
             dataParserFactory.configure(configuration);
@@ -144,14 +145,13 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         this.configuration = configuration;
         IApplicationContext appCtx = (IApplicationContext) serviceContext.getApplicationContext();
         ExternalDataUtils.validateDataSourceParameters(configuration);
-        dataSourceFactory =
-                DatasourceFactoryProvider.getExternalDataSourceFactory(appCtx.getLibraryManager(), configuration);
+        dataSourceFactory = createExternalDataSourceFactory(configuration, appCtx.getLibraryManager());
         if (dataSourceFactory.isIndexible() && (files != null)) {
             ((IIndexibleExternalDataSource) dataSourceFactory).setSnapshot(files, indexingOp);
         }
         dataSourceFactory.configure(serviceContext, configuration);
         ExternalDataUtils.validateDataParserParameters(configuration);
-        dataParserFactory = ParserFactoryProvider.getDataParserFactory(appCtx.getLibraryManager(), configuration);
+        dataParserFactory = createDataParserFactory(configuration, appCtx.getLibraryManager());
         dataParserFactory.setRecordType(recordType);
         dataParserFactory.setMetaType(metaType);
         dataParserFactory.configure(configuration);
@@ -221,5 +221,15 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         dataParserFactory.setRecordType(RecordUtil.FULLY_OPEN_RECORD_TYPE);
         dataParserFactory.configure(Collections.emptyMap());
         configuration = Collections.emptyMap();
+    }
+
+    protected IExternalDataSourceFactory createExternalDataSourceFactory(Map<String, String> configuration,
+            ILibraryManager libraryManager) throws HyracksDataException, AsterixException {
+        return DatasourceFactoryProvider.getExternalDataSourceFactory(libraryManager, configuration);
+    }
+
+    protected IDataParserFactory createDataParserFactory(Map<String, String> configuration,
+            ILibraryManager libraryManager) throws AsterixException {
+        return ParserFactoryProvider.getDataParserFactory(libraryManager, configuration);
     }
 }

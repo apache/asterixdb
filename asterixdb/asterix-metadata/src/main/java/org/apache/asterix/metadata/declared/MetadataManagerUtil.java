@@ -23,6 +23,8 @@ import java.util.List;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -48,14 +50,20 @@ public class MetadataManagerUtil {
 
     public static IAType findType(MetadataTransactionContext mdTxnCtx, String dataverse, String typeName)
             throws AlgebricksException {
+        Datatype type = findTypeEntity(mdTxnCtx, dataverse, typeName);
+        return type != null ? type.getDatatype() : null;
+    }
+
+    public static Datatype findTypeEntity(MetadataTransactionContext mdTxnCtx, String dataverse, String typeName)
+            throws AlgebricksException {
         if (dataverse == null || typeName == null) {
             return null;
         }
         Datatype type = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverse, typeName);
         if (type == null) {
-            throw new AlgebricksException("Type name '" + typeName + "' unknown in dataverse '" + dataverse + "'");
+            throw new AsterixException(ErrorCode.UNKNOWN_TYPE, dataverse + "." + typeName);
         }
-        return type.getDatatype();
+        return type;
     }
 
     public static ARecordType findOutputRecordType(MetadataTransactionContext mdTxnCtx, String dataverse,

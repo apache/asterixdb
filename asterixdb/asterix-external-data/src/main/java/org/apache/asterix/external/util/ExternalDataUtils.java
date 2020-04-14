@@ -34,6 +34,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.parsers.BooleanParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.FloatParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
@@ -43,46 +44,41 @@ import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 
 public class ExternalDataUtils {
 
+    private ExternalDataUtils() {
+    }
+
     // Get a delimiter from the given configuration
-    public static char getDelimiter(Map<String, String> configuration) throws AsterixException {
+    public static char getDelimiter(Map<String, String> configuration) throws HyracksDataException {
         String delimiterValue = configuration.get(ExternalDataConstants.KEY_DELIMITER);
         if (delimiterValue == null) {
             delimiterValue = ExternalDataConstants.DEFAULT_DELIMITER;
         } else if (delimiterValue.length() != 1) {
-            throw new AsterixException(
-                    "'" + delimiterValue + "' is not a valid delimiter. The length of a delimiter should be 1.");
+            throw new RuntimeDataException(ErrorCode.PARSER_FACTORY_DELIMITED_DATA_PARSER_FACTORY_NOT_VALID_DELIMITER,
+                    delimiterValue);
         }
         return delimiterValue.charAt(0);
     }
 
     // Get a quote from the given configuration when the delimiter is given
     // Need to pass delimiter to check whether they share the same character
-    public static char getQuote(Map<String, String> configuration, char delimiter) throws AsterixException {
+    public static char getQuote(Map<String, String> configuration, char delimiter) throws HyracksDataException {
         String quoteValue = configuration.get(ExternalDataConstants.KEY_QUOTE);
         if (quoteValue == null) {
             quoteValue = ExternalDataConstants.DEFAULT_QUOTE;
         } else if (quoteValue.length() != 1) {
-            throw new AsterixException("'" + quoteValue + "' is not a valid quote. The length of a quote should be 1.");
+            throw new RuntimeDataException(ErrorCode.PARSER_FACTORY_DELIMITED_DATA_PARSER_FACTORY_NOT_VALID_QUOTE,
+                    quoteValue);
         }
 
         // Since delimiter (char type value) can't be null,
         // we only check whether delimiter and quote use the same character
         if (quoteValue.charAt(0) == delimiter) {
-            throw new AsterixException(
-                    "Quote '" + quoteValue + "' cannot be used with the delimiter '" + delimiter + "'. ");
+            throw new RuntimeDataException(
+                    ErrorCode.PARSER_FACTORY_DELIMITED_DATA_PARSER_FACTORY_QUOTE_DELIMITER_MISMATCH, quoteValue,
+                    delimiter);
         }
 
         return quoteValue.charAt(0);
-    }
-
-    // Get the header flag
-    public static boolean getHasHeader(Map<String, String> configuration) {
-        return Boolean.parseBoolean(configuration.get(ExternalDataConstants.KEY_HEADER));
-    }
-
-    public static void validateParameters(Map<String, String> configuration) throws AsterixException {
-        validateDataSourceParameters(configuration);
-        validateDataParserParameters(configuration);
     }
 
     public static void validateDataParserParameters(Map<String, String> configuration) throws AsterixException {
@@ -150,15 +146,6 @@ public class ExternalDataUtils {
         return parserFormat != null ? parserFormat : configuration.get(ExternalDataConstants.KEY_FORMAT);
     }
 
-    public static void setRecordFormat(Map<String, String> configuration, String format) {
-        if (!configuration.containsKey(ExternalDataConstants.KEY_DATA_PARSER)) {
-            configuration.put(ExternalDataConstants.KEY_DATA_PARSER, format);
-        }
-        if (!configuration.containsKey(ExternalDataConstants.KEY_FORMAT)) {
-            configuration.put(ExternalDataConstants.KEY_FORMAT, format);
-        }
-    }
-
     private static Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = initializeValueParserFactoryMap();
 
     private static Map<ATypeTag, IValueParserFactory> initializeValueParserFactoryMap() {
@@ -168,6 +155,7 @@ public class ExternalDataUtils {
         m.put(ATypeTag.DOUBLE, DoubleParserFactory.INSTANCE);
         m.put(ATypeTag.BIGINT, LongParserFactory.INSTANCE);
         m.put(ATypeTag.STRING, UTF8StringParserFactory.INSTANCE);
+        m.put(ATypeTag.BOOLEAN, BooleanParserFactory.INSTANCE);
         return m;
     }
 
@@ -199,10 +187,6 @@ public class ExternalDataUtils {
             throw new NotImplementedException("No value parser factory for fields of type " + tag);
         }
         return vpf;
-    }
-
-    public static String getRecordReaderStreamName(Map<String, String> configuration) {
-        return configuration.get(ExternalDataConstants.KEY_READER_STREAM);
     }
 
     public static boolean hasHeader(Map<String, String> configuration) {
@@ -281,12 +265,6 @@ public class ExternalDataUtils {
         return configuration.get(ExternalDataConstants.KEY_FEED_NAME);
     }
 
-    public static int getQueueSize(Map<String, String> configuration) {
-        return configuration.containsKey(ExternalDataConstants.KEY_QUEUE_SIZE)
-                ? Integer.parseInt(configuration.get(ExternalDataConstants.KEY_QUEUE_SIZE))
-                : ExternalDataConstants.DEFAULT_QUEUE_SIZE;
-    }
-
     public static boolean isRecordWithMeta(Map<String, String> configuration) {
         return configuration.containsKey(ExternalDataConstants.KEY_META_TYPE_NAME);
     }
@@ -338,5 +316,43 @@ public class ExternalDataUtils {
             intIndicators[i] = Integer.parseInt(stringIndicators[i]);
         }
         return intIndicators;
+    }
+
+    /**
+     * Fills the configuration of the external dataset and its adapter with default values if not provided by user.
+     *
+     * @param configuration external data configuration
+     */
+    public static void defaultConfiguration(Map<String, String> configuration) {
+        String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
+        if (format != null) {
+            // default quote, escape character for quote and fields delimiter for csv and tsv format
+            if (format.equals(ExternalDataConstants.FORMAT_CSV)) {
+                configuration.putIfAbsent(ExternalDataConstants.KEY_DELIMITER, ExternalDataConstants.DEFAULT_DELIMITER);
+                configuration.putIfAbsent(ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.DEFAULT_QUOTE);
+                configuration.putIfAbsent(ExternalDataConstants.KEY_QUOTE_ESCAPE, ExternalDataConstants.DEFAULT_QUOTE);
+            } else if (format.equals(ExternalDataConstants.FORMAT_TSV)) {
+                configuration.putIfAbsent(ExternalDataConstants.KEY_DELIMITER, ExternalDataConstants.TAB_STR);
+                configuration.putIfAbsent(ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.NULL_STR);
+                configuration.putIfAbsent(ExternalDataConstants.KEY_QUOTE_ESCAPE, ExternalDataConstants.NULL_STR);
+            }
+        }
+    }
+
+    /**
+     * Prepares the configuration of the external dataset and its adapter by filling the information required by
+     * adapters and parsers.
+     *
+     * @param adapterName adapter name
+     * @param configuration external data configuration
+     */
+    public static void prepare(String adapterName, Map<String, String> configuration) {
+        if (!configuration.containsKey(ExternalDataConstants.KEY_READER)) {
+            configuration.put(ExternalDataConstants.KEY_READER, adapterName);
+        }
+        if (!configuration.containsKey(ExternalDataConstants.KEY_PARSER)
+                && configuration.containsKey(ExternalDataConstants.KEY_FORMAT)) {
+            configuration.put(ExternalDataConstants.KEY_PARSER, configuration.get(ExternalDataConstants.KEY_FORMAT));
+        }
     }
 }

@@ -10,7 +10,7 @@ FunctionCall asterix.sql-avg@1[
           LiteralExpr [STRING] [2.0]
         ]
         LiteralExpr [STRING] [hello world]
-        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [10]
         FunctionCall null.date@1[
           LiteralExpr [STRING] [2013-01-01]
         ]

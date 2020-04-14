@@ -21,6 +21,7 @@
 * Expected Res : Failure
 * Date         : Jun 2nd 2013
 */
+-- param max-warnings:json=1000
 
 select element strict_avg((
     select element x

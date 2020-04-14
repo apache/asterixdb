@@ -36,8 +36,9 @@ public class LineRecordReader extends StreamRecordReader {
     protected int newlineLength;
     protected int recordNumber = 0;
     protected boolean nextIsHeader = false;
-    private static final List<String> recordReaderFormats = Collections.unmodifiableList(
-            Arrays.asList(ExternalDataConstants.FORMAT_DELIMITED_TEXT, ExternalDataConstants.FORMAT_CSV));
+    private static final List<String> recordReaderFormats =
+            Collections.unmodifiableList(Arrays.asList(ExternalDataConstants.FORMAT_DELIMITED_TEXT,
+                    ExternalDataConstants.FORMAT_CSV, ExternalDataConstants.FORMAT_TSV));
     private static final String REQUIRED_CONFIGS = "";
 
     @Override

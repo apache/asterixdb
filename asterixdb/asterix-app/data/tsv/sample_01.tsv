@@ -1,0 +1,28 @@
+11	55	text field wih , charrrrrrrrrrr	true	90	0.666666667
+12	55	text field with " charrrrrrrrrr	false	90	0.666666667
+14	55	text field with ' charrrrrrrrrr	false	90	0.666666667
+15	55	text field with \ charrrrrrrrrr	false	90	0.666666667
+16	55	text field wih \, char         	true	90	0.666666667
+17	55	text field with \" charrrrrrrrr	false	90	0.666666667
+18	55	text field with \' charrrrrrrrr	false	90	0.666666667
+19	55	text field with \\ charrrrrrrrr	false	90	0.666666667
+20	55	text field ending with  charr ,	false	90	0.666666667
+21	55	text field ending with  charr "	false	90	0.666666667
+22	55	text field ending with  charr '	false	90	0.666666667
+23	55	text field ending with  charr \	false	90	0.666666667
+24	55	text field ending with charr \,	false	90	0.666666667
+25	55	text field ending with charr \"	false	90	0.666666667
+26	55	text field ending with charr \'	false	90	0.666666667
+27	55	text field ending with charr \\	false	90	0.666666667
+28	55	,text field starting with charr	false	90	0.666666667
+29	55	"text field starting with charr	false	90	0.666666667
+30	55	'text field starting with charr	false	90	0.666666667
+31	55	\text field starting with charr	false	90	0.666666667
+32	55	\,text field starting with char	false	90	0.666666667
+33	55	\"text field starting with char	false	90	0.666666667
+34	55	\'text field starting with char	false	90	0.666666667
+35	55	\\text field starting with char	false	90	0.666666667
+36	55	"text field inside   with char"	false	90	0.666666667
+37	55	  text field with charrrrrrrrr 	false	90	0.666666667
+38	55	text field with "" charrrrrrrrr	false	90	0.666666667
+39	55	text field "with" charrrrrrrrrr	false	90	0.666666667

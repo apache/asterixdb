@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.external.dataset.adapter;
 
+import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.external.api.IDataFlowController;
-import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
