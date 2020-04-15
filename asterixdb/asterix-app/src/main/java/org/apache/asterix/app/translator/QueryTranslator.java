@@ -636,6 +636,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 itemTypeDataverseName + "." + itemTypeName);
                     }
                     itemType = itemTypeEntity.getDatatype();
+                    validateDatasetItemType(dsType, itemType, false, sourceLoc);
                     break;
                 case RECORD:
                     itemTypeDataverseName = dataverseName;
@@ -643,6 +644,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataLockUtil.createTypeBegin(lockManager, metadataProvider.getLocks(), itemTypeDataverseName,
                             itemTypeDataverseName + "." + itemTypeName);
                     itemType = translateType(itemTypeDataverseName, itemTypeName, itemTypeExpr, mdTxnCtx);
+                    validateDatasetItemType(dsType, itemType, false, sourceLoc);
                     MetadataManager.INSTANCE.addDatatype(mdTxnCtx,
                             new Datatype(itemTypeDataverseName, itemTypeName, itemType, true));
                     break;
@@ -660,13 +662,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             } else {
                 validateCompactionPolicy(compactionPolicy, compactionPolicyProperties, mdTxnCtx, false, sourceLoc);
             }
-            switch (dd.getDatasetType()) {
+            switch (dsType) {
                 case INTERNAL:
-                    if (itemType.getTypeTag() != ATypeTag.OBJECT) {
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "Dataset type has to be a record type.");
-                    }
-
                     IAType metaItemType = null;
                     if (metaItemTypeExpr != null) {
                         switch (metaItemTypeExpr.getTypeKind()) {
@@ -679,10 +676,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                             metaItemTypeDataverseName + "." + metaItemTypeName);
                                 }
                                 metaItemType = metaItemTypeEntity.getDatatype();
-                                if (metaItemType.getTypeTag() != ATypeTag.OBJECT) {
-                                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                            "Dataset meta type has to be a record type.");
-                                }
+                                validateDatasetItemType(dsType, metaItemType, true, sourceLoc);
                                 break;
                             case RECORD:
                                 metaItemTypeDataverseName = dataverseName;
@@ -691,6 +685,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                         metaItemTypeDataverseName, metaItemTypeDataverseName + "." + metaItemTypeName);
                                 metaItemType = translateType(metaItemTypeDataverseName, metaItemTypeName,
                                         metaItemTypeExpr, mdTxnCtx);
+                                validateDatasetItemType(dsType, metaItemType, true, sourceLoc);
                                 MetadataManager.INSTANCE.addDatatype(mdTxnCtx,
                                         new Datatype(metaItemTypeDataverseName, metaItemTypeName, metaItemType, true));
                                 break;
@@ -734,7 +729,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     break;
                 default:
                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "Unknown dataset type " + dd.getDatasetType());
+                            "Unknown dataset type " + dsType);
             }
 
             // #. initialize DatasetIdFactory if it is not initialized.
@@ -748,7 +743,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     datasetDetails, dd.getHints(), dsType, DatasetIdFactory.generateDatasetId(),
                     MetadataUtil.PENDING_ADD_OP, compressionScheme);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
-            if (dd.getDatasetType() == DatasetType.INTERNAL) {
+            if (dsType == DatasetType.INTERNAL) {
                 JobSpecification jobSpec = DatasetUtil.createDatasetJobSpec(dataset, metadataProvider);
 
                 // #. make metadataTxn commit before calling runJob.
@@ -816,6 +811,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throw e;
         } finally {
             metadataProvider.getLocks().unlock();
+        }
+    }
+
+    protected void validateDatasetItemType(DatasetType datasetType, IAType itemType, boolean isMetaItemType,
+            SourceLocation sourceLoc) throws AlgebricksException {
+        if (itemType.getTypeTag() != ATypeTag.OBJECT) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                    String.format("Dataset %s has to be a record type.", isMetaItemType ? "meta type" : "type"));
         }
     }
 
