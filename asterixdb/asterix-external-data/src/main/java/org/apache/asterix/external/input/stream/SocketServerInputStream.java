@@ -137,6 +137,11 @@ public class SocketServerInputStream extends AsterixInputStream {
 
     @Override
     public boolean handleException(Throwable th) {
+        if (th instanceof RuntimeException) {
+            //Log runtime exception
+            //TODO Should we continue anyway?
+            LOGGER.error("Encountered an unexpected error", th);
+        }
         try {
             return accept();
         } catch (IOException e) {
