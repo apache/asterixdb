@@ -11721,6 +11721,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="leftouterjoin">
+      <compilation-unit name="loj-02-push-select">
+        <output-dir compare="Text">loj-02-push-select</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
       <compilation-unit name="query_issue658">
         <output-dir compare="Text">query_issue658</output-dir>
       </compilation-unit>
