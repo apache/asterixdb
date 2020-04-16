@@ -168,7 +168,6 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         flushedPartialTuples = false;
         accessor = new FrameTupleAccessor(inputRecDesc);
         writeBuffer = new VSizeFrame(ctx);
-        writer.open();
         indexHelper.open();
         index = indexHelper.getIndexInstance();
         IIndex indexForUniquessCheck;
@@ -183,6 +182,7 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 PrimaryIndexLogMarkerCallback callback = new PrimaryIndexLogMarkerCallback((AbstractLSMIndex) index);
                 TaskUtil.put(ILogMarkerCallback.KEY_MARKER_CALLBACK, callback, ctx);
             }
+            writer.open();
             keySearchCmp =
                     BTreeUtils.getSearchMultiComparator(((ITreeIndex) index).getComparatorFactories(), frameTuple);
             searchPred = new RangePredicate(frameTuple, frameTuple, true, true, keySearchCmp, keySearchCmp, null, null);
