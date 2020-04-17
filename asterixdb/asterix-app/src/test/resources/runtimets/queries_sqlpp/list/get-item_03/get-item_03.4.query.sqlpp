@@ -17,13 +17,15 @@
  * under the License.
  */
 
-SELECT
-  CASE
-    WHEN t=0 THEN 0.0
-    WHEN t IS NULL THEN -1
-    WHEN t IS MISSING THEN -2
-    ELSE 2.0/t
-  END
-FROM [0, 1, 2, 4, NULL, MISSING] t;
+use test;
 
-
+{
+"ta1": [1, 2, 3][-1],
+"ta2": [1, 2, 3][-2],
+"ta3": [1, 2, 3][-3],
+"ta4": [1, 2, 3][-4] is missing,
+"tb1": [1, 2, 3][-((select value id from test where id = 1)[0])],
+"tb2": [1, 2, 3][-((select value id from test where id = 1)[0])-1],
+"tb3": [1, 2, 3][-((select value id from test where id = 1)[0])-2],
+"tb4": [1, 2, 3][-((select value id from test where id = 1)[0])-3] is missing
+};

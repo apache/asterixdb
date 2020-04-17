@@ -27,4 +27,4 @@ SELECT
     WHEN t IS UNKNOWN THEN (SELECT -3) // Should never enter this THEN branch.
     ELSE 2.0/t
   END
-FROM [0, 1, 2, 4, NULL, [0][-1]] t;
+FROM [0, 1, 2, 4, NULL, MISSING] t;

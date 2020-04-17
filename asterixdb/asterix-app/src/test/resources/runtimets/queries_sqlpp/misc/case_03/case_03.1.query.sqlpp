@@ -24,5 +24,5 @@ SELECT
     WHEN t IS MISSING THEN (SELECT -2 AS r)
     ELSE (SELECT -3 AS r)
   END
-FROM [0, 1, 2, 4, NULL, [0][-1]] t;
+FROM [0, 1, 2, 4, NULL, MISSING] t;
 
