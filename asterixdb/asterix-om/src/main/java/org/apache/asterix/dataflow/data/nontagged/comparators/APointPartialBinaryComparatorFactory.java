@@ -46,15 +46,15 @@ public class APointPartialBinaryComparatorFactory implements IBinaryComparatorFa
     public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
         int c = Double.compare(
                 ADoubleSerializerDeserializer.getDouble(b1,
-                        s1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1),
+                        s1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X)),
                 ADoubleSerializerDeserializer.getDouble(b2,
-                        s2 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1));
+                        s2 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X)));
         if (c == 0) {
             return Double.compare(
                     ADoubleSerializerDeserializer.getDouble(b1,
-                            s1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1),
+                            s1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)),
                     ADoubleSerializerDeserializer.getDouble(b2,
-                            s2 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1));
+                            s2 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
         }
         return c;
     }

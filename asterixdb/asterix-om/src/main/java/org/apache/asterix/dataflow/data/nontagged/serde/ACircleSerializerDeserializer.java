@@ -53,15 +53,15 @@ public class ACircleSerializerDeserializer implements ISerializerDeserializer<AC
     public final static int getCenterPointCoordinateOffset(Coordinate coordinate) throws HyracksDataException {
         switch (coordinate) {
             case X:
-                return 1;
+                return 0;
             case Y:
-                return 9;
+                return 8;
             default:
                 throw new HyracksDataException("Wrong coordinate");
         }
     }
 
     public final static int getRadiusOffset() throws HyracksDataException {
-        return 17;
+        return 16;
     }
 }

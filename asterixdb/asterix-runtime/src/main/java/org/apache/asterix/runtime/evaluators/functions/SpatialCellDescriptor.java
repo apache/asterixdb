@@ -115,14 +115,14 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                                     && tag2 == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG
                                     && tag3 == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
                                 double xLoc = ADoubleSerializerDeserializer.getDouble(bytes0,
-                                        offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
+                                        offset0 + 1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
                                 double yLoc = ADoubleSerializerDeserializer.getDouble(bytes0,
-                                        offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
+                                        offset0 + 1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
                                 double xOrigin = ADoubleSerializerDeserializer.getDouble(bytes1,
-                                        offset1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
+                                        offset1 + 1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
                                 double yOrigin = ADoubleSerializerDeserializer.getDouble(bytes1,
-                                        offset1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
+                                        offset1 + 1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
                                 double xInc = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1);
                                 double yInc = ADoubleSerializerDeserializer.getDouble(bytes3, offset3 + 1);

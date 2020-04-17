@@ -46,21 +46,21 @@ public class APoint3DPartialBinaryComparatorFactory implements IBinaryComparator
     public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
         int c = Double.compare(
                 ADoubleSerializerDeserializer.getDouble(b1,
-                        s1 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1),
+                        s1 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.X)),
                 ADoubleSerializerDeserializer.getDouble(b2,
-                        s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1));
+                        s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.X)));
         if (c == 0) {
             c = Double.compare(
                     ADoubleSerializerDeserializer.getDouble(b1,
-                            s1 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1),
+                            s1 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Y)),
                     ADoubleSerializerDeserializer.getDouble(b2,
-                            s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1));
+                            s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
             if (c == 0) {
                 return Double.compare(
                         ADoubleSerializerDeserializer.getDouble(b1,
-                                s1 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Z) - 1),
+                                s1 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Z)),
                         ADoubleSerializerDeserializer.getDouble(b2,
-                                s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Z) - 1));
+                                s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Z)));
             }
         }
         return c;

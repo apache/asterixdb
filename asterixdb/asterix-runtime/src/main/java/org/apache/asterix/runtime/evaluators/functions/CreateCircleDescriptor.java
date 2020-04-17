@@ -108,9 +108,10 @@ public class CreateCircleDescriptor extends AbstractScalarFunctionDynamicDescrip
                         try {
                             aPoint.setValue(
                                     ADoubleSerializerDeserializer.getDouble(bytes0,
-                                            offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X)),
-                                    ADoubleSerializerDeserializer.getDouble(bytes0,
-                                            offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
+                                            offset0 + 1
+                                                    + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X)),
+                                    ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
+                                            + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
                             aCircle.setValue(aPoint, ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1));
                             circleSerde.serialize(aCircle, out);
                         } catch (IOException e1) {

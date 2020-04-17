@@ -100,24 +100,24 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                                     break;
                                 case CIRCLE:
                                     double radius = ADoubleSerializerDeserializer.getDouble(bytes,
-                                            offset + ACircleSerializerDeserializer.getRadiusOffset());
+                                            offset + 1 + ACircleSerializerDeserializer.getRadiusOffset());
                                     area = SpatialUtils.pi() * radius * radius;
                                     out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                                     out.writeDouble(area);
                                     break;
                                 case RECTANGLE:
                                     double x1 = ADoubleSerializerDeserializer.getDouble(bytes,
-                                            offset + ARectangleSerializerDeserializer
+                                            offset + 1 + ARectangleSerializerDeserializer
                                                     .getBottomLeftCoordinateOffset(Coordinate.X));
                                     double y1 = ADoubleSerializerDeserializer.getDouble(bytes,
-                                            offset + ARectangleSerializerDeserializer
+                                            offset + 1 + ARectangleSerializerDeserializer
                                                     .getBottomLeftCoordinateOffset(Coordinate.Y));
 
                                     double x2 = ADoubleSerializerDeserializer.getDouble(bytes,
-                                            offset + ARectangleSerializerDeserializer
+                                            offset + 1 + ARectangleSerializerDeserializer
                                                     .getUpperRightCoordinateOffset(Coordinate.X));
                                     double y2 = ADoubleSerializerDeserializer.getDouble(bytes,
-                                            offset + ARectangleSerializerDeserializer
+                                            offset + 1 + ARectangleSerializerDeserializer
                                                     .getUpperRightCoordinateOffset(Coordinate.Y));
                                     area = (x2 - x1) * (y2 - y1);
                                     out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);

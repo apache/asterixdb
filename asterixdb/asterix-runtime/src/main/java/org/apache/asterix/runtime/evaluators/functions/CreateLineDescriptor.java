@@ -109,16 +109,18 @@ public class CreateLineDescriptor extends AbstractScalarFunctionDynamicDescripto
                             aPoint[0]
                                     .setValue(
                                             ADoubleSerializerDeserializer.getDouble(bytes0,
-                                                    offset0 + APointSerializerDeserializer
-                                                            .getCoordinateOffset(Coordinate.X)),
-                                            ADoubleSerializerDeserializer.getDouble(bytes0, offset0
+                                                    offset0 + 1
+                                                            + APointSerializerDeserializer
+                                                                    .getCoordinateOffset(Coordinate.X)),
+                                            ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                                     + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
                             aPoint[1]
                                     .setValue(
                                             ADoubleSerializerDeserializer.getDouble(bytes1,
-                                                    offset1 + APointSerializerDeserializer
-                                                            .getCoordinateOffset(Coordinate.X)),
-                                            ADoubleSerializerDeserializer.getDouble(bytes1, offset1
+                                                    offset1 + 1
+                                                            + APointSerializerDeserializer
+                                                                    .getCoordinateOffset(Coordinate.X)),
+                                            ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                                     + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
                             aLine.setValue(aPoint[0], aPoint[1]);
                             lineSerde.serialize(aLine, out);

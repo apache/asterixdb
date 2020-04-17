@@ -47,25 +47,23 @@ public class ACirclePartialBinaryComparatorFactory implements IBinaryComparatorF
         // center.x
         int c = Double.compare(
                 ADoubleSerializerDeserializer.getDouble(b1,
-                        s1 + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X) - 1),
+                        s1 + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X)),
                 ADoubleSerializerDeserializer.getDouble(b2,
-                        s2 + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X) - 1));
+                        s2 + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X)));
         if (c == 0) {
             // center.y
-            c = Double
-                    .compare(
-                            ADoubleSerializerDeserializer.getDouble(
-                                    b1, s1 + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y)
-                                            - 1),
-                            ADoubleSerializerDeserializer.getDouble(b2, s2
-                                    + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y) - 1));
+            c = Double.compare(
+                    ADoubleSerializerDeserializer.getDouble(b1,
+                            s1 + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y)),
+                    ADoubleSerializerDeserializer.getDouble(b2,
+                            s2 + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y)));
             if (c == 0) {
                 // radius
                 return Double.compare(
                         ADoubleSerializerDeserializer.getDouble(b1,
-                                s1 + ACircleSerializerDeserializer.getRadiusOffset() - 1),
+                                s1 + ACircleSerializerDeserializer.getRadiusOffset()),
                         ADoubleSerializerDeserializer.getDouble(b2,
-                                s2 + ACircleSerializerDeserializer.getRadiusOffset() - 1));
+                                s2 + ACircleSerializerDeserializer.getRadiusOffset()));
             }
         }
         return c;

@@ -94,9 +94,9 @@ public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescripto
                             double cX;
                             double cY;
                             if (bytes[startOffset] == ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG) {
-                                cX = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                cX = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
                                         + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X));
-                                cY = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                cY = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
                                         + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y));
                                 aPoint.setValue(cX, cY);
                                 pointSerde.serialize(aPoint, out);

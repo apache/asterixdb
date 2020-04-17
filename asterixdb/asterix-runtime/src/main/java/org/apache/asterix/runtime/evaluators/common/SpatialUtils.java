@@ -97,21 +97,21 @@ public class SpatialUtils {
         for (int i = 0; i < numOfPoints; i++) {
 
             double x1 = ADoubleSerializerDeserializer.getDouble(bytes,
-                    offset + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X));
+                    offset + 1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X));
             double y1 = ADoubleSerializerDeserializer.getDouble(bytes,
-                    offset + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y));
+                    offset + 1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y));
             double x2;
             double y2;
             if (i + 1 == numOfPoints) {
                 x2 = ADoubleSerializerDeserializer.getDouble(bytes,
-                        offset + APolygonSerializerDeserializer.getCoordinateOffset(0, Coordinate.X));
+                        offset + 1 + APolygonSerializerDeserializer.getCoordinateOffset(0, Coordinate.X));
                 y2 = ADoubleSerializerDeserializer.getDouble(bytes,
-                        offset + APolygonSerializerDeserializer.getCoordinateOffset(0, Coordinate.Y));
+                        offset + 1 + APolygonSerializerDeserializer.getCoordinateOffset(0, Coordinate.Y));
             } else {
                 x2 = ADoubleSerializerDeserializer.getDouble(bytes,
-                        offset + APolygonSerializerDeserializer.getCoordinateOffset(i + 1, Coordinate.X));
+                        offset + 1 + APolygonSerializerDeserializer.getCoordinateOffset(i + 1, Coordinate.X));
                 y2 = ADoubleSerializerDeserializer.getDouble(bytes,
-                        offset + APolygonSerializerDeserializer.getCoordinateOffset(i + 1, Coordinate.Y));
+                        offset + 1 + APolygonSerializerDeserializer.getCoordinateOffset(i + 1, Coordinate.Y));
             }
             area += (x1 * y2) - (x2 * y1);
         }

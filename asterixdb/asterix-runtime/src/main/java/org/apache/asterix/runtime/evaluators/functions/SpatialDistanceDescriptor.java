@@ -89,14 +89,14 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
                             double distance;
                             if (tag0 == ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
                                 if (tag1 == ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
-                                    double x1 = ADoubleSerializerDeserializer.getDouble(bytes0,
-                                            offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                    double y1 = ADoubleSerializerDeserializer.getDouble(bytes0,
-                                            offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
-                                    double x2 = ADoubleSerializerDeserializer.getDouble(bytes1,
-                                            offset1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                    double y2 = ADoubleSerializerDeserializer.getDouble(bytes1,
-                                            offset1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
+                                    double x1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
+                                            + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
+                                    double y1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
+                                            + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
+                                    double x2 = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                                            + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
+                                    double y2 = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                                            + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
                                     distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
                                 } else {
                                     throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],

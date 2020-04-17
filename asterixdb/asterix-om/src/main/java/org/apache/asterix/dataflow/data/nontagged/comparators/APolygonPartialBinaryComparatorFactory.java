@@ -46,25 +46,23 @@ public class APolygonPartialBinaryComparatorFactory implements IBinaryComparator
     @SuppressWarnings("squid:S1172") // unused parameter
     public static int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
         short pointCount1 = AInt16SerializerDeserializer.getShort(b1,
-                s1 + APolygonSerializerDeserializer.getNumberOfPointsOffset() - 1);
+                s1 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
         int c = Short.compare(pointCount1, AInt16SerializerDeserializer.getShort(b2,
-                s2 + APolygonSerializerDeserializer.getNumberOfPointsOffset() - 1));
+                s2 + APolygonSerializerDeserializer.getNumberOfPointsOffset()));
         if (c == 0) {
             int ci;
             for (int i = 0; i < pointCount1; i++) {
                 ci = Double.compare(
                         DoublePointable.getDouble(b1,
-                                s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X) - 1),
+                                s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X)),
                         DoublePointable.getDouble(b2,
-                                s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X) - 1));
+                                s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X)));
                 if (ci == 0) {
-                    ci = Double
-                            .compare(
-                                    DoublePointable.getDouble(
-                                            b1, s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y)
-                                                    - 1),
-                                    DoublePointable.getDouble(b2, s1
-                                            + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y) - 1));
+                    ci = Double.compare(
+                            DoublePointable.getDouble(b1,
+                                    s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y)),
+                            DoublePointable.getDouble(b2,
+                                    s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y)));
                     if (ci == 0) {
                         continue;
                     }

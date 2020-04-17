@@ -103,18 +103,18 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                 listBuilder.reset(pointListType);
 
                                 inputVal.reset();
-                                double startX = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                double startX = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
                                         + ALineSerializerDeserializer.getStartPointCoordinateOffset(Coordinate.X));
-                                double startY = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                double startY = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
                                         + ALineSerializerDeserializer.getStartPointCoordinateOffset(Coordinate.Y));
                                 aPoint.setValue(startX, startY);
                                 pointSerde.serialize(aPoint, inputVal.getDataOutput());
                                 listBuilder.addItem(inputVal);
 
                                 inputVal.reset();
-                                double endX = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                double endX = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
                                         + ALineSerializerDeserializer.getEndPointCoordinateOffset(Coordinate.X));
-                                double endY = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                double endY = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
                                         + ALineSerializerDeserializer.getEndPointCoordinateOffset(Coordinate.Y));
                                 aPoint.setValue(endX, endY);
                                 pointSerde.serialize(aPoint, inputVal.getDataOutput());
@@ -123,18 +123,18 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                             } else if (bytes[startOffset] == ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG) {
                                 listBuilder.reset(pointListType);
                                 inputVal.reset();
-                                double x1 = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                double x1 = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
                                         + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
-                                double y1 = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                double y1 = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
                                         + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
                                 aPoint.setValue(x1, y1);
                                 pointSerde.serialize(aPoint, inputVal.getDataOutput());
                                 listBuilder.addItem(inputVal);
 
                                 inputVal.reset();
-                                double x2 = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                double x2 = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
                                         + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-                                double y2 = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                double y2 = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
                                         + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
                                 aPoint.setValue(x2, y2);
                                 pointSerde.serialize(aPoint, inputVal.getDataOutput());
@@ -142,7 +142,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                 listBuilder.write(out, true);
                             } else if (bytes[startOffset] == ATypeTag.SERIALIZED_POLYGON_TYPE_TAG) {
                                 int numOfPoints = AInt16SerializerDeserializer.getShort(bytes,
-                                        startOffset + APolygonSerializerDeserializer.getNumberOfPointsOffset());
+                                        startOffset + APolygonSerializerDeserializer.getNumberOfPointsOffset() + 1);
 
                                 if (numOfPoints < 3) {
                                     throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
@@ -151,9 +151,9 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                 listBuilder.reset(pointListType);
                                 for (int i = 0; i < numOfPoints; ++i) {
                                     inputVal.reset();
-                                    double x = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                    double x = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
                                             + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X));
-                                    double y = ADoubleSerializerDeserializer.getDouble(bytes, startOffset
+                                    double y = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
                                             + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.Y));
                                     aPoint.setValue(x, y);
                                     pointSerde.serialize(aPoint, inputVal.getDataOutput());

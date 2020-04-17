@@ -60,15 +60,15 @@ public class APolygonSerializerDeserializer implements ISerializerDeserializer<A
     }
 
     public static int getNumberOfPointsOffset() throws HyracksDataException {
-        return 1;
+        return 0;
     }
 
     public static int getCoordinateOffset(int pointId, Coordinate coordinate) throws HyracksDataException {
         switch (coordinate) {
             case X:
-                return 3 + (pointId * 16);
+                return 2 + (pointId * 16);
             case Y:
-                return 11 + (pointId * 16);
+                return 10 + (pointId * 16);
             default:
                 throw HyracksDataException.create(ErrorCode.POLYGON_INVALID_COORDINATE);
         }

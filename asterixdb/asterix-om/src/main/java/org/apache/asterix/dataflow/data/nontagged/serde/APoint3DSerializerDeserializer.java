@@ -54,11 +54,11 @@ public class APoint3DSerializerDeserializer implements ISerializerDeserializer<A
     public final static int getCoordinateOffset(Coordinate coordinate) throws HyracksDataException {
         switch (coordinate) {
             case X:
-                return 1;
+                return 0;
             case Y:
-                return 9;
+                return 8;
             case Z:
-                return 17;
+                return 16;
             default:
                 throw new HyracksDataException("Wrong coordinate");
         }

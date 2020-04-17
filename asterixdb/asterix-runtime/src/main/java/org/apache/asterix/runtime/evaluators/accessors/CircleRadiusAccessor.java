@@ -92,7 +92,7 @@ public class CircleRadiusAccessor extends AbstractScalarFunctionDynamicDescripto
                             double radius;
                             if (bytes[startOffset] == ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG) {
                                 radius = ADoubleSerializerDeserializer.getDouble(bytes,
-                                        startOffset + ACircleSerializerDeserializer.getRadiusOffset());
+                                        startOffset + 1 + ACircleSerializerDeserializer.getRadiusOffset());
                                 aDouble.setValue(radius);
                                 doubleSerde.serialize(aDouble, out);
                             } else {

@@ -49,9 +49,9 @@ public class ARectangleSerializerDeserializer implements ISerializerDeserializer
     public final static int getBottomLeftCoordinateOffset(Coordinate coordinate) throws HyracksDataException {
         switch (coordinate) {
             case X:
-                return 1;
+                return 0;
             case Y:
-                return 9;
+                return 8;
             default:
                 throw new HyracksDataException("Wrong coordinate");
         }
@@ -60,9 +60,9 @@ public class ARectangleSerializerDeserializer implements ISerializerDeserializer
     public final static int getUpperRightCoordinateOffset(Coordinate coordinate) throws HyracksDataException {
         switch (coordinate) {
             case X:
-                return 17;
+                return 16;
             case Y:
-                return 25;
+                return 24;
             default:
                 throw new HyracksDataException("Wrong coordinate");
         }

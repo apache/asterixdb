@@ -91,8 +91,8 @@ public class PointXCoordinateAccessor extends AbstractScalarFunctionDynamicDescr
                         try {
                             double x;
                             if (bytes[startOffset] == ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
-                                x = ADoubleSerializerDeserializer.getDouble(bytes,
-                                        startOffset + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
+                                x = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1
+                                        + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
                                 aDouble.setValue(x);
                                 doubleSerde.serialize(aDouble, out);
                             } else {
