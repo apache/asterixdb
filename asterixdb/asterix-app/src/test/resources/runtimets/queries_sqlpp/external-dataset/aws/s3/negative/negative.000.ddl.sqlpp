@@ -17,6 +17,7 @@
  * under the License.
  */
 
+// "format" parameter is missing for S3
 DROP DATAVERSE test IF EXISTS;
 CREATE DATAVERSE test;
 USE test;
@@ -31,7 +32,5 @@ CREATE EXTERNAL DATASET test(test) USING S3 (
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),
-("definition"="tsv-data/reviews"),
-("format"="TSV"),
-("header"="False")
+("definition"="tsv-data/reviews")
 );

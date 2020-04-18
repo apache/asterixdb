@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class LineRecordReader extends StreamRecordReader {
@@ -42,10 +43,12 @@ public class LineRecordReader extends StreamRecordReader {
     private static final String REQUIRED_CONFIGS = "";
 
     @Override
-    public void configure(AsterixInputStream inputStream, Map<String, String> config) throws HyracksDataException {
+    public void configure(IHyracksTaskContext ctx, AsterixInputStream inputStream, Map<String, String> config)
+            throws HyracksDataException {
         super.configure(inputStream);
         this.hasHeader = ExternalDataUtils.hasHeader(config);
         if (hasHeader) {
+            // TODO(ali): revisit this and notifyNewSource
             inputStream.setNotificationHandler(this);
         }
     }
@@ -100,13 +103,16 @@ public class LineRecordReader extends StreamRecordReader {
                     startPosn = bufferPosn = 0;
                     bufferLength = reader.read(inputBuffer);
                     if (bufferLength <= 0) {
-                        if (readLength > 0) {
-                            record.endRecord();
-                            recordNumber++;
-                            return true;
+                        if (readLength <= 0) {
+                            close();
+                            return false; //EOF
                         }
-                        close();
-                        return false; //EOF
+                        record.endRecord();
+                        if (record.isEmptyRecord()) {
+                            return false;
+                        }
+                        recordNumber++;
+                        return true;
                     }
                 }
                 for (; bufferPosn < bufferLength; ++bufferPosn) { //search for newline
@@ -130,6 +136,9 @@ public class LineRecordReader extends StreamRecordReader {
                     record.append(inputBuffer, startPosn, readLength);
                 }
             } while (newlineLength == 0);
+            if (record.isEmptyRecord()) {
+                continue;
+            }
             if (nextIsHeader) {
                 nextIsHeader = false;
                 continue;

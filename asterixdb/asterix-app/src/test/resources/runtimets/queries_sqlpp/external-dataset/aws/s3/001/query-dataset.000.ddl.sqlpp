@@ -32,5 +32,6 @@ CREATE EXTERNAL DATASET test(test) USING S3 (
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),
 ("definition"="csv-data/reviews"),
-("format"="csv")
+("format"="Csv"),
+("header"="false")
 );

@@ -44,12 +44,15 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.hyracks.test.support.TestUtils;
 import org.junit.Assert;
 
 public class RecordWithMetaTest {
+    private final IHyracksTaskContext ctx = TestUtils.createHyracksTask();
     private static ARecordType recordType;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -90,7 +93,7 @@ public class RecordWithMetaTest {
             config.put(ExternalDataConstants.KEY_HEADER, "true");
             config.put(ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.DEFAULT_QUOTE);
             LineRecordReader lineReader = new LineRecordReader();
-            lineReader.configure(inputStream, config);
+            lineReader.configure(ctx, inputStream, config);
             // create csv with json record reader
             CSVToRecordWithMetadataAndPKConverter recordConverter = new CSVToRecordWithMetadataAndPKConverter(
                     valueIndex, delimiter, metaType, recordType, pkIndicators, pkIndexes, keyTypes);

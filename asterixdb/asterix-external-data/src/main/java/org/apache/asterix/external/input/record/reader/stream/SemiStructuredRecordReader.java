@@ -29,6 +29,7 @@ import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SemiStructuredRecordReader extends StreamRecordReader {
@@ -45,7 +46,8 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
     private static final String REQUIRED_CONFIGS = "";
 
     @Override
-    public void configure(AsterixInputStream stream, Map<String, String> config) throws HyracksDataException {
+    public void configure(IHyracksTaskContext ctx, AsterixInputStream stream, Map<String, String> config)
+            throws HyracksDataException {
         super.configure(stream);
         String recStartString = config.get(ExternalDataConstants.KEY_RECORD_START);
         String recEndString = config.get(ExternalDataConstants.KEY_RECORD_END);

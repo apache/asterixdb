@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.external.util;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 public class ExternalDataConstants {
 
     private ExternalDataConstants() {
@@ -168,6 +172,26 @@ public class ExternalDataConstants {
     public static final String FORMAT_LINE_SEPARATED = "line-separated";
     public static final String FORMAT_HDFS_WRITABLE = "hdfs-writable";
     public static final String FORMAT_KV = "kv";
+    public static final String FORMAT_CSV = "csv";
+    public static final String FORMAT_TSV = "tsv";
+    public static final Set<String> ALL_FORMATS;
+    static {
+        Set<String> formats = new HashSet<>(13);
+        formats.add(FORMAT_HIVE);
+        formats.add(FORMAT_BINARY);
+        formats.add(FORMAT_ADM);
+        formats.add(FORMAT_JSON_LOWER_CASE);
+        formats.add(FORMAT_DELIMITED_TEXT);
+        formats.add(FORMAT_TWEET);
+        formats.add(FORMAT_RSS);
+        formats.add(FORMAT_SEMISTRUCTURED);
+        formats.add(FORMAT_LINE_SEPARATED);
+        formats.add(FORMAT_HDFS_WRITABLE);
+        formats.add(FORMAT_KV);
+        formats.add(FORMAT_CSV);
+        formats.add(FORMAT_TSV);
+        ALL_FORMATS = Collections.unmodifiableSet(formats);
+    }
 
     /**
      * input streams
@@ -234,8 +258,6 @@ public class ExternalDataConstants {
     public static final String EXTERNAL = "external";
     public static final String KEY_READER_FACTORY = "reader-factory";
     public static final String READER_RSS = "rss_feed";
-    public static final String FORMAT_CSV = "csv";
-    public static final String FORMAT_TSV = "tsv";
 
     public static final String ERROR_PARSE_RECORD = "Parser failed to parse record";
 

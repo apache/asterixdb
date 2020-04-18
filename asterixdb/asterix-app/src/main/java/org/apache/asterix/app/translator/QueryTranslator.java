@@ -723,7 +723,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 case EXTERNAL:
                     ExternalDetailsDecl externalDetails = (ExternalDetailsDecl) dd.getDatasetDetailsDecl();
                     Map<String, String> properties = createExternalDatasetProperties(dd, metadataProvider, mdTxnCtx);
-                    ExternalDataUtils.defaultConfiguration(properties);
+                    ExternalDataUtils.normalize(properties);
+                    ExternalDataUtils.validate(properties);
+                    validateExternalDatasetDetails(externalDetails, properties);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
                             TransactionState.COMMIT);
                     break;
@@ -1970,9 +1972,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         MetadataLockUtil.modifyDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName,
                 dataverseName + "." + datasetName);
         try {
+            Map<String, String> properties = loadStmt.getProperties();
+            ExternalDataUtils.normalize(properties);
+            ExternalDataUtils.validate(properties);
             CompiledLoadFromFileStatement cls =
                     new CompiledLoadFromFileStatement(dataverseName, loadStmt.getDatasetName().getValue(),
-                            loadStmt.getAdapter(), loadStmt.getProperties(), loadStmt.dataIsAlreadySorted());
+                            loadStmt.getAdapter(), properties, loadStmt.dataIsAlreadySorted());
             cls.setSourceLocation(stmt.getSourceLocation());
             JobSpecification spec = apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionOutput, cls,
                     null, responsePrinter, warningCollector);
@@ -2170,7 +2175,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             "A feed with this name " + feedName + " already exists.");
                 }
             }
-            feed = new Feed(dataverseName, feedName, cfs.getConfiguration());
+            Map<String, String> configuration = cfs.getConfiguration();
+            ExternalDataUtils.normalize(configuration);
+            ExternalDataUtils.validate(configuration);
+            feed = new Feed(dataverseName, feedName, configuration);
             FeedMetadataUtil.validateFeed(feed, mdTxnCtx, appCtx);
             MetadataManager.INSTANCE.addFeed(metadataProvider.getMetadataTxnContext(), feed);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -3175,6 +3183,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     private static void ensureNotCancelled(ClientRequest clientRequest) throws RuntimeDataException {
         if (clientRequest.isCancelled()) {
             throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, clientRequest.getId());
+        }
+    }
+
+    protected void validateExternalDatasetDetails(ExternalDetailsDecl externalDetails, Map<String, String> properties)
+            throws RuntimeDataException {
+        String adapter = externalDetails.getAdapter();
+        // "format" parameter is needed for "S3" data source
+        if (ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3.equals(adapter)
+                && properties.get(ExternalDataConstants.KEY_FORMAT) == null) {
+            throw new RuntimeDataException(ErrorCode.PARAMETERS_REQUIRED, ExternalDataConstants.KEY_FORMAT);
         }
     }
 }

@@ -42,15 +42,15 @@ public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactor
 
     @Override
     public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
-        return createParser();
+        return createParser(ctx);
     }
 
-    private DelimitedDataParser createParser() throws HyracksDataException {
+    private DelimitedDataParser createParser(IHyracksTaskContext ctx) throws HyracksDataException {
         IValueParserFactory[] valueParserFactories = ExternalDataUtils.getValueParserFactories(recordType);
-        char delimiter = ExternalDataUtils.getDelimiter(configuration);
-        char quote = ExternalDataUtils.getQuote(configuration, delimiter);
+        char delimiter = ExternalDataUtils.validateGetDelimiter(configuration);
+        char quote = ExternalDataUtils.validateGetQuote(configuration, delimiter);
         boolean hasHeader = ExternalDataUtils.hasHeader(configuration);
-        return new DelimitedDataParser(valueParserFactories, delimiter, quote, hasHeader, recordType,
+        return new DelimitedDataParser(ctx, valueParserFactories, delimiter, quote, hasHeader, recordType,
                 ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.STREAM));
     }
 
@@ -62,7 +62,7 @@ public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactor
     @Override
     public IStreamDataParser createInputStreamParser(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
-        return createParser();
+        return createParser(ctx);
     }
 
     @Override

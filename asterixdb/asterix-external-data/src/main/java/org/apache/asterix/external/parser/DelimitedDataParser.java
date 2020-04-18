@@ -35,6 +35,7 @@ import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParser;
@@ -43,22 +44,23 @@ import org.apache.hyracks.dataflow.std.file.FieldCursorForDelimitedDataParser;
 
 public class DelimitedDataParser extends AbstractDataParser implements IStreamDataParser, IRecordDataParser<char[]> {
 
+    private final IHyracksTaskContext ctx;
     private final char fieldDelimiter;
     private final char quote;
     private final boolean hasHeader;
-    private ARecordType recordType;
-    private IARecordBuilder recBuilder;
-    private ArrayBackedValueStorage fieldValueBuffer;
-    private DataOutput fieldValueBufferOutput;
-    private IValueParser[] valueParsers;
+    private final ARecordType recordType;
+    private final IARecordBuilder recBuilder;
+    private final ArrayBackedValueStorage fieldValueBuffer;
+    private final DataOutput fieldValueBufferOutput;
+    private final IValueParser[] valueParsers;
     private FieldCursorForDelimitedDataParser cursor;
-    private byte[] fieldTypeTags;
-    private int[] fldIds;
-    private ArrayBackedValueStorage[] nameBuffers;
-    private boolean areAllNullFields;
+    private final byte[] fieldTypeTags;
+    private final int[] fldIds;
+    private final ArrayBackedValueStorage[] nameBuffers;
 
-    public DelimitedDataParser(IValueParserFactory[] valueParserFactories, char fieldDelimiter, char quote,
-            boolean hasHeader, ARecordType recordType, boolean isStreamParser) throws HyracksDataException {
+    public DelimitedDataParser(IHyracksTaskContext ctx, IValueParserFactory[] valueParserFactories, char fieldDelimiter,
+            char quote, boolean hasHeader, ARecordType recordType, boolean isStreamParser) throws HyracksDataException {
+        this.ctx = ctx;
         this.fieldDelimiter = fieldDelimiter;
         this.quote = quote;
         this.hasHeader = hasHeader;
@@ -107,10 +109,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
         try {
             while (cursor.nextRecord()) {
                 parseRecord();
-                if (!areAllNullFields) {
-                    recBuilder.write(out, true);
-                    return true;
-                }
+                recBuilder.write(out, true);
+                return true;
             }
             return false;
         } catch (IOException e) {
@@ -121,7 +121,6 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     private void parseRecord() throws HyracksDataException {
         recBuilder.reset(recordType);
         recBuilder.init();
-        areAllNullFields = true;
 
         for (int i = 0; i < valueParsers.length; ++i) {
             try {
@@ -152,7 +151,6 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                     }
                     valueParsers[i].parse(cursor.getBuffer(), cursor.getFieldStart(), cursor.getFieldLength(),
                             fieldValueBufferOutput);
-                    areAllNullFields = false;
                 }
                 if (fldIds[i] < 0) {
                     recBuilder.addField(nameBuffers[i], fieldValueBuffer);
@@ -172,9 +170,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
         cursor.nextRecord(record.get(), record.size());
         parseRecord();
-        if (!areAllNullFields) {
-            recBuilder.write(out, true);
-        }
+        recBuilder.write(out, true);
     }
 
     @Override

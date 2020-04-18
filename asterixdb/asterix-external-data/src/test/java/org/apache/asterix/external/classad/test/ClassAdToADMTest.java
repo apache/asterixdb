@@ -48,9 +48,11 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.hyracks.test.support.TestUtils;
 import org.junit.Assert;
 
 import junit.framework.Test;
@@ -58,6 +60,9 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 public class ClassAdToADMTest extends TestCase {
+
+    private final IHyracksTaskContext ctx = TestUtils.createHyracksTask();
+
     /**
      * Create the test case
      *
@@ -123,7 +128,7 @@ public class ClassAdToADMTest extends TestCase {
                 FileSystemWatcher watcher = new FileSystemWatcher(paths, null, false);
                 LocalFSInputStream in = new LocalFSInputStream(watcher);
                 SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader();
-                recordReader.configure(in, config);
+                recordReader.configure(ctx, in, config);
                 while (recordReader.hasNext()) {
                     tb.reset();
                     IRawRecord<char[]> record = recordReader.next();
@@ -162,7 +167,7 @@ public class ClassAdToADMTest extends TestCase {
                 FileSystemWatcher watcher = new FileSystemWatcher(paths, null, false);
                 LocalFSInputStream in = new LocalFSInputStream(watcher);
                 SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader();
-                recordReader.configure(in, config);
+                recordReader.configure(ctx, in, config);
                 try {
                     Value val = new Value(objectPool);
                     while (recordReader.hasNext()) {
@@ -204,7 +209,7 @@ public class ClassAdToADMTest extends TestCase {
                 FileSystemWatcher watcher = new FileSystemWatcher(paths, null, false);
                 LocalFSInputStream in = new LocalFSInputStream(watcher);
                 SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader();
-                recordReader.configure(in, config);
+                recordReader.configure(ctx, in, config);
                 try {
                     Value val = new Value(objectPool);
                     while (recordReader.hasNext()) {
