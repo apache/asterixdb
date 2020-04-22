@@ -16,5 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+ USE externallibtest;
 
-uninstall externallibtest testlib admin admin
+create function mysum(a: int32, b: int32) returns int32 language java as "testlib","org.apache.asterix.external.library.MySumFactory";

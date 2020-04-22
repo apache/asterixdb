@@ -16,4 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-uninstall externallibtest testlib admin admin
+DROP DATAVERSE externallibtest;

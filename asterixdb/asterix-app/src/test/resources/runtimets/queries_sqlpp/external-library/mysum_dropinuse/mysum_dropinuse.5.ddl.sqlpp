@@ -16,4 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-uninstall udfs testlib admin admin
+ USE externallibtest;
+
+drop function externallibtest.mysum@2;

@@ -50,6 +50,7 @@ import org.apache.asterix.api.http.server.ApiServlet;
 import org.apache.asterix.app.active.ActiveEntityEventsListener;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.active.FeedEventsListener;
+import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.app.result.ExecutionError;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
@@ -78,6 +79,7 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.exceptions.WarningCollector;
 import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.utils.JobUtils;
@@ -1307,6 +1309,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         List<JobSpecification> jobsToExecute = new ArrayList<>();
+        List<Library> librariesToDelete = new ArrayList<>();
+        ICCMessageBroker broker = (ICCMessageBroker) appCtx.getServiceContext().getMessageBroker();
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
             if (dv == null) {
@@ -1326,6 +1330,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             function.getDataverseName() + "." + function.getName() + "@" + function.getArity());
                 }
             }
+
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             // # disconnect all feeds from any datasets in the dataverse.
@@ -1381,6 +1386,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             jobsToExecute.add(DataverseUtil.dropDataverseJobSpec(dv, metadataProvider));
 
+            librariesToDelete = MetadataManager.INSTANCE.getDataverseLibraries(mdTxnCtx, dataverseName);
             // #. mark PendingDropOp on the dataverse record by
             // first, deleting the dataverse record from the DATAVERSE_DATASET
             // second, inserting the dataverse record with the PendingDropOp value into the
@@ -1395,6 +1401,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
             for (JobSpecification jobSpec : jobsToExecute) {
                 runJob(hcc, jobSpec);
+            }
+
+            for (Library lib : librariesToDelete) {
+                ExternalLibraryUtils.deleteDeployedUdf(broker, appCtx, dataverseName, lib.getName());
             }
 
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -1433,6 +1443,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 try {
                     for (JobSpecification jobSpec : jobsToExecute) {
                         runJob(hcc, jobSpec);
+                    }
+
+                    for (Library lib : librariesToDelete) {
+                        ExternalLibraryUtils.deleteDeployedUdf(broker, appCtx, dataverseName, lib.getName());
                     }
                 } catch (Exception e2) {
                     // do no throw exception since still the metadata needs to be compensated.

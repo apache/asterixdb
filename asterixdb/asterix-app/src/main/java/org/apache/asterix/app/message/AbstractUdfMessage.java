@@ -46,12 +46,9 @@ public abstract class AbstractUdfMessage extends CcIdentifiedMessage implements 
     @Override
     public void handle(INcApplicationContext appCtx) {
         ILibraryManager mgr = appCtx.getLibraryManager();
-        String mdNodeName = appCtx.getMetadataProperties().getMetadataNodeName();
-        String nodeName = appCtx.getServiceContext().getNodeId();
         INCMessageBroker broker = (INCMessageBroker) appCtx.getServiceContext().getMessageBroker();
-        boolean isMdNode = mdNodeName.equals(nodeName);
         try {
-            handleAction(mgr, isMdNode, appCtx);
+            handleAction(mgr, appCtx);
             broker.sendMessageToCC(getCcId(), new UdfResponseMessage(reqId, null));
         } catch (Exception e) {
             try {
@@ -64,7 +61,6 @@ public abstract class AbstractUdfMessage extends CcIdentifiedMessage implements 
 
     }
 
-    protected abstract void handleAction(ILibraryManager mgr, boolean isMdNode, INcApplicationContext appCtx)
-            throws Exception;
+    protected abstract void handleAction(ILibraryManager mgr, INcApplicationContext appCtx) throws Exception;
 
 }

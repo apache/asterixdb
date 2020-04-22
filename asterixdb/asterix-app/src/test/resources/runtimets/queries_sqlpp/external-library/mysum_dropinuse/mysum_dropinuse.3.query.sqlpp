@@ -16,4 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-uninstall externallibtest testlib admin admin
+use externallibtest;
+
+mysum(9.7, 4);

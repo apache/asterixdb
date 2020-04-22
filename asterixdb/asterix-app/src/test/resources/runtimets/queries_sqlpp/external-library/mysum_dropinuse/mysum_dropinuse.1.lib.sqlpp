@@ -16,4 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-uninstall externallibtest testlib admin admin
+install externallibtest testlib admin admin target/data/externallib/asterix-external-data-testlib.zip

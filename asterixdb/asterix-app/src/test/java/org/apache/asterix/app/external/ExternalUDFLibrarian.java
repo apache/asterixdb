@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -39,7 +40,6 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.api.exceptions.HyracksException;
 
 @SuppressWarnings("squid:S134")
 public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
@@ -75,7 +75,7 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
         HttpResponse response = hc.execute(post, hcCtx);
         response.getEntity().consumeContent();
         if (response.getStatusLine().getStatusCode() != 200) {
-            throw new HyracksException(response.getStatusLine().toString());
+            throw new AsterixException(response.getStatusLine().toString());
         }
     }
 
@@ -93,9 +93,17 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
         hcCtx.setAuthCache(ac);
         HttpDelete del = new HttpDelete(url.toString());
         HttpResponse response = hc.execute(del, hcCtx);
+        String resp = null;
+        int respCode = response.getStatusLine().getStatusCode();
+        if (respCode == 500) {
+            resp = IOUtils.toString(response.getEntity().getContent());
+        }
         response.getEntity().consumeContent();
-        if (response.getStatusLine().getStatusCode() != 200) {
-            throw new AsterixException(response.getStatusLine().toString());
+        if (resp == null && respCode != 200) {
+            resp = response.getStatusLine().toString();
+        }
+        if (resp != null) {
+            throw new AsterixException(resp);
         }
     }
 

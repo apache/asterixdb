@@ -44,6 +44,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
+      <compilation-unit name="mysum_dropinuse">
+        <output-dir compare="Text">mysum_dropinuse</output-dir>
+        <expected-error>Library testlib is being used. It cannot be dropped</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
       <compilation-unit name="my_array_sum">
         <output-dir compare="Text">my_array_sum</output-dir>
       </compilation-unit>

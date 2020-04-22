@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.app.message;
 
-import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.DataverseName;
@@ -32,10 +31,7 @@ public class DeleteUdfMessage extends AbstractUdfMessage {
     }
 
     @Override
-    protected void handleAction(ILibraryManager mgr, boolean isMdNode, INcApplicationContext appCtx) throws Exception {
-        if (isMdNode) {
-            ExternalLibraryUtils.uninstallLibrary(dataverseName, libraryName);
-        }
+    protected void handleAction(ILibraryManager mgr, INcApplicationContext appCtx) {
         mgr.deregisterLibraryClassLoader(dataverseName, libraryName);
     }
 }

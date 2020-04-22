@@ -19,21 +19,34 @@
 package org.apache.asterix.api.http.server;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.app.external.ExternalLibraryUtils;
-import org.apache.asterix.app.message.DeleteUdfMessage;
 import org.apache.asterix.app.message.LoadUdfMessage;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.IMetadataLockUtil;
+import org.apache.asterix.common.metadata.LockList;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.DatasourceAdapter;
+import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.metadata.entities.Library;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.deployment.DeploymentId;
@@ -75,6 +88,8 @@ public class UdfApiServlet extends BasicAuthServlet {
 
     @Override
     protected void post(IServletRequest request, IServletResponse response) {
+
+        PrintWriter responseWriter = response.writer();
         FullHttpRequest req = request.getHttpRequest();
         Pair<String, DataverseName> resourceNames;
         try {
@@ -85,8 +100,17 @@ public class UdfApiServlet extends BasicAuthServlet {
         }
         String resourceName = resourceNames.first;
         DataverseName dataverse = resourceNames.second;
+        IMetadataLockUtil mdLockUtil = appCtx.getMetadataLockUtil();
+        MetadataTransactionContext mdTxnCtx = null;
+        LockList mdLockList = null;
         File udf = null;
         try {
+            MetadataManager.INSTANCE.init();
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
+            mdLockList = metadataProvider.getLocks();
+            mdLockUtil.createLibraryBegin(appCtx.getMetadataLockManager(), metadataProvider.getLocks(), dataverse,
+                    resourceName);
             File workingDir = new File(appCtx.getServiceContext().getServerCtx().getBaseDir().getAbsolutePath(),
                     UDF_TMP_DIR_PREFIX);
             if (!workingDir.exists()) {
@@ -102,33 +126,102 @@ public class UdfApiServlet extends BasicAuthServlet {
                     fc.write(content);
                 }
             }
-            IHyracksClientConnection hcc = appCtx.getHcc();
-            DeploymentId udfName = new DeploymentId(makeDeploymentId(dataverse, resourceName));
-            ClassLoader cl = appCtx.getLibraryManager().getLibraryClassLoader(dataverse, resourceName);
-            if (cl != null) {
-                deleteUdf(dataverse, resourceName);
-            }
-            hcc.deployBinary(udfName, Arrays.asList(udf.toString()), true);
-            ExternalLibraryUtils.setUpExternaLibrary(appCtx.getLibraryManager(), false,
-                    FileUtil.joinPath(appCtx.getServiceContext().getServerCtx().getBaseDir().getAbsolutePath(),
-                            "applications", udfName.toString()));
-
-            long reqId = broker.newRequestId();
-            List<INcAddressedMessage> requests = new ArrayList<>();
-            List<String> ncs = new ArrayList<>(appCtx.getClusterStateManager().getParticipantNodes());
-            ncs.forEach(s -> requests.add(new LoadUdfMessage(dataverse, resourceName, reqId)));
-            broker.sendSyncRequestToNCs(reqId, ncs, requests, UDF_RESPONSE_TIMEOUT);
+            setupBinariesAndClassloaders(dataverse, resourceName, udf);
+            installLibrary(mdTxnCtx, dataverse, resourceName);
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
+            try {
+                ExternalLibraryUtils.deleteDeployedUdf(broker, appCtx, dataverse, resourceName);
+            } catch (Exception e2) {
+                e.addSuppressed(e2);
+            }
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            responseWriter.write(e.getMessage());
+            responseWriter.flush();
             LOGGER.error(e);
-            return;
-        } finally {
+            if (mdTxnCtx != null) {
+                try {
+                    MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                } catch (RemoteException r) {
+                    LOGGER.error("Unable to abort metadata transaction", r);
+                }
+            }
             if (udf != null) {
                 udf.delete();
+            }
+            return;
+        } finally {
+            if (mdLockList != null) {
+                mdLockList.unlock();
             }
         }
         response.setStatus(HttpResponseStatus.OK);
 
+    }
+
+    private void setupBinariesAndClassloaders(DataverseName dataverse, String resourceName, File udf) throws Exception {
+        IHyracksClientConnection hcc = appCtx.getHcc();
+        DeploymentId udfName = new DeploymentId(makeDeploymentId(dataverse, resourceName));
+        ClassLoader cl = appCtx.getLibraryManager().getLibraryClassLoader(dataverse, resourceName);
+        if (cl != null) {
+            //prepare to replace the binary
+            ExternalLibraryUtils.deleteDeployedUdf(broker, appCtx, dataverse, resourceName);
+        }
+        hcc.deployBinary(udfName, Arrays.asList(udf.toString()), true);
+        //setup for CC
+        ExternalLibraryUtils.setUpExternaLibrary(appCtx.getLibraryManager(),
+                FileUtil.joinPath(appCtx.getServiceContext().getServerCtx().getBaseDir().getAbsolutePath(),
+                        "applications", udfName.toString()));
+        //setup NCs
+        long reqId = broker.newRequestId();
+        List<INcAddressedMessage> requests = new ArrayList<>();
+        List<String> ncs = new ArrayList<>(appCtx.getClusterStateManager().getParticipantNodes());
+        ncs.forEach(s -> requests.add(new LoadUdfMessage(dataverse, resourceName, reqId)));
+        broker.sendSyncRequestToNCs(reqId, ncs, requests, UDF_RESPONSE_TIMEOUT);
+    }
+
+    private static void installLibrary(MetadataTransactionContext mdTxnCtx, DataverseName dataverse, String libraryName)
+            throws RemoteException, AlgebricksException {
+        Library libraryInMetadata = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, dataverse, libraryName);
+        // Get the dataverse
+        Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse);
+        if (dv == null) {
+            throw new AsterixException(ErrorCode.UNKNOWN_DATAVERSE);
+        }
+        if (libraryInMetadata != null) {
+            //replacing binary, library already exists
+            return;
+        }
+        // Add library
+        MetadataManager.INSTANCE.addLibrary(mdTxnCtx, new Library(dataverse, libraryName));
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Added library " + libraryName + " to Metadata");
+        }
+    }
+
+    private static void deleteLibrary(MetadataTransactionContext mdTxnCtx, DataverseName dataverse, String libraryName)
+            throws RemoteException, AlgebricksException {
+        Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse);
+        if (dv == null) {
+            throw new AsterixException(ErrorCode.UNKNOWN_DATAVERSE);
+        }
+        Library library = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, dataverse, libraryName);
+        if (library == null) {
+            throw new AsterixException(ErrorCode.UNKNOWN_LIBRARY);
+        }
+        List<Function> functions = MetadataManager.INSTANCE.getDataverseFunctions(mdTxnCtx, dataverse);
+        for (Function function : functions) {
+            if (libraryName.equals(function.getLibrary())) {
+                throw new AsterixException(ErrorCode.METADATA_DROP_LIBRARY_IN_USE, libraryName);
+            }
+        }
+        List<DatasourceAdapter> adapters = MetadataManager.INSTANCE.getDataverseAdapters(mdTxnCtx, dataverse);
+        for (DatasourceAdapter adapter : adapters) {
+            if (libraryName.equals(adapter.getLibrary())) {
+                throw new AsterixException(ErrorCode.METADATA_DROP_LIBRARY_IN_USE, libraryName);
+            }
+        }
+        MetadataManager.INSTANCE.dropLibrary(mdTxnCtx, dataverse, libraryName);
     }
 
     public static String makeDeploymentId(DataverseName dv, String resourceName) {
@@ -136,16 +229,6 @@ public class UdfApiServlet extends BasicAuthServlet {
         dvParts.add(resourceName);
         DataverseName dvWithLibrarySuffix = DataverseName.create(dvParts);
         return dvWithLibrarySuffix.getCanonicalForm();
-    }
-
-    private void deleteUdf(DataverseName dataverse, String resourceName) throws Exception {
-        long reqId = broker.newRequestId();
-        List<INcAddressedMessage> requests = new ArrayList<>();
-        List<String> ncs = new ArrayList<>(appCtx.getClusterStateManager().getParticipantNodes());
-        ncs.forEach(s -> requests.add(new DeleteUdfMessage(dataverse, resourceName, reqId)));
-        broker.sendSyncRequestToNCs(reqId, ncs, requests, UDF_RESPONSE_TIMEOUT);
-        appCtx.getLibraryManager().deregisterLibraryClassLoader(dataverse, resourceName);
-        appCtx.getHcc().unDeployBinary(new DeploymentId(makeDeploymentId(dataverse, resourceName)));
     }
 
     @Override
@@ -157,14 +240,37 @@ public class UdfApiServlet extends BasicAuthServlet {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
         }
+        PrintWriter responseWriter = response.writer();
         String resourceName = resourceNames.first;
         DataverseName dataverse = resourceNames.second;
+        IMetadataLockUtil mdLockUtil = appCtx.getMetadataLockUtil();
+        MetadataTransactionContext mdTxnCtx = null;
+        LockList mdLockList = null;
         try {
-            deleteUdf(dataverse, resourceName);
+            MetadataManager.INSTANCE.init();
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
+            mdLockList = metadataProvider.getLocks();
+            mdLockUtil.dropLibraryBegin(appCtx.getMetadataLockManager(), metadataProvider.getLocks(), dataverse,
+                    resourceName);
+            deleteLibrary(mdTxnCtx, dataverse, resourceName);
+            ExternalLibraryUtils.deleteDeployedUdf(broker, appCtx, dataverse, resourceName);
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
+            try {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            } catch (RemoteException r) {
+                LOGGER.error("Unable to abort metadata transaction", r);
+            }
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            responseWriter.write(e.getMessage());
+            responseWriter.flush();
             LOGGER.error(e);
             return;
+        } finally {
+            if (mdLockList != null) {
+                mdLockList.unlock();
+            }
         }
         response.setStatus(HttpResponseStatus.OK);
     }

@@ -38,7 +38,7 @@ public class ExternalLibrarySetupTask implements INCLifecycleTask {
     public void perform(CcId ccId, IControllerService cs) throws HyracksDataException {
         INcApplicationContext appContext = (INcApplicationContext) cs.getApplicationContext();
         try {
-            ExternalLibraryUtils.setUpInstalledLibraries(appContext.getLibraryManager(), metadataNode,
+            ExternalLibraryUtils.setUpInstalledLibraries(appContext.getLibraryManager(),
                     cs.getContext().getServerCtx().getAppDir());
         } catch (Exception e) {
             throw HyracksDataException.create(e);
