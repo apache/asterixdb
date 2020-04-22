@@ -90,6 +90,7 @@ Here are steps to get AsterixDB running on your local machine:
 ## Documentation
 
 * [master](https://ci.apache.org/projects/asterixdb/index.html) |
+  [0.9.4](http://asterixdb.apache.org/docs/0.9.4/index.html) |
   [0.9.3](http://asterixdb.apache.org/docs/0.9.3/index.html) |
   [0.9.2](http://asterixdb.apache.org/docs/0.9.2/index.html) |
   [0.9.1](http://asterixdb.apache.org/docs/0.9.1/index.html) |
