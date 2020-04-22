@@ -1,0 +1,2 @@
+{ "p_id": 1, "ct": [ { "ct_sum": 92, "ct_avg": 46.0 }, { "ct_id": "LAS", "ct_sum": 16, "ct_avg": 8.0 }, { "ct_id": "RNO", "ct_sum": 14, "ct_avg": 7.0 }, { "ct_id": "SFO", "ct_sum": 10, "ct_avg": 5.0 }, { "ct_id": "SJC", "ct_sum": 12, "ct_avg": 6.0 } ], "st": [ { "st_id": "CA", "st_sum": 64, "st_avg": 16.0 }, { "st_id": "NV", "st_sum": 80, "st_avg": 20.0 } ], "p_name": "PRODUCT_1" }
+{ "p_id": 2, "ct": [  ], "st": [  ], "p_name": "PRODUCT_2" }
