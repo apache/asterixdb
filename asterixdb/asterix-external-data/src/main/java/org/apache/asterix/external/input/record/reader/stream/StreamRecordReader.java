@@ -21,6 +21,7 @@ package org.apache.asterix.external.input.record.reader.stream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IRawRecord;
@@ -56,10 +57,13 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
 
     @Override
     public void close() throws IOException {
-        if (!done) {
-            reader.close();
+        try {
+            if (!done) {
+                reader.close();
+            }
+        } finally {
+            done = true;
         }
-        done = true;
     }
 
     @Override
@@ -95,6 +99,15 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
     @Override
     public void notifyNewSource() {
         throw new UnsupportedOperationException();
+    }
+
+    protected void resetForNewSource() {
+        record.reset();
+    }
+
+    @Override
+    public Supplier<String> getDataSourceName() {
+        return reader::getStreamName;
     }
 
     public abstract List<String> getRecordReaderFormats();

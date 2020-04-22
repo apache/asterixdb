@@ -132,9 +132,10 @@ public class ClassAdToADMTest extends TestCase {
                 while (recordReader.hasNext()) {
                     tb.reset();
                     IRawRecord<char[]> record = recordReader.next();
-                    parser.parse(record, tb.getDataOutput());
-                    tb.addFieldEndOffset();
-                    printTuple(tb, printers, printStream);
+                    if (parser.parse(record, tb.getDataOutput())) {
+                        tb.addFieldEndOffset();
+                        printTuple(tb, printers, printStream);
+                    }
                 }
                 recordReader.close();
                 printStream.close();

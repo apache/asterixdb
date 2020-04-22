@@ -47,4 +47,8 @@ public abstract class AsterixInputStream extends InputStream {
     public void setNotificationHandler(IStreamNotificationHandler notificationHandler) {
         this.notificationHandler = notificationHandler;
     }
+
+    public String getStreamName() {
+        return "";
+    }
 }

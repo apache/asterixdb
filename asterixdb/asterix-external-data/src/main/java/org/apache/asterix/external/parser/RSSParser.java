@@ -48,7 +48,7 @@ public class RSSParser implements IRecordDataParser<SyndEntry> {
     }
 
     @Override
-    public void parse(IRawRecord<? extends SyndEntry> record, DataOutput out) throws HyracksDataException {
+    public boolean parse(IRawRecord<? extends SyndEntry> record, DataOutput out) throws HyracksDataException {
         SyndEntry entry = record.get();
         tupleFieldValues[0] = String.valueOf(id);
         tupleFieldValues[1] = entry.getTitle();
@@ -62,5 +62,6 @@ public class RSSParser implements IRecordDataParser<SyndEntry> {
         recordBuilder.init();
         IDataParser.writeRecord(mutableRecord, out, recordBuilder);
         id++;
+        return true;
     }
 }

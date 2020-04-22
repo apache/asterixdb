@@ -30,6 +30,7 @@ import org.junit.Assert;
 public class CursorTest {
 
     // @Test commented out due to ASTERIXDB-1881
+    // fix the code if it is to be enabled
     public void test() {
         FileInputStream in = null;
         BufferedReader reader = null;
@@ -38,24 +39,28 @@ public class CursorTest {
                     Paths.get(getClass().getResource("/data/beer.txt").toURI()).toAbsolutePath().toString());
             reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
             // skip header
-            final FieldCursorForDelimitedDataParser cursor = new FieldCursorForDelimitedDataParser(reader, ',', '"');
+            final FieldCursorForDelimitedDataParser cursor =
+                    new FieldCursorForDelimitedDataParser(reader, ',', '"', null, () -> "");
             // get number of fields from header (first record is header)
             cursor.nextRecord();
             int numOfFields = 0;
             int expectedNumberOfRecords = 7307;
-            while (cursor.nextField()) {
+            FieldCursorForDelimitedDataParser.Result lastResult = cursor.nextField();
+            while ((lastResult = cursor.nextField()) == FieldCursorForDelimitedDataParser.Result.OK) {
                 numOfFields++;
             }
+            Assert.assertNotEquals(lastResult, FieldCursorForDelimitedDataParser.Result.ERROR);
 
             int recordNumber = 0;
             while (cursor.nextRecord()) {
                 int fieldNumber = 0;
-                while (cursor.nextField()) {
+                while ((lastResult = cursor.nextField()) == FieldCursorForDelimitedDataParser.Result.OK) {
                     if (cursor.fieldHasDoubleQuote()) {
                         cursor.eliminateDoubleQuote();
                     }
                     fieldNumber++;
                 }
+                Assert.assertNotEquals(lastResult, FieldCursorForDelimitedDataParser.Result.ERROR);
                 if ((fieldNumber > numOfFields) || (fieldNumber < numOfFields)) {
                     System.err.println("Test case failed. Expected number of fields in each record is " + numOfFields
                             + " and record number " + recordNumber + " was found to have " + fieldNumber);

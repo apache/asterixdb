@@ -290,7 +290,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
         return null;
     }
 
-    private void parseRecord(ARecordType recType, ClassAd pAd, DataOutput out) throws IOException, AsterixException {
+    private boolean parseRecord(ARecordType recType, ClassAd pAd, DataOutput out) throws IOException, AsterixException {
         ArrayBackedValueStorage fieldValueBuffer = getTempBuffer();
         ArrayBackedValueStorage fieldNameBuffer = getTempBuffer();
         IARecordBuilder recBuilder = getRecordBuilder();
@@ -359,6 +359,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             }
         }
         recBuilder.write(out, true);
+        return true;
     }
 
     private void writeFieldValueToBuffer(IAType fieldType, DataOutput out, String name, ExprTree tree, ClassAd pAd)
@@ -1742,7 +1743,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     }
 
     @Override
-    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
+    public boolean parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
         try {
             resetPools();
             if (oldFormat) {
@@ -1768,7 +1769,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                 rootAd.reset();
                 asterixParseClassAd(rootAd);
             }
-            parseRecord(recordType, rootAd, out);
+            return parseRecord(recordType, rootAd, out);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }

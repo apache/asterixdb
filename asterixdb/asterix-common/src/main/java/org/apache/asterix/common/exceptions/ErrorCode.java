@@ -308,7 +308,6 @@ public class ErrorCode {
     public static final int INPUT_DECODE_FAILURE = 3116;
     public static final int FAILED_TO_PARSE_MALFORMED_LOG_RECORD = 3117;
     public static final int PARAMETERS_REQUIRED = 3118;
-    public static final int MALFORMED_RECORD = 3119;
 
     // Lifecycle management errors
     public static final int DUPLICATE_PARTITION_ID = 4000;

@@ -11260,22 +11260,16 @@
     <test-case FilePath="load">
       <compilation-unit name="csv_05">
         <output-dir compare="Text">csv_05</output-dir>
-        <expected-error>At record: 1, field#: 4 - a quote enclosing a field needs to be placed in the beginning of that field</expected-error>
-        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
       <compilation-unit name="csv_06">
         <output-dir compare="Text">csv_06</output-dir>
-        <expected-error>At record: 1, field#: 3 - a quote enclosing a field needs to be placed in the beginning of that field</expected-error>
-        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
       <compilation-unit name="csv_07">
         <output-dir compare="Text">csv_07</output-dir>
-        <expected-error>At record: 1, field#: 3 -  A quote enclosing a field needs to be followed by the delimiter</expected-error>
-        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">

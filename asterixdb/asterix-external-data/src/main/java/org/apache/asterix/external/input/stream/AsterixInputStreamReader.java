@@ -127,4 +127,8 @@ public class AsterixInputStreamReader extends Reader {
     public void reset() throws IOException {
         byteBuffer.limit(0);
     }
+
+    public String getStreamName() {
+        return in.getStreamName();
+    }
 }

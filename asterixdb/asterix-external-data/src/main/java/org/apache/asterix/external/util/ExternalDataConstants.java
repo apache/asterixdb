@@ -21,6 +21,7 @@ package org.apache.asterix.external.util;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class ExternalDataConstants {
 
@@ -245,6 +246,8 @@ public class ExternalDataConstants {
     public static final int DEFAULT_QUEUE_SIZE = 64;
     public static final int MAX_RECORD_SIZE = 32000000;
 
+    public static final Supplier<String> EMPTY_STRING = () -> "";
+
     /**
      * Expected parameter values
      */
@@ -260,6 +263,8 @@ public class ExternalDataConstants {
     public static final String READER_RSS = "rss_feed";
 
     public static final String ERROR_PARSE_RECORD = "Parser failed to parse record";
+    public static final String MISSING_FIELDS = "some fields are missing";
+    public static final String REC_ENDED_IN_Q = "malformed input record ended inside quote";
 
     public static class AwsS3Constants {
         public static final String REGION_FIELD_NAME = "region";

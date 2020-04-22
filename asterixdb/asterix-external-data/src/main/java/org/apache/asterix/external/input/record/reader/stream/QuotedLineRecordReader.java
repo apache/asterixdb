@@ -18,28 +18,30 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.REC_ENDED_IN_Q;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.ParseUtil;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class QuotedLineRecordReader extends LineRecordReader {
 
     private char quote;
     private char quoteEscape;
-    private IWarningCollector warningCollector;
-    private final SourceLocation srcLoc = new SourceLocation(-1, -1);
+    private boolean prevCharEscape;
+    private int readLength;
+    private boolean inQuote;
+    private IWarningCollector warnings;
     private static final List<String> recordReaderFormats = Collections.unmodifiableList(
             Arrays.asList(ExternalDataConstants.FORMAT_DELIMITED_TEXT, ExternalDataConstants.FORMAT_CSV));
     private static final String REQUIRED_CONFIGS = ExternalDataConstants.KEY_QUOTE;
@@ -48,11 +50,28 @@ public class QuotedLineRecordReader extends LineRecordReader {
     public void configure(IHyracksTaskContext ctx, AsterixInputStream inputStream, Map<String, String> config)
             throws HyracksDataException {
         super.configure(ctx, inputStream, config);
-        this.warningCollector = ctx.getWarningCollector();
+        this.warnings = ctx.getWarningCollector();
         String quoteString = config.get(ExternalDataConstants.KEY_QUOTE);
         ExternalDataUtils.validateQuote(quoteString);
         this.quote = quoteString.charAt(0);
         this.quoteEscape = ExternalDataUtils.validateGetQuoteEscape(config);
+    }
+
+    @Override
+    public void notifyNewSource() {
+        if (!record.isEmptyRecord() && warnings.shouldWarn()) {
+            ParseUtil.warn(warnings, reader.getStreamName(), recordNumber, 0, REC_ENDED_IN_Q);
+        }
+        // restart for a new record from a new source
+        resetForNewSource();
+    }
+
+    @Override
+    public void resetForNewSource() {
+        super.resetForNewSource();
+        prevCharEscape = false;
+        readLength = 0;
+        inQuote = false;
     }
 
     @Override
@@ -73,10 +92,10 @@ public class QuotedLineRecordReader extends LineRecordReader {
             }
             newlineLength = 0;
             prevCharCR = false;
-            boolean prevCharEscape = false;
+            prevCharEscape = false;
             record.reset();
-            int readLength = 0;
-            boolean inQuote = false;
+            readLength = 0;
+            inQuote = false;
             do {
                 int startPosn = bufferPosn;
                 if (bufferPosn >= bufferLength) {
@@ -86,19 +105,14 @@ public class QuotedLineRecordReader extends LineRecordReader {
                         // reached end of stream
                         if (readLength <= 0 || inQuote) {
                             // haven't read anything previously OR have read and in the middle and hit the end
-                            if (inQuote && warningCollector.shouldWarn()) {
-                                warningCollector
-                                        .warn(WarningUtil.forAsterix(srcLoc, ErrorCode.MALFORMED_RECORD, recordNumber));
+                            if (inQuote && warnings.shouldWarn()) {
+                                ParseUtil.warn(warnings, reader.getStreamName(), recordNumber, 0, REC_ENDED_IN_Q);
                             }
                             close();
                             return false;
                         }
                         record.endRecord();
-                        if (record.isEmptyRecord()) {
-                            return false;
-                        }
-                        recordNumber++;
-                        return true;
+                        break;
                     }
                 }
                 boolean maybeInQuote = false;
@@ -119,10 +133,8 @@ public class QuotedLineRecordReader extends LineRecordReader {
                             break;
                         }
                         prevCharCR = (inputBuffer[bufferPosn] == ExternalDataConstants.CR);
-                        if (inputBuffer[bufferPosn] == quote && !prevCharEscape) {
-                            // this is an opening quote
-                            inQuote = true;
-                        }
+                        // if this is an opening quote, mark it
+                        inQuote = inputBuffer[bufferPosn] == quote && !prevCharEscape;
                         // the quoteEscape != quote is for making an opening quote not an escape
                         prevCharEscape =
                                 inputBuffer[bufferPosn] == quoteEscape && !prevCharEscape && quoteEscape != quote;
@@ -138,9 +150,6 @@ public class QuotedLineRecordReader extends LineRecordReader {
                     }
                 }
                 readLength = bufferPosn - startPosn;
-                if (prevCharCR && newlineLength == 0) {
-                    --readLength;
-                }
                 if (readLength > 0) {
                     record.append(inputBuffer, startPosn, readLength);
                 }
@@ -148,8 +157,8 @@ public class QuotedLineRecordReader extends LineRecordReader {
             if (record.isEmptyRecord()) {
                 continue;
             }
-            if (nextIsHeader) {
-                nextIsHeader = false;
+            if (newSource && hasHeader) {
+                newSource = false;
                 continue;
             }
             recordNumber++;

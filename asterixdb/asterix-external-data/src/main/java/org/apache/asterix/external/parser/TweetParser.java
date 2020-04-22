@@ -259,12 +259,13 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
     }
 
     @Override
-    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
+    public boolean parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
         try {
             //TODO get rid of this temporary json
             resetPools();
             ObjectMapper om = new ObjectMapper();
             writeRecord(om.readTree(record.getBytes()), out, recordType);
+            return true;
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

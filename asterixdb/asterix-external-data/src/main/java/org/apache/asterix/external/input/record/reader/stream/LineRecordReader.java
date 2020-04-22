@@ -32,11 +32,11 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class LineRecordReader extends StreamRecordReader {
 
-    private boolean hasHeader;
+    protected boolean hasHeader;
     protected boolean prevCharCR;
     protected int newlineLength;
     protected int recordNumber = 0;
-    protected boolean nextIsHeader = false;
+    protected boolean newSource = false;
     private static final List<String> recordReaderFormats =
             Collections.unmodifiableList(Arrays.asList(ExternalDataConstants.FORMAT_DELIMITED_TEXT,
                     ExternalDataConstants.FORMAT_CSV, ExternalDataConstants.FORMAT_TSV));
@@ -47,17 +47,22 @@ public class LineRecordReader extends StreamRecordReader {
             throws HyracksDataException {
         super.configure(inputStream);
         this.hasHeader = ExternalDataUtils.hasHeader(config);
-        if (hasHeader) {
-            // TODO(ali): revisit this and notifyNewSource
-            inputStream.setNotificationHandler(this);
-        }
+        this.newSource = true;
+        inputStream.setNotificationHandler(this);
     }
 
     @Override
     public void notifyNewSource() {
-        if (hasHeader) {
-            nextIsHeader = true;
-        }
+        resetForNewSource();
+    }
+
+    @Override
+    public void resetForNewSource() {
+        super.resetForNewSource();
+        newSource = true;
+        recordNumber = 0;
+        prevCharCR = false;
+        newlineLength = 0;
     }
 
     @Override
@@ -108,11 +113,7 @@ public class LineRecordReader extends StreamRecordReader {
                             return false; //EOF
                         }
                         record.endRecord();
-                        if (record.isEmptyRecord()) {
-                            return false;
-                        }
-                        recordNumber++;
-                        return true;
+                        break;
                     }
                 }
                 for (; bufferPosn < bufferLength; ++bufferPosn) { //search for newline
@@ -128,10 +129,6 @@ public class LineRecordReader extends StreamRecordReader {
                     prevCharCR = (inputBuffer[bufferPosn] == ExternalDataConstants.CR);
                 }
                 readLength = bufferPosn - startPosn;
-                if (prevCharCR && newlineLength == 0) {
-                    --readLength; //CR at the end of the buffer
-                    prevCharCR = false;
-                }
                 if (readLength > 0) {
                     record.append(inputBuffer, startPosn, readLength);
                 }
@@ -139,8 +136,8 @@ public class LineRecordReader extends StreamRecordReader {
             if (record.isEmptyRecord()) {
                 continue;
             }
-            if (nextIsHeader) {
-                nextIsHeader = false;
+            if (newSource && hasHeader) {
+                newSource = false;
                 continue;
             }
             recordNumber++;

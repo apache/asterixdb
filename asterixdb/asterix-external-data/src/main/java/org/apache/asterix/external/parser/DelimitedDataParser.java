@@ -18,10 +18,13 @@
  */
 package org.apache.asterix.external.parser;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.MISSING_FIELDS;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.function.Supplier;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
@@ -31,12 +34,15 @@ import org.apache.asterix.external.api.IDataParser;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
+import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ParseUtil;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParser;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
@@ -44,7 +50,7 @@ import org.apache.hyracks.dataflow.std.file.FieldCursorForDelimitedDataParser;
 
 public class DelimitedDataParser extends AbstractDataParser implements IStreamDataParser, IRecordDataParser<char[]> {
 
-    private final IHyracksTaskContext ctx;
+    private final IWarningCollector warnings;
     private final char fieldDelimiter;
     private final char quote;
     private final boolean hasHeader;
@@ -54,13 +60,15 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     private final DataOutput fieldValueBufferOutput;
     private final IValueParser[] valueParsers;
     private FieldCursorForDelimitedDataParser cursor;
+    private Supplier<String> dataSourceName;
     private final byte[] fieldTypeTags;
     private final int[] fldIds;
     private final ArrayBackedValueStorage[] nameBuffers;
 
     public DelimitedDataParser(IHyracksTaskContext ctx, IValueParserFactory[] valueParserFactories, char fieldDelimiter,
             char quote, boolean hasHeader, ARecordType recordType, boolean isStreamParser) throws HyracksDataException {
-        this.ctx = ctx;
+        this.dataSourceName = ExternalDataConstants.EMPTY_STRING;
+        this.warnings = ctx.getWarningCollector();
         this.fieldDelimiter = fieldDelimiter;
         this.quote = quote;
         this.hasHeader = hasHeader;
@@ -100,7 +108,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
             }
         }
         if (!isStreamParser) {
-            cursor = new FieldCursorForDelimitedDataParser(null, this.fieldDelimiter, quote);
+            cursor = new FieldCursorForDelimitedDataParser(null, this.fieldDelimiter, quote, warnings, dataSourceName);
         }
     }
 
@@ -108,9 +116,13 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     public boolean parse(DataOutput out) throws HyracksDataException {
         try {
             while (cursor.nextRecord()) {
-                parseRecord();
-                recBuilder.write(out, true);
-                return true;
+                if (parseRecord()) {
+                    recBuilder.write(out, true);
+                    return true;
+                } else {
+                    // keeping the behaviour of throwing exception for stream parsers
+                    throw new RuntimeDataException(ErrorCode.FAILED_TO_PARSE_RECORD);
+                }
             }
             return false;
         } catch (IOException e) {
@@ -118,21 +130,29 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
         }
     }
 
-    private void parseRecord() throws HyracksDataException {
+    private boolean parseRecord() throws HyracksDataException {
         recBuilder.reset(recordType);
         recBuilder.init();
 
         for (int i = 0; i < valueParsers.length; ++i) {
             try {
-                if (!cursor.nextField()) {
-                    break;
+                FieldCursorForDelimitedDataParser.Result result = cursor.nextField();
+                switch (result) {
+                    case OK:
+                        break;
+                    case END:
+                        if (warnings.shouldWarn()) {
+                            ParseUtil.warn(warnings, dataSourceName.get(), cursor.getRecordCount(),
+                                    cursor.getFieldCount(), MISSING_FIELDS);
+                        }
+                        return false;
+                    case ERROR:
+                        return false;
+                    default:
+                        throw new IllegalStateException();
                 }
-            } catch (IOException e) {
-                throw HyracksDataException.create(e);
-            }
-            fieldValueBuffer.reset();
+                fieldValueBuffer.reset();
 
-            try {
                 if (cursor.isFieldEmpty() && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.STRING
                         && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.NULL) {
                     // if the field is empty and the type is optional, insert
@@ -161,32 +181,46 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                 throw HyracksDataException.create(e);
             }
         }
-        if (valueParsers.length != cursor.getFieldCount()) {
-            throw new HyracksDataException("Record #" + cursor.getRecordCount() + " is missing some fields");
-        }
+        return true;
     }
 
     @Override
-    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
+    public boolean parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
         cursor.nextRecord(record.get(), record.size());
-        parseRecord();
-        recBuilder.write(out, true);
+        if (parseRecord()) {
+            recBuilder.write(out, true);
+            return true;
+        }
+        return false;
     }
 
     @Override
     public void setInputStream(InputStream in) throws IOException {
-        cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote);
-        if (in != null && hasHeader) {
+        // TODO(ali): revisit this in regards to stream
+        cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote, warnings,
+                dataSourceName);
+        if (hasHeader) {
             cursor.nextRecord();
-            while (cursor.nextField()) {
-                ;
+            FieldCursorForDelimitedDataParser.Result result;
+            do {
+                result = cursor.nextField();
+            } while (result == FieldCursorForDelimitedDataParser.Result.OK);
+            if (result == FieldCursorForDelimitedDataParser.Result.ERROR) {
+                throw new RuntimeDataException(ErrorCode.FAILED_TO_PARSE_RECORD);
             }
         }
     }
 
     @Override
     public boolean reset(InputStream in) throws IOException {
-        cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote);
+        // TODO(ali): revisit this in regards to stream
+        cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote, warnings,
+                dataSourceName);
         return true;
+    }
+
+    @Override
+    public void setDataSourceName(Supplier<String> dataSourceName) {
+        this.dataSourceName = dataSourceName == null ? ExternalDataConstants.EMPTY_STRING : dataSourceName;
     }
 }

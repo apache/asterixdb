@@ -72,14 +72,15 @@ public class RecordWithMetadataParser<T, O> implements IRecordWithMetadataParser
     }
 
     @Override
-    public void parse(IRawRecord<? extends T> record, DataOutput out) throws HyracksDataException {
+    public boolean parse(IRawRecord<? extends T> record, DataOutput out) throws HyracksDataException {
         try {
             rwm = converter.convert(record);
             if (rwm.getRecord().size() == 0) {
                 // null record
                 out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+                return true;
             } else {
-                recordParser.parse(rwm.getRecord(), out);
+                return recordParser.parse(rwm.getRecord(), out);
             }
         } catch (IOException e) {
             throw HyracksDataException.create(e);
