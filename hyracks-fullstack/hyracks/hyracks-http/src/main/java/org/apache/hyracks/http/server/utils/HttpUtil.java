@@ -90,12 +90,12 @@ public class HttpUtil {
     public static Charset setContentType(IServletResponse response, String type, IServletRequest fromRequest)
             throws IOException {
         Charset preferredCharset = getPreferredCharset(fromRequest);
-        response.setHeader(HttpHeaderNames.CONTENT_TYPE, type + "; charset=" + preferredCharset.name());
+        setContentType(response, type, preferredCharset);
         return preferredCharset;
     }
 
-    public static void setContentType(IServletResponse response, String type, String charset) throws IOException {
-        response.setHeader(HttpHeaderNames.CONTENT_TYPE, type + "; charset=" + charset);
+    public static void setContentType(IServletResponse response, String type, Charset charset) throws IOException {
+        response.setHeader(HttpHeaderNames.CONTENT_TYPE, type + "; charset=" + charset.name());
     }
 
     public static void setContentType(IServletResponse response, String type) throws IOException {
@@ -182,13 +182,6 @@ public class HttpUtil {
     public static String trimQuery(String uri) {
         int i = uri.indexOf('?');
         return i < 0 ? uri : uri.substring(0, i);
-    }
-
-    public static class Encoding {
-        public static final String UTF8 = "utf-8";
-
-        private Encoding() {
-        }
     }
 
     public static class ContentType {
