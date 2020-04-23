@@ -17,22 +17,7 @@
  * under the License.
  */
 
-drop dataverse test if exists;
-create dataverse test;
 use test;
 
-drop type test if exists;
-create type test as open {
-};
-
-drop dataset test if exists;
-create external dataset test(test) using S3 (
-("accessKey"="dummyAccessKey"),
-("secretKey"="dummySecretKey"),
-("region"="us-west-2"),
-("serviceEndpoint"="http://localhost:8001"),
-("container"="playground"),
-("definition"="json-data/reviews"),
-("format"="json")
-);
+select count(*) `count` from test4;
 

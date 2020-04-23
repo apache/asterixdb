@@ -24,6 +24,7 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
@@ -73,27 +74,42 @@ public class AwsS3ExternalDatasetTest {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected static String TEST_CONFIG_FILE_NAME;
+    // subclasses of this class MUST instantiate these variables before using them to avoid unexpected behavior
+    static String SUITE_TESTS;
+    static String ONLY_TESTS;
+    static String TEST_CONFIG_FILE_NAME;
     static Runnable PREPARE_S3_BUCKET;
 
-    // S3 mock server
-    private static S3Mock s3MockServer;
-
-    // IMPORTANT: The following values must be used in the AWS S3 test case
-    private static S3Client client;
-    private static final String S3_MOCK_SERVER_BUCKET = "playground";
-    private static final String S3_MOCK_SERVER_BUCKET_DEFINITION = "json-data/reviews/"; // data resides here
-    private static final String S3_MOCK_SERVER_BUCKET_CSV_DEFINITION = "csv-data/reviews/"; // data resides here
-    private static final String S3_MOCK_SERVER_BUCKET_TSV_DEFINITION = "tsv-data/reviews/"; // data resides here
-    private static final String S3_MOCK_SERVER_REGION = "us-west-2";
-    private static final int S3_MOCK_SERVER_PORT = 8001;
-    private static final String S3_MOCK_SERVER_HOSTNAME = "http://localhost:" + S3_MOCK_SERVER_PORT;
+    // Base directory paths for data files
+    private static final String JSON_DATA_PATH = joinPath("data", "json");
     private static final String CSV_DATA_PATH = joinPath("data", "csv");
     private static final String TSV_DATA_PATH = joinPath("data", "tsv");
+
+    // IMPORTANT: The following values must be used in the AWS S3 test case
+    private static S3Mock s3MockServer;
+    private static S3Client client;
+
+    // Service endpoint
+    private static final int S3_MOCK_SERVER_PORT = 8001;
+    private static final String S3_MOCK_SERVER_HOSTNAME = "http://localhost:" + S3_MOCK_SERVER_PORT;
+
+    // Region, bucket and definitions
+    private static final String S3_MOCK_SERVER_REGION = "us-west-2";
+    private static final String S3_MOCK_SERVER_BUCKET = "playground";
+    private static final String S3_MOCK_SERVER_BUCKET_JSON_DEFINITION = "json-data/reviews/"; // data resides here
+    private static final String S3_MOCK_SERVER_BUCKET_CSV_DEFINITION = "csv-data/reviews/"; // data resides here
+    private static final String S3_MOCK_SERVER_BUCKET_TSV_DEFINITION = "tsv-data/reviews/"; // data resides here
+
     private static final Set<String> fileNames = new HashSet<>();
     private static final CreateBucketRequest.Builder CREATE_BUCKET_BUILDER = CreateBucketRequest.builder();
     private static final DeleteBucketRequest.Builder DELETE_BUCKET_BUILDER = DeleteBucketRequest.builder();
     private static final PutObjectRequest.Builder PUT_OBJECT_BUILDER = PutObjectRequest.builder();
+
+    protected TestCaseContext tcCtx;
+
+    public AwsS3ExternalDatasetTest(TestCaseContext tcCtx) {
+        this.tcCtx = tcCtx;
+    }
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -118,17 +134,13 @@ public class AwsS3ExternalDatasetTest {
         LOGGER.info("S3 mock down and client shut down successfully");
     }
 
-    @Parameters(name = "SqlppExecutionTest {index}: {0}")
+    @Parameters(name = "AwsS3ExternalDatasetTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
+        SUITE_TESTS = "testsuite_external_dataset.xml";
+        ONLY_TESTS = "only_external_dataset.xml";
         TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
         PREPARE_S3_BUCKET = AwsS3ExternalDatasetTest::prepareS3Bucket;
-        return LangExecutionUtil.tests("only_external_dataset.xml", "testsuite_external_dataset.xml");
-    }
-
-    protected TestCaseContext tcCtx;
-
-    public AwsS3ExternalDatasetTest(TestCaseContext tcCtx) {
-        this.tcCtx = tcCtx;
+        return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
 
     @Test
@@ -180,64 +192,58 @@ public class AwsS3ExternalDatasetTest {
         client.createBucket(CreateBucketRequest.builder().bucket(S3_MOCK_SERVER_BUCKET).build());
         LOGGER.info("bucket created successfully");
 
-        LOGGER.info("Adding JSON files to the bucket");
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "0.json").build(),
-                RequestBody.fromString("{\"id\": 1, \"year\": null, \"quarter\": null, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "1.json").build(),
-                RequestBody.fromString("{\"id\": 2, \"year\": null, \"quarter\": null, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2018/1.json").build(),
-                RequestBody.fromString("{\"id\": 3, \"year\": 2018, \"quarter\": null, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2018/2.json").build(),
-                RequestBody.fromString("{\"id\": 4, \"year\": 2018, \"quarter\": null, \"review\": \"bad\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2018/q1/1.json").build(),
-                RequestBody.fromString("{\"id\": 5, \"year\": 2018, \"quarter\": 1, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2018/q1/2.json").build(),
-                RequestBody.fromString("{\"id\": 6, \"year\": 2018, \"quarter\": 1, \"review\": \"bad\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2018/q2/1.json").build(),
-                RequestBody.fromString("{\"id\": 7, \"year\": 2018, \"quarter\": 2, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2018/q2/2.json").build(),
-                RequestBody.fromString("{\"id\": 8, \"year\": 2018, \"quarter\": 2, \"review\": \"bad\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/1.json").build(),
-                RequestBody.fromString("{\"id\": 9, \"year\": 2019, \"quarter\": null, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/2.json").build(),
-                RequestBody.fromString("{\"id\": 10, \"year\": 2019, \"quarter\": null, \"review\": \"bad\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/q1/1.json").build(),
-                RequestBody.fromString("{\"id\": 11, \"year\": 2019, \"quarter\": 1, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/q1/2.json").build(),
-                RequestBody.fromString("{\"id\": 12, \"year\": 2019, \"quarter\": 1, \"review\": \"bad\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/q2/1.json").build(),
-                RequestBody.fromString("{\"id\": 13, \"year\": 2019, \"quarter\": 2, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/q2/2.json").build(),
-                RequestBody.fromString("{\"id\": 14, \"year\": 2019, \"quarter\": 2, \"review\": \"bad\"}"));
+        // Load JSON files
+        loadJsonFiles();
+        loadCsvFiles();
+        loadTsvFiles();
 
+        LOGGER.info("Files added successfully");
+    }
+
+    private static void loadJsonFiles() {
+        LOGGER.info("Adding JSON files to the bucket");
+
+        // Set the bucket
+        PutObjectRequest.Builder builder1 = PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET);
+
+        // load multi-level single line JSON files
+        String singleLineBasePath = S3_MOCK_SERVER_BUCKET_JSON_DEFINITION + "single-line/";
+        Path filePath1 = Paths.get(JSON_DATA_PATH, "single-line", "20-records.json");
+        RequestBody reqBody1 = RequestBody.fromFile(filePath1);
+        client.putObject(builder1.key(singleLineBasePath + "20-records.json").build(), reqBody1);
+        client.putObject(builder1.key(singleLineBasePath + "level1a/" + "20-records.json").build(), reqBody1);
+        client.putObject(builder1.key(singleLineBasePath + "level1b/" + "20-records.json").build(), reqBody1);
+        client.putObject(builder1.key(singleLineBasePath + "level1a/level2a/" + "20-records.json").build(), reqBody1);
+        client.putObject(builder1.key(singleLineBasePath + "level1a/level2b/" + "20-records.json").build(), reqBody1);
+
+        // Load multi-level multi-lines JSON files
+        String multiLinesBasePath = S3_MOCK_SERVER_BUCKET_JSON_DEFINITION + "multi-lines/";
+        Path filePath2 = Paths.get(JSON_DATA_PATH, "multi-lines", "20-records.json");
+        RequestBody reqBody2 = RequestBody.fromFile(filePath2);
+        client.putObject(builder1.key(multiLinesBasePath + "20-records.json").build(), reqBody2);
+        client.putObject(builder1.key(multiLinesBasePath + "level1a/" + "20-records.json").build(), reqBody2);
+        client.putObject(builder1.key(multiLinesBasePath + "level1b/" + "20-records.json").build(), reqBody2);
+        client.putObject(builder1.key(multiLinesBasePath + "level1a/level2a/" + "20-records.json").build(), reqBody2);
+        client.putObject(builder1.key(multiLinesBasePath + "level1a/level2b/" + "20-records.json").build(), reqBody2);
+
+        // Load multi-level multi-lines with array JSON files
+        String multiLinesWithArraysBasePath = S3_MOCK_SERVER_BUCKET_JSON_DEFINITION + "multi-lines-with-arrays/";
+        Path filePath3 = Paths.get(JSON_DATA_PATH, "multi-lines-with-arrays", "5-records.json");
+        RequestBody reqBody3 = RequestBody.fromFile(filePath3);
+        client.putObject(builder1.key(multiLinesWithArraysBasePath + "5-records.json").build(), reqBody3);
+        client.putObject(builder1.key(multiLinesWithArraysBasePath + "level1a/" + "5-records.json").build(), reqBody3);
+
+        // Load multi-level multi-lines with nested objects JSON files
+        String multiLinesWithNestedObjectsBasePath =
+                S3_MOCK_SERVER_BUCKET_JSON_DEFINITION + "multi-lines-with-nested-objects/";
+        Path filePath4 = Paths.get(JSON_DATA_PATH, "multi-lines-with-nested-objects", "5-records.json");
+        RequestBody reqBody4 = RequestBody.fromFile(filePath4);
+        client.putObject(builder1.key(multiLinesWithNestedObjectsBasePath + "5-records.json").build(), reqBody4);
+        client.putObject(builder1.key(multiLinesWithNestedObjectsBasePath + "level1a/" + "5-records.json").build(),
+                reqBody4);
+    }
+
+    private static void loadCsvFiles() {
         LOGGER.info("Adding CSV files to the bucket");
         client.putObject(
                 PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
@@ -247,7 +253,9 @@ public class AwsS3ExternalDatasetTest {
                 PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
                         .key(S3_MOCK_SERVER_BUCKET_CSV_DEFINITION + "2018/01.csv").build(),
                 RequestBody.fromFile(Paths.get(CSV_DATA_PATH, "02.csv")));
+    }
 
+    private static void loadTsvFiles() {
         LOGGER.info("Adding TSV files to the bucket");
         client.putObject(
                 PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)

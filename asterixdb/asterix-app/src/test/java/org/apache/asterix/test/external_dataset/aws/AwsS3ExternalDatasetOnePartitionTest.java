@@ -22,8 +22,6 @@ import java.util.Collection;
 
 import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.FixMethodOrder;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -36,18 +34,17 @@ import org.junit.runners.Parameterized;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AwsS3ExternalDatasetOnePartitionTest extends AwsS3ExternalDatasetTest {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-    private static final String SUITE_PATH = "testsuite_external_dataset_one_partition.xml";
-
-    @Parameterized.Parameters(name = "SqlppExecutionTest {index}: {0}")
-    public static Collection<Object[]> tests() throws Exception {
-        TEST_CONFIG_FILE_NAME = "src/test/resources/cc-single.conf";
-        PREPARE_S3_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareS3Bucket;
-        return LangExecutionUtil.tests("only_external_dataset.xml", SUITE_PATH);
-    }
-
     public AwsS3ExternalDatasetOnePartitionTest(TestCaseContext tcCtx) {
         super(tcCtx);
+    }
+
+    @Parameterized.Parameters(name = "AwsS3ExternalDatasetOnePartitionTest {index}: {0}")
+    public static Collection<Object[]> tests() throws Exception {
+        SUITE_TESTS = "testsuite_external_dataset_one_partition.xml";
+        ONLY_TESTS = "only_external_dataset.xml";
+        TEST_CONFIG_FILE_NAME = "src/test/resources/cc-single.conf";
+        PREPARE_S3_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareS3Bucket;
+        return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
 
     private static void prepareS3Bucket() {

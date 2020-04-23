@@ -1,0 +1,32 @@
+{"id": 1, "year": null, "quarter": null, "review": "good", "array":  [1, 2, 3], "nested":  { "id" :  1}}
+
+
+{"id": 2, "year": null, "quarter": null, "review": "good", "array":  [1, [1, 2], [1]], "nested":  { "id" : 1}, "nested2": [ {"id":1 }]}
+{"id":3,"year":2018,"quarter":null,"review":"good","array":[1,2,3,{"nested":{"array":[{"nested":{"array":[1,2]}}]}}]}
+
+{
+  "id": 4,
+  "year": 2018,
+  "quarter": null,
+  "review": "bad",
+  "array": [
+    1,
+    2,
+    3,
+    {
+      "nested1": {
+        "id": 1,
+        "nested2": {
+          "id": 2,
+          "nested3": [
+            {
+              "nested4": null
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
+{"id": 5,
+  "year": 2018, "quarter": 1, "review": "good", "array":  [1,   2,       3, {"nested": { "array": [1, 2]}}]}
