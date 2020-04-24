@@ -17,23 +17,4 @@
  * under the License.
  */
 
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
-USE test;
-
-DROP TYPE t1 IF EXISTS;
-DROP TYPE t2 IF EXISTS;
-CREATE TYPE t1 AS {f1: int, f2: int, f3: int, f4: string};
-CREATE TYPE t2 AS {f1: bigint, f2: bigint?, f3: double, f4: double?, f5: string, f6: string?, f7: boolean, f8: boolean?};
-
-DROP DATASET ds1 IF EXISTS;
-CREATE EXTERNAL DATASET ds1(t1) USING S3 (
-("accessKey"="dummyAccessKey"),
-("secretKey"="dummySecretKey"),
-("region"="us-west-2"),
-("serviceEndpoint"="http://localhost:8001"),
-("container"="playground"),
-("definition"="data_dir"),
-("format"="CSV"),
-("header"="false")
-);
+playground data_dir data/csv/header/h_invalid_values.csv

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_REDACT_WARNINGS;
+
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -189,11 +191,12 @@ public class ExternalDataUtils {
     }
 
     public static boolean hasHeader(Map<String, String> configuration) {
-        String value = configuration.get(ExternalDataConstants.KEY_HEADER);
-        if (value != null) {
-            return Boolean.valueOf(value);
-        }
-        return false;
+        return isTrue(configuration, ExternalDataConstants.KEY_HEADER);
+    }
+
+    public static boolean isTrue(Map<String, String> configuration, String key) {
+        String value = configuration.get(key);
+        return value == null ? false : Boolean.valueOf(value);
     }
 
     public static IRecordReaderFactory<?> createExternalRecordReaderFactory(ILibraryManager libraryManager,
@@ -394,6 +397,10 @@ public class ExternalDataUtils {
         char delimiter = validateGetDelimiter(configuration);
         validateGetQuote(configuration, delimiter);
         validateGetQuoteEscape(configuration);
+        String value = configuration.get(KEY_REDACT_WARNINGS);
+        if (value != null && !isBoolean(value)) {
+            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, KEY_REDACT_WARNINGS, value);
+        }
     }
 
     private static boolean isHeaderRequiredFor(String format) {

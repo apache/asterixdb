@@ -111,6 +111,9 @@ public class ExternalDataConstants {
     public static final String KEY_HTTP_PROXY_PORT = "http-proxy-port";
     public static final String KEY_HTTP_PROXY_USER = "http-proxy-user";
     public static final String KEY_HTTP_PROXY_PASSWORD = "http-proxy-password";
+    // a string representing the NULL value
+    public static final String KEY_NULL_STR = "null";
+    public static final String KEY_REDACT_WARNINGS = "redact-warnings";
 
     /**
      *  Keys for adapter name
@@ -265,6 +268,8 @@ public class ExternalDataConstants {
     public static final String ERROR_PARSE_RECORD = "Parser failed to parse record";
     public static final String MISSING_FIELDS = "some fields are missing";
     public static final String REC_ENDED_IN_Q = "malformed input record ended inside quote";
+    public static final String EMPTY_FIELD = "empty value";
+    public static final String INVALID_VAL = "invalid value";
 
     public static class AwsS3Constants {
         public static final String REGION_FIELD_NAME = "region";

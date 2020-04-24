@@ -20,10 +20,10 @@
 use tpcds;
 
 
-load dataset customer_address using localfs ((`path`=`asterix_nc1://data/tpcds/customer_address.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset customer_address using localfs ((`path`=`asterix_nc1://data/tpcds/customer_address.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset date_dim using localfs ((`path`=`asterix_nc1://data/tpcds/date_dim.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset date_dim using localfs ((`path`=`asterix_nc1://data/tpcds/date_dim.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset catalog_returns using localfs ((`path`=`asterix_nc1://data/tpcds/catalog_returns.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset catalog_returns using localfs ((`path`=`asterix_nc1://data/tpcds/catalog_returns.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset customer using localfs ((`path`=`asterix_nc1://data/tpcds/customer.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset customer using localfs ((`path`=`asterix_nc1://data/tpcds/customer.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));

@@ -35,91 +35,61 @@ public class IntegerParserFactory implements IValueParserFactory {
     public IValueParser createValueParser() {
         return new IValueParser() {
             @Override
-            public void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
-                int n = 0;
-                int sign = 1;
-                int i = 0;
-                boolean pre = true;
-                for (; pre && i < length; ++i) {
-                    char ch = buffer[i + start];
-                    switch (ch) {
-                        case ' ':
-                        case '\t':
-                        case '\n':
-                        case '\r':
-                        case '\f':
-                            break;
-
-                        case '-':
-                            sign = -1;
-                            pre = false;
-                            break;
-
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '4':
-                        case '5':
-                        case '6':
-                        case '7':
-                        case '8':
-                        case '9':
-                            pre = false;
-                            n = n * 10 + (ch - '0');
-                            break;
-
-                        default:
-                            String errorString = new String(buffer, i + start, length - i);
-                            throw new HyracksDataException(
-                                    "Integer Parser - a digit is expected. But, encountered this character: " + ch
-                                            + " in the incoming input: " + errorString);
+            public boolean parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
+                // accumulating negatively like Integer.parse() to avoid surprises near MAX_VALUE
+                char c;
+                int i = start;
+                int end = start + length;
+                while (i < end && ((c = buffer[i]) == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f')) {
+                    i++;
+                }
+                boolean negative = false;
+                int limit = -Integer.MAX_VALUE;
+                if (i < end) {
+                    c = buffer[i];
+                    if (c == '-') {
+                        negative = true;
+                        limit = Integer.MIN_VALUE;
+                        i++;
+                    }
+                    if (c == '+') {
+                        i++;
                     }
                 }
-                boolean post = false;
-                for (; !post && i < length; ++i) {
-                    char ch = buffer[i + start];
-                    switch (ch) {
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '4':
-                        case '5':
-                        case '6':
-                        case '7':
-                        case '8':
-                        case '9':
-                            n = n * 10 + (ch - '0');
-                            break;
-                        default:
-                            String errorString = new String(buffer, i + start, length - i);
-                            throw new HyracksDataException(
-                                    "Integer Parser - a digit is expected. But, encountered this character: " + ch
-                                            + " in the incoming input: " + errorString);
+                int result = 0;
+                int multiplicationMin = limit / 10;
+                boolean gotNumber = false;
+                for (; i < end; i++) {
+                    c = buffer[i];
+                    if (c >= '0' && c <= '9') {
+                        gotNumber = true;
+                        if (result < multiplicationMin) {
+                            return false;
+                        }
+                        result *= 10;
+                        int digit = c - '0';
+                        if (result < limit + digit) {
+                            return false;
+                        }
+                        result -= digit;
+                    } else {
+                        break;
                     }
                 }
 
-                for (; i < length; ++i) {
-                    char ch = buffer[i + start];
-                    switch (ch) {
-                        case ' ':
-                        case '\t':
-                        case '\n':
-                        case '\r':
-                        case '\f':
-                            break;
-
-                        default:
-                            String errorString = new String(buffer, i + start, length - i);
-                            throw new HyracksDataException("Integer Parser - a whitespace, tab, new line, or "
-                                    + "form-feed expected. But, encountered this character: " + ch
-                                    + " in the incoming input: " + errorString);
+                for (; i < end; ++i) {
+                    c = buffer[i];
+                    if (c != ' ' && c != '\t' && c != '\n' && c != '\r' && c != '\f') {
+                        return false;
                     }
                 }
 
+                if (!gotNumber) {
+                    return false;
+                }
                 try {
-                    out.writeInt(n * sign);
+                    out.writeInt(negative ? result : -result);
+                    return true;
                 } catch (IOException e) {
                     throw HyracksDataException.create(e);
                 }

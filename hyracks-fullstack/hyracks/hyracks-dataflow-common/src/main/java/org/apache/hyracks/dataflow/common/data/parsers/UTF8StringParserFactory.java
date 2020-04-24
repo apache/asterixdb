@@ -38,9 +38,10 @@ public class UTF8StringParserFactory implements IValueParserFactory {
             private UTF8StringWriter writer = new UTF8StringWriter();
 
             @Override
-            public void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
+            public boolean parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
                 try {
                     writer.writeUTF8(buffer, start, length, out);
+                    return true;
                 } catch (IOException e) {
                     throw HyracksDataException.create(e);
                 }

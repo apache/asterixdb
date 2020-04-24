@@ -48,7 +48,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
     @Override
     public void configure(IHyracksTaskContext ctx, AsterixInputStream stream, Map<String, String> config)
             throws HyracksDataException {
-        super.configure(stream);
+        super.configure(stream, config);
         String recStartString = config.get(ExternalDataConstants.KEY_RECORD_START);
         String recEndString = config.get(ExternalDataConstants.KEY_RECORD_END);
         // set record opening char

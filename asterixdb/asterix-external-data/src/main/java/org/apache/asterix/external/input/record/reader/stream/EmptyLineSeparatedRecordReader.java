@@ -137,7 +137,7 @@ public class EmptyLineSeparatedRecordReader extends StreamRecordReader {
 
     @Override
     public void configure(IHyracksTaskContext ctx, AsterixInputStream inputStream, Map<String, String> config) {
-        super.configure(inputStream);
+        super.configure(inputStream, config);
         this.config = config;
     }
 }

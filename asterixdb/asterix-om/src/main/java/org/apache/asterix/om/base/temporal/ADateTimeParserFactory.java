@@ -43,7 +43,7 @@ public class ADateTimeParserFactory implements IValueParserFactory {
         return new IValueParser() {
 
             @Override
-            public void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
+            public boolean parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
                 long chrononTimeInMs = 0;
 
                 short timeOffset = (short) ((buffer[start] == '-') ? 1 : 0);
@@ -64,6 +64,7 @@ public class ADateTimeParserFactory implements IValueParserFactory {
 
                 try {
                     out.writeLong(chrononTimeInMs);
+                    return true;
                 } catch (IOException ex) {
                     throw HyracksDataException.create(ex);
                 }

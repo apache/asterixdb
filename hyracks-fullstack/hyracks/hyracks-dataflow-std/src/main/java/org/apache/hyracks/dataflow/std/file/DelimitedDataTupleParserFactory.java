@@ -92,8 +92,10 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                             if (cursor.fieldHasDoubleQuote()) {
                                 cursor.eliminateDoubleQuote();
                             }
-                            valueParsers[i].parse(cursor.getBuffer(), cursor.getFieldStart(), cursor.getFieldLength(),
-                                    dos);
+                            if (!valueParsers[i].parse(cursor.getBuffer(), cursor.getFieldStart(),
+                                    cursor.getFieldLength(), dos)) {
+                                throw new HyracksDataException("Failed to parse field");
+                            }
                             tb.addFieldEndOffset();
                         }
                         FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,

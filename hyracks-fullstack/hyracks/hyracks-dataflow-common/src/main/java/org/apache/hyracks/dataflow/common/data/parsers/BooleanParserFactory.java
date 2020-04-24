@@ -37,26 +37,43 @@ public class BooleanParserFactory implements IValueParserFactory {
         return BooleanParserFactory::parse;
     }
 
-    public static void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
-        try {
-            if (length == 4 && (buffer[start] == 't' || buffer[start] == 'T')
-                    && (buffer[start + 1] == 'r' || buffer[start + 1] == 'R')
-                    && (buffer[start + 2] == 'u' || buffer[start + 2] == 'U')
-                    && (buffer[start + 3] == 'e' || buffer[start + 3] == 'E')) {
-                out.writeBoolean(true);
-                return;
-            } else if (length == 5 && (buffer[start] == 'f' || buffer[start] == 'F')
-                    && (buffer[start + 1] == 'a' || buffer[start + 1] == 'A')
-                    && (buffer[start + 2] == 'l' || buffer[start + 2] == 'L')
-                    && (buffer[start + 3] == 's' || buffer[start + 3] == 'S')
-                    && (buffer[start + 4] == 'e' || buffer[start + 4] == 'E')) {
-                out.writeBoolean(false);
-                return;
+    public static boolean parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
+        char ch;
+        int i = start;
+        int end = start + length;
+        while (i < end && ((ch = buffer[i]) == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '\f')) {
+            i++;
+        }
+        int remainingLength = end - i;
+        boolean gotBoolean = false;
+        boolean booleanValue = false;
+        if (remainingLength >= 4 && ((ch = buffer[i]) == 't' || ch == 'T') && ((ch = buffer[i + 1]) == 'r' || ch == 'R')
+                && ((ch = buffer[i + 2]) == 'u' || ch == 'U') && ((ch = buffer[i + 3]) == 'e' || ch == 'E')) {
+            gotBoolean = true;
+            booleanValue = true;
+            i = i + 4;
+        } else if (remainingLength >= 5 && ((ch = buffer[i]) == 'f' || ch == 'F')
+                && ((ch = buffer[i + 1]) == 'a' || ch == 'A') && ((ch = buffer[i + 2]) == 'l' || ch == 'L')
+                && ((ch = buffer[i + 3]) == 's' || ch == 'S') && ((ch = buffer[i + 4]) == 'e' || ch == 'E')) {
+            gotBoolean = true;
+            booleanValue = false;
+            i = i + 5;
+        }
+
+        for (; i < end; ++i) {
+            ch = buffer[i];
+            if (ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' && ch != '\f') {
+                return false;
             }
+        }
+        if (!gotBoolean) {
+            return false;
+        }
+        try {
+            out.writeBoolean(booleanValue);
+            return true;
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
-
-        throw new HyracksDataException("Invalid input data");
     }
 }

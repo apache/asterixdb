@@ -45,7 +45,7 @@ public class LineRecordReader extends StreamRecordReader {
     @Override
     public void configure(IHyracksTaskContext ctx, AsterixInputStream inputStream, Map<String, String> config)
             throws HyracksDataException {
-        super.configure(inputStream);
+        super.configure(inputStream, config);
         this.hasHeader = ExternalDataUtils.hasHeader(config);
         this.newSource = true;
         inputStream.setNotificationHandler(this);

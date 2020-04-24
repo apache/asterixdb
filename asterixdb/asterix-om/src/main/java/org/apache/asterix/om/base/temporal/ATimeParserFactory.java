@@ -43,9 +43,10 @@ public class ATimeParserFactory implements IValueParserFactory {
         return new IValueParser() {
 
             @Override
-            public void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
+            public boolean parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
                 try {
                     out.writeInt(parseTimePart(buffer, start, length));
+                    return true;
                 } catch (IOException ex) {
                     throw HyracksDataException.create(ex);
                 }
@@ -318,7 +319,7 @@ public class ATimeParserFactory implements IValueParserFactory {
      *
      * @param timeString
      * @param start
-     * @param length
+     *
      * @return
      * @throws HyracksDataException
      */
@@ -473,7 +474,7 @@ public class ATimeParserFactory implements IValueParserFactory {
      *
      * @param timeString
      * @param start
-     * @param length
+     *
      * @return
      * @throws HyracksDataException
      */

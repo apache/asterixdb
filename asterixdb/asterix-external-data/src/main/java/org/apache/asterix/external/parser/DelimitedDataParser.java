@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.parser;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.EMPTY_FIELD;
+import static org.apache.asterix.external.util.ExternalDataConstants.INVALID_VAL;
 import static org.apache.asterix.external.util.ExternalDataConstants.MISSING_FIELDS;
 
 import java.io.DataOutput;
@@ -37,8 +39,10 @@ import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ParseUtil;
 import org.apache.asterix.om.base.AMutableString;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -64,9 +68,11 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     private final byte[] fieldTypeTags;
     private final int[] fldIds;
     private final ArrayBackedValueStorage[] nameBuffers;
+    private final char[] nullChars;
 
     public DelimitedDataParser(IHyracksTaskContext ctx, IValueParserFactory[] valueParserFactories, char fieldDelimiter,
-            char quote, boolean hasHeader, ARecordType recordType, boolean isStreamParser) throws HyracksDataException {
+            char quote, boolean hasHeader, ARecordType recordType, boolean isStreamParser, String nullString)
+            throws HyracksDataException {
         this.dataSourceName = ExternalDataConstants.EMPTY_STRING;
         this.warnings = ctx.getWarningCollector();
         this.fieldDelimiter = fieldDelimiter;
@@ -110,6 +116,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
         if (!isStreamParser) {
             cursor = new FieldCursorForDelimitedDataParser(null, this.fieldDelimiter, quote, warnings, dataSourceName);
         }
+        this.nullChars = nullString != null ? nullString.toCharArray() : null;
     }
 
     @Override
@@ -153,24 +160,26 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                 }
                 fieldValueBuffer.reset();
 
-                if (cursor.isFieldEmpty() && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.STRING
-                        && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.NULL) {
-                    // if the field is empty and the type is optional, insert
-                    // NULL. Note that string type can also process empty field as an
-                    // empty string
-                    if (!NonTaggedFormatUtil.isOptional(recordType.getFieldTypes()[i])) {
-                        throw new RuntimeDataException(ErrorCode.PARSER_DELIMITED_NONOPTIONAL_NULL,
-                                cursor.getRecordCount(), cursor.getFieldCount());
-                    }
+                if (nullChars != null && NonTaggedFormatUtil.isOptional(recordType.getFieldTypes()[i]) && fieldNull()) {
                     fieldValueBufferOutput.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                 } else {
+                    if (cursor.isFieldEmpty() && !canProcessEmptyField(recordType.getFieldTypes()[i])) {
+                        ParseUtil.warn(warnings, dataSourceName.get(), cursor.getRecordCount(), cursor.getFieldCount(),
+                                EMPTY_FIELD);
+                        return false;
+                    }
                     fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
                     // Eliminate double quotes in the field that we are going to parse
                     if (cursor.fieldHasDoubleQuote()) {
                         cursor.eliminateDoubleQuote();
                     }
-                    valueParsers[i].parse(cursor.getBuffer(), cursor.getFieldStart(), cursor.getFieldLength(),
-                            fieldValueBufferOutput);
+                    boolean success = valueParsers[i].parse(cursor.getBuffer(), cursor.getFieldStart(),
+                            cursor.getFieldLength(), fieldValueBufferOutput);
+                    if (!success) {
+                        ParseUtil.warn(warnings, dataSourceName.get(), cursor.getRecordCount(), cursor.getFieldCount(),
+                                INVALID_VAL);
+                        return false;
+                    }
                 }
                 if (fldIds[i] < 0) {
                     recBuilder.addField(nameBuffers[i], fieldValueBuffer);
@@ -222,5 +231,27 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     @Override
     public void setDataSourceName(Supplier<String> dataSourceName) {
         this.dataSourceName = dataSourceName == null ? ExternalDataConstants.EMPTY_STRING : dataSourceName;
+    }
+
+    private static boolean canProcessEmptyField(IAType fieldType) {
+        IAType type = TypeComputeUtils.getActualType(fieldType);
+        // TODO(ali): investigate what it means for a field to have type NULL. there is no parser implemented for it
+        return type.getTypeTag() == ATypeTag.STRING || type.getTypeTag() == ATypeTag.NULL;
+    }
+
+    private boolean fieldNull() {
+        int fieldLength = cursor.getFieldLength();
+        int nullStringLength = nullChars.length;
+        if (fieldLength != nullStringLength) {
+            return false;
+        }
+        char[] fieldChars = cursor.getBuffer();
+        int fieldStart = cursor.getFieldStart();
+        for (int i = 0; i < fieldLength; i++) {
+            if (fieldChars[fieldStart + i] != nullChars[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 }

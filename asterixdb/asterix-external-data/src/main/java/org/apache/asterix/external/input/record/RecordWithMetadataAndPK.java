@@ -155,7 +155,9 @@ public class RecordWithMetadataAndPK<T> extends RecordWithPK<T> {
             fieldValueBufferOutputs[index].writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
         } else {
             fieldValueBufferOutputs[index].writeByte(fieldTypeTags[index]);
-            valueParsers[index].parse(src, offset, length, fieldValueBufferOutputs[index]);
+            if (!valueParsers[index].parse(src, offset, length, fieldValueBufferOutputs[index])) {
+                throw new RuntimeDataException(ErrorCode.FAILED_TO_PARSE_METADATA);
+            }
         }
     }
 

@@ -33,5 +33,6 @@ CREATE EXTERNAL DATASET test(test) USING S3 (
 ("container"="playground"),
 ("definition"="tsv-data/reviews"),
 ("format"="TSV"),
-("header"="False")
+("header"="False"),
+("null"="")
 );

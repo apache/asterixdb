@@ -20,10 +20,10 @@
 use tpcds;
 
 
-load dataset web_page using localfs ((`path`=`asterix_nc1://data/tpcds/web_page.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset web_page using localfs ((`path`=`asterix_nc1://data/tpcds/web_page.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset household_demographics using localfs ((`path`=`asterix_nc1://data/tpcds/household_demographics.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset household_demographics using localfs ((`path`=`asterix_nc1://data/tpcds/household_demographics.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset time_dim using localfs ((`path`=`asterix_nc1://data/tpcds/time_dim.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset time_dim using localfs ((`path`=`asterix_nc1://data/tpcds/time_dim.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset web_sales using localfs ((`path`=`asterix_nc1://data/tpcds/web_sales.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset web_sales using localfs ((`path`=`asterix_nc1://data/tpcds/web_sales.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));

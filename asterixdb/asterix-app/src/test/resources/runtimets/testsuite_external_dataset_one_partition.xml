@@ -42,14 +42,35 @@
     <test-case FilePath="external-dataset" check-warnings="true">
       <compilation-unit name="aws/s3/csv-warnings">
         <output-dir compare="Text">aws/s3/csv-warnings</output-dir>
-        <expected-warn>Parsing error in data_dir/no_h_missing_fields.csv at record 2 field 3: some fields are missing</expected-warn>
-        <expected-warn>Parsing error in data_dir/no_h_no_closing_q.csv at record 0 field 0: malformed input record ended inside quote</expected-warn>
+        <expected-warn>Parsing error at data_dir/no_h_missing_fields.csv record 2 field 3: some fields are missing</expected-warn>
+        <expected-warn>Parsing error at data_dir/no_h_no_closing_q.csv record 0 field 0: malformed input record ended inside quote</expected-warn>
+        <expected-warn>Parsing error at  record 0 field 0: malformed input record ended inside quote</expected-warn>
+
+        <expected-warn>Parsing error at  record 4 field 3: invalid value</expected-warn>
+        <expected-warn>Parsing error at  record 1 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at  record 10 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at  record 2 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at  record 3 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at  record 6 field 7: invalid value</expected-warn>
+        <expected-warn>Parsing error at  record 12 field 7: invalid value</expected-warn>
+        <expected-warn>Parsing error at  record 11 field 3: invalid value</expected-warn>
+        <expected-warn>Parsing error at  record 8 field 6: a quote should be in the beginning</expected-warn>
+
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv record 4 field 3: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv record 1 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv record 10 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv record 2 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv record 3 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv record 6 field 7: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv record 12 field 7: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv record 11 field 3: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv record 8 field 6: a quote should be in the beginning</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset" check-warnings="true">
       <compilation-unit name="aws/s3/tsv-warnings">
         <output-dir compare="Text">aws/s3/tsv-warnings</output-dir>
-        <expected-warn>Parsing error in data_dir/no_h_missing_fields.tsv at record 2 field 3: some fields are missing</expected-warn>
+        <expected-warn>Parsing error at data_dir/no_h_missing_fields.tsv record 2 field 3: some fields are missing</expected-warn>
       </compilation-unit>
     </test-case>
   </test-group>

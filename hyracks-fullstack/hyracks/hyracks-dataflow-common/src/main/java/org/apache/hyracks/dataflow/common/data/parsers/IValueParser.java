@@ -23,5 +23,5 @@ import java.io.DataOutput;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IValueParser {
-    void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException;
+    boolean parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException;
 }

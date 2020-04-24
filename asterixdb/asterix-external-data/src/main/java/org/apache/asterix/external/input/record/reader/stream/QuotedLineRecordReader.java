@@ -60,7 +60,7 @@ public class QuotedLineRecordReader extends LineRecordReader {
     @Override
     public void notifyNewSource() {
         if (!record.isEmptyRecord() && warnings.shouldWarn()) {
-            ParseUtil.warn(warnings, reader.getStreamName(), recordNumber, 0, REC_ENDED_IN_Q);
+            ParseUtil.warn(warnings, getDataSourceName().get(), recordNumber, 0, REC_ENDED_IN_Q);
         }
         // restart for a new record from a new source
         resetForNewSource();
@@ -106,7 +106,7 @@ public class QuotedLineRecordReader extends LineRecordReader {
                         if (readLength <= 0 || inQuote) {
                             // haven't read anything previously OR have read and in the middle and hit the end
                             if (inQuote && warnings.shouldWarn()) {
-                                ParseUtil.warn(warnings, reader.getStreamName(), recordNumber, 0, REC_ENDED_IN_Q);
+                                ParseUtil.warn(warnings, getDataSourceName().get(), recordNumber, 0, REC_ENDED_IN_Q);
                             }
                             close();
                             return false;
