@@ -271,7 +271,7 @@
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-core</artifactId>
         <version>3.6.3</version>
-      </dependency>
+    </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-plugin-api</artifactId>
@@ -438,9 +438,48 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.0.0-M1</version>
+        <artifactId>maven-antrun-plugin</artifactId>
         <executions>
+          <execution>
+            <id>check-pom-packaging</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <exportAntProperties>true</exportAntProperties>
+              <target xmlns:unless="ant:unless">
+                <condition property="skipPomEnforcement">
+                  <not><equals arg1="${project.packaging}" arg2="pom"/></not>
+                </condition>
+                <echo message="will enforce non-existence of test source dir due to ${project.packaging} packaging" unless:set="skipPomEnforcement"/>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>ensure-no-tests-for-pom-packaging</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireFilesDontExist>
+                  <files>
+                    <file>${project.build.testSourceDirectory}</file>
+                  </files>
+                  <message>#### Tests cannot exist in projects with '${project.packaging}' packaging!</message>
+                </requireFilesDontExist>
+              </rules>
+              <skip>${skipPomEnforcement}</skip>
+            </configuration>
+          </execution>
           <execution>
             <id>enforce-versions</id>
             <goals>
