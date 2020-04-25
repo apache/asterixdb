@@ -691,7 +691,8 @@ public class TestNodeController {
             this.mergePolicyFactory = mergePolicyFactory;
             this.mergePolicyProperties = mergePolicyProperties;
             this.primaryKeyIndexes = primaryKeyIndexes;
-            primaryIndexNumOfTupleFields = primaryKeyTypes.length + (1 + ((metaType == null) ? 0 : 1));
+            primaryIndexNumOfTupleFields = primaryKeyTypes.length + (1 + ((metaType == null) ? 0 : 1))
+                    + (filterFields != null ? filterFields.length : 0);
             primaryIndexTypeTraits =
                     createPrimaryIndexTypeTraits(primaryIndexNumOfTupleFields, primaryKeyTypes, recordType, metaType);
             primaryIndexSerdes =

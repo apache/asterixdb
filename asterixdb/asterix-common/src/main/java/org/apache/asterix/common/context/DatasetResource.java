@@ -43,14 +43,12 @@ import org.apache.hyracks.storage.common.LocalResource;
  */
 public class DatasetResource implements Comparable<DatasetResource> {
     private final DatasetInfo datasetInfo;
-    private final DatasetVirtualBufferCaches datasetVirtualBufferCaches;
 
     private final Map<Integer, PrimaryIndexOperationTracker> datasetPrimaryOpTrackers;
     private final Map<Integer, ILSMComponentIdGenerator> datasetComponentIdGenerators;
 
-    public DatasetResource(DatasetInfo datasetInfo, DatasetVirtualBufferCaches datasetVirtualBufferCaches) {
+    public DatasetResource(DatasetInfo datasetInfo) {
         this.datasetInfo = datasetInfo;
-        this.datasetVirtualBufferCaches = datasetVirtualBufferCaches;
         this.datasetPrimaryOpTrackers = new HashMap<>();
         this.datasetComponentIdGenerators = new HashMap<>();
     }
@@ -81,10 +79,6 @@ public class DatasetResource implements Comparable<DatasetResource> {
 
     public void untouch() {
         datasetInfo.untouch();
-    }
-
-    public DatasetVirtualBufferCaches getVirtualBufferCaches() {
-        return datasetVirtualBufferCaches;
     }
 
     public ILSMIndex getIndex(long resourceID) {

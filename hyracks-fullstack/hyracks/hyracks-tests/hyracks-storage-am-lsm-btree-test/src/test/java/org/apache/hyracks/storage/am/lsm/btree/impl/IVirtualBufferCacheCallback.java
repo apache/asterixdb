@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.impl;
 
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
+
 public interface IVirtualBufferCacheCallback {
-    void isFullChanged(boolean newValue);
+    void isFullChanged(boolean newValue, ILSMMemoryComponent memoryComponent);
 }

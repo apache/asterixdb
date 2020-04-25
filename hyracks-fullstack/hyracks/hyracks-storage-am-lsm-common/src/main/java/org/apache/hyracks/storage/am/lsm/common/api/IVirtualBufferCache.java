@@ -25,9 +25,42 @@ import org.apache.hyracks.storage.common.file.IFileMapManager;
 public interface IVirtualBufferCache extends IBufferCache {
     void open() throws HyracksDataException;
 
+    /**
+     *
+     * @return true if the overall memory usage exceeds the budget
+     */
     boolean isFull();
 
-    void reset();
+    /**
+     * @param memoryComponent
+     * @return true if the memory component's memory usage exceeds its budget
+     */
+    boolean isFull(ILSMMemoryComponent memoryComponent);
 
     IFileMapManager getFileMapProvider();
+
+    /**
+    *
+    * @return the number of in-use pages
+    */
+    int getUsage();
+
+    /**
+    * Register the memory component when it is allocated
+    * @param memoryComponent
+    */
+    void register(ILSMMemoryComponent memoryComponent);
+
+    /**
+     * Unregister the memory component when it is deallocated
+     * @param memoryComponent
+     */
+    void unregister(ILSMMemoryComponent memoryComponent);
+
+    /**
+     * Notify that virtual buffer cache that the memory component has been flushed to disk
+     * @param memoryComponent
+     * @throws HyracksDataException
+     */
+    void flushed(ILSMMemoryComponent memoryComponent) throws HyracksDataException;
 }

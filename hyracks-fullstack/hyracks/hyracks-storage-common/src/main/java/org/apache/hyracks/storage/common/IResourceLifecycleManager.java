@@ -28,7 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * @param <R>
  *            resource class
  */
-public interface IResourceLifecycleManager<R> extends IResourceMemoryManager {
+public interface IResourceLifecycleManager<R> {
     /**
      * get a list of all resources which are opened
      *

@@ -148,12 +148,6 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
     }
 
     @Override
-    public long getMemoryAllocationSize() {
-        IBufferCache virtualBufferCache = btree.getBufferCache();
-        return (long) virtualBufferCache.getPageBudget() * virtualBufferCache.getPageSize();
-    }
-
-    @Override
     public InvertedListCursor createInvertedListCursor(IHyracksTaskContext ctx) {
         return new InMemoryInvertedListCursor(invListTypeTraits.length, tokenTypeTraits.length);
     }

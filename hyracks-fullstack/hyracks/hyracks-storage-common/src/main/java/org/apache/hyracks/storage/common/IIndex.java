@@ -128,11 +128,6 @@ public interface IIndex {
     IBufferCache getBufferCache();
 
     /**
-     * @return the size, in bytes, of pre-allocated memory space that this index was allotted.
-     */
-    public long getMemoryAllocationSize();
-
-    /**
      * @param fillFactor
      * @param verifyInput
      * @throws HyracksDataException

@@ -24,6 +24,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMWithBuddyMemoryComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
 /*
  * This class is also not needed at the moment but is implemented anyway
@@ -56,7 +57,7 @@ public class LSMBTreeWithBuddyMemoryComponent extends AbstractLSMWithBuddyMemory
     }
 
     @Override
-    public long getSize() {
-        return 0L;
+    public LSMComponentFileReferences getComponentFileRefs() {
+        return new LSMComponentFileReferences(btree.getFileReference(), buddyBtree.getFileReference(), null);
     }
 }

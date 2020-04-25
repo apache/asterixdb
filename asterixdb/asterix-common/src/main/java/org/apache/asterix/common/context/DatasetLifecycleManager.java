@@ -18,25 +18,21 @@
  */
 package org.apache.asterix.common.context;
 
-import static org.apache.asterix.common.metadata.MetadataIndexImmutableProperties.METADATA_DATASETS_PARTITIONS;
 import static org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId.MIN_VALID_COMPONENT_ID;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
-import org.apache.asterix.common.api.IDatasetMemoryManager;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
-import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
@@ -67,22 +63,27 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     private final Map<Integer, DatasetResource> datasets = new ConcurrentHashMap<>();
     private final StorageProperties storageProperties;
     private final ILocalResourceRepository resourceRepository;
-    private final IDatasetMemoryManager memoryManager;
+    private final IVirtualBufferCache vbc;
     private final ILogManager logManager;
     private final LogRecord waitLog;
-    private final int numPartitions;
     private volatile boolean stopped = false;
     private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
+    // all LSM-trees share the same virtual buffer cache list
+    private final List<IVirtualBufferCache> vbcs;
 
     public DatasetLifecycleManager(StorageProperties storageProperties, ILocalResourceRepository resourceRepository,
-            ILogManager logManager, IDatasetMemoryManager memoryManager,
+            ILogManager logManager, IVirtualBufferCache vbc,
             IIndexCheckpointManagerProvider indexCheckpointManagerProvider, int numPartitions) {
         this.logManager = logManager;
         this.storageProperties = storageProperties;
         this.resourceRepository = resourceRepository;
-        this.memoryManager = memoryManager;
+        this.vbc = vbc;
+        int numMemoryComponents = storageProperties.getMemoryComponentsNum();
+        this.vbcs = new ArrayList<>(numMemoryComponents);
+        for (int i = 0; i < numMemoryComponents; i++) {
+            vbcs.add(vbc);
+        }
         this.indexCheckpointManagerProvider = indexCheckpointManagerProvider;
-        this.numPartitions = numPartitions;
         waitLog = new LogRecord();
         waitLog.setLogType(LogType.WAIT_FOR_FLUSHES);
         waitLog.computeAndSetLogSize();
@@ -204,38 +205,6 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         iInfo.touch();
     }
 
-    private boolean evictCandidateDataset() throws HyracksDataException {
-        /**
-         * We will take a dataset that has no active transactions, it is open (a dataset consuming memory),
-         * that is not being used (refcount == 0) and has been least recently used, excluding metadata datasets.
-         * The sort order defined for DatasetInfo maintains this. See DatasetInfo.compareTo().
-         */
-        List<DatasetResource> datasetsResources = new ArrayList<>(datasets.values());
-        Collections.sort(datasetsResources);
-        for (DatasetResource dsr : datasetsResources) {
-            if (isCandidateDatasetForEviction(dsr)) {
-                closeDataset(dsr);
-                LOGGER.info(() -> "Evicted Dataset" + dsr.getDatasetID());
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isCandidateDatasetForEviction(DatasetResource dsr) {
-        for (PrimaryIndexOperationTracker opTracker : dsr.getOpTrackers()) {
-            if (opTracker.getNumActiveOperations() != 0) {
-                return false;
-            }
-        }
-        if (dsr.getDatasetInfo().getReferenceCount() != 0 || !dsr.getDatasetInfo().isOpen()
-                || dsr.isMetadataDataset()) {
-            return false;
-        }
-
-        return true;
-    }
-
     public DatasetResource getDatasetLifecycle(int did) {
         DatasetResource dsr = datasets.get(did);
         if (dsr != null) {
@@ -245,11 +214,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             dsr = datasets.get(did);
             if (dsr == null) {
                 DatasetInfo dsInfo = new DatasetInfo(did, logManager);
-                int partitions = MetadataIndexImmutableProperties.isMetadataDataset(did) ? METADATA_DATASETS_PARTITIONS
-                        : numPartitions;
-                DatasetVirtualBufferCaches vbcs = new DatasetVirtualBufferCaches(did, storageProperties,
-                        memoryManager.getNumPages(did), partitions);
-                dsr = new DatasetResource(dsInfo, vbcs);
+                dsr = new DatasetResource(dsInfo);
                 datasets.put(did, dsr);
             }
             return dsr;
@@ -312,24 +277,18 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         return openIndexesInfo;
     }
 
-    private DatasetVirtualBufferCaches getVirtualBufferCaches(int datasetID) {
-        return getDatasetLifecycle(datasetID).getVirtualBufferCaches();
-    }
-
     @Override
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID, int ioDeviceNum) {
-        DatasetVirtualBufferCaches dvbcs = getVirtualBufferCaches(datasetID);
-        return dvbcs.getVirtualBufferCaches(this, ioDeviceNum);
+        return vbcs;
     }
 
     private void removeDatasetFromCache(int datasetID) throws HyracksDataException {
-        deallocateDatasetMemory(datasetID);
         datasets.remove(datasetID);
     }
 
     @Override
     public synchronized PrimaryIndexOperationTracker getOperationTracker(int datasetId, int partition, String path) {
-        DatasetResource dataset = datasets.get(datasetId);
+        DatasetResource dataset = getDatasetLifecycle(datasetId);
         PrimaryIndexOperationTracker opTracker = dataset.getOpTracker(partition);
         if (opTracker == null) {
             populateOpTrackerAndIdGenerator(dataset, partition, path);
@@ -513,7 +472,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         StringBuilder sb = new StringBuilder();
 
         sb.append(String.format("Memory budget = %d%n", storageProperties.getMemoryComponentGlobalBudget()));
-        sb.append(String.format("Memory available = %d%n", memoryManager.getAvailable()));
+        long avaialbleMemory = storageProperties.getMemoryComponentGlobalBudget()
+                - (long) vbc.getUsage() * storageProperties.getMemoryComponentPageSize();
+        sb.append(String.format("Memory available = %d%n", avaialbleMemory));
         sb.append("\n");
 
         String dsHeaderFormat = "%-10s %-6s %-16s %-12s\n";
@@ -538,51 +499,6 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                     iInfo.isOpen(), iInfo.getReferenceCount(), iInfo.getIndex())));
         }
         outputStream.write(sb.toString().getBytes());
-    }
-
-    private synchronized void deallocateDatasetMemory(int datasetId) throws HyracksDataException {
-        DatasetResource dsr = datasets.get(datasetId);
-        if (dsr == null) {
-            throw new HyracksDataException(
-                    "Failed to allocate memory for dataset with ID " + datasetId + " since it is not open.");
-        }
-        DatasetInfo dsInfo = dsr.getDatasetInfo();
-        if (dsInfo == null) {
-            throw new HyracksDataException(
-                    "Failed to deallocate memory for dataset with ID " + datasetId + " since it is not open.");
-        }
-        synchronized (dsInfo) {
-            if (dsInfo.isOpen() && dsInfo.isMemoryAllocated()) {
-                memoryManager.deallocate(datasetId);
-                dsInfo.setMemoryAllocated(false);
-            }
-        }
-    }
-
-    @Override
-    public synchronized void allocateMemory(String resourcePath) throws HyracksDataException {
-        //a resource name in the case of DatasetLifecycleManager is a dataset id which is passed to the ResourceHeapBufferAllocator.
-        int datasetId = Integer.parseInt(resourcePath);
-        DatasetResource dsr = datasets.get(datasetId);
-        if (dsr == null) {
-            throw new HyracksDataException(
-                    "Failed to allocate memory for dataset with ID " + datasetId + " since it is not open.");
-        }
-        DatasetInfo dsInfo = dsr.getDatasetInfo();
-        synchronized (dsInfo) {
-            // This is not needed for external datasets' indexes since they never use the virtual buffer cache.
-            if (!dsInfo.isMemoryAllocated() && !dsInfo.isExternal()) {
-                while (!memoryManager.allocate(datasetId)) {
-                    if (!evictCandidateDataset()) {
-                        LOGGER.warn("failed to allocate memory for dataset {}. Currently allocated {}",
-                                dsInfo::getDatasetID, ((DatasetMemoryManager) memoryManager)::getState);
-                        throw new HyracksDataException("Cannot allocate dataset " + dsInfo.getDatasetID()
-                                + " memory since memory budget would be exceeded.");
-                    }
-                }
-                dsInfo.setMemoryAllocated(true);
-            }
-        }
     }
 
     @Override

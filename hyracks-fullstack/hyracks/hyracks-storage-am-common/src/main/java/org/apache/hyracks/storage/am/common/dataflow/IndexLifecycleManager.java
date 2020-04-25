@@ -21,11 +21,9 @@ package org.apache.hyracks.storage.am.common.dataflow;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -50,42 +48,17 @@ public class IndexLifecycleManager implements IResourceLifecycleManager<IIndex>,
         this.memoryUsed = 0;
     }
 
-    private boolean evictCandidateIndex() throws HyracksDataException {
-        // Why min()? As a heuristic for eviction, we will take an open index
-        // (an index consuming memory)
-        // that is not being used (refcount == 0) and has been least recently
-        // used. The sort order defined
-        // for IndexInfo maintains this. See IndexInfo.compareTo().
-        IndexInfo info = Collections.min(indexInfos.values());
-        if (info.referenceCount != 0 || !info.isOpen) {
-            return false;
-        }
-
-        info.index.deactivate();
-        //find resource name and deallocate its memory
-        for (Entry<String, IndexInfo> entry : indexInfos.entrySet()) {
-            if (entry.getValue() == info) {
-                deallocateMemory(entry.getKey());
-                break;
-            }
-        }
-        info.isOpen = false;
-        return true;
-    }
-
     private class IndexInfo implements Comparable<IndexInfo> {
         private final IIndex index;
         private int referenceCount;
         private long lastAccess;
         private boolean isOpen;
-        private boolean memoryAllocated;
 
         public IndexInfo(IIndex index) {
             this.index = index;
             this.lastAccess = -1;
             this.referenceCount = 0;
             this.isOpen = false;
-            this.memoryAllocated = false;
         }
 
         public void touch() {
@@ -202,7 +175,6 @@ public class IndexLifecycleManager implements IResourceLifecycleManager<IIndex>,
         }
 
         if (!info.isOpen) {
-            allocateMemory(resourcePath);
             info.index.activate();
             info.isOpen = true;
         }
@@ -234,40 +206,7 @@ public class IndexLifecycleManager implements IResourceLifecycleManager<IIndex>,
 
         if (info.isOpen) {
             info.index.deactivate();
-            deallocateMemory(resourcePath);
         }
         indexInfos.remove(resourcePath);
-    }
-
-    @Override
-    public void allocateMemory(String resourcePath) throws HyracksDataException {
-        IndexInfo info = indexInfos.get(resourcePath);
-        if (info == null) {
-            throw new HyracksDataException("Failed to allocate memory for index with resource ID " + resourcePath
-                    + " since it does not exist.");
-        }
-        if (!info.memoryAllocated) {
-            long inMemorySize = info.index.getMemoryAllocationSize();
-            while (memoryUsed + inMemorySize > memoryBudget) {
-                if (!evictCandidateIndex()) {
-                    throw new HyracksDataException(
-                            "Cannot allocate memory for index since memory budget would be exceeded.");
-                }
-            }
-            memoryUsed += inMemorySize;
-            info.memoryAllocated = true;
-        }
-    }
-
-    private void deallocateMemory(String resourcePath) throws HyracksDataException {
-        IndexInfo info = indexInfos.get(resourcePath);
-        if (info == null) {
-            throw new HyracksDataException("Failed to deallocate memory for index with resource name " + resourcePath
-                    + " since it does not exist.");
-        }
-        if (info.isOpen && info.memoryAllocated) {
-            memoryUsed -= info.index.getMemoryAllocationSize();
-            info.memoryAllocated = false;
-        }
     }
 }

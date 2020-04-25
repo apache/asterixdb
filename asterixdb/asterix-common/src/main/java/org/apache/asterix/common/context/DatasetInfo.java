@@ -45,7 +45,6 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     private long lastAccess;
     private boolean isExternal;
     private boolean isRegistered;
-    private boolean memoryAllocated;
     private boolean durable;
 
     public DatasetInfo(int datasetID, ILogManager logManager) {
@@ -54,7 +53,6 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         this.setLastAccess(-1);
         this.datasetID = datasetID;
         this.setRegistered(false);
-        this.setMemoryAllocated(false);
         this.logManager = logManager;
         waitLog.setLogType(LogType.WAIT_FOR_FLUSHES);
         waitLog.computeAndSetLogSize();
@@ -144,8 +142,8 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     @Override
     public String toString() {
         return "DatasetID: " + getDatasetID() + ", isOpen: " + isOpen() + ", refCount: " + getReferenceCount()
-                + ", lastAccess: " + getLastAccess() + ", isRegistered: " + isRegistered() + ", memoryAllocated: "
-                + isMemoryAllocated() + ", isDurable: " + isDurable();
+                + ", lastAccess: " + getLastAccess() + ", isRegistered: " + isRegistered() + ", isDurable: "
+                + isDurable();
     }
 
     public boolean isDurable() {
@@ -190,14 +188,6 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
 
     public int getDatasetID() {
         return datasetID;
-    }
-
-    public boolean isMemoryAllocated() {
-        return memoryAllocated;
-    }
-
-    public void setMemoryAllocated(boolean memoryAllocated) {
-        this.memoryAllocated = memoryAllocated;
     }
 
     public long getLastAccess() {

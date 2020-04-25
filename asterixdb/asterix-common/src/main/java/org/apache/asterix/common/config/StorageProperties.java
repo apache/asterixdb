@@ -47,9 +47,9 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_MEMORYCOMPONENT_GLOBALBUDGET(LONG_BYTE_UNIT, Runtime.getRuntime().maxMemory() / 4),
         STORAGE_MEMORYCOMPONENT_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
         STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS(POSITIVE_INTEGER, 2),
-        STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES(POSITIVE_INTEGER, 8),
+        STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD(DOUBLE, 0.9d),
+        STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE(LONG_BYTE_UNIT, 0L),
         STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE(DOUBLE, 0.01d),
-        STORAGE_MAX_ACTIVE_WRITABLE_DATASETS(UNSIGNED_INTEGER, 8),
         STORAGE_COMPRESSION_BLOCK(STRING, "snappy"),
         STORAGE_DISK_FORCE_BYTES(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(16, MEGABYTE)),
         STORAGE_IO_SCHEDULER(STRING, "greedy");
@@ -64,9 +64,6 @@ public class StorageProperties extends AbstractProperties {
 
         @Override
         public Section section() {
-            if (this == STORAGE_MAX_ACTIVE_WRITABLE_DATASETS) {
-                return Section.COMMON;
-            }
             return Section.NC;
         }
 
@@ -87,12 +84,13 @@ public class StorageProperties extends AbstractProperties {
                     return "The page size in bytes for pages allocated to memory components";
                 case STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS:
                     return "The number of memory components to be used per lsm index";
-                case STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES:
-                    return "The number of pages to allocate for a metadata memory component";
+                case STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD:
+                    return "The memory usage threshold when memory components should be flushed";
+                case STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE:
+                    return "The maximum size of a filtered memory component. 0 means that the memory component "
+                            + "does not have a maximum size";
                 case STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE:
                     return "The maximum acceptable false positive rate for bloom filters associated with LSM indexes";
-                case STORAGE_MAX_ACTIVE_WRITABLE_DATASETS:
-                    return "The maximum number of datasets that can be concurrently modified";
                 case STORAGE_COMPRESSION_BLOCK:
                     return "The default compression scheme for the storage";
                 case STORAGE_DISK_FORCE_BYTES:
@@ -116,9 +114,6 @@ public class StorageProperties extends AbstractProperties {
 
         @Override
         public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
-            if (this == STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES) {
-                return "8 pages";
-            }
             return null;
         }
     }
@@ -145,16 +140,13 @@ public class StorageProperties extends AbstractProperties {
         return accessor.getInt(Option.STORAGE_MEMORYCOMPONENT_PAGESIZE);
     }
 
-    public int getMemoryComponentNumPages() {
-        final long metadataReservedMem = getMetadataReservedMemory();
-        final long globalUserDatasetMem = getMemoryComponentGlobalBudget() - metadataReservedMem;
-        final long userDatasetMem =
-                globalUserDatasetMem / (getMaxActiveWritableDatasets() + geSystemReservedDatasets());
-        return (int) (userDatasetMem / getMemoryComponentPageSize());
+    public double getMemoryComponentFlushThreshold() {
+        return accessor.getDouble(Option.STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD);
     }
 
-    public int getMetadataMemoryComponentNumPages() {
-        return accessor.getInt(Option.STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES);
+    public int getFilteredMemoryComponentMaxNumPages() {
+        return (int) (accessor.getLong(Option.STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE)
+                / getMemoryComponentPageSize());
     }
 
     public int getMemoryComponentsNum() {
@@ -186,10 +178,6 @@ public class StorageProperties extends AbstractProperties {
         return jobExecutionMemory;
     }
 
-    public int getMaxActiveWritableDatasets() {
-        return accessor.getInt(Option.STORAGE_MAX_ACTIVE_WRITABLE_DATASETS);
-    }
-
     public String getCompressionScheme() {
         return accessor.getString(Option.STORAGE_COMPRESSION_BLOCK);
     }
@@ -204,10 +192,6 @@ public class StorageProperties extends AbstractProperties {
 
     protected int geSystemReservedDatasets() {
         return SYSTEM_RESERVED_DATASETS;
-    }
-
-    private long getMetadataReservedMemory() {
-        return (getMetadataMemoryComponentNumPages() * (long) getMemoryComponentPageSize()) * getMetadataDatasets();
     }
 
     public int getDiskForcePages() {

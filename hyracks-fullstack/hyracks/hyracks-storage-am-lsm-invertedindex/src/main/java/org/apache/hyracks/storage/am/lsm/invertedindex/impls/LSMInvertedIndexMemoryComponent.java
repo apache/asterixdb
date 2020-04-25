@@ -23,6 +23,7 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMWithBuddyMemoryComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
 
 public class LSMInvertedIndexMemoryComponent extends AbstractLSMWithBuddyMemoryComponent {
@@ -45,5 +46,11 @@ public class LSMInvertedIndexMemoryComponent extends AbstractLSMWithBuddyMemoryC
     @Override
     public BTree getBuddyIndex() {
         return deletedKeysBTree;
+    }
+
+    @Override
+    public LSMComponentFileReferences getComponentFileRefs() {
+        return new LSMComponentFileReferences(invIndex.getBTree().getFileReference(),
+                deletedKeysBTree.getFileReference(), null);
     }
 }

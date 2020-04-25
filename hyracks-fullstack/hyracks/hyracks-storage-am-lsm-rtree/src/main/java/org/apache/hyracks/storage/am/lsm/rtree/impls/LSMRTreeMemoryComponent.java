@@ -24,6 +24,7 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMWithBuddyMemoryComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
 
 public class LSMRTreeMemoryComponent extends AbstractLSMWithBuddyMemoryComponent {
@@ -51,6 +52,11 @@ public class LSMRTreeMemoryComponent extends AbstractLSMWithBuddyMemoryComponent
     @Override
     public void validate() throws HyracksDataException {
         throw new UnsupportedOperationException("Validation not implemented for LSM R-Trees.");
+    }
+
+    @Override
+    public LSMComponentFileReferences getComponentFileRefs() {
+        return new LSMComponentFileReferences(rtree.getFileReference(), btree.getFileReference(), null);
     }
 
 }

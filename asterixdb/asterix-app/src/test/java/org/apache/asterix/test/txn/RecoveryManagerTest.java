@@ -22,7 +22,6 @@ import java.io.File;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.TestDataUtil;
-import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.junit.After;
 import org.junit.Assert;
@@ -42,7 +41,6 @@ public class RecoveryManagerTest {
 
     @Before
     public void setUp() throws Exception {
-        integrationUtil.addOption(StorageProperties.Option.STORAGE_MAX_ACTIVE_WRITABLE_DATASETS, 20);
         integrationUtil.setGracefulShutdown(false);
         integrationUtil.init(true, TEST_CONFIG_FILE_PATH);
     }

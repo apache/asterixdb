@@ -809,15 +809,6 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     }
 
     @Override
-    public long getMemoryAllocationSize() {
-        long size = 0;
-        for (ILSMMemoryComponent c : memoryComponents) {
-            size += c.getSize();
-        }
-        return size;
-    }
-
-    @Override
     public void resetCurrentComponentIndex() {
         synchronized (lsmHarness.getOperationTracker()) {
             // validate no reader in any of the memory components and that all of them are INVALID

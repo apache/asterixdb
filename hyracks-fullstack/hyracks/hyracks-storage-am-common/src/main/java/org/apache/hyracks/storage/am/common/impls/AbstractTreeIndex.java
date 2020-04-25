@@ -337,11 +337,6 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
     }
 
-    @Override
-    public long getMemoryAllocationSize() {
-        return 0;
-    }
-
     public IBinaryComparatorFactory[] getCmpFactories() {
         return cmpFactories;
     }

@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.MemoryComponentMetadata;
 
 public interface ILSMMemoryComponent extends ILSMComponent {
@@ -46,11 +47,6 @@ public interface ILSMMemoryComponent extends ILSMComponent {
      * @throws HyracksDataException
      */
     void reset() throws HyracksDataException;
-
-    /**
-     * @return true if the memory budget has been exceeded
-     */
-    boolean isFull();
 
     /**
      * @return true if there are data in the memory component, false otherwise
@@ -86,11 +82,6 @@ public interface ILSMMemoryComponent extends ILSMComponent {
     void validate() throws HyracksDataException;
 
     /**
-     * @return the size of the memory component
-     */
-    long getSize();
-
-    /**
      * Reset the component Id of the memory component after it's recycled
      *
      * @param newId
@@ -105,4 +96,17 @@ public interface ILSMMemoryComponent extends ILSMComponent {
      * entry to the component
      */
     void setUnwritable();
+
+    /**
+     *
+     * @return the file references of the component
+     */
+    LSMComponentFileReferences getComponentFileRefs();
+
+    /**
+     * Called when the memory component is flushed to disk
+     * @throws HyracksDataException
+     */
+    void flushed() throws HyracksDataException;
+
 }

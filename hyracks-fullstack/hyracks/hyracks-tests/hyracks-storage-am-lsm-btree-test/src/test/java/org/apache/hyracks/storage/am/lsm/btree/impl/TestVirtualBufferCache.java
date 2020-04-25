@@ -20,11 +20,13 @@ package org.apache.hyracks.storage.am.lsm.btree.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
@@ -35,6 +37,7 @@ import org.apache.hyracks.storage.common.file.IFileMapManager;
 
 public class TestVirtualBufferCache implements IVirtualBufferCache {
     private final IVirtualBufferCache vbc;
+    private final ConcurrentHashMap<ILSMMemoryComponent, AtomicBoolean> isFullMap = new ConcurrentHashMap<>();
     private final AtomicBoolean isFull = new AtomicBoolean(false);
     private final List<IVirtualBufferCacheCallback> callbacks;
 
@@ -87,7 +90,14 @@ public class TestVirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
-        return vbc.pin(dpid, newPage);
+        ICachedPage page = vbc.pin(dpid, newPage);
+        // the memory component can be full after each but, but isFull may not be called by the memory component
+        // for correctness, we call isFull here after each pin
+        for (ILSMMemoryComponent component : isFullMap.keySet()) {
+            isFull(component);
+        }
+
+        return page;
     }
 
     @Override
@@ -190,19 +200,27 @@ public class TestVirtualBufferCache implements IVirtualBufferCache {
     @Override
     public boolean isFull() {
         boolean newValue = vbc.isFull();
-        if (isFull.compareAndSet(!newValue, newValue)) {
-            synchronized (callbacks) {
-                for (int i = 0; i < callbacks.size(); i++) {
-                    callbacks.get(i).isFullChanged(newValue);
-                }
-            }
-        }
+        updateFullValue(newValue, null);
         return newValue;
     }
 
     @Override
-    public void reset() {
-        vbc.reset();
+    public boolean isFull(ILSMMemoryComponent memoryComponent) {
+        boolean newValue = vbc.isFull(memoryComponent);
+        updateFullValue(newValue, memoryComponent);
+        return newValue;
+    }
+
+    private void updateFullValue(boolean newValue, ILSMMemoryComponent memoryComponent) {
+        AtomicBoolean isFull = memoryComponent != null
+                ? isFullMap.computeIfAbsent(memoryComponent, m -> new AtomicBoolean()) : this.isFull;
+        if (isFull.compareAndSet(!newValue, newValue)) {
+            synchronized (callbacks) {
+                for (int i = 0; i < callbacks.size(); i++) {
+                    callbacks.get(i).isFullChanged(newValue, memoryComponent);
+                }
+            }
+        }
     }
 
     @Override
@@ -213,6 +231,31 @@ public class TestVirtualBufferCache implements IVirtualBufferCache {
     @Override
     public void closeFileIfOpen(FileReference fileRef) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getUsage() {
+        return vbc.getUsage();
+    }
+
+    @Override
+    public void register(ILSMMemoryComponent memoryComponent) {
+        vbc.register(memoryComponent);
+    }
+
+    @Override
+    public void unregister(ILSMMemoryComponent memoryComponent) {
+        vbc.unregister(memoryComponent);
+    }
+
+    @Override
+    public void flushed(ILSMMemoryComponent memoryComponent) throws HyracksDataException {
+        vbc.flushed(memoryComponent);
+    }
+
+    public void reset() {
+        isFull.set(false);
+        isFullMap.clear();
     }
 
 }

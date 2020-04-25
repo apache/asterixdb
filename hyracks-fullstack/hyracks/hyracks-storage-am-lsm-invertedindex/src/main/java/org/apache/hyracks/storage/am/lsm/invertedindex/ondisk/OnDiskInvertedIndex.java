@@ -661,11 +661,6 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         }
     }
 
-    @Override
-    public long getMemoryAllocationSize() {
-        return 0;
-    }
-
     protected static ITypeTraits[] getBTreeTypeTraits(ITypeTraits[] tokenTypeTraits) {
         ITypeTraits[] btreeTypeTraits = new ITypeTraits[tokenTypeTraits.length + btreeValueTypeTraits.length];
         // Set key type traits.

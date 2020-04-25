@@ -37,6 +37,7 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
@@ -60,11 +61,11 @@ public interface INcApplicationContext extends IApplicationContext {
 
     IBufferCache getBufferCache();
 
+    IVirtualBufferCache getVirtualBufferCache();
+
     ILocalResourceRepository getLocalResourceRepository();
 
     IDatasetLifecycleManager getDatasetLifecycleManager();
-
-    IDatasetMemoryManager getDatasetMemoryManager();
 
     IResourceIdFactory getResourceIdFactory();
 

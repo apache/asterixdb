@@ -33,7 +33,6 @@ import org.apache.asterix.common.api.IConfigValidator;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
 import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
-import org.apache.asterix.common.api.IDatasetMemoryManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IPropertiesFactory;
 import org.apache.asterix.common.api.IReceptionist;
@@ -50,7 +49,7 @@ import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
-import org.apache.asterix.common.context.DatasetMemoryManager;
+import org.apache.asterix.common.context.GlobalVirtualBufferCache;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
@@ -91,6 +90,7 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.ipc.impl.HyracksConnection;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
 import org.apache.hyracks.storage.am.lsm.common.impls.ConcurrentMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.GreedyScheduler;
@@ -130,9 +130,9 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private final MessagingProperties messagingProperties;
     private final NodeProperties nodeProperties;
     private ExecutorService threadExecutor;
-    private IDatasetMemoryManager datasetMemoryManager;
     private IDatasetLifecycleManager datasetLifecycleManager;
     private IBufferCache bufferCache;
+    private IVirtualBufferCache virtualBufferCache;
     private ITransactionSubsystem txnSubsystem;
     private IMetadataNode metadataNodeStub;
     private ILSMIOOperationScheduler lsmIOScheduler;
@@ -205,10 +205,13 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             }
             localResourceRepository.deleteStorageData();
         }
-        datasetMemoryManager = new DatasetMemoryManager(storageProperties);
+        virtualBufferCache = new GlobalVirtualBufferCache(allocator, storageProperties);
+        // Must start vbc now instead of by life cycle component manager (lccm) because lccm happens after
+        // the metadata bootstrap task
+        ((ILifeCycleComponent) virtualBufferCache).start();
         datasetLifecycleManager =
                 new DatasetLifecycleManager(storageProperties, localResourceRepository, txnSubsystem.getLogManager(),
-                        datasetMemoryManager, indexCheckpointManagerProvider, ioManager.getIODevices().size());
+                        virtualBufferCache, indexCheckpointManagerProvider, ioManager.getIODevices().size());
         final String nodeId = getServiceContext().getNodeId();
         final ClusterPartition[] nodePartitions = metadataProperties.getNodePartitions().get(nodeId);
         final Set<Integer> nodePartitionsIds =
@@ -246,6 +249,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
          * managers. Notes: registered components are stopped in reversed order
          */
         ILifeCycleComponentManager lccm = getServiceContext().getLifeCycleComponentManager();
+        lccm.register((ILifeCycleComponent) virtualBufferCache);
         lccm.register((ILifeCycleComponent) bufferCache);
         /*
          * LogManager must be stopped after RecoveryManager, DatasetLifeCycleManager, and ReplicationManager
@@ -297,6 +301,11 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     }
 
     @Override
+    public IVirtualBufferCache getVirtualBufferCache() {
+        return virtualBufferCache;
+    }
+
+    @Override
     public ITransactionSubsystem getTransactionSubsystem() {
         return txnSubsystem;
     }
@@ -304,11 +313,6 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IDatasetLifecycleManager getDatasetLifecycleManager() {
         return datasetLifecycleManager;
-    }
-
-    @Override
-    public IDatasetMemoryManager getDatasetMemoryManager() {
-        return datasetMemoryManager;
     }
 
     @Override

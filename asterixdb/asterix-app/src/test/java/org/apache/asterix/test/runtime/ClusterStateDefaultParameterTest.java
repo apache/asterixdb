@@ -87,17 +87,27 @@ public class ClusterStateDefaultParameterTest {
                 Assert.assertTrue(getValue(row) == maxHeap / 4);
                 matchCount++;
             }
-            if (row.contains("storage.max.active.writable.datasets")) {
-                Assert.assertTrue(getValue(row) == 8);
+            if (row.contains("storage.memorycomponent.flush.threshold")) {
+                Assert.assertTrue(getDoubleValue(row) == 0.9d);
+                matchCount++;
+            }
+            if (row.contains("storage.filtered.memorycomponent.max.size")) {
+                Assert.assertTrue(getValue(row) == 0);
                 matchCount++;
             }
         }
-        Assert.assertTrue(matchCount == 3);
+        Assert.assertTrue(matchCount == 4);
     }
 
     // Parses a long value parameter.
     private long getValue(String row) {
         String valueStr = row.split(":")[1].trim();
         return Long.parseLong(valueStr);
+    }
+
+    // Parses a long value parameter.
+    private double getDoubleValue(String row) {
+        String valueStr = row.split(":")[1].trim();
+        return Double.parseDouble(valueStr);
     }
 }

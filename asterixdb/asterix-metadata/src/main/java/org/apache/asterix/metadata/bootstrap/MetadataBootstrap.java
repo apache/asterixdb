@@ -325,10 +325,6 @@ public class MetadataBootstrap {
     public static void enlistMetadataDataset(INCServiceContext ncServiceCtx, IMetadataIndex index)
             throws HyracksDataException {
         final int datasetId = index.getDatasetId().getId();
-        // reserve memory for metadata dataset to ensure it can be opened when needed
-        if (!appContext.getDatasetMemoryManager().reserve(index.getDatasetId().getId())) {
-            throw new IllegalStateException("Failed to reserve memory for metadata dataset (" + datasetId + ")");
-        }
         String metadataPartitionPath =
                 StoragePathUtil.prepareStoragePartitionPath(MetadataNode.INSTANCE.getMetadataStoragePartition());
         String resourceName = metadataPartitionPath + File.separator + index.getFileNameRelativePath();

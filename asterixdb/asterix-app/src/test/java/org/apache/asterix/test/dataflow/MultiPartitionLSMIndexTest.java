@@ -35,6 +35,7 @@ import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.config.StorageProperties.Option;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
@@ -51,7 +52,9 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.operators.LSMPrimaryInsertOperatorNodePushable;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.comm.VSizeFrame;
+import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
@@ -132,6 +135,9 @@ public class MultiPartitionLSMIndexTest {
         String configPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "test"
                 + File.separator + "resources" + File.separator + "cc-multipart.conf";
         nc = new TestNodeController(configPath, false);
+        List<Pair<IOption, Object>> opts = new ArrayList<>();
+        opts.add(Pair.of(Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET, 16 * 1024 * 1024L));
+        nc.setOpts(opts);
         nc.init();
         ncAppCtx = nc.getAppRuntimeContext();
         dsLifecycleMgr = ncAppCtx.getDatasetLifecycleManager();
@@ -262,20 +268,23 @@ public class MultiPartitionLSMIndexTest {
             MutableBoolean proceedToScheduleFlush = new MutableBoolean(false);
             primaryLsmBtrees[0].addVirtuablBufferCacheCallback(new IVirtualBufferCacheCallback() {
                 @Override
-                public void isFullChanged(boolean newValue) {
-                    synchronized (isFull) {
-                        isFull.set(newValue);
-                        isFull.notifyAll();
-                    }
-                    synchronized (proceedToScheduleFlush) {
-                        while (!proceedToScheduleFlush.booleanValue()) {
-                            try {
-                                proceedToScheduleFlush.wait();
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                                return;
+                public void isFullChanged(boolean newValue, ILSMMemoryComponent memoryComponent) {
+                    if (memoryComponent != null && memoryComponent.getLsmIndex() == primaryLsmBtrees[0]) {
+                        synchronized (isFull) {
+                            isFull.set(newValue);
+                            isFull.notifyAll();
+                        }
+                        synchronized (proceedToScheduleFlush) {
+                            while (!proceedToScheduleFlush.booleanValue()) {
+                                try {
+                                    proceedToScheduleFlush.wait();
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                    return;
+                                }
                             }
                         }
+                        System.out.println("Proceed to flush");
                     }
                 }
             });
@@ -350,7 +359,7 @@ public class MultiPartitionLSMIndexTest {
             // Now we need to know that the flush has been scheduled
             synchronized (flushStarted) {
                 while (!flushStarted.booleanValue()) {
-                    flushStarted.wait();
+                    flushStarted.wait(100);
                 }
             }
 
@@ -433,18 +442,20 @@ public class MultiPartitionLSMIndexTest {
             MutableBoolean proceedAfterIsFullChanged = new MutableBoolean(false);
             primaryLsmBtrees[1].addVirtuablBufferCacheCallback(new IVirtualBufferCacheCallback() {
                 @Override
-                public void isFullChanged(boolean newValue) {
-                    synchronized (isFull) {
-                        isFull.set(newValue);
-                        isFull.notifyAll();
-                    }
-                    synchronized (proceedAfterIsFullChanged) {
-                        while (!proceedAfterIsFullChanged.booleanValue()) {
-                            try {
-                                proceedAfterIsFullChanged.wait();
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                                return;
+                public void isFullChanged(boolean newValue, ILSMMemoryComponent memoryComponent) {
+                    if (memoryComponent != null && memoryComponent.getLsmIndex() == primaryLsmBtrees[1]) {
+                        synchronized (isFull) {
+                            isFull.set(newValue);
+                            isFull.notifyAll();
+                        }
+                        synchronized (proceedAfterIsFullChanged) {
+                            while (!proceedAfterIsFullChanged.booleanValue()) {
+                                try {
+                                    proceedAfterIsFullChanged.wait();
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                    return;
+                                }
                             }
                         }
                     }

@@ -256,6 +256,11 @@ public class LSMHarness implements ILSMHarness {
                     throw e; // NOSONAR: The last call in the finally clause
                 }
             }
+            if (opType == LSMOperationType.FLUSH) {
+                ILSMMemoryComponent flushingComponent = (ILSMMemoryComponent) ctx.getComponentHolder().get(0);
+                // We must call flushed without synchronizing on opTracker to avoid deadlocks
+                flushingComponent.flushed();
+            }
         }
     }
 

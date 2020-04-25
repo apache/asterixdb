@@ -23,6 +23,7 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMMemoryComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
 public class LSMBTreeMemoryComponent extends AbstractLSMMemoryComponent {
 
@@ -37,5 +38,10 @@ public class LSMBTreeMemoryComponent extends AbstractLSMMemoryComponent {
     @Override
     public BTree getIndex() {
         return btree;
+    }
+
+    @Override
+    public LSMComponentFileReferences getComponentFileRefs() {
+        return new LSMComponentFileReferences(btree.getFileReference(), null, null);
     }
 }

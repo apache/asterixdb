@@ -132,9 +132,6 @@ public class LSMFlushRecoveryTest {
         List<Pair<IOption, Object>> opts = new ArrayList<>();
         opts.add(Pair.of(Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET, 20 * 1024 * 1024L));
         opts.add(Pair.of(Option.STORAGE_MEMORYCOMPONENT_PAGESIZE, 1 * 1024));
-        // each memory component only gets 4 pages (we have 2 partitions, 2 memory components/partition)
-        // and some reserved memory for metadata dataset
-        opts.add(Pair.of(Option.STORAGE_MAX_ACTIVE_WRITABLE_DATASETS, 1024));
         nc.setOpts(opts);
         initializeNc(false);
         initializeTestCtx();
