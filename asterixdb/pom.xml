@@ -616,19 +616,6 @@
       </properties>
     </profile>
     <profile>
-      <id>skip-dashboard</id>
-      <activation>
-        <property>
-          <name>skip.npm</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <properties>
-        <license.stage>none</license.stage>
-        <resource.stage>none</resource.stage>
-      </properties>
-    </profile>
-    <profile>
       <id>invalid-tests</id>
       <properties>
         <invalid.tests />
