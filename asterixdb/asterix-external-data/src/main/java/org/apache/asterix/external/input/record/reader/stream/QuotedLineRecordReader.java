@@ -37,7 +37,7 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 public class QuotedLineRecordReader extends LineRecordReader {
 
     private char quote;
-    private char quoteEscape;
+    private char escape;
     private boolean prevCharEscape;
     private int readLength;
     private boolean inQuote;
@@ -54,7 +54,7 @@ public class QuotedLineRecordReader extends LineRecordReader {
         String quoteString = config.get(ExternalDataConstants.KEY_QUOTE);
         ExternalDataUtils.validateQuote(quoteString);
         this.quote = quoteString.charAt(0);
-        this.quoteEscape = ExternalDataUtils.validateGetQuoteEscape(config);
+        this.escape = ExternalDataUtils.validateGetEscape(config);
     }
 
     @Override
@@ -117,7 +117,7 @@ public class QuotedLineRecordReader extends LineRecordReader {
                 }
                 boolean maybeInQuote = false;
                 for (; bufferPosn < bufferLength; ++bufferPosn) {
-                    if (inputBuffer[bufferPosn] == quote && quoteEscape == quote) {
+                    if (inputBuffer[bufferPosn] == quote && escape == quote) {
                         inQuote |= maybeInQuote;
                         prevCharEscape |= maybeInQuote;
                     }
@@ -135,18 +135,16 @@ public class QuotedLineRecordReader extends LineRecordReader {
                         prevCharCR = (inputBuffer[bufferPosn] == ExternalDataConstants.CR);
                         // if this is an opening quote, mark it
                         inQuote = inputBuffer[bufferPosn] == quote && !prevCharEscape;
-                        // the quoteEscape != quote is for making an opening quote not an escape
-                        prevCharEscape =
-                                inputBuffer[bufferPosn] == quoteEscape && !prevCharEscape && quoteEscape != quote;
+                        // the escape != quote is for making an opening quote not an escape
+                        prevCharEscape = inputBuffer[bufferPosn] == escape && !prevCharEscape && escape != quote;
                     } else {
-                        // if quote == quoteEscape and current char is quote, then it could be closing or escaping
+                        // if quote == escape and current char is quote, then it could be closing or escaping
                         if (inputBuffer[bufferPosn] == quote && !prevCharEscape) {
                             // this is most likely a closing quote. the outcome depends on the next char
                             inQuote = false;
                             maybeInQuote = true;
                         }
-                        prevCharEscape =
-                                inputBuffer[bufferPosn] == quoteEscape && !prevCharEscape && quoteEscape != quote;
+                        prevCharEscape = inputBuffer[bufferPosn] == escape && !prevCharEscape && escape != quote;
                     }
                 }
                 readLength = bufferPosn - startPosn;

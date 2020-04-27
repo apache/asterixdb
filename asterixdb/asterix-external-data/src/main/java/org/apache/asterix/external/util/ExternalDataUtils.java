@@ -82,13 +82,13 @@ public class ExternalDataUtils {
         return quote;
     }
 
-    public static char validateGetQuoteEscape(Map<String, String> configuration) throws HyracksDataException {
-        String quoteEscapeValue = configuration.get(ExternalDataConstants.KEY_QUOTE_ESCAPE);
-        if (quoteEscapeValue == null) {
+    public static char validateGetEscape(Map<String, String> configuration) throws HyracksDataException {
+        String escapeValue = configuration.get(ExternalDataConstants.KEY_ESCAPE);
+        if (escapeValue == null) {
             return ExternalDataConstants.ESCAPE;
         }
-        validateQuoteEscape(quoteEscapeValue);
-        return quoteEscapeValue.charAt(0);
+        validateEscape(escapeValue);
+        return escapeValue.charAt(0);
     }
 
     public static void validateDataParserParameters(Map<String, String> configuration) throws AsterixException {
@@ -331,11 +331,11 @@ public class ExternalDataUtils {
             if (format.equals(ExternalDataConstants.FORMAT_CSV)) {
                 configuration.putIfAbsent(ExternalDataConstants.KEY_DELIMITER, ExternalDataConstants.DEFAULT_DELIMITER);
                 configuration.putIfAbsent(ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.DEFAULT_QUOTE);
-                configuration.putIfAbsent(ExternalDataConstants.KEY_QUOTE_ESCAPE, ExternalDataConstants.DEFAULT_QUOTE);
+                configuration.putIfAbsent(ExternalDataConstants.KEY_ESCAPE, ExternalDataConstants.DEFAULT_QUOTE);
             } else if (format.equals(ExternalDataConstants.FORMAT_TSV)) {
                 configuration.putIfAbsent(ExternalDataConstants.KEY_DELIMITER, ExternalDataConstants.TAB_STR);
                 configuration.putIfAbsent(ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.NULL_STR);
-                configuration.putIfAbsent(ExternalDataConstants.KEY_QUOTE_ESCAPE, ExternalDataConstants.NULL_STR);
+                configuration.putIfAbsent(ExternalDataConstants.KEY_ESCAPE, ExternalDataConstants.NULL_STR);
             }
         }
     }
@@ -396,7 +396,7 @@ public class ExternalDataUtils {
         }
         char delimiter = validateGetDelimiter(configuration);
         validateGetQuote(configuration, delimiter);
-        validateGetQuoteEscape(configuration);
+        validateGetEscape(configuration);
         String value = configuration.get(KEY_REDACT_WARNINGS);
         if (value != null && !isBoolean(value)) {
             throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, KEY_REDACT_WARNINGS, value);
@@ -425,10 +425,9 @@ public class ExternalDataUtils {
         }
     }
 
-    private static void validateQuoteEscape(String quoteEsc) throws RuntimeDataException {
-        if (quoteEsc.length() != 1) {
-            throw new RuntimeDataException(ErrorCode.PARSER_INVALID_CHAR_LENGTH, quoteEsc,
-                    ExternalDataConstants.KEY_QUOTE_ESCAPE);
+    private static void validateEscape(String esc) throws RuntimeDataException {
+        if (esc.length() != 1) {
+            throw new RuntimeDataException(ErrorCode.PARSER_INVALID_CHAR_LENGTH, esc, ExternalDataConstants.KEY_ESCAPE);
         }
     }
 
