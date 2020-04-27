@@ -18,17 +18,19 @@
  */
 package org.apache.asterix.test.optimizer;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.java.AsterixJavaClient;
@@ -92,6 +94,9 @@ public class OptimizerTest {
     protected static IStorageComponentProvider storageComponentProvider = new StorageComponentProvider();
 
     protected static AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
+
+    private static final String PATTERN_VAR_ID_PREFIX = "\\$\\$";
+    private static final Pattern PATTERN_VAR_ID = Pattern.compile(PATTERN_VAR_ID_PREFIX + "(\\d+)");
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -205,37 +210,36 @@ public class OptimizerTest {
                 throw new Exception("Compile ERROR for " + queryFile + ": " + e.getMessage(), e);
             }
 
-            BufferedReader readerExpected =
-                    new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
-            BufferedReader readerActual =
-                    new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
+            List<String> linesExpected = Files.readAllLines(expectedFile.toPath(), StandardCharsets.UTF_8);
+            List<String> linesActual = Files.readAllLines(actualFile.toPath(), StandardCharsets.UTF_8);
 
+            int varBaseExpected = findBaseVarId(linesExpected);
+            int varBaseActual = findBaseVarId(linesActual);
+
+            Iterator<String> readerExpected = linesExpected.iterator();
+            Iterator<String> readerActual = linesActual.iterator();
             String lineExpected, lineActual;
             int num = 1;
-            try {
-                while ((lineExpected = readerExpected.readLine()) != null) {
-                    lineActual = readerActual.readLine();
-                    if (lineActual == null) {
-                        throw new Exception("Result for " + queryFile + " changed at line " + num + ":\n< "
-                                + lineExpected + "\n> ");
-                    }
-                    if (!lineExpected.equals(lineActual)) {
-                        throw new Exception("Result for " + queryFile + " changed at line " + num + ":\n< "
-                                + lineExpected + "\n> " + lineActual);
-                    }
-                    ++num;
-                }
-                lineActual = readerActual.readLine();
-                if (lineActual != null) {
+            while (readerExpected.hasNext()) {
+                lineExpected = readerExpected.next();
+                if (!readerActual.hasNext()) {
                     throw new Exception(
-                            "Result for " + queryFile + " changed at line " + num + ":\n< \n> " + lineActual);
+                            "Result for " + queryFile + " changed at line " + num + ":\n< " + lineExpected + "\n> ");
                 }
-                LOGGER.info("Test \"" + queryFile.getPath() + "\" PASSED!");
-                actualFile.delete();
-            } finally {
-                readerExpected.close();
-                readerActual.close();
+                lineActual = readerActual.next();
+
+                if (!planLineEquals(lineExpected, varBaseExpected, lineActual, varBaseActual)) {
+                    throw new Exception("Result for " + queryFile + " changed at line " + num + ":\n< " + lineExpected
+                            + "\n> " + lineActual);
+                }
+                ++num;
             }
+            if (readerActual.hasNext()) {
+                throw new Exception(
+                        "Result for " + queryFile + " changed at line " + num + ":\n< \n> " + readerActual.next());
+            }
+            LOGGER.info("Test \"" + queryFile.getPath() + "\" PASSED!");
+            actualFile.delete();
         } catch (Exception e) {
             if (!(e instanceof AssumptionViolatedException)) {
                 LOGGER.error("Test \"" + queryFile.getPath() + "\" FAILED!");
@@ -244,5 +248,41 @@ public class OptimizerTest {
                 throw e;
             }
         }
+    }
+
+    private boolean planLineEquals(String lineExpected, int varIdBaseExpected, String lineActual, int varIdBaseActual) {
+        String lineExpectedNorm = normalizePlanLine(lineExpected, varIdBaseExpected);
+        String lineActualNorm = normalizePlanLine(lineActual, varIdBaseActual);
+        return lineExpectedNorm.equals(lineActualNorm);
+    }
+
+    // rewrite variable ids in given plan line: $$varId -> $$(varId-varIdBase)
+    private String normalizePlanLine(String line, int varIdBase) {
+        if (varIdBase == Integer.MAX_VALUE) {
+            // plan did not contain any variables -> no rewriting necessary
+            return line;
+        }
+        Matcher m = PATTERN_VAR_ID.matcher(line);
+        StringBuffer sb = new StringBuffer(line.length());
+        while (m.find()) {
+            int varId = Integer.parseInt(m.group(1));
+            int newVarId = varId - varIdBase;
+            m.appendReplacement(sb, PATTERN_VAR_ID_PREFIX + newVarId);
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    private int findBaseVarId(Collection<String> plan) {
+        int varIdBase = Integer.MAX_VALUE;
+        Matcher m = PATTERN_VAR_ID.matcher("");
+        for (String line : plan) {
+            m.reset(line);
+            while (m.find()) {
+                int varId = Integer.parseInt(m.group(1));
+                varIdBase = Math.min(varIdBase, varId);
+            }
+        }
+        return varIdBase;
     }
 }

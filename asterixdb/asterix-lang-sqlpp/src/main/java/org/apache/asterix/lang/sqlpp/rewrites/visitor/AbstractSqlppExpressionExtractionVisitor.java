@@ -23,23 +23,27 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
+import org.apache.asterix.lang.sqlpp.clause.SelectClause;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * Base class for visitors that extract expressions into LET clauses.
- * Subclasses should call {@link #extractExpressions(List, int)} to perform the extraction.
+ * Subclasses should call {@link #extractExpressionsFromList(List, int, Predicate)} or
+ * {@link #extractExpression(Expression)} to perform the extraction.
  */
 abstract class AbstractSqlppExpressionExtractionVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
@@ -57,32 +61,60 @@ abstract class AbstractSqlppExpressionExtractionVisitor extends AbstractSqlppSim
         stack.push(extractionList);
 
         if (selectBlock.hasFromClause()) {
-            FromClause clause = selectBlock.getFromClause();
-            clause.accept(this, arg);
-            if (!extractionList.isEmpty()) {
-                handleUnsupportedClause(clause, extractionList);
-            }
+            visitFromClause(selectBlock.getFromClause(), arg, extractionList);
         }
         List<AbstractClause> letWhereList = selectBlock.getLetWhereList();
         if (!letWhereList.isEmpty()) {
-            visitLetWhereClauses(letWhereList, extractionList, arg);
+            visitLetWhereClauses(letWhereList, arg, extractionList);
         }
+        GroupbyClause groupbyClause = null;
         if (selectBlock.hasGroupbyClause()) {
-            selectBlock.getGroupbyClause().accept(this, arg);
-            introduceLetClauses(extractionList, letWhereList);
+            groupbyClause = selectBlock.getGroupbyClause();
+            visitGroupByClause(groupbyClause, arg, extractionList, letWhereList);
         }
         List<AbstractClause> letHavingListAfterGby = selectBlock.getLetHavingListAfterGroupby();
         if (!letHavingListAfterGby.isEmpty()) {
-            visitLetWhereClauses(letHavingListAfterGby, extractionList, arg);
+            visitLetHavingClausesAfterGby(arg, extractionList, letHavingListAfterGby, groupbyClause);
         }
-        selectBlock.getSelectClause().accept(this, arg);
-        introduceLetClauses(extractionList, selectBlock.hasGroupbyClause() ? letHavingListAfterGby : letWhereList);
+        visitSelectClause(selectBlock.getSelectClause(), arg, extractionList,
+                selectBlock.hasGroupbyClause() ? letHavingListAfterGby : letWhereList, groupbyClause);
 
         stack.pop();
         return null;
     }
 
-    private void visitLetWhereClauses(List<AbstractClause> clauseList,
+    protected void visitFromClause(FromClause clause, ILangExpression arg,
+            List<Pair<Expression, VarIdentifier>> extractionList) throws CompilationException {
+        // Skip extraction because we won't be able to perform it as there are no LET clauses yet.
+        // Subclasses can override and fail if necessary
+    }
+
+    protected void visitLetWhereClauses(List<AbstractClause> letWhereList, ILangExpression arg,
+            List<Pair<Expression, VarIdentifier>> extractionList) throws CompilationException {
+        visitLetWhereClausesImpl(letWhereList, extractionList, arg);
+    }
+
+    protected void visitGroupByClause(GroupbyClause groupbyClause, ILangExpression arg,
+            List<Pair<Expression, VarIdentifier>> extractionList, List<AbstractClause> letWhereList)
+            throws CompilationException {
+        groupbyClause.accept(this, arg);
+        introduceLetClauses(extractionList, letWhereList);
+    }
+
+    protected void visitLetHavingClausesAfterGby(ILangExpression arg,
+            List<Pair<Expression, VarIdentifier>> extractionList, List<AbstractClause> letHavingListAfterGby,
+            GroupbyClause groupbyClause) throws CompilationException {
+        visitLetWhereClausesImpl(letHavingListAfterGby, extractionList, arg);
+    }
+
+    protected void visitSelectClause(SelectClause selectClause, ILangExpression arg,
+            List<Pair<Expression, VarIdentifier>> extractionList, List<AbstractClause> letWhereList,
+            GroupbyClause groupbyClause) throws CompilationException {
+        selectClause.accept(this, arg);
+        introduceLetClauses(extractionList, letWhereList);
+    }
+
+    private void visitLetWhereClausesImpl(List<AbstractClause> clauseList,
             List<Pair<Expression, VarIdentifier>> extractionList, ILangExpression arg) throws CompilationException {
         List<AbstractClause> newClauseList = new ArrayList<>(clauseList.size());
         for (AbstractClause letWhereClause : clauseList) {
@@ -108,7 +140,8 @@ abstract class AbstractSqlppExpressionExtractionVisitor extends AbstractSqlppSim
         fromBindingList.clear();
     }
 
-    List<Expression> extractExpressions(List<Expression> exprList, int limit) {
+    protected List<Expression> extractExpressionsFromList(List<Expression> exprList, int limit,
+            Predicate<Expression> exprTest) {
         List<Pair<Expression, VarIdentifier>> outLetList = stack.peek();
         if (outLetList == null) {
             return null;
@@ -117,23 +150,22 @@ abstract class AbstractSqlppExpressionExtractionVisitor extends AbstractSqlppSim
         List<Expression> newExprList = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
             Expression expr = exprList.get(i);
-            Expression newExpr;
-            if (i < limit && isExtractableExpression(expr)) {
-                VarIdentifier v = context.newVariable();
-                VariableExpr vExpr = new VariableExpr(v);
-                vExpr.setSourceLocation(expr.getSourceLocation());
-                outLetList.add(new Pair<>(expr, v));
-                newExpr = vExpr;
-            } else {
-                newExpr = expr;
-            }
+            Expression newExpr = i < limit && exprTest.test(expr) ? extractExpressionImpl(expr, outLetList) : expr;
             newExprList.add(newExpr);
         }
         return newExprList;
     }
 
-    abstract boolean isExtractableExpression(Expression expr);
+    protected Expression extractExpression(Expression expr) {
+        List<Pair<Expression, VarIdentifier>> outLetList = stack.peek();
+        return outLetList != null ? extractExpressionImpl(expr, outLetList) : null;
+    }
 
-    abstract void handleUnsupportedClause(FromClause clause, List<Pair<Expression, VarIdentifier>> extractionList)
-            throws CompilationException;
+    private VariableExpr extractExpressionImpl(Expression expr, List<Pair<Expression, VarIdentifier>> outLetList) {
+        VarIdentifier v = context.newVariable();
+        VariableExpr vExpr = new VariableExpr(v);
+        vExpr.setSourceLocation(expr.getSourceLocation());
+        outLetList.add(new Pair<>(expr, v));
+        return vExpr;
+    }
 }
