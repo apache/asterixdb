@@ -24,8 +24,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.asterix.external.input.stream.AbstractMultipleInputStream;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.api.util.CleanupUtils;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -62,20 +64,27 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
         // Finished reading all the files
         if (nextFileIndex >= filePaths.size()) {
             if (in != null) {
-                in.close();
+                CleanupUtils.close(in, null);
             }
             return false;
         }
 
         // Close the current stream before going to the next one
         if (in != null) {
-            in.close();
+            CleanupUtils.close(in, null);
         }
 
         String bucket = configuration.get(AwsS3Constants.CONTAINER_NAME_FIELD_NAME);
         GetObjectRequest.Builder getObjectBuilder = GetObjectRequest.builder();
         GetObjectRequest getObjectRequest = getObjectBuilder.bucket(bucket).key(filePaths.get(nextFileIndex)).build();
-        in = s3Client.getObject(getObjectRequest);
+
+        // Use the proper input stream
+        String filename = filePaths.get(nextFileIndex).toLowerCase();
+        if (filename.endsWith(".gz") || filename.endsWith(".gzip")) {
+            in = new GZIPInputStream(s3Client.getObject(getObjectRequest), ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+        } else {
+            in = s3Client.getObject(getObjectRequest);
+        }
         if (notificationHandler != null) {
             notificationHandler.notifyNewSource();
         }

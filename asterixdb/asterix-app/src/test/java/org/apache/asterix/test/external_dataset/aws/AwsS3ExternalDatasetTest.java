@@ -20,10 +20,12 @@ package org.apache.asterix.test.external_dataset.aws;
 
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -32,6 +34,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.test.common.TestExecutor;
@@ -46,6 +49,7 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -85,10 +89,6 @@ public class AwsS3ExternalDatasetTest {
     private static final String CSV_DATA_PATH = joinPath("data", "csv");
     private static final String TSV_DATA_PATH = joinPath("data", "tsv");
 
-    // IMPORTANT: The following values must be used in the AWS S3 test case
-    private static S3Mock s3MockServer;
-    private static S3Client client;
-
     // Service endpoint
     private static final int S3_MOCK_SERVER_PORT = 8001;
     private static final String S3_MOCK_SERVER_HOSTNAME = "http://localhost:" + S3_MOCK_SERVER_PORT;
@@ -104,6 +104,11 @@ public class AwsS3ExternalDatasetTest {
     private static final CreateBucketRequest.Builder CREATE_BUCKET_BUILDER = CreateBucketRequest.builder();
     private static final DeleteBucketRequest.Builder DELETE_BUCKET_BUILDER = DeleteBucketRequest.builder();
     private static final PutObjectRequest.Builder PUT_OBJECT_BUILDER = PutObjectRequest.builder();
+
+    // IMPORTANT: The following values must be used in the AWS S3 test case
+    private static S3Mock s3MockServer;
+    private static S3Client client;
+    private static PutObjectRequest.Builder builder = PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET);
 
     protected TestCaseContext tcCtx;
 
@@ -192,55 +197,117 @@ public class AwsS3ExternalDatasetTest {
         client.createBucket(CreateBucketRequest.builder().bucket(S3_MOCK_SERVER_BUCKET).build());
         LOGGER.info("bucket created successfully");
 
-        // Load JSON files
+        LOGGER.info("Adding JSON files to the bucket");
         loadJsonFiles();
+        LOGGER.info("JSON Files added successfully");
+
+        LOGGER.info("Adding CSV files to the bucket");
         loadCsvFiles();
+        LOGGER.info("CSV Files added successfully");
+
+        LOGGER.info("Adding TSV files to the bucket");
         loadTsvFiles();
+        LOGGER.info("TSV Files added successfully");
 
         LOGGER.info("Files added successfully");
     }
 
     private static void loadJsonFiles() {
-        LOGGER.info("Adding JSON files to the bucket");
+        String dataBasePath = JSON_DATA_PATH;
+        String definition = S3_MOCK_SERVER_BUCKET_JSON_DEFINITION;
 
-        // Set the bucket
-        PutObjectRequest.Builder builder1 = PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET);
+        // Json data
+        String definitionSegment = "json";
+        loadData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
+        loadData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
+        loadData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
+        loadData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
+                false);
 
-        // load multi-level single line JSON files
-        String singleLineBasePath = S3_MOCK_SERVER_BUCKET_JSON_DEFINITION + "single-line/";
-        Path filePath1 = Paths.get(JSON_DATA_PATH, "single-line", "20-records.json");
-        RequestBody reqBody1 = RequestBody.fromFile(filePath1);
-        client.putObject(builder1.key(singleLineBasePath + "20-records.json").build(), reqBody1);
-        client.putObject(builder1.key(singleLineBasePath + "level1a/" + "20-records.json").build(), reqBody1);
-        client.putObject(builder1.key(singleLineBasePath + "level1b/" + "20-records.json").build(), reqBody1);
-        client.putObject(builder1.key(singleLineBasePath + "level1a/level2a/" + "20-records.json").build(), reqBody1);
-        client.putObject(builder1.key(singleLineBasePath + "level1a/level2b/" + "20-records.json").build(), reqBody1);
+        // Json gz compressed data
+        definitionSegment = "gz";
+        loadGzData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
+                false);
 
-        // Load multi-level multi-lines JSON files
-        String multiLinesBasePath = S3_MOCK_SERVER_BUCKET_JSON_DEFINITION + "multi-lines/";
-        Path filePath2 = Paths.get(JSON_DATA_PATH, "multi-lines", "20-records.json");
-        RequestBody reqBody2 = RequestBody.fromFile(filePath2);
-        client.putObject(builder1.key(multiLinesBasePath + "20-records.json").build(), reqBody2);
-        client.putObject(builder1.key(multiLinesBasePath + "level1a/" + "20-records.json").build(), reqBody2);
-        client.putObject(builder1.key(multiLinesBasePath + "level1b/" + "20-records.json").build(), reqBody2);
-        client.putObject(builder1.key(multiLinesBasePath + "level1a/level2a/" + "20-records.json").build(), reqBody2);
-        client.putObject(builder1.key(multiLinesBasePath + "level1a/level2b/" + "20-records.json").build(), reqBody2);
+        // Mixed json and json gz compressed data
+        definitionSegment = "mixed";
+        loadData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
+        loadData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
+        loadData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
+        loadData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
+                false);
+        loadGzData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
+                false);
+    }
 
-        // Load multi-level multi-lines with array JSON files
-        String multiLinesWithArraysBasePath = S3_MOCK_SERVER_BUCKET_JSON_DEFINITION + "multi-lines-with-arrays/";
-        Path filePath3 = Paths.get(JSON_DATA_PATH, "multi-lines-with-arrays", "5-records.json");
-        RequestBody reqBody3 = RequestBody.fromFile(filePath3);
-        client.putObject(builder1.key(multiLinesWithArraysBasePath + "5-records.json").build(), reqBody3);
-        client.putObject(builder1.key(multiLinesWithArraysBasePath + "level1a/" + "5-records.json").build(), reqBody3);
+    private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,
+            String definitionSegment, boolean removeExtension) {
+        // Files data
+        Path filePath = Paths.get(fileBasePath, filePathSegment, filename);
+        RequestBody requestBody = RequestBody.fromFile(filePath);
 
-        // Load multi-level multi-lines with nested objects JSON files
-        String multiLinesWithNestedObjectsBasePath =
-                S3_MOCK_SERVER_BUCKET_JSON_DEFINITION + "multi-lines-with-nested-objects/";
-        Path filePath4 = Paths.get(JSON_DATA_PATH, "multi-lines-with-nested-objects", "5-records.json");
-        RequestBody reqBody4 = RequestBody.fromFile(filePath4);
-        client.putObject(builder1.key(multiLinesWithNestedObjectsBasePath + "5-records.json").build(), reqBody4);
-        client.putObject(builder1.key(multiLinesWithNestedObjectsBasePath + "level1a/" + "5-records.json").build(),
-                reqBody4);
+        // Keep or remove the file extension
+        Assert.assertFalse("Files with no extension are not supported yet for external datasets", removeExtension);
+        String finalFileName;
+        if (removeExtension) {
+            finalFileName = FilenameUtils.removeExtension(filename);
+        } else {
+            finalFileName = filename;
+        }
+
+        // Files base definition
+        String basePath = definition + filePathSegment + "/" + definitionSegment + "/";
+
+        // Load the data
+        client.putObject(builder.key(basePath + finalFileName).build(), requestBody);
+        client.putObject(builder.key(basePath + "level1a/" + finalFileName).build(), requestBody);
+        client.putObject(builder.key(basePath + "level1b/" + finalFileName).build(), requestBody);
+        client.putObject(builder.key(basePath + "level1a/level2a/" + finalFileName).build(), requestBody);
+        client.putObject(builder.key(basePath + "level1a/level2b/" + finalFileName).build(), requestBody);
+    }
+
+    private static void loadGzData(String fileBasePath, String filePathSegment, String filename, String definition,
+            String definitionSegment, boolean removeExtension) {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+
+            // Files data
+            Path filePath = Paths.get(fileBasePath, filePathSegment, filename);
+
+            // Get the compressed data
+            gzipOutputStream.write(Files.readAllBytes(filePath));
+            gzipOutputStream.close(); // Need to close or data will be invalid
+            byte[] gzipBytes = byteArrayOutputStream.toByteArray();
+            RequestBody requestBody = RequestBody.fromBytes(gzipBytes);
+
+            // Keep or remove the file extension
+            Assert.assertFalse("Files with no extension are not supported yet for external datasets", removeExtension);
+            String finalFileName;
+            if (removeExtension) {
+                finalFileName = FilenameUtils.removeExtension(filename);
+            } else {
+                finalFileName = filename;
+            }
+            finalFileName += ".gz";
+
+            // Files base definition
+            String basePath = definition + filePathSegment + "/" + definitionSegment + "/";
+
+            // Load the data
+            client.putObject(builder.key(basePath + finalFileName).build(), requestBody);
+            client.putObject(builder.key(basePath + "level1a/" + finalFileName).build(), requestBody);
+            client.putObject(builder.key(basePath + "level1b/" + finalFileName).build(), requestBody);
+            client.putObject(builder.key(basePath + "level1a/level2a/" + finalFileName).build(), requestBody);
+            client.putObject(builder.key(basePath + "level1a/level2b/" + finalFileName).build(), requestBody);
+        } catch (Exception ex) {
+            LOGGER.error(ex.getMessage());
+        }
     }
 
     private static void loadCsvFiles() {

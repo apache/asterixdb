@@ -20,8 +20,18 @@
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   <test-group name="external-dataset">
     <test-case FilePath="external-dataset">
-      <compilation-unit name="aws/s3/json/000">
-        <output-dir compare="Text">aws/s3/json/000</output-dir>
+      <compilation-unit name="aws/s3/json/json">
+        <output-dir compare="Text">aws/s3/json/json</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/json/gz">
+        <output-dir compare="Text">aws/s3/json/gz</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/json/mixed">
+        <output-dir compare="Text">aws/s3/json/mixed</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">

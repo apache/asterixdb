@@ -123,9 +123,26 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
             throw AsterixException.create(ErrorCode.PROVIDER_STREAM_RECORD_READER_UNKNOWN_FORMAT, fileFormat);
         }
 
-        s3Objects.stream().filter(object -> object.key().endsWith(fileExtension)).forEach(filesOnly::add);
+        // TODO(Hussain): We will have a property that can disable checking for .gz here
+        s3Objects.stream().filter(object -> isValidFile(object.key(), fileFormat)).forEach(filesOnly::add);
 
         return filesOnly;
+    }
+
+    /**
+     * Checks if the file name is of the provided format, or in the provided format in a compressed (.gz or .gzip) state
+     *
+     * @param fileName file name to be checked
+     * @param format expected format
+     * @return {@code true} if the file name is of the expected format, {@code false} otherwise
+     */
+    private boolean isValidFile(String fileName, String format) {
+        String lowCaseName = fileName.toLowerCase();
+        String lowCaseFormat = format.toLowerCase();
+        String gzExt = lowCaseFormat + ".gz";
+        String gzipExt = lowCaseFormat + ".gzip";
+
+        return lowCaseName.endsWith(lowCaseFormat) || lowCaseName.endsWith(gzExt) || lowCaseName.endsWith(gzipExt);
     }
 
     /**

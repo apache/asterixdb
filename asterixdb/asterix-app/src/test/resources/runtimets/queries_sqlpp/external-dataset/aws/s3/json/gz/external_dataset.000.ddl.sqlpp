@@ -32,7 +32,7 @@ create external dataset test1(test) using S3 (
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),
-("definition"="json-data/reviews/single-line"),
+("definition"="json-data/reviews/single-line/gz"),
 ("format"="json")
 );
 
@@ -43,7 +43,7 @@ create external dataset test2(test) using S3 (
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),
-("definition"="json-data/reviews/multi-lines"),
+("definition"="json-data/reviews/multi-lines/gz"),
 ("format"="json")
 );
 
@@ -54,7 +54,7 @@ create external dataset test3(test) using S3 (
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),
-("definition"="json-data/reviews/multi-lines-with-arrays"),
+("definition"="json-data/reviews/multi-lines-with-arrays/gz"),
 ("format"="json")
 );
 
@@ -65,6 +65,6 @@ create external dataset test4(test) using S3 (
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),
-("definition"="json-data/reviews/multi-lines-with-nested-objects"),
+("definition"="json-data/reviews/multi-lines-with-nested-objects/gz"),
 ("format"="json")
 );
