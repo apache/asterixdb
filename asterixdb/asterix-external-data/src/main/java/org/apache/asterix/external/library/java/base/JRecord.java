@@ -18,8 +18,11 @@
  */
 package org.apache.asterix.external.library.java.base;
 
+import static org.apache.asterix.om.utils.RecordUtil.FULLY_OPEN_RECORD_TYPE;
+
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -38,7 +41,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
-public final class JRecord implements IJObject {
+public final class JRecord extends JComplexObject<Map<String, Object>> {
 
     private static final AStringSerializerDeserializer aStringSerDer = AStringSerializerDeserializer.INSTANCE;
     private ARecordType recordType;
@@ -48,6 +51,12 @@ public final class JRecord implements IJObject {
     ArrayBackedValueStorage fieldNameBuffer = new ArrayBackedValueStorage();
     ArrayBackedValueStorage fieldValueBuffer = new ArrayBackedValueStorage();
     AMutableString nameString = new AMutableString("");
+
+    public JRecord() {
+        this.recordType = FULLY_OPEN_RECORD_TYPE;
+        this.fields = new IJObject[] {};
+        this.openFields = new LinkedHashMap<>();
+    }
 
     public JRecord(ARecordType recordType, IJObject[] fields) {
         this.recordType = recordType;
@@ -138,7 +147,7 @@ public final class JRecord implements IJObject {
                     nameString.setValue(entry.getKey());
                     fieldNameBuffer.getDataOutput().write(ATypeTag.STRING.serialize());
                     aStringSerDer.serialize(nameString, fieldNameBuffer.getDataOutput());
-                    entry.getValue().serialize(fieldValueBuffer.getDataOutput(), true);
+                    entry.getValue().serialize(fieldValueBuffer.getDataOutput(), writeTypeTag);
                     recordBuilder.addField(fieldNameBuffer, fieldValueBuffer);
                 }
             }
@@ -173,6 +182,30 @@ public final class JRecord implements IJObject {
     }
 
     @Override
+    public void setValueGeneric(Map<String, Object> o) throws HyracksDataException {
+        reset();
+        for (Map.Entry<String, Object> e : o.entrySet()) {
+            IAType asxClass = JObject.convertType(e.getValue().getClass());
+            IJObject obj = pool.allocate(asxClass);
+            obj.setValueGeneric(e.getValue());
+            openFields.put(e.getKey(), obj);
+        }
+    }
+
+    @Override
+    public Map<String, Object> getValueGeneric() {
+        HashMap<String, Object> rec = new HashMap<>();
+        String[] closedFieldNames = recordType.getFieldNames();
+        int idx = 0;
+        for (IJObject j : fields) {
+            rec.put(closedFieldNames[idx], j.getValueGeneric());
+            idx++;
+        }
+        openFields.entrySet().forEach(e -> rec.put(e.getKey(), e.getValue().getValueGeneric()));
+        return rec;
+    }
+
+    @Override
     public void reset() throws HyracksDataException {
         if (openFields != null && !openFields.isEmpty()) {
             openFields.clear();
@@ -191,4 +224,5 @@ public final class JRecord implements IJObject {
         this.fields = fields;
         this.openFields = openFields;
     }
+
 }

@@ -20,7 +20,6 @@ package org.apache.asterix.external.library;
 
 import org.apache.asterix.external.api.IJObject;
 import org.apache.asterix.external.library.java.base.JBoolean;
-import org.apache.asterix.external.library.java.base.JCircle;
 import org.apache.asterix.external.library.java.base.JDate;
 import org.apache.asterix.external.library.java.base.JDateTime;
 import org.apache.asterix.external.library.java.base.JDouble;
@@ -28,16 +27,11 @@ import org.apache.asterix.external.library.java.base.JDuration;
 import org.apache.asterix.external.library.java.base.JFloat;
 import org.apache.asterix.external.library.java.base.JInt;
 import org.apache.asterix.external.library.java.base.JInterval;
-import org.apache.asterix.external.library.java.base.JLine;
 import org.apache.asterix.external.library.java.base.JLong;
 import org.apache.asterix.external.library.java.base.JMissing;
 import org.apache.asterix.external.library.java.base.JNull;
 import org.apache.asterix.external.library.java.base.JOrderedList;
-import org.apache.asterix.external.library.java.base.JPoint;
-import org.apache.asterix.external.library.java.base.JPoint3D;
-import org.apache.asterix.external.library.java.base.JPolygon;
 import org.apache.asterix.external.library.java.base.JRecord;
-import org.apache.asterix.external.library.java.base.JRectangle;
 import org.apache.asterix.external.library.java.base.JString;
 import org.apache.asterix.external.library.java.base.JTime;
 import org.apache.asterix.external.library.java.base.JUnorderedList;
@@ -73,24 +67,6 @@ public class JTypeObjectFactory implements IObjectFactory<IJObject, IAType> {
                 break;
             case BOOLEAN:
                 retValue = new JBoolean(false);
-                break;
-            case CIRCLE:
-                retValue = new JCircle(new JPoint(0, 0), 0);
-                break;
-            case POINT:
-                retValue = new JPoint(0, 0);
-                break;
-            case POINT3D:
-                retValue = new JPoint3D(0, 0, 0);
-                break;
-            case POLYGON:
-                retValue = new JPolygon(new JPoint[] {});
-                break;
-            case LINE:
-                retValue = new JLine(new JPoint(0, 0), new JPoint(0, 0));
-                break;
-            case RECTANGLE:
-                retValue = new JRectangle(new JPoint(0, 0), new JPoint(1, 1));
                 break;
             case DATE:
                 retValue = new JDate(0);

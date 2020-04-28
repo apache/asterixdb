@@ -24,10 +24,13 @@ import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.functions.ExternalFunctionLanguage;
+import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
+import org.apache.asterix.external.library.JavaLibrary;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -105,7 +108,12 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         INcApplicationContext runtimeCtx =
                 (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
         ILibraryManager libraryManager = runtimeCtx.getLibraryManager();
-        ClassLoader classLoader = libraryManager.getLibraryClassLoader(feedId.getDataverseName(), adaptorLibraryName);
+
+        ILibrary lib = libraryManager.getLibrary(feedId.getDataverseName(), adaptorLibraryName);
+        if (lib.getLanguage() != ExternalFunctionLanguage.JAVA) {
+            throw new HyracksDataException("Unexpected library language: " + lib.getLanguage());
+        }
+        ClassLoader classLoader = ((JavaLibrary) lib).getClassLoader();
         if (classLoader != null) {
             try {
                 adapterFactory = (IAdapterFactory) (classLoader.loadClass(adaptorFactoryClassName).newInstance());

@@ -19,6 +19,7 @@
 package org.apache.asterix.external.library.java.base;
 
 import java.io.DataOutput;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.IAsterixListBuilder;
@@ -32,22 +33,32 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
-public final class JOrderedList extends JList {
+public final class JOrderedList extends JList<List<? extends Object>> {
 
     private AOrderedListType listType;
 
+    public JOrderedList() {
+        this(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
+    }
+
     public JOrderedList(IJType listItemType) {
         super();
+        jObjects = new ArrayList<>();
         this.listType = new AOrderedListType(listItemType.getIAType(), null);
     }
 
     public JOrderedList(IAType listItemType) {
         super();
+        jObjects = new ArrayList<>();
         this.listType = new AOrderedListType(listItemType, null);
     }
 
+    public List<? extends Object> getValueGeneric() {
+        return (ArrayList) jObjects;
+    }
+
     public List<IJObject> getValue() {
-        return jObjects;
+        return (List) jObjects;
     }
 
     @Override
@@ -65,13 +76,33 @@ public final class JOrderedList extends JList {
     }
 
     @Override
+    public void setValueGeneric(List<? extends Object> vals) throws HyracksDataException {
+        reset();
+        if (vals.size() > 0) {
+            Object first = vals.get(0);
+            IAType asxClass = JObject.convertType(first.getClass());
+            IJObject obj = pool.allocate(asxClass);
+            obj.setValueGeneric(first);
+            IAType listType = obj.getIAType();
+            this.listType = new AOrderedListType(listType, "");
+        }
+        for (Object v : vals) {
+            IAType asxClass = JObject.convertType(v.getClass());
+            IJObject obj = pool.allocate(asxClass);
+            obj.setValueGeneric(v);
+            add(obj);
+        }
+
+    }
+
+    @Override
     public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
         IAsterixListBuilder listBuilder = new OrderedListBuilder();
         listBuilder.reset(listType);
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         for (IJObject jObject : jObjects) {
             fieldValue.reset();
-            jObject.serialize(fieldValue.getDataOutput(), true);
+            jObject.serialize(fieldValue.getDataOutput(), writeTypeTag);
             listBuilder.addItem(fieldValue);
         }
         listBuilder.write(dataOutput, writeTypeTag);
@@ -82,4 +113,5 @@ public final class JOrderedList extends JList {
     public void reset() {
         jObjects.clear();
     }
+
 }

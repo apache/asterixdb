@@ -28,7 +28,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public final class JByte extends JObject {
+public final class JByte extends JObject<Byte> {
 
     public JByte(byte value) {
         super(new AMutableInt8(value));
@@ -39,6 +39,11 @@ public final class JByte extends JObject {
     }
 
     public byte getValue() {
+        return ((AMutableInt8) value).getByteValue();
+    }
+
+    @Override
+    public Byte getValueGeneric() {
         return ((AMutableInt8) value).getByteValue();
     }
 
@@ -56,5 +61,11 @@ public final class JByte extends JObject {
     @Override
     public IAType getIAType() {
         return BuiltinType.AINT8;
+    }
+
+    @Override
+    public void setValueGeneric(Byte o) {
+        setValue(o);
+
     }
 }

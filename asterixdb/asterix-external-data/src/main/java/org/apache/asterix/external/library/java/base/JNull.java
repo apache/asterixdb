@@ -47,6 +47,18 @@ public final class JNull extends JObject {
     }
 
     @Override
+    public void setValueGeneric(Object o) {
+        if (o != null) {
+            throw new IllegalArgumentException("Not null");
+        }
+    }
+
+    @Override
+    public Object getValueGeneric() {
+        return null;
+    }
+
+    @Override
     public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
         serializeTypeTag(writeTypeTag, dataOutput, ATypeTag.NULL);
     }

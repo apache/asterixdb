@@ -28,7 +28,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public final class JDouble extends JObject {
+public final class JDouble extends JObject<Double> {
 
     public JDouble(double v) {
         super(new AMutableDouble(v));
@@ -36,6 +36,10 @@ public final class JDouble extends JObject {
 
     public void setValue(double v) {
         ((AMutableDouble) value).setValue(v);
+    }
+
+    public Double getValueGeneric() {
+        return getValue();
     }
 
     public double getValue() {
@@ -57,4 +61,10 @@ public final class JDouble extends JObject {
     public IAType getIAType() {
         return BuiltinType.ADOUBLE;
     }
+
+    @Override
+    public void setValueGeneric(Double o) {
+        setValue(o);
+    }
+
 }

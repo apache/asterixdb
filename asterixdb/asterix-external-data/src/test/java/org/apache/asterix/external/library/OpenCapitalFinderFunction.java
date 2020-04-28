@@ -44,7 +44,7 @@ public class OpenCapitalFinderFunction implements IExternalScalarFunction {
         JString country = ((JString) functionHelper.getArgument(0));
         ARecordType recordType = new ARecordType("all", new String[] {}, new IAType[] {}, true);
         JRecord record = (JRecord) functionHelper.getResultObject(recordType);
-        String capitalCity = capitalList.getProperty(country.getValue(), NOT_FOUND);
+        String capitalCity = capitalList.getProperty(country.getValueGeneric(), NOT_FOUND);
         capital.setValue(capitalCity);
 
         record.setField("country", country);

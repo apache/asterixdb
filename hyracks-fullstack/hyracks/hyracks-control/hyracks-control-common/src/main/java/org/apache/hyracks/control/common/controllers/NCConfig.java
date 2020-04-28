@@ -90,7 +90,8 @@ public class NCConfig extends ControllerConfig {
         TRUST_STORE_PATH(STRING, (String) null),
         KEY_STORE_PASSWORD(STRING, (String) null),
         IO_WORKERS_PER_PARTITION(POSITIVE_INTEGER, 2),
-        IO_QUEUE_SIZE(POSITIVE_INTEGER, 10);
+        IO_QUEUE_SIZE(POSITIVE_INTEGER, 10),
+        PYTHON_HOME(STRING, "/usr/bin/python3");
 
         private final IOptionType parser;
         private final String defaultValueDescription;
@@ -223,6 +224,8 @@ public class NCConfig extends ControllerConfig {
                     return "Number of threads per partition used to write and read from storage";
                 case IO_QUEUE_SIZE:
                     return "Length of the queue used for requests to write and read";
+                case PYTHON_HOME:
+                    return "Path to python interpreter";
                 default:
                     throw new IllegalStateException("Not yet implemented: " + this);
             }

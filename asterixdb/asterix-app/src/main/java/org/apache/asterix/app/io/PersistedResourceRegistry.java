@@ -32,6 +32,7 @@ import org.apache.asterix.common.context.DatasetLSMComponentIdGeneratorFactory;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexPageWriteCallbackFactory;
+import org.apache.asterix.common.library.LibraryDescriptor;
 import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.dataflow.data.common.AListElementTokenFactory;
 import org.apache.asterix.dataflow.data.common.AOrderedListBinaryTokenizerFactory;
@@ -289,6 +290,9 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
 
         //ICompressorDecompressorFactory
         CompressionManager.registerCompressorDecompressorsFactoryClasses(registeredClasses);
+
+        //External Libraries
+        registeredClasses.put("LibraryDescriptor", LibraryDescriptor.class);
     }
 
     @Override

@@ -101,6 +101,7 @@
           <includes>
             <include>**/*.class</include>
             <include>**/*.txt</include>
+            <include>**/*.py</include>
             <include>**/NOTICE</include>
             <include>**/LICENSE</include>
             <include>**/*.properties</include>
@@ -205,6 +206,7 @@
               <usedDependency>com.sun.xml.bind:jaxb-core</usedDependency>
               <usedDependency>com.sun.xml.bind:jaxb-impl</usedDependency>
               <usedDependency>com.sun.activation:javax.activation</usedDependency>
+              <usedDependency>net.razorvine:serpent</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
@@ -305,8 +307,16 @@
       <artifactId>commons-io</artifactId>
     </dependency>
     <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-dataflow-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-control-common</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
@@ -433,6 +443,18 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>net.razorvine</groupId>
+        <artifactId>pyrolite</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.razorvine</groupId>
+      <artifactId>serpent</artifactId>
     </dependency>
   </dependencies>
 </project>

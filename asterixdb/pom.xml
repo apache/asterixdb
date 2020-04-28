@@ -70,11 +70,13 @@
     <test.includes>${global.test.includes}</test.includes>
     <test.excludes>${global.test.excludes}</test.excludes>
     <global.itest.includes>**/*IT.java,**/*IT.java,**/*ITCase.java</global.itest.includes>
-    <global.itest.excludes/>
+    <global.itest.excludes>**/ExternalPythonFunctionIT.java</global.itest.excludes>
     <itest.includes>${global.itest.includes}</itest.includes>
     <itest.excludes>${global.itest.excludes}</itest.excludes>
     <license.stage>compile</license.stage>
     <resource.stage>process-classes</resource.stage>
+    <pyro-shim.stage>none</pyro-shim.stage>
+    <pytestlib.stage>none</pytestlib.stage>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.5-SNAPSHOT</algebricks.version>
@@ -287,14 +289,6 @@
           <failOnWarning>true</failOnWarning>
           <outputXML>true</outputXML>
         </configuration>
-        <executions>
-          <execution>
-            <phase>process-test-classes</phase>
-            <goals>
-              <goal>analyze-only</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -586,6 +580,11 @@
           <artifactId>impsort-maven-plugin</artifactId>
           <version>1.2.0</version>
         </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>1.6.0</version>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -626,6 +625,19 @@
       <properties>
         <license.stage>none</license.stage>
         <resource.stage>none</resource.stage>
+      </properties>
+    </profile>
+    <profile>
+      <id>python-udfs</id>
+      <activation>
+        <file>
+          <exists>${python.path}</exists>
+        </file>
+      </activation>
+      <properties>
+        <pyro-shim.stage>process-classes</pyro-shim.stage>
+        <pytestlib.stage>generate-test-resources</pytestlib.stage>
+        <global.itest.excludes/>
       </properties>
     </profile>
     <profile>
@@ -1296,6 +1308,11 @@
         <version>1.14</version>
       </dependency>
       <dependency>
+        <groupId>commons-lang</groupId>
+        <artifactId>commons-lang</artifactId>
+        <version>2.4</version>
+      </dependency>
+      <dependency>
         <groupId>it.unimi.dsi</groupId>
         <artifactId>fastutil</artifactId>
         <version>8.3.0</version>
@@ -1359,6 +1376,21 @@
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
         <version>42.2.10</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpmime</artifactId>
+        <version>4.5.11</version>
+      </dependency>
+      <dependency>
+        <groupId>net.razorvine</groupId>
+        <artifactId>pyrolite</artifactId>
+        <version>4.30</version>
+      </dependency>
+      <dependency>
+        <groupId>net.razorvine</groupId>
+        <artifactId>serpent</artifactId>
+        <version>1.23</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

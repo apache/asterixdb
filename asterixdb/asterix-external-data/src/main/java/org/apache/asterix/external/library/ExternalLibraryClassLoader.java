@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.app.external;
+package org.apache.asterix.external.library;
 
 import java.net.URL;
 import java.net.URLClassLoader;

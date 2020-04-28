@@ -19,45 +19,20 @@
 
 package org.apache.asterix.common.library;
 
-import java.net.URLClassLoader;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ILibraryManager {
 
-    /**
-     * Registers the library class loader with the external library manager.
-     * <code>dataverseName</code> and <code>libraryName</code> uniquely identifies a class loader.
-     *
-     * @param dataverseName
-     * @param libraryName
-     * @param classLoader
-     */
-    void registerLibraryClassLoader(DataverseName dataverseName, String libraryName, URLClassLoader classLoader)
-            throws HyracksDataException;
+    void setUpDeployedLibrary(String path) throws IOException, AsterixException;
 
-    /**
-     * @return all registered libraries.
-     */
-    List<Pair<DataverseName, String>> getAllLibraries();
+    void scanLibraries(File appDir);
 
-    /**
-     * De-registers a library class loader.
-     *
-     * @param dataverseName
-     * @param libraryName
-     */
-    void deregisterLibraryClassLoader(DataverseName dataverseName, String libraryName);
+    void deregister(DataverseName dv, String name);
 
-    /**
-     * Finds a class loader for a given pair of dataverse name and library name.
-     *
-     * @param dataverseName
-     * @param libraryName
-     * @return the library class loader associated with the dataverse and library.
-     */
-    ClassLoader getLibraryClassLoader(DataverseName dataverseName, String libraryName);
+    ILibrary getLibrary(DataverseName dvName, String libraryName);
+
 }

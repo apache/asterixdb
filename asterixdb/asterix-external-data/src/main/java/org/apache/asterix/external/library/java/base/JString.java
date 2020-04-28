@@ -28,7 +28,11 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public final class JString extends JObject {
+public final class JString extends JObject<String> {
+
+    public JString() {
+        super(new AMutableString(""));
+    }
 
     public JString(String v) {
         super(new AMutableString(v));
@@ -40,6 +44,10 @@ public final class JString extends JObject {
 
     public String getValue() {
         return ((AMutableString) value).getStringValue();
+    }
+
+    public String getValueGeneric() {
+        return getValue();
     }
 
     @Override
@@ -56,5 +64,10 @@ public final class JString extends JObject {
     @Override
     public IAType getIAType() {
         return BuiltinType.ASTRING;
+    }
+
+    @Override
+    public void setValueGeneric(String o) {
+        setValue(o);
     }
 }

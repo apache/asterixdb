@@ -56,7 +56,7 @@ import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.app.config.ConfigValidator;
-import org.apache.asterix.app.external.ExternalLibraryUtils;
+import org.apache.asterix.app.io.PersistedResourceRegistry;
 import org.apache.asterix.app.replication.NcLifecycleCoordinator;
 import org.apache.asterix.app.result.JobResultCallback;
 import org.apache.asterix.common.api.AsterixThreadFactory;
@@ -143,25 +143,22 @@ public class CCApplication extends BaseCCApplication {
         final ClusterControllerService controllerService =
                 (ClusterControllerService) ccServiceCtx.getControllerService();
         ccServiceCtx.setMessageBroker(new CCMessageBroker(controllerService));
-
+        ccServiceCtx.setPersistedResourceRegistry(new PersistedResourceRegistry());
         configureLoggingLevel(ccServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
-
         LOGGER.info("Starting Asterix cluster controller");
-
         String strIP = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetAddress();
         int port = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetPort();
         hcc = new HyracksConnection(strIP, port,
                 ccServiceCtx.getControllerService().getNetworkSecurityManager().getSocketChannelFactory());
         MetadataBuiltinFunctions.init();
-        ILibraryManager libraryManager = new ExternalLibraryManager();
         ReplicationProperties repProp =
                 new ReplicationProperties(PropertiesAccessor.getInstance(ccServiceCtx.getAppConfig()));
         INcLifecycleCoordinator lifecycleCoordinator = createNcLifeCycleCoordinator(repProp.isReplicationEnabled());
-        ExternalLibraryUtils.setUpInstalledLibraries(libraryManager, ccServiceCtx.getServerCtx().getAppDir());
         componentProvider = new StorageComponentProvider();
-
         ccExtensionManager = new CCExtensionManager(new ArrayList<>(getExtensions()));
         IGlobalRecoveryManager globalRecoveryManager = createGlobalRecoveryManager();
+        ILibraryManager libraryManager = new ExternalLibraryManager(ccServiceCtx.getServerCtx().getAppDir(),
+                ccServiceCtx.getPersistedResourceRegistry());
         appCtx = createApplicationContext(libraryManager, globalRecoveryManager, lifecycleCoordinator,
                 () -> new Receptionist("CC"), ConfigValidator::new, ccExtensionManager);
         final CCConfig ccConfig = controllerService.getCCConfig();

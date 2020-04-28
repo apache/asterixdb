@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.api;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.external.library.java.JTypeTag;
@@ -41,4 +42,6 @@ public interface IFunctionHelper {
     void reset();
 
     Map<String, String> getParameters();
+
+    List<String> getExternalIdentifier();
 }

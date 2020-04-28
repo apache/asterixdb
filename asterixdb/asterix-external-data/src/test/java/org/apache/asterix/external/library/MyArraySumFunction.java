@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.library;
 
+import java.util.List;
+
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.external.library.java.base.JInt;
@@ -35,9 +37,10 @@ public class MyArraySumFunction implements IExternalScalarFunction {
     @Override
     public void evaluate(IFunctionHelper functionHelper) throws Exception {
         JOrderedList arg0 = (JOrderedList) (functionHelper.getArgument(0));
+        List<JInt> arg = (List) arg0.getValue();
         int sum = 0;
-        for (int iter1 = 0; iter1 < arg0.size(); iter1++) {
-            sum += ((JInt) arg0.getValue().get(iter1)).getValue();
+        for (int iter1 = 0; iter1 < arg.size(); iter1++) {
+            sum += arg.get(iter1).getValue();
         }
         result.setValue(sum);
         functionHelper.setResult(result);

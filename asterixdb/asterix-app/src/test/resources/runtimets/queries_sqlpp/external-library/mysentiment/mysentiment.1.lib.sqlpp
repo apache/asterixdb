@@ -16,11 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.asterix.om.functions;
-
-// WARNING: These values are stored in function metadata. Do not rename.
-public enum ExternalFunctionLanguage {
-    JAVA,
-    PYTHON
-}
+install externallibtest testlib admin admin target/TweetSent.pyz

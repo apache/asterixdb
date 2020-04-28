@@ -37,6 +37,8 @@
     <root.dir>${basedir}/..</root.dir>
     <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
     <sonar.sources>pom.xml,src/main/java,src/main/resources</sonar.sources>
+    <pip.path>${project.build.directory}${file.separator}bin${file.separator}pip3</pip.path>
+    <shiv.path>${project.build.directory}${file.separator}bin${file.separator}shiv</shiv.path>
   </properties>
   <build>
     <plugins>
@@ -163,6 +165,93 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>venv</id>
+            <phase>${pyro-shim.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <!--suppress UnresolvedMavenProperty -->
+              <executable>${python.path}</executable>
+              <workingDirectory>${project.build.directory}</workingDirectory>
+              <arguments>
+                <argument>-m</argument>
+                <argument>venv</argument>
+                <argument>${project.build.directory}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>shiv-install</id>
+            <phase>${pyro-shim.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${pip.path}</executable>
+              <workingDirectory>${project.build.directory}</workingDirectory>
+              <arguments>
+                <argument>install</argument>
+                <argument>--exists-action</argument>
+                <argument>w</argument>
+                <argument>--upgrade</argument>
+                <argument>shiv</argument>
+              </arguments>
+              <environmentVariables>
+                <VIRTUALENV>${project.build.directory}</VIRTUALENV>
+                <PATH>${project.build.directory}${path.separator}${env.PATH}${file.separator}bin</PATH>
+              </environmentVariables>
+            </configuration>
+          </execution>
+          <execution>
+            <id>shiv-pyro-shim</id>
+            <phase>${pyro-shim.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${shiv.path}</executable>
+              <workingDirectory>${project.build.directory}</workingDirectory>
+              <arguments>
+                <argument>-o </argument>
+                <argument>${project.build.directory}${file.separator}classes${file.separator}pyro4.pyz</argument>
+                <argument>pyro4</argument>
+              </arguments>
+              <environmentVariables>
+                <VIRTUALENV>${project.build.directory}</VIRTUALENV>
+                <PATH>${project.build.directory}${path.separator}${env.PATH}${file.separator}bin</PATH>
+              </environmentVariables>
+            </configuration>
+          </execution>
+          <execution>
+            <id>shiv-test-lib</id>
+            <phase>${pytestlib.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${shiv.path}</executable>
+              <workingDirectory>${project.build.directory}</workingDirectory>
+              <arguments>
+                <argument>-o </argument>
+                <argument>${project.build.directory}${file.separator}TweetSent.pyz</argument>
+                <argument>--site-packages</argument>
+                <argument>${project.build.directory}${file.separator}..${file.separator}src${file.separator}test${file.separator}resources${file.separator}TweetSent</argument>
+                <argument>scikit-learn</argument>
+              </arguments>
+              <environmentVariables>
+                <VIRTUALENV>${project.build.directory}</VIRTUALENV>
+                <PATH>${project.build.directory}${path.separator}${env.PATH}${file.separator}bin</PATH>
+              </environmentVariables>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
         <executions>
@@ -286,6 +375,18 @@
       </build>
     </profile>
     <profile>
+      <id>windows.python.envs</id>
+      <activation>
+        <os>
+          <family>Windows</family>
+        </os>
+      </activation>
+      <properties>
+        <pip.path>${project.build.directory}${file.separator}Scripts${file.separator}pip3.exe</pip.path>
+        <shiv.path>${project.build.directory}${file.separator}Scripts${file.separator}shiv.exe</shiv.path>
+      </properties>
+    </profile>
+    <profile>
       <id>asterix-gerrit-asterix-app</id>
       <properties>
         <test.excludes>**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java,**/AqlExecutionTest.java,**/*Compression*Test.java,**/*Ssl*Test.java</test.excludes>
@@ -322,7 +423,7 @@
       <id>asterix-gerrit-asterix-app-sql-execution</id>
       <properties>
         <test.excludes>**/*.java</test.excludes>
-        <itest.includes>**/SqlppExecution*IT.java</itest.includes>
+        <itest.includes>**/SqlppExecution*IT.java,**/ExternalPythonFunction*IT.java</itest.includes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
     </profile>
@@ -346,7 +447,7 @@
       <id>asterix-gerrit-verify-asterix-app</id>
       <properties>
         <test.includes>**/AqlExecutionTest.java</test.includes>
-        <itest.excludes>**/SqlppExecution*IT.java,**/SqlppRQG*IT.java,**/RebalanceWithCancellationIT.java</itest.excludes>
+        <itest.excludes>**/External*IT.java,**/SqlppExecution*IT.java,**/SqlppRQG*IT.java,**/RebalanceWithCancellationIT.java</itest.excludes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
     </profile>
@@ -725,6 +826,11 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-csv</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpmime</artifactId>
+        <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

@@ -21,8 +21,8 @@ package org.apache.asterix.metadata.functions;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.om.functions.ExternalFunctionInfo;
-import org.apache.asterix.om.functions.ExternalFunctionLanguage;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;

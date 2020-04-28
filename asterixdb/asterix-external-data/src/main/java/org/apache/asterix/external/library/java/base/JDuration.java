@@ -19,16 +19,17 @@
 package org.apache.asterix.external.library.java.base;
 
 import java.io.DataOutput;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import org.apache.asterix.om.base.AMutableDuration;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public final class JDuration extends JObject {
+public final class JDuration extends JObject<Duration> {
 
     public JDuration(int months, long milliseconds) {
         super(new AMutableDuration(months, milliseconds));
@@ -38,8 +39,10 @@ public final class JDuration extends JObject {
         ((AMutableDuration) value).setValue(months, milliseconds);
     }
 
-    public Pair<Integer, Long> getValue() {
-        return Pair.of(((AMutableDuration) value).getMonths(), ((AMutableDuration) value).getMilliseconds());
+    public Duration getValueGeneric() {
+        int months = ((AMutableDuration) value).getMonths();
+        long millis = ((AMutableDuration) value).getMilliseconds();
+        return Duration.of(months, ChronoUnit.MONTHS).plusMillis(millis);
     }
 
     @Override
@@ -56,5 +59,15 @@ public final class JDuration extends JObject {
     @Override
     public IAType getIAType() {
         return BuiltinType.ADURATION;
+    }
+
+    @Override
+    public void setValueGeneric(Duration o) {
+        long months = o.get(ChronoUnit.MONTHS);
+        if (months > Integer.MAX_VALUE) {
+            throw new ArithmeticException("Overflow");
+        }
+        long ms = o.minus(Duration.of(months, ChronoUnit.MONTHS)).get(ChronoUnit.MILLIS);
+        setValue((int) months, ms);
     }
 }

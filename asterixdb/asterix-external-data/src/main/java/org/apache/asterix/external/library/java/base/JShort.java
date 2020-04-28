@@ -28,7 +28,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public final class JShort extends JObject {
+public final class JShort extends JObject<Short> {
 
     public JShort(short value) {
         super(new AMutableInt16(value));
@@ -39,6 +39,10 @@ public final class JShort extends JObject {
     }
 
     public short getValue() {
+        return ((AMutableInt16) value).getShortValue();
+    }
+
+    public Short getValueGeneric() {
         return ((AMutableInt16) value).getShortValue();
     }
 
@@ -56,5 +60,10 @@ public final class JShort extends JObject {
     @Override
     public IAType getIAType() {
         return BuiltinType.AINT16;
+    }
+
+    @Override
+    public void setValueGeneric(Short s) {
+        setValueGeneric(s);
     }
 }

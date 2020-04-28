@@ -22,7 +22,7 @@
     "log\.dir" : "logs/",
     "log\.level" : "WARN",
     "max\.wait\.active\.cluster" : 60,
-    "max.web.request.size" : 52428800,
+    "max.web.request.size" : 209715200,
     "messaging\.frame\.count" : 512,
     "messaging\.frame\.size" : 4096,
     "metadata\.callback\.port" : 0,

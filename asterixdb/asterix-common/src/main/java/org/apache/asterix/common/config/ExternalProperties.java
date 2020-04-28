@@ -52,7 +52,7 @@ public class ExternalProperties extends AbstractProperties {
         NC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the node controller process(es) by managix"),
         MAX_WEB_REQUEST_SIZE(
                 UNSIGNED_INTEGER,
-                StorageUtil.getIntSizeInBytes(50, StorageUtil.StorageUnit.MEGABYTE),
+                StorageUtil.getIntSizeInBytes(200, StorageUtil.StorageUnit.MEGABYTE),
                 "The maximum accepted web request size in bytes"),
         REQUESTS_ARCHIVE_SIZE(UNSIGNED_INTEGER, 50, "The maximum number of archived requests to maintain"),
         CREDENTIAL_FILE(

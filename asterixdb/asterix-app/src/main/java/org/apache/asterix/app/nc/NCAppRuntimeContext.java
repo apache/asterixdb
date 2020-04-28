@@ -166,11 +166,12 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         replicationProperties = propertiesFactory.newReplicationProperties();
         messagingProperties = propertiesFactory.newMessagingProperties();
         nodeProperties = propertiesFactory.newNodeProperties();
-        libraryManager = new ExternalLibraryManager();
         ncExtensionManager = extensionManager;
         componentProvider = new StorageComponentProvider();
         resourceIdFactory = new GlobalResourceIdFactoryProvider(ncServiceContext).createResourceIdFactory();
         persistedResourceRegistry = ncServiceContext.getPersistedResourceRegistry();
+        libraryManager =
+                new ExternalLibraryManager(ncServiceContext.getServerCtx().getAppDir(), persistedResourceRegistry);
         cacheManager = new CacheManager();
     }
 

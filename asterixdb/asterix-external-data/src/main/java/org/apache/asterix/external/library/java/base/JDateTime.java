@@ -19,6 +19,8 @@
 package org.apache.asterix.external.library.java.base;
 
 import java.io.DataOutput;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.om.base.AMutableDateTime;
@@ -27,7 +29,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public final class JDateTime extends JObject {
+public final class JDateTime extends JObject<LocalDateTime> {
 
     public JDateTime(long chrononTime) {
         super(new AMutableDateTime(chrononTime));
@@ -39,6 +41,10 @@ public final class JDateTime extends JObject {
 
     public long getValue() {
         return ((AMutableDateTime) value).getChrononTime();
+    }
+
+    public LocalDateTime getValueGeneric() {
+        return LocalDateTime.ofEpochSecond(((AMutableDateTime) value).getChrononTime(), 0, ZoneOffset.UTC);
     }
 
     @Override
@@ -55,5 +61,10 @@ public final class JDateTime extends JObject {
     @Override
     public IAType getIAType() {
         return BuiltinType.ADATETIME;
+    }
+
+    @Override
+    public void setValueGeneric(LocalDateTime dt) {
+        setValue(dt.toEpochSecond(ZoneOffset.UTC));
     }
 }

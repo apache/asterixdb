@@ -27,7 +27,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public final class JMissing extends JObject {
+public final class JMissing extends JObject<Object> {
 
     public final static JMissing INSTANCE = new JMissing();
 
@@ -39,6 +39,18 @@ public final class JMissing extends JObject {
     @Override
     public IAObject getIAObject() {
         return AMissing.MISSING;
+    }
+
+    @Override
+    public void setValueGeneric(Object o) {
+        if (o != null) {
+            throw new IllegalArgumentException("Not null");
+        }
+    }
+
+    @Override
+    public Object getValueGeneric() {
+        return null;
     }
 
     @Override

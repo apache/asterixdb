@@ -18,18 +18,16 @@
  */
 package org.apache.asterix.external.library.java.base;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.asterix.external.api.IJObject;
 
-public abstract class JList implements IJObject {
-    protected List<IJObject> jObjects;
+public abstract class JList<T> extends JComplexObject<T> {
+
+    protected Collection<IJObject> jObjects;
 
     public JList() {
-        jObjects = new ArrayList<>();
     }
 
     public boolean isEmpty() {
@@ -46,10 +44,6 @@ public abstract class JList implements IJObject {
 
     public void clear() {
         jObjects.clear();
-    }
-
-    public IJObject getElement(int index) {
-        return jObjects.get(index);
     }
 
     public int size() {

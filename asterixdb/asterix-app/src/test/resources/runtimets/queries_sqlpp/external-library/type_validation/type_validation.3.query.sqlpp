@@ -17,4 +17,5 @@
  * under the License.
  */
 use externallibtest;
-typeValidation(907, 9.07, "907", 9.07, true, create_point(1.0, 1.0),date("2013-01-01"), datetime("1989-09-07T12:13:14.039Z"), create_line(create_point(1.0, 1.0), create_point(2.0, 2.0)), create_circle(create_point(1.0, 1.0), 2.0), create_rectangle(create_point(1.0, 1.0), create_point(2.0, 2.0)));
+typeValidation(907, 9.07, "907", 9.07, true, date("2013-01-01"), datetime("1989-09-07T12:13:14.039Z"));
+

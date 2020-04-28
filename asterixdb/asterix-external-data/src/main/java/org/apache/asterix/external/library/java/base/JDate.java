@@ -27,7 +27,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public final class JDate extends JObject {
+public final class JDate extends JObject<Integer> {
 
     public JDate(int chrononTimeInDays) {
         super(new AMutableDate(chrononTimeInDays));
@@ -39,6 +39,10 @@ public final class JDate extends JObject {
 
     public int getValue() {
         return ((AMutableDate) value).getChrononTimeInDays();
+    }
+
+    public Integer getValueGeneric() {
+        return getValue();
     }
 
     @Override
@@ -56,4 +60,10 @@ public final class JDate extends JObject {
     public IAType getIAType() {
         return BuiltinType.ADATE;
     }
+
+    @Override
+    public void setValueGeneric(Integer o) {
+        setValue(o);
+    }
+
 }

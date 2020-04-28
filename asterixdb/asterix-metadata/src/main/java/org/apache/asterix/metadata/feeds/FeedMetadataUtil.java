@@ -28,12 +28,15 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
+import org.apache.asterix.common.functions.ExternalFunctionLanguage;
+import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IDataSourceAdapter.AdapterType;
 import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
+import org.apache.asterix.external.library.JavaLibrary;
 import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -53,6 +56,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * A utility class for providing helper functions for feeds TODO: Refactor this
@@ -129,8 +133,11 @@ public class FeedMetadataUtil {
                     case EXTERNAL:
                         String[] anameComponents = adapterName.split("#");
                         String libraryName = anameComponents[0];
-                        ClassLoader cl =
-                                appCtx.getLibraryManager().getLibraryClassLoader(feed.getDataverseName(), libraryName);
+                        ILibrary lib = appCtx.getLibraryManager().getLibrary(feed.getDataverseName(), libraryName);
+                        if (lib.getLanguage() != ExternalFunctionLanguage.JAVA) {
+                            throw new HyracksDataException("Unexpected library language: " + lib.getLanguage());
+                        }
+                        ClassLoader cl = ((JavaLibrary) lib).getClassLoader();
                         adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
                         break;
                     default:
@@ -202,8 +209,11 @@ public class FeedMetadataUtil {
                     case EXTERNAL:
                         String[] anameComponents = adapterName.split("#");
                         String libraryName = anameComponents[0];
-                        ClassLoader cl =
-                                appCtx.getLibraryManager().getLibraryClassLoader(feed.getDataverseName(), libraryName);
+                        ILibrary lib = appCtx.getLibraryManager().getLibrary(feed.getDataverseName(), libraryName);
+                        if (lib.getLanguage() != ExternalFunctionLanguage.JAVA) {
+                            throw new HyracksDataException("Unexpected library language: " + lib.getLanguage());
+                        }
+                        ClassLoader cl = ((JavaLibrary) lib).getClassLoader();
                         adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
                         break;
                     default:

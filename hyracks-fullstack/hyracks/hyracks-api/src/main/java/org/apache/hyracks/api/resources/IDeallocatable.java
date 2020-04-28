@@ -19,5 +19,5 @@
 package org.apache.hyracks.api.resources;
 
 public interface IDeallocatable {
-    public void deallocate();
+    void deallocate();
 }

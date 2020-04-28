@@ -19,15 +19,18 @@
 package org.apache.asterix.external.library.java.base;
 
 import java.io.DataOutput;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public final class JInterval extends JObject {
+public final class JInterval extends JObject<List<Long>> {
 
     public JInterval(long intervalStart, long intervalEnd) {
         super(new AMutableInterval(intervalStart, intervalEnd, (byte) 0));
@@ -64,4 +67,21 @@ public final class JInterval extends JObject {
     public IAType getIAType() {
         return BuiltinType.AINTERVAL;
     }
+
+    @Override
+    public void setValueGeneric(List<Long> o) {
+        try {
+            setValue(o.get(0), o.get(1), o.get(2).byteValue());
+        } catch (HyracksDataException e) {
+            throw new ArithmeticException("Invalid interval");
+        }
+    }
+
+    @Override
+    public List<Long> getValueGeneric() {
+        long type = getIntervalType();
+        Long[] interval = ArrayUtils.toObject(new long[] { getIntervalStart(), getIntervalEnd(), type });
+        return (Arrays.asList(interval));
+    }
+
 }

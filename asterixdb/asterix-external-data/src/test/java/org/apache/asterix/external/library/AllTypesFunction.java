@@ -23,18 +23,13 @@ import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.external.library.java.JBuiltinType;
 import org.apache.asterix.external.library.java.JTypeTag;
 import org.apache.asterix.external.library.java.base.JBoolean;
-import org.apache.asterix.external.library.java.base.JCircle;
 import org.apache.asterix.external.library.java.base.JDate;
 import org.apache.asterix.external.library.java.base.JDateTime;
 import org.apache.asterix.external.library.java.base.JDouble;
 import org.apache.asterix.external.library.java.base.JDuration;
 import org.apache.asterix.external.library.java.base.JFloat;
 import org.apache.asterix.external.library.java.base.JInt;
-import org.apache.asterix.external.library.java.base.JLine;
 import org.apache.asterix.external.library.java.base.JOrderedList;
-import org.apache.asterix.external.library.java.base.JPoint;
-import org.apache.asterix.external.library.java.base.JPoint3D;
-import org.apache.asterix.external.library.java.base.JPolygon;
 import org.apache.asterix.external.library.java.base.JRecord;
 import org.apache.asterix.external.library.java.base.JString;
 import org.apache.asterix.external.library.java.base.JTime;
@@ -45,7 +40,7 @@ public class AllTypesFunction implements IExternalScalarFunction {
     private JOrderedList newFieldList;
 
     @Override
-    public void initialize(IFunctionHelper functionHelper) throws Exception {
+    public void initialize(IFunctionHelper functionHelper) {
         newFieldList = new JOrderedList(JBuiltinType.JINT);
     }
 
@@ -69,11 +64,6 @@ public class AllTypesFunction implements IExternalScalarFunction {
         JTime time = (JTime) inputRecord.getValueByName("time");
         JDateTime dateTime = (JDateTime) inputRecord.getValueByName("datetime");
         JDuration duration = (JDuration) inputRecord.getValueByName("duration");
-        JPoint location2d = (JPoint) inputRecord.getValueByName("location2d");
-        JPoint3D location3d = (JPoint3D) inputRecord.getValueByName("location3d");
-        JLine line = (JLine) inputRecord.getValueByName("line");
-        JPolygon polygon = (JPolygon) inputRecord.getValueByName("polygon");
-        JCircle circle = (JCircle) inputRecord.getValueByName("circle");
 
         JRecord result = (JRecord) functionHelper.getResultObject();
         result.setField("id", id);
@@ -91,21 +81,10 @@ public class AllTypesFunction implements IExternalScalarFunction {
         result.setField("time", time);
         result.setField("datetime", dateTime);
         result.setField("duration", duration);
-        result.setField("location2d", location2d);
-        result.setField("location3d", location3d);
-        result.setField("line", line);
-        result.setField("polygon", polygon);
-        result.setField("circle", circle);
 
         JString newFieldString = (JString) functionHelper.getObject(JTypeTag.STRING);
         newFieldString.setValue("processed");
         result.addField("status", newFieldString);
-
-        /*
-         * JString element = (JString)
-         * functionHelper.getObject(JTypeTag.STRING); element.setValue("raman");
-         * newFieldList.add(element); result.addField("mylist", newFieldList);
-         */
 
         JString newFieldString2 = (JString) functionHelper.getObject(JTypeTag.STRING);
         newFieldString2.setValue("this is working");

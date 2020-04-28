@@ -27,7 +27,6 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
@@ -38,11 +37,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.APoint3DSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.asterix.external.api.IJListAccessor;
 import org.apache.asterix.external.api.IJObject;
@@ -51,7 +45,6 @@ import org.apache.asterix.external.api.IJRecordAccessor;
 import org.apache.asterix.external.library.TypeInfo;
 import org.apache.asterix.external.library.java.base.JBoolean;
 import org.apache.asterix.external.library.java.base.JByte;
-import org.apache.asterix.external.library.java.base.JCircle;
 import org.apache.asterix.external.library.java.base.JDate;
 import org.apache.asterix.external.library.java.base.JDateTime;
 import org.apache.asterix.external.library.java.base.JDouble;
@@ -59,25 +52,15 @@ import org.apache.asterix.external.library.java.base.JDuration;
 import org.apache.asterix.external.library.java.base.JFloat;
 import org.apache.asterix.external.library.java.base.JInt;
 import org.apache.asterix.external.library.java.base.JInterval;
-import org.apache.asterix.external.library.java.base.JLine;
 import org.apache.asterix.external.library.java.base.JList;
 import org.apache.asterix.external.library.java.base.JLong;
 import org.apache.asterix.external.library.java.base.JOrderedList;
-import org.apache.asterix.external.library.java.base.JPoint;
-import org.apache.asterix.external.library.java.base.JPoint3D;
-import org.apache.asterix.external.library.java.base.JPolygon;
 import org.apache.asterix.external.library.java.base.JRecord;
-import org.apache.asterix.external.library.java.base.JRectangle;
+import org.apache.asterix.external.library.java.base.JShort;
 import org.apache.asterix.external.library.java.base.JString;
 import org.apache.asterix.external.library.java.base.JTime;
 import org.apache.asterix.external.library.java.base.JUnorderedList;
-import org.apache.asterix.om.base.ACircle;
 import org.apache.asterix.om.base.ADuration;
-import org.apache.asterix.om.base.ALine;
-import org.apache.asterix.om.base.APoint;
-import org.apache.asterix.om.base.APoint3D;
-import org.apache.asterix.om.base.APolygon;
-import org.apache.asterix.om.base.ARectangle;
 import org.apache.asterix.om.pointables.AFlatValuePointable;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
@@ -131,15 +114,6 @@ public class JObjectAccessors {
             case STRING:
                 accessor = new JStringAccessor();
                 break;
-            case POINT:
-                accessor = new JPointAccessor();
-                break;
-            case POINT3D:
-                accessor = new JPoint3DAccessor();
-                break;
-            case LINE:
-                accessor = new JLineAccessor();
-                break;
             case DATE:
                 accessor = new JDateAccessor();
                 break;
@@ -151,15 +125,6 @@ public class JObjectAccessors {
                 break;
             case INTERVAL:
                 accessor = new JIntervalAccessor();
-                break;
-            case CIRCLE:
-                accessor = new JCircleAccessor();
-                break;
-            case POLYGON:
-                accessor = new JPolygonAccessor();
-                break;
-            case RECTANGLE:
-                accessor = new JRectangleAccessor();
                 break;
             case TIME:
                 accessor = new JTimeAccessor();
@@ -200,7 +165,7 @@ public class JObjectAccessors {
             int s = pointable.getStartOffset();
             short i = AInt16SerializerDeserializer.getShort(b, s + 1);
             IJObject jObject = objectPool.allocate(BuiltinType.AINT16);
-            ((JInt) jObject).setValue(i);
+            ((JShort) jObject).setValue(i);
             return null;
         }
     }
@@ -385,106 +350,6 @@ public class JObjectAccessors {
             byte intervalType = AIntervalSerializerDeserializer.getIntervalTimeType(b, s + 1);
             IJObject jObject = objectPool.allocate(BuiltinType.AINTERVAL);
             ((JInterval) jObject).setValue(intervalStart, intervalEnd, intervalType);
-            return jObject;
-        }
-    }
-
-    // Spatial Types
-
-    public static class JCircleAccessor implements IJObjectAccessor {
-
-        @Override
-        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
-                throws HyracksDataException {
-            byte[] b = pointable.getByteArray();
-            int s = pointable.getStartOffset();
-            int l = pointable.getLength();
-            ACircle v = ACircleSerializerDeserializer.INSTANCE
-                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)));
-            JPoint jpoint = (JPoint) objectPool.allocate(BuiltinType.APOINT);
-            jpoint.setValue(v.getP().getX(), v.getP().getY());
-            IJObject jObject = objectPool.allocate(BuiltinType.ACIRCLE);
-            ((JCircle) jObject).setValue(jpoint, v.getRadius());
-            return jObject;
-        }
-    }
-
-    public static class JPointAccessor implements IJObjectAccessor {
-
-        @Override
-        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
-                throws HyracksDataException {
-            byte[] b = pointable.getByteArray();
-            int s = pointable.getStartOffset();
-            int l = pointable.getLength();
-            APoint v = APointSerializerDeserializer.INSTANCE
-                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)));
-            JPoint jObject = (JPoint) objectPool.allocate(BuiltinType.APOINT);
-            jObject.setValue(v.getX(), v.getY());
-            return jObject;
-        }
-    }
-
-    public static class JPoint3DAccessor implements IJObjectAccessor {
-
-        @Override
-        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
-                throws HyracksDataException {
-            byte[] b = pointable.getByteArray();
-            int s = pointable.getStartOffset();
-            int l = pointable.getLength();
-            APoint3D v = APoint3DSerializerDeserializer.INSTANCE
-                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)));
-            JPoint3D jObject = (JPoint3D) objectPool.allocate(BuiltinType.APOINT3D);
-            jObject.setValue(v.getX(), v.getY(), v.getZ());
-            return jObject;
-        }
-    }
-
-    public static class JLineAccessor implements IJObjectAccessor {
-
-        @Override
-        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
-                throws HyracksDataException {
-            byte[] b = pointable.getByteArray();
-            int s = pointable.getStartOffset();
-            int l = pointable.getLength();
-            ALine v = ALineSerializerDeserializer.INSTANCE
-                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)));
-            JLine jObject = (JLine) objectPool.allocate(BuiltinType.ALINE);
-            jObject.setValue(v.getP1(), v.getP2());
-            return jObject;
-        }
-    }
-
-    public static class JPolygonAccessor implements IJObjectAccessor {
-
-        @Override
-        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
-                throws HyracksDataException {
-            byte[] b = pointable.getByteArray();
-            int s = pointable.getStartOffset();
-            int l = pointable.getLength();
-            APolygon v = APolygonSerializerDeserializer.INSTANCE
-                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)));
-            JPolygon jObject = (JPolygon) objectPool.allocate(BuiltinType.APOLYGON);
-            jObject.setValue(v.getPoints());
-            return jObject;
-        }
-    }
-
-    public static class JRectangleAccessor implements IJObjectAccessor {
-
-        @Override
-        public IJObject access(IPointable pointable, IObjectPool<IJObject, IAType> objectPool)
-                throws HyracksDataException {
-            byte[] b = pointable.getByteArray();
-            int s = pointable.getStartOffset();
-            int l = pointable.getLength();
-            ARectangle v = ARectangleSerializerDeserializer.INSTANCE
-                    .deserialize(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)));
-            JRectangle jObject = (JRectangle) objectPool.allocate(BuiltinType.ARECTANGLE);
-            jObject.setValue(v.getP1(), v.getP2());
             return jObject;
         }
     }
