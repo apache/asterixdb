@@ -121,21 +121,31 @@ public class LocalFSInputStream extends AbstractMultipleInputStream {
             return false;
         }
         Throwable root = ExceptionUtils.getRootCause(th);
-        if (root instanceof HyracksDataException
-                && ((HyracksDataException) root).getErrorCode() == ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM) {
-            if (currentFile != null) {
-                try {
-                    logManager.logRecord(currentFile.getAbsolutePath(), "Corrupted input file");
-                } catch (IOException e) {
-                    LOGGER.log(Level.WARN, "Filed to write to feed log file", e);
+        if (root instanceof HyracksDataException) {
+            HyracksDataException r = (HyracksDataException) root;
+            String component = r.getComponent();
+            if (ErrorCode.ASTERIX.equals(component)) {
+                int errorCode = r.getErrorCode();
+                switch (errorCode) {
+                    case ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM:
+                        if (currentFile != null) {
+                            try {
+                                logManager.logRecord(currentFile.getAbsolutePath(), "Corrupted input file");
+                            } catch (IOException e) {
+                                LOGGER.log(Level.WARN, "Filed to write to feed log file", e);
+                            }
+                            LOGGER.log(Level.WARN, "Corrupted input file: " + currentFile.getAbsolutePath());
+                        }
+                    case ErrorCode.INPUT_RECORD_READER_CHAR_ARRAY_RECORD_TOO_LARGE:
+                        try {
+                            advance();
+                            return true;
+                        } catch (Exception e) {
+                            LOGGER.log(Level.WARN, "An exception was thrown while trying to skip a file", e);
+                        }
+                    default:
+                        break;
                 }
-                LOGGER.log(Level.WARN, "Corrupted input file: " + currentFile.getAbsolutePath());
-            }
-            try {
-                advance();
-                return true;
-            } catch (Exception e) {
-                LOGGER.log(Level.WARN, "An exception was thrown while trying to skip a file", e);
             }
         }
         LOGGER.log(Level.WARN, "Failed to recover from failure", th);

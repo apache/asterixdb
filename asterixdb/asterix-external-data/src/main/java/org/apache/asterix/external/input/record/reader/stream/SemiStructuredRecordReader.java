@@ -152,10 +152,10 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
             if (appendLength > 0) {
                 try {
                     record.append(inputBuffer, startPosn, appendLength);
-                } catch (IOException e) {
+                } catch (RuntimeDataException e) {
                     reader.reset();
                     bufferPosn = bufferLength = 0;
-                    throw new RuntimeDataException(ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM);
+                    throw e;
                 }
             }
         } while (!hasFinished);
