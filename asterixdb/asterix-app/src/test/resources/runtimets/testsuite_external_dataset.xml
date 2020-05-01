@@ -35,15 +35,31 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
-      <compilation-unit name="aws/s3/csv/000">
-        <output-dir compare="Text">aws/s3/csv/000</output-dir>
+      <compilation-unit name="aws/s3/csv/csv">
+        <output-dir compare="Text">aws/s3/csv/csv</output-dir>
+      </compilation-unit>
+    </test-case><test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/csv/gz">
+        <output-dir compare="Text">aws/s3/csv/gz</output-dir>
+      </compilation-unit>
+    </test-case><test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/csv/mixed">
+        <output-dir compare="Text">aws/s3/csv/mixed</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
-      <compilation-unit name="aws/s3/tsv/000">
-        <output-dir compare="Text">aws/s3/tsv/000</output-dir>
+      <compilation-unit name="aws/s3/tsv/tsv">
+        <output-dir compare="Text">aws/s3/tsv/tsv</output-dir>
       </compilation-unit>
-    </test-case>
+    </test-case><test-case FilePath="external-dataset">
+    <compilation-unit name="aws/s3/tsv/gz">
+      <output-dir compare="Text">aws/s3/tsv/gz</output-dir>
+    </compilation-unit>
+  </test-case><test-case FilePath="external-dataset">
+    <compilation-unit name="aws/s3/tsv/mixed">
+      <output-dir compare="Text">aws/s3/tsv/mixed</output-dir>
+    </compilation-unit>
+  </test-case>
     <test-case FilePath="external-dataset">
       <compilation-unit name="aws/s3/negative">
         <output-dir compare="Text">aws/s3/negative</output-dir>

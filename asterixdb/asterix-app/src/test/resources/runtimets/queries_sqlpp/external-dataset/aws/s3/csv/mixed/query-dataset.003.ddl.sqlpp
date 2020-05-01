@@ -17,22 +17,4 @@
  * under the License.
  */
 
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
-USE test;
-
-DROP TYPE test IF EXISTS;
-CREATE TYPE test AS {id: int, year: int?, review: string, details: string?};
-
 DROP DATASET test IF EXISTS;
-CREATE EXTERNAL DATASET test(test) USING S3 (
-("accessKey"="dummyAccessKey"),
-("secretKey"="dummySecretKey"),
-("region"="us-west-2"),
-("serviceEndpoint"="http://localhost:8001"),
-("container"="playground"),
-("definition"="csv-data/reviews"),
-("format"="Csv"),
-("header"="false"),
-("null"="")
-);

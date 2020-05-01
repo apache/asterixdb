@@ -78,13 +78,16 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
         GetObjectRequest.Builder getObjectBuilder = GetObjectRequest.builder();
         GetObjectRequest getObjectRequest = getObjectBuilder.bucket(bucket).key(filePaths.get(nextFileIndex)).build();
 
-        // Use the proper input stream
+        // Have a reference to the S3 stream to ensure that if GZipInputStream causes an IOException because of reading
+        // the header, then the S3 stream gets closed in the close method
+        in = s3Client.getObject(getObjectRequest);
+
+        // Use gzip stream if needed
         String filename = filePaths.get(nextFileIndex).toLowerCase();
         if (filename.endsWith(".gz") || filename.endsWith(".gzip")) {
             in = new GZIPInputStream(s3Client.getObject(getObjectRequest), ExternalDataConstants.DEFAULT_BUFFER_SIZE);
-        } else {
-            in = s3Client.getObject(getObjectRequest);
         }
+
         if (notificationHandler != null) {
             notificationHandler.notifyNewSource();
         }

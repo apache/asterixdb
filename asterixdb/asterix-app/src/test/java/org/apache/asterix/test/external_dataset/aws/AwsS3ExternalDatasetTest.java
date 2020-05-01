@@ -208,15 +208,13 @@ public class AwsS3ExternalDatasetTest {
         LOGGER.info("Adding TSV files to the bucket");
         loadTsvFiles();
         LOGGER.info("TSV Files added successfully");
-
-        LOGGER.info("Files added successfully");
     }
 
     private static void loadJsonFiles() {
         String dataBasePath = JSON_DATA_PATH;
         String definition = S3_MOCK_SERVER_BUCKET_JSON_DEFINITION;
 
-        // Json data
+        // Normal format
         String definitionSegment = "json";
         loadData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
         loadData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
@@ -224,7 +222,7 @@ public class AwsS3ExternalDatasetTest {
         loadData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
                 false);
 
-        // Json gz compressed data
+        // gz compressed format
         definitionSegment = "gz";
         loadGzData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
         loadGzData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
@@ -232,7 +230,7 @@ public class AwsS3ExternalDatasetTest {
         loadGzData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
                 false);
 
-        // Mixed json and json gz compressed data
+        // Mixed normal and gz compressed format
         definitionSegment = "mixed";
         loadData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
         loadData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
@@ -244,6 +242,50 @@ public class AwsS3ExternalDatasetTest {
         loadGzData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
         loadGzData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
                 false);
+    }
+
+    private static void loadCsvFiles() {
+        String dataBasePath = CSV_DATA_PATH;
+        String definition = S3_MOCK_SERVER_BUCKET_CSV_DEFINITION;
+
+        // Normal format
+        String definitionSegment = "csv";
+        loadData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
+        loadData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
+
+        // gz compressed format
+        definitionSegment = "gz";
+        loadGzData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
+
+        // Mixed normal and gz compressed format
+        definitionSegment = "mixed";
+        loadData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
+        loadData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
+    }
+
+    private static void loadTsvFiles() {
+        String dataBasePath = TSV_DATA_PATH;
+        String definition = S3_MOCK_SERVER_BUCKET_TSV_DEFINITION;
+
+        // Normal format
+        String definitionSegment = "tsv";
+        loadData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
+        loadData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
+
+        // gz compressed format
+        definitionSegment = "gz";
+        loadGzData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
+
+        // Mixed normal and gz compressed format
+        definitionSegment = "mixed";
+        loadData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
+        loadData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
     }
 
     private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,
@@ -262,7 +304,9 @@ public class AwsS3ExternalDatasetTest {
         }
 
         // Files base definition
-        String basePath = definition + filePathSegment + "/" + definitionSegment + "/";
+        filePathSegment = filePathSegment.isEmpty() ? "" : filePathSegment + "/";
+        definitionSegment = definitionSegment.isEmpty() ? "" : definitionSegment + "/";
+        String basePath = definition + filePathSegment + definitionSegment;
 
         // Load the data
         client.putObject(builder.key(basePath + finalFileName).build(), requestBody);
@@ -297,7 +341,9 @@ public class AwsS3ExternalDatasetTest {
             finalFileName += ".gz";
 
             // Files base definition
-            String basePath = definition + filePathSegment + "/" + definitionSegment + "/";
+            filePathSegment = filePathSegment.isEmpty() ? "" : filePathSegment + "/";
+            definitionSegment = definitionSegment.isEmpty() ? "" : definitionSegment + "/";
+            String basePath = definition + filePathSegment + definitionSegment;
 
             // Load the data
             client.putObject(builder.key(basePath + finalFileName).build(), requestBody);
@@ -308,31 +354,6 @@ public class AwsS3ExternalDatasetTest {
         } catch (Exception ex) {
             LOGGER.error(ex.getMessage());
         }
-    }
-
-    private static void loadCsvFiles() {
-        LOGGER.info("Adding CSV files to the bucket");
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_CSV_DEFINITION + "01.csv").build(),
-                RequestBody.fromFile(Paths.get(CSV_DATA_PATH, "01.csv")));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_CSV_DEFINITION + "2018/01.csv").build(),
-                RequestBody.fromFile(Paths.get(CSV_DATA_PATH, "02.csv")));
-    }
-
-    private static void loadTsvFiles() {
-        LOGGER.info("Adding TSV files to the bucket");
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_TSV_DEFINITION + "01.tsv").build(),
-                RequestBody.fromFile(Paths.get(TSV_DATA_PATH, "01.tsv")));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_TSV_DEFINITION + "2018/01.tsv").build(),
-                RequestBody.fromFile(Paths.get(TSV_DATA_PATH, "02.tsv")));
-        LOGGER.info("Files added successfully");
     }
 
     static class AwsTestExecutor extends TestExecutor {
