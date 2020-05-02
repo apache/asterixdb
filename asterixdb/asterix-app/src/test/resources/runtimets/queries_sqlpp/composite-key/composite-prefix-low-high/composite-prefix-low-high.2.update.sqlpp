@@ -1,0 +1,31 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+insert into Points {"x": 1, "y": 1, "z": 100};
+insert into Points {"x": 2, "y": 1, "z": 101};
+insert into Points {"x": 2, "y": 2, "z": 102};
+insert into Points {"x": 2, "y": 3, "z": 103};
+insert into Points {"x": 2, "y": 4, "z": 104};
+insert into Points {"x": 2, "y": 5, "z": 105};
+insert into Points {"x": 3, "y": 1, "z": 106};
+insert into Points {"x": 3, "y": 2, "z": 107};
+insert into Points {"x": 4, "y": 1, "z": 108};
+insert into Points {"x": 4, "y": 9, "z": 109};

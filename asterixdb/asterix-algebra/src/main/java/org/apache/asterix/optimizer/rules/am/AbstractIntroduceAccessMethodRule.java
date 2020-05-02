@@ -381,20 +381,18 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     }
 
                     // Check if any field name in the optFuncExpr matches.
-                    if (optFuncExpr.findFieldName(keyField) != -1) {
-                        foundKeyField =
-                                typeMatch && optFuncExpr.getOperatorSubTree(exprAndVarIdx.second).hasDataSourceScan();
-                        if (foundKeyField) {
-                            matchedExpressions.add(exprAndVarIdx.first);
-                            numMatchedKeys++;
-                            if (lastFieldMatched == i - 1) {
-                                lastFieldMatched = i;
-                            }
-                            break;
-                        }
+                    if (typeMatch && optFuncExpr.findFieldName(keyField) != -1
+                            && optFuncExpr.getOperatorSubTree(exprAndVarIdx.second).hasDataSourceScan()) {
+                        foundKeyField = true;
+                        matchedExpressions.add(exprAndVarIdx.first);
                     }
                 }
-                if (!foundKeyField) {
+                if (foundKeyField) {
+                    numMatchedKeys++;
+                    if (lastFieldMatched == i - 1) {
+                        lastFieldMatched = i;
+                    }
+                } else {
                     allUsed = false;
                     // if any expression was matched, remove the non-matched expressions, otherwise the index is unusable
                     if (lastFieldMatched >= 0) {

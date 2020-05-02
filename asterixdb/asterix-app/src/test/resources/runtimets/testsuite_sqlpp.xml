@@ -13392,6 +13392,11 @@
         <output-dir compare="Text">composite-prefix</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="composite-key">
+      <compilation-unit name="composite-prefix-low-high">
+        <output-dir compare="Text">composite-prefix-low-high</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="limit">
     <test-case FilePath="limit">
