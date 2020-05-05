@@ -52,7 +52,7 @@ public class QuotedLineRecordReader extends LineRecordReader {
         super.configure(ctx, inputStream, config);
         this.warnings = ctx.getWarningCollector();
         String quoteString = config.get(ExternalDataConstants.KEY_QUOTE);
-        ExternalDataUtils.validateQuote(quoteString);
+        ExternalDataUtils.validateChar(quoteString, ExternalDataConstants.KEY_QUOTE);
         this.quote = quoteString.charAt(0);
         this.escape = ExternalDataUtils.validateGetEscape(config);
     }

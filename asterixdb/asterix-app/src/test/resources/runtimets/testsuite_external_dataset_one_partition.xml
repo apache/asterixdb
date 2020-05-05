@@ -73,5 +73,10 @@
         <expected-warn>Parsing error at data_dir/no_h_missing_fields.tsv record 2 field 3: some fields are missing</expected-warn>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="aws/s3/jsonl">
+        <output-dir compare="Text">aws/s3/jsonl</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

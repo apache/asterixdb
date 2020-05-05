@@ -18,6 +18,15 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.CLOSING_BRACKET;
+import static org.apache.asterix.external.util.ExternalDataConstants.COMMA;
+import static org.apache.asterix.external.util.ExternalDataConstants.CR;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
+import static org.apache.asterix.external.util.ExternalDataConstants.LF;
+import static org.apache.asterix.external.util.ExternalDataConstants.OPEN_BRACKET;
+import static org.apache.asterix.external.util.ExternalDataConstants.SPACE;
+import static org.apache.asterix.external.util.ExternalDataConstants.TAB;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,21 +34,32 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SemiStructuredRecordReader extends StreamRecordReader {
+
+    private enum State {
+        TOP_LEVEL, // valid chars at this state: '{' or '[' to start a new record or array of records
+        ARRAY, // valid chars at this state: '{' or ']' to start the first nested record or close the array
+        NESTED_OBJECT, // valid chars at this state: ',' or ']' to close the array or expect another nested record
+        AFTER_COMMA // valid chars at this state: '{' to start a new nested record
+    }
 
     private int depth;
     private boolean prevCharEscape;
     private boolean inString;
     private char recordStart;
     private char recordEnd;
+    private boolean hasStarted;
+    private boolean hasFinished;
     private int recordNumber = 0;
+    private State state = State.TOP_LEVEL;
+
     private static final List<String> recordReaderFormats = Collections.unmodifiableList(
             Arrays.asList(ExternalDataConstants.FORMAT_ADM, ExternalDataConstants.FORMAT_JSON_LOWER_CASE,
                     ExternalDataConstants.FORMAT_JSON_UPPER_CASE, ExternalDataConstants.FORMAT_SEMISTRUCTURED));
@@ -49,30 +69,24 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
     public void configure(IHyracksTaskContext ctx, AsterixInputStream stream, Map<String, String> config)
             throws HyracksDataException {
         super.configure(stream, config);
-        String recStartString = config.get(ExternalDataConstants.KEY_RECORD_START);
-        String recEndString = config.get(ExternalDataConstants.KEY_RECORD_END);
+        stream.setNotificationHandler(this);
         // set record opening char
-        if (recStartString != null) {
-            if (recStartString.length() != 1) {
-                throw new HyracksDataException(
-                        ExceptionUtils.incorrectParameterMessage(ExternalDataConstants.KEY_RECORD_START,
-                                ExternalDataConstants.PARAMETER_OF_SIZE_ONE, recStartString));
-            }
-            recordStart = recStartString.charAt(0);
-        } else {
-            recordStart = ExternalDataConstants.DEFAULT_RECORD_START;
-        }
+        recordStart = ExternalDataUtils.validateGetRecordStart(config);
         // set record ending char
-        if (recEndString != null) {
-            if (recEndString.length() != 1) {
-                throw new HyracksDataException(
-                        ExceptionUtils.incorrectParameterMessage(ExternalDataConstants.KEY_RECORD_END,
-                                ExternalDataConstants.PARAMETER_OF_SIZE_ONE, recEndString));
-            }
-            recordEnd = recEndString.charAt(0);
-        } else {
-            recordEnd = ExternalDataConstants.DEFAULT_RECORD_END;
+        recordEnd = ExternalDataUtils.validateGetRecordEnd(config);
+        if (recordStart == recordEnd) {
+            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, KEY_RECORD_END, recordEnd);
         }
+    }
+
+    @Override
+    public void notifyNewSource() {
+        if (hasStarted) {
+            // TODO(ali): WARN
+        }
+        recordNumber = 0;
+        state = State.TOP_LEVEL;
+        resetForNewRecord();
     }
 
     public int getRecordNumber() {
@@ -84,12 +98,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
         if (done) {
             return false;
         }
-        record.reset();
-        boolean hasStarted = false;
-        boolean hasFinished = false;
-        prevCharEscape = false;
-        inString = false;
-        depth = 0;
+        resetForNewRecord();
         do {
             int startPosn = bufferPosn; // starting from where we left off the last time
             if (bufferPosn >= bufferLength) {
@@ -102,16 +111,30 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
             }
             if (!hasStarted) {
                 for (; bufferPosn < bufferLength; ++bufferPosn) { // search for record begin
-                    if (inputBuffer[bufferPosn] == recordStart) {
+                    char c = inputBuffer[bufferPosn];
+                    if (c == SPACE || c == TAB || c == LF || c == CR) {
+                        continue;
+                    }
+                    if (c == recordStart && state != State.NESTED_OBJECT) {
+                        // '{' is allowed at the top level, after '[' and after ','
+                        if (state == State.ARRAY || state == State.AFTER_COMMA) {
+                            state = State.NESTED_OBJECT;
+                        }
                         startPosn = bufferPosn;
                         hasStarted = true;
                         depth = 1;
-                        ++bufferPosn; // at next invocation proceed from following byte
+                        ++bufferPosn;
                         break;
-                    } else if (inputBuffer[bufferPosn] != ExternalDataConstants.SPACE
-                            && inputBuffer[bufferPosn] != ExternalDataConstants.TAB
-                            && inputBuffer[bufferPosn] != ExternalDataConstants.LF
-                            && inputBuffer[bufferPosn] != ExternalDataConstants.CR) {
+                    } else if (c == OPEN_BRACKET && state == State.TOP_LEVEL) {
+                        // '[' is allowed at the top level only
+                        state = State.ARRAY;
+                    } else if (c == CLOSING_BRACKET && (state == State.ARRAY || state == State.NESTED_OBJECT)) {
+                        // ']' is allowed after '[' and after capturing a record in an array
+                        state = State.TOP_LEVEL;
+                    } else if (c == COMMA && state == State.NESTED_OBJECT) {
+                        // ',' is allowed after capturing a record in an array
+                        state = State.AFTER_COMMA;
+                    } else {
                         // corrupted file. clear the buffer and stop reading
                         reader.reset();
                         bufferPosn = bufferLength = 0;
@@ -120,17 +143,13 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
                 }
             }
             if (hasStarted) {
-                for (; bufferPosn < bufferLength; ++bufferPosn) { // search for record begin
+                for (; bufferPosn < bufferLength; ++bufferPosn) {
                     if (inString) {
                         // we are in a string, we only care about the string end
                         if (inputBuffer[bufferPosn] == ExternalDataConstants.QUOTE && !prevCharEscape) {
                             inString = false;
                         }
-                        if (prevCharEscape) {
-                            prevCharEscape = false;
-                        } else {
-                            prevCharEscape = inputBuffer[bufferPosn] == ExternalDataConstants.ESCAPE;
-                        }
+                        prevCharEscape = inputBuffer[bufferPosn] == ExternalDataConstants.ESCAPE && !prevCharEscape;
                     } else {
                         if (inputBuffer[bufferPosn] == ExternalDataConstants.QUOTE) {
                             inString = true;
@@ -174,14 +193,12 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
         return REQUIRED_CONFIGS;
     }
 
-    @Override
-    public boolean stop() {
-        try {
-            reader.stop();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
+    private void resetForNewRecord() {
+        record.reset();
+        hasStarted = false;
+        hasFinished = false;
+        prevCharEscape = false;
+        inString = false;
+        depth = 0;
     }
 }

@@ -235,6 +235,9 @@ public class ExternalDataConstants {
     public static final char CR = '\r';
     public static final char DEFAULT_RECORD_START = '{';
     public static final char DEFAULT_RECORD_END = '}';
+    public static final char OPEN_BRACKET = '[';
+    public static final char CLOSING_BRACKET = ']';
+    public static final char COMMA = ',';
 
     /**
      * Constant byte characters

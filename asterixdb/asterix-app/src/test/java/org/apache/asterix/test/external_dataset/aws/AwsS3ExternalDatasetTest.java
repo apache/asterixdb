@@ -365,7 +365,7 @@ public class AwsS3ExternalDatasetTest {
             String[] lines;
             switch (ctx.getType()) {
                 case "s3bucket":
-                    // <bucket_name> <def_name> <file1,file2,file3>
+                    // <bucket_name> <def_name> <sub-path:src_file1,sub-path:src_file2,sub-path:src_file3>
                     lines = TestExecutor.stripAllComments(statement).trim().split("\n");
                     String lastLine = lines[lines.length - 1];
                     String[] command = lastLine.trim().split(" ");
@@ -386,7 +386,7 @@ public class AwsS3ExternalDatasetTest {
         String definitionPath = definition + (definition.endsWith("/") ? "" : "/");
         String[] fileSplits = files.split(",");
 
-        LOGGER.info("Dropping bucket");
+        LOGGER.info("Dropping bucket " + bucketName);
         try {
             client.deleteBucket(DELETE_BUCKET_BUILDER.bucket(bucketName).build());
         } catch (NoSuchBucketException e) {
@@ -397,13 +397,31 @@ public class AwsS3ExternalDatasetTest {
         LOGGER.info("Uploading to bucket " + bucketName + " definition " + definitionPath);
         fileNames.clear();
         for (int i = 0; i < fileSplits.length; i++) {
-            String fileName = FilenameUtils.getName(fileSplits[i]);
-            while (fileNames.contains(fileName)) {
-                fileName = (i + 1) + fileName;
+            String[] s3pathAndSourceFile = fileSplits[i].split(":");
+            int size = s3pathAndSourceFile.length;
+            String path;
+            String sourceFilePath;
+            String sourceFileName;
+            if (size == 1) {
+                // case: playground json-data/reviews SOURCE_FILE1,SOURCE_FILE2
+                path = definitionPath;
+                sourceFilePath = s3pathAndSourceFile[0];
+                sourceFileName = FilenameUtils.getName(s3pathAndSourceFile[0]);
+            } else {
+                // case: playground json-data/reviews level1/sub-level:SOURCE_FILE1,level2/sub-level:SOURCE_FILE2
+                path = definitionPath + s3pathAndSourceFile[0] + (s3pathAndSourceFile[0].endsWith("/") ? "" : "/");
+                sourceFilePath = s3pathAndSourceFile[1];
+                sourceFileName = FilenameUtils.getName(s3pathAndSourceFile[1]);
             }
-            fileNames.add(fileName);
-            client.putObject(PUT_OBJECT_BUILDER.bucket(bucketName).key(definitionPath + fileName).build(),
-                    RequestBody.fromFile(Paths.get(fileSplits[i])));
+
+            String keyPath = path + sourceFileName;
+            int k = 1;
+            while (fileNames.contains(keyPath)) {
+                keyPath = path + (k++) + sourceFileName;
+            }
+            fileNames.add(keyPath);
+            client.putObject(PUT_OBJECT_BUILDER.bucket(bucketName).key(keyPath).build(),
+                    RequestBody.fromFile(Paths.get(sourceFilePath)));
         }
         LOGGER.info("Done creating bucket with data");
     }

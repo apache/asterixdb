@@ -18,6 +18,11 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_REDACT_WARNINGS;
 
 import java.util.EnumMap;
@@ -61,34 +66,27 @@ public class ExternalDataUtils {
 
     // Get a delimiter from the given configuration
     public static char validateGetDelimiter(Map<String, String> configuration) throws HyracksDataException {
-        String delimiterValue = configuration.get(ExternalDataConstants.KEY_DELIMITER);
-        if (delimiterValue == null) {
-            return ExternalDataConstants.DEFAULT_DELIMITER.charAt(0);
-        }
-        validateDelimiter(delimiterValue);
-        return delimiterValue.charAt(0);
+        return validateCharOrDefault(configuration, KEY_DELIMITER, ExternalDataConstants.DEFAULT_DELIMITER.charAt(0));
     }
 
     // Get a quote from the given configuration when the delimiter is given
     // Need to pass delimiter to check whether they share the same character
     public static char validateGetQuote(Map<String, String> configuration, char delimiter) throws HyracksDataException {
-        String quoteValue = configuration.get(ExternalDataConstants.KEY_QUOTE);
-        if (quoteValue == null) {
-            return ExternalDataConstants.DEFAULT_QUOTE.charAt(0);
-        }
-        validateQuote(quoteValue);
-        char quote = quoteValue.charAt(0);
+        char quote = validateCharOrDefault(configuration, KEY_QUOTE, ExternalDataConstants.DEFAULT_QUOTE.charAt(0));
         validateDelimiterAndQuote(delimiter, quote);
         return quote;
     }
 
     public static char validateGetEscape(Map<String, String> configuration) throws HyracksDataException {
-        String escapeValue = configuration.get(ExternalDataConstants.KEY_ESCAPE);
-        if (escapeValue == null) {
-            return ExternalDataConstants.ESCAPE;
-        }
-        validateEscape(escapeValue);
-        return escapeValue.charAt(0);
+        return validateCharOrDefault(configuration, KEY_ESCAPE, ExternalDataConstants.ESCAPE);
+    }
+
+    public static char validateGetRecordStart(Map<String, String> configuration) throws HyracksDataException {
+        return validateCharOrDefault(configuration, KEY_RECORD_START, ExternalDataConstants.DEFAULT_RECORD_START);
+    }
+
+    public static char validateGetRecordEnd(Map<String, String> configuration) throws HyracksDataException {
+        return validateCharOrDefault(configuration, KEY_RECORD_END, ExternalDataConstants.DEFAULT_RECORD_END);
     }
 
     public static void validateDataParserParameters(Map<String, String> configuration) throws AsterixException {
@@ -329,13 +327,13 @@ public class ExternalDataUtils {
         if (format != null) {
             // default quote, escape character for quote and fields delimiter for csv and tsv format
             if (format.equals(ExternalDataConstants.FORMAT_CSV)) {
-                configuration.putIfAbsent(ExternalDataConstants.KEY_DELIMITER, ExternalDataConstants.DEFAULT_DELIMITER);
-                configuration.putIfAbsent(ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.DEFAULT_QUOTE);
-                configuration.putIfAbsent(ExternalDataConstants.KEY_ESCAPE, ExternalDataConstants.DEFAULT_QUOTE);
+                configuration.putIfAbsent(KEY_DELIMITER, ExternalDataConstants.DEFAULT_DELIMITER);
+                configuration.putIfAbsent(KEY_QUOTE, ExternalDataConstants.DEFAULT_QUOTE);
+                configuration.putIfAbsent(KEY_ESCAPE, ExternalDataConstants.DEFAULT_QUOTE);
             } else if (format.equals(ExternalDataConstants.FORMAT_TSV)) {
-                configuration.putIfAbsent(ExternalDataConstants.KEY_DELIMITER, ExternalDataConstants.TAB_STR);
-                configuration.putIfAbsent(ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.NULL_STR);
-                configuration.putIfAbsent(ExternalDataConstants.KEY_ESCAPE, ExternalDataConstants.NULL_STR);
+                configuration.putIfAbsent(KEY_DELIMITER, ExternalDataConstants.TAB_STR);
+                configuration.putIfAbsent(KEY_QUOTE, ExternalDataConstants.NULL_STR);
+                configuration.putIfAbsent(KEY_ESCAPE, ExternalDataConstants.NULL_STR);
             }
         }
     }
@@ -411,30 +409,25 @@ public class ExternalDataUtils {
         return value.equals(ExternalDataConstants.TRUE) || value.equals(ExternalDataConstants.FALSE);
     }
 
-    private static void validateDelimiter(String delimiter) throws RuntimeDataException {
-        if (delimiter.length() != 1) {
-            throw new RuntimeDataException(ErrorCode.PARSER_FACTORY_DELIMITED_DATA_PARSER_FACTORY_NOT_VALID_DELIMITER,
-                    delimiter);
-        }
-    }
-
-    public static void validateQuote(String quote) throws RuntimeDataException {
-        if (quote.length() != 1) {
-            throw new RuntimeDataException(ErrorCode.PARSER_INVALID_CHAR_LENGTH, quote,
-                    ExternalDataConstants.KEY_QUOTE);
-        }
-    }
-
-    private static void validateEscape(String esc) throws RuntimeDataException {
-        if (esc.length() != 1) {
-            throw new RuntimeDataException(ErrorCode.PARSER_INVALID_CHAR_LENGTH, esc, ExternalDataConstants.KEY_ESCAPE);
-        }
-    }
-
     private static void validateDelimiterAndQuote(char delimiter, char quote) throws RuntimeDataException {
         if (quote == delimiter) {
-            throw new RuntimeDataException(
-                    ErrorCode.PARSER_FACTORY_DELIMITED_DATA_PARSER_FACTORY_QUOTE_DELIMITER_MISMATCH, quote, delimiter);
+            throw new RuntimeDataException(ErrorCode.QUOTE_DELIMITER_MISMATCH, quote, delimiter);
+        }
+    }
+
+    private static char validateCharOrDefault(Map<String, String> configuration, String key, char defaultValue)
+            throws HyracksDataException {
+        String value = configuration.get(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        validateChar(value, key);
+        return value.charAt(0);
+    }
+
+    public static void validateChar(String parameterValue, String parameterName) throws RuntimeDataException {
+        if (parameterValue.length() != 1) {
+            throw new RuntimeDataException(ErrorCode.INVALID_CHAR_LENGTH, parameterValue, parameterName);
         }
     }
 }
