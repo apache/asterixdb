@@ -23,8 +23,8 @@ import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.DATASOUR
 
 import java.util.Calendar;
 
+import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;

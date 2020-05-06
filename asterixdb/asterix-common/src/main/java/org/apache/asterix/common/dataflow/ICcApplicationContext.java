@@ -19,6 +19,7 @@
 package org.apache.asterix.common.dataflow;
 
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.api.IRequestTracker;
@@ -26,6 +27,7 @@ import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.external.IAdapterFactoryService;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
@@ -133,4 +135,18 @@ public interface ICcApplicationContext extends IApplicationContext {
      * @return the request tracker.
      */
     IRequestTracker getRequestTracker();
+
+    /**
+     * Gets the coordination service
+     *
+     * @return the coordination service
+     */
+    ICoordinationService getCoordinationService();
+
+    /**
+     * Gets the adapter factory service
+     *
+     * @return the adapter factory service
+     */
+    IAdapterFactoryService getAdapterFactoryService();
 }

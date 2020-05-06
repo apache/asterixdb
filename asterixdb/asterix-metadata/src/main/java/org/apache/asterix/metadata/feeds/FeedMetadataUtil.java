@@ -28,12 +28,12 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
+import org.apache.asterix.common.external.IDataSourceAdapter;
+import org.apache.asterix.common.external.IDataSourceAdapter.AdapterType;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.external.api.IAdapterFactory;
-import org.apache.asterix.external.api.IDataSourceAdapter;
-import org.apache.asterix.external.api.IDataSourceAdapter.AdapterType;
+import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.library.JavaLibrary;
@@ -122,13 +122,13 @@ public class FeedMetadataUtil {
                 adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, feed.getDataverseName(), adapterName);
             }
             AdapterType adapterType;
-            IAdapterFactory adapterFactory;
+            ITypedAdapterFactory adapterFactory;
             if (adapterEntity != null) {
                 adapterType = adapterEntity.getType();
                 String adapterFactoryClassname = adapterEntity.getClassname();
                 switch (adapterType) {
                     case INTERNAL:
-                        adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+                        adapterFactory = (ITypedAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
                         break;
                     case EXTERNAL:
                         String[] anameComponents = adapterName.split("#");
@@ -138,7 +138,7 @@ public class FeedMetadataUtil {
                             throw new HyracksDataException("Unexpected library language: " + lib.getLanguage());
                         }
                         ClassLoader cl = ((JavaLibrary) lib).getClassLoader();
-                        adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
+                        adapterFactory = (ITypedAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
                         break;
                     default:
                         throw new AsterixException("Unknown Adapter type " + adapterType);
@@ -173,17 +173,17 @@ public class FeedMetadataUtil {
     }
 
     @SuppressWarnings("rawtypes")
-    public static Triple<IAdapterFactory, RecordDescriptor, AdapterType> getFeedFactoryAndOutput(Feed feed,
+    public static Triple<ITypedAdapterFactory, RecordDescriptor, AdapterType> getFeedFactoryAndOutput(Feed feed,
             FeedPolicyAccessor policyAccessor, MetadataTransactionContext mdTxnCtx, ICcApplicationContext appCtx)
             throws AlgebricksException {
         // This method needs to be re-visited
         String adapterName = null;
         DatasourceAdapter adapterEntity = null;
         String adapterFactoryClassname = null;
-        IAdapterFactory adapterFactory = null;
+        ITypedAdapterFactory adapterFactory = null;
         ARecordType adapterOutputType = null;
         ARecordType metaType = null;
-        Triple<IAdapterFactory, RecordDescriptor, IDataSourceAdapter.AdapterType> feedProps = null;
+        Triple<ITypedAdapterFactory, RecordDescriptor, IDataSourceAdapter.AdapterType> feedProps = null;
         IDataSourceAdapter.AdapterType adapterType = null;
         try {
             Map<String, String> configuration = feed.getConfiguration();
@@ -204,7 +204,7 @@ public class FeedMetadataUtil {
                 adapterFactoryClassname = adapterEntity.getClassname();
                 switch (adapterType) {
                     case INTERNAL:
-                        adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+                        adapterFactory = (ITypedAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
                         break;
                     case EXTERNAL:
                         String[] anameComponents = adapterName.split("#");
@@ -214,7 +214,7 @@ public class FeedMetadataUtil {
                             throw new HyracksDataException("Unexpected library language: " + lib.getLanguage());
                         }
                         ClassLoader cl = ((JavaLibrary) lib).getClassLoader();
-                        adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
+                        adapterFactory = (ITypedAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
                         break;
                     default:
                         throw new AsterixException("Unknown Adapter type " + adapterType);

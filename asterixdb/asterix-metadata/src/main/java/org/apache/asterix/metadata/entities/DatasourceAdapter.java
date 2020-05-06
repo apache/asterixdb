@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.metadata.entities;
 
-import org.apache.asterix.external.api.IDataSourceAdapter.AdapterType;
+import org.apache.asterix.common.external.IDataSourceAdapter.AdapterType;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;

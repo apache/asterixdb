@@ -54,6 +54,7 @@ public class DatasourceFactoryProvider {
 
     public static IExternalDataSourceFactory getExternalDataSourceFactory(ILibraryManager libraryManager,
             Map<String, String> configuration) throws HyracksDataException, AsterixException {
+        // Take a copy of the configuration
         if (ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.RECORDS)) {
             String reader = configuration.get(ExternalDataConstants.KEY_READER);
             return DatasourceFactoryProvider.getRecordReaderFactory(libraryManager, reader, configuration);

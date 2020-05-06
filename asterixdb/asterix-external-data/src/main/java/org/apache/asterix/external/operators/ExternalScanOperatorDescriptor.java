@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.external.operators;
 
-import org.apache.asterix.external.api.IAdapterFactory;
-import org.apache.asterix.external.api.IDataSourceAdapter;
+import org.apache.asterix.common.external.IDataSourceAdapter;
+import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -37,10 +37,10 @@ public class ExternalScanOperatorDescriptor extends AbstractSingleActivityOperat
 
     private static final long serialVersionUID = 1L;
 
-    private IAdapterFactory adapterFactory;
+    private ITypedAdapterFactory adapterFactory;
 
     public ExternalScanOperatorDescriptor(JobSpecification spec, RecordDescriptor rDesc,
-            IAdapterFactory dataSourceAdapterFactory) {
+            ITypedAdapterFactory dataSourceAdapterFactory) {
         super(spec, 0, 1);
         outRecDescs[0] = rDesc;
         this.adapterFactory = dataSourceAdapterFactory;

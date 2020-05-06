@@ -114,6 +114,7 @@ public class ExternalDataConstants {
     public static final String KEY_ADAPTER_NAME_SOCKET = "socket";
     public static final String KEY_ALIAS_ADAPTER_NAME_SOCKET = "socket_adapter";
     public static final String KEY_ADAPTER_NAME_HTTP = "http_adapter";
+    public static final String KEY_ADAPTER_NAME_AWS_S3 = "S3";
 
     /**
      * HDFS class names
@@ -229,4 +230,26 @@ public class ExternalDataConstants {
     public static final String FORMAT_CSV = "csv";
 
     public static final String ERROR_PARSE_RECORD = "Parser failed to parse record";
+
+    // TODO(Hussain): Move link related items to a different place
+    /**
+     * Common external link fields
+     */
+    public static final String KEY_DATAVERSE_NAME = "dataverseName";
+    public static final String KEY_LINK_NAME = "linkName";
+    public static final String KEY_LINK_TYPE = "linkType";
+    public static final String[] KEY_EXTERNAL_DATASET_REQUIRED_CONNECTION_PARAMETERS =
+            new String[] { KEY_DATAVERSE_NAME, KEY_LINK_NAME, KEY_LINK_TYPE };
+
+    public static class AwsS3Constants {
+        public static final String REGION_FIELD_NAME = "region";
+        public static final String ACCESS_KEY_FIELD_NAME = "accessKey";
+        public static final String SECRET_KEY_FIELD_NAME = "secretKey";
+        public static final String CONTAINER_NAME_FIELD_NAME = "container";
+        public static final String DEFINITION_FIELD_NAME = "definition";
+        public static final String SERVICE_END_POINT_FIELD_NAME = "serviceEndpoint";
+        public static final String[] REQUIRED_LINK_PARAMETERS =
+                new String[] { ACCESS_KEY_FIELD_NAME, SECRET_KEY_FIELD_NAME, REGION_FIELD_NAME };
+        public static final String[] OPTIONAL_LINK_PARAMETERS = new String[] { SERVICE_END_POINT_FIELD_NAME };
+    }
 }

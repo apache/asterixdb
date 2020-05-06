@@ -173,6 +173,11 @@
               <noticeUrl>https://raw.githubusercontent.com/netty/netty/netty-4.1.46.Final/NOTICE.txt</noticeUrl>
             </override>
             <override>
+              <gav>org.reactivestreams:reactive-streams:1.0.2</gav>
+              <noticeUrl>https://raw.githubusercontent.com/reactive-streams/reactive-streams-jvm/v1.0.2/COPYING.txt</noticeUrl>
+              <url>https://raw.githubusercontent.com/reactive-streams/reactive-streams-jvm/v1.0.2/LICENSE.txt</url>
+            </override>
+            <override>
               <gav>org.mindrot:jbcrypt:0.4</gav>
               <url>http://www.mindrot.org/files/jBCrypt/LICENSE</url>
             </override>
@@ -209,6 +214,7 @@
                 <aliasUrl>http://www.apache.org/licenses/LICENSE-2.0</aliasUrl>
                 <aliasUrl>https://www.apache.org/licenses/LICENSE-2.0.txt</aliasUrl>
                 <aliasUrl>http://www.apache.org/licenses/LICENSE-2.0.html</aliasUrl>
+                <aliasUrl>https://aws.amazon.com/apache2.0</aliasUrl>
               </aliasUrls>
               <metric>1</metric>
             </license>

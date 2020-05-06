@@ -45,6 +45,7 @@ import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.external.IAdapterFactoryService;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
@@ -100,14 +101,15 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final IReceptionist receptionist;
     private final IRequestTracker requestTracker;
     private final IConfigValidator configValidator;
+    private final IAdapterFactoryService adapterFactoryService;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
             ILibraryManager libraryManager, Supplier<IMetadataBootstrap> metadataBootstrapSupplier,
             IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator ftStrategy,
             IJobLifecycleListener activeLifeCycleListener, IStorageComponentProvider storageComponentProvider,
             IMetadataLockManager mdLockManager, IMetadataLockUtil mdLockUtil, IReceptionistFactory receptionistFactory,
-            IConfigValidatorFactory configValidatorFactory, Object extensionManager)
-            throws AlgebricksException, IOException {
+            IConfigValidatorFactory configValidatorFactory, Object extensionManager,
+            IAdapterFactoryService adapterFactoryService) throws AlgebricksException, IOException {
         this.ccServiceCtx = ccServiceCtx;
         this.hcc = hcc;
         this.libraryManager = libraryManager;
@@ -142,6 +144,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         receptionist = receptionistFactory.create();
         requestTracker = new RequestTracker(this);
         configValidator = configValidatorFactory.create();
+        this.adapterFactoryService = adapterFactoryService;
     }
 
     @Override
@@ -313,5 +316,10 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public IRequestTracker getRequestTracker() {
         return requestTracker;
+    }
+
+    @Override
+    public IAdapterFactoryService getAdapterFactoryService() {
+        return adapterFactoryService;
     }
 }

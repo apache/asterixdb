@@ -22,6 +22,6 @@ import java.util.List;
 
 import org.apache.asterix.external.indexing.ExternalFile;
 
-public interface IIndexingAdapterFactory extends IAdapterFactory {
+public interface IIndexingAdapterFactory extends ITypedAdapterFactory {
     public void setSnapshot(List<ExternalFile> files, boolean indexingOp);
 }

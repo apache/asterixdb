@@ -35,13 +35,13 @@ import org.apache.asterix.common.context.DatasetLSMComponentIdGeneratorFactory;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.MetadataException;
+import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexPageWriteCallbackFactory;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
-import org.apache.asterix.external.api.IAdapterFactory;
-import org.apache.asterix.external.api.IDataSourceAdapter;
+import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.IDatasetDetails;
@@ -295,7 +295,8 @@ public class MetadataBootstrap {
 
     private static DatasourceAdapter getAdapter(String adapterFactoryClassName) throws AlgebricksException {
         try {
-            String adapterName = ((IAdapterFactory) (Class.forName(adapterFactoryClassName).newInstance())).getAlias();
+            String adapterName =
+                    ((ITypedAdapterFactory) (Class.forName(adapterFactoryClassName).newInstance())).getAlias();
             return new DatasourceAdapter(new AdapterIdentifier(MetadataConstants.METADATA_DATAVERSE_NAME, adapterName),
                     adapterFactoryClassName, IDataSourceAdapter.AdapterType.INTERNAL);
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {

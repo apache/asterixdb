@@ -35,6 +35,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -44,8 +45,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.common.AccessibleByteArrayEval;
 import org.apache.asterix.runtime.evaluators.common.ClosedRecordConstructorEvalFactory.ClosedRecordConstructorEval;
-import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -64,6 +65,11 @@ public abstract class AbstractSerializableAvgAggregateFunction extends AbstractS
     private static final int SUM_OFFSET = 0;
     private static final int COUNT_OFFSET = 8;
     protected static final int AGG_TYPE_OFFSET = 16;
+
+    private final IEvaluatorContext context;
+
+    // Warning flag to warn only once in case of non-numeric data
+    private boolean isWarned;
 
     private IPointable inputVal = new VoidPointable();
     private IScalarEvaluator eval;
@@ -92,6 +98,7 @@ public abstract class AbstractSerializableAvgAggregateFunction extends AbstractS
     public AbstractSerializableAvgAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context,
             SourceLocation sourceLoc) throws HyracksDataException {
         super(sourceLoc);
+        this.context = context;
         eval = args[0].createScalarEvaluator(context);
     }
 
@@ -101,6 +108,7 @@ public abstract class AbstractSerializableAvgAggregateFunction extends AbstractS
             state.writeDouble(0.0);
             state.writeLong(0);
             state.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
+            isWarned = false;
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -136,17 +144,16 @@ public abstract class AbstractSerializableAvgAggregateFunction extends AbstractS
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            if (typeTag.ordinal() > aggType.ordinal()) {
-                throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.AVG, bytes[offset],
-                        aggType.serialize());
-            } else {
-                throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.AVG, aggType.serialize(),
-                        bytes[offset]);
+            // Issue warning only once and treat current tuple as null
+            if (!isWarned) {
+                isWarned = true;
+                ExceptionUtil.warnUnsupportedType(context, sourceLoc, getIdentifier().getName(), typeTag);
             }
+            processNull(state, start);
+            return;
         } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
             aggType = typeTag;
         }
-        ++count;
         switch (typeTag) {
             case TINYINT: {
                 byte val = AInt8SerializerDeserializer.getByte(bytes, offset + 1);
@@ -179,8 +186,15 @@ public abstract class AbstractSerializableAvgAggregateFunction extends AbstractS
                 break;
             }
             default:
-                throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.AVG, bytes[offset]);
+                // Issue warning only once and treat current tuple as null
+                if (!isWarned) {
+                    isWarned = true;
+                    ExceptionUtil.warnUnsupportedType(context, sourceLoc, getIdentifier().getName(), typeTag);
+                }
+                processNull(state, start);
+                return;
         }
+        count++;
         BufferSerDeUtil.writeDouble(sum, state, start + SUM_OFFSET);
         BufferSerDeUtil.writeLong(count, state, start + COUNT_OFFSET);
         state[start + AGG_TYPE_OFFSET] = aggType.serialize();
@@ -279,4 +293,8 @@ public abstract class AbstractSerializableAvgAggregateFunction extends AbstractS
         return false;
     }
 
+    // Function identifier
+    private FunctionIdentifier getIdentifier() {
+        return BuiltinFunctions.AVG;
+    }
 }
