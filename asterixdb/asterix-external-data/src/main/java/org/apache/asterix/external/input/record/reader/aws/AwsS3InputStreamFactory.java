@@ -89,7 +89,7 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
         ListObjectsRequest.Builder listObjectsBuilder = ListObjectsRequest.builder().bucket(container);
         String path = configuration.get(AwsS3Constants.DEFINITION_FIELD_NAME);
         if (path != null) {
-            listObjectsBuilder.prefix(path + (path.endsWith("/") ? "" : "/"));
+            listObjectsBuilder.prefix(path + (!path.isEmpty() && !path.endsWith("/") ? "/" : ""));
         }
         ListObjectsResponse listObjectsResponse = s3Client.listObjects(listObjectsBuilder.build());
         List<S3Object> s3Objects = listObjectsResponse.contents();
@@ -123,7 +123,6 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
             throw AsterixException.create(ErrorCode.PROVIDER_STREAM_RECORD_READER_UNKNOWN_FORMAT, fileFormat);
         }
 
-        // TODO(Hussain): We will have a property that can disable checking for .gz here
         s3Objects.stream().filter(object -> isValidFile(object.key(), fileFormat)).forEach(filesOnly::add);
 
         return filesOnly;

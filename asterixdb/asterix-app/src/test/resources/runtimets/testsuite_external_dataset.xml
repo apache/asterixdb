@@ -51,19 +51,20 @@
       <compilation-unit name="aws/s3/tsv/tsv">
         <output-dir compare="Text">aws/s3/tsv/tsv</output-dir>
       </compilation-unit>
-    </test-case><test-case FilePath="external-dataset">
-    <compilation-unit name="aws/s3/tsv/gz">
-      <output-dir compare="Text">aws/s3/tsv/gz</output-dir>
-    </compilation-unit>
-  </test-case><test-case FilePath="external-dataset">
-    <compilation-unit name="aws/s3/tsv/mixed">
-      <output-dir compare="Text">aws/s3/tsv/mixed</output-dir>
-    </compilation-unit>
-  </test-case>
+    </test-case>
     <test-case FilePath="external-dataset">
-      <compilation-unit name="aws/s3/negative">
-        <output-dir compare="Text">aws/s3/negative</output-dir>
-        <expected-error>Parameter(s) format must be specified</expected-error>
+      <compilation-unit name="aws/s3/tsv/gz">
+        <output-dir compare="Text">aws/s3/tsv/gz</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/tsv/mixed">
+        <output-dir compare="Text">aws/s3/tsv/mixed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/empty-string-definition">
+        <output-dir compare="Text">aws/s3/empty-string-definition</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

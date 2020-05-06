@@ -83,6 +83,7 @@ public class AwsS3ExternalDatasetTest {
     static String ONLY_TESTS;
     static String TEST_CONFIG_FILE_NAME;
     static Runnable PREPARE_S3_BUCKET;
+    static Runnable PREPARE_FIXED_DATA_BUCKET;
 
     // Base directory paths for data files
     private static final String JSON_DATA_PATH = joinPath("data", "json");
@@ -96,6 +97,7 @@ public class AwsS3ExternalDatasetTest {
     // Region, bucket and definitions
     private static final String S3_MOCK_SERVER_REGION = "us-west-2";
     private static final String S3_MOCK_SERVER_BUCKET = "playground";
+    private static final String S3_MOCK_SERVER_FIXED_DATA_BUCKET = "fixed-data-bucket"; // Do not use, has fixed data
     private static final String S3_MOCK_SERVER_BUCKET_JSON_DEFINITION = "json-data/reviews/"; // data resides here
     private static final String S3_MOCK_SERVER_BUCKET_CSV_DEFINITION = "csv-data/reviews/"; // data resides here
     private static final String S3_MOCK_SERVER_BUCKET_TSV_DEFINITION = "tsv-data/reviews/"; // data resides here
@@ -145,6 +147,7 @@ public class AwsS3ExternalDatasetTest {
         ONLY_TESTS = "only_external_dataset.xml";
         TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
         PREPARE_S3_BUCKET = AwsS3ExternalDatasetTest::prepareS3Bucket;
+        PREPARE_FIXED_DATA_BUCKET = AwsS3ExternalDatasetTest::prepareFixedDataBucket;
         return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
 
@@ -187,6 +190,7 @@ public class AwsS3ExternalDatasetTest {
 
         // Create the bucket and upload some json files
         PREPARE_S3_BUCKET.run();
+        PREPARE_FIXED_DATA_BUCKET.run();
     }
 
     /**
@@ -208,6 +212,26 @@ public class AwsS3ExternalDatasetTest {
         LOGGER.info("Adding TSV files to the bucket");
         loadTsvFiles();
         LOGGER.info("TSV Files added successfully");
+    }
+
+    /**
+     * This bucket is being filled by fixed data, a test is counting all records in this bucket. If this bucket is
+     * changed, the test case will fail and its result will need to be updated each time
+     */
+    private static void prepareFixedDataBucket() {
+        LOGGER.info("creating bucket " + S3_MOCK_SERVER_FIXED_DATA_BUCKET);
+        client.createBucket(CreateBucketRequest.builder().bucket(S3_MOCK_SERVER_FIXED_DATA_BUCKET).build());
+        LOGGER.info("bucket " + S3_MOCK_SERVER_FIXED_DATA_BUCKET + " created successfully");
+
+        LOGGER.info("Loading fixed data to " + S3_MOCK_SERVER_FIXED_DATA_BUCKET);
+
+        // Files data
+        RequestBody requestBody = RequestBody.fromFile(Paths.get(JSON_DATA_PATH, "single-line", "20-records.json"));
+        client.putObject(builder.bucket(S3_MOCK_SERVER_FIXED_DATA_BUCKET).key("1.json").build(), requestBody);
+        client.putObject(builder.bucket(S3_MOCK_SERVER_FIXED_DATA_BUCKET).key("2.json").build(), requestBody);
+        client.putObject(builder.bucket(S3_MOCK_SERVER_FIXED_DATA_BUCKET).key("lvl1/3.json").build(), requestBody);
+        client.putObject(builder.bucket(S3_MOCK_SERVER_FIXED_DATA_BUCKET).key("lvl1/4.json").build(), requestBody);
+        client.putObject(builder.bucket(S3_MOCK_SERVER_FIXED_DATA_BUCKET).key("lvl1/lvl2/5.json").build(), requestBody);
     }
 
     private static void loadJsonFiles() {

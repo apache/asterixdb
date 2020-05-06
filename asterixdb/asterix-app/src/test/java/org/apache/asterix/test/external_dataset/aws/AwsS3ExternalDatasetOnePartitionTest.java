@@ -44,9 +44,13 @@ public class AwsS3ExternalDatasetOnePartitionTest extends AwsS3ExternalDatasetTe
         ONLY_TESTS = "only_external_dataset.xml";
         TEST_CONFIG_FILE_NAME = "src/test/resources/cc-single.conf";
         PREPARE_S3_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareS3Bucket;
+        PREPARE_FIXED_DATA_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareFixedDataBucket;
         return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
 
     private static void prepareS3Bucket() {
+    }
+
+    private static void prepareFixedDataBucket() {
     }
 }
