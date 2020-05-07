@@ -27,8 +27,8 @@ create type test as open {
 
 drop dataset test if exists;
 create external dataset test(test) using S3 (
-("accessKey"="dummyAccessKey"),
-("secretKey"="dummySecretKey"),
+("accessKeyId"="dummyAccessKey"),
+("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="fixed-data-bucket"),

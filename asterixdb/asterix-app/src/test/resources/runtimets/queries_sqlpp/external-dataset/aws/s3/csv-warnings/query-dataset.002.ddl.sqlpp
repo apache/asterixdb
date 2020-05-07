@@ -28,8 +28,8 @@ CREATE TYPE t2 AS {f1: bigint, f2: bigint?, f3: double, f4: double?, f5: string,
 
 DROP DATASET ds1 IF EXISTS;
 CREATE EXTERNAL DATASET ds1(t1) USING S3 (
-("accessKey"="dummyAccessKey"),
-("secretKey"="dummySecretKey"),
+("accessKeyId"="dummyAccessKey"),
+("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),

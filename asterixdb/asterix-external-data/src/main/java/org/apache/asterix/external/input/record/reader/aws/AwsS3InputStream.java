@@ -131,9 +131,9 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
         S3ClientBuilder builder = S3Client.builder();
 
         // Credentials
-        String accessKey = configuration.get(AwsS3Constants.ACCESS_KEY_FIELD_NAME);
-        String secretKey = configuration.get(AwsS3Constants.SECRET_KEY_FIELD_NAME);
-        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
+        String accessKeyId = configuration.get(AwsS3Constants.ACCESS_KEY_ID_FIELD_NAME);
+        String secretAccessKey = configuration.get(AwsS3Constants.SECRET_ACCESS_KEY_FIELD_NAME);
+        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
         builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
 
         // Region

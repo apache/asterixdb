@@ -27,8 +27,8 @@ create type test as open {
 
 drop dataset test1 if exists;
 create external dataset test1(test) using S3 (
-("accessKey"="dummyAccessKey"),
-("secretKey"="dummySecretKey"),
+("accessKeyId"="dummyAccessKey"),
+("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),
@@ -38,8 +38,8 @@ create external dataset test1(test) using S3 (
 
 drop dataset test2 if exists;
 create external dataset test2(test) using S3 (
-("accessKey"="dummyAccessKey"),
-("secretKey"="dummySecretKey"),
+("accessKeyId"="dummyAccessKey"),
+("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),
@@ -49,8 +49,8 @@ create external dataset test2(test) using S3 (
 
 drop dataset test3 if exists;
 create external dataset test3(test) using S3 (
-("accessKey"="dummyAccessKey"),
-("secretKey"="dummySecretKey"),
+("accessKeyId"="dummyAccessKey"),
+("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),
@@ -60,8 +60,8 @@ create external dataset test3(test) using S3 (
 
 drop dataset test4 if exists;
 create external dataset test4(test) using S3 (
-("accessKey"="dummyAccessKey"),
-("secretKey"="dummySecretKey"),
+("accessKeyId"="dummyAccessKey"),
+("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),

@@ -21,8 +21,8 @@ USE test;
 
 DROP DATASET ds2 IF EXISTS;
 CREATE EXTERNAL DATASET ds2(t2) USING S3 (
-("accessKey"="dummyAccessKey"),
-("secretKey"="dummySecretKey"),
+("accessKeyId"="dummyAccessKey"),
+("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),

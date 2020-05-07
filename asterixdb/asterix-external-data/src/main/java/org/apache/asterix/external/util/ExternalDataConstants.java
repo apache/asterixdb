@@ -275,9 +275,12 @@ public class ExternalDataConstants {
     public static final String INVALID_VAL = "invalid value";
 
     public static class AwsS3Constants {
+        private AwsS3Constants() {
+        }
+
         public static final String REGION_FIELD_NAME = "region";
-        public static final String ACCESS_KEY_FIELD_NAME = "accessKey";
-        public static final String SECRET_KEY_FIELD_NAME = "secretKey";
+        public static final String ACCESS_KEY_ID_FIELD_NAME = "accessKeyId";
+        public static final String SECRET_ACCESS_KEY_FIELD_NAME = "secretAccessKey";
         public static final String CONTAINER_NAME_FIELD_NAME = "container";
         public static final String DEFINITION_FIELD_NAME = "definition";
         public static final String SERVICE_END_POINT_FIELD_NAME = "serviceEndpoint";
