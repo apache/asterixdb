@@ -59,7 +59,8 @@ To build AsterixDB from source, you should have a platform with the following:
 * A Unix-ish environment (Linux, OS X, will all do).
 * git
 * Maven 3.3.9 or newer.
-* Oracle JDK 8 or newer.
+* JDK 11 or newer.
+* Python 3.6+ with pip and venv
 
 Instructions for building the master:
 
@@ -83,13 +84,15 @@ Here are steps to get AsterixDB running on your local machine:
 
 * Good to go and run queries in your browser at:
 
-        http://localhost:19001
+        http://localhost:19006
 
 * Read more [documentation](https://ci.apache.org/projects/asterixdb/index.html) to learn the data model, query language, and how to create a cluster instance.
 
 ## Documentation
 
 * [master](https://ci.apache.org/projects/asterixdb/index.html) |
+  [0.9.4.1](http://asterixdb.apache.org/docs/0.9.4.1/index.html) |
+  [0.9.4](http://asterixdb.apache.org/docs/0.9.4/index.html) |
   [0.9.3](http://asterixdb.apache.org/docs/0.9.3/index.html) |
   [0.9.2](http://asterixdb.apache.org/docs/0.9.2/index.html) |
   [0.9.1](http://asterixdb.apache.org/docs/0.9.1/index.html) |
