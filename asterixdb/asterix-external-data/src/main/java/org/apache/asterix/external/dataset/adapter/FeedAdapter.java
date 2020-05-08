@@ -38,6 +38,11 @@ public class FeedAdapter implements IDataSourceAdapter, Closeable {
         controller.start(writer);
     }
 
+    @Override
+    public long getProcessedTuples() {
+        return controller.getProcessedTuples();
+    }
+
     public boolean stop(long timeout) throws HyracksDataException {
         return controller.stop(timeout);
     }

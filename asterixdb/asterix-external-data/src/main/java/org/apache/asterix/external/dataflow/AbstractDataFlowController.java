@@ -24,8 +24,14 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 public abstract class AbstractDataFlowController implements IDataFlowController {
 
     protected final IHyracksTaskContext ctx;
+    protected long processedTuples = 0;
 
     public AbstractDataFlowController(IHyracksTaskContext ctx) {
         this.ctx = ctx;
+    }
+
+    @Override
+    public long getProcessedTuples() {
+        return processedTuples;
     }
 }

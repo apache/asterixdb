@@ -44,6 +44,7 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController {
     @Override
     public void start(IFrameWriter writer) throws HyracksDataException {
         try {
+            processedTuples = 0;
             ArrayTupleBuilder tb = new ArrayTupleBuilder(numOfTupleFields);
             TupleForwarder tupleForwarder = new TupleForwarder(ctx, writer);
             while (recordReader.hasNext()) {
@@ -53,6 +54,7 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController {
                     tb.addFieldEndOffset();
                     appendOtherTupleFields(tb);
                     tupleForwarder.addTuple(tb);
+                    processedTuples++;
                 }
             }
             tupleForwarder.complete();

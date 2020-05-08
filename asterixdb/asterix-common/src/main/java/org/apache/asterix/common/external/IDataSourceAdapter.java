@@ -49,4 +49,11 @@ public interface IDataSourceAdapter {
      * @throws Exception
      */
     public void start(int partition, IFrameWriter writer) throws HyracksDataException, InterruptedException;
+
+    /**
+     * @return The number of processed tuples by this adapter
+     */
+    default long getProcessedTuples() {
+        throw new UnsupportedOperationException();
+    }
 }

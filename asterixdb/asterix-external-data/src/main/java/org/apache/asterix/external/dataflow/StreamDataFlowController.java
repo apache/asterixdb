@@ -35,6 +35,7 @@ public class StreamDataFlowController extends AbstractDataFlowController {
     @Override
     public void start(IFrameWriter writer) throws HyracksDataException {
         try {
+            processedTuples = 0;
             ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
             TupleForwarder tupleForwarder = new TupleForwarder(ctx, writer);
             while (true) {
@@ -44,6 +45,7 @@ public class StreamDataFlowController extends AbstractDataFlowController {
                 }
                 tb.addFieldEndOffset();
                 tupleForwarder.addTuple(tb);
+                processedTuples++;
             }
             tupleForwarder.complete();
         } catch (Exception e) {

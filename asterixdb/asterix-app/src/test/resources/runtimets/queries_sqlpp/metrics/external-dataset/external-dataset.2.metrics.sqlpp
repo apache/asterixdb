@@ -16,28 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.dataset.adapter;
+/*
+ * Description  : Processed objects metrics on external dataset
+ * Expected Res : Success
+ */
 
-import org.apache.asterix.common.external.IDataSourceAdapter;
-import org.apache.asterix.external.api.IDataFlowController;
-import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+USE test;
 
-public class GenericAdapter implements IDataSourceAdapter {
-
-    private final IDataFlowController controller;
-
-    public GenericAdapter(IDataFlowController controller) {
-        this.controller = controller;
-    }
-
-    @Override
-    public void start(int partition, IFrameWriter writer) throws HyracksDataException, InterruptedException {
-        controller.start(writer);
-    }
-
-    @Override
-    public long getProcessedTuples() {
-        return controller.getProcessedTuples();
-    }
-}
+SELECT COUNT(*) from ds1;
