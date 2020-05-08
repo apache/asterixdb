@@ -878,13 +878,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String dataverseName = getActiveDataverse(stmtCreateIndex.getDataverseName());
         String datasetName = stmtCreateIndex.getDatasetName().getValue();
         String indexName = stmtCreateIndex.getIndexName().getValue();
+        IndexType indexType = stmtCreateIndex.getIndexType();
         List<Integer> keySourceIndicators = stmtCreateIndex.getFieldSourceIndicators();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         String datasetFullyQualifiedName = dataverseName + "." + datasetName;
         boolean isSecondaryPrimary = stmtCreateIndex.getFieldExprs().isEmpty();
-        Dataset ds = null;
-        Index index = null;
+        Dataset ds;
+        Index index;
         MetadataLockUtil.createIndexBegin(lockManager, metadataProvider.getLocks(), dataverseName,
                 datasetFullyQualifiedName);
         try {
@@ -893,6 +894,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
                         dataverseName);
             }
+
+            DatasetType datasetType = ds.getDatasetType();
+            validateIndexType(datasetType, indexType, isSecondaryPrimary, sourceLoc);
 
             index = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
                     datasetName, indexName);
@@ -904,13 +908,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new CompilationException(ErrorCode.INDEX_EXISTS, sourceLoc, indexName);
                 }
             }
+
             // find keySourceIndicators for secondary primary index since the parser isn't aware of them
-            if (isSecondaryPrimary && ds.getDatasetType() == DatasetType.INTERNAL) {
+            if (isSecondaryPrimary && datasetType == DatasetType.INTERNAL) {
                 keySourceIndicators = ((InternalDatasetDetails) ds.getDatasetDetails()).getKeySourceIndicator();
-            }
-            // disable creating secondary primary index on an external dataset
-            if (isSecondaryPrimary && ds.getDatasetType() == DatasetType.EXTERNAL) {
-                throw new AsterixException(ErrorCode.CANNOT_CREATE_SEC_PRIMARY_IDX_ON_EXT_DATASET);
             }
             // disable creating an index on meta fields (fields with source indicator == 1 are meta fields)
             if (keySourceIndicators.stream().anyMatch(fieldSource -> fieldSource == 1) && !isSecondaryPrimary) {
@@ -956,9 +957,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 if (fieldExpr.second == null) {
                     fieldType = subType.getSubFieldType(fieldExpr.first.subList(i, fieldExpr.first.size()));
                 } else {
-                    if (!stmtCreateIndex.isEnforced() && stmtCreateIndex.getIndexType() != IndexType.BTREE) {
-                        throw new AsterixException(ErrorCode.INDEX_ILLEGAL_NON_ENFORCED_TYPED, sourceLoc,
-                                stmtCreateIndex.getIndexType());
+                    if (!stmtCreateIndex.isEnforced() && indexType != IndexType.BTREE) {
+                        throw new AsterixException(ErrorCode.INDEX_ILLEGAL_NON_ENFORCED_TYPED, sourceLoc, indexType);
                     }
                     if (stmtCreateIndex.isEnforced() && !fieldExpr.second.isUnknownable()) {
                         throw new AsterixException(ErrorCode.INDEX_ILLEGAL_ENFORCED_NON_OPTIONAL, sourceLoc,
@@ -1012,10 +1012,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // Currently, we do not support this. Therefore, as a temporary solution, we
             // print an
             // error message and stop.
-            if (stmtCreateIndex.getIndexType() == IndexType.SINGLE_PARTITION_WORD_INVIX
-                    || stmtCreateIndex.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX
-                    || stmtCreateIndex.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX
-                    || stmtCreateIndex.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
+            if (indexType == IndexType.SINGLE_PARTITION_WORD_INVIX
+                    || indexType == IndexType.SINGLE_PARTITION_NGRAM_INVIX
+                    || indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
+                    || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
                 List<List<String>> partitioningKeys = ds.getPrimaryKeys();
                 for (List<String> partitioningKey : partitioningKeys) {
                     IAType keyType = aRecordType.getSubFieldType(partitioningKey);
@@ -1032,9 +1032,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
-            Index newIndex = new Index(dataverseName, datasetName, indexName, stmtCreateIndex.getIndexType(),
-                    indexFields, keySourceIndicators, indexFieldTypes, stmtCreateIndex.getGramLength(),
-                    overridesFieldTypes, stmtCreateIndex.isEnforced(), false, MetadataUtil.PENDING_ADD_OP);
+            Index newIndex = new Index(dataverseName, datasetName, indexName, indexType, indexFields,
+                    keySourceIndicators, indexFieldTypes, stmtCreateIndex.getGramLength(), overridesFieldTypes,
+                    stmtCreateIndex.isEnforced(), false, MetadataUtil.PENDING_ADD_OP);
             doCreateIndex(hcc, metadataProvider, ds, newIndex, jobFlags, sourceLoc);
         } finally {
             metadataProvider.getLocks().unlock();
@@ -1282,6 +1282,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (datasetLocked) {
                 ExternalDatasetsRegistry.INSTANCE.buildIndexEnd(ds, firstExternalDatasetIndex);
             }
+        }
+    }
+
+    protected void validateIndexType(DatasetType datasetType, IndexType indexType, boolean isSecondaryPrimaryIndex,
+            SourceLocation sourceLoc) throws AlgebricksException {
+        // disable creating secondary primary index on an external dataset
+        if (datasetType == DatasetType.EXTERNAL && isSecondaryPrimaryIndex) {
+            throw new CompilationException(ErrorCode.CANNOT_CREATE_SEC_PRIMARY_IDX_ON_EXT_DATASET);
         }
     }
 
