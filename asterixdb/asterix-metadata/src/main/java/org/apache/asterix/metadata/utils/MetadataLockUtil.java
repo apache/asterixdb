@@ -55,14 +55,16 @@ public class MetadataLockUtil implements IMetadataLockUtil {
             DataverseName metaItemTypeDataverseName, String metaItemTypeName, String nodeGroupName,
             String compactionPolicyName, boolean isDefaultCompactionPolicy) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        if (!dataverseName.equals(itemTypeDataverseName)) {
+        if (itemTypeDataverseName != null && !dataverseName.equals(itemTypeDataverseName)) {
             lockMgr.acquireDataverseReadLock(locks, itemTypeDataverseName);
         }
         if (metaItemTypeDataverseName != null && !metaItemTypeDataverseName.equals(dataverseName)
                 && !metaItemTypeDataverseName.equals(itemTypeDataverseName)) {
             lockMgr.acquireDataverseReadLock(locks, metaItemTypeDataverseName);
         }
-        lockMgr.acquireDataTypeReadLock(locks, itemTypeDataverseName, itemTypeName);
+        if (itemTypeName != null) {
+            lockMgr.acquireDataTypeReadLock(locks, itemTypeDataverseName, itemTypeName);
+        }
         if (metaItemTypeDataverseName != null && !metaItemTypeDataverseName.equals(itemTypeDataverseName)
                 && !metaItemTypeName.equals(itemTypeName)) {
             lockMgr.acquireDataTypeReadLock(locks, metaItemTypeDataverseName, metaItemTypeName);

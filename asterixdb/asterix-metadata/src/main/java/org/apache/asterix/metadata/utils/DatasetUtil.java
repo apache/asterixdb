@@ -100,6 +100,8 @@ public class DatasetUtil {
      */
     public static final byte OP_UPSERT = 0x03;
 
+    private static final String DATASET_INLINE_TYPE_PREFIX = "$d$t$";
+
     private DatasetUtil() {
     }
 
@@ -208,9 +210,13 @@ public class DatasetUtil {
      * field is actually a key by making sure the field is coming from the right record (data record or meta record),
      * e.g. if the field name happens to be equal to the key name but the field is coming from the data record while
      * the key is coming from the meta record.
-     * @param keySourceIndicator indicates where the key is coming from, 1 from meta record, 0 from data record
-     * @param keyIndex the key index we're checking the field against
-     * @param fieldFromMeta whether the field is coming from the meta record or the data record
+     *
+     * @param keySourceIndicator
+     *            indicates where the key is coming from, 1 from meta record, 0 from data record
+     * @param keyIndex
+     *            the key index we're checking the field against
+     * @param fieldFromMeta
+     *            whether the field is coming from the meta record or the data record
      * @return true if the key source matches the field source. Otherwise, false.
      */
     private static boolean keySourceMatches(List<Integer> keySourceIndicator, int keyIndex, boolean fieldFromMeta) {
@@ -590,4 +596,12 @@ public class DatasetUtil {
         return nodeGroup;
     }
 
+    public static String createInlineTypeName(String datasetName, boolean forMetaItemType) {
+        char typeChar = forMetaItemType ? 'm' : 'i';
+        return DATASET_INLINE_TYPE_PREFIX + typeChar + '$' + datasetName;
+    }
+
+    public static boolean isInlineTypeName(Dataset dataset, DataverseName typeDataverseName, String typeName) {
+        return dataset.getDataverseName().equals(typeDataverseName) && typeName.startsWith(DATASET_INLINE_TYPE_PREFIX);
+    }
 }
