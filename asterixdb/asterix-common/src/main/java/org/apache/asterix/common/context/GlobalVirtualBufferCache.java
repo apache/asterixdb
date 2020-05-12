@@ -123,7 +123,9 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
             int pos = primaryIndexes.indexOf(index);
             if (pos >= 0) {
                 primaryIndexes.remove(index);
-                if (flushPtr > pos) {
+                if (primaryIndexes.isEmpty()) {
+                    flushPtr = 0;
+                } else if (flushPtr > pos) {
                     // If the removed index is before flushPtr, we should decrement flushPtr by 1 so that
                     // it still points to the same index.
                     flushPtr = (flushPtr - 1) % primaryIndexes.size();
