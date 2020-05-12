@@ -24,6 +24,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.CR;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.LF;
 import static org.apache.asterix.external.util.ExternalDataConstants.OPEN_BRACKET;
+import static org.apache.asterix.external.util.ExternalDataConstants.REC_ENDED_AT_EOF;
 import static org.apache.asterix.external.util.ExternalDataConstants.SPACE;
 import static org.apache.asterix.external.util.ExternalDataConstants.TAB;
 
@@ -32,14 +33,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.LongSupplier;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.ParseUtil;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class SemiStructuredRecordReader extends StreamRecordReader {
 
@@ -50,6 +54,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
         AFTER_COMMA // valid chars at this state: '{' to start a new nested record
     }
 
+    private IWarningCollector warnings;
     private int depth;
     private boolean prevCharEscape;
     private boolean inString;
@@ -57,8 +62,10 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
     private char recordEnd;
     private boolean hasStarted;
     private boolean hasFinished;
-    private int recordNumber = 0;
+    private boolean isLastCharCR;
     private State state = State.TOP_LEVEL;
+    private long beginLineNumber = 1;
+    private long lineNumber = 1;
 
     private static final List<String> recordReaderFormats = Collections.unmodifiableList(
             Arrays.asList(ExternalDataConstants.FORMAT_ADM, ExternalDataConstants.FORMAT_JSON_LOWER_CASE,
@@ -70,6 +77,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
             throws HyracksDataException {
         super.configure(stream, config);
         stream.setNotificationHandler(this);
+        warnings = ctx.getWarningCollector();
         // set record opening char
         recordStart = ExternalDataUtils.validateGetRecordStart(config);
         // set record ending char
@@ -81,16 +89,22 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
 
     @Override
     public void notifyNewSource() {
-        if (hasStarted) {
-            // TODO(ali): WARN
+        if (hasStarted && warnings.shouldWarn()) {
+            ParseUtil.warn(warnings, getPreviousStreamName(), lineNumber, 0, REC_ENDED_AT_EOF);
         }
-        recordNumber = 0;
+        beginLineNumber = 1;
+        lineNumber = 1;
         state = State.TOP_LEVEL;
         resetForNewRecord();
     }
 
-    public int getRecordNumber() {
-        return recordNumber;
+    @Override
+    public LongSupplier getLineNumber() {
+        return this::getBeginLineNumber;
+    }
+
+    private long getBeginLineNumber() {
+        return beginLineNumber;
     }
 
     @Override
@@ -99,12 +113,16 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
             return false;
         }
         resetForNewRecord();
+        beginLineNumber = lineNumber;
         do {
             int startPosn = bufferPosn; // starting from where we left off the last time
             if (bufferPosn >= bufferLength) {
                 startPosn = bufferPosn = 0;
                 bufferLength = reader.read(inputBuffer);
                 if (bufferLength < 0) {
+                    if (hasStarted && warnings.shouldWarn()) {
+                        ParseUtil.warn(warnings, getDataSourceName().get(), lineNumber, 0, REC_ENDED_AT_EOF);
+                    }
                     close();
                     return false; // EOF
                 }
@@ -112,6 +130,10 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
             if (!hasStarted) {
                 for (; bufferPosn < bufferLength; ++bufferPosn) { // search for record begin
                     char c = inputBuffer[bufferPosn];
+                    if (c == LF || isLastCharCR) {
+                        lineNumber++;
+                    }
+                    isLastCharCR = c == CR;
                     if (c == SPACE || c == TAB || c == LF || c == CR) {
                         continue;
                     }
@@ -144,18 +166,22 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
             }
             if (hasStarted) {
                 for (; bufferPosn < bufferLength; ++bufferPosn) {
+                    char c = inputBuffer[bufferPosn];
+                    if (c == LF || isLastCharCR) {
+                        lineNumber++;
+                    }
                     if (inString) {
                         // we are in a string, we only care about the string end
-                        if (inputBuffer[bufferPosn] == ExternalDataConstants.QUOTE && !prevCharEscape) {
+                        if (c == ExternalDataConstants.QUOTE && !prevCharEscape) {
                             inString = false;
                         }
-                        prevCharEscape = inputBuffer[bufferPosn] == ExternalDataConstants.ESCAPE && !prevCharEscape;
+                        prevCharEscape = c == ExternalDataConstants.ESCAPE && !prevCharEscape;
                     } else {
-                        if (inputBuffer[bufferPosn] == ExternalDataConstants.QUOTE) {
+                        if (c == ExternalDataConstants.QUOTE) {
                             inString = true;
-                        } else if (inputBuffer[bufferPosn] == recordStart) {
+                        } else if (c == recordStart) {
                             depth += 1;
-                        } else if (inputBuffer[bufferPosn] == recordEnd) {
+                        } else if (c == recordEnd) {
                             depth -= 1;
                             if (depth == 0) {
                                 hasFinished = true;
@@ -164,6 +190,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
                             }
                         }
                     }
+                    isLastCharCR = c == CR;
                 }
             }
 
@@ -179,7 +206,6 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
             }
         } while (!hasFinished);
         record.endRecord();
-        recordNumber++;
         return true;
     }
 
@@ -198,6 +224,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
         hasStarted = false;
         hasFinished = false;
         prevCharEscape = false;
+        isLastCharCR = false;
         inString = false;
         depth = 0;
     }

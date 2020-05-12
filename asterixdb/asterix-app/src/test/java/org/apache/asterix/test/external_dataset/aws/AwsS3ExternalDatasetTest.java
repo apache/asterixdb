@@ -28,6 +28,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -385,11 +386,11 @@ public class AwsS3ExternalDatasetTest {
         public void executeTestFile(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
                 String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, TestCase.CompilationUnit cUnit,
                 MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
-                MutableInt actualWarnCount) throws Exception {
+                BitSet expectedWarnings) throws Exception {
             String[] lines;
             switch (ctx.getType()) {
                 case "s3bucket":
-                    // <bucket_name> <def_name> <sub-path:src_file1,sub-path:src_file2,sub-path:src_file3>
+                    // <bucket> <def> <sub-path:new_fname:src_file1,sub-path:new_fname:src_file2,sub-path:src_file3>
                     lines = TestExecutor.stripAllComments(statement).trim().split("\n");
                     String lastLine = lines[lines.length - 1];
                     String[] command = lastLine.trim().split(" ");
@@ -401,7 +402,7 @@ public class AwsS3ExternalDatasetTest {
                     break;
                 default:
                     super.executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
-                            queryCount, expectedResultFileCtxs, testFile, actualPath, actualWarnCount);
+                            queryCount, expectedResultFileCtxs, testFile, actualPath, expectedWarnings);
             }
         }
     }
@@ -425,23 +426,37 @@ public class AwsS3ExternalDatasetTest {
             int size = s3pathAndSourceFile.length;
             String path;
             String sourceFilePath;
-            String sourceFileName;
+            String uploadedFileName;
             if (size == 1) {
                 // case: playground json-data/reviews SOURCE_FILE1,SOURCE_FILE2
                 path = definitionPath;
                 sourceFilePath = s3pathAndSourceFile[0];
-                sourceFileName = FilenameUtils.getName(s3pathAndSourceFile[0]);
-            } else {
+                uploadedFileName = FilenameUtils.getName(s3pathAndSourceFile[0]);
+            } else if (size == 2) {
                 // case: playground json-data/reviews level1/sub-level:SOURCE_FILE1,level2/sub-level:SOURCE_FILE2
+                String subPathOrNewFileName = s3pathAndSourceFile[0];
+                if (subPathOrNewFileName.startsWith("$$")) {
+                    path = definitionPath;
+                    sourceFilePath = s3pathAndSourceFile[1];
+                    uploadedFileName = subPathOrNewFileName.substring(2);
+                } else {
+                    path = definitionPath + subPathOrNewFileName + (subPathOrNewFileName.endsWith("/") ? "" : "/");
+                    sourceFilePath = s3pathAndSourceFile[1];
+                    uploadedFileName = FilenameUtils.getName(s3pathAndSourceFile[1]);
+                }
+            } else if (size == 3) {
                 path = definitionPath + s3pathAndSourceFile[0] + (s3pathAndSourceFile[0].endsWith("/") ? "" : "/");
-                sourceFilePath = s3pathAndSourceFile[1];
-                sourceFileName = FilenameUtils.getName(s3pathAndSourceFile[1]);
+                uploadedFileName = s3pathAndSourceFile[1];
+                sourceFilePath = s3pathAndSourceFile[2];
+
+            } else {
+                throw new IllegalArgumentException();
             }
 
-            String keyPath = path + sourceFileName;
+            String keyPath = path + uploadedFileName;
             int k = 1;
             while (fileNames.contains(keyPath)) {
-                keyPath = path + (k++) + sourceFileName;
+                keyPath = path + (k++) + uploadedFileName;
             }
             fileNames.add(keyPath);
             client.putObject(PUT_OBJECT_BUILDER.bucket(bucketName).key(keyPath).build(),

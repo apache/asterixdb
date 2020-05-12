@@ -23,8 +23,10 @@ USE test;
 
 DROP TYPE t1 IF EXISTS;
 DROP TYPE t2 IF EXISTS;
+DROP TYPE t3 IF EXISTS;
 CREATE TYPE t1 AS {f1: int, f2: int, f3: int, f4: string};
 CREATE TYPE t2 AS {f1: bigint, f2: bigint?, f3: double, f4: double?, f5: string, f6: string?, f7: boolean, f8: boolean?};
+CREATE TYPE t3 AS {f1: bigint, f2: string, f3: string};
 
 DROP DATASET ds1 IF EXISTS;
 CREATE EXTERNAL DATASET ds1(t1) USING S3 (

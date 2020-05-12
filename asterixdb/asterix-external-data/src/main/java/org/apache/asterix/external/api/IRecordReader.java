@@ -20,6 +20,7 @@ package org.apache.asterix.external.api;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
@@ -89,5 +90,9 @@ public interface IRecordReader<T> extends Closeable {
 
     default Supplier<String> getDataSourceName() {
         return ExternalDataConstants.EMPTY_STRING;
+    }
+
+    default LongSupplier getLineNumber() {
+        return ExternalDataConstants.NO_LINES;
     }
 }

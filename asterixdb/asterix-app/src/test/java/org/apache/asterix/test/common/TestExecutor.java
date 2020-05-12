@@ -45,6 +45,7 @@ import java.text.MessageFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,6 +54,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -65,6 +67,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.asterix.api.http.server.QueryServiceRequestParameters;
@@ -159,9 +162,9 @@ public class TestExecutor {
     private static final ContentType TEXT_PLAIN_UTF8 = ContentType.create(HttpUtil.ContentType.APPLICATION_JSON, UTF_8);
 
     private final IPollTask plainExecutor = (testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
-            queryCount, expectedResultFileCtxs, testFile, actualPath, actualWarnCount) -> executeTestFile(testCaseCtx,
+            queryCount, expectedResultFileCtxs, testFile, actualPath, expectedWarnings) -> executeTestFile(testCaseCtx,
                     ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount, expectedResultFileCtxs,
-                    testFile, actualPath, actualWarnCount);
+                    testFile, actualPath, expectedWarnings);
 
     public static final String DELIVERY_ASYNC = "async";
     public static final String DELIVERY_DEFERRED = "deferred";
@@ -947,7 +950,7 @@ public class TestExecutor {
     public void executeTestFile(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
             String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit,
             MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
-            MutableInt actualWarnCount) throws Exception {
+            BitSet expectedWarnings) throws Exception {
         InputStream resultStream;
         File qbcFile;
         boolean failed = false;
@@ -975,11 +978,11 @@ public class TestExecutor {
             case "pollquery":
                 poll(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
                         expectedResultFileCtxs, testFile, actualPath, ctx.getType().substring("poll".length()),
-                        actualWarnCount, plainExecutor);
+                        expectedWarnings, plainExecutor);
                 break;
             case "polldynamic":
                 polldynamic(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
-                        expectedResultFileCtxs, testFile, actualPath, actualWarnCount);
+                        expectedResultFileCtxs, testFile, actualPath, expectedWarnings);
                 break;
             case "query":
             case "async":
@@ -1006,7 +1009,7 @@ public class TestExecutor {
 
                 if (testCaseCtx.getTestCase().isCheckWarnings()) {
                     boolean expectedSourceLoc = testCaseCtx.isSourceLocationExpected(cUnit);
-                    validateWarnings(extractedResult.getWarnings(), cUnit.getExpectedWarn(), actualWarnCount,
+                    validateWarnings(extractedResult.getWarnings(), cUnit.getExpectedWarn(), expectedWarnings,
                             expectedSourceLoc);
                 }
                 break;
@@ -1413,17 +1416,17 @@ public class TestExecutor {
     private void polldynamic(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
             String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit,
             MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
-            MutableInt actualWarnCount) throws Exception {
+            BitSet expectedWarnings) throws Exception {
         IExpectedResultPoller poller = getExpectedResultPoller(statement);
         final String key = getKey(statement);
         poll(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount, expectedResultFileCtxs,
-                testFile, actualPath, "validate", actualWarnCount, new IPollTask() {
+                testFile, actualPath, "validate", expectedWarnings, new IPollTask() {
                     @Override
                     public void execute(TestCaseContext testCaseCtx, TestFileContext ctx,
                             Map<String, Object> variableCtx, String statement, boolean isDmlRecoveryTest,
                             ProcessBuilder pb, CompilationUnit cUnit, MutableInt queryCount,
                             List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
-                            MutableInt actualWarnCount) throws Exception {
+                            BitSet expectedWarnings) throws Exception {
                         File actualResultFile = new File(actualPath, testCaseCtx.getTestCase().getFilePath()
                                 + File.separatorChar + cUnit.getName() + '.' + ctx.getSeqNum() + ".polled.adm");
                         if (actualResultFile.exists() && !actualResultFile.delete()) {
@@ -1461,7 +1464,7 @@ public class TestExecutor {
     private void poll(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
             String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit,
             MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
-            String newType, MutableInt actualWarnCount, IPollTask pollTask) throws Exception {
+            String newType, BitSet expectedWarnings, IPollTask pollTask) throws Exception {
         // polltimeoutsecs=nnn, polldelaysecs=nnn
         int timeoutSecs = getTimeoutSecs(statement);
         int retryDelaySecs = getRetryDelaySecs(statement);
@@ -1484,7 +1487,7 @@ public class TestExecutor {
                         try {
                             startSemaphore.release();
                             pollTask.execute(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
-                                    queryCount, expectedResultFileCtxs, testFile, actualPath, actualWarnCount);
+                                    queryCount, expectedResultFileCtxs, testFile, actualPath, expectedWarnings);
                         } finally {
                             endSemaphore.release();
                         }
@@ -1798,7 +1801,8 @@ public class TestExecutor {
         for (CompilationUnit cUnit : cUnits) {
             List<String> expectedErrors = cUnit.getExpectedError();
             int expectedWarnCount = cUnit.getExpectedWarn().size();
-            MutableInt actualWarnCount = new MutableInt(0);
+            BitSet expectedWarnings = new BitSet(cUnit.getExpectedWarn().size());
+            expectedWarnings.set(0, cUnit.getExpectedWarn().size());
             LOGGER.info(
                     "Starting [TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " ... ");
             Map<String, Object> variableCtx = new HashMap<>();
@@ -1818,7 +1822,7 @@ public class TestExecutor {
                 try {
                     if (!testFile.getName().startsWith(DIAGNOSE)) {
                         executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
-                                queryCount, expectedResultFileCtxs, testFile, actualPath, actualWarnCount);
+                                queryCount, expectedResultFileCtxs, testFile, actualPath, expectedWarnings);
                     }
                 } catch (TestLoop loop) {
                     // rewind the iterator until we find our target
@@ -1850,7 +1854,7 @@ public class TestExecutor {
                         throw new Exception(
                                 "Test \"" + cUnit.getName() + "\" FAILED; expected exception was not thrown...");
                     }
-                    ensureWarnings(actualWarnCount.getValue(), expectedWarnCount, cUnit);
+                    ensureWarnings(expectedWarnings, cUnit);
                     LOGGER.info(
                             "[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " PASSED ");
                     if (passedGroup != null) {
@@ -1873,7 +1877,7 @@ public class TestExecutor {
                         final File file = ctx.getFile();
                         final String statement = readTestFile(file);
                         executeTestFile(testCaseCtx, ctx, variableCtx, statement, false, pb, cUnit, new MutableInt(-1),
-                                Collections.emptyList(), file, null, new MutableInt(-1));
+                                Collections.emptyList(), file, null, new BitSet());
                     }
                 }
             } catch (Exception diagnosticFailure) {
@@ -2074,9 +2078,17 @@ public class TestExecutor {
         LOGGER.info("Cluster state now " + desiredState);
     }
 
-    protected void ensureWarnings(int actualWarnCount, int expectedWarnCount, CompilationUnit cUnit) throws Exception {
-        if (actualWarnCount < expectedWarnCount) {
-            LOGGER.error("Test {} failed to raise (an) expected warning(s)", cUnit.getName());
+    protected void ensureWarnings(BitSet expectedWarnings, CompilationUnit cUnit) throws Exception {
+        boolean fail = !expectedWarnings.isEmpty();
+        if (fail) {
+            LOGGER.error("Test {} failed to raise (an) expected warning(s):", cUnit.getName());
+        }
+        List<String> expectedWarn = cUnit.getExpectedWarn();
+        for (int i = expectedWarnings.nextSetBit(0); i >= 0; i = expectedWarnings.nextSetBit(i + 1)) {
+            String warning = expectedWarn.get(i);
+            LOGGER.error(warning);
+        }
+        if (fail) {
             throw new Exception("Test \"" + cUnit.getName() + "\" FAILED; expected warning(s) was not returned...");
         }
     }
@@ -2212,22 +2224,30 @@ public class TestExecutor {
         return extension.endsWith(AQL) ? getEndpoint(Servlets.QUERY_AQL) : getEndpoint(Servlets.QUERY_SERVICE);
     }
 
-    private void validateWarnings(List<String> actualWarnings, List<String> expectedWarn, MutableInt actualWarnCount,
+    private void validateWarnings(List<String> actualWarnings, List<String> expectedWarn, BitSet expectedWarnings,
             boolean expectedSourceLoc) throws Exception {
         if (actualWarnings != null) {
             for (String actualWarn : actualWarnings) {
-                if (expectedWarn.stream().noneMatch(actualWarn::contains)) {
-                    throw new Exception("unexpected warning was encountered (" + actualWarn + ")");
+                OptionalInt first = IntStream.range(0, expectedWarn.size())
+                        .filter(i -> actualWarn.contains(expectedWarn.get(i)) && expectedWarnings.get(i)).findFirst();
+                if (!first.isPresent()) {
+                    String msg = "unexpected warning was encountered or has already been matched (" + actualWarn + ")";
+                    LOGGER.error(msg);
+                    if (!expectedWarnings.isEmpty()) {
+                        LOGGER.error("was expecting the following warnings: ");
+                    }
+                    for (int i = expectedWarnings.nextSetBit(0); i >= 0; i = expectedWarnings.nextSetBit(i + 1)) {
+                        LOGGER.error(expectedWarn.get(i));
+                    }
+                    throw new Exception(msg);
                 }
                 if (expectedSourceLoc && !containsSourceLocation(actualWarn)) {
                     throw new Exception(MessageFormat.format(
                             "Expected to find source location \"{}, {}\" in warning text: +++++{}+++++",
                             ERR_MSG_SRC_LOC_LINE_REGEX, ERR_MSG_SRC_LOC_COLUMN_REGEX, actualWarn));
                 }
-                actualWarnCount.increment();
-                if (actualWarnCount.getValue() > expectedWarn.size()) {
-                    throw new Exception("returned warnings exceeded expected warnings");
-                }
+                int warningIndex = first.getAsInt();
+                expectedWarnings.clear(warningIndex);
             }
         }
     }

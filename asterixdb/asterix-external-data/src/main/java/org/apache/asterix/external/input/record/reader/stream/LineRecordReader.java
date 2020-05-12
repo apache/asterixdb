@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.LongSupplier;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -35,7 +36,8 @@ public class LineRecordReader extends StreamRecordReader {
     protected boolean hasHeader;
     protected boolean prevCharCR;
     protected int newlineLength;
-    protected int recordNumber = 0;
+    protected long beginLineNumber = 1;
+    protected long lineNumber = 1;
     protected boolean newSource = false;
     private static final List<String> recordReaderFormats =
             Collections.unmodifiableList(Arrays.asList(ExternalDataConstants.FORMAT_DELIMITED_TEXT,
@@ -60,7 +62,8 @@ public class LineRecordReader extends StreamRecordReader {
     public void resetForNewSource() {
         super.resetForNewSource();
         newSource = true;
-        recordNumber = 0;
+        beginLineNumber = 1;
+        lineNumber = 1;
         prevCharCR = false;
         newlineLength = 0;
     }
@@ -98,6 +101,7 @@ public class LineRecordReader extends StreamRecordReader {
              * consuming it until we have a chance to look at the char that
              * follows.
              */
+            beginLineNumber = lineNumber;
             newlineLength = 0; //length of terminating newline
             prevCharCR = false; //true of prev char was CR
             record.reset();
@@ -120,9 +124,11 @@ public class LineRecordReader extends StreamRecordReader {
                     if (inputBuffer[bufferPosn] == ExternalDataConstants.LF) {
                         newlineLength = (prevCharCR) ? 2 : 1;
                         ++bufferPosn; // at next invocation proceed from following byte
+                        ++lineNumber;
                         break;
                     }
                     if (prevCharCR) { //CR + notLF, we are at notLF
+                        ++lineNumber;
                         newlineLength = 1;
                         break;
                     }
@@ -140,8 +146,16 @@ public class LineRecordReader extends StreamRecordReader {
                 newSource = false;
                 continue;
             }
-            recordNumber++;
             return true;
         }
+    }
+
+    @Override
+    public LongSupplier getLineNumber() {
+        return this::getBeginLineNumber;
+    }
+
+    private long getBeginLineNumber() {
+        return beginLineNumber;
     }
 }

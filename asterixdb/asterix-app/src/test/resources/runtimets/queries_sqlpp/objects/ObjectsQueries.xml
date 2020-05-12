@@ -223,7 +223,7 @@
       <expected-warn>Duplicate field name "name" (in line 22, at column 30)</expected-warn>
       <expected-warn>Duplicate field name "id" (in line 22, at column 56)</expected-warn>
       <expected-warn>Duplicate field name "f1" (in line 22, at column 70)</expected-warn>
-      <expected-warn>Duplicate field name "id" (in line 22, at column 36)</expected-warn>
+      <expected-warn>Duplicate field name "id" (in line 22, at column 56)</expected-warn>
       <expected-warn>Duplicate field name "f1" (in line 22, at column 83)</expected-warn>
       <expected-warn>Duplicate field name "fname1" (in line 25, at column 45)</expected-warn>
     </compilation-unit>

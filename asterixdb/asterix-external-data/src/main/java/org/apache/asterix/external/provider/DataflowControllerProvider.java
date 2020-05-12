@@ -71,7 +71,7 @@ public class DataflowControllerProvider {
                     IRecordDataParserFactory<?> recordParserFactory = (IRecordDataParserFactory<?>) dataParserFactory;
                     IRecordDataParser<?> dataParser = recordParserFactory.createRecordParser(ctx);
                     // TODO(ali): revisit to think about passing data source name via setter or via createRecordParser
-                    dataParser.setDataSourceName(recordReader.getDataSourceName());
+                    dataParser.configure(recordReader.getDataSourceName(), recordReader.getLineNumber());
                     if (indexingOp) {
                         return new IndexingDataFlowController(ctx, dataParser, recordReader,
                                 ((IIndexingDatasource) recordReader).getIndexer());

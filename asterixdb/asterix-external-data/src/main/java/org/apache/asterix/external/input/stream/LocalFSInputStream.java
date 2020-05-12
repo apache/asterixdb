@@ -37,6 +37,7 @@ public class LocalFSInputStream extends AbstractMultipleInputStream {
     private static final Logger LOGGER = LogManager.getLogger();
     private final FileSystemWatcher watcher;
     private File currentFile;
+    private String lastFileName = "";
 
     public LocalFSInputStream(FileSystemWatcher watcher) {
         this.watcher = watcher;
@@ -90,6 +91,10 @@ public class LocalFSInputStream extends AbstractMultipleInputStream {
 
     @Override
     protected boolean advance() throws IOException {
+        String tmpLastFileName = "";
+        if (currentFile != null) {
+            tmpLastFileName = currentFile.getPath();
+        }
         closeFile();
         currentFile = watcher.poll();
         if (currentFile == null) {
@@ -100,6 +105,7 @@ public class LocalFSInputStream extends AbstractMultipleInputStream {
         }
         if (currentFile != null) {
             in = new FileInputStream(currentFile);
+            lastFileName = tmpLastFileName;
             if (notificationHandler != null) {
                 notificationHandler.notifyNewSource();
             }
@@ -155,5 +161,10 @@ public class LocalFSInputStream extends AbstractMultipleInputStream {
     @Override
     public String getStreamName() {
         return currentFile == null ? "" : currentFile.getPath();
+    }
+
+    @Override
+    public String getPreviousStreamName() {
+        return lastFileName;
     }
 }

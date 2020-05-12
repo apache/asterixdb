@@ -19,6 +19,7 @@
 package org.apache.asterix.test.common;
 
 import java.io.File;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 
@@ -43,11 +44,11 @@ public interface IPollTask {
      * @param expectedResultFileCtxs
      * @param testFile
      * @param actualPath
-     * @param actualWarnCount
+     * @param expectedWarnings
      */
     void execute(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx, String statement,
             boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit, MutableInt queryCount,
-            List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath, MutableInt actualWarnCount)
+            List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath, BitSet expectedWarnings)
             throws Exception;
 
 }

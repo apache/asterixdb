@@ -19,6 +19,7 @@
 package org.apache.asterix.external.api;
 
 import java.io.DataOutput;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -40,11 +41,11 @@ public interface IRecordDataParser<T> extends IDataParser {
     public boolean parse(IRawRecord<? extends T> record, DataOutput out) throws HyracksDataException;
 
     /**
-     * Sets the data source name supplier that this parser is receiving records from. The data source name could be
-     * used for reporting, for example.
+     * Configures the parser with information suppliers from the {@link IRecordReader} data source.
      *
      * @param dataSourceName data source name supplier
+     * @param lineNumber line number supplier
      */
-    default void setDataSourceName(Supplier<String> dataSourceName) {
+    default void configure(Supplier<String> dataSourceName, LongSupplier lineNumber) {
     }
 }

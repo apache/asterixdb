@@ -131,4 +131,8 @@ public class AsterixInputStreamReader extends Reader {
     public String getStreamName() {
         return in.getStreamName();
     }
+
+    public String getPreviousStreamName() {
+        return in.getPreviousStreamName();
+    }
 }

@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -129,8 +130,7 @@ public class CancellationTestExecutor extends TestExecutor {
     }
 
     @Override
-    protected void ensureWarnings(int actualWarnCount, int expectedWarnCount, TestCase.CompilationUnit cUnit)
-            throws Exception {
+    protected void ensureWarnings(BitSet expectedWarnings, TestCase.CompilationUnit cUnit) throws Exception {
         // skip checking warnings as currently cancelled queries with warnings might not run successfully at all
     }
 }

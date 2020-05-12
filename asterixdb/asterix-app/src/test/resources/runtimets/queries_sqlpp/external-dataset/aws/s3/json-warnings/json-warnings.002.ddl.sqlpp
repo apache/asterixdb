@@ -16,23 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.util;
 
-import org.apache.hyracks.api.exceptions.ErrorCode;
-import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.SourceLocation;
-import org.apache.hyracks.api.exceptions.Warning;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
 
-public class ParseUtil {
+DROP TYPE t1 IF EXISTS;
+CREATE TYPE t1 AS {};
 
-    private static final SourceLocation SRC_LOC = new SourceLocation(-1, -1);
-
-    private ParseUtil() {
-    }
-
-    public static void warn(IWarningCollector warningCollector, String dataSourceName, long lineNum, int fieldNum,
-            String warnMessage) {
-        warningCollector.warn(
-                Warning.forHyracks(SRC_LOC, ErrorCode.PARSING_ERROR, dataSourceName, lineNum, fieldNum, warnMessage));
-    }
-}
+DROP DATASET ds1 IF EXISTS;
+CREATE EXTERNAL DATASET ds1(t1) USING S3 (
+("accessKeyId"="dummyAccessKey"),
+("secretAccessKey"="dummySecretKey"),
+("region"="us-west-2"),
+("serviceEndpoint"="http://localhost:8001"),
+("container"="playground"),
+("definition"="data_dir"),
+("format"="JSON")
+);

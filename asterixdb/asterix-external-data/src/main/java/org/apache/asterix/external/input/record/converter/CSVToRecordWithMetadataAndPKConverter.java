@@ -19,6 +19,7 @@
 package org.apache.asterix.external.input.record.converter;
 
 import java.io.IOException;
+import java.util.function.LongSupplier;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -38,6 +39,7 @@ public class CSVToRecordWithMetadataAndPKConverter
     private final int valueIndex;
     private final RecordWithMetadataAndPK<char[]> recordWithMetadata;
     private final CharArrayRecord record;
+    private LongSupplier lineNumber = ExternalDataConstants.NO_LINES;
 
     public CSVToRecordWithMetadataAndPKConverter(final int valueIndex, final char delimiter, final ARecordType metaType,
             final ARecordType recordType, final int[] keyIndicator, final int[] keyIndexes, final IAType[] keyTypes,
@@ -54,7 +56,7 @@ public class CSVToRecordWithMetadataAndPKConverter
     public RecordWithMetadataAndPK<char[]> convert(final IRawRecord<? extends char[]> input) throws IOException {
         record.reset();
         recordWithMetadata.reset();
-        cursor.nextRecord(input.get(), input.size());
+        cursor.nextRecord(input.get(), input.size(), lineNumber.getAsLong());
         int i = 0;
         int j = 0;
         FieldCursorForDelimitedDataParser.Result lastResult;
@@ -76,5 +78,10 @@ public class CSVToRecordWithMetadataAndPKConverter
             throw new RuntimeDataException(ErrorCode.FAILED_TO_PARSE_RECORD);
         }
         return recordWithMetadata;
+    }
+
+    @Override
+    public void configure(LongSupplier lineNumber) {
+        this.lineNumber = lineNumber == null ? ExternalDataConstants.NO_LINES : lineNumber;
     }
 }

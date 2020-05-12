@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
-import static org.apache.asterix.external.util.ExternalDataConstants.REC_ENDED_IN_Q;
+import static org.apache.asterix.external.util.ExternalDataConstants.REC_ENDED_AT_EOF;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -60,7 +60,7 @@ public class QuotedLineRecordReader extends LineRecordReader {
     @Override
     public void notifyNewSource() {
         if (!record.isEmptyRecord() && warnings.shouldWarn()) {
-            ParseUtil.warn(warnings, getDataSourceName().get(), recordNumber, 0, REC_ENDED_IN_Q);
+            ParseUtil.warn(warnings, getPreviousStreamName(), lineNumber, 0, REC_ENDED_AT_EOF);
         }
         // restart for a new record from a new source
         resetForNewSource();
@@ -90,6 +90,7 @@ public class QuotedLineRecordReader extends LineRecordReader {
             if (done) {
                 return false;
             }
+            beginLineNumber = lineNumber;
             newlineLength = 0;
             prevCharCR = false;
             prevCharEscape = false;
@@ -106,7 +107,7 @@ public class QuotedLineRecordReader extends LineRecordReader {
                         if (readLength <= 0 || inQuote) {
                             // haven't read anything previously OR have read and in the middle and hit the end
                             if (inQuote && warnings.shouldWarn()) {
-                                ParseUtil.warn(warnings, getDataSourceName().get(), recordNumber, 0, REC_ENDED_IN_Q);
+                                ParseUtil.warn(warnings, getDataSourceName().get(), lineNumber, 0, REC_ENDED_AT_EOF);
                             }
                             close();
                             return false;
@@ -117,13 +118,18 @@ public class QuotedLineRecordReader extends LineRecordReader {
                 }
                 boolean maybeInQuote = false;
                 for (; bufferPosn < bufferLength; ++bufferPosn) {
-                    if (inputBuffer[bufferPosn] == quote && escape == quote) {
+                    char ch = inputBuffer[bufferPosn];
+                    // count lines here since we need to also count the lines inside quotes
+                    if (ch == ExternalDataConstants.LF || prevCharCR) {
+                        lineNumber++;
+                    }
+                    if (ch == quote && escape == quote) {
                         inQuote |= maybeInQuote;
                         prevCharEscape |= maybeInQuote;
                     }
                     maybeInQuote = false;
                     if (!inQuote) {
-                        if (inputBuffer[bufferPosn] == ExternalDataConstants.LF) {
+                        if (ch == ExternalDataConstants.LF) {
                             newlineLength = (prevCharCR) ? 2 : 1;
                             ++bufferPosn;
                             break;
@@ -132,20 +138,20 @@ public class QuotedLineRecordReader extends LineRecordReader {
                             newlineLength = 1;
                             break;
                         }
-                        prevCharCR = (inputBuffer[bufferPosn] == ExternalDataConstants.CR);
                         // if this is an opening quote, mark it
-                        inQuote = inputBuffer[bufferPosn] == quote && !prevCharEscape;
+                        inQuote = ch == quote && !prevCharEscape;
                         // the escape != quote is for making an opening quote not an escape
-                        prevCharEscape = inputBuffer[bufferPosn] == escape && !prevCharEscape && escape != quote;
+                        prevCharEscape = ch == escape && !prevCharEscape && escape != quote;
                     } else {
                         // if quote == escape and current char is quote, then it could be closing or escaping
-                        if (inputBuffer[bufferPosn] == quote && !prevCharEscape) {
+                        if (ch == quote && !prevCharEscape) {
                             // this is most likely a closing quote. the outcome depends on the next char
                             inQuote = false;
                             maybeInQuote = true;
                         }
-                        prevCharEscape = inputBuffer[bufferPosn] == escape && !prevCharEscape && escape != quote;
+                        prevCharEscape = ch == escape && !prevCharEscape && escape != quote;
                     }
+                    prevCharCR = (ch == ExternalDataConstants.CR);
                 }
                 readLength = bufferPosn - startPosn;
                 if (readLength > 0) {
@@ -159,7 +165,6 @@ public class QuotedLineRecordReader extends LineRecordReader {
                 newSource = false;
                 continue;
             }
-            recordNumber++;
             return true;
         }
     }

@@ -26,6 +26,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 import org.apache.asterix.builders.IARecordBuilder;
@@ -65,6 +66,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     private final IValueParser[] valueParsers;
     private FieldCursorForDelimitedDataParser cursor;
     private Supplier<String> dataSourceName;
+    private LongSupplier lineNumber;
     private final byte[] fieldTypeTags;
     private final int[] fldIds;
     private final ArrayBackedValueStorage[] nameBuffers;
@@ -74,6 +76,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
             char quote, boolean hasHeader, ARecordType recordType, boolean isStreamParser, String nullString)
             throws HyracksDataException {
         this.dataSourceName = ExternalDataConstants.EMPTY_STRING;
+        this.lineNumber = ExternalDataConstants.NO_LINES;
         this.warnings = ctx.getWarningCollector();
         this.fieldDelimiter = fieldDelimiter;
         this.quote = quote;
@@ -114,7 +117,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
             }
         }
         if (!isStreamParser) {
-            cursor = new FieldCursorForDelimitedDataParser(null, this.fieldDelimiter, quote, warnings, dataSourceName);
+            cursor = new FieldCursorForDelimitedDataParser(null, this.fieldDelimiter, quote, warnings,
+                    this::getDataSourceName);
         }
         this.nullChars = nullString != null ? nullString.toCharArray() : null;
     }
@@ -122,7 +126,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     @Override
     public boolean parse(DataOutput out) throws HyracksDataException {
         try {
-            while (cursor.nextRecord()) {
+            if (cursor.nextRecord()) {
                 if (parseRecord()) {
                     recBuilder.write(out, true);
                     return true;
@@ -149,7 +153,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                         break;
                     case END:
                         if (warnings.shouldWarn()) {
-                            ParseUtil.warn(warnings, dataSourceName.get(), cursor.getRecordCount(),
+                            ParseUtil.warn(warnings, dataSourceName.get(), cursor.getLineCount(),
                                     cursor.getFieldCount(), MISSING_FIELDS);
                         }
                         return false;
@@ -164,8 +168,10 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                     fieldValueBufferOutput.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                 } else {
                     if (cursor.isFieldEmpty() && !canProcessEmptyField(recordType.getFieldTypes()[i])) {
-                        ParseUtil.warn(warnings, dataSourceName.get(), cursor.getRecordCount(), cursor.getFieldCount(),
-                                EMPTY_FIELD);
+                        if (warnings.shouldWarn()) {
+                            ParseUtil.warn(warnings, dataSourceName.get(), cursor.getLineCount(),
+                                    cursor.getFieldCount(), EMPTY_FIELD);
+                        }
                         return false;
                     }
                     fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
@@ -176,8 +182,10 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                     boolean success = valueParsers[i].parse(cursor.getBuffer(), cursor.getFieldStart(),
                             cursor.getFieldLength(), fieldValueBufferOutput);
                     if (!success) {
-                        ParseUtil.warn(warnings, dataSourceName.get(), cursor.getRecordCount(), cursor.getFieldCount(),
-                                INVALID_VAL);
+                        if (warnings.shouldWarn()) {
+                            ParseUtil.warn(warnings, dataSourceName.get(), cursor.getLineCount(),
+                                    cursor.getFieldCount(), INVALID_VAL);
+                        }
                         return false;
                     }
                 }
@@ -190,12 +198,19 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                 throw HyracksDataException.create(e);
             }
         }
-        return true;
+        try {
+            while (cursor.nextField() == FieldCursorForDelimitedDataParser.Result.OK) {
+                // keep reading and discarding the extra fields
+            }
+            return true;
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
     @Override
     public boolean parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
-        cursor.nextRecord(record.get(), record.size());
+        cursor.nextRecord(record.get(), record.size(), lineNumber.getAsLong());
         if (parseRecord()) {
             recBuilder.write(out, true);
             return true;
@@ -207,7 +222,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     public void setInputStream(InputStream in) throws IOException {
         // TODO(ali): revisit this in regards to stream
         cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote, warnings,
-                dataSourceName);
+                this::getDataSourceName);
         if (hasHeader) {
             cursor.nextRecord();
             FieldCursorForDelimitedDataParser.Result result;
@@ -224,13 +239,19 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     public boolean reset(InputStream in) throws IOException {
         // TODO(ali): revisit this in regards to stream
         cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote, warnings,
-                dataSourceName);
+                this::getDataSourceName);
         return true;
     }
 
     @Override
-    public void setDataSourceName(Supplier<String> dataSourceName) {
+    public void configure(Supplier<String> dataSourceName, LongSupplier lineNumber) {
         this.dataSourceName = dataSourceName == null ? ExternalDataConstants.EMPTY_STRING : dataSourceName;
+        this.lineNumber = lineNumber == null ? ExternalDataConstants.NO_LINES : lineNumber;
+
+    }
+
+    private String getDataSourceName() {
+        return dataSourceName.get();
     }
 
     private static boolean canProcessEmptyField(IAType fieldType) {

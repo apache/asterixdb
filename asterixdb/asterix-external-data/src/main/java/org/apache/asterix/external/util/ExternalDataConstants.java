@@ -21,6 +21,7 @@ package org.apache.asterix.external.util;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 public class ExternalDataConstants {
@@ -253,6 +254,7 @@ public class ExternalDataConstants {
     public static final int MAX_RECORD_SIZE = 32000000;
 
     public static final Supplier<String> EMPTY_STRING = () -> "";
+    public static final LongSupplier NO_LINES = () -> -1;
 
     /**
      * Expected parameter values
@@ -270,7 +272,7 @@ public class ExternalDataConstants {
 
     public static final String ERROR_PARSE_RECORD = "Parser failed to parse record";
     public static final String MISSING_FIELDS = "some fields are missing";
-    public static final String REC_ENDED_IN_Q = "malformed input record ended inside quote";
+    public static final String REC_ENDED_AT_EOF = "malformed input record ended abruptly";
     public static final String EMPTY_FIELD = "empty value";
     public static final String INVALID_VAL = "invalid value";
 

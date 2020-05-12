@@ -51,4 +51,8 @@ public abstract class AsterixInputStream extends InputStream {
     public String getStreamName() {
         return "";
     }
+
+    public String getPreviousStreamName() {
+        return "";
+    }
 }

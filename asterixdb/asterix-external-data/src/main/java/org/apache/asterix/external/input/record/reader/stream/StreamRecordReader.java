@@ -48,6 +48,7 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
     protected boolean done = false;
     protected FeedLogManager feedLogManager;
     private Supplier<String> dataSourceName = EMPTY_STRING;
+    private Supplier<String> previousDataSourceName = EMPTY_STRING;
 
     public void configure(AsterixInputStream inputStream, Map<String, String> config) {
         this.reader = new AsterixInputStreamReader(inputStream);
@@ -55,6 +56,7 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
         inputBuffer = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
         if (!ExternalDataUtils.isTrue(config, KEY_REDACT_WARNINGS)) {
             this.dataSourceName = reader::getStreamName;
+            this.previousDataSourceName = reader::getPreviousStreamName;
         }
     }
 
@@ -116,6 +118,10 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
     @Override
     public final Supplier<String> getDataSourceName() {
         return dataSourceName;
+    }
+
+    String getPreviousStreamName() {
+        return previousDataSourceName.get();
     }
 
     public abstract List<String> getRecordReaderFormats();

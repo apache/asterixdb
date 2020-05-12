@@ -88,12 +88,11 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
             in = new GZIPInputStream(s3Client.getObject(getObjectRequest), ExternalDataConstants.DEFAULT_BUFFER_SIZE);
         }
 
+        // Current file ready, point to the next file
+        nextFileIndex++;
         if (notificationHandler != null) {
             notificationHandler.notifyNewSource();
         }
-
-        // Current file ready, point to the next file
-        nextFileIndex++;
         return true;
     }
 
@@ -116,8 +115,16 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
 
     @Override
     public String getStreamName() {
-        int currentFileIndex = nextFileIndex - 1;
-        return currentFileIndex < 0 || filePaths == null || filePaths.isEmpty() ? "" : filePaths.get(currentFileIndex);
+        return getStreamNameAt(nextFileIndex - 1);
+    }
+
+    @Override
+    public String getPreviousStreamName() {
+        return getStreamNameAt(nextFileIndex - 2);
+    }
+
+    private String getStreamNameAt(int fileIndex) {
+        return fileIndex < 0 || filePaths == null || filePaths.isEmpty() ? "" : filePaths.get(fileIndex);
     }
 
     /**

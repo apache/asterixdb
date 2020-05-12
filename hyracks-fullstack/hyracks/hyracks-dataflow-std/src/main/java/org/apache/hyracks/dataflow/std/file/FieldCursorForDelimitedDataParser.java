@@ -54,7 +54,7 @@ public class FieldCursorForDelimitedDataParser {
     private char[] buffer; //buffer to holds the input coming form the underlying input stream
     private int fStart; //start position for field
     private int fEnd; //end position for field
-    private int recordCount; //count of records
+    private long lineCount; //count of lines
     private int fieldCount; //count of fields in current record
     private int doubleQuoteCount; //count of double quotes
     private boolean isDoubleQuoteIncludedInThisField; //does current field include double quotes
@@ -99,7 +99,7 @@ public class FieldCursorForDelimitedDataParser {
         doubleQuoteCount = 0;
         startedQuote = false;
         isDoubleQuoteIncludedInThisField = false;
-        recordCount = 0;
+        lineCount = 1;
         fieldCount = 0;
     }
 
@@ -127,12 +127,12 @@ public class FieldCursorForDelimitedDataParser {
         return fieldCount;
     }
 
-    public int getRecordCount() {
-        return recordCount;
+    public long getLineCount() {
+        return lineCount;
     }
 
-    public void nextRecord(char[] buffer, int recordLength) {
-        recordCount++;
+    public void nextRecord(char[] buffer, int recordLength, long lineNumber) {
+        lineCount = lineNumber;
         fieldCount = 0;
         lastDelimiterPosition = -1;
         lastQuotePosition = -1;
@@ -148,7 +148,6 @@ public class FieldCursorForDelimitedDataParser {
     }
 
     public boolean nextRecord() throws IOException {
-        recordCount++;
         fieldCount = 0;
         while (true) {
             switch (state) {
@@ -164,6 +163,7 @@ public class FieldCursorForDelimitedDataParser {
 
                 case IN_RECORD:
                     int p = start;
+                    char lastChar = '\0';
                     while (true) {
                         if (p >= end) {
                             int s = start;
@@ -204,6 +204,11 @@ public class FieldCursorForDelimitedDataParser {
                             lastDelimiterPosition = p;
                             break;
                         }
+                        // count lines inside quotes
+                        if (ch == '\r' || (ch == '\n' && lastChar != '\r')) {
+                            lineCount++;
+                        }
+                        lastChar = ch;
                         ++p;
                     }
                     break;
@@ -217,6 +222,10 @@ public class FieldCursorForDelimitedDataParser {
                         }
                     }
                     char ch = buffer[start];
+                    // if the next char "ch" is not \n, then count the \r
+                    if (ch != '\n') {
+                        lineCount++;
+                    }
                     if (ch == '\n' && !startedQuote) {
                         ++start;
                         state = State.EOR;
@@ -226,6 +235,7 @@ public class FieldCursorForDelimitedDataParser {
                     }
 
                 case EOR:
+                    lineCount++;
                     if (start >= end) {
                         eof = !readMore();
                         if (eof) {
@@ -265,6 +275,7 @@ public class FieldCursorForDelimitedDataParser {
                 quoteCount = 0;
                 doubleQuoteCount = 0;
 
+                char lastChar = '\0';
                 int p = start;
                 while (true) {
                     if (p >= end) {
@@ -380,6 +391,11 @@ public class FieldCursorForDelimitedDataParser {
                             return Result.OK;
                         }
                     }
+                    // count lines inside quotes
+                    if (ch == '\r' || (ch == '\n' && lastChar != '\r')) {
+                        lineCount++;
+                    }
+                    lastChar = ch;
                     ++p;
                 }
         }
@@ -434,7 +450,7 @@ public class FieldCursorForDelimitedDataParser {
     }
 
     private void warn(String message) {
-        warnings.warn(Warning.forHyracks(SRC_LOC, ErrorCode.PARSING_ERROR, dataSourceName.get(), recordCount,
-                fieldCount, message));
+        warnings.warn(Warning.forHyracks(SRC_LOC, ErrorCode.PARSING_ERROR, dataSourceName.get(), lineCount, fieldCount,
+                message));
     }
 }
