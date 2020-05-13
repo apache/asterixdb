@@ -3932,6 +3932,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
+      <compilation-unit name="create-dataset-inline-type-2">
+        <output-dir compare="Text">create-dataset-inline-type-2</output-dir>
+        <expected-error>ASX1082: Cannot find datatype with name test.$d$t$i$Cust1</expected-error>
+        <expected-error>ASX1082: Cannot find datatype with name test.$d$t$i$Cust2</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
       <compilation-unit name="drop-primary-index">
         <output-dir compare="Text">drop-primary-index</output-dir>
         <expected-error>Cannot drop index "ds". Drop dataset "ds" to remove this index</expected-error>
