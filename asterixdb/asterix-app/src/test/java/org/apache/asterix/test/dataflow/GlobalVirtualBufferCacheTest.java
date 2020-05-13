@@ -91,65 +91,85 @@ public class GlobalVirtualBufferCacheTest {
     private static final long FILTERED_MEMORY_COMPONENT_SIZE = 16 * 1024l;
 
     @BeforeClass
-    public static void setUp() throws Exception {
-        System.out.println("SetUp: ");
-        TestHelper.deleteExistingInstanceFiles();
-        String configPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "test"
-                + File.separator + "resources" + File.separator + "cc.conf";
-        nc = new TestNodeController(configPath, false);
+    public static void setUp() {
+        try {
+            System.out.println("SetUp: ");
+            TestHelper.deleteExistingInstanceFiles();
+            String configPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "test"
+                    + File.separator + "resources" + File.separator + "cc.conf";
+            nc = new TestNodeController(configPath, false);
+        } catch (Throwable e) {
+            LOGGER.error(e);
+            Assert.fail(e.getMessage());
+        }
     }
 
     @Before
-    public void initializeTest() throws Exception {
+    public void initializeTest() {
         // initialize NC before each test
-        initializeNc();
-        initializeTestCtx();
-        createIndex();
-        readIndex();
-        tupleGenerator = StorageTestUtils.getTupleGenerator();
+        try {
+            initializeNc();
+            initializeTestCtx();
+            createIndex();
+            readIndex();
+            tupleGenerator = StorageTestUtils.getTupleGenerator();
+        } catch (Throwable e) {
+            LOGGER.error(e);
+            Assert.fail(e.getMessage());
+        }
     }
 
     @After
-    public void deinitializeTest() throws Exception {
-        dropIndex();
-        // cleanup after each test case
-        nc.deInit(true);
-        nc.clearOpts();
+    public void deinitializeTest() {
+        try {
+            dropIndex();
+            // cleanup after each test case
+            nc.deInit(true);
+            nc.clearOpts();
+        } catch (Throwable e) {
+            LOGGER.error(e);
+            Assert.fail(e.getMessage());
+        }
     }
 
     @Test
-    public void testFlushes() throws Exception {
-        List<Thread> threads = new ArrayList<>();
-        int records = 16 * 1024;
-        int threadsPerPartition = 2;
-        AtomicReference<Exception> exceptionRef = new AtomicReference<>();
-        for (int p = 0; p < NUM_PARTITIONS; p++) {
-            for (int t = 0; t < threadsPerPartition; t++) {
-                threads.add(insertRecords(records, p, false, exceptionRef));
-                threads.add(insertRecords(records, p, true, exceptionRef));
+    public void testFlushes() {
+        try {
+            List<Thread> threads = new ArrayList<>();
+            int records = 16 * 1024;
+            int threadsPerPartition = 2;
+            AtomicReference<Exception> exceptionRef = new AtomicReference<>();
+            for (int p = 0; p < NUM_PARTITIONS; p++) {
+                for (int t = 0; t < threadsPerPartition; t++) {
+                    threads.add(insertRecords(records, p, false, exceptionRef));
+                    threads.add(insertRecords(records, p, true, exceptionRef));
+                }
             }
-        }
-        for (Thread thread : threads) {
-            thread.join();
-        }
-        if (exceptionRef.get() != null) {
-            exceptionRef.get().printStackTrace();
-            Assert.fail();
-        }
-        for (int i = 0; i < NUM_PARTITIONS; i++) {
-            Assert.assertFalse(primaryIndexes[i].getDiskComponents().isEmpty());
-            Assert.assertTrue(
-                    primaryIndexes[i].getDiskComponents().stream().anyMatch(c -> ((AbstractTreeIndex) c.getIndex())
-                            .getFileReference().getFile().length() > FILTERED_MEMORY_COMPONENT_SIZE));
+            for (Thread thread : threads) {
+                thread.join();
+            }
+            if (exceptionRef.get() != null) {
+                exceptionRef.get().printStackTrace();
+                Assert.fail();
+            }
+            for (int i = 0; i < NUM_PARTITIONS; i++) {
+                Assert.assertFalse(primaryIndexes[i].getDiskComponents().isEmpty());
+                Assert.assertTrue(
+                        primaryIndexes[i].getDiskComponents().stream().anyMatch(c -> ((AbstractTreeIndex) c.getIndex())
+                                .getFileReference().getFile().length() > FILTERED_MEMORY_COMPONENT_SIZE));
 
-            Assert.assertFalse(filteredPrimaryIndexes[i].getDiskComponents().isEmpty());
-            Assert.assertTrue(filteredPrimaryIndexes[i].getDiskComponents().stream()
-                    .allMatch(c -> ((AbstractTreeIndex) c.getIndex()).getFileReference().getFile()
-                            .length() <= FILTERED_MEMORY_COMPONENT_SIZE));
-        }
+                Assert.assertFalse(filteredPrimaryIndexes[i].getDiskComponents().isEmpty());
+                Assert.assertTrue(filteredPrimaryIndexes[i].getDiskComponents().stream()
+                        .allMatch(c -> ((AbstractTreeIndex) c.getIndex()).getFileReference().getFile()
+                                .length() <= FILTERED_MEMORY_COMPONENT_SIZE));
+            }
 
-        nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
-        nc.getTransactionManager().commitTransaction(filteredTxnCtx.getTxnId());
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
+            nc.getTransactionManager().commitTransaction(filteredTxnCtx.getTxnId());
+        } catch (Throwable e) {
+            LOGGER.error(e);
+            Assert.fail(e.getMessage());
+        }
     }
 
     private void initializeNc() throws Exception {
