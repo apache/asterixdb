@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IInputStreamFactory;
@@ -35,7 +36,6 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -77,8 +77,7 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
     }
 
     @Override
-    public void configure(IServiceContext ctx, Map<String, String> configuration)
-            throws AlgebricksException, HyracksDataException {
+    public void configure(IServiceContext ctx, Map<String, String> configuration) throws AlgebricksException {
         this.configuration = configuration;
         ICcApplicationContext ccApplicationContext = (ICcApplicationContext) ctx.getApplicationContext();
 
@@ -115,13 +114,13 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
      *
      * @return A list of string paths that point to files only
      *
-     * @throws HyracksDataException HyracksDataException
+     * @throws AsterixException AsterixException
      */
-    private List<S3Object> getFilesOnly(List<S3Object> s3Objects, String fileFormat) throws HyracksDataException {
+    private List<S3Object> getFilesOnly(List<S3Object> s3Objects, String fileFormat) throws AsterixException {
         List<S3Object> filesOnly = new ArrayList<>();
         String fileExtension = getFileExtension(fileFormat);
         if (fileExtension == null) {
-            throw HyracksDataException.create(ErrorCode.INVALID_FORMAT);
+            throw AsterixException.create(ErrorCode.PROVIDER_STREAM_RECORD_READER_UNKNOWN_FORMAT, fileFormat);
         }
 
         s3Objects.stream().filter(object -> object.key().endsWith(fileExtension)).forEach(filesOnly::add);
@@ -214,8 +213,12 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
      */
     private String getFileExtension(String format) {
         switch (format.toLowerCase()) {
-            case "json":
+            case ExternalDataConstants.FORMAT_JSON_LOWER_CASE:
                 return ".json";
+            case ExternalDataConstants.FORMAT_CSV:
+                return ".csv";
+            case ExternalDataConstants.FORMAT_TSV:
+                return ".tsv";
             default:
                 return null;
         }

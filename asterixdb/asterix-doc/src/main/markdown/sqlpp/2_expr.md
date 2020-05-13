@@ -218,8 +218,9 @@ For arrays, path access is based on (zero-based) array-style indexing. Array ind
 single element from an array, or a whole subset of an array. Accessing a single element is achieved by
 providing a single index argument (zero-based element position), while obtaining a subset of an array is achieved by
 providing the `start` and `end` (zero-based) index positions; the returned subset is from position `start` to position
-`end - 1`; the `end` position argument is optional. Multisets have similar behavior to arrays, except for retrieving
-arbitrary items as the order of items is not fixed in multisets.
+`end - 1`; the `end` position argument is optional. If a position argument is negative then the element position is
+counted from the end of the array (`-1` addresses the last element, `-2` next to last, and so on). Multisets have
+similar behavior to arrays, except for retrieving arbitrary items as the order of items is not fixed in multisets.
 
 Attempts to access non-existent fields or out-of-bound array elements produce the special value `MISSING`. Type errors
 will be raised for inappropriate use of a path expression, such as applying a field accessor to a numeric value.
@@ -232,12 +233,16 @@ and also a composition thereof.
     ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array
 
     (["a", "b", "c"])[2]
+    
+    (["a", "b", "c"])[-1]
 
     ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array[2]
 
     (["a", "b", "c"])[0:2]
 
     (["a", "b", "c"])[0:]
+    
+    (["a", "b", "c"])[-2:-1]
 
 
 ## <a id="Primary_expressions">Primary Expressions</a>

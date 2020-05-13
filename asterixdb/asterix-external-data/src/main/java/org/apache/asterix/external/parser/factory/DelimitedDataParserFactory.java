@@ -21,10 +21,7 @@ package org.apache.asterix.external.parser.factory;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
@@ -40,19 +37,20 @@ public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactor
 
     private static final long serialVersionUID = 1L;
     private static final List<String> parserFormats =
-            Collections.unmodifiableList(Arrays.asList("csv", "delimited-text"));
+            Collections.unmodifiableList(Arrays.asList(ExternalDataConstants.FORMAT_CSV,
+                    ExternalDataConstants.FORMAT_DELIMITED_TEXT, ExternalDataConstants.FORMAT_TSV));
 
     @Override
     public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
-        return createParser();
+        return createParser(ctx);
     }
 
-    private DelimitedDataParser createParser() throws HyracksDataException {
+    private DelimitedDataParser createParser(IHyracksTaskContext ctx) throws HyracksDataException {
         IValueParserFactory[] valueParserFactories = ExternalDataUtils.getValueParserFactories(recordType);
-        Character delimiter = DelimitedDataParserFactory.getDelimiter(configuration);
-        char quote = DelimitedDataParserFactory.getQuote(configuration, delimiter);
+        char delimiter = ExternalDataUtils.validateGetDelimiter(configuration);
+        char quote = ExternalDataUtils.validateGetQuote(configuration, delimiter);
         boolean hasHeader = ExternalDataUtils.hasHeader(configuration);
-        return new DelimitedDataParser(valueParserFactories, delimiter, quote, hasHeader, recordType,
+        return new DelimitedDataParser(ctx, valueParserFactories, delimiter, quote, hasHeader, recordType,
                 ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.STREAM));
     }
 
@@ -64,41 +62,7 @@ public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactor
     @Override
     public IStreamDataParser createInputStreamParser(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
-        return createParser();
-    }
-
-    // Get a delimiter from the given configuration
-    public static char getDelimiter(Map<String, String> configuration) throws HyracksDataException {
-        String delimiterValue = configuration.get(ExternalDataConstants.KEY_DELIMITER);
-        if (delimiterValue == null) {
-            delimiterValue = ExternalDataConstants.DEFAULT_DELIMITER;
-        } else if (delimiterValue.length() != 1) {
-            throw new RuntimeDataException(ErrorCode.PARSER_FACTORY_DELIMITED_DATA_PARSER_FACTORY_NOT_VALID_DELIMITER,
-                    delimiterValue);
-        }
-        return delimiterValue.charAt(0);
-    }
-
-    // Get a quote from the given configuration when the delimiter is given
-    // Need to pass delimiter to check whether they share the same character
-    public static char getQuote(Map<String, String> configuration, char delimiter) throws HyracksDataException {
-        String quoteValue = configuration.get(ExternalDataConstants.KEY_QUOTE);
-        if (quoteValue == null) {
-            quoteValue = ExternalDataConstants.DEFAULT_QUOTE;
-        } else if (quoteValue.length() != 1) {
-            throw new RuntimeDataException(ErrorCode.PARSER_FACTORY_DELIMITED_DATA_PARSER_FACTORY_NOT_VALID_QUOTE,
-                    quoteValue);
-        }
-
-        // Since delimiter (char type value) can't be null,
-        // we only check whether delimiter and quote use the same character
-        if (quoteValue.charAt(0) == delimiter) {
-            throw new RuntimeDataException(
-                    ErrorCode.PARSER_FACTORY_DELIMITED_DATA_PARSER_FACTORY_QUOTE_DELIMITER_MISMATCH, quoteValue,
-                    delimiter);
-        }
-
-        return quoteValue.charAt(0);
+        return createParser(ctx);
     }
 
     @Override

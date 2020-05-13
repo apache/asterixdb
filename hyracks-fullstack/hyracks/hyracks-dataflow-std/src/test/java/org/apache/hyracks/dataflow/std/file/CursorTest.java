@@ -51,9 +51,8 @@ public class CursorTest {
             while (cursor.nextRecord()) {
                 int fieldNumber = 0;
                 while (cursor.nextField()) {
-                    if (cursor.isDoubleQuoteIncludedInThisField) {
-                        cursor.eliminateDoubleQuote(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart);
-                        cursor.fEnd -= cursor.doubleQuoteCount;
+                    if (cursor.fieldHasDoubleQuote()) {
+                        cursor.eliminateDoubleQuote();
                     }
                     fieldNumber++;
                 }

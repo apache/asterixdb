@@ -18,7 +18,15 @@
  */
 package org.apache.asterix.external.util;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 public class ExternalDataConstants {
+
+    private ExternalDataConstants() {
+    }
+
     // TODO: Remove unused variables.
     /**
      * Keys
@@ -62,6 +70,7 @@ public class ExternalDataConstants {
     public static final String KEY_LOCAL_SOCKET_PATH = "local-socket-path";
     public static final String KEY_FORMAT = "format";
     public static final String KEY_QUOTE = "quote";
+    public static final String KEY_QUOTE_ESCAPE = "quote-escape";
     public static final String KEY_PARSER = "parser";
     public static final String KEY_DATASET_RECORD = "dataset-record";
     public static final String KEY_HIVE_SERDE = "hive-serde";
@@ -163,6 +172,26 @@ public class ExternalDataConstants {
     public static final String FORMAT_LINE_SEPARATED = "line-separated";
     public static final String FORMAT_HDFS_WRITABLE = "hdfs-writable";
     public static final String FORMAT_KV = "kv";
+    public static final String FORMAT_CSV = "csv";
+    public static final String FORMAT_TSV = "tsv";
+    public static final Set<String> ALL_FORMATS;
+    static {
+        Set<String> formats = new HashSet<>(13);
+        formats.add(FORMAT_HIVE);
+        formats.add(FORMAT_BINARY);
+        formats.add(FORMAT_ADM);
+        formats.add(FORMAT_JSON_LOWER_CASE);
+        formats.add(FORMAT_DELIMITED_TEXT);
+        formats.add(FORMAT_TWEET);
+        formats.add(FORMAT_RSS);
+        formats.add(FORMAT_SEMISTRUCTURED);
+        formats.add(FORMAT_LINE_SEPARATED);
+        formats.add(FORMAT_HDFS_WRITABLE);
+        formats.add(FORMAT_KV);
+        formats.add(FORMAT_CSV);
+        formats.add(FORMAT_TSV);
+        ALL_FORMATS = Collections.unmodifiableSet(formats);
+    }
 
     /**
      * input streams
@@ -188,6 +217,8 @@ public class ExternalDataConstants {
      */
     public static final String TRUE = "true";
     public static final String FALSE = "false";
+    public static final String TAB_STR = "\t";
+    public static final String NULL_STR = "\0";
 
     /**
      * Constant characters
@@ -227,7 +258,6 @@ public class ExternalDataConstants {
     public static final String EXTERNAL = "external";
     public static final String KEY_READER_FACTORY = "reader-factory";
     public static final String READER_RSS = "rss_feed";
-    public static final String FORMAT_CSV = "csv";
 
     public static final String ERROR_PARSE_RECORD = "Parser failed to parse record";
 
@@ -238,8 +268,5 @@ public class ExternalDataConstants {
         public static final String CONTAINER_NAME_FIELD_NAME = "container";
         public static final String DEFINITION_FIELD_NAME = "definition";
         public static final String SERVICE_END_POINT_FIELD_NAME = "serviceEndpoint";
-        public static final String[] REQUIRED_LINK_PARAMETERS =
-                new String[] { ACCESS_KEY_FIELD_NAME, SECRET_KEY_FIELD_NAME, REGION_FIELD_NAME };
-        public static final String[] OPTIONAL_LINK_PARAMETERS = new String[] { SERVICE_END_POINT_FIELD_NAME };
     }
 }

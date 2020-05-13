@@ -22,6 +22,7 @@ package org.apache.asterix.metadata.entitytupletranslators;
 import java.io.DataOutput;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -64,6 +65,7 @@ import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.compression.CompressionManager;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -115,20 +117,9 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         String nodeGroupName =
                 ((AString) datasetRecord.getValueByPos(MetadataRecordTypes.DATASET_ARECORD_GROUPNAME_FIELD_INDEX))
                         .getStringValue();
-        String compactionPolicy = ((AString) datasetRecord
-                .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_FIELD_INDEX)).getStringValue();
-        IACursor cursor = ((AOrderedList) datasetRecord
-                .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX))
-                        .getCursor();
-        Map<String, String> compactionPolicyProperties = new LinkedHashMap<>();
-        while (cursor.next()) {
-            ARecord field = (ARecord) cursor.get();
-            String key =
-                    ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX)).getStringValue();
-            String value =
-                    ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX)).getStringValue();
-            compactionPolicyProperties.put(key, value);
-        }
+
+        Pair<String, Map<String, String>> compactionPolicy = readCompactionPolicy(datasetType, datasetRecord);
+
         switch (datasetType) {
             case INTERNAL: {
                 ARecord datasetDetailsRecord = (ARecord) datasetRecord
@@ -139,7 +130,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 PartitioningStrategy partitioningStrategy = PartitioningStrategy.valueOf(((AString) datasetDetailsRecord
                         .getValueByPos(MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_PARTITIONSTRATEGY_FIELD_INDEX))
                                 .getStringValue());
-                cursor = ((AOrderedList) datasetDetailsRecord
+                IACursor cursor = ((AOrderedList) datasetDetailsRecord
                         .getValueByPos(MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_PARTITIONKEY_FIELD_INDEX))
                                 .getCursor();
                 List<List<String>> partitioningKey = new ArrayList<>();
@@ -199,7 +190,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 String adapter = ((AString) datasetDetailsRecord
                         .getValueByPos(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_DATASOURCE_ADAPTER_FIELD_INDEX))
                                 .getStringValue();
-                cursor = ((AOrderedList) datasetDetailsRecord
+                IACursor cursor = ((AOrderedList) datasetDetailsRecord
                         .getValueByPos(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX))
                                 .getCursor();
                 Map<String, String> properties = new HashMap<>();
@@ -242,8 +233,32 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         String compressionScheme = getCompressionScheme(datasetRecord);
 
         return new Dataset(dataverseName, datasetName, typeDataverseName, typeName, metaTypeDataverseName, metaTypeName,
-                nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails, hints, datasetType,
+                nodeGroupName, compactionPolicy.first, compactionPolicy.second, datasetDetails, hints, datasetType,
                 datasetId, pendingOp, rebalanceCount, compressionScheme);
+    }
+
+    protected Pair<String, Map<String, String>> readCompactionPolicy(DatasetType datasetType, ARecord datasetRecord) {
+
+        String compactionPolicy = ((AString) datasetRecord
+                .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_FIELD_INDEX)).getStringValue();
+        AOrderedList compactionPolicyPropertiesList = ((AOrderedList) datasetRecord
+                .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX));
+
+        Map<String, String> compactionPolicyProperties;
+        if (compactionPolicyPropertiesList.size() > 0) {
+            compactionPolicyProperties = new LinkedHashMap<>();
+            for (IACursor cursor = compactionPolicyPropertiesList.getCursor(); cursor.next();) {
+                ARecord field = (ARecord) cursor.get();
+                String key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX))
+                        .getStringValue();
+                String value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX))
+                        .getStringValue();
+                compactionPolicyProperties.put(key, value);
+            }
+        } else {
+            compactionPolicyProperties = Collections.emptyMap();
+        }
+        return new Pair<>(compactionPolicy, compactionPolicyProperties);
     }
 
     private long getRebalanceCount(ARecord datasetRecord) {
@@ -323,29 +338,9 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_GROUPNAME_FIELD_INDEX, fieldValue);
 
-        // write field 6
-        fieldValue.reset();
-        aString.setValue(dataset.getCompactionPolicy());
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_FIELD_INDEX, fieldValue);
-
-        // write field 7
-        listBuilder.reset((AOrderedListType) MetadataRecordTypes.DATASET_RECORDTYPE
-                .getFieldTypes()[MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX]);
-        if (dataset.getCompactionPolicyProperties() != null) {
-            for (Map.Entry<String, String> property : dataset.getCompactionPolicyProperties().entrySet()) {
-                String name = property.getKey();
-                String value = property.getValue();
-                itemValue.reset();
-                DatasetUtil.writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
-                        MetadataRecordTypes.COMPACTION_POLICY_PROPERTIES_RECORDTYPE);
-                listBuilder.addItem(itemValue);
-            }
-        }
-        fieldValue.reset();
-        listBuilder.write(fieldValue.getDataOutput(), true);
-        recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX,
-                fieldValue);
+        // write field 6/7
+        writeCompactionPolicy(dataset.getDatasetType(), dataset.getCompactionPolicy(),
+                dataset.getCompactionPolicyProperties(), listBuilder, itemValue);
 
         // write field 8/9
         fieldValue.reset();
@@ -393,6 +388,34 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
         return tuple;
+    }
+
+    protected void writeCompactionPolicy(DatasetType datasetType, String compactionPolicy,
+            Map<String, String> compactionPolicyProperties, OrderedListBuilder listBuilder,
+            ArrayBackedValueStorage itemValue) throws HyracksDataException {
+        // write field 6
+        fieldValue.reset();
+        aString.setValue(compactionPolicy);
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_FIELD_INDEX, fieldValue);
+
+        // write field 7
+        listBuilder.reset((AOrderedListType) MetadataRecordTypes.DATASET_RECORDTYPE
+                .getFieldTypes()[MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX]);
+        if (compactionPolicyProperties != null && !compactionPolicyProperties.isEmpty()) {
+            for (Map.Entry<String, String> property : compactionPolicyProperties.entrySet()) {
+                String name = property.getKey();
+                String value = property.getValue();
+                itemValue.reset();
+                DatasetUtil.writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
+                        MetadataRecordTypes.COMPACTION_POLICY_PROPERTIES_RECORDTYPE);
+                listBuilder.addItem(itemValue);
+            }
+        }
+        fieldValue.reset();
+        listBuilder.write(fieldValue.getDataOutput(), true);
+        recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX,
+                fieldValue);
     }
 
     /**

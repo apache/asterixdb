@@ -27,7 +27,7 @@ import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
 import org.apache.asterix.external.api.IIndexingAdapterFactory;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.external.util.ExternalDataCompatibilityUtils;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -39,11 +39,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public class AdapterFactoryProvider {
 
-    // Adapters
+    private AdapterFactoryProvider() {
+    }
+
+    // get adapter factory. this method has the side effect of modifying the configuration as necessary
     public static ITypedAdapterFactory getAdapterFactory(IServiceContext serviceCtx, String adapterName,
             Map<String, String> configuration, ARecordType itemType, ARecordType metaType)
             throws HyracksDataException, AlgebricksException {
-        ExternalDataCompatibilityUtils.prepare(adapterName, configuration);
+        ExternalDataUtils.defaultConfiguration(configuration);
+        ExternalDataUtils.prepare(adapterName, configuration);
         ICcApplicationContext context = (ICcApplicationContext) serviceCtx.getApplicationContext();
         ITypedAdapterFactory adapterFactory =
                 (ITypedAdapterFactory) context.getAdapterFactoryService().createAdapterFactory();
@@ -53,11 +57,12 @@ public class AdapterFactoryProvider {
         return adapterFactory;
     }
 
-    // Indexing Adapters
+    // get indexing adapter factory. this method has the side effect of modifying the configuration as necessary
     public static IIndexingAdapterFactory getIndexingAdapterFactory(IServiceContext serviceCtx, String adapterName,
             Map<String, String> configuration, ARecordType itemType, List<ExternalFile> snapshot, boolean indexingOp,
             ARecordType metaType) throws HyracksDataException, AlgebricksException {
-        ExternalDataCompatibilityUtils.prepare(adapterName, configuration);
+        ExternalDataUtils.defaultConfiguration(configuration);
+        ExternalDataUtils.prepare(adapterName, configuration);
         GenericAdapterFactory adapterFactory = new GenericAdapterFactory();
         adapterFactory.setOutputType(itemType);
         adapterFactory.setMetaType(metaType);

@@ -18,20 +18,16 @@
  */
 package org.apache.asterix.external.input.record.reader.aws;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReaderFactory;
 import org.apache.asterix.external.provider.StreamRecordReaderProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AwsS3ReaderFactory extends StreamRecordReaderFactory {
@@ -72,19 +68,5 @@ public class AwsS3ReaderFactory extends StreamRecordReaderFactory {
 
         // record reader
         recordReaderClazz = StreamRecordReaderProvider.getRecordReaderClazz(configuration);
-    }
-
-    @Override
-    public IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException {
-        try {
-            StreamRecordReader streamRecordReader =
-                    (StreamRecordReader) recordReaderClazz.getConstructor().newInstance();
-            streamRecordReader.configure(streamFactory.createInputStream(ctx, partition), configuration);
-            return streamRecordReader;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException
-                | NoSuchMethodException e) {
-            throw HyracksDataException.create(e);
-        }
     }
 }

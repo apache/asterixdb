@@ -24,29 +24,35 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.ExceptionUtils;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class QuotedLineRecordReader extends LineRecordReader {
 
     private char quote;
-    private boolean prevCharEscape;
-    private boolean inQuote;
+    private char quoteEscape;
+    private IWarningCollector warningCollector;
+    private final SourceLocation srcLoc = new SourceLocation(-1, -1);
     private static final List<String> recordReaderFormats = Collections.unmodifiableList(
             Arrays.asList(ExternalDataConstants.FORMAT_DELIMITED_TEXT, ExternalDataConstants.FORMAT_CSV));
-    private static final String REQUIRED_CONFIGS = "quote";
+    private static final String REQUIRED_CONFIGS = ExternalDataConstants.KEY_QUOTE;
 
     @Override
-    public void configure(AsterixInputStream inputStream, Map<String, String> config) throws HyracksDataException {
-        super.configure(inputStream, config);
+    public void configure(IHyracksTaskContext ctx, AsterixInputStream inputStream, Map<String, String> config)
+            throws HyracksDataException {
+        super.configure(ctx, inputStream, config);
+        this.warningCollector = ctx.getWarningCollector();
         String quoteString = config.get(ExternalDataConstants.KEY_QUOTE);
-        if (quoteString.length() != 1) {
-            throw new HyracksDataException(ExceptionUtils.incorrectParameterMessage(ExternalDataConstants.KEY_QUOTE,
-                    ExternalDataConstants.PARAMETER_OF_SIZE_ONE, quoteString));
-        }
+        ExternalDataUtils.validateQuote(quoteString);
         this.quote = quoteString.charAt(0);
+        this.quoteEscape = ExternalDataUtils.validateGetQuoteEscape(config);
     }
 
     @Override
@@ -67,31 +73,41 @@ public class QuotedLineRecordReader extends LineRecordReader {
             }
             newlineLength = 0;
             prevCharCR = false;
-            prevCharEscape = false;
+            boolean prevCharEscape = false;
             record.reset();
             int readLength = 0;
-            inQuote = false;
+            boolean inQuote = false;
             do {
                 int startPosn = bufferPosn;
                 if (bufferPosn >= bufferLength) {
                     startPosn = bufferPosn = 0;
                     bufferLength = reader.read(inputBuffer);
                     if (bufferLength <= 0) {
-                        {
-                            if (readLength > 0) {
-                                if (inQuote) {
-                                    throw new IOException("malformed input record ended inside quote");
-                                }
-                                record.endRecord();
-                                recordNumber++;
-                                return true;
+                        // reached end of stream
+                        if (readLength <= 0 || inQuote) {
+                            // haven't read anything previously OR have read and in the middle and hit the end
+                            if (inQuote && warningCollector.shouldWarn()) {
+                                warningCollector
+                                        .warn(WarningUtil.forAsterix(srcLoc, ErrorCode.MALFORMED_RECORD, recordNumber));
                             }
                             close();
                             return false;
                         }
+                        record.endRecord();
+                        if (record.isEmptyRecord()) {
+                            return false;
+                        }
+                        recordNumber++;
+                        return true;
                     }
                 }
+                boolean maybeInQuote = false;
                 for (; bufferPosn < bufferLength; ++bufferPosn) {
+                    if (inputBuffer[bufferPosn] == quote && quoteEscape == quote) {
+                        inQuote |= maybeInQuote;
+                        prevCharEscape |= maybeInQuote;
+                    }
+                    maybeInQuote = false;
                     if (!inQuote) {
                         if (inputBuffer[bufferPosn] == ExternalDataConstants.LF) {
                             newlineLength = (prevCharCR) ? 2 : 1;
@@ -103,24 +119,22 @@ public class QuotedLineRecordReader extends LineRecordReader {
                             break;
                         }
                         prevCharCR = (inputBuffer[bufferPosn] == ExternalDataConstants.CR);
-                        if (inputBuffer[bufferPosn] == quote) {
-                            if (!prevCharEscape) {
-                                inQuote = true;
-                            }
+                        if (inputBuffer[bufferPosn] == quote && !prevCharEscape) {
+                            // this is an opening quote
+                            inQuote = true;
                         }
-                        if (prevCharEscape) {
-                            prevCharEscape = false;
-                        } else {
-                            prevCharEscape = inputBuffer[bufferPosn] == ExternalDataConstants.ESCAPE;
-                        }
+                        // the quoteEscape != quote is for making an opening quote not an escape
+                        prevCharEscape =
+                                inputBuffer[bufferPosn] == quoteEscape && !prevCharEscape && quoteEscape != quote;
                     } else {
-                        // only look for next quote
-                        if (inputBuffer[bufferPosn] == quote) {
-                            if (!prevCharEscape) {
-                                inQuote = false;
-                            }
+                        // if quote == quoteEscape and current char is quote, then it could be closing or escaping
+                        if (inputBuffer[bufferPosn] == quote && !prevCharEscape) {
+                            // this is most likely a closing quote. the outcome depends on the next char
+                            inQuote = false;
+                            maybeInQuote = true;
                         }
-                        prevCharEscape = inputBuffer[bufferPosn] == ExternalDataConstants.ESCAPE;
+                        prevCharEscape =
+                                inputBuffer[bufferPosn] == quoteEscape && !prevCharEscape && quoteEscape != quote;
                     }
                 }
                 readLength = bufferPosn - startPosn;
@@ -131,6 +145,9 @@ public class QuotedLineRecordReader extends LineRecordReader {
                     record.append(inputBuffer, startPosn, readLength);
                 }
             } while (newlineLength == 0);
+            if (record.isEmptyRecord()) {
+                continue;
+            }
             if (nextIsHeader) {
                 nextIsHeader = false;
                 continue;

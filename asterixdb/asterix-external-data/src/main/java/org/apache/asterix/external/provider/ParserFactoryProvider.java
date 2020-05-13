@@ -46,15 +46,12 @@ public class ParserFactoryProvider {
     public static IDataParserFactory getDataParserFactory(ILibraryManager libraryManager,
             Map<String, String> configuration) throws AsterixException {
         IDataParserFactory parserFactory;
-        String parserFactoryName = configuration.get(ExternalDataConstants.KEY_DATA_PARSER);
+        String parserFactoryName = configuration.get(ExternalDataConstants.KEY_PARSER);
         if (ExternalDataUtils.isExternal(parserFactoryName)) {
             return ExternalDataUtils.createExternalParserFactory(libraryManager,
                     ExternalDataUtils.getDataverse(configuration), parserFactoryName);
         } else {
-            String parserFactoryKey = ExternalDataUtils.getRecordFormat(configuration);
-            if (parserFactoryKey == null) {
-                parserFactoryKey = configuration.get(ExternalDataConstants.KEY_PARSER_FACTORY);
-            }
+            String parserFactoryKey = ExternalDataUtils.getParserFactory(configuration);
             parserFactory = ParserFactoryProvider.getDataParserFactory(parserFactoryKey);
         }
         return parserFactory;

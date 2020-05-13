@@ -55,7 +55,7 @@ public class RecordWithMetadataParserFactory<I, O> implements IRecordDataParserF
         String recordFormat = configuration.get(ExternalDataConstants.KEY_RECORD_FORMAT);
         if (recordFormat == null) {
             throw AlgebricksException.create(ErrorCode.UNKNOWN_RECORD_FORMAT_FOR_META_PARSER,
-                    ExternalDataConstants.KEY_FORMAT);
+                    ExternalDataConstants.KEY_RECORD_FORMAT);
         }
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
         if (format == null) {

@@ -32,6 +32,7 @@ import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.ResultSetId;
+import org.apache.hyracks.net.protocols.muxdemux.AbstractChannelWriteInterface;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -125,6 +126,11 @@ public class ResultNetworkInputChannel implements IInputChannel {
     @Override
     public void close() throws HyracksDataException {
 
+    }
+
+    @Override
+    public void fail() {
+        ccb.getWriteInterface().getFullBufferAcceptor().error(AbstractChannelWriteInterface.REMOTE_ERROR_CODE);
     }
 
     private class ReadFullBufferAcceptor implements ICloseableBufferAcceptor {

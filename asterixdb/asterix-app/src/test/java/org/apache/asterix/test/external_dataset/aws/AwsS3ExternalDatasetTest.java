@@ -18,9 +18,12 @@
  */
 package org.apache.asterix.test.external_dataset.aws;
 
+import static org.apache.hyracks.util.file.FileUtil.joinPath;
+
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,9 +69,13 @@ public class AwsS3ExternalDatasetTest {
     private static S3Client client;
     private static final String S3_MOCK_SERVER_BUCKET = "playground";
     private static final String S3_MOCK_SERVER_BUCKET_DEFINITION = "json-data/reviews/"; // data resides here
+    private static final String S3_MOCK_SERVER_BUCKET_CSV_DEFINITION = "csv-data/reviews/"; // data resides here
+    private static final String S3_MOCK_SERVER_BUCKET_TSV_DEFINITION = "tsv-data/reviews/"; // data resides here
     private static final String S3_MOCK_SERVER_REGION = "us-west-2";
     private static final int S3_MOCK_SERVER_PORT = 8001;
     private static final String S3_MOCK_SERVER_HOSTNAME = "http://localhost:" + S3_MOCK_SERVER_PORT;
+    private static final String CSV_DATA_PATH = joinPath("data", "csv");
+    private static final String TSV_DATA_PATH = joinPath("data", "tsv");
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -210,6 +217,26 @@ public class AwsS3ExternalDatasetTest {
                 PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
                         .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/q2/2.json").build(),
                 RequestBody.fromString("{\"id\": 14, \"year\": 2019, \"quarter\": 2, \"review\": \"bad\"}"));
+
+        LOGGER.info("Adding CSV files to the bucket");
+        client.putObject(
+                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
+                        .key(S3_MOCK_SERVER_BUCKET_CSV_DEFINITION + "01.csv").build(),
+                RequestBody.fromFile(Paths.get(CSV_DATA_PATH, "01.csv")));
+        client.putObject(
+                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
+                        .key(S3_MOCK_SERVER_BUCKET_CSV_DEFINITION + "2018/01.csv").build(),
+                RequestBody.fromFile(Paths.get(CSV_DATA_PATH, "02.csv")));
+
+        LOGGER.info("Adding TSV files to the bucket");
+        client.putObject(
+                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
+                        .key(S3_MOCK_SERVER_BUCKET_TSV_DEFINITION + "01.tsv").build(),
+                RequestBody.fromFile(Paths.get(TSV_DATA_PATH, "01.tsv")));
+        client.putObject(
+                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
+                        .key(S3_MOCK_SERVER_BUCKET_TSV_DEFINITION + "2018/01.tsv").build(),
+                RequestBody.fromFile(Paths.get(TSV_DATA_PATH, "02.tsv")));
         LOGGER.info("Files added successfully");
     }
 }

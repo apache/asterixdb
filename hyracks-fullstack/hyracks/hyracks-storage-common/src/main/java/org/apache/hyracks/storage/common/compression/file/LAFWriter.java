@@ -83,22 +83,21 @@ class LAFWriter implements ICompressedPageWriter {
     public void prepareWrite(ICachedPage cPage) throws HyracksDataException {
         final ICachedPageInternal internalPage = (ICachedPageInternal) cPage;
         final int entryPageId = getLAFEntryPageId(BufferedFileHandle.getPageId(internalPage.getDiskPageId()));
-
-        if (!cachedFrames.containsKey(entryPageId)) {
-            try {
-                //Writing new page(s). Confiscate the page(s) from the buffer cache.
-                prepareFrames(entryPageId, internalPage);
-            } catch (HyracksDataException e) {
-                abort();
-                throw e;
-            }
+        try {
+            //Writing new page(s). Confiscate the page(s) from the buffer cache.
+            prepareFrames(entryPageId, internalPage);
+        } catch (HyracksDataException e) {
+            abort();
+            throw e;
         }
     }
 
     private void prepareFrames(int entryPageId, ICachedPageInternal cPage) throws HyracksDataException {
-        //Confiscate the first page
-        confiscatePage(entryPageId);
-        //check if extra pages spans to the next entry page
+        // check if we need to confiscate a page for the main page
+        if (!cachedFrames.containsKey(entryPageId)) {
+            confiscatePage(entryPageId);
+        }
+        // check if extra pages span to the next entry page
         for (int i = 0; i < cPage.getFrameSizeMultiplier() - 1; i++) {
             final int extraEntryPageId = getLAFEntryPageId(cPage.getExtraBlockPageId() + i);
             if (!cachedFrames.containsKey(extraEntryPageId)) {

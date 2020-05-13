@@ -1,0 +1,39 @@
+1,"?/ Text ending with a backslash  / \",2000-09-03 07:12:22
+2,non quoted text!yes......,2003-08-09 22:34:19
+3,Text with more sentences. Another sentence.,2003-09-12 05:29:12
+4,"Quoted text.. yes.",2003-09-13 17:21:49
+5,Another text,2003-01-21 23:31:41
+6,Text with' quotes.,2003-09-14 20:15:50
+7,Text with quote's,2003-09-14 18:34:03
+8,"Text with quotes '",2003-01-28 20:32:13
+9,"Text with quotes """,2003-01-18 11:44:15
+10,Text with question marks!?!?,2003-09-18 06:25:56
+11,""" Text that starts with quotes",2003-09-12 00:31:24
+12,"Text with \"" backslash and quotes",2003-09-13 20:30:06
+13,"Text with \"" backslash and quotes\""",2003-09-14 16:20:36
+14,"Text that has comma ,",2003-09-12 08:21:18
+15,"Text that has "","" quoted comma",2003-09-12 08:21:18
+16,",Text that has ",2003-09-12 08:21:18
+17,","",Text that has ",2003-09-12 08:21:18
+18,"Text with commas,inside it., yes",2003-09-13 23:42:14
+19,"Text that has \n inside ",2003-09-12 08:21:18
+20,"Text that has \\\n inside ",2003-09-12 08:21:18
+21,text with :),2003-09-05 19:15:34
+22,"Text that has \\\"" inside \\",2003-09-12 08:21:18
+23,"Text that has \\\"" inside \\""",2003-09-12 08:21:18
+24,"""text that spans multiple
+Lines and more
+Lines ane more and more
+Lines ...
+And yet more lines
+And more""",2011-09-19 01:09:09
+25,"Text ""
+more lines",2011-09-19 01:09:09
+26,"""
+",2011-09-19 01:09:09
+27,"Text",""
+28,"Text","2011-09-19 01:09:09"
+29,"Text\.","2011-09-19 01:09:09"
+30,Text\.,"2011-09-19 01:09:09"
+31,"\.Text","2011-09-19 01:09:09"
+32,\.Text,"2011-09-19 01:09:09"

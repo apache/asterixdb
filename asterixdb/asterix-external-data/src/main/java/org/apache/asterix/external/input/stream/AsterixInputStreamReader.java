@@ -68,7 +68,7 @@ public class AsterixInputStreamReader extends Reader {
     }
 
     @Override
-    public int read(char cbuf[], int offset, int length) throws IOException {
+    public int read(char[] cbuf, int offset, int length) throws IOException {
         if (done) {
             return -1;
         }
@@ -84,7 +84,9 @@ public class AsterixInputStreamReader extends Reader {
                 } else {
                     // need to read more data
                     System.arraycopy(bytes, byteBuffer.position(), bytes, 0, byteBuffer.remaining());
+                    len = 0; // reset to read more bytes
                     byteBuffer.position(byteBuffer.remaining());
+                    byteBuffer.limit(byteBuffer.capacity()); //set limit to capacity for the new bytes
                     while (len == 0) {
                         len = in.read(bytes, byteBuffer.position(), bytes.length - byteBuffer.position());
                     }

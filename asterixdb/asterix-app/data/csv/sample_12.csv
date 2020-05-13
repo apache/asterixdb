@@ -1,0 +1,16 @@
+f1,f2,f3
+1,true,"text"
+2,false,"text"
+3,true,"text"
+4,true,""
+5,false,
+6,true,"text""
+more lines"
+7,false,"""
+"
+8,true,""
+9,false,"text"""
+10,false,text\.
+11,true,"text\."
+,false,\.text
+13,true,"\.text"

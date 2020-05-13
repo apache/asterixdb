@@ -119,6 +119,11 @@ public class NetworkInputChannel implements IInputChannel {
 
     }
 
+    @Override
+    public void fail() {
+        // do nothing (covered by job lifecycle)
+    }
+
     private class ReadFullBufferAcceptor implements ICloseableBufferAcceptor {
         @Override
         public void accept(ByteBuffer buffer) {

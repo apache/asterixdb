@@ -90,36 +90,43 @@ public class ResultSetReader implements IResultSetReader {
     public int read(IFrame frame) throws HyracksDataException {
         frame.reset();
         int readSize = 0;
-        if (isFirstRead() && !hasNextRecord()) {
-            return readSize;
-        }
-        // read until frame is full or all result records have been read
-        while (readSize < frame.getFrameSize()) {
-            if (currentRecordMonitor.hasMoreFrames()) {
-                final ByteBuffer readBuffer = currentRecordChannel.getNextBuffer();
-                if (readBuffer == null) {
-                    throw new IllegalStateException("Unexpected empty frame");
-                }
-                currentRecordMonitor.notifyFrameRead();
-                if (readSize == 0) {
-                    final int nBlocks = FrameHelper.deserializeNumOfMinFrame(readBuffer);
-                    frame.ensureFrameSize(frame.getMinSize() * nBlocks);
-                    frame.getBuffer().clear();
-                }
-                frame.getBuffer().put(readBuffer);
-                currentRecordChannel.recycleBuffer(readBuffer);
-                readSize = frame.getBuffer().position();
-            } else {
-                currentRecordChannel.close();
-                if (currentRecordMonitor.failed()) {
-                    throw HyracksDataException.create(ErrorCode.FAILED_TO_READ_RESULT, jobId);
-                }
-                if (isLastRecord() || !hasNextRecord()) {
-                    break;
+        try {
+            if (isFirstRead() && !hasNextRecord()) {
+                return readSize;
+            }
+            // read until frame is full or all result records have been read
+            while (readSize < frame.getFrameSize()) {
+                if (currentRecordMonitor.hasMoreFrames()) {
+                    final ByteBuffer readBuffer = currentRecordChannel.getNextBuffer();
+                    if (readBuffer == null) {
+                        throw new IllegalStateException("Unexpected empty frame");
+                    }
+                    currentRecordMonitor.notifyFrameRead();
+                    if (readSize == 0) {
+                        final int nBlocks = FrameHelper.deserializeNumOfMinFrame(readBuffer);
+                        frame.ensureFrameSize(frame.getMinSize() * nBlocks);
+                        frame.getBuffer().clear();
+                    }
+                    frame.getBuffer().put(readBuffer);
+                    currentRecordChannel.recycleBuffer(readBuffer);
+                    readSize = frame.getBuffer().position();
+                } else {
+                    currentRecordChannel.close();
+                    if (currentRecordMonitor.failed()) {
+                        throw HyracksDataException.create(ErrorCode.FAILED_TO_READ_RESULT, jobId);
+                    }
+                    if (isLastRecord() || !hasNextRecord()) {
+                        break;
+                    }
                 }
             }
+            frame.getBuffer().flip();
+        } catch (Exception e) {
+            if (isLocalFailure()) {
+                currentRecordChannel.fail();
+            }
+            throw e;
         }
-        frame.getBuffer().flip();
         return readSize;
     }
 
@@ -199,6 +206,10 @@ public class ResultSetReader implements IResultSetReader {
 
     private boolean isLastRecord() {
         return knownRecords != null && currentRecord == knownRecords.length - 1;
+    }
+
+    private boolean isLocalFailure() {
+        return currentRecordMonitor != null && !currentRecordMonitor.failed();
     }
 
     private static class ResultInputChannelMonitor implements IInputChannelMonitor {

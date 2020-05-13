@@ -143,13 +143,13 @@ public class FeedMetadataUtil {
                     default:
                         throw new AsterixException("Unknown Adapter type " + adapterType);
                 }
-                adapterFactory.setOutputType(adapterOutputType);
-                adapterFactory.setMetaType(metaType);
-                adapterFactory.configure(appCtx.getServiceContext(), configuration);
             } else {
-                AdapterFactoryProvider.getAdapterFactory(appCtx.getServiceContext(), adapterName, configuration,
-                        adapterOutputType, metaType);
+                ExternalDataUtils.prepare(adapterName, configuration);
+                adapterFactory = (ITypedAdapterFactory) appCtx.getAdapterFactoryService().createAdapterFactory();
             }
+            adapterFactory.setOutputType(adapterOutputType);
+            adapterFactory.setMetaType(metaType);
+            adapterFactory.configure(appCtx.getServiceContext(), configuration);
             if (metaType == null && configuration.containsKey(ExternalDataConstants.KEY_META_TYPE_NAME)) {
                 metaType = getOutputType(feed, configuration.get(ExternalDataConstants.KEY_META_TYPE_NAME));
                 if (metaType == null) {

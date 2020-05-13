@@ -24,6 +24,6 @@ SELECT
     WHEN t IS MISSING THEN -2
     ELSE 2.0/t
   END
-FROM [0, 1, 2, 4, NULL, [0][-1]] t;
+FROM [0, 1, 2, 4, NULL, MISSING] t;
 
 
