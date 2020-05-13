@@ -108,6 +108,10 @@ public class ResultExtractor {
         return extract(resultStream, EnumSet.of(ResultField.PLANS), resultCharset).getResult();
     }
 
+    public static InputStream extractStatus(InputStream resultStream, Charset resultCharset) throws Exception {
+        return extract(resultStream, EnumSet.of(ResultField.STATUS), resultCharset).getResult();
+    }
+
     public static String extractHandle(InputStream resultStream, Charset responseCharset) throws Exception {
         String result = IOUtils.toString(resultStream, responseCharset);
         ObjectNode resultJson = OBJECT_MAPPER.readValue(result, ObjectNode.class);

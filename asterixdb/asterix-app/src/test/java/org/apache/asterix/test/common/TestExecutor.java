@@ -154,6 +154,7 @@ public class TestExecutor {
             Pattern.compile("maxresultreads=(\\d+)(\\D|$)", Pattern.MULTILINE);
     private static final Pattern HTTP_REQUEST_TYPE = Pattern.compile("requesttype=(.*)", Pattern.MULTILINE);
     private static final Pattern EXTRACT_RESULT_TYPE = Pattern.compile("extractresult=(.*)", Pattern.MULTILINE);
+    private static final Pattern EXTRACT_STATUS_PATTERN = Pattern.compile("extractstatus", Pattern.MULTILINE);
     private static final String NC_ENDPOINT_PREFIX = "nc:";
     public static final int TRUNCATE_THRESHOLD = 16384;
     public static final Set<String> NON_CANCELLABLE =
@@ -1278,6 +1279,7 @@ public class TestExecutor {
         final Optional<String> body = extractBody(statement);
         final Predicate<Integer> statusCodePredicate = extractStatusCodePredicate(statement);
         final boolean extracResult = isExtracResult(statement);
+        final boolean extractStatus = isExtractStatus(statement);
         final String mimeReqType = extractHttpRequestType(statement);
         ContentType contentType = mimeReqType != null ? ContentType.create(mimeReqType, UTF_8) : TEXT_PLAIN_UTF8;
         InputStream resultStream;
@@ -1286,11 +1288,13 @@ public class TestExecutor {
         } else if ("uri".equals(extension)) {
             resultStream = executeURI(reqType, URI.create(variablesReplaced), fmt, params, statusCodePredicate, body,
                     contentType);
-            if (extracResult) {
-                resultStream = ResultExtractor.extract(resultStream, UTF_8).getResult();
-            }
         } else {
             throw new IllegalArgumentException("Unexpected format for method " + reqType + ": " + extension);
+        }
+        if (extracResult) {
+            resultStream = ResultExtractor.extract(resultStream, UTF_8).getResult();
+        } else if (extractStatus) {
+            resultStream = ResultExtractor.extractStatus(resultStream, UTF_8);
         }
         if (handleVar != null) {
             String handle = ResultExtractor.extractHandle(resultStream, UTF_8);
@@ -1698,6 +1702,11 @@ public class TestExecutor {
     private static boolean isExtracResult(String statement) {
         Matcher m = EXTRACT_RESULT_TYPE.matcher(statement);
         return m.find() ? Boolean.valueOf(m.group(1)) : false;
+    }
+
+    private static boolean isExtractStatus(String statement) {
+        Matcher m = EXTRACT_STATUS_PATTERN.matcher(statement);
+        return m.find();
     }
 
     private static boolean isJsonEncoded(String httpRequestType) throws Exception {

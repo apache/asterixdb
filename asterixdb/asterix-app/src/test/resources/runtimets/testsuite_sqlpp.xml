@@ -31,15 +31,15 @@
     <test-case FilePath="api">
       <compilation-unit name="readonly-request">
         <output-dir compare="Text">readonly-request</output-dir>
-        <expected-error>ASX0044: CREATE_DATAVERSE statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: DATAVERSE_DROP statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: DATASET_DECL statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: DATASET_DROP statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: CREATE_INDEX statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: INDEX_DROP statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: INSERT statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: UPSERT statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: DELETE statement is prohibited by this request</expected-error>
+        <expected-error>ASX0044: CREATE_DATAVERSE statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: DATAVERSE_DROP statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: DATASET_DECL statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: DATASET_DROP statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: CREATE_INDEX statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: INDEX_DROP statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: INSERT statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: UPSERT statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: DELETE statement is not supported in read-only mode</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="api">
@@ -106,6 +106,25 @@
     <test-case FilePath="api">
       <compilation-unit name="format-param-in-accept-05">
         <output-dir compare="AST">format-param-in-accept-05</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="get-non-query">
+        <output-dir compare="Text">get-non-query</output-dir>
+        <expected-error>CREATE_DATAVERSE statement is not supported in read-only mode</expected-error>
+        <expected-error>TYPE_DECL statement is not supported in read-only mode</expected-error>
+        <expected-error>CREATE_FUNCTION statement is not supported in read-only mode</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="get-query">
+        <output-dir compare="Text">get-query</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="post-non-query">
+        <output-dir compare="Text">post-non-query</output-dir>
+        <expected-error>TYPE_DECL statement is not supported in read-only mode</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
