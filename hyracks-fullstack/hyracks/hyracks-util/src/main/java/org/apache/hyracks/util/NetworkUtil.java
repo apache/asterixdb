@@ -115,6 +115,17 @@ public class NetworkUtil {
         return hosts;
     }
 
+    public static String defaultPort(String maybeHostPort, int defaultPort) {
+        String encodedInput = encodeIPv6LiteralHost(maybeHostPort);
+        int lastColon = encodedInput.lastIndexOf(':');
+        int closeBracket = encodedInput.lastIndexOf(']');
+        if (lastColon > 0 && lastColon > closeBracket) {
+            return maybeHostPort;
+        } else {
+            return encodedInput + ":" + defaultPort;
+        }
+    }
+
     public static String encodeIPv6LiteralHost(String hostname) {
         return InetAddressUtils.isIPv6Address(hostname) ? "[" + hostname + "]" : hostname;
     }

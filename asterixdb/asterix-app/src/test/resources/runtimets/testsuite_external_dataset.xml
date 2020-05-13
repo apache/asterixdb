@@ -17,11 +17,27 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp">
+<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   <test-group name="external-dataset">
     <test-case FilePath="external-dataset">
       <compilation-unit name="aws/s3/000">
         <output-dir compare="Text">aws/s3/000</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/001">
+        <output-dir compare="Text">aws/s3/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/002">
+        <output-dir compare="Text">aws/s3/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/negative">
+        <output-dir compare="Text">aws/s3/negative</output-dir>
+        <expected-error>Parameter(s) format must be specified</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

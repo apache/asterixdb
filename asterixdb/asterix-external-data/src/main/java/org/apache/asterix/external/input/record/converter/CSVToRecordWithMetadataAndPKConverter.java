@@ -41,7 +41,7 @@ public class CSVToRecordWithMetadataAndPKConverter
         this.cursor = new FieldCursorForDelimitedDataParser(null, delimiter, ExternalDataConstants.QUOTE);
         this.record = new CharArrayRecord();
         this.valueIndex = valueIndex;
-        this.recordWithMetadata = new RecordWithMetadataAndPK<char[]>(record, metaType.getFieldTypes(), recordType,
+        this.recordWithMetadata = new RecordWithMetadataAndPK<>(record, metaType.getFieldTypes(), recordType,
                 keyIndicator, keyIndexes, keyTypes);
     }
 
@@ -53,16 +53,15 @@ public class CSVToRecordWithMetadataAndPKConverter
         int i = 0;
         int j = 0;
         while (cursor.nextField()) {
-            if (cursor.isDoubleQuoteIncludedInThisField) {
-                cursor.eliminateDoubleQuote(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart);
-                cursor.fEnd -= cursor.doubleQuoteCount;
-                cursor.isDoubleQuoteIncludedInThisField = false;
+            if (cursor.fieldHasDoubleQuote()) {
+                cursor.eliminateDoubleQuote();
             }
             if (i == valueIndex) {
-                record.setValue(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart);
+                record.setValue(cursor.getBuffer(), cursor.getFieldStart(), cursor.getFieldLength());
                 record.endRecord();
             } else {
-                recordWithMetadata.setRawMetadata(j, cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart);
+                recordWithMetadata.setRawMetadata(j, cursor.getBuffer(), cursor.getFieldStart(),
+                        cursor.getFieldLength());
                 j++;
             }
             i++;

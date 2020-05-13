@@ -205,7 +205,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
             IExternalIndexer indexer = files == null ? null : ExternalIndexerProvider.getIndexer(configuration);
             if (recordReaderClazz != null) {
                 StreamRecordReader streamReader = (StreamRecordReader) recordReaderClazz.getConstructor().newInstance();
-                streamReader.configure(createInputStream(ctx, partition, indexer), configuration);
+                streamReader.configure(ctx, createInputStream(ctx, partition, indexer), configuration);
                 if (indexer != null) {
                     return new IndexingStreamRecordReader(streamReader, indexer);
                 } else {

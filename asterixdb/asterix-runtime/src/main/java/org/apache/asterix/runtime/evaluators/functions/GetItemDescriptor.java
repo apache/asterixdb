@@ -116,6 +116,10 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         int itemIndex = ATypeHierarchy.getIntegerValue(BuiltinFunctions.GET_ITEM.getName(), 0,
                                 indexBytes, indexOffset);
 
+                        if (itemIndex < 0) {
+                            itemIndex = itemCount + itemIndex;
+                        }
+
                         if (itemIndex < 0 || itemIndex >= itemCount) {
                             // Out-of-bound index access should return MISSING.
                             result.set(missingBytes, 0, 1);

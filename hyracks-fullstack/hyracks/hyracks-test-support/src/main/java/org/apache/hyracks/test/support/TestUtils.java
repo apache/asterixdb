@@ -51,6 +51,7 @@ import org.apache.logging.log4j.core.config.Configuration;
 
 public class TestUtils {
 
+    private static final int DEFAULT_FRAME_SIZE = 32768;
     public static final IWarningCollector NOOP_WARNING_COLLECTOR = new IWarningCollector() {
         @Override
         public void warn(Warning warning) {
@@ -67,6 +68,10 @@ public class TestUtils {
             return 0;
         }
     };
+
+    public static IHyracksTaskContext createHyracksTask() {
+        return create(DEFAULT_FRAME_SIZE);
+    }
 
     public static IHyracksTaskContext create(int frameSize) {
         IOManager ioManager = null;

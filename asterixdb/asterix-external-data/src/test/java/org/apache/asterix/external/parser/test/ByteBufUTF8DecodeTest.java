@@ -41,6 +41,8 @@ import org.apache.asterix.external.input.record.reader.stream.SemiStructuredReco
 import org.apache.asterix.external.input.stream.LocalFSInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FileSystemWatcher;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.test.support.TestUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -56,6 +58,7 @@ public class ByteBufUTF8DecodeTest {
     private final CharBuffer chars = CharBuffer.allocate(BUFFER_SIZE);
     private final CharArrayRecord value = new CharArrayRecord();
     private final ByteBuf nettyBuffer = UnpooledByteBufAllocator.DEFAULT.heapBuffer(KB32, Integer.MAX_VALUE);
+    private final IHyracksTaskContext ctx = TestUtils.createHyracksTask();
 
     @Test
     public void eatGlass() {
@@ -83,7 +86,7 @@ public class ByteBufUTF8DecodeTest {
         FileSystemWatcher watcher = new FileSystemWatcher(paths, null, false);
         LocalFSInputStream in = new LocalFSInputStream(watcher);
         try (SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader()) {
-            recordReader.configure(in, config);
+            recordReader.configure(ctx, in, config);
             while (recordReader.hasNext()) {
                 try {
                     IRawRecord<char[]> record = recordReader.next();

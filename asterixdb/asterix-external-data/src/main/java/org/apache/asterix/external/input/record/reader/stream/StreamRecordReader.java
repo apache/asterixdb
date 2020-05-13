@@ -31,6 +31,7 @@ import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.stream.AsterixInputStreamReader;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class StreamRecordReader implements IRecordReader<char[]>, IStreamNotificationHandler {
@@ -100,6 +101,6 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
 
     public abstract String getRequiredConfigs();
 
-    public abstract void configure(AsterixInputStream inputStream, Map<String, String> config)
+    public abstract void configure(IHyracksTaskContext ctx, AsterixInputStream inputStream, Map<String, String> config)
             throws HyracksDataException;
 }

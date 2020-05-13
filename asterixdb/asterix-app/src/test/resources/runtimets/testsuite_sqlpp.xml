@@ -13141,6 +13141,18 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="csv-tsv-parser">
+    <test-case FilePath="csv-tsv-parser">
+      <compilation-unit name="csv-parser-001">
+        <output-dir compare="Text">csv-parser-001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="csv-tsv-parser">
+      <compilation-unit name="tsv-parser-001">
+        <output-dir compare="Text">tsv-parser-001</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="binary">
     <test-case FilePath="binary">
       <compilation-unit name="parse">
@@ -13231,6 +13243,11 @@
       <compilation-unit name="union_negative_3">
         <output-dir compare="Text">union</output-dir>
         <expected-error>Operation UNION with set semantics is not supported.</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_nested">
+        <output-dir compare="Text">union_nested</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="union">

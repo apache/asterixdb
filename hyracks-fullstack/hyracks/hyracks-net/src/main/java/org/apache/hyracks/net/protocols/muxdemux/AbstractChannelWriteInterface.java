@@ -75,14 +75,14 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
 
     @GuardedBy("ChannelControlBlock")
     private boolean computeWritability() {
-        boolean writableDataPresent = currentWriteBuffer != null || !wiFullQueue.isEmpty();
+        if (!ecodeSent && ecode.get() == REMOTE_ERROR_CODE) {
+            return true;
+        }
+        boolean writableDataPresent = !ecodeSent && (currentWriteBuffer != null || !wiFullQueue.isEmpty());
         if (writableDataPresent) {
             return credits > 0;
         }
-        if (isPendingCloseWrite()) {
-            return true;
-        }
-        return ecode.get() == REMOTE_ERROR_CODE && !ecodeSent;
+        return isPendingCloseWrite();
     }
 
     @Override

@@ -37,4 +37,9 @@ public interface IInputChannel {
     public void open(IHyracksCommonContext ctx) throws HyracksDataException;
 
     public void close() throws HyracksDataException;
+
+    /**
+     * Called when a failure is encountered while reading data
+     */
+    void fail();
 }

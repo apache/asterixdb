@@ -76,12 +76,11 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                                 break;
                             }
                             // Eliminate double quotes in the field that we are going to parse
-                            if (cursor.isDoubleQuoteIncludedInThisField) {
-                                cursor.eliminateDoubleQuote(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart);
-                                cursor.fEnd -= cursor.doubleQuoteCount;
-                                cursor.isDoubleQuoteIncludedInThisField = false;
+                            if (cursor.fieldHasDoubleQuote()) {
+                                cursor.eliminateDoubleQuote();
                             }
-                            valueParsers[i].parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart, dos);
+                            valueParsers[i].parse(cursor.getBuffer(), cursor.getFieldStart(), cursor.getFieldLength(),
+                                    dos);
                             tb.addFieldEndOffset();
                         }
                         FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,

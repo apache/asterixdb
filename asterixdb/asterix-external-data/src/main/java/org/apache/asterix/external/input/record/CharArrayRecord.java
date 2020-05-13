@@ -134,4 +134,10 @@ public class CharArrayRecord implements IRawRecord<char[]> {
         strValue.getChars(0, strValue.length(), value, 0);
         this.size = strValue.length();
     }
+
+    public boolean isEmptyRecord() {
+        return size <= 0
+                || (size == 1 && (value[0] == ExternalDataConstants.LF || value[0] == ExternalDataConstants.CR))
+                || (size == 2 && value[0] == ExternalDataConstants.CR && value[1] == ExternalDataConstants.LF);
+    }
 }

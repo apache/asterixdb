@@ -22,5 +22,5 @@ SELECT
     WHEN t = 0 THEN MISSING
     ELSE NULL
   END
-FROM [0, 1, 2, 4, NULL, [0][-1]] t;
+FROM [0, 1, 2, 4, NULL, MISSING] t;
 

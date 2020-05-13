@@ -97,12 +97,7 @@ RecordConstructor [
         LiteralExpr [STRING] [-6.5d]
       ]
       +
-      IndexAccessor [
-        OrderedListConstructor [
-          LiteralExpr [DOUBLE] [1.0]
-        ]
-        Index:         - LiteralExpr [LONG] [1]
-      ]
+      LiteralExpr [MISSING]
     ]
   )
 ]
