@@ -22,5 +22,5 @@ create dataverse test;
 
 use test;
 
-create dataset prd(p_id integer not null) open type primary key p_id;
-create dataset sls(s_id integer not null) open type primary key s_id;
+create dataset prd(p_id integer not unknown) open type primary key p_id;
+create dataset sls(s_id integer not unknown) open type primary key s_id;

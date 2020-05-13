@@ -25,12 +25,12 @@ USE test;
 /* Prepare: create datasets with inline type */
 
 CREATE DATASET Cust1(
-  c_custkey integer not null,
-  c_name string not null
+  c_custkey integer not unknown,
+  c_name string not unknown
 ) PRIMARY KEY c_custkey;
 
 CREATE DATASET Cust2(
-  c_custkey integer not null,
-  c_name string not null,
+  c_custkey integer not unknown,
+  c_name string not unknown,
   c_phone string
 ) PRIMARY KEY c_custkey;

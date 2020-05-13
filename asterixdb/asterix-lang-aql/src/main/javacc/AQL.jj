@@ -1362,7 +1362,7 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
 {
   String fieldName;
   TypeExpression type = null;
-  boolean nullable = false;
+  boolean nullable = false, missable = false;
 }
 {
   fieldName = Identifier()
@@ -1370,9 +1370,9 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
       String hint = getHint(token);
       IRecordFieldDataGen rfdg = hint != null ? parseFieldDataGen(hint) : null;
     }
-  <COLON> type =  TypeExpr() (<QUES> { nullable = true; } )?
+  <COLON> type =  TypeExpr() (<QUES> { nullable = true; missable = true; } )?
     {
-      recType.addField(fieldName, type, nullable, rfdg);
+      recType.addField(fieldName, type, nullable, missable, rfdg);
     }
 }
 

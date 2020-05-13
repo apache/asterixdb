@@ -38,22 +38,22 @@ CREATE FUNCTION listMetadata() {
 /* Internal datasets */
 
 CREATE DATASET A_Customers_Default_Closed(
-  c_custkey integer not null,
-  c_name string not null,
+  c_custkey integer not unknown,
+  c_name string not unknown,
   c_phone string,
   c_comment string
 ) PRIMARY KEY c_custkey ;
 
 CREATE DATASET A_Customers_Closed(
-  c_custkey integer not null,
-  c_name string not null,
+  c_custkey integer not unknown,
+  c_name string not unknown,
   c_phone string,
   c_comment string
 ) CLOSED TYPE PRIMARY KEY c_custkey;
 
 CREATE DATASET A_Customers_Open(
-  c_custkey integer not null,
-  c_name string not null,
+  c_custkey integer not unknown,
+  c_name string not unknown,
   c_phone string,
   c_comment string
 ) OPEN TYPE PRIMARY KEY c_custkey;
@@ -61,14 +61,14 @@ CREATE DATASET A_Customers_Open(
 /* External datasets */
 
 CREATE EXTERNAL DATASET B_Orders_Default_Closed(
-    o_orderkey integer not null,
-    o_custkey integer not null,
-    o_orderstatus string not null,
-    o_totalprice double not null,
-    o_orderdate string not null,
-    o_orderpriority string not null,
-    o_clerk string not null,
-    o_shippriority integer not null,
+    o_orderkey integer not unknown,
+    o_custkey integer not unknown,
+    o_orderstatus string not unknown,
+    o_totalprice double not unknown,
+    o_orderdate string not unknown,
+    o_orderpriority string not unknown,
+    o_clerk string not unknown,
+    o_shippriority integer not unknown,
     o_comment string
 )
 USING `localfs`
@@ -76,14 +76,14 @@ USING `localfs`
 (`input-format`=`text-input-format`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
 CREATE EXTERNAL DATASET B_Orders_Closed(
-    o_orderkey integer not null,
-    o_custkey integer not null,
-    o_orderstatus string not null,
-    o_totalprice double not null,
-    o_orderdate string not null,
-    o_orderpriority string not null,
-    o_clerk string not null,
-    o_shippriority integer not null,
+    o_orderkey integer not unknown,
+    o_custkey integer not unknown,
+    o_orderstatus string not unknown,
+    o_totalprice double not unknown,
+    o_orderdate string not unknown,
+    o_orderpriority string not unknown,
+    o_clerk string not unknown,
+    o_shippriority integer not unknown,
     o_comment string
 ) CLOSED TYPE
 USING `localfs`
@@ -91,14 +91,14 @@ USING `localfs`
 (`input-format`=`text-input-format`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
 CREATE EXTERNAL DATASET B_Orders_Open(
-    o_orderkey integer not null,
-    o_custkey integer not null,
-    o_orderstatus string not null,
-    o_totalprice double not null,
-    o_orderdate string not null,
-    o_orderpriority string not null,
-    o_clerk string not null,
-    o_shippriority integer not null,
+    o_orderkey integer not unknown,
+    o_custkey integer not unknown,
+    o_orderstatus string not unknown,
+    o_totalprice double not unknown,
+    o_orderdate string not unknown,
+    o_orderpriority string not unknown,
+    o_clerk string not unknown,
+    o_shippriority integer not unknown,
     o_comment string
 ) OPEN TYPE
 USING `localfs`
@@ -108,34 +108,34 @@ USING `localfs`
 /* Internal datasets with inline META type */
 
 CREATE DATASET C_Customers_Meta_Default_Closed(
-  c_custkey integer not null,
-  c_name string not null,
+  c_custkey integer not unknown,
+  c_name string not unknown,
   c_phone string,
   c_comment string
 )
-WITH META(c_x integer not null, c_y integer)
+WITH META(c_x integer not unknown, c_y integer)
 PRIMARY KEY c_custkey ;
 
 CREATE DATASET C_Customers_Meta_Closed(
-  c_custkey integer not null,
-  c_name string not null,
+  c_custkey integer not unknown,
+  c_name string not unknown,
   c_phone string,
   c_comment string
 ) CLOSED TYPE
 WITH META(
-  c_x integer not null,
+  c_x integer not unknown,
   c_y integer
 ) CLOSED TYPE
 PRIMARY KEY c_custkey;
 
 CREATE DATASET C_Customers_Meta_Open(
-  c_custkey integer not null,
-  c_name string not null,
+  c_custkey integer not unknown,
+  c_name string not unknown,
   c_phone string,
   c_comment string
 ) OPEN TYPE
 WITH META(
-  c_x integer not null,
+  c_x integer not unknown,
   c_y integer
 ) OPEN TYPE
 PRIMARY KEY c_custkey;

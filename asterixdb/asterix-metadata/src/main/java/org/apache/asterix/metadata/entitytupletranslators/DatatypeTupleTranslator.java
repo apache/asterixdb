@@ -36,6 +36,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Datatype;
+import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
@@ -49,7 +50,6 @@ import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.AbstractComplexType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -82,6 +82,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(MetadataRecordTypes.DATATYPE_RECORDTYPE);
     private final MetadataNode metadataNode;
     private final TxnId txnId;
+    protected final transient ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage();
 
     protected DatatypeTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATATYPE_DATASET.getFieldCount());
@@ -123,8 +124,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                     ARecord recordType = (ARecord) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_RECORD_FIELD_INDEX);
                     boolean isOpen = ((ABoolean) recordType
-                            .getValueByPos(MetadataRecordTypes.RECORDTYPE_ARECORD_ISOPEN_FIELD_INDEX)).getBoolean()
-                                    .booleanValue();
+                            .getValueByPos(MetadataRecordTypes.RECORDTYPE_ARECORD_ISOPEN_FIELD_INDEX)).getBoolean();
                     int numberOfFields = ((AOrderedList) recordType
                             .getValueByPos(MetadataRecordTypes.RECORDTYPE_ARECORD_FIELDS_FIELD_INDEX)).size();
                     IACursor cursor = ((AOrderedList) recordType
@@ -141,11 +141,24 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                         fieldTypeName =
                                 ((AString) field.getValueByPos(MetadataRecordTypes.FIELD_ARECORD_FIELDTYPE_FIELD_INDEX))
                                         .getStringValue();
+
                         boolean isNullable = ((ABoolean) field
-                                .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_ISNULLABLE_FIELD_INDEX)).getBoolean()
-                                        .booleanValue();
-                        fieldTypes[fieldId] = BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName,
-                                fieldTypeName, isNullable);
+                                .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_ISNULLABLE_FIELD_INDEX)).getBoolean();
+
+                        int isMissableIdx = field.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_IS_MISSABLE);
+                        boolean isMissable;
+                        if (isMissableIdx >= 0) {
+                            isMissable = ((ABoolean) field.getValueByPos(isMissableIdx)).getBoolean();
+                        } else {
+                            // back-compat
+                            // we previously stored 'isNullable' = true if type was 'unknowable',
+                            // or 'isNullable' = 'false' if the type was 'not unknowable'.
+                            isMissable = isNullable;
+                        }
+
+                        IAType fieldType =
+                                BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, fieldTypeName);
+                        fieldTypes[fieldId] = TypeUtil.createQuantifiedType(fieldType, isNullable, isMissable);
                         fieldId++;
                     }
                     return new Datatype(dataverseName, datatypeName,
@@ -157,17 +170,16 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                                     .getStringValue();
                     return new Datatype(dataverseName, datatypeName,
                             new AUnorderedListType(BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId,
-                                    dataverseName, unorderedlistTypeName, false), datatypeName),
+                                    dataverseName, unorderedlistTypeName), datatypeName),
                             isAnonymous);
                 }
                 case ORDEREDLIST: {
                     String orderedlistTypeName = ((AString) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_ORDEREDLIST_FIELD_INDEX))
                                     .getStringValue();
-                    return new Datatype(dataverseName, datatypeName,
-                            new AOrderedListType(BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName,
-                                    orderedlistTypeName, false), datatypeName),
-                            isAnonymous);
+                    return new Datatype(dataverseName, datatypeName, new AOrderedListType(
+                            BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, orderedlistTypeName),
+                            datatypeName), isAnonymous);
                 }
                 default:
                     throw new UnsupportedOperationException("Unsupported derived type: " + tag);
@@ -203,20 +215,15 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_DATATYPENAME_FIELD_INDEX, fieldValue);
 
+        // write field 2
         IAType fieldType = dataType.getDatatype();
-        // unwrap nullable type out of the union
-        if (fieldType.getTypeTag() == ATypeTag.UNION) {
-            fieldType = ((AUnionType) dataType.getDatatype()).getActualType();
-        }
-
-        // write field 3
         if (fieldType.getTypeTag().isDerivedType()) {
             fieldValue.reset();
             writeDerivedTypeRecord(dataType, (AbstractComplexType) fieldType, fieldValue.getDataOutput());
             recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_DERIVED_FIELD_INDEX, fieldValue);
         }
 
-        // write field 4
+        // write field 3
         fieldValue.reset();
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
@@ -232,7 +239,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
 
     private void writeDerivedTypeRecord(Datatype type, AbstractComplexType derivedDatatype, DataOutput out)
             throws HyracksDataException {
-        DerivedTypeTag tag = null;
+        DerivedTypeTag tag;
         IARecordBuilder derivedRecordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         switch (derivedDatatype.getTypeTag()) {
@@ -260,7 +267,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
 
         // write field 1
         fieldValue.reset();
-        booleanSerde.serialize(type.getIsAnonymous() ? ABoolean.TRUE : ABoolean.FALSE, fieldValue.getDataOutput());
+        booleanSerde.serialize(ABoolean.valueOf(type.getIsAnonymous()), fieldValue.getDataOutput());
         derivedRecordBuilder.addField(MetadataRecordTypes.DERIVEDTYPE_ARECORD_ISANONYMOUS_FIELD_INDEX, fieldValue);
 
         switch (tag) {
@@ -308,14 +315,18 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         ARecordType recType = (ARecordType) type;
         OrderedListBuilder listBuilder = new OrderedListBuilder();
         listBuilder.reset(new AOrderedListType(MetadataRecordTypes.FIELD_RECORDTYPE, null));
-        IAType fieldType = null;
+        IAType fieldType;
 
         for (int i = 0; i < recType.getFieldNames().length; i++) {
             fieldType = recType.getFieldTypes()[i];
             boolean fieldIsNullable = false;
-            if (NonTaggedFormatUtil.isOptional(fieldType)) {
-                fieldIsNullable = true;
-                fieldType = ((AUnionType) fieldType).getActualType();
+            boolean fieldIsMissable = false;
+
+            if (fieldType.getTypeTag() == ATypeTag.UNION) {
+                AUnionType fieldUnionType = (AUnionType) fieldType;
+                fieldIsNullable = fieldUnionType.isNullableType();
+                fieldIsMissable = fieldUnionType.isMissableType();
+                fieldType = fieldUnionType.getActualType();
             }
             if (fieldType.getTypeTag().isDerivedType()) {
                 handleNestedDerivedType(fieldType.getTypeName(), (AbstractComplexType) fieldType, instance,
@@ -341,6 +352,14 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
             fieldValue.reset();
             booleanSerde.serialize(fieldIsNullable ? ABoolean.TRUE : ABoolean.FALSE, fieldValue.getDataOutput());
             fieldRecordBuilder.addField(MetadataRecordTypes.FIELD_ARECORD_ISNULLABLE_FIELD_INDEX, fieldValue);
+
+            // write open fields
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_IS_MISSABLE);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            booleanSerde.serialize(ABoolean.valueOf(fieldIsMissable), fieldValue.getDataOutput());
+            fieldRecordBuilder.addField(fieldName, fieldValue);
 
             // write record
             fieldRecordBuilder.write(itemValue.getDataOutput(), true);
