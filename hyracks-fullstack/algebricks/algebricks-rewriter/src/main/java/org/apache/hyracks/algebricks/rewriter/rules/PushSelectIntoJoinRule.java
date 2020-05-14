@@ -150,18 +150,24 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
         if (!intersectsBranch[0] && !intersectsBranch[1]) {
             return false;
         }
+        boolean planChanged;
         if (needToPushOps) {
             //We should push independent ops into the first branch that the selection depends on
-            if (intersectsBranch[0]) {
-                pushOps(pushedOnEither, joinBranchLeftRef, context);
-            } else {
-                pushOps(pushedOnEither, joinBranchRightRef, context);
-            }
-            pushOps(pushedOnLeft, joinBranchLeftRef, context);
-            pushOps(pushedOnRight, joinBranchRightRef, context);
+            planChanged =
+                    pushOps(pushedOnEither, intersectsBranch[0] ? joinBranchLeftRef : joinBranchRightRef, context);
+            planChanged |= pushOps(pushedOnLeft, joinBranchLeftRef, context);
+            planChanged |= pushOps(pushedOnRight, joinBranchRightRef, context);
+        } else {
+            planChanged = false;
         }
         if (intersectsAllBranches) {
-            addCondToJoin(select, join, context);
+            // add condition to the join condition only if we have IJ
+            if (isLoj) {
+                notPushedStack.addFirst(select);
+            } else {
+                addCondToJoin(select, join, context);
+                planChanged = true;
+            }
         } else { // push down
             Iterator<Mutable<ILogicalOperator>> branchIter = join.getInputs().iterator();
             ILogicalExpression selectCondition = select.getCondition().getValue();
@@ -172,20 +178,20 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
                 if (!inter) {
                     continue;
                 }
-
-                // if a left outer join, if the select condition is not-missing filtering,
-                // we rewrite left outer join
-                // to inner join for this case.
-                if (j > 0 && isLoj && containsNotMissingFiltering(selectCondition)) {
-                    lojToInner = true;
-                }
-                if ((j > 0 && isLoj) && containsMissingFiltering(selectCondition)) {
-                    // Select "is-not-missing($$var)" cannot be pushed in the right branch of a LOJ;
+                if (j > 0 && isLoj) {
+                    // if a LOJ and the select condition is not-missing filtering,
+                    // we rewrite LOJ to IJ for this case.
+                    if (containsNotMissingFiltering(selectCondition)) {
+                        lojToInner = true;
+                    }
+                    // Do not push conditions into the right branch of a LOJ;
                     notPushedStack.addFirst(select);
                 } else {
-                    // Conditions for the left branch can always be pushed.
-                    // Other conditions can be pushed to the right branch of a LOJ.
+                    // Conditions for the left branch for IJ/LOJ or
+                    // for the right branch of IJ can always be pushed into that branch.
+                    // We don't push conditions into the right branch of LOJ at this point.
                     copySelectToBranch(select, branch, context);
+                    planChanged = true;
                 }
             }
             if (lojToInner) {
@@ -194,23 +200,47 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
                 innerJoin.getInputs().addAll(join.getInputs());
                 join = innerJoin;
                 context.computeAndSetTypeEnvironmentForOperator(join);
+                planChanged = true;
             }
         }
-        ILogicalOperator top = join;
-        for (ILogicalOperator npOp : notPushedStack) {
-            List<Mutable<ILogicalOperator>> npInpList = npOp.getInputs();
-            npInpList.clear();
-            npInpList.add(new MutableObject<ILogicalOperator>(top));
-            context.computeAndSetTypeEnvironmentForOperator(npOp);
-            top = npOp;
-        }
-        opRef.setValue(top);
-        return true;
 
+        planChanged |= applyNonPushed(opRef, notPushedStack, join, context);
+        return planChanged;
     }
 
-    private void pushOps(List<ILogicalOperator> opList, Mutable<ILogicalOperator> joinBranch,
+    private boolean applyNonPushed(Mutable<ILogicalOperator> opRef, LinkedList<ILogicalOperator> notPushedStack,
+            ILogicalOperator top, IOptimizationContext context) throws AlgebricksException {
+        switch (notPushedStack.size()) {
+            case 0:
+                if (opRef.getValue() == top) {
+                    return false;
+                }
+                opRef.setValue(top);
+                return true;
+            case 1:
+                ILogicalOperator notPushedOp = notPushedStack.peek();
+                if (opRef.getValue() == notPushedOp && opRef.getValue().getInputs().get(0).getValue() == top) {
+                    return false;
+                }
+                // fall thru to 'default'
+            default:
+                for (ILogicalOperator npOp : notPushedStack) {
+                    List<Mutable<ILogicalOperator>> npInpList = npOp.getInputs();
+                    npInpList.clear();
+                    npInpList.add(new MutableObject<>(top));
+                    context.computeAndSetTypeEnvironmentForOperator(npOp);
+                    top = npOp;
+                }
+                opRef.setValue(top);
+                return true;
+        }
+    }
+
+    private boolean pushOps(List<ILogicalOperator> opList, Mutable<ILogicalOperator> joinBranch,
             IOptimizationContext context) throws AlgebricksException {
+        if (opList.isEmpty()) {
+            return false;
+        }
         ILogicalOperator topOp = joinBranch.getValue();
         ListIterator<ILogicalOperator> iter = opList.listIterator(opList.size());
         while (iter.hasPrevious()) {
@@ -222,6 +252,7 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
             context.computeAndSetTypeEnvironmentForOperator(op);
         }
         joinBranch.setValue(topOp);
+        return true;
     }
 
     private static void addCondToJoin(SelectOperator select, AbstractBinaryJoinOperator join,

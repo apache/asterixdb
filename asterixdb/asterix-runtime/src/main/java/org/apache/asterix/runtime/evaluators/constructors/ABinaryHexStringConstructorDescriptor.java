@@ -111,7 +111,10 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
                     utf8Ptr.set(inputArg.getByteArray(), startOffset + 1, len - 1);
                     char[] buffer = utf8Ptr.toString().toCharArray();
                     out.write(ATypeTag.BINARY.serialize());
-                    byteArrayParser.parse(buffer, 0, buffer.length, out);
+                    if (!byteArrayParser.parse(buffer, 0, buffer.length, out)) {
+                        PointableHelper.setNull(result);
+                        return;
+                    }
                     result.set(resultStorage);
                 } else {
                     throw new TypeMismatchException(sourceLoc, BuiltinFunctions.BINARY_HEX_CONSTRUCTOR, 0, tt,

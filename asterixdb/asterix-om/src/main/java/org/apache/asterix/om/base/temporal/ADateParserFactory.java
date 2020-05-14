@@ -43,9 +43,10 @@ public class ADateParserFactory implements IValueParserFactory {
         return new IValueParser() {
 
             @Override
-            public void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
+            public boolean parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
                 try {
                     out.writeInt((int) (parseDatePart(buffer, start, length) / GregorianCalendarSystem.CHRONON_OF_DAY));
+                    return true;
                 } catch (IOException ex) {
                     throw HyracksDataException.create(ex);
                 }
@@ -56,11 +57,11 @@ public class ADateParserFactory implements IValueParserFactory {
     /**
      * Parse the given char sequence as a date string, and return the milliseconds represented by the date.
      *
-     * @param charAccessor
+     * @param dateString
      *            accessor for the char sequence
-     * @param isDateOnly
+     * @param start
      *            indicating whether it is a single date string, or it is the date part of a datetime string
-     * @param errorMessage
+     * @param length
      * @return
      * @throws Exception
      */

@@ -171,6 +171,9 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
 
         // Nothing is pushed.
         if (bi.modifyGbyMap.isEmpty()) {
+            // Reset the group-by operator with original nested plans.
+            gbyNestedPlans.clear();
+            gbyNestedPlans.addAll(backupNestedPlans);
             return null;
         }
 
@@ -188,6 +191,9 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
                         LogicalVariable v2 = newOpGbyList.get(i);
                         if (v != v2) {
                             // cannot linearize
+                            // Reset the group-by operator with original nested plans.
+                            gbyNestedPlans.clear();
+                            gbyNestedPlans.addAll(backupNestedPlans);
                             return null;
                         }
                     } else {

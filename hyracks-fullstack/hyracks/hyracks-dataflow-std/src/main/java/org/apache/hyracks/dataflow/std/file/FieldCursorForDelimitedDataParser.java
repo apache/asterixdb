@@ -21,6 +21,12 @@ package org.apache.hyracks.dataflow.std.file;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Arrays;
+import java.util.function.Supplier;
+
+import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.Warning;
 
 public class FieldCursorForDelimitedDataParser {
 
@@ -29,13 +35,26 @@ public class FieldCursorForDelimitedDataParser {
         IN_RECORD, //cursor is inside record
         EOR, //cursor is at end of record
         CR, //cursor at carriage return
-        EOF //end of stream reached
+        EOF, //end of stream reached
+        FAILED // cursor failed to parse a field
     }
 
+    public enum Result {
+        OK,
+        ERROR,
+        END
+    }
+
+    private static final SourceLocation SRC_LOC = new SourceLocation(-1, -1);
+    private static final String CLOSING_Q = "missing a closing quote";
+    private static final String OPENING_Q = "a quote should be in the beginning";
+    private static final String DELIMITER_AFTER_Q = "a quote enclosing a field needs to be followed by the delimiter";
+    private final IWarningCollector warnings;
+    private final Supplier<String> dataSourceName;
     private char[] buffer; //buffer to holds the input coming form the underlying input stream
     private int fStart; //start position for field
     private int fEnd; //end position for field
-    private int recordCount; //count of records
+    private long lineCount; //count of lines
     private int fieldCount; //count of fields in current record
     private int doubleQuoteCount; //count of double quotes
     private boolean isDoubleQuoteIncludedInThisField; //does current field include double quotes
@@ -58,7 +77,10 @@ public class FieldCursorForDelimitedDataParser {
     private final char quote; //the quote character
     private final char fieldDelimiter; //the delimiter
 
-    public FieldCursorForDelimitedDataParser(Reader in, char fieldDelimiter, char quote) {
+    public FieldCursorForDelimitedDataParser(Reader in, char fieldDelimiter, char quote,
+            IWarningCollector warningCollector, Supplier<String> dataSourceName) {
+        this.warnings = warningCollector;
+        this.dataSourceName = dataSourceName;
         this.in = in;
         if (in != null) {
             buffer = new char[INITIAL_BUFFER_SIZE];
@@ -77,7 +99,7 @@ public class FieldCursorForDelimitedDataParser {
         doubleQuoteCount = 0;
         startedQuote = false;
         isDoubleQuoteIncludedInThisField = false;
-        recordCount = 0;
+        lineCount = 1;
         fieldCount = 0;
     }
 
@@ -105,12 +127,12 @@ public class FieldCursorForDelimitedDataParser {
         return fieldCount;
     }
 
-    public int getRecordCount() {
-        return recordCount;
+    public long getLineCount() {
+        return lineCount;
     }
 
-    public void nextRecord(char[] buffer, int recordLength) {
-        recordCount++;
+    public void nextRecord(char[] buffer, int recordLength, long lineNumber) {
+        lineCount = lineNumber;
         fieldCount = 0;
         lastDelimiterPosition = -1;
         lastQuotePosition = -1;
@@ -126,7 +148,6 @@ public class FieldCursorForDelimitedDataParser {
     }
 
     public boolean nextRecord() throws IOException {
-        recordCount++;
         fieldCount = 0;
         while (true) {
             switch (state) {
@@ -142,6 +163,7 @@ public class FieldCursorForDelimitedDataParser {
 
                 case IN_RECORD:
                     int p = start;
+                    char lastChar = '\0';
                     while (true) {
                         if (p >= end) {
                             int s = start;
@@ -182,6 +204,11 @@ public class FieldCursorForDelimitedDataParser {
                             lastDelimiterPosition = p;
                             break;
                         }
+                        // count lines inside quotes
+                        if (ch == '\r' || (ch == '\n' && lastChar != '\r')) {
+                            lineCount++;
+                        }
+                        lastChar = ch;
                         ++p;
                     }
                     break;
@@ -195,6 +222,10 @@ public class FieldCursorForDelimitedDataParser {
                         }
                     }
                     char ch = buffer[start];
+                    // if the next char "ch" is not \n, then count the \r
+                    if (ch != '\n') {
+                        lineCount++;
+                    }
                     if (ch == '\n' && !startedQuote) {
                         ++start;
                         state = State.EOR;
@@ -204,6 +235,7 @@ public class FieldCursorForDelimitedDataParser {
                     }
 
                 case EOR:
+                    lineCount++;
                     if (start >= end) {
                         eof = !readMore();
                         if (eof) {
@@ -217,17 +249,21 @@ public class FieldCursorForDelimitedDataParser {
 
                 case EOF:
                     return false;
+                case FAILED:
+                    return false;
             }
         }
     }
 
-    public boolean nextField() throws IOException {
+    public Result nextField() throws IOException {
         switch (state) {
             case INIT:
             case EOR:
             case EOF:
             case CR:
-                return false;
+                return Result.END;
+            case FAILED:
+                return Result.ERROR;
 
             case IN_RECORD:
                 fieldCount++;
@@ -239,6 +275,7 @@ public class FieldCursorForDelimitedDataParser {
                 quoteCount = 0;
                 doubleQuoteCount = 0;
 
+                char lastChar = '\0';
                 int p = start;
                 while (true) {
                     if (p >= end) {
@@ -260,11 +297,14 @@ public class FieldCursorForDelimitedDataParser {
                                     fStart = start + 1;
                                     fEnd = p - 1;
                                 } else {
-                                    throw new IOException("At record: " + recordCount + ", field#: " + fieldCount
-                                            + " - missing a closing quote");
+                                    state = State.FAILED;
+                                    if (warnings.shouldWarn()) {
+                                        warn(CLOSING_Q);
+                                    }
+                                    return Result.ERROR;
                                 }
                             }
-                            return true;
+                            return Result.OK;
                         }
                     }
                     char ch = buffer[p];
@@ -275,8 +315,11 @@ public class FieldCursorForDelimitedDataParser {
                                 startedQuote = true;
                             } else {
                                 // In this case, we don't have a quote in the beginning of a field.
-                                throw new IOException("At record: " + recordCount + ", field#: " + fieldCount
-                                        + " - a quote enclosing a field needs to be placed in the beginning of that field");
+                                state = State.FAILED;
+                                if (warnings.shouldWarn()) {
+                                    warn(OPENING_Q);
+                                }
+                                return Result.ERROR;
                             }
                         }
                         // Check double quotes - "". We check [start != p-2]
@@ -300,7 +343,7 @@ public class FieldCursorForDelimitedDataParser {
                             fEnd = p;
                             start = p + 1;
                             lastDelimiterPosition = p;
-                            return true;
+                            return Result.OK;
                         }
 
                         if (lastQuotePosition == p - 1 && lastDoubleQuotePosition != p - 1
@@ -313,14 +356,17 @@ public class FieldCursorForDelimitedDataParser {
                             start = p + 1;
                             lastDelimiterPosition = p;
                             startedQuote = false;
-                            return true;
+                            return Result.OK;
                         } else if (lastQuotePosition < p - 1 && lastQuotePosition != lastDoubleQuotePosition
                                 && quoteCount == doubleQuoteCount * 2 + 2) {
                             // There is a quote before the delimiter, however it is not directly placed before the delimiter.
                             // In this case, we throw an exception.
                             // quoteCount == doubleQuoteCount * 2 + 2 : only true when we have two quotes except double-quotes.
-                            throw new IOException("At record: " + recordCount + ", field#: " + fieldCount
-                                    + " -  A quote enclosing a field needs to be followed by the delimiter.");
+                            state = State.FAILED;
+                            if (warnings.shouldWarn()) {
+                                warn(DELIMITER_AFTER_Q);
+                            }
+                            return Result.ERROR;
                         }
                         // If the control flow reaches here: we have a delimiter in this field and
                         // there should be a quote in the beginning and the end of
@@ -332,7 +378,7 @@ public class FieldCursorForDelimitedDataParser {
                             start = p + 1;
                             state = ch == '\n' ? State.EOR : State.CR;
                             lastDelimiterPosition = p;
-                            return true;
+                            return Result.OK;
                         } else if (lastQuotePosition == p - 1 && lastDoubleQuotePosition != p - 1
                                 && quoteCount == doubleQuoteCount * 2 + 2) {
                             // set the position of fStart to +1, fEnd to -1 to remove quote character
@@ -342,9 +388,14 @@ public class FieldCursorForDelimitedDataParser {
                             start = p + 1;
                             state = ch == '\n' ? State.EOR : State.CR;
                             startedQuote = false;
-                            return true;
+                            return Result.OK;
                         }
                     }
+                    // count lines inside quotes
+                    if (ch == '\r' || (ch == '\n' && lastChar != '\r')) {
+                        lineCount++;
+                    }
+                    lastChar = ch;
                     ++p;
                 }
         }
@@ -396,5 +447,10 @@ public class FieldCursorForDelimitedDataParser {
         }
         fEnd -= doubleQuoteCount;
         isDoubleQuoteIncludedInThisField = false;
+    }
+
+    private void warn(String message) {
+        warnings.warn(Warning.forHyracks(SRC_LOC, ErrorCode.PARSING_ERROR, dataSourceName.get(), lineCount, fieldCount,
+                message));
     }
 }

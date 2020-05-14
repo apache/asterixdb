@@ -35,4 +35,9 @@ public class GenericAdapter implements IDataSourceAdapter {
     public void start(int partition, IFrameWriter writer) throws HyracksDataException, InterruptedException {
         controller.start(writer);
     }
+
+    @Override
+    public long getProcessedTuples() {
+        return controller.getProcessedTuples();
+    }
 }

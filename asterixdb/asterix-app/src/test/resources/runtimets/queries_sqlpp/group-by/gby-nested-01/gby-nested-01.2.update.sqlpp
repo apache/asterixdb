@@ -1,0 +1,66 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+insert into prd
+([
+  {
+    "p_id": 1,
+    "p_name": "PRODUCT_1"
+  },
+  {
+    "p_id": 2,
+    "p_name": "PRODUCT_2"
+  }
+]);
+
+insert into sls
+([
+  {
+    "s_id": 10,
+    "s_pid": 1,
+    "s_year": 2019,
+    "s_city": [
+      { "ct_id": "SFO", "ct_sum": 10, "ct_avg": 5.0 },
+      { "ct_id": "SJC", "ct_sum": 12, "ct_avg": 6.0 },
+      { "ct_id": "RNO", "ct_sum": 14, "ct_avg": 7.0 },
+      { "ct_id": "LAS", "ct_sum": 16, "ct_avg": 8.0 }
+    ],
+    "s_state": [
+      { "st_id": "CA", "st_sum": 22, "st_avg": 5.5 },
+      { "st_id": "NV", "st_sum": 30, "st_avg": 7.5 }
+    ]
+  },
+  {
+    "s_id": 11,
+    "s_pid": 1,
+    "s_year": 2020,
+    "s_city": [
+      { "st_id": "SFO", "ct_sum": 20, "ct_avg": 10.0 },
+      { "st_id": "SJC", "ct_sum": 22, "ct_avg": 11.0 },
+      { "st_id": "RNO", "ct_sum": 24, "ct_avg": 12.0 },
+      { "st_id": "LAS", "ct_sum": 26, "ct_avg": 13.0 }
+    ],
+    "s_state": [
+      { "st_id": "CA", "st_sum": 42, "st_avg": 10.5 },
+      { "st_id": "NV", "st_sum": 50, "st_avg": 12.5 }
+    ]
+  }
+]);

@@ -65,7 +65,7 @@ public class CharArrayRecord implements IRawRecord<char[]> {
         size = length;
     }
 
-    private void ensureCapacity(int len) throws IOException {
+    private void ensureCapacity(int len) throws RuntimeDataException {
         if (value.length < len) {
             if (len > ExternalDataConstants.MAX_RECORD_SIZE) {
                 throw new RuntimeDataException(ErrorCode.INPUT_RECORD_READER_CHAR_ARRAY_RECORD_TOO_LARGE,
@@ -77,7 +77,7 @@ public class CharArrayRecord implements IRawRecord<char[]> {
         }
     }
 
-    public void append(char[] recordBuffer, int offset, int length) throws IOException {
+    public void append(char[] recordBuffer, int offset, int length) throws RuntimeDataException {
         ensureCapacity(size + length);
         System.arraycopy(recordBuffer, offset, value, size, length);
         size += length;

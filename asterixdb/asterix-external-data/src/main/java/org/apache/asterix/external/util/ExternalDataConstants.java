@@ -21,6 +21,8 @@ package org.apache.asterix.external.util;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.LongSupplier;
+import java.util.function.Supplier;
 
 public class ExternalDataConstants {
 
@@ -70,7 +72,7 @@ public class ExternalDataConstants {
     public static final String KEY_LOCAL_SOCKET_PATH = "local-socket-path";
     public static final String KEY_FORMAT = "format";
     public static final String KEY_QUOTE = "quote";
-    public static final String KEY_QUOTE_ESCAPE = "quote-escape";
+    public static final String KEY_ESCAPE = "escape";
     public static final String KEY_PARSER = "parser";
     public static final String KEY_DATASET_RECORD = "dataset-record";
     public static final String KEY_HIVE_SERDE = "hive-serde";
@@ -110,6 +112,9 @@ public class ExternalDataConstants {
     public static final String KEY_HTTP_PROXY_PORT = "http-proxy-port";
     public static final String KEY_HTTP_PROXY_USER = "http-proxy-user";
     public static final String KEY_HTTP_PROXY_PASSWORD = "http-proxy-password";
+    // a string representing the NULL value
+    public static final String KEY_NULL_STR = "null";
+    public static final String KEY_REDACT_WARNINGS = "redact-warnings";
 
     /**
      *  Keys for adapter name
@@ -231,6 +236,9 @@ public class ExternalDataConstants {
     public static final char CR = '\r';
     public static final char DEFAULT_RECORD_START = '{';
     public static final char DEFAULT_RECORD_END = '}';
+    public static final char OPEN_BRACKET = '[';
+    public static final char CLOSING_BRACKET = ']';
+    public static final char COMMA = ',';
 
     /**
      * Constant byte characters
@@ -244,6 +252,9 @@ public class ExternalDataConstants {
     public static final float DEFAULT_BUFFER_INCREMENT_FACTOR = 1.5F;
     public static final int DEFAULT_QUEUE_SIZE = 64;
     public static final int MAX_RECORD_SIZE = 32000000;
+
+    public static final Supplier<String> EMPTY_STRING = () -> "";
+    public static final LongSupplier NO_LINES = () -> -1;
 
     /**
      * Expected parameter values
@@ -260,11 +271,18 @@ public class ExternalDataConstants {
     public static final String READER_RSS = "rss_feed";
 
     public static final String ERROR_PARSE_RECORD = "Parser failed to parse record";
+    public static final String MISSING_FIELDS = "some fields are missing";
+    public static final String REC_ENDED_AT_EOF = "malformed input record ended abruptly";
+    public static final String EMPTY_FIELD = "empty value";
+    public static final String INVALID_VAL = "invalid value";
 
     public static class AwsS3Constants {
+        private AwsS3Constants() {
+        }
+
         public static final String REGION_FIELD_NAME = "region";
-        public static final String ACCESS_KEY_FIELD_NAME = "accessKey";
-        public static final String SECRET_KEY_FIELD_NAME = "secretKey";
+        public static final String ACCESS_KEY_ID_FIELD_NAME = "accessKeyId";
+        public static final String SECRET_ACCESS_KEY_FIELD_NAME = "secretAccessKey";
         public static final String CONTAINER_NAME_FIELD_NAME = "container";
         public static final String DEFINITION_FIELD_NAME = "definition";
         public static final String SERVICE_END_POINT_FIELD_NAME = "serviceEndpoint";

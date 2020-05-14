@@ -66,7 +66,8 @@ public class ByteArrayBase64ParserFactoryTest extends TestCase {
         DataOutputStream outputStream = new DataOutputStream(bos);
         ByteArrayPointable bytePtr = new ByteArrayPointable();
 
-        parser.parse(test.toCharArray(), 0, test.length(), outputStream);
+        boolean result = parser.parse(test.toCharArray(), 0, test.length(), outputStream);
+        assertTrue(result);
         bytePtr.set(bos.toByteArray(), 0, bos.size());
 
         byte[] answer = DatatypeConverter.parseBase64Binary(test);

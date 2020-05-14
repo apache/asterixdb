@@ -1,0 +1,33 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Test WHERE IF_MISSING(.., "missing") using right side of an outer join.
+ * 1:1 left outer join.
+ * Expect only 2 tuples in the result (x=3 and x=4 that didn't join)
+ * because t2_right.y evaluates to MISSING in those tuples,
+ * therefore IF_MISSING(.., "missing") evaluates to "missing"
+ */
+
+use test;
+
+select *
+from t1 t1_left left join t2 t2_right on t1_left.x = t2_right.y
+where if_missing(t2_right.y, "missing") = "missing"
+order by t1_left.a;

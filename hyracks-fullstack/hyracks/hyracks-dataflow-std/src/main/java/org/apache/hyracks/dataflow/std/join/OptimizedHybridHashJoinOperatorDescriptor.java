@@ -273,7 +273,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 ITuplePartitionComputer buildHpc =
                         new FieldHashPartitionComputerFamily(buildKeys, buildHashFunctionFactories)
                                 .createPartitioner(0);
-                boolean isFailed = false;
+                boolean failed = false;
 
                 @Override
                 public void open() throws HyracksDataException {
@@ -302,21 +302,24 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 @Override
                 public void close() throws HyracksDataException {
                     if (state.hybridHJ != null) {
-                        state.hybridHJ.closeBuild();
-                        if (isFailed) {
-                            state.hybridHJ.clearBuildTempFiles();
-                        } else {
+                        if (!failed) {
+                            state.hybridHJ.closeBuild();
                             ctx.setStateObject(state);
                             if (LOGGER.isTraceEnabled()) {
                                 LOGGER.trace("OptimizedHybridHashJoin closed its build phase");
                             }
+                        } else {
+                            state.hybridHJ.clearBuildTempFiles();
                         }
                     }
                 }
 
                 @Override
                 public void fail() throws HyracksDataException {
-                    isFailed = true;
+                    failed = true;
+                    if (state.hybridHJ != null) {
+                        state.hybridHJ.fail();
+                    }
                 }
 
                 @Override
@@ -401,6 +404,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 @Override
                 public void fail() throws HyracksDataException {
                     failed = true;
+                    if (state.hybridHJ != null) {
+                        state.hybridHJ.fail();
+                    }
                     writer.fail();
                 }
 
@@ -447,6 +453,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             joinPartitionPair(bReader, pReader, bSize, pSize, 1);
                         }
                     } catch (Exception e) {
+                        if (state.hybridHJ != null) {
+                            state.hybridHJ.fail();
+                        }
                         // Since writer.nextFrame() is called in the above "try" body, we have to call writer.fail()
                         // to send the failure signal to the downstream, when there is a throwable thrown.
                         writer.fail();

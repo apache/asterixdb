@@ -18,9 +18,13 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.EMPTY_STRING;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_REDACT_WARNINGS;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IRawRecord;
@@ -30,6 +34,7 @@ import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.stream.AsterixInputStreamReader;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -42,11 +47,17 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
     protected int bufferPosn = 0;
     protected boolean done = false;
     protected FeedLogManager feedLogManager;
+    private Supplier<String> dataSourceName = EMPTY_STRING;
+    private Supplier<String> previousDataSourceName = EMPTY_STRING;
 
-    public void configure(AsterixInputStream inputStream) {
+    public void configure(AsterixInputStream inputStream, Map<String, String> config) {
         this.reader = new AsterixInputStreamReader(inputStream);
         record = new CharArrayRecord();
         inputBuffer = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
+        if (!ExternalDataUtils.isTrue(config, KEY_REDACT_WARNINGS)) {
+            this.dataSourceName = reader::getStreamName;
+            this.previousDataSourceName = reader::getPreviousStreamName;
+        }
     }
 
     @Override
@@ -56,10 +67,13 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
 
     @Override
     public void close() throws IOException {
-        if (!done) {
-            reader.close();
+        try {
+            if (!done) {
+                reader.close();
+            }
+        } finally {
+            done = true;
         }
-        done = true;
     }
 
     @Override
@@ -95,6 +109,19 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
     @Override
     public void notifyNewSource() {
         throw new UnsupportedOperationException();
+    }
+
+    protected void resetForNewSource() {
+        record.reset();
+    }
+
+    @Override
+    public final Supplier<String> getDataSourceName() {
+        return dataSourceName;
+    }
+
+    String getPreviousStreamName() {
+        return previousDataSourceName.get();
     }
 
     public abstract List<String> getRecordReaderFormats();

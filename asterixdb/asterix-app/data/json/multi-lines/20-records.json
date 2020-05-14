@@ -1,0 +1,34 @@
+{"id": 1, "year": null, "quarter": null, "review": "good"}
+
+
+{"id": 2, "year": null, "quarter": null, "review": "good"}
+{"id": 3, "year": 2018, "quarter": null, "review": "good"}
+
+{"id": 4,
+  "year": 2018,
+  "quarter": null,
+  "review": "bad"
+}
+{"id": 5,
+  "year": 2018, "quarter": 1, "review": "good"}
+{"id": 6, "year": 2018, "quarter": 1, "review": "bad"
+}
+{"id": 7, "year": 2018, "quarter": 2, "review": "good"}
+{"id": 8, "year": 2018, "quarter": 2, "review": "bad"}
+{"id": 9, "year": 2019, "quarter": null,
+
+  "review": "good"}
+{"id": 10, "year": 2019,
+
+  "quarter": null,
+  "review": "bad"}
+{"id": 11, "year": 2019, "quarter": 1, "review": "good"}
+{"id": 12, "year": 2019, "quarter": 1, "review": "bad"}
+{"id": 13, "year": 2019, "quarter": 2, "review": "good"}
+{"id": 14, "year": 2019, "quarter": 2, "review": "bad"}
+{"id": 15, "year": 2019, "quarter": null, "review": "good"}
+{"id": 16, "year": 2019, "quarter": null, "review": "bad"}
+{"id": 17, "year": 2019, "quarter": 1, "review": "good"}
+{"id": 18, "year": 2019, "quarter": 1, "review": "bad"}
+{"id": 19, "year": 2019, "quarter": 2, "review": "good"}
+{"id": 20, "year": 2019, "quarter": 2, "review": "bad"}

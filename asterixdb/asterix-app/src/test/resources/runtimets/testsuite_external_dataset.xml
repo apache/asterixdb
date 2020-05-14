@@ -20,24 +20,51 @@
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   <test-group name="external-dataset">
     <test-case FilePath="external-dataset">
-      <compilation-unit name="aws/s3/000">
-        <output-dir compare="Text">aws/s3/000</output-dir>
+      <compilation-unit name="aws/s3/json/json">
+        <output-dir compare="Text">aws/s3/json/json</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
-      <compilation-unit name="aws/s3/001">
-        <output-dir compare="Text">aws/s3/001</output-dir>
+      <compilation-unit name="aws/s3/json/gz">
+        <output-dir compare="Text">aws/s3/json/gz</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
-      <compilation-unit name="aws/s3/002">
-        <output-dir compare="Text">aws/s3/002</output-dir>
+      <compilation-unit name="aws/s3/json/mixed">
+        <output-dir compare="Text">aws/s3/json/mixed</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
-      <compilation-unit name="aws/s3/negative">
-        <output-dir compare="Text">aws/s3/negative</output-dir>
-        <expected-error>Parameter(s) format must be specified</expected-error>
+      <compilation-unit name="aws/s3/csv/csv">
+        <output-dir compare="Text">aws/s3/csv/csv</output-dir>
+      </compilation-unit>
+    </test-case><test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/csv/gz">
+        <output-dir compare="Text">aws/s3/csv/gz</output-dir>
+      </compilation-unit>
+    </test-case><test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/csv/mixed">
+        <output-dir compare="Text">aws/s3/csv/mixed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/tsv/tsv">
+        <output-dir compare="Text">aws/s3/tsv/tsv</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/tsv/gz">
+        <output-dir compare="Text">aws/s3/tsv/gz</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/tsv/mixed">
+        <output-dir compare="Text">aws/s3/tsv/mixed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/empty-string-definition">
+        <output-dir compare="Text">aws/s3/empty-string-definition</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

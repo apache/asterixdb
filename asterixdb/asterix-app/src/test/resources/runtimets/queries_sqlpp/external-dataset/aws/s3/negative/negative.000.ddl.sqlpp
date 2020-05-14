@@ -27,8 +27,8 @@ CREATE TYPE test AS {id: int, year: int?, review: string, details: string?};
 
 DROP DATASET test IF EXISTS;
 CREATE EXTERNAL DATASET test(test) USING S3 (
-("accessKey"="dummyAccessKey"),
-("secretKey"="dummySecretKey"),
+("accessKeyId"="dummyAccessKey"),
+("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
 ("container"="playground"),

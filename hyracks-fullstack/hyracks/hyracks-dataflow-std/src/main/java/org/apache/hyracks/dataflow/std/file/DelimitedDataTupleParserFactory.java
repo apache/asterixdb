@@ -28,12 +28,16 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParser;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 
+/**
+ * Currently used by tests only. Reconsider the code when it will be used otherwise.
+ */
 public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
     private static final long serialVersionUID = 1L;
     private IValueParserFactory[] valueParserFactories;
@@ -54,6 +58,8 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
     @Override
     public ITupleParser createTupleParser(final IHyracksTaskContext ctx) {
         return new ITupleParser() {
+            final IWarningCollector warningCollector = ctx.getWarningCollector();
+
             @Override
             public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
                 try {
@@ -67,20 +73,29 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                     ArrayTupleBuilder tb = new ArrayTupleBuilder(valueParsers.length);
                     DataOutput dos = tb.getDataOutput();
 
-                    FieldCursorForDelimitedDataParser cursor =
-                            new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote);
+                    FieldCursorForDelimitedDataParser cursor = new FieldCursorForDelimitedDataParser(
+                            new InputStreamReader(in), fieldDelimiter, quote, warningCollector, () -> "");
                     while (cursor.nextRecord()) {
                         tb.reset();
                         for (int i = 0; i < valueParsers.length; ++i) {
-                            if (!cursor.nextField()) {
-                                break;
+                            FieldCursorForDelimitedDataParser.Result result = cursor.nextField();
+                            switch (result) {
+                                case OK:
+                                    break;
+                                case END:
+                                case ERROR:
+                                    throw new HyracksDataException("Failed to parse record");
+                                default:
+                                    throw new IllegalStateException();
                             }
                             // Eliminate double quotes in the field that we are going to parse
                             if (cursor.fieldHasDoubleQuote()) {
                                 cursor.eliminateDoubleQuote();
                             }
-                            valueParsers[i].parse(cursor.getBuffer(), cursor.getFieldStart(), cursor.getFieldLength(),
-                                    dos);
+                            if (!valueParsers[i].parse(cursor.getBuffer(), cursor.getFieldStart(),
+                                    cursor.getFieldLength(), dos)) {
+                                throw new HyracksDataException("Failed to parse field");
+                            }
                             tb.addFieldEndOffset();
                         }
                         FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,

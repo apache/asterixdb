@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.LongSupplier;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -32,11 +33,12 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class LineRecordReader extends StreamRecordReader {
 
-    private boolean hasHeader;
+    protected boolean hasHeader;
     protected boolean prevCharCR;
     protected int newlineLength;
-    protected int recordNumber = 0;
-    protected boolean nextIsHeader = false;
+    protected long beginLineNumber = 1;
+    protected long lineNumber = 1;
+    protected boolean newSource = false;
     private static final List<String> recordReaderFormats =
             Collections.unmodifiableList(Arrays.asList(ExternalDataConstants.FORMAT_DELIMITED_TEXT,
                     ExternalDataConstants.FORMAT_CSV, ExternalDataConstants.FORMAT_TSV));
@@ -45,19 +47,25 @@ public class LineRecordReader extends StreamRecordReader {
     @Override
     public void configure(IHyracksTaskContext ctx, AsterixInputStream inputStream, Map<String, String> config)
             throws HyracksDataException {
-        super.configure(inputStream);
+        super.configure(inputStream, config);
         this.hasHeader = ExternalDataUtils.hasHeader(config);
-        if (hasHeader) {
-            // TODO(ali): revisit this and notifyNewSource
-            inputStream.setNotificationHandler(this);
-        }
+        this.newSource = true;
+        inputStream.setNotificationHandler(this);
     }
 
     @Override
     public void notifyNewSource() {
-        if (hasHeader) {
-            nextIsHeader = true;
-        }
+        resetForNewSource();
+    }
+
+    @Override
+    public void resetForNewSource() {
+        super.resetForNewSource();
+        newSource = true;
+        beginLineNumber = 1;
+        lineNumber = 1;
+        prevCharCR = false;
+        newlineLength = 0;
     }
 
     @Override
@@ -93,6 +101,7 @@ public class LineRecordReader extends StreamRecordReader {
              * consuming it until we have a chance to look at the char that
              * follows.
              */
+            beginLineNumber = lineNumber;
             newlineLength = 0; //length of terminating newline
             prevCharCR = false; //true of prev char was CR
             record.reset();
@@ -108,30 +117,24 @@ public class LineRecordReader extends StreamRecordReader {
                             return false; //EOF
                         }
                         record.endRecord();
-                        if (record.isEmptyRecord()) {
-                            return false;
-                        }
-                        recordNumber++;
-                        return true;
+                        break;
                     }
                 }
                 for (; bufferPosn < bufferLength; ++bufferPosn) { //search for newline
                     if (inputBuffer[bufferPosn] == ExternalDataConstants.LF) {
                         newlineLength = (prevCharCR) ? 2 : 1;
                         ++bufferPosn; // at next invocation proceed from following byte
+                        ++lineNumber;
                         break;
                     }
                     if (prevCharCR) { //CR + notLF, we are at notLF
+                        ++lineNumber;
                         newlineLength = 1;
                         break;
                     }
                     prevCharCR = (inputBuffer[bufferPosn] == ExternalDataConstants.CR);
                 }
                 readLength = bufferPosn - startPosn;
-                if (prevCharCR && newlineLength == 0) {
-                    --readLength; //CR at the end of the buffer
-                    prevCharCR = false;
-                }
                 if (readLength > 0) {
                     record.append(inputBuffer, startPosn, readLength);
                 }
@@ -139,12 +142,20 @@ public class LineRecordReader extends StreamRecordReader {
             if (record.isEmptyRecord()) {
                 continue;
             }
-            if (nextIsHeader) {
-                nextIsHeader = false;
+            if (newSource && hasHeader) {
+                newSource = false;
                 continue;
             }
-            recordNumber++;
             return true;
         }
+    }
+
+    @Override
+    public LongSupplier getLineNumber() {
+        return this::getBeginLineNumber;
+    }
+
+    private long getBeginLineNumber() {
+        return beginLineNumber;
     }
 }

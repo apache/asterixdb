@@ -53,6 +53,16 @@ public final class SqlppWindowRewriteVisitor extends AbstractSqlppExpressionExtr
     }
 
     @Override
+    protected void visitFromClause(FromClause clause, ILangExpression arg, StackElement stackElement)
+            throws CompilationException {
+        clause.accept(this, arg);
+        if (!stackElement.extractionList.isEmpty()) {
+            throw new CompilationException(ErrorCode.COMPILATION_UNEXPECTED_WINDOW_EXPRESSION,
+                    clause.getSourceLocation());
+        }
+    }
+
+    @Override
     public Expression visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
         super.visit(winExpr, arg);
 
@@ -68,14 +78,16 @@ public final class SqlppWindowRewriteVisitor extends AbstractSqlppExpressionExtr
             rewriteSpecificWindowFunctions(winfi, winExpr);
             if (BuiltinFunctions.builtinFunctionHasProperty(winfi,
                     BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG)) {
-                List<Expression> newExprList = extractExpressions(winExpr.getExprList(), 1);
+                List<Expression> newExprList = extractExpressionsFromList(winExpr.getExprList(), 1,
+                        SqlppWindowRewriteVisitor::isExtractableExpression);
                 if (newExprList == null) {
                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, winExpr.getSourceLocation(), "");
                 }
                 winExpr.setExprList(newExprList);
             }
         } else if (FunctionMapUtil.isSql92AggregateFunction(signature)) {
-            List<Expression> newExprList = extractExpressions(winExpr.getExprList(), winExpr.getExprList().size());
+            List<Expression> newExprList = extractExpressionsFromList(winExpr.getExprList(),
+                    winExpr.getExprList().size(), SqlppWindowRewriteVisitor::isExtractableExpression);
             if (newExprList == null) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, winExpr.getSourceLocation(), "");
             }
@@ -111,7 +123,7 @@ public final class SqlppWindowRewriteVisitor extends AbstractSqlppExpressionExtr
         return newExprList;
     }
 
-    private boolean isExtractableExpression(Expression expr) {
+    protected static boolean isExtractableExpression(Expression expr) {
         switch (expr.getKind()) {
             case LITERAL_EXPRESSION:
             case VARIABLE_EXPRESSION:

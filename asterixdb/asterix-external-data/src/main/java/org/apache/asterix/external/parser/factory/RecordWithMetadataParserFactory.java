@@ -99,7 +99,7 @@ public class RecordWithMetadataParserFactory<I, O> implements IRecordDataParserF
     @Override
     public IRecordDataParser<I> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
         IRecordDataParser<O> recordParser = recordParserFactory.createRecordParser(ctx);
-        return new RecordWithMetadataParser<I, O>(metaType, recordParser, converterFactory.createConverter());
+        return new RecordWithMetadataParser<I, O>(metaType, recordParser, converterFactory.createConverter(ctx));
     }
 
 }

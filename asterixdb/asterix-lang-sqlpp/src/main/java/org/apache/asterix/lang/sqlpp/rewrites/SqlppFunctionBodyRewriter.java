@@ -67,6 +67,9 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
         variableCheckAndRewrite();
 
+        //  Extracts SQL-92 aggregate functions from CASE/IF expressions into LET clauses
+        rewriteCaseExpressions();
+
         // Rewrites SQL-92 global aggregations.
         rewriteGroupByAggregationSugar();
 

@@ -64,6 +64,7 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineWithExpressionVisito
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.OperatorExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SetOperationVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppBuiltinFunctionRewriteVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppCaseRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByAggregationSugarVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupingSetsVisitor;
@@ -152,10 +153,13 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
         variableCheckAndRewrite();
 
+        //  Extracts SQL-92 aggregate functions from CASE/IF expressions into LET clauses
+        rewriteCaseExpressions();
+
         // Rewrites SQL-92 aggregate functions
         rewriteGroupByAggregationSugar();
 
-        // Rewrite window expression aggregations.
+        // Rewrites window expression aggregations.
         rewriteWindowAggregationSugar();
 
         // Rewrites like/not-like expressions.
@@ -261,6 +265,11 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     protected void rewriteWindowAggregationSugar() throws CompilationException {
         SqlppWindowAggregationSugarVisitor windowVisitor = new SqlppWindowAggregationSugarVisitor(context);
         rewriteTopExpr(windowVisitor, null);
+    }
+
+    protected void rewriteCaseExpressions() throws CompilationException {
+        SqlppCaseRewriteVisitor visitor = new SqlppCaseRewriteVisitor(context);
+        rewriteTopExpr(visitor, null);
     }
 
     protected void inlineDeclaredUdfs(boolean inlineUdfs) throws CompilationException {

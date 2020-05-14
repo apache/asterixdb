@@ -247,9 +247,9 @@ public class ErrorCode {
     public static final int LIBRARY_JAVA_FUNCTION_HELPER_OBJ_TYPE_NOT_SUPPORTED = 3046;
     public static final int LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_NAME = 3047;
     public static final int OPERATORS_FEED_META_OPERATOR_DESCRIPTOR_INVALID_RUNTIME = 3048;
-    public static final int PARSER_FACTORY_DELIMITED_DATA_PARSER_FACTORY_NOT_VALID_DELIMITER = 3049;
-    public static final int PARSER_INVALID_CHAR_LENGTH = 3050;
-    public static final int PARSER_FACTORY_DELIMITED_DATA_PARSER_FACTORY_QUOTE_DELIMITER_MISMATCH = 3051;
+    public static final int INVALID_DELIMITER = 3049;
+    public static final int INVALID_CHAR_LENGTH = 3050;
+    public static final int QUOTE_DELIMITER_MISMATCH = 3051;
     public static final int INDEXING_EXTERNAL_FILE_INDEX_ACCESSOR_UNABLE_TO_FIND_FILE_INDEX = 3052;
     public static final int PARSER_ADM_DATA_PARSER_FIELD_NOT_NULL = 3053;
     public static final int PARSER_ADM_DATA_PARSER_TYPE_MISMATCH = 3054;

@@ -360,23 +360,31 @@ public abstract class LicenseMojo extends AbstractMojo {
 
         gatherProjectDependencies(project, dependencyLicenseMap, dependencyGavMap);
         for (Override override : overrides) {
-            String gav = override.getGav();
-            MavenProject dep = dependencyGavMap.get(gav);
-            if (dep == null) {
-                getLog().warn("Unused override dependency " + gav + "; ignoring...");
-                continue;
+
+            // Collect both <gav></gav> and <gavs><gav></gav><gav></gav>...</gavs>
+            List<String> gavs = override.getGavs();
+            if (override.getGav() != null) {
+                gavs.add(override.getGav());
             }
-            if (override.getUrl() != null) {
-                final List<Pair<String, String>> newLicense =
-                        Collections.singletonList(new ImmutablePair<>(override.getUrl(), override.getName()));
-                List<Pair<String, String>> prevLicense = dependencyLicenseMap.put(dep, newLicense);
-                warnUnlessFlag(dep, IGNORE_LICENSE_OVERRIDE, "license list for " + toGav(dep)
-                        + " changed with <override>; was: " + prevLicense + ", now: " + newLicense);
-            }
-            if (override.getNoticeUrl() != null) {
-                noticeOverrides.put(gav, override.getNoticeUrl());
-                warnUnlessFlag(dep, IGNORE_NOTICE_OVERRIDE,
-                        "notice for " + toGav(dep) + " changed with <override>; now: " + override.getNoticeUrl());
+
+            for (String gav : gavs) {
+                MavenProject dep = dependencyGavMap.get(gav);
+                if (dep == null) {
+                    getLog().warn("Unused override dependency " + gav + "; ignoring...");
+                    continue;
+                }
+                if (override.getUrl() != null) {
+                    final List<Pair<String, String>> newLicense =
+                            Collections.singletonList(new ImmutablePair<>(override.getUrl(), override.getName()));
+                    List<Pair<String, String>> prevLicense = dependencyLicenseMap.put(dep, newLicense);
+                    warnUnlessFlag(dep, IGNORE_LICENSE_OVERRIDE, "license list for " + toGav(dep)
+                            + " changed with <override>; was: " + prevLicense + ", now: " + newLicense);
+                }
+                if (override.getNoticeUrl() != null) {
+                    noticeOverrides.put(gav, override.getNoticeUrl());
+                    warnUnlessFlag(dep, IGNORE_NOTICE_OVERRIDE,
+                            "notice for " + toGav(dep) + " changed with <override>; now: " + override.getNoticeUrl());
+                }
             }
         }
         return dependencyLicenseMap;

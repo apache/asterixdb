@@ -20,26 +20,42 @@ package org.apache.asterix.test.external_dataset.aws;
 
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.testframework.context.TestFileContext;
+import org.apache.asterix.testframework.xml.TestCase;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
@@ -50,36 +66,62 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 /**
  * Runs an AWS S3 mock server and test it as an external dataset
  */
 @RunWith(Parameterized.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AwsS3ExternalDatasetTest {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
+    // subclasses of this class MUST instantiate these variables before using them to avoid unexpected behavior
+    static String SUITE_TESTS;
+    static String ONLY_TESTS;
+    static String TEST_CONFIG_FILE_NAME;
+    static Runnable PREPARE_S3_BUCKET;
+    static Runnable PREPARE_FIXED_DATA_BUCKET;
 
-    // S3 mock server
-    private static S3Mock s3MockServer;
-
-    // IMPORTANT: The following values must be used in the AWS S3 test case
-    private static S3Client client;
-    private static final String S3_MOCK_SERVER_BUCKET = "playground";
-    private static final String S3_MOCK_SERVER_BUCKET_DEFINITION = "json-data/reviews/"; // data resides here
-    private static final String S3_MOCK_SERVER_BUCKET_CSV_DEFINITION = "csv-data/reviews/"; // data resides here
-    private static final String S3_MOCK_SERVER_BUCKET_TSV_DEFINITION = "tsv-data/reviews/"; // data resides here
-    private static final String S3_MOCK_SERVER_REGION = "us-west-2";
-    private static final int S3_MOCK_SERVER_PORT = 8001;
-    private static final String S3_MOCK_SERVER_HOSTNAME = "http://localhost:" + S3_MOCK_SERVER_PORT;
+    // Base directory paths for data files
+    private static final String JSON_DATA_PATH = joinPath("data", "json");
     private static final String CSV_DATA_PATH = joinPath("data", "csv");
     private static final String TSV_DATA_PATH = joinPath("data", "tsv");
 
+    // Service endpoint
+    private static final int S3_MOCK_SERVER_PORT = 8001;
+    private static final String S3_MOCK_SERVER_HOSTNAME = "http://localhost:" + S3_MOCK_SERVER_PORT;
+
+    // Region, bucket and definitions
+    private static final String S3_MOCK_SERVER_REGION = "us-west-2";
+    private static final String S3_MOCK_SERVER_BUCKET = "playground";
+    private static final String S3_MOCK_SERVER_FIXED_DATA_BUCKET = "fixed-data-bucket"; // Do not use, has fixed data
+    private static final String S3_MOCK_SERVER_BUCKET_JSON_DEFINITION = "json-data/reviews/"; // data resides here
+    private static final String S3_MOCK_SERVER_BUCKET_CSV_DEFINITION = "csv-data/reviews/"; // data resides here
+    private static final String S3_MOCK_SERVER_BUCKET_TSV_DEFINITION = "tsv-data/reviews/"; // data resides here
+
+    private static final Set<String> fileNames = new HashSet<>();
+    private static final CreateBucketRequest.Builder CREATE_BUCKET_BUILDER = CreateBucketRequest.builder();
+    private static final DeleteBucketRequest.Builder DELETE_BUCKET_BUILDER = DeleteBucketRequest.builder();
+    private static final PutObjectRequest.Builder PUT_OBJECT_BUILDER = PutObjectRequest.builder();
+
+    // IMPORTANT: The following values must be used in the AWS S3 test case
+    private static S3Mock s3MockServer;
+    private static S3Client client;
+    private static PutObjectRequest.Builder builder = PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET);
+
+    protected TestCaseContext tcCtx;
+
+    public AwsS3ExternalDatasetTest(TestCaseContext tcCtx) {
+        this.tcCtx = tcCtx;
+    }
+
     @BeforeClass
     public static void setUp() throws Exception {
-        final TestExecutor testExecutor = new TestExecutor();
+        final TestExecutor testExecutor = new AwsTestExecutor();
         LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, testExecutor);
         setNcEndpoints(testExecutor);
         startAwsS3MockServer();
@@ -100,15 +142,14 @@ public class AwsS3ExternalDatasetTest {
         LOGGER.info("S3 mock down and client shut down successfully");
     }
 
-    @Parameters(name = "SqlppExecutionTest {index}: {0}")
+    @Parameters(name = "AwsS3ExternalDatasetTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        return LangExecutionUtil.tests("only_external_dataset.xml", "testsuite_external_dataset.xml");
-    }
-
-    protected TestCaseContext tcCtx;
-
-    public AwsS3ExternalDatasetTest(TestCaseContext tcCtx) {
-        this.tcCtx = tcCtx;
+        SUITE_TESTS = "testsuite_external_dataset.xml";
+        ONLY_TESTS = "only_external_dataset.xml";
+        TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
+        PREPARE_S3_BUCKET = AwsS3ExternalDatasetTest::prepareS3Bucket;
+        PREPARE_FIXED_DATA_BUCKET = AwsS3ExternalDatasetTest::prepareFixedDataBucket;
+        return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
 
     @Test
@@ -149,7 +190,8 @@ public class AwsS3ExternalDatasetTest {
         LOGGER.info("Client created successfully");
 
         // Create the bucket and upload some json files
-        prepareS3Bucket();
+        PREPARE_S3_BUCKET.run();
+        PREPARE_FIXED_DATA_BUCKET.run();
     }
 
     /**
@@ -161,82 +203,265 @@ public class AwsS3ExternalDatasetTest {
         LOGGER.info("bucket created successfully");
 
         LOGGER.info("Adding JSON files to the bucket");
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "0.json").build(),
-                RequestBody.fromString("{\"id\": 1, \"year\": null, \"quarter\": null, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "1.json").build(),
-                RequestBody.fromString("{\"id\": 2, \"year\": null, \"quarter\": null, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2018/1.json").build(),
-                RequestBody.fromString("{\"id\": 3, \"year\": 2018, \"quarter\": null, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2018/2.json").build(),
-                RequestBody.fromString("{\"id\": 4, \"year\": 2018, \"quarter\": null, \"review\": \"bad\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2018/q1/1.json").build(),
-                RequestBody.fromString("{\"id\": 5, \"year\": 2018, \"quarter\": 1, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2018/q1/2.json").build(),
-                RequestBody.fromString("{\"id\": 6, \"year\": 2018, \"quarter\": 1, \"review\": \"bad\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2018/q2/1.json").build(),
-                RequestBody.fromString("{\"id\": 7, \"year\": 2018, \"quarter\": 2, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2018/q2/2.json").build(),
-                RequestBody.fromString("{\"id\": 8, \"year\": 2018, \"quarter\": 2, \"review\": \"bad\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/1.json").build(),
-                RequestBody.fromString("{\"id\": 9, \"year\": 2019, \"quarter\": null, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/2.json").build(),
-                RequestBody.fromString("{\"id\": 10, \"year\": 2019, \"quarter\": null, \"review\": \"bad\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/q1/1.json").build(),
-                RequestBody.fromString("{\"id\": 11, \"year\": 2019, \"quarter\": 1, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/q1/2.json").build(),
-                RequestBody.fromString("{\"id\": 12, \"year\": 2019, \"quarter\": 1, \"review\": \"bad\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/q2/1.json").build(),
-                RequestBody.fromString("{\"id\": 13, \"year\": 2019, \"quarter\": 2, \"review\": \"good\"}"));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_DEFINITION + "2019/q2/2.json").build(),
-                RequestBody.fromString("{\"id\": 14, \"year\": 2019, \"quarter\": 2, \"review\": \"bad\"}"));
+        loadJsonFiles();
+        LOGGER.info("JSON Files added successfully");
 
         LOGGER.info("Adding CSV files to the bucket");
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_CSV_DEFINITION + "01.csv").build(),
-                RequestBody.fromFile(Paths.get(CSV_DATA_PATH, "01.csv")));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_CSV_DEFINITION + "2018/01.csv").build(),
-                RequestBody.fromFile(Paths.get(CSV_DATA_PATH, "02.csv")));
+        loadCsvFiles();
+        LOGGER.info("CSV Files added successfully");
 
         LOGGER.info("Adding TSV files to the bucket");
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_TSV_DEFINITION + "01.tsv").build(),
-                RequestBody.fromFile(Paths.get(TSV_DATA_PATH, "01.tsv")));
-        client.putObject(
-                PutObjectRequest.builder().bucket(S3_MOCK_SERVER_BUCKET)
-                        .key(S3_MOCK_SERVER_BUCKET_TSV_DEFINITION + "2018/01.tsv").build(),
-                RequestBody.fromFile(Paths.get(TSV_DATA_PATH, "02.tsv")));
-        LOGGER.info("Files added successfully");
+        loadTsvFiles();
+        LOGGER.info("TSV Files added successfully");
+    }
+
+    /**
+     * This bucket is being filled by fixed data, a test is counting all records in this bucket. If this bucket is
+     * changed, the test case will fail and its result will need to be updated each time
+     */
+    private static void prepareFixedDataBucket() {
+        LOGGER.info("creating bucket " + S3_MOCK_SERVER_FIXED_DATA_BUCKET);
+        client.createBucket(CreateBucketRequest.builder().bucket(S3_MOCK_SERVER_FIXED_DATA_BUCKET).build());
+        LOGGER.info("bucket " + S3_MOCK_SERVER_FIXED_DATA_BUCKET + " created successfully");
+
+        LOGGER.info("Loading fixed data to " + S3_MOCK_SERVER_FIXED_DATA_BUCKET);
+
+        // Files data
+        RequestBody requestBody = RequestBody.fromFile(Paths.get(JSON_DATA_PATH, "single-line", "20-records.json"));
+        client.putObject(builder.bucket(S3_MOCK_SERVER_FIXED_DATA_BUCKET).key("1.json").build(), requestBody);
+        client.putObject(builder.bucket(S3_MOCK_SERVER_FIXED_DATA_BUCKET).key("2.json").build(), requestBody);
+        client.putObject(builder.bucket(S3_MOCK_SERVER_FIXED_DATA_BUCKET).key("lvl1/3.json").build(), requestBody);
+        client.putObject(builder.bucket(S3_MOCK_SERVER_FIXED_DATA_BUCKET).key("lvl1/4.json").build(), requestBody);
+        client.putObject(builder.bucket(S3_MOCK_SERVER_FIXED_DATA_BUCKET).key("lvl1/lvl2/5.json").build(), requestBody);
+    }
+
+    private static void loadJsonFiles() {
+        String dataBasePath = JSON_DATA_PATH;
+        String definition = S3_MOCK_SERVER_BUCKET_JSON_DEFINITION;
+
+        // Normal format
+        String definitionSegment = "json";
+        loadData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
+        loadData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
+        loadData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
+        loadData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
+                false);
+
+        // gz compressed format
+        definitionSegment = "gz";
+        loadGzData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
+                false);
+
+        // Mixed normal and gz compressed format
+        definitionSegment = "mixed";
+        loadData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
+        loadData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
+        loadData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
+        loadData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
+                false);
+        loadGzData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
+                false);
+    }
+
+    private static void loadCsvFiles() {
+        String dataBasePath = CSV_DATA_PATH;
+        String definition = S3_MOCK_SERVER_BUCKET_CSV_DEFINITION;
+
+        // Normal format
+        String definitionSegment = "csv";
+        loadData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
+        loadData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
+
+        // gz compressed format
+        definitionSegment = "gz";
+        loadGzData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
+
+        // Mixed normal and gz compressed format
+        definitionSegment = "mixed";
+        loadData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
+        loadData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
+    }
+
+    private static void loadTsvFiles() {
+        String dataBasePath = TSV_DATA_PATH;
+        String definition = S3_MOCK_SERVER_BUCKET_TSV_DEFINITION;
+
+        // Normal format
+        String definitionSegment = "tsv";
+        loadData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
+        loadData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
+
+        // gz compressed format
+        definitionSegment = "gz";
+        loadGzData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
+
+        // Mixed normal and gz compressed format
+        definitionSegment = "mixed";
+        loadData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
+        loadData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
+        loadGzData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
+    }
+
+    private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,
+            String definitionSegment, boolean removeExtension) {
+        // Files data
+        Path filePath = Paths.get(fileBasePath, filePathSegment, filename);
+        RequestBody requestBody = RequestBody.fromFile(filePath);
+
+        // Keep or remove the file extension
+        Assert.assertFalse("Files with no extension are not supported yet for external datasets", removeExtension);
+        String finalFileName;
+        if (removeExtension) {
+            finalFileName = FilenameUtils.removeExtension(filename);
+        } else {
+            finalFileName = filename;
+        }
+
+        // Files base definition
+        filePathSegment = filePathSegment.isEmpty() ? "" : filePathSegment + "/";
+        definitionSegment = definitionSegment.isEmpty() ? "" : definitionSegment + "/";
+        String basePath = definition + filePathSegment + definitionSegment;
+
+        // Load the data
+        client.putObject(builder.key(basePath + finalFileName).build(), requestBody);
+        client.putObject(builder.key(basePath + "level1a/" + finalFileName).build(), requestBody);
+        client.putObject(builder.key(basePath + "level1b/" + finalFileName).build(), requestBody);
+        client.putObject(builder.key(basePath + "level1a/level2a/" + finalFileName).build(), requestBody);
+        client.putObject(builder.key(basePath + "level1a/level2b/" + finalFileName).build(), requestBody);
+    }
+
+    private static void loadGzData(String fileBasePath, String filePathSegment, String filename, String definition,
+            String definitionSegment, boolean removeExtension) {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+
+            // Files data
+            Path filePath = Paths.get(fileBasePath, filePathSegment, filename);
+
+            // Get the compressed data
+            gzipOutputStream.write(Files.readAllBytes(filePath));
+            gzipOutputStream.close(); // Need to close or data will be invalid
+            byte[] gzipBytes = byteArrayOutputStream.toByteArray();
+            RequestBody requestBody = RequestBody.fromBytes(gzipBytes);
+
+            // Keep or remove the file extension
+            Assert.assertFalse("Files with no extension are not supported yet for external datasets", removeExtension);
+            String finalFileName;
+            if (removeExtension) {
+                finalFileName = FilenameUtils.removeExtension(filename);
+            } else {
+                finalFileName = filename;
+            }
+            finalFileName += ".gz";
+
+            // Files base definition
+            filePathSegment = filePathSegment.isEmpty() ? "" : filePathSegment + "/";
+            definitionSegment = definitionSegment.isEmpty() ? "" : definitionSegment + "/";
+            String basePath = definition + filePathSegment + definitionSegment;
+
+            // Load the data
+            client.putObject(builder.key(basePath + finalFileName).build(), requestBody);
+            client.putObject(builder.key(basePath + "level1a/" + finalFileName).build(), requestBody);
+            client.putObject(builder.key(basePath + "level1b/" + finalFileName).build(), requestBody);
+            client.putObject(builder.key(basePath + "level1a/level2a/" + finalFileName).build(), requestBody);
+            client.putObject(builder.key(basePath + "level1a/level2b/" + finalFileName).build(), requestBody);
+        } catch (Exception ex) {
+            LOGGER.error(ex.getMessage());
+        }
+    }
+
+    static class AwsTestExecutor extends TestExecutor {
+
+        public void executeTestFile(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
+                String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, TestCase.CompilationUnit cUnit,
+                MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
+                BitSet expectedWarnings) throws Exception {
+            String[] lines;
+            switch (ctx.getType()) {
+                case "s3bucket":
+                    // <bucket> <def> <sub-path:new_fname:src_file1,sub-path:new_fname:src_file2,sub-path:src_file3>
+                    lines = TestExecutor.stripAllComments(statement).trim().split("\n");
+                    String lastLine = lines[lines.length - 1];
+                    String[] command = lastLine.trim().split(" ");
+                    int length = command.length;
+                    if (length != 3) {
+                        throw new Exception("invalid create bucket format");
+                    }
+                    dropRecreateBucket(command[0], command[1], command[2]);
+                    break;
+                default:
+                    super.executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
+                            queryCount, expectedResultFileCtxs, testFile, actualPath, expectedWarnings);
+            }
+        }
+    }
+
+    private static void dropRecreateBucket(String bucketName, String definition, String files) {
+        String definitionPath = definition + (definition.endsWith("/") ? "" : "/");
+        String[] fileSplits = files.split(",");
+
+        LOGGER.info("Dropping bucket " + bucketName);
+        try {
+            client.deleteBucket(DELETE_BUCKET_BUILDER.bucket(bucketName).build());
+        } catch (NoSuchBucketException e) {
+            // ignore
+        }
+        LOGGER.info("Creating bucket " + bucketName);
+        client.createBucket(CREATE_BUCKET_BUILDER.bucket(bucketName).build());
+        LOGGER.info("Uploading to bucket " + bucketName + " definition " + definitionPath);
+        fileNames.clear();
+        for (int i = 0; i < fileSplits.length; i++) {
+            String[] s3pathAndSourceFile = fileSplits[i].split(":");
+            int size = s3pathAndSourceFile.length;
+            String path;
+            String sourceFilePath;
+            String uploadedFileName;
+            if (size == 1) {
+                // case: playground json-data/reviews SOURCE_FILE1,SOURCE_FILE2
+                path = definitionPath;
+                sourceFilePath = s3pathAndSourceFile[0];
+                uploadedFileName = FilenameUtils.getName(s3pathAndSourceFile[0]);
+            } else if (size == 2) {
+                // case: playground json-data/reviews level1/sub-level:SOURCE_FILE1,level2/sub-level:SOURCE_FILE2
+                String subPathOrNewFileName = s3pathAndSourceFile[0];
+                if (subPathOrNewFileName.startsWith("$$")) {
+                    path = definitionPath;
+                    sourceFilePath = s3pathAndSourceFile[1];
+                    uploadedFileName = subPathOrNewFileName.substring(2);
+                } else {
+                    path = definitionPath + subPathOrNewFileName + (subPathOrNewFileName.endsWith("/") ? "" : "/");
+                    sourceFilePath = s3pathAndSourceFile[1];
+                    uploadedFileName = FilenameUtils.getName(s3pathAndSourceFile[1]);
+                }
+            } else if (size == 3) {
+                path = definitionPath + s3pathAndSourceFile[0] + (s3pathAndSourceFile[0].endsWith("/") ? "" : "/");
+                uploadedFileName = s3pathAndSourceFile[1];
+                sourceFilePath = s3pathAndSourceFile[2];
+
+            } else {
+                throw new IllegalArgumentException();
+            }
+
+            String keyPath = path + uploadedFileName;
+            int k = 1;
+            while (fileNames.contains(keyPath)) {
+                keyPath = path + (k++) + uploadedFileName;
+            }
+            fileNames.add(keyPath);
+            client.putObject(PUT_OBJECT_BUILDER.bucket(bucketName).key(keyPath).build(),
+                    RequestBody.fromFile(Paths.get(sourceFilePath)));
+        }
+        LOGGER.info("Done creating bucket with data");
     }
 }

@@ -134,8 +134,13 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     @Override
+    protected void get(IServletRequest request, IServletResponse response) throws IOException {
+        handleRequest(request, response, true);
+    }
+
+    @Override
     protected void post(IServletRequest request, IServletResponse response) throws IOException {
-        handleRequest(request, response);
+        handleRequest(request, response, false);
     }
 
     @Override
@@ -237,7 +242,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return "http://" + host + path + handlePath(delivery);
     }
 
-    private void handleRequest(IServletRequest request, IServletResponse response) throws IOException {
+    private void handleRequest(IServletRequest request, IServletResponse response, boolean forceReadOnly)
+            throws IOException {
         final IRequestReference requestRef = receptionist.welcome(request);
         long elapsedStart = System.nanoTime();
         long errorCount = 1;
@@ -258,6 +264,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 optionalParams = optionalParamProvider.apply(request);
             }
             setRequestParam(request, param, optionalParams);
+            if (forceReadOnly) {
+                param.setReadOnly(true);
+            }
             LOGGER.info(() -> "handleRequest: " + LogRedactionUtil.userData(param.toString()));
             delivery = param.getMode();
             setSessionConfig(sessionOutput, param, delivery);

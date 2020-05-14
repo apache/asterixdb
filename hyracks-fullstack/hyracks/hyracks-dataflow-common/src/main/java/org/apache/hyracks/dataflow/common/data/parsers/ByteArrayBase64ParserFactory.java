@@ -41,11 +41,12 @@ public class ByteArrayBase64ParserFactory implements IValueParserFactory {
             ByteArraySerializerDeserializer serializer = ByteArraySerializerDeserializer.INSTANCE;
 
             @Override
-            public void parse(char[] input, int start, int length, DataOutput out) throws HyracksDataException {
+            public boolean parse(char[] input, int start, int length, DataOutput out) throws HyracksDataException {
 
                 parser.generatePureByteArrayFromBase64String(input, start, length);
                 try {
                     serializer.serialize(parser.getByteArray(), 0, parser.getLength(), out);
+                    return true;
                 } catch (IOException e) {
                     throw HyracksDataException.create(e);
                 }

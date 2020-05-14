@@ -89,7 +89,7 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
         ListObjectsRequest.Builder listObjectsBuilder = ListObjectsRequest.builder().bucket(container);
         String path = configuration.get(AwsS3Constants.DEFINITION_FIELD_NAME);
         if (path != null) {
-            listObjectsBuilder.prefix(path + (path.endsWith("/") ? "" : "/"));
+            listObjectsBuilder.prefix(path + (!path.isEmpty() && !path.endsWith("/") ? "/" : ""));
         }
         ListObjectsResponse listObjectsResponse = s3Client.listObjects(listObjectsBuilder.build());
         List<S3Object> s3Objects = listObjectsResponse.contents();
@@ -123,9 +123,25 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
             throw AsterixException.create(ErrorCode.PROVIDER_STREAM_RECORD_READER_UNKNOWN_FORMAT, fileFormat);
         }
 
-        s3Objects.stream().filter(object -> object.key().endsWith(fileExtension)).forEach(filesOnly::add);
+        s3Objects.stream().filter(object -> isValidFile(object.key(), fileFormat)).forEach(filesOnly::add);
 
         return filesOnly;
+    }
+
+    /**
+     * Checks if the file name is of the provided format, or in the provided format in a compressed (.gz or .gzip) state
+     *
+     * @param fileName file name to be checked
+     * @param format expected format
+     * @return {@code true} if the file name is of the expected format, {@code false} otherwise
+     */
+    private boolean isValidFile(String fileName, String format) {
+        String lowCaseName = fileName.toLowerCase();
+        String lowCaseFormat = format.toLowerCase();
+        String gzExt = lowCaseFormat + ".gz";
+        String gzipExt = lowCaseFormat + ".gzip";
+
+        return lowCaseName.endsWith(lowCaseFormat) || lowCaseName.endsWith(gzExt) || lowCaseName.endsWith(gzipExt);
     }
 
     /**
@@ -186,9 +202,9 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
         S3ClientBuilder builder = S3Client.builder();
 
         // Credentials
-        String accessKey = configuration.get(AwsS3Constants.ACCESS_KEY_FIELD_NAME);
-        String secretKey = configuration.get(AwsS3Constants.SECRET_KEY_FIELD_NAME);
-        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
+        String accessKeyId = configuration.get(AwsS3Constants.ACCESS_KEY_ID_FIELD_NAME);
+        String secretAccessKey = configuration.get(AwsS3Constants.SECRET_ACCESS_KEY_FIELD_NAME);
+        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
         builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
 
         // Region

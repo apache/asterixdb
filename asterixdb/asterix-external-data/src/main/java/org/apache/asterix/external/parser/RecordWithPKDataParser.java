@@ -37,15 +37,16 @@ public class RecordWithPKDataParser<T> implements IRecordWithPKDataParser<T> {
     }
 
     @Override
-    public void parse(IRawRecord<? extends T> record, DataOutput out) throws HyracksDataException {
+    public boolean parse(IRawRecord<? extends T> record, DataOutput out) throws HyracksDataException {
         if (record.size() == 0) {
             try {
                 out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                return true;
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             }
         } else {
-            recordParser.parse(record, out);
+            return recordParser.parse(record, out);
         }
     }
 

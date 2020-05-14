@@ -54,6 +54,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class DataflowControllerProvider {
 
+    private DataflowControllerProvider() {
+    }
+
     // TODO: Instead, use a factory just like data source and data parser.
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static IDataFlowController getDataflowController(ARecordType recordType, IHyracksTaskContext ctx,
@@ -67,6 +70,8 @@ public class DataflowControllerProvider {
                     IRecordReader<?> recordReader = recordReaderFactory.createRecordReader(ctx, partition);
                     IRecordDataParserFactory<?> recordParserFactory = (IRecordDataParserFactory<?>) dataParserFactory;
                     IRecordDataParser<?> dataParser = recordParserFactory.createRecordParser(ctx);
+                    // TODO(ali): revisit to think about passing data source name via setter or via createRecordParser
+                    dataParser.configure(recordReader.getDataSourceName(), recordReader.getLineNumber());
                     if (indexingOp) {
                         return new IndexingDataFlowController(ctx, dataParser, recordReader,
                                 ((IIndexingDatasource) recordReader).getIndexer());
@@ -96,6 +101,7 @@ public class DataflowControllerProvider {
                     IInputStreamFactory streamFactory = (IInputStreamFactory) dataSourceFactory;
                     AsterixInputStream stream = streamFactory.createInputStream(ctx, partition);
                     IStreamDataParserFactory streamParserFactory = (IStreamDataParserFactory) dataParserFactory;
+                    // TODO(ali): revisit to think about passing data source name to parser
                     IStreamDataParser streamParser = streamParserFactory.createInputStreamParser(ctx, partition);
                     streamParser.setInputStream(stream);
                     if (isFeed) {

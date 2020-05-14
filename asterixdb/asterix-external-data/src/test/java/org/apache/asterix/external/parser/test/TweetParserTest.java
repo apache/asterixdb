@@ -72,7 +72,9 @@ public class TweetParserTest {
         for (int iter1 = 0; iter1 < lines.size(); iter1++) {
             record.set(lines.get(iter1));
             try {
-                parser.parse(record, output);
+                if (!parser.parse(record, output)) {
+                    Assert.fail("Unexpected failure in parser.");
+                }
             } catch (HyracksDataException e) {
                 e.printStackTrace();
                 Assert.fail("Unexpected failure in parser.");
@@ -98,8 +100,9 @@ public class TweetParserTest {
         for (int iter1 = 0; iter1 < lines.size(); iter1++) {
             record.set(lines.get(iter1));
             try {
-                parser.parse(record, output);
-                regularCount++;
+                if (parser.parse(record, output)) {
+                    regularCount++;
+                }
             } catch (HyracksDataException e) {
                 Assert.assertTrue(e.toString().contains("Non-null") && (iter1 == 0 || iter1 == 1));
             }

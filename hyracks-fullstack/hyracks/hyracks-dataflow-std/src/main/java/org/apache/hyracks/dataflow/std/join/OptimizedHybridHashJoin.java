@@ -34,6 +34,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
@@ -215,6 +216,19 @@ public class OptimizedHybridHashJoin {
         for (int i = 0; i < runFileWriters.length; i++) {
             if (runFileWriters[i] != null) {
                 runFileWriters[i].erase();
+            }
+        }
+    }
+
+    public void fail() throws HyracksDataException {
+        for (RunFileWriter writer : buildRFWriters) {
+            if (writer != null) {
+                CleanupUtils.fail(writer, null);
+            }
+        }
+        for (RunFileWriter writer : probeRFWriters) {
+            if (writer != null) {
+                CleanupUtils.fail(writer, null);
             }
         }
     }

@@ -110,7 +110,7 @@ public class HiveRecordParser implements IRecordDataParser<Writable> {
     }
 
     @Override
-    public void parse(IRawRecord<? extends Writable> record, DataOutput out) throws HyracksDataException {
+    public boolean parse(IRawRecord<? extends Writable> record, DataOutput out) throws HyracksDataException {
         try {
             Writable hiveRawRecord = record.get();
             Object hiveObject = hiveSerde.deserialize(hiveRawRecord);
@@ -129,6 +129,7 @@ public class HiveRecordParser implements IRecordDataParser<Writable> {
                 recBuilder.addField(i, fieldValueBuffer);
             }
             recBuilder.write(out, true);
+            return true;
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }

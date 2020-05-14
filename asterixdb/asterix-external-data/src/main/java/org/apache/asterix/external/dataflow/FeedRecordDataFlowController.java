@@ -177,11 +177,16 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     }
 
     private boolean parseAndForward(IRawRecord<? extends T> record) throws IOException {
+        boolean success;
         try {
-            dataParser.parse(record, tb.getDataOutput());
+            success = dataParser.parse(record, tb.getDataOutput());
         } catch (Exception e) {
             LOGGER.log(Level.WARN, ExternalDataConstants.ERROR_PARSE_RECORD, e);
             feedLogManager.logRecord(record.toString(), ExternalDataConstants.ERROR_PARSE_RECORD);
+            // continue the outer loop
+            return false;
+        }
+        if (!success) {
             // continue the outer loop
             return false;
         }

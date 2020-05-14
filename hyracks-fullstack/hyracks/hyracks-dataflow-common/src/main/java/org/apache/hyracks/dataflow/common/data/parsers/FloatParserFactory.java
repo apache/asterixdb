@@ -35,12 +35,13 @@ public class FloatParserFactory implements IValueParserFactory {
     public IValueParser createValueParser() {
         return new IValueParser() {
             @Override
-            public void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
+            public boolean parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
                 String s = String.valueOf(buffer, start, length);
                 try {
                     out.writeFloat(Float.parseFloat(s));
+                    return true;
                 } catch (NumberFormatException e) {
-                    throw HyracksDataException.create(e);
+                    return false;
                 } catch (IOException e) {
                     throw HyracksDataException.create(e);
                 }

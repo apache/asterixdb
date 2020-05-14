@@ -27,6 +27,7 @@ import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class CSVWithRecordConverterFactory implements IRecordConverterFactory<char[], RecordWithMetadataAndPK<char[]>> {
 
@@ -40,9 +41,9 @@ public class CSVWithRecordConverterFactory implements IRecordConverterFactory<ch
     private IAType[] keyTypes;
 
     @Override
-    public IRecordConverter<char[], RecordWithMetadataAndPK<char[]>> createConverter() {
+    public IRecordConverter<char[], RecordWithMetadataAndPK<char[]>> createConverter(IHyracksTaskContext ctx) {
         return new CSVToRecordWithMetadataAndPKConverter(recordIndex, delimiter, metaType, recordType, keyIndicators,
-                keyIndexes, keyTypes);
+                keyIndexes, keyTypes, ctx.getWarningCollector());
     }
 
     @Override
