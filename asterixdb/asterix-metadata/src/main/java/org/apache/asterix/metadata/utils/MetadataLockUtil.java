@@ -27,10 +27,11 @@ public class MetadataLockUtil {
     private MetadataLockUtil() {
     }
 
-    public static void createDatasetBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
-            String itemTypeDataverseName, String itemTypeFullyQualifiedName, String metaItemTypeDataverseName,
-            String metaItemTypeFullyQualifiedName, String nodeGroupName, String compactionPolicyName,
-            String datasetFullyQualifiedName, boolean isDefaultCompactionPolicy) throws AlgebricksException {
+    public static void createDatasetBeginPre(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
+            String itemTypeDataverseName, String itemTypeFullyQualifiedName, boolean itemTypeAnonymous,
+            String metaItemTypeDataverseName, String metaItemTypeFullyQualifiedName, boolean metaItemTypeAnonymous,
+            String nodeGroupName, String compactionPolicyName, boolean isDefaultCompactionPolicy)
+            throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
         if (!dataverseName.equals(itemTypeDataverseName)) {
             lockMgr.acquireDataverseReadLock(locks, itemTypeDataverseName);
@@ -39,10 +40,20 @@ public class MetadataLockUtil {
                 && !metaItemTypeDataverseName.equals(itemTypeDataverseName)) {
             lockMgr.acquireDataverseReadLock(locks, metaItemTypeDataverseName);
         }
-        lockMgr.acquireDataTypeReadLock(locks, itemTypeFullyQualifiedName);
+        if (itemTypeAnonymous) {
+            // the datatype will be created
+            lockMgr.acquireDataTypeWriteLock(locks, itemTypeFullyQualifiedName);
+        } else {
+            lockMgr.acquireDataTypeReadLock(locks, itemTypeFullyQualifiedName);
+        }
         if (metaItemTypeFullyQualifiedName != null
                 && !metaItemTypeFullyQualifiedName.equals(itemTypeFullyQualifiedName)) {
-            lockMgr.acquireDataTypeReadLock(locks, metaItemTypeFullyQualifiedName);
+            if (metaItemTypeAnonymous) {
+                // the datatype will be created
+                lockMgr.acquireDataTypeWriteLock(locks, metaItemTypeFullyQualifiedName);
+            } else {
+                lockMgr.acquireDataTypeReadLock(locks, metaItemTypeFullyQualifiedName);
+            }
         }
         if (nodeGroupName != null) {
             lockMgr.acquireNodeGroupReadLock(locks, nodeGroupName);
@@ -50,6 +61,16 @@ public class MetadataLockUtil {
         if (!isDefaultCompactionPolicy) {
             lockMgr.acquireMergePolicyReadLock(locks, compactionPolicyName);
         }
+    }
+
+    public static void createDatasetBegin(IMetadataLockManager lockMgr, LockList locks, String dataverseName,
+            String itemTypeDataverseName, String itemTypeFullyQualifiedName, boolean itemTypeAnonymous,
+            String metaItemTypeDataverseName, String metaItemTypeFullyQualifiedName, boolean metaItemTypeAnonymous,
+            String nodeGroupName, String compactionPolicyName, String datasetFullyQualifiedName,
+            boolean isDefaultCompactionPolicy) throws AlgebricksException {
+        createDatasetBeginPre(lockMgr, locks, dataverseName, itemTypeDataverseName, itemTypeFullyQualifiedName,
+                itemTypeAnonymous, metaItemTypeDataverseName, metaItemTypeFullyQualifiedName, metaItemTypeAnonymous,
+                nodeGroupName, compactionPolicyName, isDefaultCompactionPolicy);
         lockMgr.acquireDatasetWriteLock(locks, datasetFullyQualifiedName);
     }
 
