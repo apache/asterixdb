@@ -20,12 +20,12 @@
 use tpcds;
 
 
-load dataset web_sales using localfs ((`path`=`asterix_nc1://data/tpcds/web_sales.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset web_sales using localfs ((`path`=`asterix_nc1://data/tpcds/web_sales.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset date_dim using localfs ((`path`=`asterix_nc1://data/tpcds/date_dim.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset date_dim using localfs ((`path`=`asterix_nc1://data/tpcds/date_dim.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset web_site using localfs ((`path`=`asterix_nc1://data/tpcds/web_site.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset web_site using localfs ((`path`=`asterix_nc1://data/tpcds/web_site.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset warehouse using localfs ((`path`=`asterix_nc1://data/tpcds/warehouse.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset warehouse using localfs ((`path`=`asterix_nc1://data/tpcds/warehouse.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset ship_mode using localfs ((`path`=`asterix_nc1://data/tpcds/ship_mode.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset ship_mode using localfs ((`path`=`asterix_nc1://data/tpcds/ship_mode.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));

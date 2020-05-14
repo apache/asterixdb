@@ -20,6 +20,8 @@ package org.apache.asterix.external.parser;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.function.LongSupplier;
+import java.util.function.Supplier;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.external.api.IDataParser;
@@ -72,14 +74,15 @@ public class RecordWithMetadataParser<T, O> implements IRecordWithMetadataParser
     }
 
     @Override
-    public void parse(IRawRecord<? extends T> record, DataOutput out) throws HyracksDataException {
+    public boolean parse(IRawRecord<? extends T> record, DataOutput out) throws HyracksDataException {
         try {
             rwm = converter.convert(record);
             if (rwm.getRecord().size() == 0) {
                 // null record
                 out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+                return true;
             } else {
-                recordParser.parse(rwm.getRecord(), out);
+                return recordParser.parse(rwm.getRecord(), out);
             }
         } catch (IOException e) {
             throw HyracksDataException.create(e);
@@ -109,5 +112,11 @@ public class RecordWithMetadataParser<T, O> implements IRecordWithMetadataParser
     @Override
     public void appendLastParsedPrimaryKeyToTuple(ArrayTupleBuilder tb) throws HyracksDataException {
         rwm.appendPrimaryKeyToTuple(tb);
+    }
+
+    @Override
+    public void configure(Supplier<String> dataSourceName, LongSupplier lineNumber) {
+        this.recordParser.configure(dataSourceName, lineNumber);
+        this.converter.configure(lineNumber);
     }
 }

@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.maven.license;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Override {
 
     @SuppressWarnings("unused") // set by Maven plugin configuration
@@ -27,6 +30,9 @@ public class Override {
     private String gav;
 
     @SuppressWarnings("unused") // set by Maven plugin configuration
+    private List<String> gavs = new ArrayList<>();
+
+    @SuppressWarnings("unused") // set by Maven plugin configuration
     private String name;
 
     @SuppressWarnings("unused") // set by Maven plugin configuration
@@ -34,6 +40,10 @@ public class Override {
 
     public String getGav() {
         return gav;
+    }
+
+    public List<String> getGavs() {
+        return gavs;
     }
 
     public String getUrl() {

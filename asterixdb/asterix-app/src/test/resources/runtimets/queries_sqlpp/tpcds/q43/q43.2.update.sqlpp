@@ -20,8 +20,8 @@
 use tpcds;
 
 
-load dataset date_dim using localfs ((`path`=`asterix_nc1://data/tpcds/date_dim.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset date_dim using localfs ((`path`=`asterix_nc1://data/tpcds/date_dim.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset store_sales using localfs ((`path`=`asterix_nc1://data/tpcds/store_sales.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset store_sales using localfs ((`path`=`asterix_nc1://data/tpcds/store_sales.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset store using localfs ((`path`=`asterix_nc1://data/tpcds/store.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset store using localfs ((`path`=`asterix_nc1://data/tpcds/store.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));

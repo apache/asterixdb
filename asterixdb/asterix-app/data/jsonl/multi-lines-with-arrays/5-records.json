@@ -1,0 +1,20 @@
+[]
+{"id": 21, "year": null, "quarter": null, "review": "good", "array":  [1, 2, 3]}
+
+
+{"id": 22, "year": null, "quarter": null, "review": "good", "array":  [1, [1, 2], [1]]}
+{"id": 23, "year": 2018, "quarter": null, "review": "good", "array":  [1,
+2, 3]}
+
+{"id": 24,
+  "year": 2018,
+  "quarter": null,
+  "review": "bad",
+  "array": [
+    1,
+    2,
+    3
+  ]
+}
+{"id": 25,
+  "year": 2018, "quarter": 1, "review": "good", "array":  [1,   2,       3]}

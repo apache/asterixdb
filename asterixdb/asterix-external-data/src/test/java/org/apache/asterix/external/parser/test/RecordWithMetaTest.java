@@ -95,8 +95,9 @@ public class RecordWithMetaTest {
             LineRecordReader lineReader = new LineRecordReader();
             lineReader.configure(ctx, inputStream, config);
             // create csv with json record reader
-            CSVToRecordWithMetadataAndPKConverter recordConverter = new CSVToRecordWithMetadataAndPKConverter(
-                    valueIndex, delimiter, metaType, recordType, pkIndicators, pkIndexes, keyTypes);
+            CSVToRecordWithMetadataAndPKConverter recordConverter =
+                    new CSVToRecordWithMetadataAndPKConverter(valueIndex, delimiter, metaType, recordType, pkIndicators,
+                            pkIndexes, keyTypes, ctx.getWarningCollector());
             // create the value parser <ADM in this case>
             ADMDataParser valueParser = new ADMDataParser(recordType, false);
             // create parser.
@@ -124,14 +125,14 @@ public class RecordWithMetaTest {
             while (lineReader.hasNext()) {
                 IRawRecord<char[]> record = lineReader.next();
                 tb.reset();
-                parser.parse(record, tb.getDataOutput());
-                tb.addFieldEndOffset();
-                parser.parseMeta(tb.getDataOutput());
-                tb.addFieldEndOffset();
-                parser.appendLastParsedPrimaryKeyToTuple(tb);
-                //print tuple
-                printTuple(tb, printers, printStream);
-
+                if (parser.parse(record, tb.getDataOutput())) {
+                    tb.addFieldEndOffset();
+                    parser.parseMeta(tb.getDataOutput());
+                    tb.addFieldEndOffset();
+                    parser.appendLastParsedPrimaryKeyToTuple(tb);
+                    //print tuple
+                    printTuple(tb, printers, printStream);
+                }
             }
             lineReader.close();
             printStream.close();

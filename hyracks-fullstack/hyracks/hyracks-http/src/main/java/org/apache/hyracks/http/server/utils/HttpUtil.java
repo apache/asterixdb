@@ -19,6 +19,7 @@
 package org.apache.hyracks.http.server.utils;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -27,14 +28,22 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalDouble;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.BaseRequest;
 import org.apache.hyracks.http.server.FormUrlEncodedRequest;
+import org.apache.hyracks.util.ThrowingConsumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -90,12 +99,12 @@ public class HttpUtil {
     public static Charset setContentType(IServletResponse response, String type, IServletRequest fromRequest)
             throws IOException {
         Charset preferredCharset = getPreferredCharset(fromRequest);
-        response.setHeader(HttpHeaderNames.CONTENT_TYPE, type + "; charset=" + preferredCharset.name());
+        setContentType(response, type, preferredCharset);
         return preferredCharset;
     }
 
-    public static void setContentType(IServletResponse response, String type, String charset) throws IOException {
-        response.setHeader(HttpHeaderNames.CONTENT_TYPE, type + "; charset=" + charset);
+    public static void setContentType(IServletResponse response, String type, Charset charset) throws IOException {
+        response.setHeader(HttpHeaderNames.CONTENT_TYPE, type + "; charset=" + charset.name());
     }
 
     public static void setContentType(IServletResponse response, String type) throws IOException {
@@ -184,10 +193,29 @@ public class HttpUtil {
         return i < 0 ? uri : uri.substring(0, i);
     }
 
-    public static class Encoding {
-        public static final String UTF8 = "utf-8";
-
-        private Encoding() {
+    public static void handleStreamInterruptibly(CloseableHttpResponse response,
+            ThrowingConsumer<InputStreamReader> streamProcessor, ExecutorService executor,
+            Supplier<String> taskDescription) throws IOException, InterruptedException, ExecutionException {
+        // we have to consume the stream in a separate thread, as it not stop on interrupt; we need to
+        // instead close the connection to achieve the interrupt
+        Future<Void> readFuture = executor.submit(() -> {
+            InputStreamReader reader = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8);
+            streamProcessor.process(reader);
+            return null;
+        });
+        try {
+            readFuture.get();
+        } catch (InterruptedException ex) { // NOSONAR -- interrupt or rethrow
+            response.close();
+            try {
+                readFuture.get(1, TimeUnit.SECONDS);
+            } catch (TimeoutException te) {
+                LOGGER.warn("{} did not exit on stream close due to interrupt after 1s", taskDescription);
+                readFuture.cancel(true);
+            } catch (ExecutionException ee) {
+                LOGGER.debug("ignoring exception awaiting aborted {} shutdown", taskDescription, ee);
+            }
+            throw ex;
         }
     }
 

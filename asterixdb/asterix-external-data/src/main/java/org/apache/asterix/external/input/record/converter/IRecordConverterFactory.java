@@ -24,10 +24,11 @@ import java.util.Map;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IRecordConverter;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public interface IRecordConverterFactory<I, O> extends Serializable {
 
-    public IRecordConverter<I, O> createConverter();
+    public IRecordConverter<I, O> createConverter(IHyracksTaskContext ctx);
 
     public void configure(Map<String, String> configuration) throws AsterixException;
 

@@ -43,4 +43,11 @@ public interface IDataFlowController {
     public default boolean stop(long timeout) throws HyracksDataException {
         throw new RuntimeDataException(ErrorCode.OPERATION_NOT_SUPPORTED);
     }
+
+    /**
+     * @return The number of processed tuples by this controller
+     */
+    default long getProcessedTuples() {
+        throw new UnsupportedOperationException();
+    }
 }

@@ -90,13 +90,14 @@ public class JSONDataParser extends AbstractNestedDataParser<ADMToken>
      */
 
     @Override
-    public final void parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
+    public final boolean parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
         try {
             //TODO(wyk): find a way to reset byte[] instead of creating a new parser for each record.
             jsonParser = jsonFactory.createParser(record.get(), 0, record.size());
             geometryCoParser.reset(jsonParser);
             nextToken();
             parseObject(rootType, out);
+            return true;
         } catch (IOException e) {
             throw new RuntimeDataException(ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM, e);
         }

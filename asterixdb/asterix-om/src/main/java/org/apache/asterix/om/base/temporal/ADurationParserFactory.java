@@ -52,11 +52,12 @@ public class ADurationParserFactory implements IValueParserFactory {
         return new IValueParser() {
 
             @Override
-            public void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
+            public boolean parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
                 parseDuration(buffer, start, length, aMutableDuration, ADurationParseOption.All);
                 try {
                     out.writeInt(aMutableDuration.getMonths());
                     out.writeLong(aMutableDuration.getMilliseconds());
+                    return true;
                 } catch (IOException ex) {
                     throw HyracksDataException.create(ex);
                 }

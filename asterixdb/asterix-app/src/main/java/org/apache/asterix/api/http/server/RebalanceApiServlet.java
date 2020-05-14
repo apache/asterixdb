@@ -21,6 +21,7 @@ package org.apache.asterix.api.http.server;
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -170,7 +171,7 @@ public class RebalanceApiServlet extends AbstractServlet {
             IServletResponse response, CountDownLatch terminated) {
         try {
             // Sets the content type.
-            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
+            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, StandardCharsets.UTF_8);
 
             if (datasetName == null) {
                 // Rebalances datasets in a given dataverse or all non-metadata datasets.

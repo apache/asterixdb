@@ -127,9 +127,10 @@ public final class LookupAdapter<T> implements IFrameWriter {
                     propagateInputFields(tupleIndex);
                 }
                 if (record != null) {
-                    dataParser.parse(record, tb.getDataOutput());
-                    tb.addFieldEndOffset();
-                    DataflowUtils.addTupleToFrame(appender, tb, writer);
+                    if (dataParser.parse(record, tb.getDataOutput())) {
+                        tb.addFieldEndOffset();
+                        DataflowUtils.addTupleToFrame(appender, tb, writer);
+                    }
                 } else if (retainNull) {
                     tb.getDataOutput().write(missingTupleBuild.getByteArray());
                     tb.addFieldEndOffset();

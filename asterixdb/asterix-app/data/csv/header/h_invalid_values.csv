@@ -1,0 +1,13 @@
+bigint_t,nullable_bigint_t,double_t,nullable_double_t,str_t,nullable_str_t,boolean_t,nullable_boolean_t
+163a,12,33.4,16.1,"text","text",true,false
+1.22,12,33.4,16.1,"text","text",true,false
+999999999999999999999999999999999,12,33.4,16.1,"text","text",true,false
+1234,12,non-double,16.1,"text","text",true,false
+1234  ,12,  15.1,16.1,"fine","fine",TRUE,false
+1234,12,15.1,16.1,"text","text",non-boolean,false
+1234,12,15.1,16.1,"fine","fine", true,false
+1234,12,15.1,16.1,"text",   "quote-not-at-beginning",true,false
+1234,\N,15.1,\N,\N,\N,true,\N
+\N,12,15.1,16.1,"text","text",true,false
+1234,12,\N,16.1,"text","text",true,false
+1234,12,15.1,16.1,"text","text",\N,false

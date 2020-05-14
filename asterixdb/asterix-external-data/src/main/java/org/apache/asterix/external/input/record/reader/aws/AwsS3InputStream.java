@@ -21,13 +21,13 @@ package org.apache.asterix.external.input.record.reader.aws;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3Constants;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
-import org.apache.asterix.external.api.AsterixInputStream;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.external.input.stream.AbstractMultipleInputStream;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.api.util.CleanupUtils;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -37,7 +37,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 
-public class AwsS3InputStream extends AsterixInputStream {
+public class AwsS3InputStream extends AbstractMultipleInputStream {
 
     // Configuration
     private final Map<String, String> configuration;
@@ -48,70 +48,51 @@ public class AwsS3InputStream extends AsterixInputStream {
     private final List<String> filePaths;
     private int nextFileIndex = 0;
 
-    // File reading fields
-    private InputStream inputStream;
-
     public AwsS3InputStream(Map<String, String> configuration, List<String> filePaths) {
         this.configuration = configuration;
         this.filePaths = filePaths;
-
         this.s3Client = buildAwsS3Client(configuration);
     }
 
     @Override
-    public int read() throws IOException {
-        throw new HyracksDataException(
-                "read() is not supported with this stream. use read(byte[] b, int off, int len)");
-    }
-
-    @Override
-    public int read(byte[] b, int off, int len) throws IOException {
-        if (inputStream == null) {
-            if (!advance()) {
-                return -1;
-            }
-        }
-
-        int result = inputStream.read(b, off, len);
-
-        // If file reading is done, go to the next file, or finish up if no files are left
-        if (result < 0) {
-            if (advance()) {
-                result = inputStream.read(b, off, len);
-            } else {
-                return -1;
-            }
-        }
-
-        return result;
-    }
-
-    private boolean advance() throws IOException {
+    protected boolean advance() throws IOException {
         // No files to read for this partition
         if (filePaths == null || filePaths.isEmpty()) {
             return false;
         }
 
         // Finished reading all the files
-        if (nextFileIndex == filePaths.size()) {
-            if (inputStream != null) {
-                inputStream.close();
+        if (nextFileIndex >= filePaths.size()) {
+            if (in != null) {
+                CleanupUtils.close(in, null);
             }
             return false;
         }
 
         // Close the current stream before going to the next one
-        if (inputStream != null) {
-            inputStream.close();
+        if (in != null) {
+            CleanupUtils.close(in, null);
         }
 
         String bucket = configuration.get(AwsS3Constants.CONTAINER_NAME_FIELD_NAME);
         GetObjectRequest.Builder getObjectBuilder = GetObjectRequest.builder();
         GetObjectRequest getObjectRequest = getObjectBuilder.bucket(bucket).key(filePaths.get(nextFileIndex)).build();
-        inputStream = s3Client.getObject(getObjectRequest);
+
+        // Have a reference to the S3 stream to ensure that if GZipInputStream causes an IOException because of reading
+        // the header, then the S3 stream gets closed in the close method
+        in = s3Client.getObject(getObjectRequest);
+
+        // Use gzip stream if needed
+        String filename = filePaths.get(nextFileIndex).toLowerCase();
+        if (filename.endsWith(".gz") || filename.endsWith(".gzip")) {
+            in = new GZIPInputStream(s3Client.getObject(getObjectRequest), ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+        }
 
         // Current file ready, point to the next file
         nextFileIndex++;
+        if (notificationHandler != null) {
+            notificationHandler.notifyNewSource();
+        }
         return true;
     }
 
@@ -127,9 +108,23 @@ public class AwsS3InputStream extends AsterixInputStream {
 
     @Override
     public void close() throws IOException {
-        if (inputStream != null) {
-            CleanupUtils.close(inputStream, null);
+        if (in != null) {
+            CleanupUtils.close(in, null);
         }
+    }
+
+    @Override
+    public String getStreamName() {
+        return getStreamNameAt(nextFileIndex - 1);
+    }
+
+    @Override
+    public String getPreviousStreamName() {
+        return getStreamNameAt(nextFileIndex - 2);
+    }
+
+    private String getStreamNameAt(int fileIndex) {
+        return fileIndex < 0 || filePaths == null || filePaths.isEmpty() ? "" : filePaths.get(fileIndex);
     }
 
     /**
@@ -143,9 +138,9 @@ public class AwsS3InputStream extends AsterixInputStream {
         S3ClientBuilder builder = S3Client.builder();
 
         // Credentials
-        String accessKey = configuration.get(AwsS3Constants.ACCESS_KEY_FIELD_NAME);
-        String secretKey = configuration.get(AwsS3Constants.SECRET_KEY_FIELD_NAME);
-        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
+        String accessKeyId = configuration.get(AwsS3Constants.ACCESS_KEY_ID_FIELD_NAME);
+        String secretAccessKey = configuration.get(AwsS3Constants.SECRET_ACCESS_KEY_FIELD_NAME);
+        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
         builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
 
         // Region

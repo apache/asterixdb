@@ -74,8 +74,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
 
     private final TokenImage tmpTokenImage = new TokenImage();
 
-    private final String mismatchErrorMessage = "Mismatch Type, expecting a value of type ";
-    private final String mismatchErrorMessage2 = " got a value of type ";
+    private static final String mismatchErrorMessage = "Mismatch Type, expecting a value of type ";
+    private static final String mismatchErrorMessage2 = " got a value of type ";
 
     public ADMDataParser(ARecordType recordType, boolean isStream) {
         this(null, recordType, isStream);
@@ -103,11 +103,11 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
     }
 
     @Override
-    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
+    public boolean parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
         try {
             resetPools();
             admLexer.setBuffer(record.get());
-            parseAdmInstance(recordType, out);
+            return parseAdmInstance(recordType, out);
         } catch (ParseException e) {
             e.setLocation(filename, admLexer.getLine(), admLexer.getColumn());
             throw e;
@@ -121,7 +121,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         admLexer = new AdmLexer(new java.io.InputStreamReader(in));
     }
 
-    protected boolean parseAdmInstance(IAType objectType, DataOutput out) throws IOException {
+    private boolean parseAdmInstance(IAType objectType, DataOutput out) throws IOException {
         int token = admLexer.next();
         if (token == AdmLexer.TOKEN_EOF) {
             return false;

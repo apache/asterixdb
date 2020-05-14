@@ -31,15 +31,15 @@
     <test-case FilePath="api">
       <compilation-unit name="readonly-request">
         <output-dir compare="Text">readonly-request</output-dir>
-        <expected-error>ASX0044: CREATE_DATAVERSE statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: DATAVERSE_DROP statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: DATASET_DECL statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: DATASET_DROP statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: CREATE_INDEX statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: INDEX_DROP statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: INSERT statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: UPSERT statement is prohibited by this request</expected-error>
-        <expected-error>ASX0044: DELETE statement is prohibited by this request</expected-error>
+        <expected-error>ASX0044: CREATE_DATAVERSE statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: DATAVERSE_DROP statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: DATASET_DECL statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: DATASET_DROP statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: CREATE_INDEX statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: INDEX_DROP statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: INSERT statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: UPSERT statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: DELETE statement is not supported in read-only mode</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="api">
@@ -106,6 +106,25 @@
     <test-case FilePath="api">
       <compilation-unit name="format-param-in-accept-05">
         <output-dir compare="AST">format-param-in-accept-05</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="get-non-query">
+        <output-dir compare="Text">get-non-query</output-dir>
+        <expected-error>CREATE_DATAVERSE statement is not supported in read-only mode</expected-error>
+        <expected-error>TYPE_DECL statement is not supported in read-only mode</expected-error>
+        <expected-error>CREATE_FUNCTION statement is not supported in read-only mode</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="get-query">
+        <output-dir compare="Text">get-query</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="post-non-query">
+        <output-dir compare="Text">post-non-query</output-dir>
+        <expected-error>TYPE_DECL statement is not supported in read-only mode</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -5381,6 +5400,16 @@
     <test-case FilePath="group-by">
       <compilation-unit name="gby-array">
         <output-dir compare="Text">gby-array</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="gby-case-01">
+        <output-dir compare="Text">gby-case-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="gby-nested-01">
+        <output-dir compare="Text">gby-nested-01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
@@ -11962,22 +11991,16 @@
     <test-case FilePath="load">
       <compilation-unit name="csv_05">
         <output-dir compare="Text">csv_05</output-dir>
-        <expected-error>At record: 1, field#: 4 - a quote enclosing a field needs to be placed in the beginning of that field</expected-error>
-        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
       <compilation-unit name="csv_06">
         <output-dir compare="Text">csv_06</output-dir>
-        <expected-error>At record: 1, field#: 3 - a quote enclosing a field needs to be placed in the beginning of that field</expected-error>
-        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
       <compilation-unit name="csv_07">
         <output-dir compare="Text">csv_07</output-dir>
-        <expected-error>At record: 1, field#: 3 -  A quote enclosing a field needs to be followed by the delimiter</expected-error>
-        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
@@ -12494,6 +12517,11 @@
     <test-case FilePath="leftouterjoin">
       <compilation-unit name="loj-01-sugar">
         <output-dir compare="Text">loj-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
+      <compilation-unit name="loj-02-push-select">
+        <output-dir compare="Text">loj-02-push-select</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="leftouterjoin">
@@ -13944,7 +13972,7 @@
 
         <expected-warn>Type mismatch: function string-concat expects its 2nd input parameter to be of type string, but the actual input type is bigint (in line 30, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function string-concat expects its 2nd input parameter to be of type string, but the actual input type is tinyint (in line 31, at column 7)</expected-warn>
-        <expected-warn>Type mismatch: function substring expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 32, at column 1)</expected-warn>
+        <expected-warn>Type mismatch: function substring expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string (in line 32, at column 1)</expected-warn>
         <expected-warn>Type mismatch: function codepoint-to-string expects its 1st input parameter to be of type array, but the actual input type is string (in line 33, at column 1)</expected-warn>
         <expected-warn>Unsupported type: codepoint-to-string cannot process input type string (in line 34, at column 1)</expected-warn>
         <expected-warn>Unsupported type: codepoint-to-string cannot process input type double (in line 35, at column 1)</expected-warn>
@@ -14046,12 +14074,13 @@
         <expected-warn>Type mismatch: function round-half-to-even expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string</expected-warn>
         <expected-warn>Type mismatch: function trunc expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string</expected-warn>
 
-        <expected-warn>Type mismatch: function round expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string</expected-warn>
-        <expected-warn>Type mismatch: function round-half-to-even expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string</expected-warn>
-        <expected-warn>Type mismatch: function trunc expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string</expected-warn>
-        <expected-warn>Type mismatch: function round expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string</expected-warn>
-        <expected-warn>Type mismatch: function round-half-to-even expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string</expected-warn>
-        <expected-warn>Type mismatch: function trunc expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function round expects its 2nd input parameter to be of type tinyint, smallint, integer or bigint, but the actual input type is string (in line 33, at column 24)</expected-warn>
+        <expected-warn>Type mismatch: function round expects its 2nd input parameter to be of type tinyint, smallint, integer or bigint, but the actual input type is string (in line 33, at column 47)</expected-warn>
+        <expected-warn>Type mismatch: function trunc expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string (in line 34, at column 24)</expected-warn>
+        <expected-warn>Type mismatch: function trunc expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string (in line 34, at column 47)</expected-warn>
+
+        <expected-warn>Type mismatch: function round-half-to-even expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string (in line 36, at column 40)</expected-warn>
+        <expected-warn>Type mismatch: function round-half-to-even expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string (in line 36, at column 79)</expected-warn>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
