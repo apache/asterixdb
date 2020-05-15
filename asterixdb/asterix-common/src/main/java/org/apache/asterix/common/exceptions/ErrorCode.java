@@ -81,6 +81,8 @@ public class ErrorCode {
     public static final int INVALID_LIKE_PATTERN = 46;
     public static final int INVALID_REQ_PARAM_VAL = 47;
     public static final int INVALID_REQ_JSON_VAL = 48;
+    public static final int PARAMETERS_REQUIRED = 49;
+    public static final int INVALID_PARAM = 50;
 
     public static final int UNSUPPORTED_JRE = 100;
 
@@ -307,7 +309,6 @@ public class ErrorCode {
     public static final int FAILED_TO_PARSE_METADATA = 3115;
     public static final int INPUT_DECODE_FAILURE = 3116;
     public static final int FAILED_TO_PARSE_MALFORMED_LOG_RECORD = 3117;
-    public static final int PARAMETERS_REQUIRED = 3118;
 
     // Lifecycle management errors
     public static final int DUPLICATE_PARTITION_ID = 4000;
