@@ -33,11 +33,11 @@ import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.AbstractComplexType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -141,13 +141,15 @@ public abstract class AbstractDatatypeTupleTranslator<T> extends AbstractTupleTr
         listBuilder.reset(new AOrderedListType(MetadataRecordTypes.FIELD_RECORDTYPE, null));
 
         for (int i = 0, n = recType.getFieldNames().length; i < n; i++) {
-            String fieldName = recType.getFieldNames()[i];
             IAType fieldType = recType.getFieldTypes()[i];
-
             boolean fieldIsNullable = false;
-            if (NonTaggedFormatUtil.isOptional(fieldType)) {
-                fieldIsNullable = true;
-                fieldType = ((AUnionType) fieldType).getActualType();
+            boolean fieldIsMissable = false;
+
+            if (fieldType.getTypeTag() == ATypeTag.UNION) {
+                AUnionType fieldUnionType = (AUnionType) fieldType;
+                fieldIsNullable = fieldUnionType.isNullableType();
+                fieldIsMissable = fieldUnionType.isMissableType();
+                fieldType = fieldUnionType.getActualType();
             }
             if (fieldType.getTypeTag().isDerivedType()) {
                 handleNestedDerivedType(dataverseName, fieldType.getTypeName(), (AbstractComplexType) fieldType);
@@ -159,7 +161,7 @@ public abstract class AbstractDatatypeTupleTranslator<T> extends AbstractTupleTr
 
             // write field 0
             fieldValue.reset();
-            aString.setValue(fieldName);
+            aString.setValue(recType.getFieldNames()[i]);
             stringSerde.serialize(aString, fieldValue.getDataOutput());
             fieldRecordBuilder.addField(MetadataRecordTypes.FIELD_ARECORD_FIELDNAME_FIELD_INDEX, fieldValue);
 
@@ -173,6 +175,14 @@ public abstract class AbstractDatatypeTupleTranslator<T> extends AbstractTupleTr
             fieldValue.reset();
             booleanSerde.serialize(ABoolean.valueOf(fieldIsNullable), fieldValue.getDataOutput());
             fieldRecordBuilder.addField(MetadataRecordTypes.FIELD_ARECORD_ISNULLABLE_FIELD_INDEX, fieldValue);
+
+            // write open fields
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_IS_MISSABLE);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            booleanSerde.serialize(ABoolean.valueOf(fieldIsMissable), fieldValue.getDataOutput());
+            fieldRecordBuilder.addField(fieldName, fieldValue);
 
             // write record
             fieldRecordBuilder.write(itemValue.getDataOutput(), true);

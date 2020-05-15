@@ -22,7 +22,7 @@ create dataverse test;
 
 use test;
 
-create dataset t1(id integer not null) open type primary key id;
+create dataset t1(id integer not unknown) open type primary key id;
 
 create function f1() {
   select x,

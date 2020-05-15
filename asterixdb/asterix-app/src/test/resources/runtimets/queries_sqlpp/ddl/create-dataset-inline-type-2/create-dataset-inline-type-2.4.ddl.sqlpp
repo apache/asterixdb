@@ -24,8 +24,8 @@
 USE test;
 
 CREATE DATASET Cust2X(
-  c_custkey integer not null,
-  c_name string not null
+  c_custkey integer not unknown,
+  c_name string not unknown
 )
 WITH META(`$d$t$i$Cust2`)
 PRIMARY KEY c_custkey;

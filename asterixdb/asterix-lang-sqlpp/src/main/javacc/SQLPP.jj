@@ -904,13 +904,13 @@ void DatasetRecordField(RecordTypeDefinition recType) throws ParseException:
 {
   String fieldName;
   TypeExpression type = null;
-  boolean isUnknownable = true;
+  boolean nullable = true, missable = true;
 }
 {
   fieldName = Identifier()
-  type = TypeReference() ( <NOT> <NULL> { isUnknownable = false; } )?
+  type = TypeReference() ( <NOT> <UNKNOWN> { nullable = false; missable = false; } )?
   {
-    recType.addField(fieldName, type, isUnknownable);
+    recType.addField(fieldName, type, nullable, missable);
   }
 }
 
@@ -2206,7 +2206,7 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
 {
   String fieldName;
   TypeExpression type = null;
-  boolean nullable = false;
+  boolean nullable = false, missable = false;
 }
 {
   fieldName = Identifier()
@@ -2216,9 +2216,9 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
         SqlppHint.DATE_BETWEEN_YEARS_HINT, SqlppHint.DATETIME_ADD_RAND_HOURS_HINT, SqlppHint.AUTO_HINT);
       IRecordFieldDataGen rfdg = hintToken != null ? parseFieldDataGen(hintToken) : null;
     }
-  <COLON> type =  TypeExpr() (<QUES> { nullable = true; } )?
+  <COLON> type = TypeExpr() ( <QUES> { nullable = true; missable = true; } )?
     {
-      recType.addField(fieldName, type, nullable, rfdg);
+      recType.addField(fieldName, type, nullable, missable, rfdg);
     }
 }
 

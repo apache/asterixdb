@@ -37,7 +37,8 @@ public class RecordTypeDefinition extends AbstractTypeExpression {
     private final List<String> fieldNames = new ArrayList<>();
     private final List<TypeExpression> fieldTypes = new ArrayList<>();
     private final List<IRecordFieldDataGen> fieldDataGen = new ArrayList<>();
-    private final List<Boolean> optionalFields = new ArrayList<>();
+    private final List<Boolean> nullableFields = new ArrayList<>();
+    private final List<Boolean> missableFields = new ArrayList<>();
     private RecordKind recordKind;
     private UndeclaredFieldsDataGen undeclaredFieldsDataGen;
 
@@ -50,17 +51,20 @@ public class RecordTypeDefinition extends AbstractTypeExpression {
         return TypeExprKind.RECORD;
     }
 
-    public void addField(String name, TypeExpression type, Boolean nullable, IRecordFieldDataGen fldDataGen) {
+    public void addField(String name, TypeExpression type, boolean nullable, boolean missable,
+            IRecordFieldDataGen fldDataGen) {
         fieldNames.add(name);
         fieldTypes.add(type);
-        optionalFields.add(nullable);
+        nullableFields.add(nullable);
+        missableFields.add(missable);
         fieldDataGen.add(fldDataGen);
     }
 
-    public void addField(String name, TypeExpression type, Boolean optional) {
+    public void addField(String name, TypeExpression type, boolean nullable, boolean missable) {
         fieldNames.add(name);
         fieldTypes.add(type);
-        optionalFields.add(optional);
+        nullableFields.add(nullable);
+        missableFields.add(missable);
     }
 
     public List<String> getFieldNames() {
@@ -71,8 +75,12 @@ public class RecordTypeDefinition extends AbstractTypeExpression {
         return fieldTypes;
     }
 
-    public List<Boolean> getOptionableFields() {
-        return optionalFields;
+    public List<Boolean> getNullableFields() {
+        return nullableFields;
+    }
+
+    public List<Boolean> getMissableFields() {
+        return missableFields;
     }
 
     public List<IRecordFieldDataGen> getFieldDataGen() {
@@ -102,7 +110,8 @@ public class RecordTypeDefinition extends AbstractTypeExpression {
 
     @Override
     public int hashCode() {
-        return Objects.hash(fieldDataGen, fieldNames, fieldTypes, optionalFields, recordKind, undeclaredFieldsDataGen);
+        return Objects.hash(fieldDataGen, fieldNames, fieldTypes, nullableFields, missableFields, recordKind,
+                undeclaredFieldsDataGen);
     }
 
     @Override
@@ -116,7 +125,8 @@ public class RecordTypeDefinition extends AbstractTypeExpression {
         }
         RecordTypeDefinition target = (RecordTypeDefinition) object;
         return fieldDataGen.equals(target.getFieldDataGen()) && fieldNames.equals(target.getFieldNames())
-                && fieldTypes.equals(target.getFieldTypes()) && optionalFields.equals(target.getOptionableFields())
+                && fieldTypes.equals(target.getFieldTypes()) && nullableFields.equals(target.getNullableFields())
+                && missableFields.equals(target.getMissableFields())
                 && Objects.equals(recordKind, target.getRecordKind())
                 && Objects.equals(undeclaredFieldsDataGen, target.getUndeclaredFieldsDataGen());
     }

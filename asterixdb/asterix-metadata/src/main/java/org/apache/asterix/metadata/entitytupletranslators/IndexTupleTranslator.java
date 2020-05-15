@@ -134,7 +134,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         List<IAType> searchKeyType = new ArrayList<>(searchKey.size());
         while (fieldTypeCursor.next()) {
             String typeName = ((AString) fieldTypeCursor.get()).getStringValue();
-            IAType fieldType = BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName, false);
+            IAType fieldType = BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName);
             searchKeyType.add(fieldType);
         }
         boolean isOverridingKeyTypes = !searchKeyType.isEmpty();

@@ -69,6 +69,7 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_INDEX_STRUCTURE = "IndexStructure";
     public static final String FIELD_NAME_INTERNAL_DETAILS = "InternalDetails";
     public static final String FIELD_NAME_IS_ANONYMOUS = "IsAnonymous";
+    public static final String FIELD_NAME_IS_MISSABLE = "IsMissable";
     public static final String FIELD_NAME_IS_NULLABLE = "IsNullable";
     public static final String FIELD_NAME_IS_OPEN = "IsOpen";
     public static final String FIELD_NAME_IS_PRIMARY = "IsPrimary";

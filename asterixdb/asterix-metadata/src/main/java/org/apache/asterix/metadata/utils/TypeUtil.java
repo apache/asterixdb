@@ -212,4 +212,32 @@ public class TypeUtil {
                     "Field accessor is not defined for \"" + fName + "\" of type " + actualType.getTypeTag());
         }
     }
+
+    /**
+     * Warning: this is not a general-purpose method.
+     * Use only when processing types stored in metadata.
+     * Doesn't properly handle ANY, UNION, NULL and MISSING types.
+     * Allows {@code null} type reference which will be filled later during type translation.
+     */
+    public static IAType createQuantifiedType(IAType primeType, boolean nullable, boolean missable) {
+        if (primeType != null) {
+            switch (primeType.getTypeTag()) {
+                case ANY:
+                case UNION:
+                case NULL:
+                case MISSING:
+                    throw new IllegalArgumentException(primeType.getDisplayName());
+            }
+        }
+
+        IAType resType = primeType;
+        if (nullable && missable) {
+            resType = AUnionType.createUnknownableType(resType);
+        } else if (nullable) {
+            resType = AUnionType.createNullableType(resType);
+        } else if (missable) {
+            resType = AUnionType.createMissableType(resType);
+        }
+        return resType;
+    }
 }

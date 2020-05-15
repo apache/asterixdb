@@ -28,6 +28,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Datatype;
+import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
@@ -35,8 +36,6 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.AbstractComplexType;
 import org.apache.asterix.om.types.IAType;
@@ -98,10 +97,23 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
                         fieldTypeName =
                                 ((AString) field.getValueByPos(MetadataRecordTypes.FIELD_ARECORD_FIELDTYPE_FIELD_INDEX))
                                         .getStringValue();
+
                         boolean isNullable = ((ABoolean) field
                                 .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_ISNULLABLE_FIELD_INDEX)).getBoolean();
-                        fieldTypes[fieldId] = BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName,
-                                fieldTypeName, isNullable);
+                        int isMissableIdx = field.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_IS_MISSABLE);
+                        boolean isMissable;
+                        if (isMissableIdx >= 0) {
+                            isMissable = ((ABoolean) field.getValueByPos(isMissableIdx)).getBoolean();
+                        } else {
+                            // back-compat
+                            // we previously stored 'isNullable' = true if type was 'unknowable',
+                            // or 'isNullable' = 'false' if the type was 'not unknowable'.
+                            isMissable = isNullable;
+                        }
+
+                        IAType fieldType =
+                                BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, fieldTypeName);
+                        fieldTypes[fieldId] = TypeUtil.createQuantifiedType(fieldType, isNullable, isMissable);
                         fieldId++;
                     }
                     return new Datatype(dataverseName, datatypeName,
@@ -113,17 +125,16 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
                                     .getStringValue();
                     return new Datatype(dataverseName, datatypeName,
                             new AUnorderedListType(BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId,
-                                    dataverseName, unorderedlistTypeName, false), datatypeName),
+                                    dataverseName, unorderedlistTypeName), datatypeName),
                             isAnonymous);
                 }
                 case ORDEREDLIST: {
                     String orderedlistTypeName = ((AString) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_ORDEREDLIST_FIELD_INDEX))
                                     .getStringValue();
-                    return new Datatype(dataverseName, datatypeName,
-                            new AOrderedListType(BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName,
-                                    orderedlistTypeName, false), datatypeName),
-                            isAnonymous);
+                    return new Datatype(dataverseName, datatypeName, new AOrderedListType(
+                            BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, orderedlistTypeName),
+                            datatypeName), isAnonymous);
                 }
                 default:
                     throw new UnsupportedOperationException("Unsupported derived type: " + tag);
@@ -160,13 +171,8 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_DATATYPENAME_FIELD_INDEX, fieldValue);
 
+        // write field 2
         IAType fieldType = dataType.getDatatype();
-        // unwrap nullable type out of the union
-        if (fieldType.getTypeTag() == ATypeTag.UNION) {
-            fieldType = ((AUnionType) dataType.getDatatype()).getActualType();
-        }
-
-        // write field 3
         if (fieldType.getTypeTag().isDerivedType()) {
             fieldValue.reset();
             writeDerivedTypeRecord(dataType.getDataverseName(), (AbstractComplexType) fieldType,
@@ -174,7 +180,7 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
             recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_DERIVED_FIELD_INDEX, fieldValue);
         }
 
-        // write field 4
+        // write field 3
         fieldValue.reset();
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());

@@ -390,7 +390,8 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
         out.println("{");
         Iterator<String> nameIter = r.getFieldNames().iterator();
         Iterator<TypeExpression> typeIter = r.getFieldTypes().iterator();
-        Iterator<Boolean> isOptionalIter = r.getOptionableFields().iterator();
+        Iterator<Boolean> isNullableIter = r.getNullableFields().iterator();
+        Iterator<Boolean> isMissableIter = r.getMissableFields().iterator();
         boolean first = true;
         while (nameIter.hasNext()) {
             if (first) {
@@ -400,10 +401,11 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
             }
             String name = normalize(nameIter.next());
             TypeExpression texp = typeIter.next();
-            Boolean isNullable = isOptionalIter.next();
+            Boolean isNullable = isNullableIter.next();
+            Boolean isMissable = isMissableIter.next();
             out.print(skip(step) + name + " : ");
             texp.accept(this, step + 2);
-            if (isNullable) {
+            if (isNullable || isMissable) {
                 out.print("?");
             }
         }

@@ -41,6 +41,7 @@ import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
@@ -322,48 +323,33 @@ public class TypeTranslator {
 
         for (int j = 0; j < n; j++) {
             TypeExpression texpr = rtd.getFieldTypes().get(j);
+            IAType type;
             switch (texpr.getTypeKind()) {
                 case TYPEREFERENCE: {
                     TypeReferenceExpression tre = (TypeReferenceExpression) texpr;
                     TypeSignature signature = createTypeSignature(tre, defaultDataverse);
-                    IAType tref = solveTypeReference(signature, typeMap);
-                    if (tref != null) {
-                        if (!rtd.getOptionableFields().get(j)) { // not nullable
-                            fldTypes[j] = tref;
-                        } else { // optional
-                            fldTypes[j] = AUnionType.createUnknownableType(tref);
-                        }
-                    } else {
+                    type = solveTypeReference(signature, typeMap);
+                    if (type == null) {
                         addIncompleteFieldTypeReference(recType, j, tre, incompleteFieldTypes);
-                        if (rtd.getOptionableFields().get(j)) {
-                            fldTypes[j] = AUnionType.createUnknownableType(null);
-                        }
                     }
                     break;
                 }
                 case RECORD: {
                     RecordTypeDefinition recTypeDef2 = (RecordTypeDefinition) texpr;
-                    IAType t2 = computeRecordType(null, recTypeDef2, typeMap, incompleteFieldTypes, incompleteItemTypes,
+                    type = computeRecordType(null, recTypeDef2, typeMap, incompleteFieldTypes, incompleteItemTypes,
                             defaultDataverse);
-                    if (!rtd.getOptionableFields().get(j)) { // not nullable
-                        fldTypes[j] = t2;
-                    } else { // nullable
-                        fldTypes[j] = AUnionType.createUnknownableType(t2);
-                    }
                     break;
                 }
                 case ORDEREDLIST: {
                     OrderedListTypeDefinition oltd = (OrderedListTypeDefinition) texpr;
-                    IAType t2 = computeOrderedListType(null, oltd, typeMap, incompleteItemTypes, incompleteFieldTypes,
+                    type = computeOrderedListType(null, oltd, typeMap, incompleteItemTypes, incompleteFieldTypes,
                             defaultDataverse);
-                    fldTypes[j] = rtd.getOptionableFields().get(j) ? AUnionType.createUnknownableType(t2) : t2;
                     break;
                 }
                 case UNORDEREDLIST: {
                     UnorderedListTypeDefinition ultd = (UnorderedListTypeDefinition) texpr;
-                    IAType t2 = computeUnorderedListType(null, ultd, typeMap, incompleteItemTypes, incompleteFieldTypes,
+                    type = computeUnorderedListType(null, ultd, typeMap, incompleteItemTypes, incompleteFieldTypes,
                             defaultDataverse);
-                    fldTypes[j] = rtd.getOptionableFields().get(j) ? AUnionType.createUnknownableType(t2) : t2;
                     break;
                 }
                 default: {
@@ -371,6 +357,9 @@ public class TypeTranslator {
                 }
             }
 
+            Boolean nullable = rtd.getNullableFields().get(j);
+            Boolean missable = rtd.getMissableFields().get(j);
+            fldTypes[j] = TypeUtil.createQuantifiedType(type, nullable, missable);
         }
 
         return recType;

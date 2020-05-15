@@ -22,7 +22,7 @@ create dataverse test;
 
 use test;
 
-create dataset t1(id integer not null) open type primary key id;
+create dataset t1(id integer not unknown) open type primary key id;
 
 select x,
   case when sum(z)=0 then 0 else sum(y*z)/sum(z) end as res

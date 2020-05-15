@@ -49,6 +49,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
@@ -157,9 +158,11 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
 
     private IAType resolveType(DataverseName dataverseName, String typeName, Boolean isUnknownable)
             throws AlgebricksException {
+        //TODO(dmitry): revisit "isNullable"/"isMissable" for function paramters
         return BuiltinType.ANY.getTypeName().equalsIgnoreCase(typeName) ? BuiltinType.ANY
-                : BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName,
-                        isUnknownable != null ? isUnknownable : false);
+                : TypeUtil.createQuantifiedType(
+                        BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName), isUnknownable,
+                        isUnknownable);
     }
 
     private List<IAType> getArgTypes(ARecord functionRecord, DataverseName dataverseName, int arity)

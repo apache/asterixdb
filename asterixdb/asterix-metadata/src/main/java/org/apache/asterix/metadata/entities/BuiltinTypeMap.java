@@ -27,7 +27,6 @@ import java.util.Set;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.MetadataNode;
-import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -94,16 +93,13 @@ public class BuiltinTypeMap {
     }
 
     public static IAType getTypeFromTypeName(MetadataNode metadataNode, TxnId txnId, DataverseName dataverseName,
-            String typeName, boolean optional) throws AlgebricksException {
+            String typeName) throws AlgebricksException {
         IAType type = _builtinTypeMap.get(typeName);
         if (type == null) {
             Datatype dt = metadataNode.getDatatype(txnId, dataverseName, typeName);
             if (dt != null) {
                 type = dt.getDatatype();
             }
-        }
-        if (optional) {
-            type = AUnionType.createUnknownableType(type);
         }
         return type;
     }
