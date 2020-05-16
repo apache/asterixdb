@@ -587,16 +587,21 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DataverseName dataverseName = getActiveDataverseName(dd.getDataverse());
         String datasetName = dd.getName().getValue();
         TypeExpression itemTypeExpr = dd.getItemType();
-        DataverseName itemTypeDataverseName = null;
-        String itemTypeName = null;
+        DataverseName itemTypeDataverseName;
+        String itemTypeName;
+        boolean itemTypeAnonymous;
         switch (itemTypeExpr.getTypeKind()) {
             case TYPEREFERENCE:
                 TypeReferenceExpression itemTypeRefExpr = (TypeReferenceExpression) itemTypeExpr;
                 Pair<DataverseName, Identifier> itemTypeIdent = itemTypeRefExpr.getIdent();
                 itemTypeDataverseName = itemTypeIdent.first != null ? itemTypeIdent.first : dataverseName;
                 itemTypeName = itemTypeRefExpr.getIdent().second.getValue();
+                itemTypeAnonymous = false;
                 break;
             case RECORD:
+                itemTypeDataverseName = dataverseName;
+                itemTypeName = DatasetUtil.createInlineTypeName(datasetName, false);
+                itemTypeAnonymous = true;
                 break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, stmt.getSourceLocation(),
@@ -606,6 +611,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         TypeExpression metaItemTypeExpr = dd.getMetaItemType();
         DataverseName metaItemTypeDataverseName = null;
         String metaItemTypeName = null;
+        boolean metaItemTypeAnonymous;
         if (metaItemTypeExpr != null) {
             switch (metaItemTypeExpr.getTypeKind()) {
                 case TYPEREFERENCE:
@@ -614,13 +620,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     metaItemTypeDataverseName =
                             metaItemTypeIdent.first != null ? metaItemTypeIdent.first : dataverseName;
                     metaItemTypeName = metaItemTypeRefExpr.getIdent().second.getValue();
+                    metaItemTypeAnonymous = false;
                     break;
                 case RECORD:
+                    metaItemTypeDataverseName = dataverseName;
+                    metaItemTypeName = DatasetUtil.createInlineTypeName(datasetName, true);
+                    metaItemTypeAnonymous = true;
                     break;
                 default:
                     throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, stmt.getSourceLocation(),
                             String.valueOf(metaItemTypeExpr.getTypeKind()));
             }
+        } else {
+            metaItemTypeAnonymous = true; // doesn't matter
         }
 
         Identifier ngNameId = dd.getNodegroupName();
@@ -629,8 +641,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         boolean defaultCompactionPolicy = compactionPolicy == null;
 
         lockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName,
-                itemTypeDataverseName, itemTypeName, metaItemTypeDataverseName, metaItemTypeName, nodegroupName,
-                compactionPolicy, defaultCompactionPolicy, dd.getDatasetDetailsDecl());
+                itemTypeDataverseName, itemTypeName, itemTypeAnonymous, metaItemTypeDataverseName, metaItemTypeName,
+                metaItemTypeAnonymous, nodegroupName, compactionPolicy, defaultCompactionPolicy, dd.getDatasetType(),
+                dd.getDatasetDetailsDecl());
         try {
             doCreateDatasetStatement(metadataProvider, dd, dataverseName, datasetName, itemTypeDataverseName,
                     itemTypeExpr, itemTypeName, metaItemTypeExpr, metaItemTypeDataverseName, metaItemTypeName, hcc,
@@ -675,16 +688,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     if (itemTypeEntity == null || itemTypeEntity.getIsAnonymous()) {
                         // anonymous types cannot be referred from CREATE DATASET
                         throw new AsterixException(ErrorCode.UNKNOWN_TYPE, sourceLoc,
-                                itemTypeDataverseName + "." + itemTypeName);
+                                DatasetUtil.getFullyQualifiedDisplayName(itemTypeDataverseName, itemTypeName));
                     }
                     itemType = itemTypeEntity.getDatatype();
                     validateDatasetItemType(dsType, itemType, false, sourceLoc);
                     break;
                 case RECORD:
-                    itemTypeDataverseName = dataverseName;
-                    itemTypeName = DatasetUtil.createInlineTypeName(datasetName, false);
-                    lockUtil.createTypeBegin(lockManager, metadataProvider.getLocks(), itemTypeDataverseName,
-                            itemTypeName);
                     itemType = translateType(itemTypeDataverseName, itemTypeName, itemTypeExpr, mdTxnCtx);
                     validateDatasetItemType(dsType, itemType, false, sourceLoc);
                     MetadataManager.INSTANCE.addDatatype(mdTxnCtx,
@@ -714,17 +723,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                         metadataProvider.findTypeEntity(metaItemTypeDataverseName, metaItemTypeName);
                                 if (metaItemTypeEntity == null || metaItemTypeEntity.getIsAnonymous()) {
                                     // anonymous types cannot be referred from CREATE DATASET
-                                    throw new AsterixException(ErrorCode.UNKNOWN_TYPE, sourceLoc,
-                                            metaItemTypeDataverseName + "." + metaItemTypeName);
+                                    throw new AsterixException(ErrorCode.UNKNOWN_TYPE, sourceLoc, DatasetUtil
+                                            .getFullyQualifiedDisplayName(metaItemTypeDataverseName, metaItemTypeName));
                                 }
                                 metaItemType = metaItemTypeEntity.getDatatype();
                                 validateDatasetItemType(dsType, metaItemType, true, sourceLoc);
                                 break;
                             case RECORD:
-                                metaItemTypeDataverseName = dataverseName;
-                                metaItemTypeName = DatasetUtil.createInlineTypeName(datasetName, true);
-                                lockUtil.createTypeBegin(lockManager, metadataProvider.getLocks(),
-                                        metaItemTypeDataverseName, metaItemTypeName);
                                 metaItemType = translateType(metaItemTypeDataverseName, metaItemTypeName,
                                         metaItemTypeExpr, mdTxnCtx);
                                 validateDatasetItemType(dsType, metaItemType, true, sourceLoc);
@@ -764,7 +769,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     break;
                 case EXTERNAL:
                     ExternalDetailsDecl externalDetails = (ExternalDetailsDecl) dd.getDatasetDetailsDecl();
-                    Map<String, String> properties = createExternalDatasetProperties(dd, metadataProvider, mdTxnCtx);
+                    Map<String, String> properties =
+                            createExternalDatasetProperties(dataverseName, dd, metadataProvider, mdTxnCtx);
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
                     validateExternalDatasetDetails(externalDetails, properties);
@@ -864,8 +870,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected Map<String, String> createExternalDatasetProperties(DatasetDecl dd, MetadataProvider metadataProvider,
-            MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
+    protected Map<String, String> createExternalDatasetProperties(DataverseName dataverseName, DatasetDecl dd,
+            MetadataProvider metadataProvider, MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
         ExternalDetailsDecl externalDetails = (ExternalDetailsDecl) dd.getDatasetDetailsDecl();
         return externalDetails.getProperties();
     }

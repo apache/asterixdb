@@ -20,6 +20,7 @@
 package org.apache.asterix.common.metadata;
 
 import org.apache.asterix.common.api.IMetadataLockManager;
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public interface IMetadataLockUtil {
@@ -35,10 +36,10 @@ public interface IMetadataLockUtil {
     // Dataset helpers
 
     void createDatasetBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
-            String datasetName, DataverseName itemTypeDataverseName, String itemTypeName,
-            DataverseName metaItemTypeDataverseName, String metaItemTypeName, String nodeGroupName,
-            String compactionPolicyName, boolean isDefaultCompactionPolicy, Object datasetDetails)
-            throws AlgebricksException;
+            String datasetName, DataverseName itemTypeDataverseName, String itemTypeName, boolean itemTypeAnonymous,
+            DataverseName metaItemTypeDataverseName, String metaItemTypeName, boolean metaItemTypeAnonymous,
+            String nodeGroupName, String compactionPolicyName, boolean isDefaultCompactionPolicy,
+            DatasetConfig.DatasetType datasetType, Object datasetDetails) throws AlgebricksException;
 
     void dropDatasetBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
             String datasetName) throws AlgebricksException;

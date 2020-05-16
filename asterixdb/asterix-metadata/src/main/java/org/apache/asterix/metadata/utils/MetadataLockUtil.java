@@ -19,6 +19,7 @@
 package org.apache.asterix.metadata.utils;
 
 import org.apache.asterix.common.api.IMetadataLockManager;
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.metadata.LockList;
@@ -40,20 +41,21 @@ public class MetadataLockUtil implements IMetadataLockUtil {
 
     @Override
     public void createDatasetBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
-            String datasetName, DataverseName itemTypeDataverseName, String itemTypeName,
-            DataverseName metaItemTypeDataverseName, String metaItemTypeName, String nodeGroupName,
-            String compactionPolicyName, boolean isDefaultCompactionPolicy, Object datasetDetails)
-            throws AlgebricksException {
-        createDatasetBeginPre(lockMgr, locks, dataverseName, itemTypeDataverseName, itemTypeName,
-                metaItemTypeDataverseName, metaItemTypeName, nodeGroupName, compactionPolicyName,
+            String datasetName, DataverseName itemTypeDataverseName, String itemTypeName, boolean itemTypeAnonymous,
+            DataverseName metaItemTypeDataverseName, String metaItemTypeName, boolean metaItemTypeAnonymous,
+            String nodeGroupName, String compactionPolicyName, boolean isDefaultCompactionPolicy,
+            DatasetConfig.DatasetType datasetType, Object datasetDetails) throws AlgebricksException {
+        createDatasetBeginPre(lockMgr, locks, dataverseName, itemTypeDataverseName, itemTypeName, itemTypeAnonymous,
+                metaItemTypeDataverseName, metaItemTypeName, metaItemTypeAnonymous, nodeGroupName, compactionPolicyName,
                 isDefaultCompactionPolicy);
         lockMgr.acquireDatasetWriteLock(locks, dataverseName, datasetName);
     }
 
     protected final void createDatasetBeginPre(IMetadataLockManager lockMgr, LockList locks,
             DataverseName dataverseName, DataverseName itemTypeDataverseName, String itemTypeName,
-            DataverseName metaItemTypeDataverseName, String metaItemTypeName, String nodeGroupName,
-            String compactionPolicyName, boolean isDefaultCompactionPolicy) throws AlgebricksException {
+            boolean itemTypeAnonymous, DataverseName metaItemTypeDataverseName, String metaItemTypeName,
+            boolean metaItemTypeAnonymous, String nodeGroupName, String compactionPolicyName,
+            boolean isDefaultCompactionPolicy) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
         if (itemTypeDataverseName != null && !dataverseName.equals(itemTypeDataverseName)) {
             lockMgr.acquireDataverseReadLock(locks, itemTypeDataverseName);
@@ -62,12 +64,20 @@ public class MetadataLockUtil implements IMetadataLockUtil {
                 && !metaItemTypeDataverseName.equals(itemTypeDataverseName)) {
             lockMgr.acquireDataverseReadLock(locks, metaItemTypeDataverseName);
         }
-        if (itemTypeName != null) {
+        if (itemTypeAnonymous) {
+            // the datatype will be created
+            lockMgr.acquireDataTypeWriteLock(locks, itemTypeDataverseName, itemTypeName);
+        } else {
             lockMgr.acquireDataTypeReadLock(locks, itemTypeDataverseName, itemTypeName);
         }
         if (metaItemTypeDataverseName != null && !metaItemTypeDataverseName.equals(itemTypeDataverseName)
                 && !metaItemTypeName.equals(itemTypeName)) {
-            lockMgr.acquireDataTypeReadLock(locks, metaItemTypeDataverseName, metaItemTypeName);
+            if (metaItemTypeAnonymous) {
+                // the datatype will be created
+                lockMgr.acquireDataTypeWriteLock(locks, metaItemTypeDataverseName, metaItemTypeName);
+            } else {
+                lockMgr.acquireDataTypeReadLock(locks, metaItemTypeDataverseName, metaItemTypeName);
+            }
         }
         if (nodeGroupName != null) {
             lockMgr.acquireNodeGroupReadLock(locks, nodeGroupName);
