@@ -2068,7 +2068,9 @@ Pair<String, String> KeyValuePair() throws ParseException:
   String value;
 }
 {
-  <LEFTPAREN> key = ConstantString() <EQ> value = ConstantString()  <RIGHTPAREN>
+  <LEFTPAREN> key = ConstantString()
+  <EQ> ( value = ConstantString() | (<TRUE> | <FALSE>) {value = token.image.toLowerCase();} )
+  <RIGHTPAREN>
     {
       return new Pair<String, String>(key, value);
     }

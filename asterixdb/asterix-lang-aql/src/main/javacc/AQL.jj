@@ -1281,7 +1281,9 @@ Pair<String, String> KeyValuePair() throws ParseException:
   String value;
 }
 {
-  <LEFTPAREN> key = StringLiteral() <EQ> value = StringLiteral() <RIGHTPAREN>
+  <LEFTPAREN> key = StringLiteral()
+  <EQ>( value = StringLiteral() | (<TRUE> | <FALSE>) {value = token.image.toLowerCase();} )
+  <RIGHTPAREN>
     {
       return new Pair<String, String>(key, value);
     }

@@ -773,7 +773,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             createExternalDatasetProperties(dataverseName, dd, metadataProvider, mdTxnCtx);
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
-                    validateExternalDatasetDetails(externalDetails, properties);
+                    validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation());
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
                             TransactionState.COMMIT);
                     break;
@@ -3453,13 +3453,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void validateExternalDatasetDetails(ExternalDetailsDecl externalDetails, Map<String, String> properties)
-            throws RuntimeDataException {
+    protected void validateExternalDatasetProperties(ExternalDetailsDecl externalDetails,
+            Map<String, String> properties, SourceLocation srcLoc) throws CompilationException {
         String adapter = externalDetails.getAdapter();
         // "format" parameter is needed for "S3" data source
         if (ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3.equals(adapter)
                 && properties.get(ExternalDataConstants.KEY_FORMAT) == null) {
-            throw new RuntimeDataException(ErrorCode.PARAMETERS_REQUIRED, ExternalDataConstants.KEY_FORMAT);
+            throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
         }
     }
 }
