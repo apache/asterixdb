@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.config.StorageProperties;
+import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
@@ -102,6 +103,10 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
             if (!primaryIndexes.contains(index)) {
                 // make sure only add index once
                 primaryIndexes.add(index);
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info("Registered {} index {} to the global VBC",
+                            isMetadataIndex(index) ? "metadata" : "primary", index.toString());
+                }
             }
             if (index.getNumOfFilterFields() > 0) {
                 // handle filtered primary index
@@ -123,6 +128,10 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
             int pos = primaryIndexes.indexOf(index);
             if (pos >= 0) {
                 primaryIndexes.remove(index);
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info("Unregistered {} index {} to the global VBC",
+                            isMetadataIndex(index) ? "metadata" : "primary", index.toString());
+                }
                 if (primaryIndexes.isEmpty()) {
                     flushPtr = 0;
                 } else if (flushPtr > pos) {
@@ -159,6 +168,11 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
                         synchronized (opTracker) {
                             opTracker.notifyAll();
                         }
+                    }
+
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info("Completed flushing {}. Resetting flushIndex back to null.",
+                                memoryComponent.getIndex().toString());
                     }
                 }
             }
@@ -421,6 +435,11 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
         return vbc.getUsage();
     }
 
+    private boolean isMetadataIndex(ILSMIndex index) {
+        BaseOperationTracker opTracker = (BaseOperationTracker) index.getOperationTracker();
+        return MetadataIndexImmutableProperties.isMetadataDataset(opTracker.getDatasetInfo().getDatasetID());
+    }
+
     /**
      * We use a dedicated thread to schedule flushes to avoid deadlock. We cannot schedule flushes directly during
      * page pins because page pins can be called while synchronized on op trackers (e.g., when resetting a
@@ -476,9 +495,17 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
                             opTracker.flushIfNeeded();
                             // If the flush cannot be scheduled at this time, then there must be active writers.
                             // The flush will be eventually scheduled when writers exit
+                            if (LOGGER.isInfoEnabled()) {
+                                LOGGER.info("Requested {} flushing primary index {}",
+                                        isMetadataIndex(primaryIndex) ? "metadata" : "primary",
+                                        primaryIndex.toString());
+                            }
                         }
-                        if (flushable || opTracker.isFlushLogCreated()) {
+                        if ((flushable || opTracker.isFlushLogCreated()) && !isMetadataIndex(primaryIndex)) {
+                            // global vbc cannot wait on metadata indexes because metadata indexes support full
+                            // ACID transactions. Waiting on metadata indexes can introduce deadlocks.
                             flushingIndex = primaryIndex;
+                            LOGGER.debug("Waiting for flushing primary index {} to complete...", primaryIndex);
                             break;
                         }
                     }
