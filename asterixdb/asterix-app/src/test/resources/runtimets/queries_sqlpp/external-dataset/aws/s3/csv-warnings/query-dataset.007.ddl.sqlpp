@@ -29,5 +29,5 @@ CREATE EXTERNAL DATASET ds1(t1) USING S3 (
 ("definition"="data_dir"),
 ("format"="CSV"),
 ("header"="false"),
-("redact-warnings"="true")
+("redact-warnings"="True")
 );

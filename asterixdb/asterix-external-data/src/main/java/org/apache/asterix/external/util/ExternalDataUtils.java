@@ -23,7 +23,6 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
-import static org.apache.asterix.external.util.ExternalDataConstants.KEY_REDACT_WARNINGS;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -383,11 +382,10 @@ public class ExternalDataUtils {
                 configuration.put(ExternalDataConstants.KEY_FORMAT, lowerCaseFormat);
             }
         }
-        // normalize the "header" parameter
-        paramValue = configuration.get(ExternalDataConstants.KEY_HEADER);
-        if (paramValue != null) {
-            configuration.put(ExternalDataConstants.KEY_HEADER, paramValue.toLowerCase().trim());
-        }
+        // normalize "header" parameter
+        putToLowerIfExists(configuration, ExternalDataConstants.KEY_HEADER);
+        // normalize "redact-warnings" parameter
+        putToLowerIfExists(configuration, ExternalDataConstants.KEY_REDACT_WARNINGS);
     }
 
     /**
@@ -408,9 +406,10 @@ public class ExternalDataUtils {
         char delimiter = validateGetDelimiter(configuration);
         validateGetQuote(configuration, delimiter);
         validateGetEscape(configuration);
-        String value = configuration.get(KEY_REDACT_WARNINGS);
+        String value = configuration.get(ExternalDataConstants.KEY_REDACT_WARNINGS);
         if (value != null && !isBoolean(value)) {
-            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, KEY_REDACT_WARNINGS, value);
+            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, ExternalDataConstants.KEY_REDACT_WARNINGS,
+                    value);
         }
     }
 
@@ -441,6 +440,13 @@ public class ExternalDataUtils {
     public static void validateChar(String parameterValue, String parameterName) throws RuntimeDataException {
         if (parameterValue.length() != 1) {
             throw new RuntimeDataException(ErrorCode.INVALID_CHAR_LENGTH, parameterValue, parameterName);
+        }
+    }
+
+    private static void putToLowerIfExists(Map<String, String> configuration, String key) {
+        String paramValue = configuration.get(key);
+        if (paramValue != null) {
+            configuration.put(key, paramValue.toLowerCase().trim());
         }
     }
 }
