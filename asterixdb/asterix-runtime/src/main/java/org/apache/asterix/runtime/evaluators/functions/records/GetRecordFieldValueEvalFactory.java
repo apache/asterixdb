@@ -27,7 +27,9 @@ import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.RecordUtil;
@@ -93,7 +95,6 @@ public class GetRecordFieldValueEvalFactory implements IScalarEvaluatorFactory {
                     if (PointableHelper.checkAndSetMissingOrNull(result, inputArg0, inputArg1)) {
                         return;
                     }
-
                     byte[] serFldName = inputArg1.getByteArray();
                     int serFldNameOffset = inputArg1.getStartOffset();
                     int serFldNameLen = inputArg1.getLength();
@@ -114,22 +115,32 @@ public class GetRecordFieldValueEvalFactory implements IScalarEvaluatorFactory {
                     int subFieldIndex = recTypeInfo.getFieldIndex(serFldName, serFldNameOffset + 1, serFldNameLen - 1);
                     if (subFieldIndex >= 0) {
                         int nullBitmapSize = RecordUtil.computeNullBitmapSize(recordType);
+
                         subFieldOffset = ARecordSerializerDeserializer.getFieldOffsetById(serRecord, serRecordOffset,
                                 subFieldIndex, nullBitmapSize, recordType.isOpen());
-                        if (subFieldOffset == 0) {
-                            // the field is null, we checked the null bit map
-                            out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
-                            result.set(resultStorage);
-                            return;
+                        switch (subFieldOffset) {
+                            case -1:
+                                out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+                                result.set(resultStorage);
+                                return;
+                            case 0:
+                                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                                result.set(resultStorage);
+                                return;
+                            default:
+                                IAType fieldType = recordType.getFieldTypes()[subFieldIndex];
+                                if (fieldType.getTypeTag() == ATypeTag.UNION) {
+                                    fieldType = ((AUnionType) fieldType).getActualType();
+                                }
+                                ATypeTag fieldTypeTag = fieldType.getTypeTag();
+                                subFieldLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset,
+                                        fieldTypeTag, false);
+                                // write result.
+                                out.writeByte(fieldTypeTag.serialize());
+                                out.write(serRecord, subFieldOffset, subFieldLength);
+                                result.set(resultStorage);
+                                return;
                         }
-                        ATypeTag fieldTypeTag = recordType.getFieldTypes()[subFieldIndex].getTypeTag();
-                        subFieldLength =
-                                NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset, fieldTypeTag, false);
-                        // write result.
-                        out.writeByte(fieldTypeTag.serialize());
-                        out.write(serRecord, subFieldOffset, subFieldLength);
-                        result.set(resultStorage);
-                        return;
                     }
 
                     // Look at open fields.
