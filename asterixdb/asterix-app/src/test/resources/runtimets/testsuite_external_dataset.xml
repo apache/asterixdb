@@ -67,5 +67,10 @@
         <output-dir compare="Text">aws/s3/empty-string-definition</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/over-1000-objects">
+        <output-dir compare="Text">aws/s3/over-1000-objects</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

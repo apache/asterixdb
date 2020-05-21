@@ -42,8 +42,8 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
-import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class AwsS3InputStreamFactory implements IInputStreamFactory {
@@ -86,13 +86,35 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
         S3Client s3Client = buildAwsS3Client(configuration);
 
         // Get all objects in a bucket and extract the paths to files
-        ListObjectsRequest.Builder listObjectsBuilder = ListObjectsRequest.builder().bucket(container);
+        ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder().bucket(container);
         String path = configuration.get(AwsS3Constants.DEFINITION_FIELD_NAME);
         if (path != null) {
             listObjectsBuilder.prefix(path + (!path.isEmpty() && !path.endsWith("/") ? "/" : ""));
         }
-        ListObjectsResponse listObjectsResponse = s3Client.listObjects(listObjectsBuilder.build());
-        List<S3Object> s3Objects = listObjectsResponse.contents();
+
+        ListObjectsV2Response listObjectsResponse;
+        List<S3Object> s3Objects = new ArrayList<>();
+        boolean done = false;
+        String newMarker = null;
+
+        while (!done) {
+            // List the objects from the start, or from the last marker in case of truncated result
+            if (newMarker == null) {
+                listObjectsResponse = s3Client.listObjectsV2(listObjectsBuilder.build());
+            } else {
+                listObjectsResponse = s3Client.listObjectsV2(listObjectsBuilder.continuationToken(newMarker).build());
+            }
+
+            // Collect all the provided objects
+            s3Objects.addAll(listObjectsResponse.contents());
+
+            // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
+            if (!listObjectsResponse.isTruncated()) {
+                done = true;
+            } else {
+                newMarker = listObjectsResponse.nextContinuationToken();
+            }
+        }
 
         // Exclude the directories and get the files only
         String fileFormat = configuration.get(ExternalDataConstants.KEY_FORMAT);

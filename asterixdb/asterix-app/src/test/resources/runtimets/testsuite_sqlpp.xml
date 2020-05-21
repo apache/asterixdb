@@ -3915,7 +3915,7 @@
         </test-case>
         -->
   </test-group>
-  <test-group name="ddl/create-index">
+  <test-group name="ddl">
     <test-case FilePath="ddl/create-index">
       <compilation-unit name="create-index-1">
         <output-dir compare="Text">create-index-1</output-dir>
@@ -3961,6 +3961,24 @@
       <compilation-unit name="drop-primary-index">
         <output-dir compare="Text">drop-primary-index</output-dir>
         <expected-error>Cannot drop index "ds". Drop dataset "ds" to remove this index</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="invalid-dataverse">
+        <output-dir compare="Text">invalid-dataverse</output-dir>
+        <source-location>false</source-location>
+        <expected-error>Cannot find dataverse with name fakeDataverse (in line 20, at column 1)</expected-error>
+        <expected-error>Cannot find dataverse with name fakeDataverse (in line 25, at column 1)</expected-error>
+        <expected-error>Cannot find dataverse with name fakeDataverse (in line 27, at column 1)</expected-error>
+        <expected-error>Cannot find dataverse with name fakeDataverse (in line 28, at column 1)</expected-error>
+        <expected-error>Cannot find datatype with name fakeDataverse.myType</expected-error>
+        <expected-error>Cannot find dataverse with name fakeDataverse (in line 28, at column 1)</expected-error>
+        <expected-error>Cannot find dataverse with name fakeDataverse (in line 30, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="dataset-and-index-same-dataverse">
+        <output-dir compare="Text">dataset-and-index-same-dataverse</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

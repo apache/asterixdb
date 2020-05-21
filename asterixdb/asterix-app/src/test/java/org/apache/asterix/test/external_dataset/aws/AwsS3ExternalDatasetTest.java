@@ -103,6 +103,10 @@ public class AwsS3ExternalDatasetTest {
     private static final String S3_MOCK_SERVER_BUCKET_CSV_DEFINITION = "csv-data/reviews/"; // data resides here
     private static final String S3_MOCK_SERVER_BUCKET_TSV_DEFINITION = "tsv-data/reviews/"; // data resides here
 
+    // This is used for a test to generate over 1000 number of files
+    private static final String OVER_1000_OBJECTS_PATH = "over-1000-objects";
+    private static final int OVER_1000_OBJECTS_COUNT = 2999;
+
     private static final Set<String> fileNames = new HashSet<>();
     private static final CreateBucketRequest.Builder CREATE_BUCKET_BUILDER = CreateBucketRequest.builder();
     private static final DeleteBucketRequest.Builder DELETE_BUCKET_BUILDER = DeleteBucketRequest.builder();
@@ -213,6 +217,10 @@ public class AwsS3ExternalDatasetTest {
         LOGGER.info("Adding TSV files to the bucket");
         loadTsvFiles();
         LOGGER.info("TSV Files added successfully");
+
+        LOGGER.info("Loading " + OVER_1000_OBJECTS_COUNT + " into " + OVER_1000_OBJECTS_PATH);
+        loadLargeNumberOfFiles();
+        LOGGER.info("Added " + OVER_1000_OBJECTS_COUNT + " files into " + OVER_1000_OBJECTS_PATH + " successfully");
     }
 
     /**
@@ -378,6 +386,16 @@ public class AwsS3ExternalDatasetTest {
             client.putObject(builder.key(basePath + "level1a/level2b/" + finalFileName).build(), requestBody);
         } catch (Exception ex) {
             LOGGER.error(ex.getMessage());
+        }
+    }
+
+    /**
+     * Generates over 1000 objects and upload them to S3 mock server, 1 record per object
+     */
+    private static void loadLargeNumberOfFiles() {
+        for (int i = 0; i < OVER_1000_OBJECTS_COUNT; i++) {
+            RequestBody body = RequestBody.fromString("{\"id\":" + i + "}");
+            client.putObject(builder.key(OVER_1000_OBJECTS_PATH + "/" + i + ".json").build(), body);
         }
     }
 
