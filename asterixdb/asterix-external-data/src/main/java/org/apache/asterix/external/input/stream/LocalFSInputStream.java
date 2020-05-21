@@ -18,11 +18,16 @@
  */
 package org.apache.asterix.external.input.stream;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.ASTERIX;
+import static org.apache.asterix.common.exceptions.ErrorCode.INPUT_RECORD_READER_CHAR_ARRAY_RECORD_TOO_LARGE;
+import static org.apache.asterix.common.exceptions.ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM;
+import static org.apache.hyracks.api.exceptions.ErrorCode.HYRACKS;
+import static org.apache.hyracks.api.exceptions.ErrorCode.PARSING_ERROR;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.FeedLogManager;
@@ -130,27 +135,28 @@ public class LocalFSInputStream extends AbstractMultipleInputStream {
         if (root instanceof HyracksDataException) {
             HyracksDataException r = (HyracksDataException) root;
             String component = r.getComponent();
-            if (ErrorCode.ASTERIX.equals(component)) {
-                int errorCode = r.getErrorCode();
+            boolean advance = false;
+            int errorCode = r.getErrorCode();
+            if (ASTERIX.equals(component)) {
                 switch (errorCode) {
-                    case ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM:
-                        if (currentFile != null) {
-                            try {
-                                logManager.logRecord(currentFile.getAbsolutePath(), "Corrupted input file");
-                            } catch (IOException e) {
-                                LOGGER.log(Level.WARN, "Filed to write to feed log file", e);
-                            }
-                            LOGGER.log(Level.WARN, "Corrupted input file: " + currentFile.getAbsolutePath());
-                        }
-                    case ErrorCode.INPUT_RECORD_READER_CHAR_ARRAY_RECORD_TOO_LARGE:
-                        try {
-                            advance();
-                            return true;
-                        } catch (Exception e) {
-                            LOGGER.log(Level.WARN, "An exception was thrown while trying to skip a file", e);
-                        }
+                    case RECORD_READER_MALFORMED_INPUT_STREAM:
+                        logCorruptedInput();
+                    case INPUT_RECORD_READER_CHAR_ARRAY_RECORD_TOO_LARGE:
+                        advance = true;
+                        break;
                     default:
                         break;
+                }
+            } else if (HYRACKS.equals(component) && errorCode == PARSING_ERROR) {
+                logCorruptedInput();
+                advance = true;
+            }
+            if (advance) {
+                try {
+                    advance();
+                    return true;
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARN, "An exception was thrown while trying to skip a file", e);
                 }
             }
         }
@@ -166,5 +172,16 @@ public class LocalFSInputStream extends AbstractMultipleInputStream {
     @Override
     public String getPreviousStreamName() {
         return lastFileName;
+    }
+
+    private void logCorruptedInput() {
+        if (currentFile != null) {
+            try {
+                logManager.logRecord(currentFile.getAbsolutePath(), "Corrupted input file");
+            } catch (IOException e) {
+                LOGGER.log(Level.WARN, "Filed to write to feed log file", e);
+            }
+            LOGGER.log(Level.WARN, "Corrupted input file: " + currentFile.getAbsolutePath());
+        }
     }
 }
