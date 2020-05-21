@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.transaction.management.resource;
 
+import static org.apache.asterix.common.storage.ResourceReference.getComponentSequence;
 import static org.apache.asterix.common.utils.StorageConstants.INDEX_CHECKPOINT_FILE_PREFIX;
 import static org.apache.asterix.common.utils.StorageConstants.METADATA_FILE_NAME;
 import static org.apache.hyracks.api.exceptions.ErrorCode.CANNOT_CREATE_FILE;
@@ -591,19 +592,6 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     private Path getResourceMaskFilePath(FileReference resourceFile) {
         return Paths.get(resourceFile.getFile().getParentFile().getAbsolutePath(), METADATA_FILE_MASK_NAME);
-    }
-
-    /**
-     * Gets a component sequence based on its unique timestamp.
-     * e.g. a component file 1_3_b
-     * will return a component sequence 1_3
-     *
-     * @param componentFile any component file
-     * @return The component sequence
-     */
-    public static String getComponentSequence(String componentFile) {
-        final ResourceReference ref = ResourceReference.of(componentFile);
-        return IndexComponentFileReference.of(ref.getName()).getSequence();
     }
 
     private static boolean isComponentMask(File mask) {
