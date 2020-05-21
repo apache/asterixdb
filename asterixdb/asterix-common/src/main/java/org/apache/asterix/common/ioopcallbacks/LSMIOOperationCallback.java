@@ -19,6 +19,10 @@
 
 package org.apache.asterix.common.ioopcallbacks;
 
+import static org.apache.asterix.common.storage.ResourceReference.getComponentSequence;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
@@ -28,8 +32,10 @@ import java.util.Map;
 import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
@@ -83,7 +89,15 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
 
     @Override
     public void beforeOperation(ILSMIOOperation operation) throws HyracksDataException {
-        // No Op
+        if (isMerge(operation)) {
+            FileReference operationMaskFilePath = getOperationMaskFilePath(operation);
+            // if a merge operation is attempted after a failure, its mask file may already exists
+            if (!operationMaskFilePath.getFile().exists()) {
+                IoUtil.create(operationMaskFilePath);
+            } else {
+                LOGGER.warn("merge operation mask file {} already exists", operationMaskFilePath);
+            }
+        }
     }
 
     @Override
@@ -121,6 +135,8 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
         } else if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH
                 || operation.getIOOpertionType() == LSMIOOperationType.LOAD) {
             addComponentToCheckpoint(operation);
+        } else if (isMerge(operation)) {
+            IoUtil.delete(getOperationMaskFilePath(operation));
         }
     }
 
@@ -276,5 +292,19 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
     @Override
     public void allocated(ILSMMemoryComponent component) throws HyracksDataException {
         // no op
+    }
+
+    private boolean isMerge(ILSMIOOperation operation) {
+        return operation.getIOOpertionType() == LSMIOOperationType.MERGE
+                && operation.getAccessor().getOpContext().getOperation() != IndexOperation.DELETE_COMPONENTS;
+    }
+
+    private static FileReference getOperationMaskFilePath(ILSMIOOperation operation) {
+        FileReference target = operation.getTarget();
+        final String componentSequence = getComponentSequence(target.getFile().getAbsolutePath());
+        Path idxRelPath = Paths.get(target.getRelativePath()).getParent();
+        Path maskFileRelPath =
+                Paths.get(idxRelPath.toString(), StorageConstants.COMPONENT_MASK_FILE_PREFIX + componentSequence);
+        return new FileReference(target.getDeviceHandle(), maskFileRelPath.toString());
     }
 }

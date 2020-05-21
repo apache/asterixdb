@@ -20,7 +20,6 @@ package org.apache.asterix.app.nc;
 
 import org.apache.hyracks.storage.am.lsm.common.api.IIoOperationFailedCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.LogManager;
@@ -42,8 +41,6 @@ public class HaltCallback implements IIoOperationFailedCallback {
     @Override
     public void operationFailed(ILSMIOOperation operation, Throwable t) {
         LOGGER.error("Operation {} has failed", operation, t);
-        if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH) {
-            ExitUtil.halt(ExitUtil.EC_FLUSH_FAILED);
-        }
+        ExitUtil.halt(ExitUtil.EC_IO_OPERATION_FAILED);
     }
 }

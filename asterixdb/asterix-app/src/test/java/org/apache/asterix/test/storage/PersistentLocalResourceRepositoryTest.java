@@ -171,6 +171,59 @@ public class PersistentLocalResourceRepositoryTest {
         Assert.assertFalse(indexMetadataMaskFile.exists());
     }
 
+    @Test
+    public void deleteMaskedMergedFiles() throws Exception {
+        final INcApplicationContext ncAppCtx = (INcApplicationContext) integrationUtil.ncs[0].getApplicationContext();
+        final String nodeId = ncAppCtx.getServiceContext().getNodeId();
+        final String datasetName = "ds";
+        TestDataUtil.createIdOnlyDataset(datasetName);
+        final Dataset dataset = TestDataUtil.getDataset(integrationUtil, datasetName);
+        final String indexPath = TestDataUtil.getIndexPath(integrationUtil, dataset, nodeId);
+        FileReference indexDirRef = ncAppCtx.getIoManager().resolve(indexPath);
+        int compSeqStart = 100;
+        int validComponentSequence = 103;
+        // advance valid component seq in checkpoint
+        PersistentLocalResourceRepository localResourceRepository =
+                (PersistentLocalResourceRepository) ncAppCtx.getLocalResourceRepository();
+        LocalResource localResource = localResourceRepository.get(indexPath);
+        DatasetResourceReference drr = DatasetResourceReference.of(localResource);
+        IIndexCheckpointManagerProvider indexCheckpointManagerProvider = ncAppCtx.getIndexCheckpointManagerProvider();
+        IIndexCheckpointManager indexCheckpointManager = indexCheckpointManagerProvider.get(drr);
+        indexCheckpointManager.advanceValidComponentSequence(validComponentSequence);
+        // create components to be merged
+        String btree = "_b";
+        String filter = "_f";
+        String indexDir = indexDirRef.getFile().getAbsolutePath();
+        for (int i = compSeqStart; i <= validComponentSequence; i++) {
+            String componentId = i + "_" + i;
+            Path btreePath = Paths.get(indexDir, componentId + btree);
+            Path filterPath = Paths.get(indexDir, componentId + filter);
+            Files.createFile(btreePath);
+            Files.createFile(filterPath);
+        }
+        // create masked merged component
+        String mergedComponentId = compSeqStart + "_" + validComponentSequence;
+        Path mergedBtreePath = Paths.get(indexDir, mergedComponentId + btree);
+        Path mergedFilterPath = Paths.get(indexDir, mergedComponentId + filter);
+        Path mergeMaskPath = Paths.get(indexDir, StorageConstants.COMPONENT_MASK_FILE_PREFIX + mergedComponentId);
+        Files.createFile(mergedBtreePath);
+        Files.createFile(mergedFilterPath);
+        Files.createFile(mergeMaskPath);
+        // cleanup storage and ensure merged component files were deleted while individual files still exist
+        DatasetLocalResource lr = (DatasetLocalResource) localResourceRepository.get(indexPath).getResource();
+        localResourceRepository.cleanup(lr.getPartition());
+        Assert.assertFalse(mergedBtreePath.toFile().exists());
+        Assert.assertFalse(mergedFilterPath.toFile().exists());
+        Assert.assertFalse(mergeMaskPath.toFile().exists());
+        for (int i = compSeqStart; i <= validComponentSequence; i++) {
+            String componentId = i + "_" + i;
+            Path btreePath = Paths.get(indexDir, componentId + btree);
+            Path filterPath = Paths.get(indexDir, componentId + filter);
+            Assert.assertTrue(btreePath.toFile().exists());
+            Assert.assertTrue(filterPath.toFile().exists());
+        }
+    }
+
     private void ensureInvalidComponentDeleted(String indexDir, String componentSeq,
             PersistentLocalResourceRepository localResourceRepository, DatasetLocalResource lr) throws IOException {
         Path btreePath = Paths.get(indexDir,
