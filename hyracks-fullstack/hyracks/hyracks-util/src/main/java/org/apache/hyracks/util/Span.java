@@ -21,16 +21,24 @@ package org.apache.hyracks.util;
 import java.util.concurrent.TimeUnit;
 
 public class Span {
-    private final long startNanos;
     private final long spanNanos;
+    private volatile long startNanos;
 
     private Span(long span, TimeUnit unit) {
-        startNanos = System.nanoTime();
         spanNanos = unit.toNanos(span);
+        reset();
+    }
+
+    public void reset() {
+        startNanos = System.nanoTime();
     }
 
     public long getSpanNanos() {
         return spanNanos;
+    }
+
+    public long getSpan(TimeUnit unit) {
+        return unit.convert(spanNanos, TimeUnit.NANOSECONDS);
     }
 
     public static Span start(long span, TimeUnit unit) {
@@ -43,6 +51,15 @@ public class Span {
 
     public long elapsed(TimeUnit unit) {
         return unit.convert(System.nanoTime() - startNanos, TimeUnit.NANOSECONDS);
+    }
+
+    /**
+     * Sleep for the remainder of this span
+     *
+     * @throws InterruptedException
+     */
+    public void sleep() throws InterruptedException {
+        TimeUnit.NANOSECONDS.sleep(remaining(TimeUnit.NANOSECONDS));
     }
 
     /**

@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
 
 public class ResourceReference {
 
@@ -125,5 +126,18 @@ public class ResourceReference {
     @Override
     public String toString() {
         return getRelativePath().toString();
+    }
+
+    /**
+     * Gets a component sequence based on its unique timestamp.
+     * e.g. a component file 1_3_b
+     * will return a component sequence 1_3
+     *
+     * @param componentFile any component file
+     * @return The component sequence
+     */
+    public static String getComponentSequence(String componentFile) {
+        final ResourceReference ref = of(componentFile);
+        return IndexComponentFileReference.of(ref.getName()).getSequence();
     }
 }

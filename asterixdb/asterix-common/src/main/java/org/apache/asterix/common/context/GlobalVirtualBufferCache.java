@@ -463,7 +463,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
                         scheduleFlush();
                     } catch (Throwable e) {
                         LOGGER.error("Unexpected exception when trying to schedule flushes.", e);
-                        ExitUtil.halt(ExitUtil.EC_FLUSH_FAILED);
+                        ExitUtil.halt(ExitUtil.EC_IO_SCHEDULER_FAILED);
                     }
                 }
             }
