@@ -17,48 +17,139 @@
  ! under the License.
  !-->
 
-## <a name="introduction">Introduction</a>##
+## <a name="introduction">Introduction</a>
 
-Apache AsterixDB supports two languages for writing user-defined functions (UDFs): SQL++ and Java.
+Apache AsterixDB supports three languages for writing user-defined functions (UDFs): SQL++, Java and Python
 A user can encapsulate data processing logic into a UDF and invoke it
 later repeatedly. For SQL++ functions, a user can refer to [SQL++ Functions](sqlpp/manual.html#Functions)
-for their usages. In this document, we
-focus on how to install/invoke/uninstall a Java function library using the Ansible script that we provide.
+for their usages. This document will focus on UDFs in languages other than SQL++
 
 
-## <a name="installingUDF">Installing an UDF Library</a>##
+## <a name="authentication">Endpoints and Authentication</a>
 
-UDFs have to be installed offline.
-This section describes the process assuming that you have followed the preceding [ansible installation instructions](ansible.html)
-to deploy an AsterixDB instance on your local machine or cluster. Here are the
-instructions to install an UDF library:
+The UDF endpoint is not enabled by default until authentication has been configured properly. To enable it, we
+will need to set the path to the credential file and populate it with our username and password.
 
-- Step 1: Stop the AsterixDB instance if it is ACTIVE.
+The credential file is a simple `/etc/passwd` style text file with usernames and corresponding `bcrypt` hashed and salted
+passwords. You can populate this on your own if you would like, but the `asterixhelper` utility can write the entries as
+well. We can invoke `asterixhelper` like so:
 
-        $ bin/stop.sh
+    $ bin/asterixhelper -u admin -p admin -cp opt/local/conf add_credential
 
-- Step 2: Deploy the UDF package.
+Then, in your `cc.conf`, in the `[cc]` section, add the correct `credential.file` path
 
-        $ bin/udf.sh -m i -d DATAVERSE_NAME -l LIBRARY_NAME -p UDF_PACKAGE_PATH
+    [cc]
+    address = 127.0.0.1
+    ...
+    ...
+    credential.file = conf/passwd
 
-- Step 3: Start AsterixDB
+Now,restart the cluster if it was already started to allow the Cluster Controller to find the new credentials.
 
-        $ bin/start.sh
 
-After AsterixDB starts, you can use the following query to check whether your UDFs have been sucessfully registered with the system.
+## <a name="installingUDF">Installing a Java UDF Library</a>
 
-        SELECT * FROM Metadata.`Function`;
+To install a UDF package to the cluster, we need to send a Multipart Form-data HTTP request to the `/admin/udf` endpoint
+of the CC at the normal API port (`19002` by default). The request should use HTTP Basic authentication. This means your
+credentials will *not* be obfuscated or encrypted *in any way*, so submit to this endpoint over localhost or a network
+where you know your traffic is safe from eavesdropping. Any suitable tool will do, but for the example here I will use
+`curl` which is widely available.
+
+For example, to install a library with the following criteria:
+
+* `udfs` dataverse name
+* with a new Library name of `testlib`
+* from `lib.zip` in the present working directory
+* to the cluster at `localhost` with API port `19002`
+* with credentials being a username and password of `admin:admin`
+
+we would execute
+
+    curl -v -u admin:admin -X POST -F 'data=@./lib.zip' localhost:19002/admin/udf/udfs/testlib
+
+Any response other than `200` indicates an error in deployment.
 
 In the AsterixDB source release, we provide several sample UDFs that you can try out.
 You need to build the AsterixDB source to get the compiled UDF package. It can be found under
 the `asterixdb-external` sub-project. Assuming that these UDFs have been installed into the `udfs` dataverse and `testlib` library,
 here is an example that uses the sample UDF `mysum` to compute the sum of two input integers.
 
-        use udfs;
+    USE udfs;
 
-        testlib#mysum(3,4);
+    CREATE FUNCTION mysum(a: int32, b: int32)
+    RETURNS int32
+    LANGUAGE JAVA
+    AS "testlib","org.apache.asterix.external.library.MySumFactory";
 
-## <a id="UDFOnFeeds">Attaching a UDF on Data Feeds</a> ##
+## <a id="PythonUDF">Creating a Python UDF</a>
+
+Python UDFs need to be rolled into a [shiv](https://github.com/linkedin/shiv) package with all their dependencies.
+By default AsterixDB will use the Python interpreter located at `/usr/bin/python3`. This can be changed in the cluster
+config `[common]` section using the `python.path` configuration variable.
+
+First, let's devise a function that we would like to use in AsterixDB, `sentiment_mod.py`
+
+    import os
+    from typing import Tuple
+    class sent_model:
+
+        def __init__(self):
+            good_words = os.path.join(os.path.dirname(__file__), 'good.txt')
+            with open(good_words) as f:
+                self.whitelist = f.read().splitlines()
+
+        def sentiment(self, arg: Tuple[str])-> str:
+            words = arg[0].split()
+            for word in words:
+                if word in self.whitelist:
+                    return 'great'
+
+            return 'eh'
+
+
+Furthermore, let's assume 'good.txt' contains the following entries
+
+    spam
+    eggs
+    ham
+
+Now, in the module directory, execute `shiv` with all the dependencies of the module listed. We don't actually use
+scikit-learn here (our method is obviously better!), but it's just included as an example of a real dependency.
+
+    shiv -o lib.pyz --site-packages . scikit-learn
+
+Then, deploy it the same as the Java UDF was, with the library name `pylib`
+
+    curl -v -u admin:admin -X POST -F 'data=@./lib.pyz' localhost:19002/admin/udf/udfs/pylib
+
+With the library deployed, we can define a function within it for use. For example, to expose the Python function
+`sentiment` in the module `sentiment_mod` in the class `sent_model`, the `CREATE FUNCTION` would be as follows
+
+    USE udfs;
+
+    CREATE FUNCTION sentiment(a)
+    LANGUAGE PYTHON DETERMINISTIC
+    AS "pylib","sentiment_mod:sent_model";
+
+By default, AsterixDB will treat all external functions as `NOT DETERMINISTIC`. Loosely this means the result might
+change depending on when the function is called, regardless of the input. This function behaves the same on each input,
+so we can safely call it `DETERMINISTIC`. This will enable better optimization of queries including this function.
+
+With the function now defined, it can then be used as any other scalar SQL++ function would be. For example:
+
+    USE udfs;
+
+    INSERT INTO Tweets([
+    {"id":1, "msg":"spam is great"},
+    {"id":2, "msg":"i will not eat green eggs and ham"},
+    {"id":3, "msg":"bacon is better"}]);
+
+    USE udfs;
+    SELECT t.msg as msg, sentiment(t.msg) as sentiment
+    FROM Tweets t;
+
+
+## <a id="UDFOnFeeds">Attaching a UDF on Data Feeds</a>
 
 In [Data Ingestion using feeds](feeds.html), we introduced an efficient way for users to get data into AsterixDB. In
 some use cases, users may want to pre-process the incoming data before storing it into the dataset. To meet this need,
@@ -74,74 +165,61 @@ datatype. Thus, users should make sure that their datatypes are consistent in th
 take advantage of open datatypes in AsterixDB by creating a minimum description of the data for simplicity.
 Here we use open datatypes:
 
-        use udfs;
+    USE udfs;
 
-        create type TweetType if not exists as open {
-            id: int64
-        };
+    CREATE TYPE TweetType IF NOT EXISTS AS OPEN {
+        id: int64
+    };
 
-        create dataset ProcessedTweets(TweetType) primary key id;
+    CREATE DATASET ProcessedTweets(TweetType) PRIMARY KEY id;
 
 As the `TweetType` is an open datatype, processed Tweets can be stored into the dataset after they are annotated
 with an extra attribute. Given the datatype and dataset above, we can create a Twitter Feed with the same datatype.
 Please refer to section [Data Ingestion](feeds.html) if you have any trouble in creating feeds.
 
-        use udfs;
+    USE udfs;
 
-        create feed TwitterFeed with {
-          "adapter-name": "push_twitter",
-          "type-name": "TweetType",
-          "format": "twitter-status",
-          "consumer.key": "************",
-          "consumer.secret": "************",
-          "access.token": "**********",
-          "access.token.secret": "*************"
-        };
+    CREATE FEED TwitterFeed WITH {
+      "adapter-name": "push_twitter",
+      "type-name": "TweetType",
+      "format": "twitter-status",
+      "consumer.key": "************",
+      "consumer.secret": "************",
+      "access.token": "**********",
+      "access.token.secret": "*************"
+    };
+
+Then we define the function we want to apply to the feed
+
+   USE udfs;
+
+   CREATE FUNCTION addMentionedUsers(t: TweetType)
+   RETURNS TweetType
+   LANGUAGE JAVA as "testlib","org.apache.asterix.external.library.AddMentionedUsersFactory"
+   WITH {"textFieldName": "text"};
 
 After creating the feed, we attach the UDF onto the feed pipeline and start the feed with following statements:
 
-        use udfs;
+    USE udfs;
 
-        connect feed TwitterFeed to dataset ProcessedTweets apply function udfs#addMentionedUsers;
+    CONNECT FEED TwitterFeed TO DATASET ProcessedTweets APPLY FUNCTION addMentionedUsers;
 
-        start feed TwitterFeed;
+    START FEED TwitterFeed;
 
 You can check the annotated Tweets by querying the `ProcessedTweets` dataset:
 
-        SELECT * FROM ProcessedTweets LIMIT 10;
+    SELECT * FROM ProcessedTweets LIMIT 10;
 
-## <a name="udfConfiguration">A quick look of the UDF configuration</a>##
+## <a name="uninstall">Unstalling an UDF Library</a>
 
-AsterixDB uses an XML configuration file to describe the UDFs. A user can use it to define and reuse their compiled UDFs
-for different purposes. Here is a snippet of the configuration used in our [previous example](#UDFOnFeeds):
+If you want to uninstall the UDF library, simply issue a `DELETE` against the endpoint you `POST`ed against once all
+functions declared with the library are removed. First we'll drop the function we declared earlier:
 
-        <libraryFunction>
-          <name>addMentionedUsers</name>
-          <function_type>SCALAR</function_type>
-          <argument_type>TweetType</argument_type>
-          <return_type>TweetType</return_type>
-          <definition>org.apache.asterix.external.library.AddMentionedUsersFactory</definition>
-          <parameters>text</parameters>
-        </libraryFunction>
+    USE udfs;
+    DROP FUNCTION mysum@2;
 
-Here are the explanations of the fields in the configuration file:
+Then issue the proper `DELETE` request
 
-       name: The proper name that is used for invoke the function.
-       function_type: The type of the function.
-       argument_type: The datatype of the arguments passed in. If there is more than one parameter, separate them with comma(s), e.g., `AINT32,AINT32`.
-       return_type: The datatype of the returning value.
-       definition: A reference to the function factory.
-       parameters: The parameters passed into the function.
+    curl -u admin:admin -X DELETE localhost:19002/admin/udf/udfs/testlib
 
-In our feeds example, we passed in `"text"` as a parameter to the function so it knows which field to look at to get the Tweet text.
-If the Twitter API were to change its field names in the future, we can accommodate that change by simply modifying the configuration file
-instead of recompiling the whole UDF package. This feature can be further utilized in use cases where a user has a Machine Learning
-algorithm with different trained model files. If you are interested, You can find more examples [here](https://github.com/apache/asterixdb/tree/master/asterixdb/asterix-external-data/src/test/java/org/apache/asterix/external/library)
-
-## <a name="uninstall">Unstalling an UDF Library</a>##
-
-If you want to uninstall the UDF library, put AsterixDB into `INACTVIVE` mode and run following command:
-
-        $ bin/udf.sh -m u -d DATAVERSE_NAME -l LIBRARY_NAME
-
-
+The library will also be dropped if you drop the dataverse entirely.
