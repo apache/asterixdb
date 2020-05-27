@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.app.translator;
 
-import static org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_DATAVERSE;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -637,7 +635,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
             }
 
-            IDatasetDetails datasetDetails = null;
+            IDatasetDetails datasetDetails;
             Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
             if (ds != null) {
                 if (dd.getIfNotExists()) {
@@ -738,7 +736,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             createExternalDatasetProperties(dataverseName, dd, metadataProvider, mdTxnCtx);
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
-                    validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation());
+                    validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
                             TransactionState.COMMIT);
                     break;
@@ -3236,12 +3234,26 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void validateExternalDatasetProperties(ExternalDetailsDecl externalDetails,
-            Map<String, String> properties, SourceLocation srcLoc) throws CompilationException {
+            Map<String, String> properties, SourceLocation srcLoc, MetadataTransactionContext mdTxnCtx)
+            throws AlgebricksException, HyracksDataException {
         String adapter = externalDetails.getAdapter();
         // "format" parameter is needed for "S3" data source
         if (ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3.equals(adapter)
                 && properties.get(ExternalDataConstants.KEY_FORMAT) == null) {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
         }
+
+        Map<String, String> details = new HashMap<>(properties);
+        details.put(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapter);
+        validateExternalSourceContainer(details);
+    }
+
+    /**
+     * Ensures that the external source container is present
+     *
+     * @param configuration external source properties
+     */
+    protected void validateExternalSourceContainer(Map<String, String> configuration) throws CompilationException {
+        ExternalDataUtils.validateExternalSourceContainer(configuration);
     }
 }

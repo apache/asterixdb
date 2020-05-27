@@ -82,5 +82,22 @@
         <expected-error>Parsing error at malformed-data/malformed-jsonl-2.json line 11 field array_f: Unexpected character (']' (code 93)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/definition-does-not-exist">
+        <output-dir compare="Text">aws/s3/definition-does-not-exist</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/invalid-endpoint">
+        <output-dir compare="Text">aws/s3/invalid-endpoint</output-dir>
+        <expected-error>External source error. Invalid service endpoint ^invalid-endpoint^</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/bucket-does-not-exist">
+        <output-dir compare="Text">aws/s3/bucket-does-not-exist</output-dir>
+        <expected-error>External source error. The specified bucket does not exist (Service: S3, Status Code: 404, Request ID: null)</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
