@@ -8725,6 +8725,11 @@
   </test-group>
   <test-group name="statement-params">
     <test-case FilePath="statement-params">
+      <compilation-unit name="index_01">
+        <output-dir compare="Text">index_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="statement-params">
       <compilation-unit name="mixed_01">
         <output-dir compare="Text">mixed_01</output-dir>
       </compilation-unit>

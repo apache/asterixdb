@@ -1,0 +1,18 @@
+distribute result [$$13]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$13])
+    -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$13] <- [le($$x, 2)]
+      -- ASSIGN  |UNPARTITIONED|
+        exchange
+        -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+          order (ASC, $$x)
+          -- STABLE_SORT [$$x(ASC)]  |UNPARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+              unnest $$x <- range(1, 4)
+              -- UNNEST  |UNPARTITIONED|
+                empty-tuple-source
+                -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
