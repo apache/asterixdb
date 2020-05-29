@@ -22,6 +22,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.BitSet;
+import java.util.function.LongSupplier;
+import java.util.function.Supplier;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.IAsterixListBuilder;
@@ -33,6 +35,7 @@ import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.parser.jackson.ADMToken;
 import org.apache.asterix.external.parser.jackson.GeometryCoParser;
 import org.apache.asterix.external.parser.jackson.ParserContext;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AUnorderedList;
@@ -45,10 +48,13 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonStreamContext;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TreeTraversingParser;
@@ -63,6 +69,8 @@ public class JSONDataParser extends AbstractNestedDataParser<ADMToken>
     protected final JsonFactory jsonFactory;
     protected final ARecordType rootType;
     protected final GeometryCoParser geometryCoParser;
+    private Supplier<String> dataSourceName;
+    private LongSupplier lineNumber;
 
     protected JsonParser jsonParser;
 
@@ -81,6 +89,8 @@ public class JSONDataParser extends AbstractNestedDataParser<ADMToken>
         //GeometyCoParser to parse GeoJSON objects to AsterixDB internal spatial types.
         geometryCoParser = new GeometryCoParser(jsonParser);
         parserContext = new ParserContext();
+        this.dataSourceName = ExternalDataConstants.EMPTY_STRING;
+        this.lineNumber = ExternalDataConstants.NO_LINES;
     }
 
     /*
@@ -88,6 +98,12 @@ public class JSONDataParser extends AbstractNestedDataParser<ADMToken>
      * Public methods
      ****************************************************
      */
+
+    @Override
+    public void configure(Supplier<String> dataSourceName, LongSupplier lineNumber) {
+        this.dataSourceName = dataSourceName == null ? ExternalDataConstants.EMPTY_STRING : dataSourceName;
+        this.lineNumber = lineNumber == null ? ExternalDataConstants.NO_LINES : lineNumber;
+    }
 
     @Override
     public final boolean parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
@@ -99,7 +115,7 @@ public class JSONDataParser extends AbstractNestedDataParser<ADMToken>
             parseObject(rootType, out);
             return true;
         } catch (IOException e) {
-            throw new RuntimeDataException(ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM, e);
+            throw createException(e);
         }
     }
 
@@ -459,5 +475,34 @@ public class JSONDataParser extends AbstractNestedDataParser<ADMToken>
                 throw new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, jsonParser.currentToken().toString());
 
         }
+    }
+
+    private HyracksDataException createException(IOException e) {
+        if (jsonParser != null) {
+            String msg;
+            if (e instanceof JsonParseException) {
+                msg = ((JsonParseException) e).getOriginalMessage();
+            } else {
+                msg = ExceptionUtils.getRootCause(e).getMessage();
+            }
+            if (msg == null) {
+                msg = ErrorCode.getErrorMessage(ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM);
+            }
+            long lineNum = lineNumber.getAsLong() + jsonParser.getCurrentLocation().getLineNr() - 1;
+            JsonStreamContext parsingContext = jsonParser.getParsingContext();
+            String fieldName = "N/A";
+            while (parsingContext != null) {
+                String currentFieldName = parsingContext.getCurrentName();
+                if (currentFieldName != null) {
+                    fieldName = currentFieldName;
+                    break;
+                }
+                parsingContext = parsingContext.getParent();
+            }
+
+            return HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.PARSING_ERROR,
+                    dataSourceName.get(), lineNum, fieldName, msg);
+        }
+        return new RuntimeDataException(ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM, e);
     }
 }

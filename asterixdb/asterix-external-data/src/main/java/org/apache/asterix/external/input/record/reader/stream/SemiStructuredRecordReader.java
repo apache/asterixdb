@@ -142,6 +142,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
                         if (state == State.ARRAY || state == State.AFTER_COMMA) {
                             state = State.NESTED_OBJECT;
                         }
+                        beginLineNumber = lineNumber;
                         startPosn = bufferPosn;
                         hasStarted = true;
                         depth = 1;

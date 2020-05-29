@@ -5595,14 +5595,14 @@
     <test-case FilePath="group-by">
       <compilation-unit name="grouping-sets-3-negative">
         <output-dir compare="Text">grouping-sets-2</output-dir>
-        <expected-error>ASX1113: Unexpected alias: v21</expected-error>
-        <expected-error>ASX1113: Unexpected alias: v22</expected-error>
-        <expected-error>ASX1113: Unexpected alias: v23</expected-error>
+        <expected-error>ASX1115: Unexpected alias: v21</expected-error>
+        <expected-error>ASX1115: Unexpected alias: v22</expected-error>
+        <expected-error>ASX1115: Unexpected alias: v23</expected-error>
         <expected-error>ASX1087: Invalid number of arguments for function grouping</expected-error>
-        <expected-error>ASX1112: Invalid argument to grouping() function</expected-error>
-        <expected-error>ASX1112: Invalid argument to grouping() function</expected-error>
-        <expected-error>ASX1112: Invalid argument to grouping() function</expected-error>
-        <expected-error>ASX1111: Too many grouping sets in group by clause: 512. Maximum allowed: 128.</expected-error>
+        <expected-error>ASX1114: Invalid argument to grouping() function</expected-error>
+        <expected-error>ASX1114: Invalid argument to grouping() function</expected-error>
+        <expected-error>ASX1114: Invalid argument to grouping() function</expected-error>
+        <expected-error>ASX1113: Too many grouping sets in group by clause: 512. Maximum allowed: 128.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">

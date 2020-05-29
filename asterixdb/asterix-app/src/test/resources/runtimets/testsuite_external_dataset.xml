@@ -72,5 +72,32 @@
         <output-dir compare="Text">aws/s3/over-1000-objects</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/malformed-json">
+        <output-dir compare="Text">aws/s3/malformed-json</output-dir>
+        <expected-error>Parsing error at malformed-data/duplicate-fields.json line 1 field field: Duplicate field 'field'</expected-error>
+        <expected-error>Parsing error at malformed-data/malformed-json.json line 1 field field: Unexpected character ('}' (code 125)): was expecting double-quote to start field name</expected-error>
+        <expected-error>Parsing error at malformed-data/malformed-json-2.json line 4 field array_f: Unexpected character (']' (code 93)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
+        <expected-error>Parsing error at malformed-data/malformed-jsonl-1.json line 3 field field2: Unrecognized token 'truee': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
+        <expected-error>Parsing error at malformed-data/malformed-jsonl-2.json line 11 field array_f: Unexpected character (']' (code 93)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/definition-does-not-exist">
+        <output-dir compare="Text">aws/s3/definition-does-not-exist</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/invalid-endpoint">
+        <output-dir compare="Text">aws/s3/invalid-endpoint</output-dir>
+        <expected-error>External source error. Invalid service endpoint ^invalid-endpoint^</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/bucket-does-not-exist">
+        <output-dir compare="Text">aws/s3/bucket-does-not-exist</output-dir>
+        <expected-error>External source error. The specified bucket does not exist (Service: S3, Status Code: 404, Request ID: null)</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

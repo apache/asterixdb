@@ -24,10 +24,15 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
@@ -44,6 +49,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.data.parsers.BooleanParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.FloatParserFactory;
@@ -51,6 +57,15 @@ import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
+
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 
 public class ExternalDataUtils {
 
@@ -447,6 +462,103 @@ public class ExternalDataUtils {
         String paramValue = configuration.get(key);
         if (paramValue != null) {
             configuration.put(key, paramValue.toLowerCase().trim());
+        }
+    }
+
+    /**
+     * Ensures that the external source container is present
+     *
+     * @param configuration external source properties
+     */
+    public static void validateExternalSourceContainer(Map<String, String> configuration) throws CompilationException {
+        String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
+
+        switch (type) {
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3:
+                ExternalDataUtils.AwsS3.validateExternalSourceContainer(configuration);
+                break;
+            default:
+                // Nothing needs to be done
+                break;
+        }
+    }
+
+    public static class AwsS3 {
+        private AwsS3() {
+            throw new AssertionError("do not instantiate");
+        }
+
+        public static S3Client buildAwsS3Client(Map<String, String> configuration) throws CompilationException {
+            // TODO(Hussain): Need to ensure that all required parameters are present in a previous step
+            String accessKeyId = configuration.get(ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME);
+            String secretAccessKey = configuration.get(ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME);
+            String regionId = configuration.get(ExternalDataConstants.AwsS3.REGION_FIELD_NAME);
+            String serviceEndpoint = configuration.get(ExternalDataConstants.AwsS3.SERVICE_END_POINT_FIELD_NAME);
+
+            S3ClientBuilder builder = S3Client.builder();
+
+            // Credentials
+            AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+            builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
+
+            // Validate the region
+            List<Region> supportedRegions = S3Client.serviceMetadata().regions();
+            Optional<Region> selectedRegion =
+                    supportedRegions.stream().filter(region -> region.id().equalsIgnoreCase(regionId)).findFirst();
+
+            if (!selectedRegion.isPresent()) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR,
+                        String.format("region %s is not supported", regionId));
+            }
+            builder.region(selectedRegion.get());
+
+            // Validate the service endpoint if present
+            if (serviceEndpoint != null) {
+                try {
+                    URI uri = new URI(serviceEndpoint);
+                    try {
+                        builder.endpointOverride(uri);
+                    } catch (NullPointerException ex) {
+                        throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                    }
+                } catch (URISyntaxException ex) {
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR,
+                            String.format("Invalid service endpoint %s", serviceEndpoint));
+                }
+            }
+
+            return builder.build();
+        }
+
+        /**
+         * Validates if the container being used is available or not.
+         *
+         * @param configuration external datasource configuration
+         *
+         * @throws CompilationException Compilation exception
+         */
+        public static void validateExternalSourceContainer(Map<String, String> configuration)
+                throws CompilationException {
+            S3Client s3Client = null;
+
+            try {
+                String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
+                s3Client = buildAwsS3Client(configuration);
+                ListObjectsV2Response response =
+                        s3Client.listObjectsV2(ListObjectsV2Request.builder().bucket(container).maxKeys(1).build());
+
+                // Returns 200 only in case the bucket exists, however, otherwise, throws an exception. However, to
+                // ensure coverage, check if the result is successful as well and not only catch exceptions
+                if (!response.sdkHttpResponse().isSuccessful()) {
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_CONTAINER_NOT_FOUND, container);
+                }
+            } catch (SdkException ex) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+            } finally {
+                if (s3Client != null) {
+                    CleanupUtils.close(s3Client, null);
+                }
+            }
         }
     }
 }

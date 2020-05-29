@@ -18,23 +18,24 @@
  */
 package org.apache.asterix.external.input.record.reader.aws;
 
-import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3Constants;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.input.stream.AbstractMultipleInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
 
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 
 public class AwsS3InputStream extends AbstractMultipleInputStream {
@@ -48,7 +49,7 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
     private final List<String> filePaths;
     private int nextFileIndex = 0;
 
-    public AwsS3InputStream(Map<String, String> configuration, List<String> filePaths) {
+    public AwsS3InputStream(Map<String, String> configuration, List<String> filePaths) throws HyracksDataException {
         this.configuration = configuration;
         this.filePaths = filePaths;
         this.s3Client = buildAwsS3Client(configuration);
@@ -74,13 +75,17 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
             CleanupUtils.close(in, null);
         }
 
-        String bucket = configuration.get(AwsS3Constants.CONTAINER_NAME_FIELD_NAME);
+        String bucket = configuration.get(AwsS3.CONTAINER_NAME_FIELD_NAME);
         GetObjectRequest.Builder getObjectBuilder = GetObjectRequest.builder();
         GetObjectRequest getObjectRequest = getObjectBuilder.bucket(bucket).key(filePaths.get(nextFileIndex)).build();
 
         // Have a reference to the S3 stream to ensure that if GZipInputStream causes an IOException because of reading
         // the header, then the S3 stream gets closed in the close method
-        in = s3Client.getObject(getObjectRequest);
+        try {
+            in = s3Client.getObject(getObjectRequest);
+        } catch (SdkException ex) {
+            throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+        }
 
         // Use gzip stream if needed
         String filename = filePaths.get(nextFileIndex).toLowerCase();
@@ -94,6 +99,14 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
             notificationHandler.notifyNewSource();
         }
         return true;
+    }
+
+    private S3Client buildAwsS3Client(Map<String, String> configuration) throws HyracksDataException {
+        try {
+            return ExternalDataUtils.AwsS3.buildAwsS3Client(configuration);
+        } catch (CompilationException ex) {
+            throw HyracksDataException.create(ex);
+        }
     }
 
     @Override
@@ -125,34 +138,5 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
 
     private String getStreamNameAt(int fileIndex) {
         return fileIndex < 0 || filePaths == null || filePaths.isEmpty() ? "" : filePaths.get(fileIndex);
-    }
-
-    /**
-     * Prepares and builds the Amazon S3 client with the provided configuration
-     *
-     * @param configuration S3 client configuration
-     *
-     * @return Amazon S3 client
-     */
-    private static S3Client buildAwsS3Client(Map<String, String> configuration) {
-        S3ClientBuilder builder = S3Client.builder();
-
-        // Credentials
-        String accessKeyId = configuration.get(AwsS3Constants.ACCESS_KEY_ID_FIELD_NAME);
-        String secretAccessKey = configuration.get(AwsS3Constants.SECRET_ACCESS_KEY_FIELD_NAME);
-        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
-        builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
-
-        // Region
-        String region = configuration.get(AwsS3Constants.REGION_FIELD_NAME);
-        builder.region(Region.of(region));
-
-        // Use user's endpoint if provided
-        if (configuration.get(AwsS3Constants.SERVICE_END_POINT_FIELD_NAME) != null) {
-            String endPoint = configuration.get(AwsS3Constants.SERVICE_END_POINT_FIELD_NAME);
-            builder.endpointOverride(URI.create(endPoint));
-        }
-
-        return builder.build();
     }
 }

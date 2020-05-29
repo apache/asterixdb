@@ -82,7 +82,7 @@ public class ExternalDataConstants {
     public static final String KEY_WAIT_FOR_DATA = "wait-for-data";
     public static final String KEY_FEED_NAME = "feed";
     // a string representing external bucket name
-    public static final String KEY_BUCKET = "bucket";
+    public static final String KEY_EXTERNAL_SOURCE_TYPE = "type";
     // a comma delimited list of nodes
     public static final String KEY_NODES = "nodes";
     // a string representing the password used to authenticate with the external data source
@@ -276,8 +276,9 @@ public class ExternalDataConstants {
     public static final String EMPTY_FIELD = "empty value";
     public static final String INVALID_VAL = "invalid value";
 
-    public static class AwsS3Constants {
-        private AwsS3Constants() {
+    public static class AwsS3 {
+        private AwsS3() {
+            throw new AssertionError("do not instantiate");
         }
 
         public static final String REGION_FIELD_NAME = "region";
