@@ -255,6 +255,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="sorting">
+      <compilation-unit name="range_hint">
+        <output-dir compare="Text">range_hint</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="sorting">
       <compilation-unit name="records">
         <output-dir compare="Text">records</output-dir>
       </compilation-unit>
