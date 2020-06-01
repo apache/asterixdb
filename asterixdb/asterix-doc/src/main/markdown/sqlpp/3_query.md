@@ -1266,7 +1266,7 @@ It is important to realize that `COUNT` is actually **not** a built-in aggregati
 Rather, the `COUNT` query above is using a special "sugared" function symbol that the query compiler
 will rewrite as follows:
 
-    SELECT uid AS uid, ARRAY_COUNT( (SELECT VALUE 1 FROM `$1` as g) ) AS msgCnt
+    SELECT uid AS uid, ARRAY_COUNT( (SELECT VALUE 1 FROM `$1` AS g) ) AS msgCnt
     FROM GleambookMessages msg
     GROUP BY msg.authorId AS uid
     GROUP AS `$1`(msg AS msg);
@@ -1297,6 +1297,23 @@ and their corresponding built-in functions.
 
 Note that the `ARRAY_AGG` function symbol is rewritten simply to return the result of the generated subquery,
 without applying any built-in function.
+
+SQL aggregate function calls optionally support a FILTER subclause.
+
+##### Example
+
+    SELECT uid, COUNT(*) FILTER (WHERE msg.message LIKE "%awesome%") AS msgCnt
+    FROM GleambookMessages msg
+    GROUP BY msg.authorId AS uid;
+
+The query compiler rewrites this query to use the built-in aggregate as follows:
+
+    SELECT uid AS uid, ARRAY_COUNT( (SELECT VALUE 1 FROM `$1` AS g WHERE g.msg.message LIKE "%awesome%") ) AS msgCnt
+    FROM GleambookMessages msg
+    GROUP BY msg.authorId AS uid
+    GROUP AS `$1`(msg AS msg);
+
+Note that the FILTER subclause is not supported for built-in aggregate function calls.
 
 ### <a id="SQL-92_compliant_gby">SQL-92 Compliant GROUP BY Aggregations</a>
 The query language provides full support for SQL-92 `GROUP BY` aggregation queries.

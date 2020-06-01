@@ -848,6 +848,10 @@ abstract class LangExpressionToPlanTranslator
             throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature.getName());
         }
 
+        if (fcall.hasAggregateFilterExpr()) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_USE_OF_FILTER_CLAUSE, sourceLoc);
+        }
+
         // Put hints into function call expr.
         if (fcall.hasHints()) {
             for (IExpressionAnnotation hint : fcall.getHints()) {

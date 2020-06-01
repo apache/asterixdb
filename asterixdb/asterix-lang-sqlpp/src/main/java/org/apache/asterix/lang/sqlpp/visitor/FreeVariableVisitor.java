@@ -390,6 +390,9 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         for (Expression expr : callExpr.getExprList()) {
             expr.accept(this, freeVars);
         }
+        if (callExpr.hasAggregateFilterExpr()) {
+            callExpr.getAggregateFilterExpr().accept(this, freeVars);
+        }
         return null;
     }
 
@@ -461,6 +464,9 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
             }
         }
         visit(winExpr.getExprList(), freeVars);
+        if (winExpr.hasAggregateFilterExpr()) {
+            winExpr.getAggregateFilterExpr().accept(this, freeVars);
+        }
         if (winExpr.hasWindowVar()) {
             freeVars.remove(winExpr.getWindowVar());
         }

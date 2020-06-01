@@ -305,12 +305,14 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
                 || (winExpr.hasFrameStartExpr() && visit(winExpr.getFrameStartExpr(), arg))
                 || (winExpr.hasFrameEndExpr() && visit(winExpr.getFrameEndExpr(), arg))
                 || (winExpr.hasWindowFieldList() && visitFieldList(winExpr.getWindowFieldList(), arg))
+                || (winExpr.hasAggregateFilterExpr() && winExpr.getAggregateFilterExpr().accept(this, arg))
                 || visitExprList(winExpr.getExprList(), arg);
     }
 
     @Override
     public Boolean visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
-        return visitExprList(callExpr.getExprList(), arg);
+        return visitExprList(callExpr.getExprList(), arg)
+                || (callExpr.hasAggregateFilterExpr() && visit(callExpr.getAggregateFilterExpr(), arg));
     }
 
     private boolean visit(ILangExpression expr, ILangExpression arg) throws CompilationException {

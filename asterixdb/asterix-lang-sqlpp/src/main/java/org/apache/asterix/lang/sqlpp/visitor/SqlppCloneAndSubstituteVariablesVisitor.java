@@ -406,6 +406,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             VariableSubstitutionEnvironment env) throws CompilationException {
         List<Expression> newExprList =
                 VariableCloneAndSubstitutionUtil.visitAndCloneExprList(winExpr.getExprList(), env, this);
+        Expression newAggFilterExpr = winExpr.hasAggregateFilterExpr()
+                ? (Expression) winExpr.getAggregateFilterExpr().accept(this, env).first : null;
         List<Expression> newPartitionList = winExpr.hasPartitionList()
                 ? VariableCloneAndSubstitutionUtil.visitAndCloneExprList(winExpr.getPartitionList(), env, this) : null;
         List<Expression> newOrderbyList = winExpr.hasOrderByList()
@@ -421,10 +423,10 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         List<Pair<Expression, Identifier>> newWindowFieldList = winExpr.hasWindowFieldList()
                 ? VariableCloneAndSubstitutionUtil.substInFieldList(winExpr.getWindowFieldList(), env, this) : null;
         WindowExpression newWinExpr =
-                new WindowExpression(winExpr.getFunctionSignature(), newExprList, newPartitionList, newOrderbyList,
-                        newOrderbyModifierList, winExpr.getFrameMode(), winExpr.getFrameStartKind(), newFrameStartExpr,
-                        winExpr.getFrameEndKind(), newFrameEndExpr, winExpr.getFrameExclusionKind(), newWindowVar,
-                        newWindowFieldList, winExpr.getIgnoreNulls(), winExpr.getFromLast());
+                new WindowExpression(winExpr.getFunctionSignature(), newExprList, newAggFilterExpr, newPartitionList,
+                        newOrderbyList, newOrderbyModifierList, winExpr.getFrameMode(), winExpr.getFrameStartKind(),
+                        newFrameStartExpr, winExpr.getFrameEndKind(), newFrameEndExpr, winExpr.getFrameExclusionKind(),
+                        newWindowVar, newWindowFieldList, winExpr.getIgnoreNulls(), winExpr.getFromLast());
         newWinExpr.setSourceLocation(winExpr.getSourceLocation());
         newWinExpr.addHints(winExpr.getHints());
         return new Pair<>(newWinExpr, env);

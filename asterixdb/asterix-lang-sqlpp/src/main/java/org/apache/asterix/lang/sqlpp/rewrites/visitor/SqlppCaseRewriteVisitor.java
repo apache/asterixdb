@@ -29,6 +29,7 @@ import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.IfExpr;
+import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
@@ -87,9 +88,12 @@ public final class SqlppCaseRewriteVisitor extends AbstractSqlppExpressionExtrac
         public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
             CallExpr resultExpr = (CallExpr) super.visit(callExpr, arg);
             if (FunctionMapUtil.isSql92AggregateFunction(resultExpr.getFunctionSignature())) {
-                Expression newExpr = extractExpression(resultExpr);
-                if (newExpr != null) {
-                    return newExpr;
+                StackElement stackElement = stack.peek();
+                if (stackElement != null && stackElement.getSelectBlock().hasGroupbyClause()) {
+                    VarIdentifier v = stackElement.addPendingLetClause(resultExpr);
+                    VariableExpr vExpr = new VariableExpr(v);
+                    vExpr.setSourceLocation(callExpr.getSourceLocation());
+                    return vExpr;
                 }
             }
             return resultExpr;

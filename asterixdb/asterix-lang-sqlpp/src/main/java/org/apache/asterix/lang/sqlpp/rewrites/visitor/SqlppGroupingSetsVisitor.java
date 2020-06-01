@@ -204,6 +204,10 @@ public final class SqlppGroupingSetsVisitor extends AbstractSqlppSimpleExpressio
             throw new CompilationException(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, callExpr.getSourceLocation(),
                     BuiltinFunctions.GROUPING.getName());
         }
+        if (callExpr.hasAggregateFilterExpr()) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_USE_OF_FILTER_CLAUSE,
+                    callExpr.getSourceLocation());
+        }
         long result = 0;
         for (Expression argExpr : argList) {
             int v;

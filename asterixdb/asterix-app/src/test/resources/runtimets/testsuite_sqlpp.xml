@@ -2862,6 +2862,23 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="aggregate-subclause">
+    <test-case FilePath="aggregate-subclause">
+      <compilation-unit name="agg_filter_01">
+        <output-dir compare="Text">agg_filter_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-subclause">
+      <compilation-unit name="agg_filter_02_neg">
+        <output-dir compare="Text">agg_filter_01</output-dir>
+        <expected-error>ASX1116: Illegal use of aggregate FILTER clause</expected-error>
+        <expected-error>ASX1116: Illegal use of aggregate FILTER clause</expected-error>
+        <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier r</expected-error>
+        <expected-error>ASX1116: Illegal use of aggregate FILTER clause</expected-error>
+        <expected-error>ASX1116: Illegal use of aggregate FILTER clause</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="array_fun">
     <test-case FilePath="array_fun">
       <compilation-unit name="array_prepend">
@@ -5395,7 +5412,7 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q12_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>The parameter * can only be used in COUNT().</expected-error>
+        <expected-error>The parameter * can only be used in count().</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
@@ -11687,13 +11704,13 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-9">
         <output-dir compare="Text">bad-function-ddl-9</output-dir>
-        <expected-error>function experiments.function_that_does_not_exist@0 is not defined</expected-error>
+        <expected-error>function experiments.function_that_does_not_exist@0 which is undefined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-10">
         <output-dir compare="Text">bad-function-ddl-10</output-dir>
-        <expected-error>function experiments.f0@2 is not defined</expected-error>
+        <expected-error>function experiments.f0@2 which is undefined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">

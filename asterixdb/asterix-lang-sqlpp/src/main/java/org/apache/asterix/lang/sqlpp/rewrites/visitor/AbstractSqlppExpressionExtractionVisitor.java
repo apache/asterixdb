@@ -23,7 +23,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.function.Predicate;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractClause;
@@ -42,8 +41,6 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * Base class for visitors that extract expressions into LET clauses.
- * Subclasses should call {@link #extractExpressionsFromList(List, int, Predicate)} or
- * {@link #extractExpression(Expression)} to perform the extraction.
  */
 abstract class AbstractSqlppExpressionExtractionVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
@@ -140,35 +137,6 @@ abstract class AbstractSqlppExpressionExtractionVisitor extends AbstractSqlppSim
             toLetWhereList.add(new LetClause(varExpr, bindExpr));
         }
         fromBindingList.clear();
-    }
-
-    protected List<Expression> extractExpressionsFromList(List<Expression> exprList, int limit,
-            Predicate<Expression> exprTest) {
-        StackElement outElement = stack.peek();
-        if (outElement == null) {
-            return null;
-        }
-        int n = exprList.size();
-        List<Expression> newExprList = new ArrayList<>(n);
-        for (int i = 0; i < n; i++) {
-            Expression expr = exprList.get(i);
-            Expression newExpr = i < limit && exprTest.test(expr) ? extractExpressionImpl(expr, outElement) : expr;
-            newExprList.add(newExpr);
-        }
-        return newExprList;
-    }
-
-    protected Expression extractExpression(Expression expr) {
-        StackElement outLetList = stack.peek();
-        return outLetList != null ? extractExpressionImpl(expr, outLetList) : null;
-    }
-
-    private VariableExpr extractExpressionImpl(Expression expr, StackElement outElement) {
-        VarIdentifier v = context.newVariable();
-        VariableExpr vExpr = new VariableExpr(v);
-        vExpr.setSourceLocation(expr.getSourceLocation());
-        outElement.extractionList.add(new Pair<>(expr, v));
-        return vExpr;
     }
 
     abstract void handleUnsupportedClause(FromClause clause) throws CompilationException;

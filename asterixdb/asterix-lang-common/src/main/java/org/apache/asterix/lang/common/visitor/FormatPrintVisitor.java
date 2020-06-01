@@ -226,6 +226,11 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
                 callExpr.getFunctionSignature().getName()) + "(");
         printDelimitedExpressions(callExpr.getExprList(), COMMA, step);
         out.print(")");
+        if (callExpr.hasAggregateFilterExpr()) {
+            out.println(" FILTER ( WHERE ");
+            callExpr.getAggregateFilterExpr().accept(this, step + 1);
+            out.println(skip(step) + ")");
+        }
         return null;
     }
 

@@ -19,7 +19,7 @@
 
 package org.apache.asterix.lang.common.visitor;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,13 +57,16 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<Void, Void> {
 
-    protected final Set<CallExpr> calls = new HashSet<>();
+    protected final Set<CallExpr> calls = new LinkedHashSet<>();
 
     @Override
-    public Void visit(CallExpr pf, Void arg) throws CompilationException {
-        calls.add(pf);
-        for (Expression e : pf.getExprList()) {
+    public Void visit(CallExpr callExpr, Void arg) throws CompilationException {
+        calls.add(callExpr);
+        for (Expression e : callExpr.getExprList()) {
             e.accept(this, arg);
+        }
+        if (callExpr.hasAggregateFilterExpr()) {
+            callExpr.getAggregateFilterExpr().accept(this, arg);
         }
         return null;
     }

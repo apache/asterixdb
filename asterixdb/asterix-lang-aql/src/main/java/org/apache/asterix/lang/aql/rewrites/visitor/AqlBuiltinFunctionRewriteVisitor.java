@@ -41,7 +41,9 @@ public class AqlBuiltinFunctionRewriteVisitor extends AbstractAqlSimpleExpressio
             newExprList.add(expr.accept(this, arg));
         }
         callExpr.setExprList(newExprList);
+        if (callExpr.hasAggregateFilterExpr()) {
+            callExpr.setAggregateFilterExpr(callExpr.getAggregateFilterExpr().accept(this, arg));
+        }
         return callExpr;
     }
-
 }

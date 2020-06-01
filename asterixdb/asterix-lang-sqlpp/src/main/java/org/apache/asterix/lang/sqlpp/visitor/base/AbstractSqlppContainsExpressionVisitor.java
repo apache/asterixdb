@@ -297,12 +297,14 @@ public abstract class AbstractSqlppContainsExpressionVisitor<T>
                 || (winExpr.hasFrameStartExpr() && visit(winExpr.getFrameStartExpr(), arg))
                 || (winExpr.hasFrameEndExpr() && visit(winExpr.getFrameEndExpr(), arg))
                 || (winExpr.hasWindowFieldList() && visitFieldList(winExpr.getWindowFieldList(), arg))
+                || (winExpr.hasAggregateFilterExpr() && visit(winExpr.getAggregateFilterExpr(), arg))
                 || visitExprList(winExpr.getExprList(), arg);
     }
 
     @Override
     public Boolean visit(CallExpr callExpr, T arg) throws CompilationException {
-        return visitExprList(callExpr.getExprList(), arg);
+        return visitExprList(callExpr.getExprList(), arg)
+                || (callExpr.hasAggregateFilterExpr() && visit(callExpr.getAggregateFilterExpr(), arg));
     }
 
     private boolean visit(ILangExpression expr, T arg) throws CompilationException {

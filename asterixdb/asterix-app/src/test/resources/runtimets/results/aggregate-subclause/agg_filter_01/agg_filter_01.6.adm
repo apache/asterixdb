@@ -1,0 +1,10 @@
+{ "twothous": 0, "fivethous": 0, "tenthous": 0, "cnt": 1, "sm": 0, "cnt_filter": 1, "sm_filter": 0 }
+{ "twothous": 1000, "fivethous": 1000, "tenthous": 1000, "cnt": 2, "sm": 1000, "cnt_filter": 1, "sm_filter": 0 }
+{ "twothous": 0, "fivethous": 2000, "tenthous": 2000, "cnt": 3, "sm": 3000, "cnt_filter": 2, "sm_filter": 2000 }
+{ "twothous": 1000, "fivethous": 3000, "tenthous": 3000, "cnt": 4, "sm": 6000, "cnt_filter": 2, "sm_filter": 2000 }
+{ "twothous": 0, "fivethous": 4000, "tenthous": 4000, "cnt": 5, "sm": 10000, "cnt_filter": 3, "sm_filter": 6000 }
+{ "twothous": 1000, "fivethous": 0, "tenthous": 5000, "cnt": 6, "sm": 15000, "cnt_filter": 3, "sm_filter": 6000 }
+{ "twothous": 0, "fivethous": 1000, "tenthous": 6000, "cnt": 7, "sm": 21000, "cnt_filter": 4, "sm_filter": 12000 }
+{ "twothous": 1000, "fivethous": 2000, "tenthous": 7000, "cnt": 8, "sm": 28000, "cnt_filter": 4, "sm_filter": 12000 }
+{ "twothous": 0, "fivethous": 3000, "tenthous": 8000, "cnt": 9, "sm": 36000, "cnt_filter": 5, "sm_filter": 20000 }
+{ "twothous": 1000, "fivethous": 4000, "tenthous": 9000, "cnt": 10, "sm": 45000, "cnt_filter": 5, "sm_filter": 20000 }

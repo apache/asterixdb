@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -89,17 +90,28 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
             winExpr.setFunctionSignature(new FunctionSignature(winfi));
             if (BuiltinFunctions.builtinFunctionHasProperty(winfi,
                     BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG)) {
-                wrapAggregationArguments(winExpr, 1);
+                if (winExpr.hasAggregateFilterExpr()) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_USE_OF_FILTER_CLAUSE,
+                            winExpr.getSourceLocation());
+                }
+                wrapAggregationArgument(winExpr, null);
             }
         } else if (FunctionMapUtil.isSql92AggregateFunction(signature)) {
+            if (winExpr.getExprList().size() != 1) {
+                // binary SQL-92 aggregate functions are not yet supported
+                throw new CompilationException(ErrorCode.COMPILATION_INVALID_PARAMETER_NUMBER,
+                        winExpr.getSourceLocation(), signature.getName(), winExpr.getExprList().size());
+            }
+            wrapAggregationArgument(winExpr, winExpr.getAggregateFilterExpr());
+            winExpr.setAggregateFilterExpr(null);
             winExpr.setFunctionSignature(FunctionMapUtil.sql92ToCoreAggregateFunction(signature));
-            wrapAggregationArguments(winExpr, winExpr.getExprList().size());
         }
 
         return super.visit(winExpr, arg);
     }
 
-    void wrapAggregationArguments(WindowExpression winExpr, int limit) throws CompilationException {
+    private void wrapAggregationArgument(WindowExpression winExpr, Expression aggFilterExpr)
+            throws CompilationException {
         VariableExpr winVar = winExpr.getWindowVar();
 
         Map<VariableExpr, Set<? extends Scope.SymbolAnnotation>> liveAnnotatedVars =
@@ -112,15 +124,15 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
         Map<VariableExpr, Identifier> winVarFieldMap =
                 SqlppGroupByAggregationSugarVisitor.createGroupVarFieldMap(winFieldList);
 
+        //binary SQL-92 aggregates are not yet supported, so we just need to rewrite the first argument
         List<Expression> exprList = winExpr.getExprList();
-        int n = exprList.size();
-        List<Expression> newExprList = new ArrayList<>(n);
-        for (int i = 0; i < n; i++) {
-            Expression expr = exprList.get(i);
-            Expression newExpr = i < limit ? Sql92AggregateFunctionVisitor.wrapAggregationArgument(expr, winVar,
-                    winVarFieldMap, liveContextVars, null, liveVars, context) : expr;
-            newExprList.add(newExpr);
-        }
+        Expression aggArgExpr = exprList.get(0);
+        Expression newAggArgExpr = Sql92AggregateFunctionVisitor.wrapAggregationArgument(aggArgExpr, aggFilterExpr,
+                winVar, winVarFieldMap, liveContextVars, null, liveVars, context);
+
+        List<Expression> newExprList = new ArrayList<>(exprList);
+        newExprList.set(0, newAggArgExpr);
+
         winExpr.setExprList(newExprList);
     }
 

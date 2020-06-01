@@ -30,10 +30,16 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 public class CallExpr extends AbstractExpression {
     private FunctionSignature functionSignature;
     private List<Expression> exprList;
+    private Expression aggFilterExpr;
 
     public CallExpr(FunctionSignature functionSignature, List<Expression> exprList) {
+        this(functionSignature, exprList, null);
+    }
+
+    public CallExpr(FunctionSignature functionSignature, List<Expression> exprList, Expression aggFilterExpr) {
         this.functionSignature = functionSignature;
         this.exprList = exprList;
+        this.aggFilterExpr = aggFilterExpr;
     }
 
     public FunctionSignature getFunctionSignature() {
@@ -42,6 +48,14 @@ public class CallExpr extends AbstractExpression {
 
     public List<Expression> getExprList() {
         return exprList;
+    }
+
+    public boolean hasAggregateFilterExpr() {
+        return aggFilterExpr != null;
+    }
+
+    public Expression getAggregateFilterExpr() {
+        return aggFilterExpr;
     }
 
     @Override
@@ -57,6 +71,10 @@ public class CallExpr extends AbstractExpression {
         this.exprList = exprList;
     }
 
+    public void setAggregateFilterExpr(Expression aggFilterExpr) {
+        this.aggFilterExpr = aggFilterExpr;
+    }
+
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
         return visitor.visit(this, arg);
@@ -69,7 +87,7 @@ public class CallExpr extends AbstractExpression {
 
     @Override
     public int hashCode() {
-        return Objects.hash(exprList, functionSignature);
+        return Objects.hash(exprList, aggFilterExpr, functionSignature);
     }
 
     @Override
@@ -81,6 +99,7 @@ public class CallExpr extends AbstractExpression {
             return false;
         }
         CallExpr target = (CallExpr) object;
-        return Objects.equals(exprList, target.exprList) && Objects.equals(functionSignature, target.functionSignature);
+        return Objects.equals(exprList, target.exprList) && Objects.equals(aggFilterExpr, target.aggFilterExpr)
+                && Objects.equals(functionSignature, target.functionSignature);
     }
 }

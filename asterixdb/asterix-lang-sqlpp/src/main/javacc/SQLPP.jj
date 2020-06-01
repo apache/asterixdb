@@ -3375,50 +3375,58 @@ FieldBinding FieldBinding() throws ParseException:
 
 Expression FunctionCallExpr() throws ParseException:
 {
-  Expression resultExpr;
-  CallExpr callExpr;
   List<Expression> argList = new ArrayList<Expression>();
-  Expression tmp = null;
-  int arity = 0;
+  Expression argExpr = null;
   FunctionName funcName = null;
   boolean star = false;
   boolean distinct = false;
+  Expression filterExpr = null;
+  WindowExpression windowExpr = null;
 }
 {
   funcName = FunctionName()
   <LEFTPAREN> (
     ( <DISTINCT> { distinct = true; } )?
-    ( tmp = Expression() | <MUL> { star = true; } )
+    ( argExpr = Expression() | <MUL> { star = true; } )
     {
-      if(star){
-        if(!funcName.function.equalsIgnoreCase("count")){
-           throw new SqlppParseException(getSourceLocation(token), "The parameter * can only be used in COUNT().");
+      if (star) {
+        if (funcName.function.equalsIgnoreCase(BuiltinFunctions.SCALAR_COUNT.getName())) {
+          argExpr = new LiteralExpr(new LongIntegerLiteral(1L));
+        } else {
+          throw new SqlppParseException(getSourceLocation(token),
+            "The parameter * can only be used in " + BuiltinFunctions.SCALAR_COUNT.getName() + "().");
         }
-        argList.add(new LiteralExpr(new LongIntegerLiteral(1L)));
-      } else {
-         argList.add(tmp);
       }
-      arity ++;
+      argList.add(argExpr);
     }
-  (<COMMA> tmp = Expression()
+  (<COMMA> argExpr = Expression()
     {
-      argList.add(tmp);
-      arity++;
+      argList.add(argExpr);
     }
   )*)? <RIGHTPAREN>
-    {
-      String name = funcName.function;
-      if (distinct) {
-        name += FunctionMapUtil.DISTINCT_AGGREGATE_SUFFIX;
-      }
-      // TODO use funcName.library
-      String fqFunctionName = funcName.library == null ? name : funcName.library + "#" + name;
-      FunctionSignature signature
-        = lookupFunctionSignature(funcName.dataverse, fqFunctionName, arity);
-      if (signature == null) {
-        signature = new FunctionSignature(funcName.dataverse, fqFunctionName, arity);
-      }
-      callExpr = FunctionMapUtil.normalizedListInputFunctions(new CallExpr(signature,argList));
+
+  {
+    String name = funcName.function;
+    if (distinct) {
+      name += FunctionMapUtil.DISTINCT_AGGREGATE_SUFFIX;
+    }
+    String fqFunctionName = funcName.library == null ? name : funcName.library + "#" + name;
+    int arity = argList.size();
+    FunctionSignature signature = lookupFunctionSignature(funcName.dataverse, fqFunctionName, arity);
+    if (signature == null) {
+      signature = new FunctionSignature(funcName.dataverse, fqFunctionName, arity);
+    }
+  }
+
+  ( <FILTER> <LEFTPAREN> <WHERE> filterExpr = Expression() <RIGHTPAREN> )?
+
+  ( LOOKAHEAD(5) windowExpr = WindowExpr(signature, argList, filterExpr) )?
+
+  {
+    if (windowExpr != null) {
+      return windowExpr;
+    } else {
+      CallExpr callExpr = new CallExpr(signature, argList, filterExpr);
       if (funcName.hint != null) {
         switch (funcName.hint) {
           case INDEXED_NESTED_LOOP_JOIN_HINT:
@@ -3429,18 +3437,15 @@ Expression FunctionCallExpr() throws ParseException:
             break;
         }
       }
+      FunctionMapUtil.normalizedListInputFunctions(callExpr);
       callExpr.setSourceLocation(funcName.sourceLoc);
-      resultExpr = callExpr;
+      return callExpr;
     }
-
-  ( LOOKAHEAD(5) resultExpr = WindowExpr(callExpr.getFunctionSignature(), callExpr.getExprList()) )?
-
-  {
-     return resultExpr;
   }
 }
 
-WindowExpression WindowExpr(FunctionSignature signature, List<Expression> argList) throws ParseException:
+WindowExpression WindowExpr(FunctionSignature signature, List<Expression> argList, Expression aggFilterExpr)
+  throws ParseException:
 {
   Boolean fromLast = null, ignoreNulls = null;
 }
@@ -3481,12 +3486,12 @@ WindowExpression WindowExpr(FunctionSignature signature, List<Expression> argLis
   )?
   <OVER>
   {
-    return OverClause(signature, argList, token, fromLast, ignoreNulls);
+    return OverClause(signature, argList, aggFilterExpr, token, fromLast, ignoreNulls);
   }
 }
 
-WindowExpression OverClause(FunctionSignature signature, List<Expression> argList, Token startToken, Boolean fromLast,
-    Boolean ignoreNulls) throws ParseException:
+WindowExpression OverClause(FunctionSignature signature, List<Expression> argList, Expression aggFilterExpr,
+    Token startToken, Boolean fromLast, Boolean ignoreNulls) throws ParseException:
 {
   Expression partitionExpr = null;
   List<Expression> partitionExprs = new ArrayList<Expression>();
@@ -3546,10 +3551,10 @@ WindowExpression OverClause(FunctionSignature signature, List<Expression> argLis
   )?
   <RIGHTPAREN>
   {
-    WindowExpression winExp = new WindowExpression(signature, argList, partitionExprs, orderbyList, orderbyModifierList,
-      frameMode, frameStartKind, frameStartExpr, frameEndKind, frameEndExpr, frameExclusionKind, windowVar,
-      windowFieldList, ignoreNulls, fromLast);
-    return addSourceLocation(winExp, startToken);
+    WindowExpression winExpr = new WindowExpression(signature, argList, aggFilterExpr, partitionExprs, orderbyList,
+      orderbyModifierList, frameMode, frameStartKind, frameStartExpr, frameEndKind, frameEndExpr, frameExclusionKind,
+      windowVar, windowFieldList, ignoreNulls, fromLast);
+    return addSourceLocation(winExpr, startToken);
   }
 }
 

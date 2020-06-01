@@ -1,0 +1,145 @@
+DataverseUse test
+Query:
+SELECT [
+Variable [ Name=$twenty ]
+twenty
+FunctionCall asterix.sql-sum@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#2 ]
+        Field=tenk
+      ]
+      Field=ten
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#2 ]
+    ]
+  )
+]
+sm
+WINDOW test.sum@1[
+  FunctionCall asterix.sql-sum@1[
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=#3 ]
+          Field=tenk
+        ]
+        Field=ten
+      ]
+      ]
+      FROM [        Variable [ Name=#1 ]
+        AS Variable [ Name=#3 ]
+      ]
+    )
+  ]
+]
+OVER (
+  ORDER BY
+    Variable [ Name=$twenty ]
+    ASC
+)
+sm_sm
+WINDOW test.sum@1[
+  FunctionCall asterix.sql-sum@1[
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=#4 ]
+          Field=tenk
+        ]
+        Field=ten
+      ]
+      ]
+      FROM [        Variable [ Name=#1 ]
+        AS Variable [ Name=#4 ]
+      ]
+    )
+  ]
+]
+  FILTER (WHERE
+    OperatorExpr [
+      Variable [ Name=$twenty ]
+      <
+      LiteralExpr [LONG] [10]
+    ]
+  )
+OVER (
+  ORDER BY
+    Variable [ Name=$twenty ]
+    ASC
+)
+sm_sm_where_twenty_lt_10
+WINDOW test.sum@1[
+  FunctionCall asterix.sql-sum@1[
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=#5 ]
+          Field=tenk
+        ]
+        Field=ten
+      ]
+      ]
+      FROM [        Variable [ Name=#1 ]
+        AS Variable [ Name=#5 ]
+      ]
+    )
+  ]
+]
+  FILTER (WHERE
+    OperatorExpr [
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#6 ]
+              Field=tenk
+            ]
+            Field=ten
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#6 ]
+          ]
+        )
+      ]
+      <
+      LiteralExpr [LONG] [3000]
+    ]
+  )
+OVER (
+  ORDER BY
+    Variable [ Name=$twenty ]
+    ASC
+)
+sm_sm_where_sm_lt_3k
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.tenk]
+  ]
+  AS Variable [ Name=$tenk ]
+]
+Groupby
+  Variable [ Name=$twenty ]
+  :=
+  FieldAccessor [
+    Variable [ Name=$tenk ]
+    Field=twenty
+  ]
+  GROUP AS Variable [ Name=#1 ]
+  (
+    tenk:=Variable [ Name=$tenk ]
+  )
+
+Orderby
+  Variable [ Name=$twenty ]
+  ASC
+

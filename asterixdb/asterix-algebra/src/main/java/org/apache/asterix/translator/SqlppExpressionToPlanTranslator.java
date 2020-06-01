@@ -1090,6 +1090,10 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         boolean allowFromFirstLast = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
                 BuiltinFunctions.WindowFunctionProperty.ALLOW_FROM_FIRST_LAST);
 
+        if (winExpr.hasAggregateFilterExpr()) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_USE_OF_FILTER_CLAUSE, sourceLoc);
+        }
+
         Mutable<ILogicalOperator> currentOpRef = tupSource;
 
         List<Mutable<ILogicalExpression>> partExprListOut = Collections.emptyList();

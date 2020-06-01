@@ -343,42 +343,43 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
 
     @Override
     public Void visit(WindowExpression windowExpr, Integer step) throws CompilationException {
-        out.print(skip(step) + "window ");
-        out.print(generateFullName(windowExpr.getFunctionSignature().getDataverseName(),
+        out.println(skip(step) + "window " + generateFullName(windowExpr.getFunctionSignature().getDataverseName(),
                 windowExpr.getFunctionSignature().getName()) + "(");
-        printDelimitedExpressions(windowExpr.getExprList(), COMMA, step);
-        out.print(")");
-        out.print(skip(step) + " over ");
-        if (windowExpr.hasWindowVar()) {
-            windowExpr.getWindowVar().accept(this, step + 2);
-            out.print(skip(step) + "as ");
+        printDelimitedExpressions(windowExpr.getExprList(), COMMA, step + 2);
+        out.println(")");
+        if (windowExpr.hasAggregateFilterExpr()) {
+            out.println(skip(step + 1) + "filter where (");
+            windowExpr.getAggregateFilterExpr().accept(this, step + 2);
+            out.println();
         }
-        out.print("(");
+        out.print(skip(step + 1) + "over ");
+        if (windowExpr.hasWindowVar()) {
+            windowExpr.getWindowVar().accept(this, step + 1);
+            out.print(" as ");
+        }
+        out.println("(");
         if (windowExpr.hasPartitionList()) {
-            List<Expression> partitionList = windowExpr.getPartitionList();
-            for (int i = 0, ln = partitionList.size(); i < ln; i++) {
-                if (i > 0) {
-                    out.print(COMMA);
-                }
-                Expression partExpr = partitionList.get(i);
-                partExpr.accept(this, step + 2);
-            }
+            printDelimitedExpressions(windowExpr.getPartitionList(), COMMA, step + 2);
+            out.println();
         }
         if (windowExpr.hasOrderByList()) {
-            out.print(skip(step) + " order by ");
+            out.print(skip(step + 1) + "order by ");
             printDelimitedObyExpressions(windowExpr.getOrderbyList(), windowExpr.getOrderbyModifierList(), step + 2);
+            out.println();
         }
         if (windowExpr.hasFrameDefinition()) {
-            out.println(skip(step) + windowExpr.getFrameMode());
+            out.println(skip(step + 1) + windowExpr.getFrameMode());
             if (windowExpr.hasFrameStartExpr()) {
                 windowExpr.getFrameStartExpr().accept(this, step + 2);
+                out.println();
             }
-            out.println(skip(step) + windowExpr.getFrameStartKind());
+            out.println(skip(step + 1) + windowExpr.getFrameStartKind());
             if (windowExpr.hasFrameEndExpr()) {
                 windowExpr.getFrameEndExpr().accept(this, step + 2);
+                out.println();
             }
-            out.println(skip(step) + windowExpr.getFrameEndKind());
-            out.println(skip(step) + "exclude " + windowExpr.getFrameExclusionKind());
+            out.println(skip(step + 1) + windowExpr.getFrameEndKind());
+            out.println(skip(step + 1) + "exclude " + windowExpr.getFrameExclusionKind());
         }
         out.println(skip(step) + ")");
         return null;

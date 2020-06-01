@@ -30,8 +30,10 @@ import java.util.Set;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -58,7 +60,14 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  * <code>SUM(e.salary + i.bonus)</code>
  * is turned into
  * <code>array_sum( (FROM g AS gi SELECT ELEMENT gi.e.salary + gi.i.bonus) )</code>
- * where <code>g</code> is a 'group as' variable
+ * where <code>g</code> is a 'group as' variable.
+ * <br/>
+ * If the SQL-92 aggregate function call contains a filter expression then that filter expression
+ * becomes a WHERE clause. <br/>
+ * For example
+ * <code>SUM(e.salary + i.bonus) FILTER (WHERE e.dept = 100)</code>
+ * is turned into
+ * <code>array_sum( (FROM g AS gi WHERE gi.e.dept = 100 SELECT ELEMENT gi.e.salary + gi.i.bonus) )</code>
  */
 class Sql92AggregateFunctionVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
@@ -87,83 +96,117 @@ class Sql92AggregateFunctionVisitor extends AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
-        List<Expression> newExprList = new ArrayList<>();
         FunctionSignature signature = callExpr.getFunctionSignature();
-        boolean aggregate = FunctionMapUtil.isSql92AggregateFunction(signature);
-        boolean rewritten = false;
-        for (Expression expr : callExpr.getExprList()) {
-            Expression newExpr = aggregate ? wrapAggregationArgument(expr, groupVar, groupVarFieldMap,
-                    preGroupContextVars, preGroupUnmappedVars, outerVars, context) : expr;
-            rewritten |= newExpr != expr;
-            newExprList.add(newExpr.accept(this, arg));
+        if (FunctionMapUtil.isSql92AggregateFunction(signature)) {
+            rewriteSql92AggregateFunction(callExpr, arg);
+            return callExpr;
+        } else {
+            return super.visit(callExpr, arg);
         }
-        if (rewritten) {
-            // Rewrites the SQL-92 function name to core functions,
-            // e.g., SUM --> array_sum
-            callExpr.setFunctionSignature(FunctionMapUtil.sql92ToCoreAggregateFunction(signature));
-        }
-        callExpr.setExprList(newExprList);
-        return callExpr;
     }
 
-    static Expression wrapAggregationArgument(Expression expr, Expression groupVar,
+    private void rewriteSql92AggregateFunction(CallExpr callExpr, ILangExpression arg) throws CompilationException {
+        FunctionSignature signature = callExpr.getFunctionSignature();
+        List<Expression> argList = callExpr.getExprList();
+        if (argList.size() != 1) {
+            // binary SQL-92 aggregate functions are not yet supported
+            throw new CompilationException(ErrorCode.COMPILATION_INVALID_PARAMETER_NUMBER, callExpr.getSourceLocation(),
+                    signature.getName(), argList.size());
+        }
+        Expression filterExpr = callExpr.getAggregateFilterExpr();
+        Expression expr = argList.get(0);
+        Expression newExpr = wrapAggregationArgument(expr, filterExpr, groupVar, groupVarFieldMap, preGroupContextVars,
+                preGroupUnmappedVars, outerVars, context);
+        List<Expression> newExprList = new ArrayList<>(1);
+        newExprList.add(newExpr.accept(this, arg));
+        // Rewrites the SQL-92 function name to core functions,
+        // e.g., SUM --> array_sum
+        callExpr.setFunctionSignature(FunctionMapUtil.sql92ToCoreAggregateFunction(signature));
+        callExpr.setExprList(newExprList);
+        callExpr.setAggregateFilterExpr(null);
+    }
+
+    static Expression wrapAggregationArgument(Expression expr, Expression filterExpr, Expression groupVar,
             Map<VariableExpr, Identifier> groupVarFieldMap, Collection<VariableExpr> preGroupContextVars,
             Collection<VariableExpr> preGroupUnmappedVars, Collection<VariableExpr> outerVars,
             LangRewritingContext context) throws CompilationException {
         SourceLocation sourceLoc = expr.getSourceLocation();
-        Set<VariableExpr> freeVars = SqlppRewriteUtil.getFreeVariable(expr);
 
-        VariableExpr fromBindingVar = new VariableExpr(context.newVariable());
-        fromBindingVar.setSourceLocation(sourceLoc);
-        FromTerm fromTerm = new FromTerm(groupVar, fromBindingVar, null, null);
+        // From clause
+        VariableExpr groupItemVar = new VariableExpr(context.newVariable());
+        groupItemVar.setSourceLocation(sourceLoc);
+
+        FromTerm fromTerm = new FromTerm(groupVar, groupItemVar, null, null);
         fromTerm.setSourceLocation(sourceLoc);
         FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
         fromClause.setSourceLocation(sourceLoc);
 
-        // Maps field variable expressions to field accesses.
-        Map<Expression, Expression> varExprMap = new HashMap<>();
-        for (VariableExpr usedVar : freeVars) {
-            // Reference to a field in the group variable.
-            if (groupVarFieldMap.containsKey(usedVar)) {
-                // Rewrites to a reference to a field in the group variable.
-                FieldAccessor fa =
-                        new FieldAccessor(fromBindingVar, new VarIdentifier(groupVarFieldMap.get(usedVar).getValue()));
-                fa.setSourceLocation(usedVar.getSourceLocation());
-                varExprMap.put(usedVar, fa);
-            } else if (outerVars.contains(usedVar)) {
-                // Do nothing
-            } else if (preGroupUnmappedVars != null && preGroupUnmappedVars.contains(usedVar)) {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_USE_OF_IDENTIFIER, sourceLoc,
-                        SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar().getValue()).getValue());
-            } else {
-                // Rewrites to a reference to a single field in the group variable.
-                VariableExpr preGroupVar = VariableCheckAndRewriteVisitor.pickContextVar(preGroupContextVars, usedVar);
-                Identifier groupVarField = groupVarFieldMap.get(preGroupVar);
-                if (groupVarField == null) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc);
-                }
-                FieldAccessor faInner = new FieldAccessor(fromBindingVar, groupVarField);
-                faInner.setSourceLocation(usedVar.getSourceLocation());
-                Expression faOuter = VariableCheckAndRewriteVisitor.generateFieldAccess(faInner, usedVar.getVar(),
-                        usedVar.getSourceLocation());
-                varExprMap.put(usedVar, faOuter);
-            }
+        // Where clause if filter expression is present
+
+        List<AbstractClause> whereClauseList = null;
+        if (filterExpr != null) {
+            Expression newFilterExpr = rewriteAggregationArgumentExpr(filterExpr, groupItemVar, groupVarFieldMap,
+                    preGroupContextVars, preGroupUnmappedVars, outerVars, context);
+            WhereClause whereClause = new WhereClause(newFilterExpr);
+            whereClause.setSourceLocation(sourceLoc);
+            whereClauseList = new ArrayList<>(1);
+            whereClauseList.add(whereClause);
         }
 
         // Select clause.
-        SelectElement selectElement =
-                new SelectElement(SqlppRewriteUtil.substituteExpression(expr, varExprMap, context));
+        Expression newExpr = rewriteAggregationArgumentExpr(expr, groupItemVar, groupVarFieldMap, preGroupContextVars,
+                preGroupUnmappedVars, outerVars, context);
+
+        SelectElement selectElement = new SelectElement(newExpr);
         selectElement.setSourceLocation(sourceLoc);
         SelectClause selectClause = new SelectClause(selectElement, null, false);
         selectClause.setSourceLocation(sourceLoc);
 
         // Construct the select expression.
-        SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, null, null);
+        SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, whereClauseList, null, null);
         selectBlock.setSourceLocation(sourceLoc);
         SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
         selectSetOperation.setSourceLocation(sourceLoc);
         SelectExpression selectExpr = new SelectExpression(null, selectSetOperation, null, null, true);
         selectExpr.setSourceLocation(sourceLoc);
         return selectExpr;
+    }
+
+    private static Expression rewriteAggregationArgumentExpr(Expression expr, VariableExpr groupItemVar,
+            Map<VariableExpr, Identifier> groupVarFieldMap, Collection<VariableExpr> preGroupContextVars,
+            Collection<VariableExpr> preGroupUnmappedVars, Collection<VariableExpr> outerVars,
+            LangRewritingContext context) throws CompilationException {
+        // Maps field variable expressions to field accesses.
+        Set<VariableExpr> freeVars = SqlppRewriteUtil.getFreeVariable(expr);
+        Map<Expression, Expression> varExprMap = new HashMap<>();
+        for (VariableExpr usedVar : freeVars) {
+            // Reference to a field in the group variable.
+            if (groupVarFieldMap.containsKey(usedVar)) {
+                // Rewrites to a reference to a field in the group variable.
+                FieldAccessor fa =
+                        new FieldAccessor(groupItemVar, new VarIdentifier(groupVarFieldMap.get(usedVar).getValue()));
+                fa.setSourceLocation(usedVar.getSourceLocation());
+                varExprMap.put(usedVar, fa);
+            } else if (outerVars.contains(usedVar)) {
+                // Do nothing
+            } else if (preGroupUnmappedVars != null && preGroupUnmappedVars.contains(usedVar)) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_USE_OF_IDENTIFIER,
+                        expr.getSourceLocation(),
+                        SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar().getValue()).getValue());
+            } else {
+                // Rewrites to a reference to a single field in the group variable.
+                VariableExpr preGroupVar = VariableCheckAndRewriteVisitor.pickContextVar(preGroupContextVars, usedVar);
+                Identifier groupVarField = groupVarFieldMap.get(preGroupVar);
+                if (groupVarField == null) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, expr.getSourceLocation());
+                }
+                FieldAccessor faInner = new FieldAccessor(groupItemVar, groupVarField);
+                faInner.setSourceLocation(usedVar.getSourceLocation());
+                Expression faOuter = VariableCheckAndRewriteVisitor.generateFieldAccess(faInner, usedVar.getVar(),
+                        usedVar.getSourceLocation());
+                varExprMap.put(usedVar, faOuter);
+            }
+        }
+        return SqlppRewriteUtil.substituteExpression(expr, varExprMap, context);
     }
 }

@@ -177,6 +177,9 @@ public class AbstractAqlSimpleExpressionVisitor extends AbstractAqlQueryExpressi
     @Override
     public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         callExpr.setExprList(visit(callExpr.getExprList(), arg));
+        if (callExpr.hasAggregateFilterExpr()) {
+            callExpr.setAggregateFilterExpr(visit(callExpr.getAggregateFilterExpr(), arg));
+        }
         return callExpr;
     }
 

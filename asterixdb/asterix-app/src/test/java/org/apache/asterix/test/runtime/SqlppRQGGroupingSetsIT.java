@@ -292,7 +292,12 @@ public class SqlppRQGGroupingSetsIT {
             selectClause.append(String.format("GROUPING(%s) AS grp", String.join(",", randomize(allColumns, random))))
                     .append(',');
         }
-        selectClause.append(String.format("SUM(%s) AS agg_sum", UNIQUE_1));
+        String agg = String.format("SUM(%s)", UNIQUE_1);
+        if (random.nextInt(3) == 0) {
+            int filterLimit = 1 + random.nextInt(9999);
+            agg = String.format("%s FILTER(WHERE %s < %d)", agg, UNIQUE_2, filterLimit);
+        }
+        selectClause.append(String.format("%s AS agg_sum", agg));
 
         String groupingElementText = groupingElements.isEmpty() ? "()" : String.join(",", groupingElements);
         String groupbyClause = String.format("GROUP BY %s", groupingElementText);

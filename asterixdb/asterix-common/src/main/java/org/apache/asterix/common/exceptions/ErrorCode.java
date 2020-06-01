@@ -205,6 +205,7 @@ public class ErrorCode {
     public static final int COMPILATION_GROUPING_SETS_OVERFLOW = 1113;
     public static final int COMPILATION_GROUPING_OPERATION_INVALID_ARG = 1114;
     public static final int COMPILATION_UNEXPECTED_ALIAS = 1115;
+    public static final int COMPILATION_ILLEGAL_USE_OF_FILTER_CLAUSE = 1116;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

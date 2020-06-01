@@ -39,6 +39,7 @@ public class WindowExpression extends AbstractExpression {
 
     private FunctionSignature functionSignature;
     private List<Expression> exprList;
+    private Expression aggFilterExpr;
 
     private List<Expression> partitionList;
     private List<Expression> orderbyList;
@@ -57,7 +58,7 @@ public class WindowExpression extends AbstractExpression {
     private Boolean ignoreNulls;
     private Boolean fromLast;
 
-    public WindowExpression(FunctionSignature functionSignature, List<Expression> exprList,
+    public WindowExpression(FunctionSignature functionSignature, List<Expression> exprList, Expression aggFilterExpr,
             List<Expression> partitionList, List<Expression> orderbyList,
             List<OrderbyClause.OrderModifier> orderbyModifierList, FrameMode frameMode,
             FrameBoundaryKind frameStartKind, Expression frameStartExpr, FrameBoundaryKind frameEndKind,
@@ -68,6 +69,7 @@ public class WindowExpression extends AbstractExpression {
         }
         this.functionSignature = functionSignature;
         this.exprList = exprList;
+        this.aggFilterExpr = aggFilterExpr;
         this.partitionList = partitionList;
         this.orderbyList = orderbyList;
         this.orderbyModifierList = orderbyModifierList;
@@ -108,6 +110,18 @@ public class WindowExpression extends AbstractExpression {
             throw new NullPointerException();
         }
         this.exprList = exprList;
+    }
+
+    public boolean hasAggregateFilterExpr() {
+        return aggFilterExpr != null;
+    }
+
+    public Expression getAggregateFilterExpr() {
+        return aggFilterExpr;
+    }
+
+    public void setAggregateFilterExpr(Expression filterExpr) {
+        this.aggFilterExpr = filterExpr;
     }
 
     public boolean hasPartitionList() {
@@ -244,7 +258,7 @@ public class WindowExpression extends AbstractExpression {
 
     @Override
     public int hashCode() {
-        return Objects.hash(functionSignature, exprList, ExpressionUtils.emptyIfNull(partitionList),
+        return Objects.hash(functionSignature, exprList, aggFilterExpr, ExpressionUtils.emptyIfNull(partitionList),
                 ExpressionUtils.emptyIfNull(orderbyList), ExpressionUtils.emptyIfNull(orderbyModifierList), frameMode,
                 frameStartKind, frameStartExpr, frameEndKind, frameEndExpr, frameExclusionKind, windowVar,
                 ExpressionUtils.emptyIfNull(windowFieldList), ignoreNulls, fromLast);
@@ -261,6 +275,7 @@ public class WindowExpression extends AbstractExpression {
         }
         WindowExpression target = (WindowExpression) object;
         return Objects.equals(functionSignature, target.functionSignature) && Objects.equals(exprList, target.exprList)
+                && Objects.equals(aggFilterExpr, target.aggFilterExpr)
                 && Objects.equals(ExpressionUtils.emptyIfNull(partitionList),
                         ExpressionUtils.emptyIfNull(target.partitionList))
                 && Objects.equals(ExpressionUtils.emptyIfNull(orderbyList),
@@ -289,6 +304,9 @@ public class WindowExpression extends AbstractExpression {
         }
         if (ignoreNulls != null && ignoreNulls) {
             sb.append(" IGNORE NULLS");
+        }
+        if (aggFilterExpr != null) {
+            sb.append(" FILTER (WHERE ").append(aggFilterExpr).append(')');
         }
         sb.append(" OVER ");
         if (hasWindowVar()) {
@@ -346,7 +364,7 @@ public class WindowExpression extends AbstractExpression {
         ROWS("rows"),
         GROUPS("groups");
 
-        private String text;
+        private final String text;
 
         FrameMode(String text) {
             this.text = text;
@@ -365,7 +383,7 @@ public class WindowExpression extends AbstractExpression {
         BOUNDED_PRECEDING("preceding"),
         BOUNDED_FOLLOWING("following");
 
-        private String text;
+        private final String text;
 
         FrameBoundaryKind(String text) {
             this.text = text;
@@ -383,7 +401,7 @@ public class WindowExpression extends AbstractExpression {
         TIES("ties"),
         NO_OTHERS("no others");
 
-        private String text;
+        private final String text;
 
         FrameExclusionKind(String text) {
             this.text = text;
