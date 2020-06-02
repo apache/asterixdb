@@ -896,11 +896,9 @@ abstract class LangExpressionToPlanTranslator
             if (function == null) {
                 return null;
             }
-            IFunctionInfo finfo =
-                    function.isExternal()
-                            ? ExternalFunctionCompilerUtil
-                                    .getExternalFunctionInfo(metadataProvider.getMetadataTxnContext(), function)
-                            : FunctionUtil.getFunctionInfo(signature);
+            IFunctionInfo finfo = function.isExternal()
+                    ? ExternalFunctionCompilerUtil.getExternalFunctionInfo(metadataProvider, function)
+                    : FunctionUtil.getFunctionInfo(signature);
             AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(finfo, args);
             f.setSourceLocation(sourceLoc);
             return f;

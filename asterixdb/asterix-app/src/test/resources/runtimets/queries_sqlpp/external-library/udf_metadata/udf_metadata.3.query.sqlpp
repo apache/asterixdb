@@ -19,9 +19,9 @@
 
 SELECT object_remove(fn, "Timestamp") as fn
 FROM Metadata.`Function` fn
-WHERE fn.DataverseName = "externallibtest"
+WHERE fn.DataverseName like "externallibtest%"
 UNION ALL
 SELECT object_remove(dt, "Timestamp") as dt
 FROM Metadata.`Datatype` dt
-WHERE dt.DataverseName = "externallibtest"
+WHERE dt.DataverseName like "externallibtest%"
 ORDER BY dt.DatatypeName, fn.Name;

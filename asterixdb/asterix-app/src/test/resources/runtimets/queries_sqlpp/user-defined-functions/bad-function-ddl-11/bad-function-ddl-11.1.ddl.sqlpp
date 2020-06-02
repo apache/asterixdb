@@ -16,5 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-DROP DATAVERSE externallibtest2;
-DROP DATAVERSE externallibtest;
+
+/*
+ * Description  : Parameter type definition is prohibited for inline functions
+ * Expected Res : Error
+ */
+
+drop dataverse experiments if exists;
+create dataverse experiments;
+use experiments;
+
+create function myfn001(a:string) {
+  a
+};

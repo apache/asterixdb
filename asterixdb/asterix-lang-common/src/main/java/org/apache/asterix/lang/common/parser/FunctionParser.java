@@ -46,6 +46,6 @@ public class FunctionParser {
                     function.getLanguage());
         }
         IParser parser = parserFactory.createParser(new StringReader(function.getFunctionBody()));
-        return parser.parseFunctionBody(function.getSignature(), function.getArgNames());
+        return parser.parseFunctionBody(function.getSignature(), function.getParameterNames());
     }
 }

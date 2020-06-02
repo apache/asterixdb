@@ -100,8 +100,6 @@ public class DatasetUtil {
      */
     public static final byte OP_UPSERT = 0x03;
 
-    private static final String DATASET_INLINE_TYPE_PREFIX = "$d$t$";
-
     private DatasetUtil() {
     }
 
@@ -596,12 +594,4 @@ public class DatasetUtil {
         return nodeGroup;
     }
 
-    public static String createInlineTypeName(String datasetName, boolean forMetaItemType) {
-        char typeChar = forMetaItemType ? 'm' : 'i';
-        return DATASET_INLINE_TYPE_PREFIX + typeChar + '$' + datasetName;
-    }
-
-    public static boolean isInlineTypeName(Dataset dataset, DataverseName typeDataverseName, String typeName) {
-        return dataset.getDataverseName().equals(typeDataverseName) && typeName.startsWith(DATASET_INLINE_TYPE_PREFIX);
-    }
 }

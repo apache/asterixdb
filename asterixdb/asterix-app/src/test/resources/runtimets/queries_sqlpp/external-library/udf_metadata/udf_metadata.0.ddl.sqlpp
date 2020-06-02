@@ -21,6 +21,15 @@ CREATE DATAVERSE  externallibtest;
 USE externallibtest;
 
 create type CountryCapitalType if not exists as closed {
-country: string,
-capital: string
+  country: string,
+  capital: string
+};
+
+DROP DATAVERSE externallibtest2 if exists;
+CREATE DATAVERSE  externallibtest2;
+USE externallibtest2;
+
+create type CountryCapitalType2 if not exists as open {
+  country: string,
+  capital: string
 };

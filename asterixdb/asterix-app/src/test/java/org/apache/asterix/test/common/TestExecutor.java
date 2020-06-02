@@ -1196,36 +1196,37 @@ public class TestExecutor {
                             // <library-directory>
                         // TODO: make this case work well with entity names containing spaces by
                         // looking for \"
-                lines = statement.split("\n");
-                String lastLine = lines[lines.length - 1];
-                String[] command = lastLine.trim().split(" ");
-                if (command.length < 2) {
-                    throw new Exception("invalid library format");
-                }
-                String dataverse = command[1];
-                String library = command[2];
-                String username = command[3];
-                String pw = command[4];
-                switch (command[0]) {
-                    case "install":
-                        if (command.length != 6) {
+                lines = stripAllComments(statement).trim().split("\n");
+                for (String line : lines) {
+                    String[] command = line.trim().split(" ");
+                    if (command.length < 2) {
+                        throw new Exception("invalid library command: " + line);
+                    }
+                    String dataverse = command[1];
+                    String library = command[2];
+                    String username = command[3];
+                    String pw = command[4];
+                    switch (command[0]) {
+                        case "install":
+                            if (command.length != 6) {
+                                throw new Exception("invalid library format");
+                            }
+                            String libPath = command[5];
+                            librarian.install(dataverse, library, libPath, new Pair<>(username, pw));
+                            break;
+                        case "uninstall":
+                            if (command.length != 5) {
+                                throw new Exception("invalid library format");
+                            }
+                            librarian.uninstall(dataverse, library, new Pair<>(username, pw));
+                            break;
+                        default:
                             throw new Exception("invalid library format");
-                        }
-                        String libPath = command[5];
-                        librarian.install(dataverse, library, libPath, new Pair(username, pw));
-                        break;
-                    case "uninstall":
-                        if (command.length != 5) {
-                            throw new Exception("invalid library format");
-                        }
-                        librarian.uninstall(dataverse, library, new Pair(username, pw));
-                        break;
-                    default:
-                        throw new Exception("invalid library format");
+                    }
                 }
                 break;
             case "node":
-                command = stripJavaComments(statement).trim().split(" ");
+                String[] command = stripJavaComments(statement).trim().split(" ");
                 String commandType = command[0];
                 String nodeId = command[1];
                 switch (commandType) {

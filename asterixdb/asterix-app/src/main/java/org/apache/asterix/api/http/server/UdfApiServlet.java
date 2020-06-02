@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.app.message.LoadUdfMessage;
+import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -103,6 +104,12 @@ public class UdfApiServlet extends BasicAuthServlet {
 
     @Override
     protected void post(IServletRequest request, IServletResponse response) {
+        IClusterManagementWork.ClusterState clusterState = appCtx.getClusterStateManager().getState();
+        if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
+            response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);
+            return;
+        }
+
         PrintWriter responseWriter = response.writer();
         FullHttpRequest req = request.getHttpRequest();
         Pair<String, DataverseName> resourceNames;
@@ -238,11 +245,11 @@ public class UdfApiServlet extends BasicAuthServlet {
             throws RemoteException, AlgebricksException {
         Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse);
         if (dv == null) {
-            throw new AsterixException(ErrorCode.UNKNOWN_DATAVERSE);
+            throw new AsterixException(ErrorCode.UNKNOWN_DATAVERSE, dataverse);
         }
         Library library = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, dataverse, libraryName);
         if (library == null) {
-            throw new AsterixException(ErrorCode.UNKNOWN_LIBRARY);
+            throw new AsterixException(ErrorCode.UNKNOWN_LIBRARY, libraryName);
         }
         List<Function> functions = MetadataManager.INSTANCE.getDataverseFunctions(mdTxnCtx, dataverse);
         for (Function function : functions) {
@@ -261,6 +268,12 @@ public class UdfApiServlet extends BasicAuthServlet {
 
     @Override
     protected void delete(IServletRequest request, IServletResponse response) {
+        IClusterManagementWork.ClusterState clusterState = appCtx.getClusterStateManager().getState();
+        if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
+            response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);
+            return;
+        }
+
         Pair<String, DataverseName> resourceNames;
         try {
             resourceNames = getResource(request.getHttpRequest());

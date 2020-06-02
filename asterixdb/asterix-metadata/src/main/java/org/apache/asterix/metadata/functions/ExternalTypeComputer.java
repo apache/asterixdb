@@ -22,6 +22,8 @@ import java.util.List;
 
 import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -32,22 +34,23 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class ExternalTypeComputer extends AbstractResultTypeComputer {
 
     private IAType resultType;
-    private List<IAType> argTypes;
+    private List<IAType> paramPrimeTypes;
 
     @Override
     protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
             throws AlgebricksException {
-        IAType reqArgType = argTypes.get(argIndex);
-        if (!type.equals(argTypes.get(argIndex))
-                && !ATypeHierarchy.isCompatible(type.getTypeTag(), reqArgType.getTypeTag())) {
+        IAType reqParamType = paramPrimeTypes.get(argIndex);
+        if (!type.equals(paramPrimeTypes.get(argIndex))
+                && !ATypeHierarchy.isCompatible(type.getTypeTag(), reqParamType.getTypeTag())) {
             throw new TypeMismatchException(sourceLoc, funcId, argIndex, type.getTypeTag(),
-                    argTypes.get(argIndex).getTypeTag());
+                    paramPrimeTypes.get(argIndex).getTypeTag());
         }
     }
 
-    public ExternalTypeComputer(IAType resultType, List<IAType> argTypes) {
-        this.resultType = resultType;
-        this.argTypes = argTypes;
+    public ExternalTypeComputer(IAType resultPrimeType, List<IAType> paramPrimeTypes) {
+        this.resultType = resultPrimeType.getTypeTag() == ATypeTag.ANY ? resultPrimeType
+                : AUnionType.createUnknownableType(resultPrimeType);
+        this.paramPrimeTypes = paramPrimeTypes;
     }
 
     @Override

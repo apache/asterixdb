@@ -19,15 +19,15 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_IS_NULLABLE;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_NAME;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_RETURN_TYPE_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_TYPE;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_VALUE;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DETERMINISTIC_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_LIBRARY_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_NULLCALL_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_PARAMTYPES_FIELD_NAME;
-import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_RETURN_TYPE_IS_NULLABLE;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_WITHPARAM_LIST_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.PROPERTIES_NAME_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.PROPERTIES_VALUE_FIELD_NAME;
@@ -58,13 +58,8 @@ import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.AbstractComplexType;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.utils.NonTaggedFormatUtil;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.om.types.TypeSignature;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -98,7 +93,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         }
     }
 
-    protected Function createMetadataEntityFromARecord(ARecord functionRecord) throws AlgebricksException {
+    protected Function createMetadataEntityFromARecord(ARecord functionRecord) {
         String dataverseCanonicalName =
                 ((AString) functionRecord.getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_DATAVERSENAME_FIELD_INDEX))
                         .getStringValue();
@@ -109,19 +104,19 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         int arity = Integer.parseInt(((AString) functionRecord
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_ARITY_FIELD_INDEX)).getStringValue());
 
-        IACursor argCursor = ((AOrderedList) functionRecord
+        IACursor paramNameCursor = ((AOrderedList) functionRecord
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_PARAM_LIST_FIELD_INDEX)).getCursor();
-        List<String> argNames = new ArrayList<>();
-        while (argCursor.next()) {
-            argNames.add(((AString) argCursor.get()).getStringValue());
+        List<String> paramNames = new ArrayList<>();
+        while (paramNameCursor.next()) {
+            paramNames.add(((AString) paramNameCursor.get()).getStringValue());
         }
 
-        List<IAType> argTypes = getArgTypes(functionRecord, dataverseName, arity);
+        List<TypeSignature> paramTypes = getParamTypes(functionRecord, arity, dataverseName);
 
         String returnTypeName = ((AString) functionRecord
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_RETURN_TYPE_FIELD_INDEX)).getStringValue();
-        Boolean returnTypeIsNullable = getBoolean(functionRecord, FUNCTION_ARECORD_FUNCTION_RETURN_TYPE_IS_NULLABLE);
-        IAType returnType = resolveType(dataverseName, returnTypeName, returnTypeIsNullable);
+        String returnTypeDataverseNameCanonical = getString(functionRecord, FIELD_NAME_RETURN_TYPE_DATAVERSE_NAME);
+        TypeSignature returnType = getTypeSignature(returnTypeName, returnTypeDataverseNameCanonical, dataverseName);
 
         String definition = ((AString) functionRecord
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEFINITION_FIELD_INDEX)).getStringValue();
@@ -134,7 +129,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         Boolean nullCall = getBoolean(functionRecord, FUNCTION_ARECORD_FUNCTION_NULLCALL_FIELD_NAME);
         Boolean deterministic = getBoolean(functionRecord, FUNCTION_ARECORD_FUNCTION_DETERMINISTIC_FIELD_NAME);
 
-        Map<String, String> params = getWithParameters(functionRecord);
+        Map<String, String> resources = getResources(functionRecord);
 
         IACursor dependenciesCursor = ((AOrderedList) functionRecord
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEPENDENCIES_FIELD_INDEX)).getCursor();
@@ -152,23 +147,12 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
 
         FunctionSignature signature = new FunctionSignature(dataverseName, functionName, arity);
 
-        return new Function(signature, argNames, argTypes, returnType, definition, functionKind, language,
-                functionLibrary, nullCall, deterministic, params, dependencies);
+        return new Function(signature, paramNames, paramTypes, returnType, definition, functionKind, language,
+                functionLibrary, nullCall, deterministic, resources, dependencies);
     }
 
-    private IAType resolveType(DataverseName dataverseName, String typeName, Boolean isUnknownable)
-            throws AlgebricksException {
-        //TODO(dmitry): revisit "isNullable"/"isMissable" for function paramters
-        return BuiltinType.ANY.getTypeName().equalsIgnoreCase(typeName) ? BuiltinType.ANY
-                : TypeUtil.createQuantifiedType(
-                        BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName), isUnknownable,
-                        isUnknownable);
-    }
-
-    private List<IAType> getArgTypes(ARecord functionRecord, DataverseName dataverseName, int arity)
-            throws AlgebricksException {
-        List<IAType> argTypes = new ArrayList<>(arity);
-
+    private List<TypeSignature> getParamTypes(ARecord functionRecord, int arity, DataverseName functionDataverseName) {
+        List<TypeSignature> paramTypes = new ArrayList<>(arity);
         ARecordType functionRecordType = functionRecord.getType();
         int paramTypesFieldIdx = functionRecordType.getFieldIndex(FUNCTION_ARECORD_FUNCTION_PARAMTYPES_FIELD_NAME);
         if (paramTypesFieldIdx >= 0) {
@@ -176,17 +160,31 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
             while (cursor.next()) {
                 ARecord paramTypeRecord = (ARecord) cursor.get();
                 String paramTypeName = getString(paramTypeRecord, FIELD_NAME_TYPE);
-                Boolean paramTypeIsNullable = getBoolean(paramTypeRecord, FIELD_NAME_IS_NULLABLE);
-                IAType paramType = paramTypeName != null
-                        ? resolveType(dataverseName, paramTypeName, paramTypeIsNullable) : BuiltinType.ANY;
-                argTypes.add(paramType);
+                String paramTypeDataverseNameCanonical = getString(paramTypeRecord, FIELD_NAME_DATAVERSE_NAME);
+                TypeSignature paramType =
+                        getTypeSignature(paramTypeName, paramTypeDataverseNameCanonical, functionDataverseName);
+                paramTypes.add(paramType);
             }
         } else {
             for (int i = 0; i < arity; i++) {
-                argTypes.add(BuiltinType.ANY);
+                paramTypes.add(TypeUtil.ANY_TYPE_SIGNATURE);
             }
         }
-        return argTypes;
+        return paramTypes;
+    }
+
+    private TypeSignature getTypeSignature(String typeName, String typeDataverseNameCanonical,
+            DataverseName functionDataverseName) {
+        if (BuiltinType.ANY.getTypeName().equals(typeName)) {
+            return TypeUtil.ANY_TYPE_SIGNATURE;
+        }
+        BuiltinType builtinType = BuiltinTypeMap.getBuiltinType(typeName);
+        if (builtinType != null) {
+            return new TypeSignature(builtinType);
+        }
+        DataverseName typeDataverseName = typeDataverseNameCanonical == null ? functionDataverseName
+                : DataverseName.createFromCanonicalForm(typeDataverseNameCanonical);
+        return new TypeSignature(typeDataverseName, typeName);
     }
 
     private Triple<DataverseName, String, String> getDependency(AOrderedList dependencySubnames) {
@@ -203,7 +201,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         return new Triple<>(dataverseName, second, third);
     }
 
-    private Map<String, String> getWithParameters(ARecord functionRecord) {
+    private Map<String, String> getResources(ARecord functionRecord) {
         Map<String, String> adaptorConfiguration = new HashMap<>();
         final ARecordType functionType = functionRecord.getType();
         final int functionLibraryIdx = functionType.getFieldIndex(FUNCTION_ARECORD_FUNCTION_WITHPARAM_LIST_NAME);
@@ -278,7 +276,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         listBuilder.reset((AOrderedListType) MetadataRecordTypes.FUNCTION_RECORDTYPE
                 .getFieldTypes()[MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_PARAM_LIST_FIELD_INDEX]);
-        for (String p : function.getArgNames()) {
+        for (String p : function.getParameterNames()) {
             itemValue.reset();
             aString.setValue(p);
             stringSerde.serialize(aString, itemValue.getDataOutput());
@@ -288,17 +286,10 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         listBuilder.write(fieldValue.getDataOutput(), true);
         recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_PARAM_LIST_FIELD_INDEX, fieldValue);
 
-        IAType returnType = function.getReturnType();
-        boolean returnTypeIsUnknownable = NonTaggedFormatUtil.isOptional(returnType);
-        IAType returnPrimeType = returnTypeIsUnknownable ? ((AUnionType) returnType).getActualType() : returnType;
-        if (returnPrimeType.getTypeTag().isDerivedType()) {
-            handleNestedDerivedType(dataverseName, returnPrimeType.getTypeName(),
-                    (AbstractComplexType) returnPrimeType);
-        }
-
         // write field 4
+        // Note: return type's dataverse name is written later in the open part
         fieldValue.reset();
-        aString.setValue(returnPrimeType.getTypeName());
+        aString.setValue(function.getReturnType().getName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_RETURN_TYPE_FIELD_INDEX, fieldValue);
 
@@ -347,7 +338,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         dependenciesListBuilder.write(fieldValue.getDataOutput(), true);
         recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEPENDENCIES_FIELD_INDEX, fieldValue);
 
-        writeOpenFields(function, returnPrimeType, returnTypeIsUnknownable);
+        writeOpenFields(function);
 
         // write record
         recordBuilder.write(tupleBuilder.getDataOutput(), true);
@@ -357,18 +348,17 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         return tuple;
     }
 
-    protected void writeOpenFields(Function function, IAType returnPrimeType, boolean returnTypeIsUnknownable)
-            throws HyracksDataException {
-        writeReturnTypeIsNullable(returnPrimeType, returnTypeIsUnknownable);
-        writeArgTypes(function);
-        writeWithParameters(function);
+    protected void writeOpenFields(Function function) throws HyracksDataException {
+        writeReturnTypeDataverseName(function);
+        writeParameterTypes(function);
+        writeResources(function);
         writeLibrary(function);
         writeNullCall(function);
         writeDeterministic(function);
     }
 
-    protected void writeWithParameters(Function function) throws HyracksDataException {
-        Map<String, String> withParams = function.getParams();
+    protected void writeResources(Function function) throws HyracksDataException {
+        Map<String, String> withParams = function.getResources();
         if (withParams == null || withParams.isEmpty()) {
             return;
         }
@@ -391,19 +381,14 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         recordBuilder.addField(fieldName, fieldValue);
     }
 
-    protected void writeArgTypes(Function function) throws HyracksDataException {
-        DataverseName dataverseName = function.getDataverseName();
+    protected void writeParameterTypes(Function function) throws HyracksDataException {
         OrderedListBuilder listBuilder = new OrderedListBuilder();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         listBuilder.reset(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
-        for (IAType argType : function.getArgTypes()) {
-            boolean argTypeIsUnknownable = NonTaggedFormatUtil.isOptional(argType);
-            IAType argPrimeType = argTypeIsUnknownable ? ((AUnionType) argType).getActualType() : argType;
-            if (argPrimeType.getTypeTag().isDerivedType()) {
-                handleNestedDerivedType(dataverseName, argPrimeType.getTypeName(), (AbstractComplexType) argPrimeType);
-            }
+        for (TypeSignature paramType : function.getParameterTypes()) {
             itemValue.reset();
-            writeTypeRecord(argPrimeType, argTypeIsUnknownable, itemValue.getDataOutput());
+            writeTypeRecord(paramType.getDataverseName(), paramType.getName(), function.getDataverseName(),
+                    itemValue.getDataOutput());
             listBuilder.addItem(itemValue);
         }
         fieldValue.reset();
@@ -429,14 +414,17 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         recordBuilder.addField(fieldName, fieldValue);
     }
 
-    protected void writeReturnTypeIsNullable(IAType returnPrimeType, boolean returnTypeIsUnknownable)
-            throws HyracksDataException {
-        if (returnPrimeType.getTypeTag() != ATypeTag.ANY) {
+    protected void writeReturnTypeDataverseName(Function function) throws HyracksDataException {
+        DataverseName returnTypeDataverseName = function.getReturnType().getDataverseName();
+        boolean skipReturnTypeDataverseName =
+                returnTypeDataverseName == null || returnTypeDataverseName.equals(function.getDataverseName());
+        if (!skipReturnTypeDataverseName) {
             fieldName.reset();
-            aString.setValue(FUNCTION_ARECORD_FUNCTION_RETURN_TYPE_IS_NULLABLE);
+            aString.setValue(FIELD_NAME_RETURN_TYPE_DATAVERSE_NAME);
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
-            booleanSerde.serialize(ABoolean.valueOf(returnTypeIsUnknownable), fieldValue.getDataOutput());
+            aString.setValue(returnTypeDataverseName.getCanonicalForm());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
             recordBuilder.addField(fieldName, fieldValue);
         }
     }
@@ -492,7 +480,8 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         propertyRecordBuilder.write(out, true);
     }
 
-    public void writeTypeRecord(IAType primeType, boolean isUnknownable, DataOutput out) throws HyracksDataException {
+    public void writeTypeRecord(DataverseName typeDataverseName, String typeName, DataverseName functionDataverseName,
+            DataOutput out) throws HyracksDataException {
         IARecordBuilder propertyRecordBuilder = new RecordBuilder();
         propertyRecordBuilder.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
 
@@ -501,17 +490,19 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         aString.setValue(FIELD_NAME_TYPE);
         stringSerde.serialize(aString, fieldName.getDataOutput());
         fieldValue.reset();
-        aString.setValue(primeType.getTypeName());
+        aString.setValue(typeName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         propertyRecordBuilder.addField(fieldName, fieldValue);
 
-        // write field "IsNullable"
-        if (primeType.getTypeTag() != ATypeTag.ANY) {
+        // write field "DataverseName"
+        boolean skipTypeDataverseName = typeDataverseName == null || typeDataverseName.equals(functionDataverseName);
+        if (!skipTypeDataverseName) {
             fieldName.reset();
-            aString.setValue(FIELD_NAME_IS_NULLABLE);
+            aString.setValue(FIELD_NAME_DATAVERSE_NAME);
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
-            booleanSerde.serialize(ABoolean.valueOf(isUnknownable), fieldValue.getDataOutput());
+            aString.setValue(typeDataverseName.getCanonicalForm());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
             propertyRecordBuilder.addField(fieldName, fieldValue);
         }
 

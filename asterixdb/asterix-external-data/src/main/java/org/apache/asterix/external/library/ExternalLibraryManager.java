@@ -55,7 +55,7 @@ public class ExternalLibraryManager implements ILibraryManager {
     }
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final Map<Pair<DataverseName, String>, ILibrary> libraries = Collections.synchronizedMap(new HashMap());
+    private final Map<Pair<DataverseName, String>, ILibrary> libraries = Collections.synchronizedMap(new HashMap<>());
     private final IPersistedResourceRegistry reg;
 
     public ExternalLibraryManager(File appDir, IPersistedResourceRegistry reg) {
@@ -86,13 +86,13 @@ public class ExternalLibraryManager implements ILibraryManager {
     @Override
     public void deregister(DataverseName dataverseName, String libraryName) {
         Pair<DataverseName, String> key = getKey(dataverseName, libraryName);
-        ILibrary cl = libraries.get(key);
+        ILibrary cl = libraries.remove(key);
         if (cl != null) {
             cl.close();
-            libraries.remove(key);
         }
     }
 
+    @Override
     public void setUpDeployedLibrary(String libraryPath) throws IOException, AsterixException {
         // get the installed library dirs
         String[] parts = libraryPath.split(File.separator);

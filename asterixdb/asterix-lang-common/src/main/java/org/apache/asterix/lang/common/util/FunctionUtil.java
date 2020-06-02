@@ -19,10 +19,9 @@
 
 package org.apache.asterix.lang.common.util;
 
-import static org.apache.asterix.common.functions.FunctionConstants.ASTERIX_DV;
-
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -35,7 +34,6 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.expression.CallExpr;
-import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
@@ -48,6 +46,8 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.TypeSignature;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -85,32 +85,30 @@ public class FunctionUtil {
         return fi;
     }
 
-    public static Pair<DataverseName, String> getDependencyFromParameterType(IndexedTypeExpression parameterType,
-            DataverseName defaultDataverse) {
-        Pair<DataverseName, String> typeName =
-                FunctionUtil.extractNestedTypeName(parameterType.getType(), defaultDataverse);
-        return typeName == null || ASTERIX_DV.equals(typeName.getFirst()) ? null : typeName;
-    }
-
-    private static Pair<DataverseName, String> extractNestedTypeName(TypeExpression typeExpr,
+    public static TypeSignature getTypeDependencyFromFunctionParameter(TypeExpression typeExpr,
             DataverseName defaultDataverse) {
         switch (typeExpr.getTypeKind()) {
             case ORDEREDLIST:
-                return extractNestedTypeName(((OrderedListTypeDefinition) typeExpr).getItemTypeExpression(),
-                        defaultDataverse);
+                return getTypeDependencyFromFunctionParameter(
+                        ((OrderedListTypeDefinition) typeExpr).getItemTypeExpression(), defaultDataverse);
             case UNORDEREDLIST:
-                return extractNestedTypeName(((UnorderedListTypeDefinition) typeExpr).getItemTypeExpression(),
-                        defaultDataverse);
-            case RECORD:
-                break;
+                return getTypeDependencyFromFunctionParameter(
+                        ((UnorderedListTypeDefinition) typeExpr).getItemTypeExpression(), defaultDataverse);
             case TYPEREFERENCE:
                 TypeReferenceExpression typeRef = ((TypeReferenceExpression) typeExpr);
                 String typeName = typeRef.getIdent().getSecond().toString();
-                DataverseName typeDv = BuiltinTypeMap.getBuiltinType(typeName) != null ? ASTERIX_DV
-                        : typeRef.getIdent().getFirst() != null ? typeRef.getIdent().getFirst() : defaultDataverse;
-                return new Pair<>(typeDv, typeName);
+                BuiltinType builtinType = BuiltinTypeMap.getBuiltinType(typeName);
+                if (builtinType != null) {
+                    return null;
+                }
+                DataverseName typeDataverseName =
+                        typeRef.getIdent().getFirst() != null ? typeRef.getIdent().getFirst() : defaultDataverse;
+                return new TypeSignature(typeDataverseName, typeName);
+            case RECORD:
+                throw new IllegalArgumentException();
+            default:
+                throw new IllegalStateException();
         }
-        return null;
     }
 
     @FunctionalInterface
@@ -218,13 +216,13 @@ public class FunctionUtil {
     }
 
     public static List<List<Triple<DataverseName, String, String>>> getFunctionDependencies(IQueryRewriter rewriter,
-            Expression expression, MetadataProvider metadataProvider, Collection<Pair<DataverseName, String>> argTypes)
+            Expression expression, MetadataProvider metadataProvider, Collection<TypeSignature> dependentTypes)
             throws CompilationException {
         Set<CallExpr> functionCalls = rewriter.getFunctionCalls(expression);
         //Get the List of used functions and used datasets
         List<Triple<DataverseName, String, String>> datasourceDependencies = new ArrayList<>();
         List<Triple<DataverseName, String, String>> functionDependencies = new ArrayList<>();
-        List<Triple<DataverseName, String, String>> typeDependencies = new ArrayList<>();
+        List<Triple<DataverseName, String, String>> typeDependencies = new ArrayList<>(dependentTypes.size());
         for (CallExpr functionCall : functionCalls) {
             FunctionSignature signature = functionCall.getFunctionSignature();
             if (isBuiltinDatasetFunction(signature)) {
@@ -237,8 +235,8 @@ public class FunctionUtil {
                         Integer.toString(signature.getArity())));
             }
         }
-        for (Pair<DataverseName, String> t : argTypes) {
-            typeDependencies.add(new Triple<>(t.getFirst(), t.getSecond(), null));
+        for (TypeSignature t : dependentTypes) {
+            typeDependencies.add(new Triple<>(t.getDataverseName(), t.getName(), null));
         }
         List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>(3);
         dependencies.add(datasourceDependencies);
@@ -248,12 +246,12 @@ public class FunctionUtil {
     }
 
     public static List<List<Triple<DataverseName, String, String>>> getExternalFunctionDependencies(
-            Collection<Pair<DataverseName, String>> argTypes) {
-        List<Triple<DataverseName, String, String>> datasourceDependencies = new ArrayList<>();
-        List<Triple<DataverseName, String, String>> functionDependencies = new ArrayList<>();
-        List<Triple<DataverseName, String, String>> typeDependencies = new ArrayList<>();
-        for (Pair<DataverseName, String> t : argTypes) {
-            typeDependencies.add(new Triple<>(t.getFirst(), t.getSecond(), null));
+            Collection<TypeSignature> dependentTypes) {
+        List<Triple<DataverseName, String, String>> datasourceDependencies = Collections.emptyList();
+        List<Triple<DataverseName, String, String>> functionDependencies = Collections.emptyList();
+        List<Triple<DataverseName, String, String>> typeDependencies = new ArrayList<>(dependentTypes.size());
+        for (TypeSignature t : dependentTypes) {
+            typeDependencies.add(new Triple<>(t.getDataverseName(), t.getName(), null));
         }
         List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>(3);
         dependencies.add(datasourceDependencies);

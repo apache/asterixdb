@@ -16,5 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-DROP DATAVERSE externallibtest2;
-DROP DATAVERSE externallibtest;
+
+/*
+ * Description  : Reserved type name
+ * Expected Res : Error
+ */
+
+drop dataverse experiments if exists;
+create dataverse experiments;
+use experiments;
+
+create type `$x` as {
+  c : string
+};

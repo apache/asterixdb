@@ -81,14 +81,13 @@ public class BuiltinTypeMap {
     }
 
     private BuiltinTypeMap() {
-
     }
 
-    public static IAType getBuiltinType(String typeName) {
+    public static BuiltinType getBuiltinType(String typeName) {
         return _builtinTypeMap.get(typeName.toLowerCase());
     }
 
-    public static Set<IAType> getAllBuiltinTypes() {
+    public static Set<BuiltinType> getAllBuiltinTypes() {
         return new HashSet<>(_builtinTypeMap.values());
     }
 

@@ -546,6 +546,21 @@ class SQLPPParser extends ScopeChecker implements IParser {
             warningCollector.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.UNEXPECTED_HINT, actualHint, expectedHints));
         }
     }
+
+    private void ensureNoTypeDeclsInFunction(String fnName, List<Pair<VarIdentifier, TypeExpression>> paramList,
+      TypeExpression returnType, Token startToken) throws SqlppParseException {
+      for (Pair<VarIdentifier, TypeExpression> p : paramList) {
+        if (p.second != null) {
+          String paramName = SqlppVariableUtil.toUserDefinedName(p.first.getValue());
+          throw new SqlppParseException(getSourceLocation(startToken),
+            "Unexpected type declaration for parameter " + paramName + " in function " + fnName);
+        }
+      }
+      if (returnType != null) {
+        throw new SqlppParseException(getSourceLocation(startToken),
+          "Unexpected return type declaration for function " + fnName);
+      }
+    }
 }
 
 PARSER_END(SQLPPParser)
@@ -1144,14 +1159,14 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
   Token endPos;
   FunctionName fctName = null;
   DataverseName currentDataverse = defaultDataverse;
-  IndexedTypeExpression returnType = null;
+  TypeExpression returnType = null;
   boolean deterministic = false;
   boolean nullCall = false;
   String lang = null;
   String libName ="";
   String externalIdent = "";
   List<String> externalIdentList = null;
-  List<Pair<VarIdentifier,IndexedTypeExpression>> args = null;
+  List<Pair<VarIdentifier,TypeExpression>> params = null;
   RecordConstructor resources = null;
 }
 {
@@ -1160,7 +1175,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
      defaultDataverse = fctName.dataverse;
   }
   ifNotExists = IfNotExists()
-  args = FunctionParameters()
+  params = FunctionParameters()
   returnType = FunctionReturnType()
   (
     (
@@ -1173,11 +1188,12 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
       <RIGHTBRACE>{
           endPos = token;
           functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
-          signature = new FunctionSignature(fctName.dataverse, fctName.function, args.size());
+          signature = new FunctionSignature(fctName.dataverse, fctName.function, params.size());
           getCurrentScope().addFunctionDescriptor(signature, false);
           removeCurrentScope();
           defaultDataverse = currentDataverse;
-          CreateFunctionStatement stmt = new CreateFunctionStatement(signature, args, returnType, functionBody, functionBodyExpr, ifNotExists);
+          ensureNoTypeDeclsInFunction(fctName.function, params, returnType, startStmtToken);
+          CreateFunctionStatement stmt = new CreateFunctionStatement(signature, params, functionBody, functionBodyExpr, ifNotExists);
           return addSourceLocation(stmt, startStmtToken);
         }
     )
@@ -1195,11 +1211,12 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
               {
                   endPos = token;
                   functionBody = extractFragment(beginPos.endLine, beginPos.beginColumn+1, endPos.endLine, endPos.endColumn+1);
-                  signature = new FunctionSignature(fctName.dataverse, fctName.function, args.size());
+                  signature = new FunctionSignature(fctName.dataverse, fctName.function, params.size());
                   getCurrentScope().addFunctionDescriptor(signature, false);
                   removeCurrentScope();
                   defaultDataverse = currentDataverse;
-                  CreateFunctionStatement stmt = new CreateFunctionStatement(signature, args, returnType, functionBody, functionBodyExpr, ifNotExists);
+                  ensureNoTypeDeclsInFunction(fctName.function, params, returnType, startStmtToken);
+                  CreateFunctionStatement stmt = new CreateFunctionStatement(signature, params, functionBody, functionBodyExpr, ifNotExists);
                   return addSourceLocation(stmt, startStmtToken);
               }
         )
@@ -1213,12 +1230,12 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
               ( <COMMA>  externalIdent = ConstantString() { externalIdentList.add(externalIdent); } )+
               (<WITH> resources = RecordConstructor())?
               {
-                  signature = new FunctionSignature(fctName.dataverse, fctName.function, args.size());
+                  signature = new FunctionSignature(fctName.dataverse, fctName.function, params.size());
                   defaultDataverse = currentDataverse;
                   CreateFunctionStatement stmt = null;
                   try{
                       stmt =
-                      new CreateFunctionStatement(signature, args, returnType, deterministic, nullCall,
+                      new CreateFunctionStatement(signature, params, returnType, deterministic, nullCall,
                                                    lang, libName, externalIdentList, resources,  ifNotExists);
                   } catch (AlgebricksException e) {
                       throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
@@ -1230,9 +1247,9 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
   )
 }
 
-List<Pair<VarIdentifier,IndexedTypeExpression>> FunctionParameters() :
+List<Pair<VarIdentifier,TypeExpression>> FunctionParameters() :
 {
-  List<Pair<VarIdentifier,IndexedTypeExpression>> paramList = Collections.<Pair<VarIdentifier,IndexedTypeExpression>>emptyList();
+  List<Pair<VarIdentifier,TypeExpression>> paramList = Collections.<Pair<VarIdentifier,TypeExpression>>emptyList();
 }
 {
   <LEFTPAREN> (paramList = FunctionParameterList())? <RIGHTPAREN>
@@ -1241,33 +1258,38 @@ List<Pair<VarIdentifier,IndexedTypeExpression>> FunctionParameters() :
   }
 }
 
-List<Pair<VarIdentifier,IndexedTypeExpression>> FunctionParameterList() :
+List<Pair<VarIdentifier,TypeExpression>> FunctionParameterList() :
 {
-    List<Pair<VarIdentifier,IndexedTypeExpression>> paramList = new ArrayList<Pair<VarIdentifier,IndexedTypeExpression>>();
-    Pair<VarIdentifier,IndexedTypeExpression> varPair = new Pair<VarIdentifier,IndexedTypeExpression>(null,null);
-    String var = null;
-    IndexedTypeExpression type = null;
+  List<Pair<VarIdentifier,TypeExpression>> paramList = new ArrayList<Pair<VarIdentifier,TypeExpression>>();
+  Pair<VarIdentifier,TypeExpression> param = null;
 }
 {
-    var = VariableIdentifier() {
-        varPair.setFirst(new VarIdentifier(var));
-        paramList.add(varPair);
-    } (LOOKAHEAD(3)(<COLON>)? type = IndexedTypeExpr() {varPair.setSecond(type);} )? (<COMMA> var = VariableIdentifier() {
-        varPair = new Pair<VarIdentifier,IndexedTypeExpression>(null,null);
-        varPair.setFirst(new VarIdentifier(var));
-        paramList.add(varPair);
-    } (LOOKAHEAD(3)(<COLON>)? type = IndexedTypeExpr() {varPair.setSecond(type);})?)*
-    {
-        return paramList;
-    }
+  param = FunctionParameter() { paramList.add(param); }
+  ( <COMMA> param = FunctionParameter() { paramList.add(param); } )*
+  {
+    return paramList;
+  }
 }
 
-IndexedTypeExpression FunctionReturnType() throws ParseException:
+Pair<VarIdentifier,TypeExpression> FunctionParameter() throws ParseException:
 {
-  IndexedTypeExpression returnType = null;
+  String name = null;
+  TypeExpression type = null;
 }
 {
-  ( LOOKAHEAD({laIdentifier(RETURNS)}) <IDENTIFIER> returnType = IndexedTypeExpr() )?
+  name = VariableIdentifier()
+  ( LOOKAHEAD(3) (<COLON>)? type = TypeExpr(false) )?
+  {
+    return new Pair<VarIdentifier,TypeExpression>(new VarIdentifier(name), type);
+  }
+}
+
+TypeExpression FunctionReturnType() throws ParseException:
+{
+  TypeExpression returnType = null;
+}
+{
+  ( LOOKAHEAD({laIdentifier(RETURNS)}) <IDENTIFIER> returnType = TypeExpr(false) )?
   {
     return returnType;
   }
@@ -2124,27 +2146,27 @@ IndexedTypeExpression IndexedTypeExpr() throws ParseException:
   boolean isUnknownable = false;
 }
 {
-  (
-      typeExpr = TypeReference()
-    | typeExpr = OrderedListTypeDef()
-    | typeExpr = UnorderedListTypeDef()
-  )
+  typeExpr = TypeExpr(false)
   ( <QUES> { isUnknownable = true; } )?
   {
     return new IndexedTypeExpression(typeExpr, isUnknownable);
   }
 }
 
-TypeExpression TypeExpr() throws ParseException:
+TypeExpression TypeExpr(boolean allowRecordTypeDef) throws ParseException:
 {
   TypeExpression typeExpr = null;
 }
 {
   (
-      typeExpr = RecordTypeDef()
-    | typeExpr = TypeReference()
-    | typeExpr = OrderedListTypeDef()
-    | typeExpr = UnorderedListTypeDef()
+    typeExpr = TypeReference()
+    | typeExpr = OrderedListTypeDef(allowRecordTypeDef)
+    | typeExpr = UnorderedListTypeDef(allowRecordTypeDef)
+    | typeExpr = RecordTypeDef() {
+      if (!allowRecordTypeDef) {
+        throw new SqlppParseException(typeExpr.getSourceLocation(), "Unexpected record type declaration");
+      }
+    }
   )
   {
     return typeExpr;
@@ -2218,7 +2240,7 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
         SqlppHint.DATE_BETWEEN_YEARS_HINT, SqlppHint.DATETIME_ADD_RAND_HOURS_HINT, SqlppHint.AUTO_HINT);
       IRecordFieldDataGen rfdg = hintToken != null ? parseFieldDataGen(hintToken) : null;
     }
-  <COLON> type = TypeExpr() ( <QUES> { nullable = true; missable = true; } )?
+  <COLON> type = TypeExpr(true) ( <QUES> { nullable = true; missable = true; } )?
     {
       recType.addField(fieldName, type, nullable, missable, rfdg);
     }
@@ -2240,14 +2262,14 @@ TypeReferenceExpression TypeReference() throws ParseException:
   }
 }
 
-OrderedListTypeDefinition OrderedListTypeDef() throws ParseException:
+OrderedListTypeDefinition OrderedListTypeDef(boolean allowRecordTypeDef) throws ParseException:
 {
   Token startToken = null;
   TypeExpression type = null;
 }
 {
   <LEFTBRACKET> { startToken = token; }
-    ( type = TypeExpr() )
+    ( type = TypeExpr(allowRecordTypeDef) )
   <RIGHTBRACKET>
   {
     OrderedListTypeDefinition typeDef = new OrderedListTypeDefinition(type);
@@ -2255,14 +2277,14 @@ OrderedListTypeDefinition OrderedListTypeDef() throws ParseException:
   }
 }
 
-UnorderedListTypeDefinition UnorderedListTypeDef() throws ParseException:
+UnorderedListTypeDefinition UnorderedListTypeDef(boolean allowRecordTypeDef) throws ParseException:
 {
   Token startToken = null;
   TypeExpression type = null;
 }
 {
   <LEFTDBLBRACE> { startToken = token; }
-    ( type =  TypeExpr() )
+    ( type = TypeExpr(allowRecordTypeDef) )
   <RIGHTDBLBRACE>
   {
     UnorderedListTypeDefinition typeDef = new UnorderedListTypeDefinition(type);
@@ -2498,8 +2520,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
 {
   Token startToken = null;
   String functionName;
-  List<Pair<VarIdentifier,IndexedTypeExpression>> paramList = Collections.<Pair<VarIdentifier,IndexedTypeExpression>>emptyList();;
-  List<VarIdentifier> paramVarOnly = new ArrayList<VarIdentifier>();
+  List<Pair<VarIdentifier,TypeExpression>> paramList;
   Expression funcBody;
   createNewScope();
 }
@@ -2513,10 +2534,12 @@ FunctionDecl FunctionDeclaration() throws ParseException:
   {
     FunctionSignature signature = new FunctionSignature(defaultDataverse, functionName, paramList.size());
     getCurrentScope().addFunctionDescriptor(signature, false);
-    for(Pair<VarIdentifier,IndexedTypeExpression> p: paramList){
-        paramVarOnly.add(p.getFirst());
+    ensureNoTypeDeclsInFunction(functionName, paramList, null, startToken);
+    List<VarIdentifier> params = new ArrayList<VarIdentifier>(paramList.size());
+    for (Pair<VarIdentifier,TypeExpression> p: paramList) {
+        params.add(p.getFirst());
     }
-    FunctionDecl stmt = new FunctionDecl(signature, paramVarOnly, funcBody);
+    FunctionDecl stmt = new FunctionDecl(signature, params, funcBody);
     removeCurrentScope();
     return addSourceLocation(stmt, startToken);
   }

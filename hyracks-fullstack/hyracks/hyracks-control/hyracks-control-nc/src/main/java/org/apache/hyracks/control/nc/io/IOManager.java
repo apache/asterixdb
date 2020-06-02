@@ -81,7 +81,7 @@ public class IOManager implements IIOManager {
         for (IODeviceHandle d : ioDevices) {
             if (d.getWorkspace() != null) {
                 try {
-                    FileUtil.forceMkdirs(new File(d.getMount(), d.getWorkspace()));
+                    FileUtil.forceMkdirs(getWorkspaceFolder(d));
                 } catch (IOException e) {
                     throw HyracksDataException.create(e);
                 }
@@ -346,8 +346,13 @@ public class IOManager implements IIOManager {
         return dev.createFileRef(waPath + File.separator + waf.getName());
     }
 
-    public String getWorkspacePath(int index) {
-        return workspaces.get(index) != null ? workspaces.get(index).getWorkspace() : null;
+    public File getWorkspacePath(int index) {
+        IODeviceHandle dev = workspaces.get(index);
+        return dev != null ? getWorkspaceFolder(dev) : null;
+    }
+
+    private File getWorkspaceFolder(IODeviceHandle dev) {
+        return new File(dev.getMount(), dev.getWorkspace());
     }
 
     @Override
@@ -367,7 +372,7 @@ public class IOManager implements IIOManager {
     @Override
     public void deleteWorkspaceFiles() throws HyracksDataException {
         for (IODeviceHandle ioDevice : workspaces) {
-            File workspaceFolder = new File(ioDevice.getMount(), ioDevice.getWorkspace());
+            File workspaceFolder = getWorkspaceFolder(ioDevice);
             if (workspaceFolder.exists() && workspaceFolder.isDirectory()) {
                 File[] workspaceFiles = workspaceFolder.listFiles(WORKSPACE_FILES_FILTER);
                 for (File workspaceFile : workspaceFiles) {
