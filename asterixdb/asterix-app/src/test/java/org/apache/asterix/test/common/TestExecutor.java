@@ -19,6 +19,7 @@
 package org.apache.asterix.test.common;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.hyracks.util.NetworkUtil.toHostPort;
 import static org.apache.hyracks.util.file.FileUtil.canonicalize;
 
 import java.io.BufferedReader;
@@ -1739,8 +1740,7 @@ public class TestExecutor {
 
     protected InputStream executeHttp(String ctxType, String endpoint, OutputFormat fmt, List<Parameter> params,
             Predicate<Integer> statusCodePredicate, Optional<String> body, ContentType contentType) throws Exception {
-        String[] split = endpoint.split("\\?");
-        URI uri = createEndpointURI(split[0], split.length > 1 ? split[1] : null);
+        URI uri = createEndpointURI(endpoint);
         return executeURI(ctxType, uri, fmt, params, statusCodePredicate, body, contentType);
     }
 
@@ -1757,7 +1757,7 @@ public class TestExecutor {
         //get node process id
         OutputFormat fmt = OutputFormat.CLEAN_JSON;
         String endpoint = "/admin/cluster/node/" + nodeId + "/config";
-        InputStream executeJSONGet = executeJSONGet(fmt, createEndpointURI(endpoint, null));
+        InputStream executeJSONGet = executeJSONGet(fmt, createEndpointURI(endpoint));
         StringWriter actual = new StringWriter();
         IOUtils.copy(executeJSONGet, actual, UTF_8);
         String config = actual.toString();
@@ -1787,7 +1787,7 @@ public class TestExecutor {
     private void deleteNCTxnLogs(String nodeId, CompilationUnit cUnit) throws Exception {
         OutputFormat fmt = OutputFormat.forCompilationUnit(cUnit);
         String endpoint = "/admin/cluster/node/" + nodeId + "/config";
-        InputStream executeJSONGet = executeJSONGet(fmt, createEndpointURI(endpoint, null));
+        InputStream executeJSONGet = executeJSONGet(fmt, createEndpointURI(endpoint));
         StringWriter actual = new StringWriter();
         IOUtils.copy(executeJSONGet, actual, UTF_8);
         String config = actual.toString();
@@ -1938,17 +1938,17 @@ public class TestExecutor {
                         + cUnit.getName() + "_qbc.adm");
     }
 
-    protected URI createEndpointURI(String path, String query) throws URISyntaxException {
+    protected URI createEndpointURI(String pathAndQuery) throws URISyntaxException {
         InetSocketAddress endpoint;
-        if (!ncEndPointsList.isEmpty() && path.equals(Servlets.QUERY_SERVICE)) {
+        if (!ncEndPointsList.isEmpty() && pathAndQuery.equals(Servlets.QUERY_SERVICE)) {
             int endpointIdx = Math.abs(endpointSelector++ % ncEndPointsList.size());
             endpoint = ncEndPointsList.get(endpointIdx);
-        } else if (isCcEndPointPath(path)) {
+        } else if (isCcEndPointPath(pathAndQuery)) {
             int endpointIdx = Math.abs(endpointSelector++ % endpoints.size());
             endpoint = endpoints.get(endpointIdx);
         } else {
             // allowed patterns: [nc:endpointName URL] or [nc:nodeId:port URL]
-            final String[] tokens = path.split(" ");
+            final String[] tokens = pathAndQuery.split(" ");
             if (tokens.length != 2) {
                 throw new IllegalArgumentException("Unrecognized http pattern");
             }
@@ -1962,19 +1962,19 @@ public class TestExecutor {
             } else {
                 endpoint = getNcEndPoint(endpointName);
             }
-            path = tokens[1];
+            pathAndQuery = tokens[1];
         }
-        URI uri = new URI("http", null, endpoint.getHostString(), endpoint.getPort(), path, query, null);
+        URI uri = URI.create("http://" + toHostPort(endpoint.getHostString(), endpoint.getPort()) + pathAndQuery);
         LOGGER.debug("Created endpoint URI: " + uri);
         return uri;
     }
 
     public URI getEndpoint(String servlet) throws URISyntaxException {
-        return createEndpointURI(Servlets.getAbsolutePath(getPath(servlet)), null);
+        return createEndpointURI(Servlets.getAbsolutePath(getPath(servlet)));
     }
 
     public URI getEndpoint(String servlet, String extension) throws URISyntaxException {
-        return createEndpointURI(Servlets.getAbsolutePath(getPath(servlet)), null);
+        return createEndpointURI(Servlets.getAbsolutePath(getPath(servlet)));
     }
 
     public static String stripJavaComments(String text) {

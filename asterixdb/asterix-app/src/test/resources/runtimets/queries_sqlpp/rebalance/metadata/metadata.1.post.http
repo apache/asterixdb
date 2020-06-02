@@ -17,4 +17,4 @@
  * under the License.
  */
 
-/admin/rebalance?dataverseName=Metadata&datasetName=Dataset&nodes="asterix_nc1"
+/admin/rebalance?dataverseName=Metadata&datasetName=Dataset&nodes=%22asterix_nc1%22
