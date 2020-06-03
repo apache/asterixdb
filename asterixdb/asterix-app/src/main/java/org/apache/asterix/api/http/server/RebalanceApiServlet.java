@@ -47,7 +47,6 @@ import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.rebalance.NoOpDatasetRebalanceCallback;
 import org.apache.asterix.utils.RebalanceUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -114,7 +113,7 @@ public class RebalanceApiServlet extends AbstractServlet {
                 sendResponse(response, HttpResponseStatus.BAD_REQUEST, "nodes are not given");
                 return;
             }
-            String nodesString = StringUtils.strip(nodes, "\"'").trim();
+            String nodesString = nodes.trim();
             String[] targetNodes = nodesString.split(",");
             if ("".equals(nodesString)) {
                 sendResponse(response, HttpResponseStatus.BAD_REQUEST, "target nodes should not be empty");
