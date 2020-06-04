@@ -20,6 +20,7 @@ package org.apache.hyracks.http.server.utils;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -194,13 +195,25 @@ public class HttpUtil {
     }
 
     public static void handleStreamInterruptibly(CloseableHttpResponse response,
-            ThrowingConsumer<InputStreamReader> streamProcessor, ExecutorService executor,
-            Supplier<String> taskDescription) throws IOException, InterruptedException, ExecutionException {
+            ThrowingConsumer<Reader> streamProcessor, ExecutorService executor, Supplier<String> taskDescription)
+            throws IOException, InterruptedException, ExecutionException {
         // we have to consume the stream in a separate thread, as it not stop on interrupt; we need to
         // instead close the connection to achieve the interrupt
         Future<Void> readFuture = executor.submit(() -> {
             InputStreamReader reader = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8);
-            streamProcessor.process(reader);
+            streamProcessor.process(new Reader() {
+                @Override
+                public int read(char[] cbuf, int off, int len) throws IOException {
+                    return reader.read(cbuf, off, len);
+                }
+
+                @Override
+                public void close() throws IOException {
+                    // this will block until the response is closed, which will cause hangs if the stream processor
+                    // tries to close the reader e.g. on processing failure
+                    LOGGER.debug("ignoring close on {}", reader);
+                }
+            });
             return null;
         });
         try {
