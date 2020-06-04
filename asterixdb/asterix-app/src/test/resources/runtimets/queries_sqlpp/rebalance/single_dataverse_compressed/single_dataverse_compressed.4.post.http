@@ -17,4 +17,4 @@
  * under the License.
  */
 
-/admin/rebalance?dataverseName=tpch&nodes="asterix_nc1"
+/admin/rebalance?dataverseName=tpch&nodes=%22asterix_nc1%22

@@ -17,4 +17,4 @@
  * under the License.
  */
 
-/admin/rebalance?nodes="asterix_nc1,asterix_nc2"
+/admin/rebalance?nodes=%22asterix_nc1%2Casterix_nc2%22
