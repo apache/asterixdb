@@ -34,6 +34,8 @@ public abstract class ExtensionStatement extends AbstractStatement {
         return Kind.EXTENSION;
     }
 
+    public abstract String getName();
+
     /**
      * Called when the {@code IStatementExecutor} encounters an extension statement.
      * An implementation class should implement the actual processing of the statement in this method.

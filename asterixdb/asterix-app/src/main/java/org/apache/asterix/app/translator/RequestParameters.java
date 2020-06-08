@@ -31,6 +31,7 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.IStatementExecutor.StatementProperties;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.ResultProperties;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -49,6 +50,7 @@ public class RequestParameters implements IRequestParameters {
     private final IResultSet resultSet;
     private final ResultProperties resultProperties;
     private final Stats stats;
+    private final StatementProperties statementProperties;
     private final Map<String, String> optionalParameters;
     private final IStatementExecutor.ResultMetadata outMetadata;
     private final String clientContextId;
@@ -58,22 +60,24 @@ public class RequestParameters implements IRequestParameters {
     private final String statement;
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
-            ResultProperties resultProperties, Stats stats, IStatementExecutor.ResultMetadata outMetadata,
-            String clientContextId, Map<String, String> optionalParameters, Map<String, IAObject> statementParameters,
-            boolean multiStatement) {
-        this(requestReference, statement, resultSet, resultProperties, stats, outMetadata, clientContextId,
-                optionalParameters, statementParameters, multiStatement, NO_CATEGORY_RESTRICTION_MASK);
+            ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
+            IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
+            Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement) {
+        this(requestReference, statement, resultSet, resultProperties, stats, statementProperties, outMetadata,
+                clientContextId, optionalParameters, statementParameters, multiStatement, NO_CATEGORY_RESTRICTION_MASK);
     }
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
-            ResultProperties resultProperties, Stats stats, IStatementExecutor.ResultMetadata outMetadata,
-            String clientContextId, Map<String, String> optionalParameters, Map<String, IAObject> statementParameters,
-            boolean multiStatement, int statementCategoryRestrictionMask) {
+            ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
+            IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
+            Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement,
+            int statementCategoryRestrictionMask) {
         this.requestReference = requestReference;
         this.statement = statement;
         this.resultSet = resultSet;
         this.resultProperties = resultProperties;
         this.stats = stats;
+        this.statementProperties = statementProperties;
         this.outMetadata = outMetadata;
         this.clientContextId = clientContextId;
         this.optionalParameters = optionalParameters;
@@ -93,8 +97,13 @@ public class RequestParameters implements IRequestParameters {
     }
 
     @Override
-    public IStatementExecutor.Stats getStats() {
+    public Stats getStats() {
         return stats;
+    }
+
+    @Override
+    public StatementProperties getStatementProperties() {
+        return statementProperties;
     }
 
     @Override
