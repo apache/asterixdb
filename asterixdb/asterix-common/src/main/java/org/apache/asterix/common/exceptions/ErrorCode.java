@@ -198,6 +198,10 @@ public class ErrorCode {
     public static final int UNEXPECTED_HINT = 1107;
     public static final int EXTERNAL_SOURCE_ERROR = 1108;
     public static final int EXTERNAL_SOURCE_CONTAINER_NOT_FOUND = 1109;
+    public static final int PARAMETERS_NOT_ALLOWED_AT_SAME_TIME = 1110;
+    public static final int PROPERTY_INVALID_VALUE_TYPE = 1111;
+    public static final int INVALID_PROPERTY_FORMAT = 1112;
+    public static final int INVALID_REGEX_PATTERN = 1113;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

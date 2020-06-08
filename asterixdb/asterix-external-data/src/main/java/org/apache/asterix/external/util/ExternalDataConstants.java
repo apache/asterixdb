@@ -71,6 +71,8 @@ public class ExternalDataConstants {
     public static final String KEY_EXPRESSION = "expression";
     public static final String KEY_LOCAL_SOCKET_PATH = "local-socket-path";
     public static final String KEY_FORMAT = "format";
+    public static final String KEY_INCLUDE = "include";
+    public static final String KEY_EXCLUDE = "exclude";
     public static final String KEY_QUOTE = "quote";
     public static final String KEY_ESCAPE = "escape";
     public static final String KEY_PARSER = "parser";

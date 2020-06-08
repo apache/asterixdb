@@ -43,8 +43,9 @@ public class AwsS3ExternalDatasetOnePartitionTest extends AwsS3ExternalDatasetTe
         SUITE_TESTS = "testsuite_external_dataset_one_partition.xml";
         ONLY_TESTS = "only_external_dataset.xml";
         TEST_CONFIG_FILE_NAME = "src/test/resources/cc-single.conf";
-        PREPARE_S3_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareS3Bucket;
+        PREPARE_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareS3Bucket;
         PREPARE_FIXED_DATA_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareFixedDataBucket;
+        PREPARE_MIXED_DATA_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareMixedDataBucket;
         return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
 
@@ -52,5 +53,8 @@ public class AwsS3ExternalDatasetOnePartitionTest extends AwsS3ExternalDatasetTe
     }
 
     private static void prepareFixedDataBucket() {
+    }
+
+    private static void prepareMixedDataBucket() {
     }
 }
