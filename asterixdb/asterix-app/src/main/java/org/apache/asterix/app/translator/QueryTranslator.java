@@ -291,6 +291,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final ResultDelivery resultDelivery = requestParameters.getResultProperties().getDelivery();
         final long maxResultReads = requestParameters.getResultProperties().getMaxReads();
         final Stats stats = requestParameters.getStats();
+        final StatementProperties statementProperties = requestParameters.getStatementProperties();
         final ResultMetadata outMetadata = requestParameters.getOutMetadata();
         final Map<String, IAObject> stmtParams = requestParameters.getStatementParameters();
         warningCollector.setMaxWarnings(sessionConfig.getMaxWarnings());
@@ -307,7 +308,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 metadataProvider.setWriterFactory(writerFactory);
                 metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
                 metadataProvider.setOutputFile(outputFile);
-                switch (stmt.getKind()) {
+                Statement.Kind kind = stmt.getKind();
+                statementProperties.setKind(kind);
+                switch (kind) {
                     case SET:
                         handleSetStatement(stmt, config);
                         break;
@@ -417,12 +420,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         // No op
                         break;
                     case EXTENSION:
-                        ((ExtensionStatement) stmt).handle(hcc, this, requestParameters, metadataProvider,
-                                resultSetIdCounter);
+                        final ExtensionStatement extStmt = (ExtensionStatement) stmt;
+                        statementProperties.setName(extStmt.getName());
+                        extStmt.handle(hcc, this, requestParameters, metadataProvider, resultSetIdCounter);
                         break;
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, stmt.getSourceLocation(),
-                                "Unexpected statement: " + stmt.getKind());
+                                "Unexpected statement: " + kind);
                 }
             }
         } finally {

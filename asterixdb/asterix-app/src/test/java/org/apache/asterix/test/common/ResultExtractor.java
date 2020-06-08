@@ -144,16 +144,18 @@ public class ResultExtractor {
             return extract(resultStream, resultFields, resultCharset, "", "", "");
         }
 
-        throw new AsterixException("Unkown output format for result of test query");
+        throw new AsterixException("Unknown output format for result of test query");
     }
 
     private static ExtractedResult extract(InputStream resultStream, EnumSet<ResultField> resultFields,
             Charset resultCharset, String openMarker, String separator, String closeMarker) throws Exception {
         ExtractedResult extractedResult = new ExtractedResult();
         final String resultStr = IOUtils.toString(resultStream, resultCharset);
+
+        LOGGER.debug("+++++++\n" + resultStr + "\n+++++++\n");
+
         final ObjectNode result = OBJECT_MAPPER.readValue(resultStr, ObjectNode.class);
 
-        LOGGER.debug("+++++++\n" + result + "\n+++++++\n");
         // if we have errors field in the results, we will always return it
         checkForErrors(result);
         final StringBuilder resultBuilder = new StringBuilder();

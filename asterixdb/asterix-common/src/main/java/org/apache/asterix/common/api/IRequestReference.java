@@ -42,4 +42,18 @@ public interface IRequestReference extends Serializable {
      * @return the time at which the request was received.
      */
     long getTime();
+
+    /**
+     * Gets the user agent from which the request was received.
+     *
+     * @return user agent from which the request was received.
+     */
+    String getUserAgent();
+
+    /**
+     * Gets the remote address from which the request was received.
+     *
+     * @return remote address from which the request was received.
+     */
+    String getRemoteAddr();
 }

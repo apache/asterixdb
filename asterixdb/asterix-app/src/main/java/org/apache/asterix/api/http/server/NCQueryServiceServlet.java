@@ -69,8 +69,9 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
 
     @Override
     protected void executeStatement(IRequestReference requestReference, String statementsText,
-            SessionOutput sessionOutput, ResultProperties resultProperties, IStatementExecutor.Stats stats,
-            QueryServiceRequestParameters param, RequestExecutionState execution,
+            SessionOutput sessionOutput, ResultProperties resultProperties,
+            IStatementExecutor.StatementProperties statementProperties, IStatementExecutor.Stats stats,
+            QueryServiceRequestParameters param, RequestExecutionState executionState,
             Map<String, String> optionalParameters, Map<String, byte[]> statementParameters,
             ResponsePrinter responsePrinter, List<Warning> warnings) throws Exception {
         // Running on NC -> send 'execute' message to CC
@@ -89,7 +90,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                     resultProperties.getNcToCcResultProperties(), param.getClientContextID(), handleUrl,
                     optionalParameters, statementParameters, param.isMultiStatement(), param.getProfileType(),
                     stmtCategoryRestrictionMask, requestReference);
-            execution.start();
+            executionState.start();
             ncMb.sendMessageToPrimaryCC(requestMsg);
             try {
                 responseMsg = (ExecuteStatementResponseMessage) responseFuture.get(timeout, TimeUnit.MILLISECONDS);
@@ -103,11 +104,12 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                 cancelQuery(ncMb, ncCtx.getNodeId(), requestReference.getUuid(), param.getClientContextID(), hde, true);
                 throw hde;
             }
-            execution.end();
+            executionState.end();
         } finally {
             ncMb.deregisterMessageFuture(responseFuture.getFutureId());
         }
 
+        updatePropertiesFromCC(statementProperties, responseMsg);
         Throwable err = responseMsg.getError();
         if (err != null) {
             if (err instanceof Error) {
@@ -118,6 +120,8 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                 throw new Exception(err.toString(), err);
             }
         }
+        // if the was no error, we can set the result status to success
+        executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
         updateStatsFromCC(stats, responseMsg);
         if (hasResult(responseMsg)) {
             responsePrinter.addResultPrinter(
@@ -151,14 +155,14 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     }
 
     @Override
-    protected void handleExecuteStatementException(Throwable t, RequestExecutionState state,
+    protected void handleExecuteStatementException(Throwable t, RequestExecutionState executionState,
             QueryServiceRequestParameters param) {
         if (t instanceof TimeoutException // TODO(mblow): I don't think t can ever been an instance of TimeoutException
                 || ExceptionUtils.matchingCause(t, candidate -> candidate instanceof IPCException)) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.WARN, t.toString(), t);
-            state.setStatus(ResultStatus.FAILED, HttpResponseStatus.SERVICE_UNAVAILABLE);
+            executionState.setStatus(ResultStatus.FAILED, HttpResponseStatus.SERVICE_UNAVAILABLE);
         } else {
-            super.handleExecuteStatementException(t, state, param);
+            super.handleExecuteStatementException(t, executionState, param);
         }
     }
 
@@ -176,5 +180,14 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         stats.setJobProfile(responseStats.getJobProfile());
         stats.setProcessedObjects(responseStats.getProcessedObjects());
         stats.updateTotalWarningsCount(responseStats.getTotalWarningsCount());
+    }
+
+    private static void updatePropertiesFromCC(IStatementExecutor.StatementProperties statementProperties,
+            ExecuteStatementResponseMessage responseMsg) {
+        IStatementExecutor.StatementProperties responseStmtProps = responseMsg.getStatementProperties();
+        if (responseStmtProps != null) {
+            statementProperties.setKind(responseStmtProps.getKind());
+            statementProperties.setName(responseStmtProps.getName());
+        }
     }
 }

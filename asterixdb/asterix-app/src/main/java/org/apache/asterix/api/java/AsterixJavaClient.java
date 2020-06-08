@@ -136,8 +136,8 @@ public class AsterixJavaClient {
         final RequestReference requestReference =
                 RequestReference.of(UUID.randomUUID().toString(), "CC", System.currentTimeMillis());
         final IRequestParameters requestParameters = new RequestParameters(requestReference, statement, null,
-                new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE), new IStatementExecutor.Stats(), null,
-                null, null, statementParams, true);
+                new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE), new IStatementExecutor.Stats(),
+                new IStatementExecutor.StatementProperties(), null, null, null, statementParams, true);
         translator.compileAndExecute(hcc, requestParameters);
         executionPlans = translator.getExecutionPlans();
         writer.flush();
