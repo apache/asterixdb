@@ -2871,11 +2871,11 @@
     <test-case FilePath="aggregate-subclause">
       <compilation-unit name="agg_filter_02_neg">
         <output-dir compare="Text">agg_filter_01</output-dir>
-        <expected-error>ASX1116: Illegal use of aggregate FILTER clause</expected-error>
-        <expected-error>ASX1116: Illegal use of aggregate FILTER clause</expected-error>
+        <expected-error>ASX1120: Illegal use of aggregate FILTER clause</expected-error>
+        <expected-error>ASX1120: Illegal use of aggregate FILTER clause</expected-error>
         <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier r</expected-error>
-        <expected-error>ASX1116: Illegal use of aggregate FILTER clause</expected-error>
-        <expected-error>ASX1116: Illegal use of aggregate FILTER clause</expected-error>
+        <expected-error>ASX1120: Illegal use of aggregate FILTER clause</expected-error>
+        <expected-error>ASX1120: Illegal use of aggregate FILTER clause</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -5623,14 +5623,14 @@
     <test-case FilePath="group-by">
       <compilation-unit name="grouping-sets-3-negative">
         <output-dir compare="Text">grouping-sets-2</output-dir>
-        <expected-error>ASX1115: Unexpected alias: v21</expected-error>
-        <expected-error>ASX1115: Unexpected alias: v22</expected-error>
-        <expected-error>ASX1115: Unexpected alias: v23</expected-error>
+        <expected-error>ASX1119: Unexpected alias: v21</expected-error>
+        <expected-error>ASX1119: Unexpected alias: v22</expected-error>
+        <expected-error>ASX1119: Unexpected alias: v23</expected-error>
         <expected-error>ASX1087: Invalid number of arguments for function grouping</expected-error>
-        <expected-error>ASX1114: Invalid argument to grouping() function</expected-error>
-        <expected-error>ASX1114: Invalid argument to grouping() function</expected-error>
-        <expected-error>ASX1114: Invalid argument to grouping() function</expected-error>
-        <expected-error>ASX1113: Too many grouping sets in group by clause: 512. Maximum allowed: 128.</expected-error>
+        <expected-error>ASX1118: Invalid argument to grouping() function</expected-error>
+        <expected-error>ASX1118: Invalid argument to grouping() function</expected-error>
+        <expected-error>ASX1118: Invalid argument to grouping() function</expected-error>
+        <expected-error>ASX1117: Too many grouping sets in group by clause: 512. Maximum allowed: 128.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">

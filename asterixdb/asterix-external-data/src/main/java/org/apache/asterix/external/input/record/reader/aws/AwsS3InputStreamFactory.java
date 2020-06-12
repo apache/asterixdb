@@ -19,19 +19,24 @@
 package org.apache.asterix.external.input.record.reader.aws;
 
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_INCLUDE;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiPredicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IInputStreamFactory;
-import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -49,12 +54,9 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 public class AwsS3InputStreamFactory implements IInputStreamFactory {
 
     private static final long serialVersionUID = 1L;
+
     private Map<String, String> configuration;
-
-    // Files to read from
-    private final List<S3Object> filesOnly = new ArrayList<>();
     private final List<PartitionWorkLoadBasedOnSize> partitionWorkLoadsBasedOnSize = new ArrayList<>();
-
     private transient AlgebricksAbsolutePartitionConstraint partitionConstraint;
 
     @Override
@@ -84,6 +86,42 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
 
         String container = configuration.get(AwsS3.CONTAINER_NAME_FIELD_NAME);
 
+        List<S3Object> filesOnly = new ArrayList<>();
+
+        // Ensure the validity of include/exclude
+        ExternalDataUtils.AwsS3.validateIncludeExclude(configuration);
+
+        // Get and compile the patterns for include/exclude if provided
+        List<Matcher> includeMatchers = new ArrayList<>();
+        List<Matcher> excludeMatchers = new ArrayList<>();
+        String pattern = null;
+        try {
+            for (Map.Entry<String, String> entry : configuration.entrySet()) {
+                if (entry.getKey().startsWith(KEY_INCLUDE)) {
+                    pattern = entry.getValue();
+                    includeMatchers.add(Pattern.compile(ExternalDataUtils.wildcardToRegex(pattern)).matcher(""));
+                } else if (entry.getKey().startsWith(KEY_EXCLUDE)) {
+                    pattern = entry.getValue();
+                    excludeMatchers.add(Pattern.compile(ExternalDataUtils.wildcardToRegex(pattern)).matcher(""));
+                }
+            }
+        } catch (PatternSyntaxException ex) {
+            throw new CompilationException(ErrorCode.INVALID_REGEX_PATTERN, pattern);
+        }
+
+        List<Matcher> matchersList;
+        BiPredicate<List<Matcher>, String> p;
+        if (!includeMatchers.isEmpty()) {
+            matchersList = includeMatchers;
+            p = (matchers, key) -> ExternalDataUtils.matchPatterns(matchers, key);
+        } else if (!excludeMatchers.isEmpty()) {
+            matchersList = excludeMatchers;
+            p = (matchers, key) -> !ExternalDataUtils.matchPatterns(matchers, key);
+        } else {
+            matchersList = Collections.emptyList();
+            p = (matchers, key) -> true;
+        }
+
         S3Client s3Client = ExternalDataUtils.AwsS3.buildAwsS3Client(configuration);
 
         // Get all objects in a bucket and extract the paths to files
@@ -97,8 +135,6 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
         boolean done = false;
         String newMarker = null;
 
-        String fileFormat = configuration.get(ExternalDataConstants.KEY_FORMAT);
-
         try {
             while (!done) {
                 // List the objects from the start, or from the last marker in case of truncated result
@@ -110,7 +146,7 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
                 }
 
                 // Collect the paths to files only
-                collectFilesOnly(listObjectsResponse.contents(), fileFormat);
+                collectAndFilterFiles(listObjectsResponse.contents(), p, matchersList, filesOnly);
 
                 // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
                 if (!listObjectsResponse.isTruncated()) {
@@ -140,33 +176,20 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
      * a file if it does not end up with a "/" which is the separator in a folder structure.
      *
      * @param s3Objects List of returned objects
-     * @param fileFormat The expected file format
-     *
-     * @throws AsterixException AsterixException
      */
-    private void collectFilesOnly(List<S3Object> s3Objects, String fileFormat) throws AsterixException {
-        String fileExtension = getFileExtension(fileFormat);
-        if (fileExtension == null) {
-            throw AsterixException.create(ErrorCode.PROVIDER_STREAM_RECORD_READER_UNKNOWN_FORMAT, fileFormat);
+    private void collectAndFilterFiles(List<S3Object> s3Objects, BiPredicate<List<Matcher>, String> predicate,
+            List<Matcher> matchers, List<S3Object> filesOnly) {
+        for (S3Object object : s3Objects) {
+            // skip folders
+            if (object.key().endsWith("/")) {
+                continue;
+            }
+
+            // No filter, add file
+            if (predicate.test(matchers, object.key())) {
+                filesOnly.add(object);
+            }
         }
-
-        s3Objects.stream().filter(object -> isValidFile(object.key(), fileFormat)).forEach(filesOnly::add);
-    }
-
-    /**
-     * Checks if the file name is of the provided format, or in the provided format in a compressed (.gz or .gzip) state
-     *
-     * @param fileName file name to be checked
-     * @param format expected format
-     * @return {@code true} if the file name is of the expected format, {@code false} otherwise
-     */
-    private boolean isValidFile(String fileName, String format) {
-        String lowCaseName = fileName.toLowerCase();
-        String lowCaseFormat = format.toLowerCase();
-        String gzExt = lowCaseFormat + ".gz";
-        String gzipExt = lowCaseFormat + ".gzip";
-
-        return lowCaseName.endsWith(lowCaseFormat) || lowCaseName.endsWith(gzExt) || lowCaseName.endsWith(gzipExt);
     }
 
     /**
@@ -216,29 +239,9 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
         return smallest;
     }
 
-    /**
-     * Returns the file extension for the provided file format.
-     *
-     * @param format file format
-     *
-     * @return file extension for the provided file format, null otherwise.
-     */
-    private String getFileExtension(String format) {
-        switch (format.toLowerCase()) {
-            case ExternalDataConstants.FORMAT_JSON_LOWER_CASE:
-                return ".json";
-            case ExternalDataConstants.FORMAT_CSV:
-                return ".csv";
-            case ExternalDataConstants.FORMAT_TSV:
-                return ".tsv";
-            default:
-                return null;
-        }
-    }
-
     private static class PartitionWorkLoadBasedOnSize implements Serializable {
         private static final long serialVersionUID = 1L;
-        private List<String> filePaths = new ArrayList<>();
+        private final List<String> filePaths = new ArrayList<>();
         private long totalSize = 0;
 
         PartitionWorkLoadBasedOnSize() {

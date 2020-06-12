@@ -100,4 +100,122 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="include-exclude">
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/bad-name-1">
+        <output-dir compare="Text">aws/s3/include-exclude/bad-name-1</output-dir>
+        <expected-error>Invalid format for property "exclude1"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/bad-name-2">
+        <output-dir compare="Text">aws/s3/include-exclude/bad-name-2</output-dir>
+        <expected-error>Invalid format for property "exclude#"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/bad-name-3">
+        <output-dir compare="Text">aws/s3/include-exclude/bad-name-3</output-dir>
+        <expected-error>Invalid format for property "exclude#hello"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/both">
+        <output-dir compare="Text">aws/s3/include-exclude/both</output-dir>
+        <expected-error>The parameters "include" and "exclude" cannot be provided at the same time</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/exclude-all">
+        <output-dir compare="Text">aws/s3/include-exclude/exclude-all</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/exclude-1">
+        <output-dir compare="Text">aws/s3/include-exclude/exclude-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/exclude-2">
+        <output-dir compare="Text">aws/s3/include-exclude/exclude-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/exclude-3">
+        <output-dir compare="Text">aws/s3/include-exclude/exclude-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/exclude-4">
+        <output-dir compare="Text">aws/s3/include-exclude/exclude-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/exclude-5">
+        <output-dir compare="Text">aws/s3/include-exclude/exclude-5</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/exclude-6">
+        <output-dir compare="Text">aws/s3/include-exclude/exclude-6</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-all">
+        <output-dir compare="Text">aws/s3/include-exclude/include-all</output-dir>
+        <expected-error>Malformed input stream</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-1">
+        <output-dir compare="Text">aws/s3/include-exclude/include-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-2">
+        <output-dir compare="Text">aws/s3/include-exclude/include-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-3">
+        <output-dir compare="Text">aws/s3/include-exclude/include-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-4">
+        <output-dir compare="Text">aws/s3/include-exclude/include-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-5">
+        <output-dir compare="Text">aws/s3/include-exclude/include-5</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-6">
+        <output-dir compare="Text">aws/s3/include-exclude/include-6</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-7">
+        <output-dir compare="Text">aws/s3/include-exclude/include-7</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-8">
+        <output-dir compare="Text">aws/s3/include-exclude/include-8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-9">
+        <output-dir compare="Text">aws/s3/include-exclude/include-9</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-10">
+        <output-dir compare="Text">aws/s3/include-exclude/include-10</output-dir>
+        <expected-error>Invalid pattern *[abc][.*</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>
