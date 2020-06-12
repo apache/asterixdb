@@ -23,8 +23,10 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,6 +36,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -66,9 +69,11 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     private final Int2ObjectMap<AtomicInteger> fileIdUsageMap =
             Int2ObjectMaps.synchronize(new Int2ObjectOpenHashMap<>());
 
+    private final int maxConcurrentFlushes;
     private final List<ILSMIndex> primaryIndexes = new ArrayList<>();
+
+    private final Set<ILSMIndex> flushingIndexes = Collections.synchronizedSet(new HashSet<>());
     private volatile int flushPtr;
-    private volatile ILSMIndex flushingIndex;
 
     private final int filteredMemoryComponentMaxNumPages;
     private final int flushPageBudget;
@@ -76,7 +81,8 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     private final AtomicBoolean isOpen = new AtomicBoolean(false);
     private final FlushThread flushThread = new FlushThread();
 
-    public GlobalVirtualBufferCache(ICacheMemoryAllocator allocator, StorageProperties storageProperties) {
+    public GlobalVirtualBufferCache(ICacheMemoryAllocator allocator, StorageProperties storageProperties,
+            int maxConcurrentFlushes) {
         this.vbc = new VirtualBufferCache(allocator, storageProperties.getBufferCachePageSize(),
                 (int) (storageProperties.getMemoryComponentGlobalBudget()
                         / storageProperties.getMemoryComponentPageSize()));
@@ -84,6 +90,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
                 / storageProperties.getMemoryComponentPageSize()
                 * storageProperties.getMemoryComponentFlushThreshold());
         this.filteredMemoryComponentMaxNumPages = storageProperties.getFilteredMemoryComponentMaxNumPages();
+        this.maxConcurrentFlushes = maxConcurrentFlushes;
     }
 
     @Override
@@ -97,24 +104,26 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     }
 
     @Override
-    public synchronized void register(ILSMMemoryComponent memoryComponent) {
+    public void register(ILSMMemoryComponent memoryComponent) {
         ILSMIndex index = memoryComponent.getLsmIndex();
         if (index.isPrimaryIndex()) {
-            if (!primaryIndexes.contains(index)) {
-                // make sure only add index once
-                primaryIndexes.add(index);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("Registered {} index {} to the global VBC",
-                            isMetadataIndex(index) ? "metadata" : "primary", index.toString());
+            synchronized (primaryIndexes) {
+                if (!primaryIndexes.contains(index)) {
+                    // make sure only add index once
+                    primaryIndexes.add(index);
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info("Registered {} index {} to the global VBC",
+                                isMetadataIndex(index) ? "metadata" : "primary", index.toString());
+                    }
                 }
-            }
-            if (index.getNumOfFilterFields() > 0) {
-                // handle filtered primary index
-                AtomicInteger usage = new AtomicInteger();
-                memoryComponentUsageMap.put(memoryComponent, usage);
-                for (FileReference ref : memoryComponent.getComponentFileRefs().getFileReferences()) {
-                    if (ref != null) {
-                        fileRefUsageMap.put(ref, usage);
+                if (index.getNumOfFilterFields() > 0) {
+                    // handle filtered primary index
+                    AtomicInteger usage = new AtomicInteger();
+                    memoryComponentUsageMap.put(memoryComponent, usage);
+                    for (FileReference ref : memoryComponent.getComponentFileRefs().getFileReferences()) {
+                        if (ref != null) {
+                            fileRefUsageMap.put(ref, usage);
+                        }
                     }
                 }
             }
@@ -122,29 +131,31 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     }
 
     @Override
-    public synchronized void unregister(ILSMMemoryComponent memoryComponent) {
+    public void unregister(ILSMMemoryComponent memoryComponent) {
         ILSMIndex index = memoryComponent.getLsmIndex();
         if (index.isPrimaryIndex()) {
-            int pos = primaryIndexes.indexOf(index);
-            if (pos >= 0) {
-                primaryIndexes.remove(index);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("Unregistered {} index {} to the global VBC",
-                            isMetadataIndex(index) ? "metadata" : "primary", index.toString());
+            synchronized (primaryIndexes) {
+                int pos = primaryIndexes.indexOf(index);
+                if (pos >= 0) {
+                    primaryIndexes.remove(index);
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info("Unregistered {} index {} to the global VBC",
+                                isMetadataIndex(index) ? "metadata" : "primary", index.toString());
+                    }
+                    if (primaryIndexes.isEmpty()) {
+                        flushPtr = 0;
+                    } else if (flushPtr > pos) {
+                        // If the removed index is before flushPtr, we should decrement flushPtr by 1 so that
+                        // it still points to the same index.
+                        flushPtr = (flushPtr - 1) % primaryIndexes.size();
+                    }
                 }
-                if (primaryIndexes.isEmpty()) {
-                    flushPtr = 0;
-                } else if (flushPtr > pos) {
-                    // If the removed index is before flushPtr, we should decrement flushPtr by 1 so that
-                    // it still points to the same index.
-                    flushPtr = (flushPtr - 1) % primaryIndexes.size();
-                }
-            }
-            if (index.getNumOfFilterFields() > 0) {
-                memoryComponentUsageMap.remove(memoryComponent);
-                for (FileReference ref : memoryComponent.getComponentFileRefs().getFileReferences()) {
-                    if (ref != null) {
-                        fileRefUsageMap.remove(ref);
+                if (index.getNumOfFilterFields() > 0) {
+                    memoryComponentUsageMap.remove(memoryComponent);
+                    for (FileReference ref : memoryComponent.getComponentFileRefs().getFileReferences()) {
+                        if (ref != null) {
+                            fileRefUsageMap.remove(ref);
+                        }
                     }
                 }
             }
@@ -153,26 +164,19 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
 
     @Override
     public void flushed(ILSMMemoryComponent memoryComponent) throws HyracksDataException {
-        if (memoryComponent.getLsmIndex() == flushingIndex) {
+        if (flushingIndexes.remove(memoryComponent.getLsmIndex())) {
+            LOGGER.info("Completed flushing {}.", memoryComponent.getIndex());
+            // After the flush operation is completed, we may have 2 cases:
+            // 1. there is no active reader on this memory component and memory is reclaimed;
+            // 2. there are still some active readers and memory cannot be reclaimed.
+            // But for both cases, we will notify all primary index op trackers to let their writers retry,
+            // if they have been blocked. Moreover, we will check whether more flushes are needed.
             synchronized (this) {
-                if (memoryComponent.getLsmIndex() == flushingIndex) {
-                    flushingIndex = null;
-                    // After the flush operation is completed, we may have 2 cases:
-                    // 1. there is no active reader on this memory component and memory is reclaimed;
-                    // 2. there are still some active readers and memory cannot be reclaimed.
-                    // But for both cases, we will notify all primary index op trackers to let their writers retry,
-                    // if they have been blocked. Moreover, we will check whether more flushes are needed.
-                    final int size = primaryIndexes.size();
-                    for (int i = 0; i < size; i++) {
-                        ILSMOperationTracker opTracker = primaryIndexes.get(i).getOperationTracker();
-                        synchronized (opTracker) {
-                            opTracker.notifyAll();
-                        }
-                    }
-
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info("Completed flushing {}. Resetting flushIndex back to null.",
-                                memoryComponent.getIndex().toString());
+                final int size = primaryIndexes.size();
+                for (int i = 0; i < size; i++) {
+                    ILSMOperationTracker opTracker = primaryIndexes.get(i).getOperationTracker();
+                    synchronized (opTracker) {
+                        opTracker.notifyAll();
                     }
                 }
             }
@@ -200,7 +204,8 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
 
     @Override
     public boolean isFull(ILSMMemoryComponent memoryComponent) {
-        return memoryComponent.getLsmIndex() == flushingIndex || isFilteredMemoryComponentFull(memoryComponent);
+        return flushingIndexes.contains(memoryComponent.getLsmIndex())
+                || isFilteredMemoryComponentFull(memoryComponent);
     }
 
     private boolean isFilteredMemoryComponentFull(ILSMMemoryComponent memoryComponent) {
@@ -278,11 +283,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     }
 
     private void checkAndNotifyFlushThread() {
-        if (vbc.getUsage() < flushPageBudget || flushingIndex != null) {
-            // For better performance, we only flush one dataset partition at a time.
-            // After reclaiming memory from this dataset partition, its memory can be used by other indexes.
-            // Thus, given N dataset partitions, each dataset partition will approximately receive 2/N of
-            // the total memory instead of 1/N, which doubles the memory utilization.
+        if (vbc.getUsage() < flushPageBudget) {
             return;
         }
         // Notify the flush thread to schedule flushes. This is used to avoid deadlocks because page pins can be
@@ -470,48 +471,63 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
         }
 
         private void scheduleFlush() throws HyracksDataException {
+            ILSMIndex selectedIndex = null;
             synchronized (GlobalVirtualBufferCache.this) {
-                int cycles = 0;
-                while (vbc.getUsage() >= flushPageBudget && flushingIndex == null && cycles <= primaryIndexes.size()) {
-                    // find the first modified memory component while avoiding infinite loops
-                    while (cycles <= primaryIndexes.size()
-                            && primaryIndexes.get(flushPtr).isCurrentMutableComponentEmpty()) {
-                        flushPtr = (flushPtr + 1) % primaryIndexes.size();
-                        cycles++;
-                    }
-
-                    ILSMIndex primaryIndex = primaryIndexes.get(flushPtr);
-                    flushPtr = (flushPtr + 1) % primaryIndexes.size();
-                    // we need to manually flush this memory component because it may be idle at this point
-                    // note that this is different from flushing a filtered memory component
-                    PrimaryIndexOperationTracker opTracker =
-                            (PrimaryIndexOperationTracker) primaryIndex.getOperationTracker();
-                    synchronized (opTracker) {
-                        boolean flushable = !primaryIndex.isCurrentMutableComponentEmpty();
-                        if (flushable && !opTracker.isFlushLogCreated()) {
-                            // if the flush log has already been created, then we can simply wait for
-                            // that flush to complete
-                            opTracker.setFlushOnExit(true);
-                            opTracker.flushIfNeeded();
-                            // If the flush cannot be scheduled at this time, then there must be active writers.
-                            // The flush will be eventually scheduled when writers exit
-                            if (LOGGER.isInfoEnabled()) {
-                                LOGGER.info("Requested {} flushing primary index {}",
-                                        isMetadataIndex(primaryIndex) ? "metadata" : "primary",
-                                        primaryIndex.toString());
-                            }
-                        }
-                        if ((flushable || opTracker.isFlushLogCreated()) && !isMetadataIndex(primaryIndex)) {
-                            // global vbc cannot wait on metadata indexes because metadata indexes support full
-                            // ACID transactions. Waiting on metadata indexes can introduce deadlocks.
-                            flushingIndex = primaryIndex;
-                            LOGGER.debug("Waiting for flushing primary index {} to complete...", primaryIndex);
-                            break;
-                        }
-                    }
+                while (flushingIndexes.size() < maxConcurrentFlushes
+                        && ((selectedIndex = selectFlushIndex()) != null)) {
+                    LOGGER.debug("Waiting for flushing primary index {} to complete...", selectedIndex);
+                    flushingIndexes.add(selectedIndex);
                 }
             }
         }
+
+        private ILSMIndex selectFlushIndex() throws HyracksDataException {
+            int cycles = 0;
+            while (vbc.getUsage() >= flushPageBudget && cycles <= primaryIndexes.size()) {
+                // find the first modified memory component while avoiding infinite loops
+                while (cycles <= primaryIndexes.size()
+                        && primaryIndexes.get(flushPtr).isCurrentMutableComponentEmpty()) {
+                    flushPtr = (flushPtr + 1) % primaryIndexes.size();
+                    cycles++;
+                }
+
+                ILSMIndex primaryIndex = primaryIndexes.get(flushPtr);
+                flushPtr = (flushPtr + 1) % primaryIndexes.size();
+                // we need to manually flush this memory component because it may be idle at this point
+                // note that this is different from flushing a filtered memory component
+                PrimaryIndexOperationTracker opTracker =
+                        (PrimaryIndexOperationTracker) primaryIndex.getOperationTracker();
+                synchronized (opTracker) {
+                    boolean flushable = !primaryIndex.isCurrentMutableComponentEmpty();
+                    if (flushable && !opTracker.isFlushLogCreated()) {
+                        // if the flush log has already been created, then we can simply wait for
+                        // that flush to complete
+                        ILSMMemoryComponent memoryComponent = primaryIndex.getCurrentMemoryComponent();
+                        if (memoryComponent.getState() == ComponentState.READABLE_WRITABLE) {
+                            // before we schedule the flush, mark the memory component as unwritable to prevent
+                            // future writers
+                            memoryComponent.setUnwritable();
+                        }
+
+                        opTracker.setFlushOnExit(true);
+                        opTracker.flushIfNeeded();
+                        // If the flush cannot be scheduled at this time, then there must be active writers.
+                        // The flush will be eventually scheduled when writers exit
+                        if (LOGGER.isInfoEnabled()) {
+                            LOGGER.info("Requested flushing {} index {}",
+                                    isMetadataIndex(primaryIndex) ? "metadata" : "primary", primaryIndex.toString());
+                        }
+                    }
+                    if ((flushable || opTracker.isFlushLogCreated()) && !isMetadataIndex(primaryIndex)) {
+                        // global vbc cannot wait on metadata indexes because metadata indexes support full
+                        // ACID transactions. Waiting on metadata indexes can introduce deadlocks.
+                        return primaryIndex;
+                    }
+                }
+            }
+            return null;
+        }
+
     }
 
 }

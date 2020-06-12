@@ -33,8 +33,8 @@ public abstract class AbstractLSMWithBuddyMemoryComponent extends AbstractLSMMem
     public abstract AbstractTreeIndex getBuddyIndex();
 
     @Override
-    public void doReset() throws HyracksDataException {
-        super.doReset();
+    public void cleanup() throws HyracksDataException {
+        super.cleanup();
         getBuddyIndex().deactivate();
         getBuddyIndex().destroy();
         getBuddyIndex().create();

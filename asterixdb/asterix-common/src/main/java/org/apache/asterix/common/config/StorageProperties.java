@@ -19,6 +19,7 @@
 package org.apache.asterix.common.config;
 
 import static org.apache.hyracks.control.common.config.OptionTypes.DOUBLE;
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
@@ -48,6 +49,7 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_MEMORYCOMPONENT_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
         STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS(POSITIVE_INTEGER, 2),
         STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD(DOUBLE, 0.9d),
+        STORAGE_MEMORYCOMPONENT_MAX_CONCURRENT_FLUSHES(INTEGER, 0),
         STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE(LONG_BYTE_UNIT, 0L),
         STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE(DOUBLE, 0.01d),
         STORAGE_COMPRESSION_BLOCK(STRING, "snappy"),
@@ -84,6 +86,9 @@ public class StorageProperties extends AbstractProperties {
                     return "The page size in bytes for pages allocated to memory components";
                 case STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS:
                     return "The number of memory components to be used per lsm index";
+                case STORAGE_MEMORYCOMPONENT_MAX_CONCURRENT_FLUSHES:
+                    return "The maximum number of concurrent flush operations. 0 means that the value will be "
+                            + "calculated as the number of partitions";
                 case STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD:
                     return "The memory usage threshold when memory components should be flushed";
                 case STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE:
@@ -163,6 +168,10 @@ public class StorageProperties extends AbstractProperties {
 
     public int getBufferCacheNumPages() {
         return (int) (getBufferCacheSize() / (getBufferCachePageSize() + IBufferCache.RESERVED_HEADER_BYTES));
+    }
+
+    public int getMaxConcurrentFlushes() {
+        return accessor.getInt(Option.STORAGE_MEMORYCOMPONENT_MAX_CONCURRENT_FLUSHES);
     }
 
     public long getJobExecutionMemoryBudget() {

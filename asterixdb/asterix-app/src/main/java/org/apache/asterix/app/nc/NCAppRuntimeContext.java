@@ -206,7 +206,15 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             }
             localResourceRepository.deleteStorageData();
         }
-        virtualBufferCache = new GlobalVirtualBufferCache(allocator, storageProperties);
+        int maxConcurrentFlushes = storageProperties.getMaxConcurrentFlushes();
+        if (maxConcurrentFlushes <= 0) {
+            maxConcurrentFlushes = ioManager.getIODevices().size();
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("The value of maxConcurrentFlushes is not provided. Setting maxConcurrentFlushes = {}.",
+                        maxConcurrentFlushes);
+            }
+        }
+        virtualBufferCache = new GlobalVirtualBufferCache(allocator, storageProperties, maxConcurrentFlushes);
         // Must start vbc now instead of by life cycle component manager (lccm) because lccm happens after
         // the metadata bootstrap task
         ((ILifeCycleComponent) virtualBufferCache).start();

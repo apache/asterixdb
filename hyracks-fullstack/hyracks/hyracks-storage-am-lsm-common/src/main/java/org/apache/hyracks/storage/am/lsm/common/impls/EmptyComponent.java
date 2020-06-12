@@ -46,7 +46,7 @@ public class EmptyComponent implements ILSMDiskComponent {
     }
 
     @Override
-    public void threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
+    public boolean threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
             throws HyracksDataException {
         throw HyracksDataException.create(ErrorCode.ILLEGAL_ATTEMPT_TO_EXIT_EMPTY_COMPONENT);
     }
