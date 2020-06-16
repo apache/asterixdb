@@ -31,7 +31,7 @@ create external dataset test(test) using S3 (
 ("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
 ("serviceEndpoint"="http://localhost:8001"),
-("container"="fixed-data-bucket"),
+("container"="fixed-data"),
 ("definition"=""),
 ("format"="json")
 );

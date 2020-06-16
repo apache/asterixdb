@@ -26,10 +26,12 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -47,8 +49,10 @@ import org.apache.asterix.external.library.JavaLibrary;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.data.parsers.BooleanParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
@@ -466,16 +470,18 @@ public class ExternalDataUtils {
     }
 
     /**
-     * Ensures that the external source container is present
+     * Validates adapter specific external dataset properties. Specific properties for different adapters should be
+     * validated here
      *
-     * @param configuration external source properties
+     * @param configuration properties
      */
-    public static void validateExternalSourceContainer(Map<String, String> configuration) throws CompilationException {
+    public static void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc)
+            throws CompilationException {
         String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
 
         switch (type) {
             case ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3:
-                ExternalDataUtils.AwsS3.validateExternalSourceContainer(configuration);
+                ExternalDataUtils.AwsS3.validateProperties(configuration, srcLoc);
                 break;
             default:
                 // Nothing needs to be done
@@ -483,11 +489,109 @@ public class ExternalDataUtils {
         }
     }
 
+    /**
+     * Regex matches all the provided patterns against the provided path
+     *
+     * @param path path to check against
+     *
+     * @return {@code true} if all patterns match, {@code false} otherwise
+     */
+    public static boolean matchPatterns(List<Matcher> matchers, String path) {
+        for (Matcher matcher : matchers) {
+            if (matcher.reset(path).matches()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Converts the wildcard to proper regex
+     *
+     * @param wildcard wildcard pattern to convert
+     *
+     * @return regex expression
+     */
+    public static String wildcardToRegex(String wildcard) {
+        StringBuilder builder = new StringBuilder(wildcard.length());
+        builder.append('^');
+
+        // This keeps an eye on the presence inside or outside a sequence, everything inside a sequence is a literal
+        // e.g ("*" ===> ".*" while "[*]" ===> "[\*]"
+        boolean outsideBracketSequence = true;
+
+        for (int i = 0; i < wildcard.length(); i++) {
+            char c = wildcard.charAt(i);
+            switch (c) {
+                case '*':
+                    builder.append(outsideBracketSequence ? "." : "\\").append(c);
+                    break;
+                case '?':
+                    builder.append(outsideBracketSequence ? "." : "\\?");
+                    break;
+                case '[':
+                    if (outsideBracketSequence) {
+                        outsideBracketSequence = false;
+                        builder.append(c);
+                        if (i + 1 < wildcard.length()) {
+                            if (wildcard.charAt(i + 1) == '!') {
+                                i++;
+                                builder.append('^');
+                            }
+                        }
+                    } else {
+                        // escape the open bracket "[" if we are already inside a bracket sequence
+                        builder.append("\\").append(c);
+                    }
+                    break;
+                case ']':
+                    if (outsideBracketSequence) {
+                        // escape if we are outside bracket sequence
+                        builder.append("\\").append(c);
+                    } else {
+                        // Inside bracket, close it and mark as outside bracket
+                        outsideBracketSequence = true;
+                        builder.append(c);
+                    }
+                    break;
+                // escape special regexp-characters
+                case '(':
+                case ')':
+                case '$':
+                case '^':
+                case '.':
+                case '{':
+                case '}':
+                case '|':
+                case '+':
+                case '=':
+                case '<':
+                case '>':
+                case '!':
+                case '\\':
+                    builder.append("\\").append(c);
+                    break;
+                default:
+                    builder.append(c);
+                    break;
+            }
+        }
+        builder.append('$');
+        return builder.toString();
+    }
+
     public static class AwsS3 {
         private AwsS3() {
             throw new AssertionError("do not instantiate");
         }
 
+        /**
+         * Builds the S3 client using the provided configuration
+         *
+         * @param configuration properties
+         * @return S3 client
+         * @throws CompilationException CompilationException
+         */
         public static S3Client buildAwsS3Client(Map<String, String> configuration) throws CompilationException {
             // TODO(Hussain): Need to ensure that all required parameters are present in a previous step
             String accessKeyId = configuration.get(ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME);
@@ -531,16 +635,24 @@ public class ExternalDataUtils {
         }
 
         /**
-         * Validates if the container being used is available or not.
+         * Validate external dataset properties
          *
-         * @param configuration external datasource configuration
+         * @param configuration properties
          *
          * @throws CompilationException Compilation exception
          */
-        public static void validateExternalSourceContainer(Map<String, String> configuration)
+        public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc)
                 throws CompilationException {
-            S3Client s3Client = null;
 
+            // check if the format property is present
+            if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
+                throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
+            }
+
+            validateIncludeExclude(configuration);
+
+            // Check if the bucket is present
+            S3Client s3Client = null;
             try {
                 String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
                 s3Client = buildAwsS3Client(configuration);
@@ -558,6 +670,52 @@ public class ExternalDataUtils {
                 if (s3Client != null) {
                     CleanupUtils.close(s3Client, null);
                 }
+            }
+        }
+
+        /**
+         * TODO(Hussain)
+         * @param configuration
+         * @throws CompilationException
+         */
+        public static void validateIncludeExclude(Map<String, String> configuration) throws CompilationException {
+            // Ensure that include and exclude are not provided at the same time + ensure valid format or property
+            List<Map.Entry<String, String>> includes = new ArrayList<>();
+            List<Map.Entry<String, String>> excludes = new ArrayList<>();
+
+            // Accepted formats are include, include#1, include#2, ... etc, same for excludes
+            for (Map.Entry<String, String> entry : configuration.entrySet()) {
+                String key = entry.getKey();
+
+                if (key.equals(ExternalDataConstants.KEY_INCLUDE)) {
+                    includes.add(entry);
+                } else if (key.equals(ExternalDataConstants.KEY_EXCLUDE)) {
+                    excludes.add(entry);
+                } else if (key.startsWith(ExternalDataConstants.KEY_INCLUDE)
+                        || key.startsWith(ExternalDataConstants.KEY_EXCLUDE)) {
+
+                    // Split by the "#", length should be 2, left should be include/exclude, right should be integer
+                    String[] splits = key.split("#");
+
+                    if (key.startsWith(ExternalDataConstants.KEY_INCLUDE) && splits.length == 2
+                            && splits[0].equals(ExternalDataConstants.KEY_INCLUDE)
+                            && NumberUtils.isIntegerNumericString(splits[1])) {
+                        includes.add(entry);
+                    } else if (key.startsWith(ExternalDataConstants.KEY_EXCLUDE) && splits.length == 2
+                            && splits[0].equals(ExternalDataConstants.KEY_EXCLUDE)
+                            && NumberUtils.isIntegerNumericString(splits[1])) {
+                        excludes.add(entry);
+                    } else {
+                        throw new CompilationException(ErrorCode.INVALID_PROPERTY_FORMAT, key);
+                    }
+                }
+            }
+
+            // TODO: Should include/exclude be a common check or S3 specific?
+            // Ensure either include or exclude are provided, but not both of them
+            if (!includes.isEmpty() && !excludes.isEmpty()) {
+                throw new CompilationException(ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME,
+                        ExternalDataConstants.KEY_INCLUDE, ExternalDataConstants.KEY_EXCLUDE);
             }
         }
     }

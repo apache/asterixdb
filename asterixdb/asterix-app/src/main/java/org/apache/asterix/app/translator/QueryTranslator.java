@@ -3509,16 +3509,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void validateExternalDatasetProperties(ExternalDetailsDecl externalDetails,
             Map<String, String> properties, SourceLocation srcLoc, MetadataTransactionContext mdTxnCtx)
             throws AlgebricksException, HyracksDataException {
+        // Validate adapter specific properties
         String adapter = externalDetails.getAdapter();
-        // "format" parameter is needed for "S3" data source
-        if (ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3.equals(adapter)
-                && properties.get(ExternalDataConstants.KEY_FORMAT) == null) {
-            throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
-        }
-
         Map<String, String> details = new HashMap<>(properties);
         details.put(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapter);
-        validateExternalSourceContainer(details);
+        validateAdapterSpecificProperties(details, srcLoc);
     }
 
     /**
@@ -3526,7 +3521,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
      *
      * @param configuration external source properties
      */
-    protected void validateExternalSourceContainer(Map<String, String> configuration) throws CompilationException {
-        ExternalDataUtils.validateExternalSourceContainer(configuration);
+    protected void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc)
+            throws CompilationException {
+        ExternalDataUtils.validateAdapterSpecificProperties(configuration, srcLoc);
     }
 }
