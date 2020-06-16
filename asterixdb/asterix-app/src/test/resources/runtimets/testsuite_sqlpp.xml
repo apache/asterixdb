@@ -12366,6 +12366,11 @@
   </test-group>
   <test-group name="unnest">
     <test-case FilePath="unnest">
+      <compilation-unit name="ASTERIXDB-2750_unnest_join">
+        <output-dir compare="Text">ASTERIXDB-2750_unnest_join</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="unnest">
       <compilation-unit name="left-outer-unnest">
         <output-dir compare="Text">left-outer-unnest</output-dir>
       </compilation-unit>

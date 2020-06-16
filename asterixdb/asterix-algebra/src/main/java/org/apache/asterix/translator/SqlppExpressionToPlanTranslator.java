@@ -149,7 +149,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     public static final String REWRITE_IN_AS_OR_OPTION = "rewrite_in_as_or";
     private static final boolean REWRITE_IN_AS_OR_OPTION_DEFAULT = true;
 
-    private Deque<Mutable<ILogicalOperator>> uncorrelatedLeftBranchStack = new ArrayDeque<>();
+    private Deque<Mutable<ILogicalOperator>> uncorrelatedRightBranchStack = new ArrayDeque<>();
     private final Map<VarIdentifier, IAObject> externalVars;
     private final boolean translateInAsOr;
 
@@ -297,10 +297,12 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             throws CompilationException {
         Mutable<ILogicalOperator> inputSrc = arg;
         Pair<ILogicalOperator, LogicalVariable> topUnnest = null;
+        uncorrelatedRightBranchStack.push(inputSrc);
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
             topUnnest = fromTerm.accept(this, inputSrc);
             inputSrc = new MutableObject<>(topUnnest.first);
         }
+        uncorrelatedRightBranchStack.pop();
         return topUnnest;
     }
 
@@ -328,27 +330,20 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         Mutable<ILogicalOperator> topOpRef = new MutableObject<>(unnestOp);
         if (fromTerm.hasCorrelateClauses()) {
             for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
-                if (correlateClause.getClauseType() == ClauseType.UNNEST_CLAUSE) {
-                    // Correlation is allowed.
-                    topOpRef = new MutableObject<>(correlateClause.accept(this, topOpRef).first);
-                } else {
-                    // Correlation is dis-allowed.
-                    uncorrelatedLeftBranchStack.push(topOpRef);
-                    topOpRef = new MutableObject<>(correlateClause.accept(this, tupSource).first);
-                }
+                topOpRef = new MutableObject<>(correlateClause.accept(this, topOpRef).first);
             }
         }
         return new Pair<>(topOpRef.getValue(), fromVar);
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visit(JoinClause joinClause, Mutable<ILogicalOperator> inputRef)
+    public Pair<ILogicalOperator, LogicalVariable> visit(JoinClause joinClause, Mutable<ILogicalOperator> leftInputRef)
             throws CompilationException {
         SourceLocation sourceLoc = joinClause.getSourceLocation();
-        Mutable<ILogicalOperator> leftInputRef = uncorrelatedLeftBranchStack.pop();
         if (joinClause.getJoinType() == JoinType.INNER) {
+            Mutable<ILogicalOperator> rightInputRef = uncorrelatedRightBranchStack.peek();
             Pair<ILogicalOperator, LogicalVariable> rightBranch =
-                    generateUnnestForBinaryCorrelateRightBranch(joinClause, inputRef, true);
+                    generateUnnestForBinaryCorrelateRightBranch(joinClause, rightInputRef, true);
             // A join operator with condition TRUE.
             AbstractBinaryJoinOperator joinOperator = new InnerJoinOperator(
                     new MutableObject<>(ConstantExpression.TRUE), leftInputRef, new MutableObject<>(rightBranch.first));
@@ -362,7 +357,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             filter.getInputs().add(conditionExprOpPair.second);
             filter.setSourceLocation(conditionExprOpPair.first.getSourceLocation());
             return new Pair<>(filter, rightBranch.second);
-        } else {
+        } else if (joinClause.getJoinType() == JoinType.LEFTOUTER) {
             // Creates a subplan operator.
             SubplanOperator subplanOp = new SubplanOperator();
             subplanOp.getInputs().add(leftInputRef);
@@ -498,6 +493,9 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 context.setVar(joinClause.getRightVariable(), outerUnnestVar);
             }
             return new Pair<>(currentTopOp, null);
+        } else {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, joinClause.getSourceLocation(),
+                    String.valueOf(joinClause.getJoinType().toString()));
         }
     }
 
