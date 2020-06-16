@@ -77,7 +77,7 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         int n = args.length;
                         evals[0].evaluate(tuple, condPtr);
-                        for (int i = 1; i < n; i += 2) {
+                        for (int i = 1; i < n - 1; i += 2) {
                             evals[i].evaluate(tuple, casePtr);
                             if (equals(condPtr, casePtr)) {
                                 evals[i + 1].evaluate(tuple, argPtr);
