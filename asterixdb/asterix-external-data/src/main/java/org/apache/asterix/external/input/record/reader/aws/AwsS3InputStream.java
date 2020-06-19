@@ -33,12 +33,18 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
+import org.apache.hyracks.util.LogRedactionUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
 public class AwsS3InputStream extends AbstractMultipleInputStream {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     // Configuration
     private final Map<String, String> configuration;
@@ -83,6 +89,11 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
         // the header, then the S3 stream gets closed in the close method
         try {
             in = s3Client.getObject(getObjectRequest);
+        } catch (NoSuchKeyException ex) {
+            LOGGER.debug(() -> "Key " + LogRedactionUtil.userData(getObjectRequest.key()) + " was not found in bucket "
+                    + getObjectRequest.bucket());
+            nextFileIndex++;
+            return advance();
         } catch (SdkException ex) {
             throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
         }

@@ -570,8 +570,9 @@ public class BTreeAccessMethod implements IAccessMethod {
             if (lowKeyLimits[0] == null && lowKeyLimits[i] != null || lowKeyLimits[0] != null && lowKeyLimits[i] == null
                     || highKeyLimits[0] == null && highKeyLimits[i] != null
                     || highKeyLimits[0] != null && highKeyLimits[i] == null) {
-                numSecondaryKeys--;
+                numSecondaryKeys = i;
                 primaryIndexPostProccessingIsNeeded = true;
+                break;
             }
         }
 
