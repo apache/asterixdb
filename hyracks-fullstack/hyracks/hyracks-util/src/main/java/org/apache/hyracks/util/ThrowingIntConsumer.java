@@ -18,16 +18,16 @@
  */
 package org.apache.hyracks.util;
 
-import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 @FunctionalInterface
-public interface ThrowingConsumer<V> {
-    void process(V value) throws Exception;
+public interface ThrowingIntConsumer {
+    void process(int value) throws Exception;
 
     @SuppressWarnings("Duplicates")
-    static <T> Consumer<T> asUnchecked(ThrowingConsumer<T> consumer) {
+    static IntConsumer asUnchecked(ThrowingIntConsumer consumer) {
         return input -> {
             try {
                 consumer.process(input);
