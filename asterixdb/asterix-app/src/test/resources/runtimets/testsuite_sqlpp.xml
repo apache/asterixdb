@@ -3888,6 +3888,7 @@
         <output-dir compare="Text">create-dataset-inline-type-2</output-dir>
         <expected-error>ASX1082: Cannot find datatype with name test.$d$t$i$Cust1</expected-error>
         <expected-error>ASX1082: Cannot find datatype with name test.$d$t$i$Cust2</expected-error>
+        <expected-error>ASX1082: Cannot find datatype with name my_unknown_type</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">

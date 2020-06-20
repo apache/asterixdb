@@ -29,6 +29,8 @@ import java.util.Map;
 
 import org.apache.asterix.common.annotations.IRecordFieldDataGen;
 import org.apache.asterix.common.annotations.RecordDataGenAnnotation;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
 import org.apache.asterix.lang.common.expression.RecordTypeDefinition.RecordKind;
@@ -50,6 +52,7 @@ import org.apache.asterix.om.types.AbstractComplexType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class TypeTranslator {
 
@@ -70,7 +73,7 @@ public class TypeTranslator {
         firstPass(typeExpr, typeName, typeMap, incompleteFieldTypes, incompleteItemTypes,
                 incompleteTopLevelTypeReferences, typeDataverse);
         secondPass(mdTxnCtx, typeMap, incompleteFieldTypes, incompleteItemTypes, incompleteTopLevelTypeReferences,
-                typeDataverse);
+                typeDataverse, typeExpr.getSourceLocation());
 
         for (IAType type : typeMap.values()) {
             if (type.getTypeTag().isDerivedType()) {
@@ -87,7 +90,8 @@ public class TypeTranslator {
             throws AlgebricksException {
 
         if (BuiltinTypeMap.getBuiltinType(typeName) != null) {
-            throw new AlgebricksException("Cannot redefine builtin type " + typeName + " .");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, typeExpr.getSourceLocation(),
+                    "Cannot redefine builtin type " + typeName);
         }
         TypeSignature typeSignature = new TypeSignature(typeDataverse, typeName);
         switch (typeExpr.getTypeKind()) {
@@ -133,15 +137,15 @@ public class TypeTranslator {
     private static void secondPass(MetadataTransactionContext mdTxnCtx, Map<TypeSignature, IAType> typeMap,
             Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes,
             Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes,
-            Map<TypeSignature, List<TypeSignature>> incompleteTopLevelTypeReferences, String typeDataverse)
-            throws AlgebricksException {
+            Map<TypeSignature, List<TypeSignature>> incompleteTopLevelTypeReferences, String typeDataverse,
+            SourceLocation sourceLoc) throws AlgebricksException {
         // solve remaining top level references
         for (TypeSignature typeSignature : incompleteTopLevelTypeReferences.keySet()) {
             IAType t;
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeSignature.getNamespace(),
                     typeSignature.getName());
             if (dt == null) {
-                throw new AlgebricksException("Could not resolve type " + typeSignature);
+                throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, typeSignature.getName());
             } else {
                 t = dt.getDatatype();
             }
@@ -158,7 +162,7 @@ public class TypeTranslator {
                         trefName);
             }
             if (dt == null) {
-                throw new AlgebricksException("Could not resolve type " + trefName);
+                throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, trefName);
             } else {
                 t = dt.getDatatype();
             }
@@ -185,7 +189,7 @@ public class TypeTranslator {
                 dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeSignature.getNamespace(),
                         typeSignature.getName());
                 if (dt == null) {
-                    throw new AlgebricksException("Could not resolve type " + typeSignature);
+                    throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, typeSignature.getName());
                 }
                 t = dt.getDatatype();
             } else {
