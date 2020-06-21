@@ -22,7 +22,7 @@ package org.apache.hyracks.util;
 public interface IRetryPolicy {
     /**
      * @param failure
-     *            the cause of the failure
+     *            the cause of the failure (this cannot be null)
      * @return true if one more attempt should be done
      */
     boolean retry(Throwable failure);
