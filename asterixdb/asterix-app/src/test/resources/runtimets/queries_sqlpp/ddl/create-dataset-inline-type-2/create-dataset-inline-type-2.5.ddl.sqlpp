@@ -16,14 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.util;
 
-@FunctionalInterface
-public interface IRetryPolicy {
-    /**
-     * @param failure
-     *            the cause of the failure (this cannot be null)
-     * @return true if one more attempt should be done
-     */
-    boolean retry(Throwable failure);
-}
+/* Create dataset that attempts to use unknown type
+   in inline type definition */
+
+USE test;
+
+CREATE DATASET Cust3X(
+  c_custkey integer not unknown,
+  c_name my_unknown_type
+) PRIMARY KEY c_custkey;

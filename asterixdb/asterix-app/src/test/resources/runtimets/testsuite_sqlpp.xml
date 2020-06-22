@@ -3983,6 +3983,7 @@
         <output-dir compare="Text">create-dataset-inline-type-2</output-dir>
         <expected-error>ASX1082: Cannot find datatype with name test.$d$t$i$Cust1</expected-error>
         <expected-error>ASX1082: Cannot find datatype with name test.$d$t$i$Cust2</expected-error>
+        <expected-error>ASX1082: Cannot find datatype with name my_unknown_type</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -13297,6 +13298,11 @@
     </test-case>
   </test-group>
   <test-group name="unnest">
+    <test-case FilePath="unnest">
+      <compilation-unit name="ASTERIXDB-2750_unnest_join">
+        <output-dir compare="Text">ASTERIXDB-2750_unnest_join</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="unnest">
       <compilation-unit name="left-outer-unnest">
         <output-dir compare="Text">left-outer-unnest</output-dir>

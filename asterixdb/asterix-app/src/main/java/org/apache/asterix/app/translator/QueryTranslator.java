@@ -691,10 +691,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new CompilationException(ErrorCode.DATASET_EXISTS, sourceLoc, datasetName, dataverseName);
                 }
             }
+            Datatype itemTypeEntity;
             IAType itemType;
             switch (itemTypeExpr.getTypeKind()) {
                 case TYPEREFERENCE:
-                    Datatype itemTypeEntity = metadataProvider.findTypeEntity(itemTypeDataverseName, itemTypeName);
+                    itemTypeEntity = metadataProvider.findTypeEntity(itemTypeDataverseName, itemTypeName);
                     if (itemTypeEntity == null || itemTypeEntity.getIsAnonymous()) {
                         // anonymous types cannot be referred from CREATE DATASET
                         throw new AsterixException(ErrorCode.UNKNOWN_TYPE, sourceLoc,
@@ -706,8 +707,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 case RECORD:
                     itemType = translateType(itemTypeDataverseName, itemTypeName, itemTypeExpr, mdTxnCtx);
                     validateDatasetItemType(dsType, itemType, false, sourceLoc);
-                    MetadataManager.INSTANCE.addDatatype(mdTxnCtx,
-                            new Datatype(itemTypeDataverseName, itemTypeName, itemType, true));
+                    itemTypeEntity = new Datatype(itemTypeDataverseName, itemTypeName, itemType, true);
+                    MetadataManager.INSTANCE.addDatatype(mdTxnCtx, itemTypeEntity);
                     break;
                 default:
                     throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
@@ -783,7 +784,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             createExternalDatasetProperties(dataverseName, dd, metadataProvider, mdTxnCtx);
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
-                    validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx);
+                    validateExternalDatasetProperties(externalDetails, properties, itemTypeEntity,
+                            dd.getSourceLocation(), mdTxnCtx);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
                             TransactionState.COMMIT);
                     break;
@@ -3507,8 +3509,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void validateExternalDatasetProperties(ExternalDetailsDecl externalDetails,
-            Map<String, String> properties, SourceLocation srcLoc, MetadataTransactionContext mdTxnCtx)
-            throws AlgebricksException, HyracksDataException {
+            Map<String, String> properties, Datatype itemType, SourceLocation srcLoc,
+            MetadataTransactionContext mdTxnCtx) throws AlgebricksException, HyracksDataException {
         // Validate adapter specific properties
         String adapter = externalDetails.getAdapter();
         Map<String, String> details = new HashMap<>(properties);

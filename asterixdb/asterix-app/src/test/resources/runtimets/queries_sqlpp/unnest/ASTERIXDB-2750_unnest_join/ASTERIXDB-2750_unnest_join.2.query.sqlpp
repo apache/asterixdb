@@ -16,14 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.util;
 
-@FunctionalInterface
-public interface IRetryPolicy {
-    /**
-     * @param failure
-     *            the cause of the failure (this cannot be null)
-     * @return true if one more attempt should be done
-     */
-    boolean retry(Throwable failure);
-}
+with
+  t1 as [ { "x": 1, "y": [10, 11, 12] }, { "x": 2, "y": [20, 21, 22] } ],
+  t2 as [ 100, 101, 102, 103 ],
+  t3 as [ 1000, 1001, 1002, 1003, 1004 ]
+from t1 as t1, t1.y as y join t2 as t2 on true join t3 as t3 on true
+select value count(*)

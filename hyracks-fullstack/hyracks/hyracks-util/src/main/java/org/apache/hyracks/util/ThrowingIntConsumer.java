@@ -18,12 +18,26 @@
  */
 package org.apache.hyracks.util;
 
+import java.util.function.IntConsumer;
+
+import com.google.common.util.concurrent.UncheckedExecutionException;
+
 @FunctionalInterface
-public interface IRetryPolicy {
-    /**
-     * @param failure
-     *            the cause of the failure (this cannot be null)
-     * @return true if one more attempt should be done
-     */
-    boolean retry(Throwable failure);
+public interface ThrowingIntConsumer {
+    void process(int value) throws Exception;
+
+    @SuppressWarnings("Duplicates")
+    static IntConsumer asUnchecked(ThrowingIntConsumer consumer) {
+        return input -> {
+            try {
+                consumer.process(input);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new UncheckedExecutionException(e);
+            } catch (Exception e) {
+                throw new UncheckedExecutionException(e);
+            }
+        };
+    }
+
 }

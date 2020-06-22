@@ -888,10 +888,10 @@ TypeExpression DatasetRecordTypeSpecification(boolean allowRecordKindModifier) t
 {
   RecordTypeDefinition recordTypeDef = null;
   RecordTypeDefinition.RecordKind recordKind = null;
-  Token recordKindToken = null;
+  Token startToken = null, recordKindToken = null;
 }
 {
-   <LEFTPAREN> recordTypeDef = DatasetRecordTypeDef() <RIGHTPAREN>
+   <LEFTPAREN> { startToken = token; } recordTypeDef = DatasetRecordTypeDef() <RIGHTPAREN>
    ( recordKind = RecordTypeKind() { recordKindToken = token; } <TYPE> )?
    {
      if (recordKind == null) {
@@ -900,7 +900,7 @@ TypeExpression DatasetRecordTypeSpecification(boolean allowRecordKindModifier) t
        throw createUnexpectedTokenError(recordKindToken);
      }
      recordTypeDef.setRecordKind(recordKind);
-     return recordTypeDef;
+     return addSourceLocation(recordTypeDef, startToken);
    }
 }
 
