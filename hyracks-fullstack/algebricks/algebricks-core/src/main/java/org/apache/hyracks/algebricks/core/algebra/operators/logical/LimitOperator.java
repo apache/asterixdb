@@ -105,7 +105,7 @@ public class LimitOperator extends AbstractLogicalOperator {
 
     @Override
     public boolean isMap() {
-        return true;
+        return false;
     }
 
     @Override

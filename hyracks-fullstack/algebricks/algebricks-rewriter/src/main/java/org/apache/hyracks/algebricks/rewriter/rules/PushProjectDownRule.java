@@ -91,7 +91,9 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
                     || op2.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
                 return new Pair<Boolean, Boolean>(false, false);
             }
-            if (!op2.isMap()) {
+            // ok to push PROJECT through LIMIT
+            boolean isMapOrLimit = op2.isMap() || op2.getOperatorTag() == LogicalOperatorTag.LIMIT;
+            if (!isMapOrLimit) {
                 break;
             }
             LinkedList<LogicalVariable> usedVars = new LinkedList<LogicalVariable>();
