@@ -2232,7 +2232,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ExternalDataUtils.normalize(configuration);
             ExternalDataUtils.validate(configuration);
             feed = new Feed(dataverseName, feedName, configuration);
-            FeedMetadataUtil.validateFeed(feed, mdTxnCtx, appCtx);
+            FeedMetadataUtil.validateFeed(feed, mdTxnCtx, appCtx, warningCollector);
             MetadataManager.INSTANCE.addFeed(metadataProvider.getMetadataTxnContext(), feed);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
@@ -3256,6 +3256,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
      */
     protected void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc)
             throws CompilationException {
-        ExternalDataUtils.validateAdapterSpecificProperties(configuration, srcLoc);
+        ExternalDataUtils.validateAdapterSpecificProperties(configuration, srcLoc, warningCollector);
     }
 }

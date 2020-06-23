@@ -35,6 +35,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 import com.rometools.rome.feed.synd.SyndEntry;
 
@@ -60,7 +61,8 @@ public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntry> {
     }
 
     @Override
-    public void configure(IServiceContext serviceContext, Map<String, String> configuration) {
+    public void configure(IServiceContext serviceContext, Map<String, String> configuration,
+            IWarningCollector warningCollector) {
         this.serviceContext = serviceContext;
         String url = configuration.get(ExternalDataConstants.KEY_RSS_URL);
         if (url == null) {

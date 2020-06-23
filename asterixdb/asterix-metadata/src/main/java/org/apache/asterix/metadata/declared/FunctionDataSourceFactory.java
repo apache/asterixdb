@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class FunctionDataSourceFactory implements IRecordReaderFactory<char[]> {
 
@@ -51,7 +52,7 @@ public class FunctionDataSourceFactory implements IRecordReaderFactory<char[]> {
     }
 
     @Override
-    public void configure(IServiceContext ctx, Map<String, String> configuration)
+    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
             throws AlgebricksException, HyracksDataException {
         // No Op
     }

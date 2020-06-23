@@ -35,6 +35,7 @@ import java.util.regex.PatternSyntaxException;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -43,6 +44,8 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.util.CleanupUtils;
 
 import software.amazon.awssdk.core.exception.SdkException;
@@ -80,7 +83,8 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
     }
 
     @Override
-    public void configure(IServiceContext ctx, Map<String, String> configuration) throws AlgebricksException {
+    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
+            throws AlgebricksException {
         this.configuration = configuration;
         ICcApplicationContext ccApplicationContext = (ICcApplicationContext) ctx.getApplicationContext();
 
@@ -126,10 +130,7 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
 
         // Get all objects in a bucket and extract the paths to files
         ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder().bucket(container);
-        String path = configuration.get(AwsS3.DEFINITION_FIELD_NAME);
-        if (path != null) {
-            listObjectsBuilder.prefix(path + (!path.isEmpty() && !path.endsWith("/") ? "/" : ""));
-        }
+        ExternalDataUtils.AwsS3.setPrefix(configuration, listObjectsBuilder);
 
         ListObjectsV2Response listObjectsResponse;
         boolean done = false;
@@ -161,6 +162,12 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
             if (s3Client != null) {
                 CleanupUtils.close(s3Client, null);
             }
+        }
+
+        // Warn if no files are returned
+        if (filesOnly.isEmpty() && warningCollector.shouldWarn()) {
+            Warning warning = WarningUtil.forAsterix(null, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+            warningCollector.warn(warning);
         }
 
         // Partition constraints

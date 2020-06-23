@@ -105,7 +105,7 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                                 normalizedKeyComputerFactoryProvider, expressionRuntimeProvider, expressionTypeComputer,
                                 oc, expressionEvalSizeComputer, partialAggregationTypeComputer,
                                 predEvaluatorFactoryProvider, physicalOptimizationConfig.getFrameSize(),
-                                clusterLocations, maxWarnings);
+                                clusterLocations, warningCollector, maxWarnings);
 
                         PlanCompiler pc = new PlanCompiler(context);
                         return pc.compilePlan(plan, jobEventListenerFactory);

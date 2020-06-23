@@ -16,20 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.util;
 
-import org.apache.hyracks.api.exceptions.ErrorCode;
+package org.apache.asterix.common.exceptions;
+
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 
-public class ParseUtil {
+public final class NoOpWarningCollector implements IWarningCollector {
 
-    private ParseUtil() {
+    public static final IWarningCollector INSTANCE = new NoOpWarningCollector();
+
+    private NoOpWarningCollector() {
     }
 
-    public static void warn(IWarningCollector warningCollector, String dataSourceName, long lineNum, int fieldNum,
-            String warnMessage) {
-        warningCollector.warn(
-                Warning.forHyracks(null, ErrorCode.PARSING_ERROR, dataSourceName, lineNum, fieldNum, warnMessage));
+    @Override
+    public void warn(Warning warning) {
+        // no-op
+    }
+
+    @Override
+    public boolean shouldWarn() {
+        return false;
+    }
+
+    @Override
+    public long getTotalWarningsCount() {
+        return 0;
     }
 }
