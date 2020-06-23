@@ -34,8 +34,6 @@ public interface IMessage extends Serializable {
 
     static void logMessage(Logger logger, IMessage msg) {
         final Level logLevel = msg.isWhispered() ? Level.TRACE : Level.INFO;
-        if (logger.isEnabled(logLevel)) {
-            logger.info("Received message: {}", msg);
-        }
+        logger.log(logLevel, "Received message: {}", msg);
     }
 }
