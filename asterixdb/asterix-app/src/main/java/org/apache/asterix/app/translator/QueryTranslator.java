@@ -737,12 +737,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     break;
                 case EXTERNAL:
                     ExternalDetailsDecl externalDetails = (ExternalDetailsDecl) dd.getDatasetDetailsDecl();
-                    Map<String, String> properties =
-                            createExternalDatasetProperties(dataverseName, dd, metadataProvider, mdTxnCtx);
+                    Map<String, String> properties = createExternalDatasetProperties(dataverseName, dd, itemTypeEntity,
+                            metadataProvider, mdTxnCtx);
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
-                    validateExternalDatasetProperties(externalDetails, properties, itemTypeEntity,
-                            dd.getSourceLocation(), mdTxnCtx);
+                    validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
                             TransactionState.COMMIT);
                     break;
@@ -853,7 +852,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected Map<String, String> createExternalDatasetProperties(String dataverseName, DatasetDecl dd,
-            MetadataProvider metadataProvider, MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
+            Datatype itemType, MetadataProvider metadataProvider, MetadataTransactionContext mdTxnCtx)
+            throws AlgebricksException {
         ExternalDetailsDecl externalDetails = (ExternalDetailsDecl) dd.getDatasetDetailsDecl();
         return externalDetails.getProperties();
     }
@@ -3240,8 +3240,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void validateExternalDatasetProperties(ExternalDetailsDecl externalDetails,
-            Map<String, String> properties, Datatype itemType, SourceLocation srcLoc,
-            MetadataTransactionContext mdTxnCtx) throws AlgebricksException, HyracksDataException {
+            Map<String, String> properties, SourceLocation srcLoc, MetadataTransactionContext mdTxnCtx)
+            throws AlgebricksException, HyracksDataException {
         // Validate adapter specific properties
         String adapter = externalDetails.getAdapter();
         Map<String, String> details = new HashMap<>(properties);
