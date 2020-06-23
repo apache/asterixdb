@@ -98,7 +98,7 @@ public class ActiveManager {
     }
 
     public void submit(ActiveManagerMessage message) throws HyracksDataException {
-        LOGGER.log(Level.INFO, "Message of type " + message.getKind() + " received in " + nodeId);
+        LOGGER.debug("Message of type {} received in {}", message.getKind(), nodeId);
         switch (message.getKind()) {
             case STOP_ACTIVITY:
                 stopRuntime(message);
