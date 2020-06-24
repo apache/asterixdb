@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 /**
  * Base interface for IGenericDatasetAdapterFactory and ITypedDatasetAdapterFactory.
@@ -71,9 +72,10 @@ public interface IAdapterFactory extends Serializable {
      *
      * @param serviceContext
      * @param configuration
+     * @param warningCollector warning collector
      * @throws AlgebricksException
      * @throws HyracksDataException
      */
-    void configure(IServiceContext serviceContext, Map<String, String> configuration)
-            throws HyracksDataException, AlgebricksException;
+    void configure(IServiceContext serviceContext, Map<String, String> configuration,
+            IWarningCollector warningCollector) throws HyracksDataException, AlgebricksException;
 }

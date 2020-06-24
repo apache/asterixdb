@@ -118,7 +118,8 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
             try {
                 adapterFactory = (ITypedAdapterFactory) (classLoader.loadClass(adaptorFactoryClassName).newInstance());
                 adapterFactory.setOutputType(adapterOutputType);
-                adapterFactory.configure(ctx.getJobletContext().getServiceContext(), adaptorConfiguration);
+                adapterFactory.configure(ctx.getJobletContext().getServiceContext(), adaptorConfiguration,
+                        ctx.getWarningCollector());
             } catch (Exception e) {
                 throw HyracksDataException.create(e);
             }

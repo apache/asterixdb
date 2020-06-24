@@ -45,6 +45,7 @@ import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class JobGenContext {
     private final IOperatorSchema outerFlowSchema;
@@ -70,6 +71,7 @@ public class JobGenContext {
     private AlgebricksAbsolutePartitionConstraint clusterLocations;
     private int varCounter;
     private final ITypingContext typingContext;
+    private final IWarningCollector warningCollector;
     private final long maxWarnings;
 
     public JobGenContext(IOperatorSchema outerFlowSchema, IMetadataProvider<?, ?> metadataProvider, Object appContext,
@@ -85,7 +87,8 @@ public class JobGenContext {
             ITypingContext typingContext, IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IPartialAggregationTypeComputer partialAggregationTypeComputer,
             IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider, int frameSize,
-            AlgebricksAbsolutePartitionConstraint clusterLocations, long maxWarnings) {
+            AlgebricksAbsolutePartitionConstraint clusterLocations, IWarningCollector warningCollector,
+            long maxWarnings) {
         this.outerFlowSchema = outerFlowSchema;
         this.metadataProvider = metadataProvider;
         this.appContext = appContext;
@@ -108,6 +111,7 @@ public class JobGenContext {
         this.predEvaluatorFactoryProvider = predEvaluatorFactoryProvider;
         this.frameSize = frameSize;
         this.varCounter = 0;
+        this.warningCollector = warningCollector;
         this.maxWarnings = maxWarnings;
     }
 
@@ -207,6 +211,10 @@ public class JobGenContext {
 
     public IVariableTypeEnvironment getTypeEnvironment(ILogicalOperator op) {
         return typingContext.getOutputTypeEnvironment(op);
+    }
+
+    public IWarningCollector getWarningCollector() {
+        return warningCollector;
     }
 
     public long getMaxWarnings() {

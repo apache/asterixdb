@@ -42,7 +42,6 @@ public class Warning implements Serializable {
     }
 
     public static Warning of(String component, SourceLocation srcLocation, int code, String message) {
-        Objects.requireNonNull(srcLocation, "warnings must have source location");
         return new Warning(component, srcLocation, code, message);
     }
 
@@ -88,7 +87,7 @@ public class Warning implements Serializable {
         output.writeUTF(component);
         output.writeInt(code);
         output.writeUTF(message);
-        srcLocation.writeFields(output);
+        SourceLocation.writeFields(srcLocation, output);
     }
 
     public static Warning create(DataInput input) throws IOException {

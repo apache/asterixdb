@@ -55,6 +55,7 @@ import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -100,7 +101,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, ITypedAda
         INCServiceContext serviceCtx = ctx.getJobletContext().getServiceContext();
         INcApplicationContext appCtx = (INcApplicationContext) serviceCtx.getApplicationContext();
         try {
-            restoreExternalObjects(serviceCtx, appCtx.getLibraryManager());
+            restoreExternalObjects(serviceCtx, appCtx.getLibraryManager(), ctx.getWarningCollector());
         } catch (Exception e) {
             LOGGER.log(Level.INFO, "Failure restoring external objects", e);
             throw HyracksDataException.create(e);
@@ -120,15 +121,15 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, ITypedAda
         }
     }
 
-    private void restoreExternalObjects(IServiceContext serviceContext, ILibraryManager libraryManager)
-            throws HyracksDataException, AlgebricksException {
+    private void restoreExternalObjects(IServiceContext serviceContext, ILibraryManager libraryManager,
+            IWarningCollector warningCollector) throws HyracksDataException, AlgebricksException {
         if (dataSourceFactory == null) {
             dataSourceFactory = createExternalDataSourceFactory(configuration, libraryManager);
             // create and configure parser factory
             if (dataSourceFactory.isIndexible() && (files != null)) {
                 ((IIndexibleExternalDataSource) dataSourceFactory).setSnapshot(files, indexingOp);
             }
-            dataSourceFactory.configure(serviceContext, configuration);
+            dataSourceFactory.configure(serviceContext, configuration, warningCollector);
         }
         if (dataParserFactory == null) {
             // create and configure parser factory
@@ -140,8 +141,8 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, ITypedAda
     }
 
     @Override
-    public void configure(IServiceContext serviceContext, Map<String, String> configuration)
-            throws HyracksDataException, AlgebricksException {
+    public void configure(IServiceContext serviceContext, Map<String, String> configuration,
+            IWarningCollector warningCollector) throws HyracksDataException, AlgebricksException {
         this.configuration = configuration;
         IApplicationContext appCtx = (IApplicationContext) serviceContext.getApplicationContext();
         ExternalDataUtils.validateDataSourceParameters(configuration);
@@ -149,7 +150,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, ITypedAda
         if (dataSourceFactory.isIndexible() && (files != null)) {
             ((IIndexibleExternalDataSource) dataSourceFactory).setSnapshot(files, indexingOp);
         }
-        dataSourceFactory.configure(serviceContext, configuration);
+        dataSourceFactory.configure(serviceContext, configuration, warningCollector);
         ExternalDataUtils.validateDataParserParameters(configuration);
         dataParserFactory = createDataParserFactory(configuration, appCtx.getLibraryManager());
         dataParserFactory.setRecordType(recordType);

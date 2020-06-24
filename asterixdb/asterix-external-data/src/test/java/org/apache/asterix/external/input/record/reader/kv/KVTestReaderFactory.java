@@ -29,6 +29,7 @@ import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 import com.couchbase.client.core.message.dcp.DCPRequest;
 
@@ -58,7 +59,8 @@ public class KVTestReaderFactory implements IRecordReaderFactory<DCPRequest> {
     }
 
     @Override
-    public void configure(IServiceContext serviceCtx, final Map<String, String> configuration) {
+    public void configure(IServiceContext serviceCtx, final Map<String, String> configuration,
+            IWarningCollector warningCollector) {
         this.serviceCtx = serviceCtx;
         if (configuration.containsKey("num-of-records")) {
             numOfRecords = Integer.parseInt(configuration.get("num-of-records"));

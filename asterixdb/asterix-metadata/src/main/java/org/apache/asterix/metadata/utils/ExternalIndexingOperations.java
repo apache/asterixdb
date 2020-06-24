@@ -30,6 +30,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.DatasetConfig.TransactionState;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingConstants;
@@ -256,7 +257,7 @@ public class ExternalIndexingOperations {
         Map<String, String> configuration = externalDatasetDetails.getProperties();
         ITypedAdapterFactory adapterFactory = AdapterFactoryProvider.getIndexingAdapterFactory(
                 metadataProvider.getApplicationContext().getServiceContext(), externalDatasetDetails.getAdapter(),
-                configuration, (ARecordType) itemType, files, true, null);
+                configuration, (ARecordType) itemType, files, true, null, NoOpWarningCollector.INSTANCE);
         ExternalScanOperatorDescriptor scanOp =
                 new ExternalScanOperatorDescriptor(jobSpec, indexerDesc, adapterFactory);
         scanOp.setSourceLocation(sourceLoc);

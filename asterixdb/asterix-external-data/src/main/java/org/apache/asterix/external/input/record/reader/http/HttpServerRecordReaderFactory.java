@@ -33,6 +33,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.http.server.HttpServerConfigBuilder;
 
 public class HttpServerRecordReaderFactory implements IRecordReaderFactory<char[]> {
@@ -86,7 +87,8 @@ public class HttpServerRecordReaderFactory implements IRecordReaderFactory<char[
     }
 
     @Override
-    public void configure(IServiceContext ctx, Map<String, String> configuration) throws AlgebricksException {
+    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
+            throws AlgebricksException {
         this.configurations = configuration;
         // necessary configs
         addrValue = getConfigurationValue(KEY_CONFIGURATION_ADDRESSES, true);

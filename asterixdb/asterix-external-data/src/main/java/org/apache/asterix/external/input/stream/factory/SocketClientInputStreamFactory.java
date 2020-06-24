@@ -39,6 +39,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class SocketClientInputStreamFactory implements IInputStreamFactory {
 
@@ -55,7 +56,8 @@ public class SocketClientInputStreamFactory implements IInputStreamFactory {
     }
 
     @Override
-    public void configure(IServiceContext serviceCtx, Map<String, String> configuration) throws AsterixException {
+    public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
+            IWarningCollector warningCollector) throws AsterixException {
         try {
             this.serviceCtx = serviceCtx;
             this.sockets = new ArrayList<>();

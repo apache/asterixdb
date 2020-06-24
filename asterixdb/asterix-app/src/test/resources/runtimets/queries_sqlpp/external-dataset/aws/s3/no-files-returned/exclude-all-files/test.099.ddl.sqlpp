@@ -16,20 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.util;
 
-import org.apache.hyracks.api.exceptions.ErrorCode;
-import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.Warning;
-
-public class ParseUtil {
-
-    private ParseUtil() {
-    }
-
-    public static void warn(IWarningCollector warningCollector, String dataSourceName, long lineNum, int fieldNum,
-            String warnMessage) {
-        warningCollector.warn(
-                Warning.forHyracks(null, ErrorCode.PARSING_ERROR, dataSourceName, lineNum, fieldNum, warnMessage));
-    }
-}
+drop dataverse test if exists;

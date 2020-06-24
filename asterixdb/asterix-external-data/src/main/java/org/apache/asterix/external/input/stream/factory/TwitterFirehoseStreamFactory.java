@@ -31,6 +31,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 /**
  * Factory class for creating @see{TwitterFirehoseFeedAdapter}. The adapter
@@ -84,7 +85,8 @@ public class TwitterFirehoseStreamFactory implements IInputStreamFactory {
     }
 
     @Override
-    public void configure(IServiceContext serviceCtx, Map<String, String> configuration) {
+    public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
+            IWarningCollector warningCollector) {
         this.serviceCtx = serviceCtx;
         this.configuration = configuration;
     }

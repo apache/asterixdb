@@ -1867,7 +1867,6 @@ public class TestExecutor {
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
             List<String> expectedErrors = cUnit.getExpectedError();
-            int expectedWarnCount = cUnit.getExpectedWarn().size();
             BitSet expectedWarnings = new BitSet(cUnit.getExpectedWarn().size());
             expectedWarnings.set(0, cUnit.getExpectedWarn().size());
             LOGGER.info(

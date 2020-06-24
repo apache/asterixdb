@@ -203,13 +203,14 @@ public class ErrorCode {
     public static final int PROPERTY_INVALID_VALUE_TYPE = 1111;
     public static final int INVALID_PROPERTY_FORMAT = 1112;
     public static final int INVALID_REGEX_PATTERN = 1113;
-    public static final int SYNONYM_EXISTS = 1114;
-    public static final int UNKNOWN_SYNONYM = 1115;
-    public static final int UNKNOWN_LIBRARY = 1116;
-    public static final int COMPILATION_GROUPING_SETS_OVERFLOW = 1117;
-    public static final int COMPILATION_GROUPING_OPERATION_INVALID_ARG = 1118;
-    public static final int COMPILATION_UNEXPECTED_ALIAS = 1119;
-    public static final int COMPILATION_ILLEGAL_USE_OF_FILTER_CLAUSE = 1120;
+    public static final int EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES = 1114;
+    public static final int SYNONYM_EXISTS = 1115;
+    public static final int UNKNOWN_SYNONYM = 1116;
+    public static final int UNKNOWN_LIBRARY = 1117;
+    public static final int COMPILATION_GROUPING_SETS_OVERFLOW = 1118;
+    public static final int COMPILATION_GROUPING_OPERATION_INVALID_ARG = 1119;
+    public static final int COMPILATION_UNEXPECTED_ALIAS = 1120;
+    public static final int COMPILATION_ILLEGAL_USE_OF_FILTER_CLAUSE = 1121;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

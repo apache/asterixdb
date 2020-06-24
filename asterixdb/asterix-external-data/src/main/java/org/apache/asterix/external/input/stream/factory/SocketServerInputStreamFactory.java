@@ -36,6 +36,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class SocketServerInputStreamFactory implements IInputStreamFactory {
 
@@ -43,7 +44,8 @@ public class SocketServerInputStreamFactory implements IInputStreamFactory {
     private List<Pair<String, Integer>> sockets;
 
     @Override
-    public void configure(IServiceContext serviceCtx, Map<String, String> configuration) throws CompilationException {
+    public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
+            IWarningCollector warningCollector) throws CompilationException {
         try {
             sockets = FeedUtils.extractHostsPorts(configuration.get(ExternalDataConstants.KEY_MODE), serviceCtx,
                     configuration.get(ExternalDataConstants.KEY_SOCKETS));

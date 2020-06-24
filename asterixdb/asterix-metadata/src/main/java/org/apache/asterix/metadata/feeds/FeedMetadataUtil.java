@@ -28,6 +28,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
+import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.external.IDataSourceAdapter.AdapterType;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
@@ -57,6 +58,7 @@ import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 /**
  * A utility class for providing helper functions for feeds TODO: Refactor this
@@ -103,8 +105,8 @@ public class FeedMetadataUtil {
         return feedPolicy;
     }
 
-    public static void validateFeed(Feed feed, MetadataTransactionContext mdTxnCtx, ICcApplicationContext appCtx)
-            throws AlgebricksException {
+    public static void validateFeed(Feed feed, MetadataTransactionContext mdTxnCtx, ICcApplicationContext appCtx,
+            IWarningCollector warningCollector) throws AlgebricksException {
         try {
             Map<String, String> configuration = feed.getConfiguration();
             ARecordType adapterOutputType = getOutputType(feed, configuration.get(ExternalDataConstants.KEY_TYPE_NAME));
@@ -149,7 +151,7 @@ public class FeedMetadataUtil {
             }
             adapterFactory.setOutputType(adapterOutputType);
             adapterFactory.setMetaType(metaType);
-            adapterFactory.configure(appCtx.getServiceContext(), configuration);
+            adapterFactory.configure(appCtx.getServiceContext(), configuration, warningCollector);
             if (metaType == null && configuration.containsKey(ExternalDataConstants.KEY_META_TYPE_NAME)) {
                 metaType = getOutputType(feed, configuration.get(ExternalDataConstants.KEY_META_TYPE_NAME));
                 if (metaType == null) {
@@ -221,10 +223,10 @@ public class FeedMetadataUtil {
                 }
                 adapterFactory.setOutputType(adapterOutputType);
                 adapterFactory.setMetaType(metaType);
-                adapterFactory.configure(appCtx.getServiceContext(), configuration);
+                adapterFactory.configure(appCtx.getServiceContext(), configuration, NoOpWarningCollector.INSTANCE);
             } else {
                 adapterFactory = AdapterFactoryProvider.getAdapterFactory(appCtx.getServiceContext(), adapterName,
-                        configuration, adapterOutputType, metaType);
+                        configuration, adapterOutputType, metaType, NoOpWarningCollector.INSTANCE);
                 adapterType = IDataSourceAdapter.AdapterType.INTERNAL;
             }
             if (metaType == null) {

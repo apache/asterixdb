@@ -31,6 +31,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public interface IExternalDataSourceFactory extends Serializable {
 
@@ -63,7 +64,7 @@ public interface IExternalDataSourceFactory extends Serializable {
      * @param configuration
      * @throws AsterixException
      */
-    void configure(IServiceContext ctx, Map<String, String> configuration)
+    void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
             throws AlgebricksException, HyracksDataException;
 
     /**

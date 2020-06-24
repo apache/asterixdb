@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.hdfs.dataflow.ConfFactory;
 
 public class HDFSLookupReaderFactory<T> implements ILookupReaderFactory<T> {
@@ -60,7 +61,8 @@ public class HDFSLookupReaderFactory<T> implements ILookupReaderFactory<T> {
     }
 
     @Override
-    public void configure(IServiceContext serviceCtx, Map<String, String> configuration) throws AsterixException {
+    public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
+            IWarningCollector warningCollector) throws AsterixException {
         this.serviceCtx = serviceCtx;
         this.configuration = configuration;
         JobConf conf = HDFSUtils.configureHDFSJobConf(configuration);

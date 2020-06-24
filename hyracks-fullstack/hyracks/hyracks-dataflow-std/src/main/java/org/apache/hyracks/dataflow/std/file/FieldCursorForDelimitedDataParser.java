@@ -25,7 +25,6 @@ import java.util.function.Supplier;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 
 public class FieldCursorForDelimitedDataParser {
@@ -45,7 +44,6 @@ public class FieldCursorForDelimitedDataParser {
         END
     }
 
-    private static final SourceLocation SRC_LOC = new SourceLocation(-1, -1);
     private static final String CLOSING_Q = "missing a closing quote";
     private static final String OPENING_Q = "a quote should be in the beginning";
     private static final String DELIMITER_AFTER_Q = "a quote enclosing a field needs to be followed by the delimiter";
@@ -450,7 +448,7 @@ public class FieldCursorForDelimitedDataParser {
     }
 
     private void warn(String message) {
-        warnings.warn(Warning.forHyracks(SRC_LOC, ErrorCode.PARSING_ERROR, dataSourceName.get(), lineCount, fieldCount,
+        warnings.warn(Warning.forHyracks(null, ErrorCode.PARSING_ERROR, dataSourceName.get(), lineCount, fieldCount,
                 message));
     }
 }

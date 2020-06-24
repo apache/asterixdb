@@ -780,12 +780,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     break;
                 case EXTERNAL:
                     ExternalDetailsDecl externalDetails = (ExternalDetailsDecl) dd.getDatasetDetailsDecl();
-                    Map<String, String> properties =
-                            createExternalDatasetProperties(dataverseName, dd, metadataProvider, mdTxnCtx);
+                    Map<String, String> properties = createExternalDatasetProperties(dataverseName, dd, itemTypeEntity,
+                            metadataProvider, mdTxnCtx);
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
-                    validateExternalDatasetProperties(externalDetails, properties, itemTypeEntity,
-                            dd.getSourceLocation(), mdTxnCtx);
+                    validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
                             TransactionState.COMMIT);
                     break;
@@ -883,7 +882,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected Map<String, String> createExternalDatasetProperties(DataverseName dataverseName, DatasetDecl dd,
-            MetadataProvider metadataProvider, MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
+            Datatype itemType, MetadataProvider metadataProvider, MetadataTransactionContext mdTxnCtx)
+            throws AlgebricksException {
         ExternalDetailsDecl externalDetails = (ExternalDetailsDecl) dd.getDatasetDetailsDecl();
         return externalDetails.getProperties();
     }
@@ -2499,7 +2499,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ExternalDataUtils.normalize(configuration);
             ExternalDataUtils.validate(configuration);
             feed = new Feed(dataverseName, feedName, configuration);
-            FeedMetadataUtil.validateFeed(feed, mdTxnCtx, appCtx);
+            FeedMetadataUtil.validateFeed(feed, mdTxnCtx, appCtx, warningCollector);
             MetadataManager.INSTANCE.addFeed(metadataProvider.getMetadataTxnContext(), feed);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
@@ -3509,8 +3509,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void validateExternalDatasetProperties(ExternalDetailsDecl externalDetails,
-            Map<String, String> properties, Datatype itemType, SourceLocation srcLoc,
-            MetadataTransactionContext mdTxnCtx) throws AlgebricksException, HyracksDataException {
+            Map<String, String> properties, SourceLocation srcLoc, MetadataTransactionContext mdTxnCtx)
+            throws AlgebricksException, HyracksDataException {
         // Validate adapter specific properties
         String adapter = externalDetails.getAdapter();
         Map<String, String> details = new HashMap<>(properties);
@@ -3525,6 +3525,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
      */
     protected void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc)
             throws CompilationException {
-        ExternalDataUtils.validateAdapterSpecificProperties(configuration, srcLoc);
+        ExternalDataUtils.validateAdapterSpecificProperties(configuration, srcLoc, warningCollector);
     }
 }

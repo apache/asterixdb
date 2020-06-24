@@ -51,6 +51,7 @@ import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.hdfs.dataflow.ConfFactory;
 import org.apache.hyracks.hdfs.dataflow.InputSplitsFactory;
 import org.apache.hyracks.hdfs.scheduler.Scheduler;
@@ -80,7 +81,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     private static final List<String> recordReaderNames = Collections.unmodifiableList(Arrays.asList("hdfs"));
 
     @Override
-    public void configure(IServiceContext serviceCtx, Map<String, String> configuration) throws AsterixException {
+    public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
+            IWarningCollector warningCollector) throws AsterixException {
         try {
             this.serviceCtx = serviceCtx;
             this.configuration = configuration;
