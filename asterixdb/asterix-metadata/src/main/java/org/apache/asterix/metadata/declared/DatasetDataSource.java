@@ -112,8 +112,9 @@ public class DatasetDataSource extends DataSource {
                         externalDataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
 
                 ExternalDatasetDetails edd = (ExternalDatasetDetails) externalDataset.getDatasetDetails();
-                ITypedAdapterFactory adapterFactory = metadataProvider.getConfiguredAdapterFactory(externalDataset,
-                        edd.getAdapter(), edd.getProperties(), (ARecordType) itemType, null);
+                ITypedAdapterFactory adapterFactory =
+                        metadataProvider.getConfiguredAdapterFactory(externalDataset, edd.getAdapter(),
+                                edd.getProperties(), (ARecordType) itemType, null, context.getWarningCollector());
                 return metadataProvider.buildExternalDatasetDataScannerRuntime(jobSpec, itemType, adapterFactory);
             case INTERNAL:
                 DataSourceId id = getId();

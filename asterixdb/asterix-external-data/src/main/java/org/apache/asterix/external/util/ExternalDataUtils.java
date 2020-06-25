@@ -37,6 +37,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -52,7 +53,9 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.data.parsers.BooleanParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
@@ -475,13 +478,13 @@ public class ExternalDataUtils {
      *
      * @param configuration properties
      */
-    public static void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc)
-            throws CompilationException {
+    public static void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc,
+            IWarningCollector collector) throws CompilationException {
         String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
 
         switch (type) {
             case ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3:
-                ExternalDataUtils.AwsS3.validateProperties(configuration, srcLoc);
+                ExternalDataUtils.AwsS3.validateProperties(configuration, srcLoc, collector);
                 break;
             default:
                 // Nothing needs to be done
@@ -635,14 +638,27 @@ public class ExternalDataUtils {
         }
 
         /**
+         * Sets the prefix for the list objects builder if it is available
+         *
+         * @param configuration configuration
+         * @param builder builder
+         */
+        public static void setPrefix(Map<String, String> configuration, ListObjectsV2Request.Builder builder) {
+            String definition = configuration.get(ExternalDataConstants.AwsS3.DEFINITION_FIELD_NAME);
+            if (definition != null) {
+                builder.prefix(definition + (!definition.isEmpty() && !definition.endsWith("/") ? "/" : ""));
+            }
+        }
+
+        /**
          * Validate external dataset properties
          *
          * @param configuration properties
          *
          * @throws CompilationException Compilation exception
          */
-        public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc)
-                throws CompilationException {
+        public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
+                IWarningCollector collector) throws CompilationException {
 
             // check if the format property is present
             if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
@@ -656,8 +672,17 @@ public class ExternalDataUtils {
             try {
                 String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
                 s3Client = buildAwsS3Client(configuration);
+                ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder();
+                setPrefix(configuration, listObjectsBuilder);
+
                 ListObjectsV2Response response =
-                        s3Client.listObjectsV2(ListObjectsV2Request.builder().bucket(container).maxKeys(1).build());
+                        s3Client.listObjectsV2(listObjectsBuilder.bucket(container).maxKeys(1).build());
+
+                if (response.contents().isEmpty() && collector.shouldWarn()) {
+                    Warning warning =
+                            WarningUtil.forAsterix(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                    collector.warn(warning);
+                }
 
                 // Returns 200 only in case the bucket exists, however, otherwise, throws an exception. However, to
                 // ensure coverage, check if the result is successful as well and not only catch exceptions
@@ -674,7 +699,6 @@ public class ExternalDataUtils {
         }
 
         /**
-         * TODO(Hussain)
          * @param configuration
          * @throws CompilationException
          */

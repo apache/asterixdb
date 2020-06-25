@@ -99,6 +99,24 @@
         <expected-error>External source error. The specified bucket does not exist (Service: S3, Status Code: 404, Request ID: null)</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="aws/s3/no-files-returned/definition-points-to-nothing">
+        <output-dir compare="Text">aws/s3/no-files-returned/definition-points-to-nothing</output-dir>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="aws/s3/no-files-returned/exclude-all-files">
+        <output-dir compare="Text">aws/s3/no-files-returned/exclude-all-files</output-dir>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="aws/s3/no-files-returned/include-no-files">
+        <output-dir compare="Text">aws/s3/no-files-returned/include-no-files</output-dir>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="include-exclude">
     <test-case FilePath="external-dataset">

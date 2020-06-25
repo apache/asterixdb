@@ -134,6 +134,7 @@ import org.apache.hyracks.api.dataflow.value.IResultSerializerFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.result.IResultMetadata;
@@ -823,11 +824,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     protected ITypedAdapterFactory getConfiguredAdapterFactory(Dataset dataset, String adapterName,
-            Map<String, String> configuration, ARecordType itemType, ARecordType metaType) throws AlgebricksException {
+            Map<String, String> configuration, ARecordType itemType, ARecordType metaType,
+            IWarningCollector warningCollector) throws AlgebricksException {
         try {
             configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataset.getDataverseName().getCanonicalForm());
-            ITypedAdapterFactory adapterFactory = AdapterFactoryProvider.getAdapterFactory(
-                    getApplicationContext().getServiceContext(), adapterName, configuration, itemType, metaType);
+            ITypedAdapterFactory adapterFactory =
+                    AdapterFactoryProvider.getAdapterFactory(getApplicationContext().getServiceContext(), adapterName,
+                            configuration, itemType, metaType, warningCollector);
 
             // check to see if dataset is indexed
             Index filesIndex =
@@ -900,7 +903,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             ExternalDatasetDetails datasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
             LookupAdapterFactory<?> adapterFactory = AdapterFactoryProvider.getLookupAdapterFactory(
                     getApplicationContext().getServiceContext(), datasetDetails.getProperties(), itemType, ridIndexes,
-                    retainInput, retainMissing, context.getMissingWriterFactory());
+                    retainInput, retainMissing, context.getMissingWriterFactory(), context.getWarningCollector());
             String fileIndexName = IndexingConstants.getFilesIndexName(dataset.getDatasetName());
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc =
                     metadataProvider.getSplitProviderAndConstraints(dataset, fileIndexName);

@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class AwsS3ReaderFactory extends StreamRecordReaderFactory {
 
@@ -58,13 +59,13 @@ public class AwsS3ReaderFactory extends StreamRecordReaderFactory {
     }
 
     @Override
-    public void configure(IServiceContext ctx, Map<String, String> configuration)
+    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
             throws AlgebricksException, HyracksDataException {
         this.configuration = configuration;
 
         // Stream factory
         streamFactory = new AwsS3InputStreamFactory();
-        streamFactory.configure(ctx, configuration);
+        streamFactory.configure(ctx, configuration, warningCollector);
 
         // record reader
         recordReaderClazz = StreamRecordReaderProvider.getRecordReaderClazz(configuration);

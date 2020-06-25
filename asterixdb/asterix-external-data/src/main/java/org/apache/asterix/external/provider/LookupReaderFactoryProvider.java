@@ -26,18 +26,19 @@ import org.apache.asterix.external.input.record.reader.hdfs.HDFSLookupReaderFact
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.hyracks.api.application.IServiceContext;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class LookupReaderFactoryProvider {
 
     @SuppressWarnings("rawtypes")
     public static ILookupReaderFactory getLookupReaderFactory(IServiceContext serviceCtx,
-            Map<String, String> configuration) throws AsterixException {
+            Map<String, String> configuration, IWarningCollector warningCollector) throws AsterixException {
         String inputFormat = HDFSUtils.getInputFormatClassName(configuration);
         if (inputFormat.equals(ExternalDataConstants.CLASS_NAME_TEXT_INPUT_FORMAT)
                 || inputFormat.equals(ExternalDataConstants.CLASS_NAME_SEQUENCE_INPUT_FORMAT)
                 || inputFormat.equals(ExternalDataConstants.CLASS_NAME_RC_INPUT_FORMAT)) {
             HDFSLookupReaderFactory<Object> readerFactory = new HDFSLookupReaderFactory<>();
-            readerFactory.configure(serviceCtx, configuration);
+            readerFactory.configure(serviceCtx, configuration, warningCollector);
             return readerFactory;
         } else {
             throw new AsterixException("Unrecognized external format");
