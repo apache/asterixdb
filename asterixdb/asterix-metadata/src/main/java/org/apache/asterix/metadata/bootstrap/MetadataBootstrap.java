@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.bootstrap;
 import java.io.File;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -170,6 +171,7 @@ public class MetadataBootstrap {
                 }
             } else {
                 insertNewCompactionPoliciesIfNotExist(mdTxnCtx);
+                insertSynonymEntitiesIfNotExist(mdTxnCtx);
             }
             // #. initialize datasetIdFactory
             MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
@@ -220,6 +222,10 @@ public class MetadataBootstrap {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Finished inserting initial datasets.");
         }
+    }
+
+    public static void getMetadataIndexes(List<IMetadataIndex> outIndexes) {
+        Collections.addAll(outIndexes, PRIMARY_INDEXES);
     }
 
     private static void getMetadataTypes(ArrayList<IAType> types) {
@@ -290,6 +296,20 @@ public class MetadataBootstrap {
                 ConcurrentMergePolicyFactory.NAME) == null) {
             CompactionPolicy compactionPolicy = getCompactionPolicyEntity(ConcurrentMergePolicyFactory.class.getName());
             MetadataManager.INSTANCE.addCompactionPolicy(mdTxnCtx, compactionPolicy);
+        }
+    }
+
+    private static void insertSynonymEntitiesIfNotExist(MetadataTransactionContext mdTxnCtx)
+            throws AlgebricksException {
+        IAType synonymDatasetRecordType = MetadataPrimaryIndexes.SYNONYM_DATASET.getPayloadRecordType();
+        if (MetadataManager.INSTANCE.getDatatype(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+                synonymDatasetRecordType.getTypeName()) == null) {
+            MetadataManager.INSTANCE.addDatatype(mdTxnCtx, new Datatype(MetadataConstants.METADATA_DATAVERSE_NAME,
+                    synonymDatasetRecordType.getTypeName(), synonymDatasetRecordType, false));
+        }
+        if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+                MetadataConstants.SYNONYM_DATASET_NAME) == null) {
+            insertMetadataDatasets(mdTxnCtx, new IMetadataIndex[] { MetadataPrimaryIndexes.SYNONYM_DATASET });
         }
     }
 
