@@ -262,6 +262,9 @@ public class AwsS3ExternalDatasetTest {
         loadData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
                 false);
 
+        definitionSegment = "json-array-of-objects";
+        loadData(dataBasePath, "single-line", "array_of_objects.json", "json-data/", definitionSegment, false, false);
+
         // gz compressed format
         definitionSegment = "gz";
         loadGzData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
@@ -330,6 +333,11 @@ public class AwsS3ExternalDatasetTest {
 
     private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,
             String definitionSegment, boolean removeExtension) {
+        loadData(fileBasePath, filePathSegment, filename, definition, definitionSegment, removeExtension, true);
+    }
+
+    private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,
+            String definitionSegment, boolean removeExtension, boolean copyToSubLevels) {
         // Files data
         Path filePath = Paths.get(fileBasePath, filePathSegment, filename);
         RequestBody requestBody = RequestBody.fromFile(filePath);
@@ -350,10 +358,12 @@ public class AwsS3ExternalDatasetTest {
 
         // Load the data
         client.putObject(builder.key(basePath + finalFileName).build(), requestBody);
-        client.putObject(builder.key(basePath + "level1a/" + finalFileName).build(), requestBody);
-        client.putObject(builder.key(basePath + "level1b/" + finalFileName).build(), requestBody);
-        client.putObject(builder.key(basePath + "level1a/level2a/" + finalFileName).build(), requestBody);
-        client.putObject(builder.key(basePath + "level1a/level2b/" + finalFileName).build(), requestBody);
+        if (copyToSubLevels) {
+            client.putObject(builder.key(basePath + "level1a/" + finalFileName).build(), requestBody);
+            client.putObject(builder.key(basePath + "level1b/" + finalFileName).build(), requestBody);
+            client.putObject(builder.key(basePath + "level1a/level2a/" + finalFileName).build(), requestBody);
+            client.putObject(builder.key(basePath + "level1a/level2b/" + finalFileName).build(), requestBody);
+        }
     }
 
     private static void loadGzData(String fileBasePath, String filePathSegment, String filename, String definition,

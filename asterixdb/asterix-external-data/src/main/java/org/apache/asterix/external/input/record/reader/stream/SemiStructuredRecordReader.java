@@ -193,16 +193,16 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
                     }
                     isLastCharCR = c == CR;
                 }
-            }
 
-            int appendLength = bufferPosn - startPosn;
-            if (appendLength > 0) {
-                try {
-                    record.append(inputBuffer, startPosn, appendLength);
-                } catch (RuntimeDataException e) {
-                    reader.reset();
-                    bufferPosn = bufferLength = 0;
-                    throw e;
+                int appendLength = bufferPosn - startPosn;
+                if (appendLength > 0) {
+                    try {
+                        record.append(inputBuffer, startPosn, appendLength);
+                    } catch (RuntimeDataException e) {
+                        reader.reset();
+                        bufferPosn = bufferLength = 0;
+                        throw e;
+                    }
                 }
             }
         } while (!hasFinished);
