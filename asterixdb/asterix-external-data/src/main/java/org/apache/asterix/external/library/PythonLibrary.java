@@ -29,8 +29,8 @@ public class PythonLibrary implements ILibrary {
 
     private final File path;
 
-    PythonLibrary(String path) {
-        this.path = new File(path);
+    PythonLibrary(File libDir) {
+        this.path = libDir;
     }
 
     @Override

@@ -53,6 +53,8 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
 
     @Override
     public void close() throws IOException {
-        feedLogManager.close();
+        if (feedLogManager != null) {
+            feedLogManager.close();
+        }
     }
 }

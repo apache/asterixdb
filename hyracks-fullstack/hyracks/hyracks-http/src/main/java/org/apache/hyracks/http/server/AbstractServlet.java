@@ -53,7 +53,7 @@ public abstract class AbstractServlet implements IServlet {
 
     protected final String[] paths;
     protected final ConcurrentMap<String, Object> ctx;
-    private final int[] trims;
+    protected final int[] trims;
 
     public AbstractServlet(ConcurrentMap<String, Object> ctx, String... paths) {
         this.paths = paths;

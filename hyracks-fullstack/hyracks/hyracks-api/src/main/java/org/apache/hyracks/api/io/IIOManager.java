@@ -20,6 +20,7 @@ package org.apache.hyracks.api.io;
 
 import java.io.Closeable;
 import java.nio.ByteBuffer;
+import java.nio.channels.WritableByteChannel;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -57,7 +58,11 @@ public interface IIOManager extends Closeable {
 
     public void sync(IFileHandle fileHandle, boolean metadata) throws HyracksDataException;
 
+    public void truncate(IFileHandle fileHandle, long size) throws HyracksDataException;
+
     public long getSize(IFileHandle fileHandle);
+
+    public WritableByteChannel newWritableChannel(IFileHandle fileHandle);
 
     public void deleteWorkspaceFiles() throws HyracksDataException;
 

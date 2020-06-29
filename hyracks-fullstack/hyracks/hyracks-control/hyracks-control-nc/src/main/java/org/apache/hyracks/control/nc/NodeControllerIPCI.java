@@ -102,8 +102,8 @@ final class NodeControllerIPCI implements IIPCI {
 
             case DEPLOY_BINARY:
                 CCNCFunctions.DeployBinaryFunction dbf = (CCNCFunctions.DeployBinaryFunction) fn;
-                ncs.getWorkQueue().schedule(new DeployBinaryWork(ncs, dbf.getDeploymentId(), dbf.getBinaryURLs(),
-                        dbf.getCcId(), dbf.isExtractFromArchive()));
+                ncs.getWorkQueue()
+                        .schedule(new DeployBinaryWork(ncs, dbf.getDeploymentId(), dbf.getBinaryURLs(), dbf.getCcId()));
                 return;
 
             case UNDEPLOY_BINARY:

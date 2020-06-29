@@ -703,6 +703,16 @@ public interface IMetadataManager extends IMetadataBootstrap {
     void updateDataset(MetadataTransactionContext ctx, Dataset dataset) throws AlgebricksException;
 
     /**
+     * update an existing library in metadata.
+     *
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param library
+     *            Existing Library.
+     */
+    void updateLibrary(MetadataTransactionContext ctx, Library library) throws AlgebricksException;
+
+    /**
      * Add an extension entity to its extension dataset under the ongoing metadata
      * transaction
      *

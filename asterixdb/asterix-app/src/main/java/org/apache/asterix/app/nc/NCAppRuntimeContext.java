@@ -80,6 +80,7 @@ import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
@@ -142,7 +143,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private ActiveManager activeManager;
     private IReplicationChannel replicationChannel;
     private IReplicationManager replicationManager;
-    private final ILibraryManager libraryManager;
+    private ExternalLibraryManager libraryManager;
     private final NCExtensionManager ncExtensionManager;
     private final IStorageComponentProvider componentProvider;
     private final IPersistedResourceRegistry persistedResourceRegistry;
@@ -170,8 +171,6 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         componentProvider = new StorageComponentProvider();
         resourceIdFactory = new GlobalResourceIdFactoryProvider(ncServiceContext).createResourceIdFactory();
         persistedResourceRegistry = ncServiceContext.getPersistedResourceRegistry();
-        libraryManager =
-                new ExternalLibraryManager(ncServiceContext.getServerCtx().getAppDir(), persistedResourceRegistry);
         cacheManager = new CacheManager();
     }
 
@@ -198,7 +197,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         txnSubsystem = new TransactionSubsystem(this, recoveryManagerFactory);
         IRecoveryManager recoveryMgr = txnSubsystem.getRecoveryManager();
         SystemState systemState = recoveryMgr.getSystemState();
-        if (initialRun || systemState == SystemState.PERMANENT_DATA_LOSS) {
+        boolean resetStorageData = initialRun || systemState == SystemState.PERMANENT_DATA_LOSS;
+        if (resetStorageData) {
             //delete any storage data before the resource factory is initialized
             if (LOGGER.isWarnEnabled()) {
                 LOGGER.log(Level.WARN,
@@ -253,6 +253,12 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                     storageProperties.getBufferCacheMaxOpenFiles(), ioQueueLen, getServiceContext().getThreadFactory());
         }
 
+        NodeControllerService ncs = (NodeControllerService) getServiceContext().getControllerService();
+        FileReference appDir =
+                ioManager.resolveAbsolutePath(getServiceContext().getServerCtx().getAppDir().getAbsolutePath());
+        libraryManager = new ExternalLibraryManager(ncs, persistedResourceRegistry, appDir);
+        libraryManager.initStorage(resetStorageData);
+
         /*
          * The order of registration is important. The buffer cache must registered before recovery and transaction
          * managers. Notes: registered components are stopped in reversed order
@@ -280,6 +286,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         lccm.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
         lccm.register((ILifeCycleComponent) txnSubsystem.getLockManager());
         lccm.register(txnSubsystem.getCheckpointManager());
+        lccm.register(libraryManager);
     }
 
     @Override

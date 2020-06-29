@@ -50,7 +50,7 @@ import org.apache.asterix.api.http.server.ApiServlet;
 import org.apache.asterix.app.active.ActiveEntityEventsListener;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.active.FeedEventsListener;
-import org.apache.asterix.app.external.ExternalLibraryUtils;
+import org.apache.asterix.app.external.ExternalLibraryUtil;
 import org.apache.asterix.app.result.ExecutionError;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
@@ -81,7 +81,6 @@ import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.utils.JobUtils;
@@ -110,6 +109,7 @@ import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.CreateIndexStatement;
+import org.apache.asterix.lang.common.statement.CreateLibraryStatement;
 import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
@@ -125,6 +125,7 @@ import org.apache.asterix.lang.common.statement.FunctionDropStatement;
 import org.apache.asterix.lang.common.statement.IndexDropStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.InternalDetailsDecl;
+import org.apache.asterix.lang.common.statement.LibraryDropStatement;
 import org.apache.asterix.lang.common.statement.LoadStatement;
 import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.lang.common.statement.NodegroupDecl;
@@ -372,6 +373,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         break;
                     case FUNCTION_DROP:
                         handleFunctionDropStatement(metadataProvider, stmt);
+                        break;
+                    case CREATE_LIBRARY:
+                        handleCreateLibraryStatement(metadataProvider, stmt, hcc);
+                        break;
+                    case LIBRARY_DROP:
+                        handleLibraryDropStatement(metadataProvider, stmt, hcc);
                         break;
                     case CREATE_SYNONYM:
                         handleCreateSynonymStatement(metadataProvider, stmt);
@@ -1437,8 +1444,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         List<JobSpecification> jobsToExecute = new ArrayList<>();
-        List<Library> librariesToDelete = new ArrayList<>();
-        ICCMessageBroker broker = (ICCMessageBroker) appCtx.getServiceContext().getMessageBroker();
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
             if (dv == null) {
@@ -1512,9 +1517,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     ExternalDatasetsRegistry.INSTANCE.removeDatasetInfo(dataset);
                 }
             }
+
+            // #. prepare jobs which will drop corresponding libraries.
+            List<Library> libraries = MetadataManager.INSTANCE.getDataverseLibraries(mdTxnCtx, dataverseName);
+            for (Library library : libraries) {
+                jobsToExecute.add(ExternalLibraryUtil.buildDropLibraryJobSpec(dataverseName, library.getName(),
+                        metadataProvider));
+            }
+
             jobsToExecute.add(DataverseUtil.dropDataverseJobSpec(dv, metadataProvider));
 
-            librariesToDelete = MetadataManager.INSTANCE.getDataverseLibraries(mdTxnCtx, dataverseName);
             // #. mark PendingDropOp on the dataverse record by
             // first, deleting the dataverse record from the DATAVERSE_DATASET
             // second, inserting the dataverse record with the PendingDropOp value into the
@@ -1529,10 +1541,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
             for (JobSpecification jobSpec : jobsToExecute) {
                 runJob(hcc, jobSpec);
-            }
-
-            for (Library lib : librariesToDelete) {
-                ExternalLibraryUtils.deleteDeployedUdf(broker, appCtx, dataverseName, lib.getName());
             }
 
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -1567,14 +1575,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
 
                 // #. execute compensation operations
-                // remove the all indexes in NC
+                // remove the all artifacts in NC
                 try {
                     for (JobSpecification jobSpec : jobsToExecute) {
                         runJob(hcc, jobSpec);
-                    }
-
-                    for (Library lib : librariesToDelete) {
-                        ExternalLibraryUtils.deleteDeployedUdf(broker, appCtx, dataverseName, lib.getName());
                     }
                 } catch (Exception e2) {
                     // do no throw exception since still the metadata needs to be compensated.
@@ -2209,6 +2213,205 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
+            throw e;
+        }
+    }
+
+    protected void handleCreateLibraryStatement(MetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc) throws Exception {
+        CreateLibraryStatement cls = (CreateLibraryStatement) stmt;
+        DataverseName dataverseName = getActiveDataverseName(cls.getDataverseName());
+        String libraryName = cls.getLibraryName();
+        lockUtil.createLibraryBegin(lockManager, metadataProvider.getLocks(), dataverseName, libraryName);
+        try {
+            doCreateLibrary(metadataProvider, dataverseName, libraryName, cls, hcc);
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
+    }
+
+    private void doCreateLibrary(MetadataProvider metadataProvider, DataverseName dataverseName, String libraryName,
+            CreateLibraryStatement cls, IHyracksClientConnection hcc) throws Exception {
+        JobUtils.ProgressState progress = ProgressState.NO_PROGRESS;
+        boolean prepareJobSuccessful = false;
+        JobSpecification abortJobSpec = null;
+        Library existingLibrary = null;
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        try {
+            Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
+            if (dv == null) {
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, dataverseName);
+            }
+            ExternalFunctionLanguage language = cls.getLang();
+            existingLibrary = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, dataverseName, libraryName);
+            if (existingLibrary != null && !cls.getReplaceIfExists()) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                        "A library with this name " + libraryName + " already exists.");
+            }
+
+            // #. add/update library with PendingAddOp
+            Library libraryPendingAdd =
+                    new Library(dataverseName, libraryName, language.name(), MetadataUtil.PENDING_ADD_OP);
+            if (existingLibrary == null) {
+                MetadataManager.INSTANCE.addLibrary(mdTxnCtx, libraryPendingAdd);
+            } else {
+                MetadataManager.INSTANCE.updateLibrary(mdTxnCtx, libraryPendingAdd);
+            }
+
+            // #. prepare to create library artifacts in NC.
+            Triple<JobSpecification, JobSpecification, JobSpecification> jobSpecs =
+                    ExternalLibraryUtil.buildCreateLibraryJobSpec(dataverseName, libraryName, language,
+                            cls.getLocation(), cls.getAuthToken(), metadataProvider);
+            JobSpecification prepareJobSpec = jobSpecs.first;
+            JobSpecification commitJobSpec = jobSpecs.second;
+            abortJobSpec = jobSpecs.third;
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+            progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
+
+            // #. create library artifacts in NCs.
+            runJob(hcc, prepareJobSpec, jobFlags);
+            prepareJobSuccessful = true;
+            runJob(hcc, commitJobSpec, jobFlags);
+
+            // #. begin new metadataTxn
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            bActiveTxn = true;
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+
+            Library newLibrary = new Library(dataverseName, libraryName, language.name(), MetadataUtil.PENDING_NO_OP);
+            MetadataManager.INSTANCE.updateLibrary(mdTxnCtx, newLibrary);
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                abort(e, e, mdTxnCtx);
+            }
+            if (progress == ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA) {
+                boolean undoFailure = false;
+                if (!prepareJobSuccessful) {
+                    // 'prepare' job failed -> try running 'abort' job
+                    try {
+                        runJob(hcc, abortJobSpec, jobFlags);
+                    } catch (Exception e2) {
+                        e.addSuppressed(e2);
+                        undoFailure = true;
+                    }
+                } else if (existingLibrary == null) {
+                    // 'commit' job failed for a new library -> try removing the library
+                    try {
+                        JobSpecification dropLibraryJobSpec = ExternalLibraryUtil.buildDropLibraryJobSpec(dataverseName,
+                                libraryName, metadataProvider);
+                        runJob(hcc, dropLibraryJobSpec, jobFlags);
+                    } catch (Exception e2) {
+                        e.addSuppressed(e2);
+                        undoFailure = true;
+                    }
+                } else {
+                    // 'commit' job failed for an existing library -> bad state
+                    undoFailure = true;
+                }
+
+                // revert/remove the record from the metadata.
+                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                try {
+                    if (existingLibrary == null) {
+                        MetadataManager.INSTANCE.dropLibrary(mdTxnCtx, dataverseName, libraryName);
+                    } else {
+                        MetadataManager.INSTANCE.updateLibrary(mdTxnCtx, existingLibrary);
+                    }
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                } catch (Exception e2) {
+                    e.addSuppressed(e2);
+                    abort(e, e2, mdTxnCtx);
+                    throw new IllegalStateException("System is inconsistent state: pending library(" + libraryName
+                            + ") couldn't be reverted/removed from the metadata", e);
+                }
+
+                if (undoFailure) {
+                    throw new IllegalStateException(
+                            "System is inconsistent state: library(" + libraryName + ") couldn't be deployed", e);
+                }
+            }
+            throw e;
+        }
+    }
+
+    protected void handleLibraryDropStatement(MetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc) throws Exception {
+        LibraryDropStatement stmtDropLibrary = (LibraryDropStatement) stmt;
+        DataverseName dataverseName = getActiveDataverseName(stmtDropLibrary.getDataverseName());
+        String libraryName = stmtDropLibrary.getLibraryName();
+        lockUtil.dropLibraryBegin(lockManager, metadataProvider.getLocks(), dataverseName, libraryName);
+        try {
+            doDropLibrary(metadataProvider, dataverseName, libraryName, hcc);
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
+    }
+
+    private void doDropLibrary(MetadataProvider metadataProvider, DataverseName dataverseName, String libraryName,
+            IHyracksClientConnection hcc) throws Exception {
+        JobUtils.ProgressState progress = ProgressState.NO_PROGRESS;
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        try {
+            Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
+            if (dv == null) {
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, dataverseName);
+            }
+            Library library = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, dataverseName, libraryName);
+            if (library == null) {
+                throw new CompilationException(ErrorCode.UNKNOWN_LIBRARY, libraryName);
+            }
+
+            // #. mark the existing library as PendingDropOp
+            // do drop instead of update because drop will fail if the library is used by functions/adapters
+            MetadataManager.INSTANCE.dropLibrary(mdTxnCtx, dataverseName, libraryName);
+            MetadataManager.INSTANCE.addLibrary(mdTxnCtx,
+                    new Library(dataverseName, libraryName, library.getLanguage(), MetadataUtil.PENDING_DROP_OP));
+
+            // #. drop library artifacts in NCs.
+            JobSpecification jobSpec =
+                    ExternalLibraryUtil.buildDropLibraryJobSpec(dataverseName, libraryName, metadataProvider);
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+            progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
+
+            // #. drop library artifacts in NCs.
+            runJob(hcc, jobSpec, jobFlags);
+
+            // #. begin new metadataTxn
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            bActiveTxn = true;
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+
+            // #. drop library
+            MetadataManager.INSTANCE.dropLibrary(mdTxnCtx, dataverseName, libraryName);
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                abort(e, e, mdTxnCtx);
+            }
+            if (progress == ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA) {
+                // remove the record from the metadata.
+                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                try {
+                    MetadataManager.INSTANCE.dropLibrary(mdTxnCtx, dataverseName, libraryName);
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                } catch (Exception e2) {
+                    e.addSuppressed(e2);
+                    abort(e, e2, mdTxnCtx);
+                    throw new IllegalStateException("System is inconsistent state: pending library(" + libraryName
+                            + ") couldn't be removed from the metadata", e);
+                }
+            }
             throw e;
         }
     }

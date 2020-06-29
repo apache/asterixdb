@@ -79,7 +79,6 @@ import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.external.adapter.factory.AdapterFactoryService;
-import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
@@ -159,9 +158,7 @@ public class CCApplication extends BaseCCApplication {
         componentProvider = new StorageComponentProvider();
         ccExtensionManager = new CCExtensionManager(new ArrayList<>(getExtensions()));
         IGlobalRecoveryManager globalRecoveryManager = createGlobalRecoveryManager();
-        ILibraryManager libraryManager = new ExternalLibraryManager(ccServiceCtx.getServerCtx().getAppDir(),
-                ccServiceCtx.getPersistedResourceRegistry());
-        appCtx = createApplicationContext(libraryManager, globalRecoveryManager, lifecycleCoordinator,
+        appCtx = createApplicationContext(null, globalRecoveryManager, lifecycleCoordinator,
                 () -> new Receptionist("CC"), ConfigValidator::new, ccExtensionManager, new AdapterFactoryService());
         final CCConfig ccConfig = controllerService.getCCConfig();
         if (System.getProperty("java.rmi.server.hostname") == null) {
@@ -212,10 +209,10 @@ public class CCApplication extends BaseCCApplication {
             IReceptionistFactory receptionistFactory, IConfigValidatorFactory configValidatorFactory,
             CCExtensionManager ccExtensionManager, IAdapterFactoryService adapterFactoryService)
             throws AlgebricksException, IOException {
-        return new CcApplicationContext(ccServiceCtx, getHcc(), libraryManager, () -> MetadataManager.INSTANCE,
-                globalRecoveryManager, lifecycleCoordinator, new ActiveNotificationHandler(), componentProvider,
-                new MetadataLockManager(), createMetadataLockUtil(), receptionistFactory, configValidatorFactory,
-                ccExtensionManager, adapterFactoryService);
+        return new CcApplicationContext(ccServiceCtx, getHcc(), () -> MetadataManager.INSTANCE, globalRecoveryManager,
+                lifecycleCoordinator, new ActiveNotificationHandler(), componentProvider, new MetadataLockManager(),
+                createMetadataLockUtil(), receptionistFactory, configValidatorFactory, ccExtensionManager,
+                adapterFactoryService);
     }
 
     protected IGlobalRecoveryManager createGlobalRecoveryManager() throws Exception {
@@ -300,7 +297,7 @@ public class CCApplication extends BaseCCApplication {
     }
 
     protected void addServlet(HttpServer server, String path) {
-        server.addServlet(createServlet(server.ctx(), path, path));
+        server.addServlet(createServlet(server, path, path));
     }
 
     protected HttpServer setupQueryWebServer(ExternalProperties externalProperties) throws Exception {
@@ -315,7 +312,8 @@ public class CCApplication extends BaseCCApplication {
         return queryWebServer;
     }
 
-    protected IServlet createServlet(ConcurrentMap<String, Object> ctx, String key, String... paths) {
+    protected IServlet createServlet(HttpServer server, String key, String... paths) {
+        ConcurrentMap<String, Object> ctx = server.ctx();
         switch (key) {
             case Servlets.RUNNING_REQUESTS:
                 return new CcQueryCancellationServlet(ctx, appCtx, paths);
@@ -349,9 +347,11 @@ public class CCApplication extends BaseCCApplication {
             case Servlets.ACTIVE_STATS:
                 return new ActiveStatsApiServlet(appCtx, ctx, paths);
             case Servlets.UDF:
-                return new UdfApiServlet(appCtx, ctx, paths);
+                return new UdfApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(SQLPP),
+                        getStatementExecutorFactory(), componentProvider, server.getScheme(),
+                        server.getAddress().getPort());
             default:
-                throw new IllegalStateException(String.valueOf(key));
+                throw new IllegalStateException(key);
         }
     }
 

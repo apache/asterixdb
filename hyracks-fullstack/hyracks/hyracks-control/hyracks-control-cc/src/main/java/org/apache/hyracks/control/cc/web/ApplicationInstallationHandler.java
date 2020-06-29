@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.common.context.ServerContext;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -68,8 +69,9 @@ public class ApplicationInstallationHandler extends AbstractServlet {
         final String fileName = params[1];
         final String rootDir = ccs.getServerContext().getBaseDir().toString();
 
-        final String deploymentDir = rootDir.endsWith(File.separator) ? rootDir + "applications/" + deployIdString
-                : rootDir + File.separator + "/applications/" + File.separator + deployIdString;
+        final String deploymentDir = rootDir.endsWith(File.separator)
+                ? rootDir + ServerContext.APP_DIR_NAME + File.separator + deployIdString
+                : rootDir + File.separator + ServerContext.APP_DIR_NAME + File.separator + deployIdString;
         final HttpMethod method = request.getHttpRequest().method();
         try {
             response.setStatus(HttpResponseStatus.OK);

@@ -72,6 +72,7 @@ import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.CreateIndexStatement;
+import org.apache.asterix.lang.common.statement.CreateLibraryStatement;
 import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
@@ -87,6 +88,7 @@ import org.apache.asterix.lang.common.statement.FunctionDropStatement;
 import org.apache.asterix.lang.common.statement.IndexDropStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.InternalDetailsDecl;
+import org.apache.asterix.lang.common.statement.LibraryDropStatement;
 import org.apache.asterix.lang.common.statement.LoadStatement;
 import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.lang.common.statement.NodegroupDecl;
@@ -849,6 +851,18 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
 
     @Override
     public Void visit(CompactStatement del, Integer step) throws CompilationException {
+        return null;
+    }
+
+    @Override
+    public Void visit(CreateLibraryStatement cls, Integer arg) throws CompilationException {
+        // this statement is internal
+        return null;
+    }
+
+    @Override
+    public Void visit(LibraryDropStatement del, Integer arg) throws CompilationException {
+        // this statement is internal
         return null;
     }
 

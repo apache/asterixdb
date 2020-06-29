@@ -75,7 +75,7 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_IS_PRIMARY = "IsPrimary";
     public static final String FIELD_NAME_KIND = "Kind";
     public static final String FIELD_NAME_LANGUAGE = "Language";
-    public static final String FIELD_NAME_LIBRARY = "Library";
+    public static final String FIELD_NAME_LIBRARY_NAME = "LibraryName";
     public static final String FIELD_NAME_LAST_REFRESH_TIME = "LastRefreshTime";
     public static final String FIELD_NAME_METATYPE_DATAVERSE_NAME = "MetatypeDataverseName";
     public static final String FIELD_NAME_METATYPE_NAME = "MetatypeName";
@@ -369,8 +369,6 @@ public final class MetadataRecordTypes {
     public static final int DATASOURCE_ADAPTER_ARECORD_TYPE_FIELD_INDEX = 3;
     public static final int DATASOURCE_ADAPTER_ARECORD_TIMESTAMP_FIELD_INDEX = 4;
     //open types
-
-    public static final String DATASOURCE_ARECORD_FUNCTION_LIBRARY_FIELD_NAME = "Library";
 
     public static final ARecordType DATASOURCE_ADAPTER_RECORDTYPE = createRecordType(
             // RecordTypeName

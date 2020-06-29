@@ -962,6 +962,18 @@ public abstract class MetadataManager implements IMetadataManager {
     }
 
     @Override
+    public void updateLibrary(MetadataTransactionContext ctx, Library library) throws AlgebricksException {
+        try {
+            metadataNode.updateLibrary(ctx.getTxnId(), library);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        // reflect the library into the cache
+        ctx.dropLibrary(library.getDataverseName(), library.getName());
+        ctx.addLibrary(library);
+    }
+
+    @Override
     public <T extends IExtensionMetadataEntity> void addEntity(MetadataTransactionContext mdTxnCtx, T entity)
             throws AlgebricksException {
         try {

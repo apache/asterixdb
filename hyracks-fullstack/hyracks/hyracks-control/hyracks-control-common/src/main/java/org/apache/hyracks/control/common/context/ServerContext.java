@@ -24,6 +24,8 @@ import org.apache.hyracks.api.application.IServerContext;
 
 public class ServerContext implements IServerContext {
 
+    public static final String APP_DIR_NAME = "applications";
+
     private final ServerType type;
     private final File baseDir;
     private final File appDir;
@@ -31,7 +33,7 @@ public class ServerContext implements IServerContext {
     public ServerContext(ServerType type, File baseDir) {
         this.type = type;
         this.baseDir = baseDir;
-        this.appDir = new File(baseDir, "applications");
+        this.appDir = new File(baseDir, APP_DIR_NAME);
     }
 
     public ServerType getServerType() {

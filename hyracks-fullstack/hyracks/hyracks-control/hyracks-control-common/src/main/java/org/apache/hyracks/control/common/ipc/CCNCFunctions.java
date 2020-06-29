@@ -1176,14 +1176,11 @@ public class CCNCFunctions {
 
         private final List<URL> binaryURLs;
         private final DeploymentId deploymentId;
-        private final boolean extractFromArchive;
 
-        public DeployBinaryFunction(DeploymentId deploymentId, List<URL> binaryURLs, CcId ccId,
-                boolean isExtractFromArchive) {
+        public DeployBinaryFunction(DeploymentId deploymentId, List<URL> binaryURLs, CcId ccId) {
             super(ccId);
             this.binaryURLs = binaryURLs;
             this.deploymentId = deploymentId;
-            this.extractFromArchive = isExtractFromArchive;
         }
 
         @Override
@@ -1197,10 +1194,6 @@ public class CCNCFunctions {
 
         public DeploymentId getDeploymentId() {
             return deploymentId;
-        }
-
-        public boolean isExtractFromArchive() {
-            return extractFromArchive;
         }
     }
 

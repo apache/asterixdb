@@ -216,8 +216,8 @@ public class NodeControllerService implements IControllerService {
             jobletMap = new ConcurrentHashMap<>();
             deployedJobSpecActivityClusterGraphMap = new Hashtable<>();
             timer = new Timer(true);
-            serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER,
-                    new File(ioManager.getWorkspacePath(0), id));
+            File ncBaseDir = ioManager.getWorkspacePath(0);
+            serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER, ncBaseDir);
             getNodeControllerInfosAcceptor = new MutableObject<>();
             memoryManager =
                     new MemoryManager((long) (memoryMXBean.getHeapMemoryUsage().getMax() * MEMORY_FUDGE_FACTOR));

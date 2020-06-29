@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.http.server;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -224,7 +225,10 @@ public class HttpServer {
         return servlets.getServlets();
     }
 
-    protected void doStart() throws InterruptedException {
+    protected void doStart() throws InterruptedException, IOException {
+        for (IServlet servlet : servlets.getServlets()) {
+            servlet.init();
+        }
         channel = bind();
     }
 
@@ -371,5 +375,9 @@ public class HttpServer {
 
     public HttpServerConfig getConfig() {
         return config;
+    }
+
+    public InetSocketAddress getAddress() {
+        return address;
     }
 }

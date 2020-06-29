@@ -21,9 +21,11 @@ package org.apache.hyracks.api.util;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -132,4 +134,22 @@ public class IoUtil {
         return files;
     }
 
+    public static void flushDirectory(File directory) throws IOException {
+        flushDirectory(directory.toPath());
+    }
+
+    public static void flushDirectory(Path path) throws IOException {
+        if (!Files.isDirectory(path)) {
+            throw new IOException("Not a directory: " + path);
+        }
+        if (Files.getFileStore(path).supportsFileAttributeView("posix")) {
+            try (FileChannel ch = FileChannel.open(path, StandardOpenOption.READ)) {
+                ch.force(true);
+            }
+        } else {
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Unable to flush directory " + path);
+            }
+        }
+    }
 }

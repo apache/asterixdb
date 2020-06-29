@@ -31,8 +31,6 @@ import java.util.Map;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IInputStreamFactory;
@@ -42,6 +40,7 @@ import org.apache.asterix.external.input.stream.factory.SocketServerInputStreamF
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class DatasourceFactoryProvider {
@@ -52,26 +51,27 @@ public class DatasourceFactoryProvider {
     private DatasourceFactoryProvider() {
     }
 
-    public static IExternalDataSourceFactory getExternalDataSourceFactory(ILibraryManager libraryManager,
-            Map<String, String> configuration) throws HyracksDataException, AsterixException {
+    public static IExternalDataSourceFactory getExternalDataSourceFactory(Map<String, String> configuration)
+            throws HyracksDataException, AsterixException {
         // Take a copy of the configuration
         if (ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.RECORDS)) {
             String reader = configuration.get(ExternalDataConstants.KEY_READER);
-            return DatasourceFactoryProvider.getRecordReaderFactory(libraryManager, reader, configuration);
+            return DatasourceFactoryProvider.getRecordReaderFactory(reader, configuration);
         } else {
             // get stream source
             String streamSource = configuration.get(ExternalDataConstants.KEY_STREAM_SOURCE);
-            return DatasourceFactoryProvider.getInputStreamFactory(libraryManager, streamSource, configuration);
+            return DatasourceFactoryProvider.getInputStreamFactory(streamSource, configuration);
         }
     }
 
-    public static IInputStreamFactory getInputStreamFactory(ILibraryManager libraryManager, String streamSource,
-            Map<String, String> configuration) throws HyracksDataException {
+    public static IInputStreamFactory getInputStreamFactory(String streamSource, Map<String, String> configuration)
+            throws HyracksDataException {
         IInputStreamFactory streamSourceFactory;
         if (ExternalDataUtils.isExternal(streamSource)) {
-            DataverseName dataverse = ExternalDataUtils.getDataverse(configuration);
-            streamSourceFactory =
-                    ExternalDataUtils.createExternalInputStreamFactory(libraryManager, dataverse, streamSource);
+            //DataverseName dataverse = ExternalDataUtils.getDataverse(configuration);
+            //streamSourceFactory =
+            //        ExternalDataUtils.createExternalInputStreamFactory(libraryManager, dataverse, streamSource);
+            throw new NotImplementedException();
         } else {
             switch (streamSource) {
                 case ExternalDataConstants.KEY_ADAPTER_NAME_LOCALFS:
@@ -104,10 +104,11 @@ public class DatasourceFactoryProvider {
         }
     }
 
-    public static IRecordReaderFactory getRecordReaderFactory(ILibraryManager libraryManager, String adaptorName,
-            Map<String, String> configuration) throws HyracksDataException, AsterixException {
+    public static IRecordReaderFactory getRecordReaderFactory(String adaptorName, Map<String, String> configuration)
+            throws HyracksDataException, AsterixException {
         if (adaptorName.equals(ExternalDataConstants.EXTERNAL)) {
-            return ExternalDataUtils.createExternalRecordReaderFactory(libraryManager, configuration);
+            //return ExternalDataUtils.createExternalRecordReaderFactory(libraryManager, configuration);
+            throw new NotImplementedException();
         }
 
         if (factories == null) {

@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.http.api;
 
+import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.hyracks.http.server.HttpServer;
@@ -54,5 +55,11 @@ public interface IServlet {
      */
     default IChannelClosedHandler getChannelClosedHandler(HttpServer server) {
         return server.getChannelClosedHandler();
+    }
+
+    /**
+     * Called at server startup to initialize the servlet
+     */
+    default void init() throws IOException {
     }
 }

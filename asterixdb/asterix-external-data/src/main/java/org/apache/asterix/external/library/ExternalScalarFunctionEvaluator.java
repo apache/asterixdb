@@ -19,7 +19,7 @@
 
 package org.apache.asterix.external.library;
 
-import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.types.IAType;
@@ -44,6 +44,6 @@ public abstract class ExternalScalarFunctionEvaluator implements IScalarEvaluato
             argEvals[i] = args[i].createScalarEvaluator(context);
         }
         libraryManager =
-                ((IApplicationContext) context.getServiceContext().getApplicationContext()).getLibraryManager();
+                ((INcApplicationContext) context.getServiceContext().getApplicationContext()).getLibraryManager();
     }
 }

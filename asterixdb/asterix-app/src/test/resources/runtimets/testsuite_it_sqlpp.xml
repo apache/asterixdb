@@ -46,7 +46,7 @@
     <test-case FilePath="external-library">
       <compilation-unit name="mysum_dropinuse">
         <output-dir compare="Text">mysum_dropinuse</output-dir>
-        <expected-error>Library testlib is being used. It cannot be dropped</expected-error>
+        <expected-error>Cannot drop library externallibtest.testlib being used by funciton externallibtest.mysum@2</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
@@ -100,6 +100,11 @@
     <test-case FilePath="feeds">
       <compilation-unit name="feed-with-external-function">
         <output-dir compare="Text">feed-with-external-function</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feed-with-external-adapter">
+        <output-dir compare="Text">feed-with-external-adapter</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

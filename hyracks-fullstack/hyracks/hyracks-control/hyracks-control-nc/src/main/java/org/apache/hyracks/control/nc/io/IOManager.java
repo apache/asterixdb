@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -365,6 +366,15 @@ public class IOManager implements IIOManager {
     }
 
     @Override
+    public void truncate(IFileHandle fileHandle, long size) throws HyracksDataException {
+        try {
+            ((FileHandle) fileHandle).getFileChannel().truncate(size);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    @Override
     public long getSize(IFileHandle fileHandle) {
         return fileHandle.getFileReference().getFile().length();
     }
@@ -434,5 +444,33 @@ public class IOManager implements IIOManager {
             totalSize += FileUtils.sizeOfDirectory(handle.getMount());
         }
         return totalSize;
+    }
+
+    @Override
+    public WritableByteChannel newWritableChannel(IFileHandle fHandle) {
+        FileHandle fh = (FileHandle) fHandle;
+        if (!fh.isOpen()) {
+            throw new IllegalStateException("closed");
+        }
+        return new WritableByteChannel() {
+            long position;
+
+            @Override
+            public int write(ByteBuffer src) throws IOException {
+                int written = IOManager.this.syncWrite(fHandle, position, src);
+                position += written;
+                return written;
+            }
+
+            @Override
+            public boolean isOpen() {
+                return fh.isOpen();
+            }
+
+            @Override
+            public void close() throws IOException {
+                IOManager.this.close(fh);
+            }
+        };
     }
 }

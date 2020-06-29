@@ -50,6 +50,7 @@ import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
+import org.apache.asterix.external.adapter.factory.ExternalAdapterFactory;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
@@ -62,7 +63,6 @@ import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
 import org.apache.asterix.external.operators.FeedIntakeOperatorDescriptor;
 import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.FeedConstants;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
@@ -488,10 +488,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         policyAccessor, factoryOutput.second);
                 break;
             case EXTERNAL:
-                String libraryName = feed.getConfiguration().get(ExternalDataConstants.KEY_ADAPTER_NAME).trim()
-                        .split(FeedConstants.NamingConstants.LIBRARY_NAME_SEPARATOR)[0];
-                feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feed, libraryName,
-                        adapterFactory.getClass().getName(), recordType, policyAccessor, factoryOutput.second);
+                ExternalAdapterFactory extAdapterFactory = (ExternalAdapterFactory) adapterFactory;
+                feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feed, extAdapterFactory.getLibraryDataverse(),
+                        extAdapterFactory.getLibraryName(), extAdapterFactory.getClassName(), recordType,
+                        policyAccessor, factoryOutput.second);
                 break;
             default:
                 break;

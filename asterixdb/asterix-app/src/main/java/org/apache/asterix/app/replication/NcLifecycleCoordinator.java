@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 import org.apache.asterix.app.nc.task.BindMetadataNodeTask;
 import org.apache.asterix.app.nc.task.CheckpointTask;
 import org.apache.asterix.app.nc.task.ExportMetadataNodeTask;
-import org.apache.asterix.app.nc.task.ExternalLibrarySetupTask;
 import org.apache.asterix.app.nc.task.LocalRecoveryTask;
 import org.apache.asterix.app.nc.task.MetadataBootstrapTask;
 import org.apache.asterix.app.nc.task.StartLifecycleComponentsTask;
@@ -202,7 +201,6 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         if (metadataNode) {
             tasks.add(new MetadataBootstrapTask(clusterManager.getMetadataPartition().getPartitionId()));
         }
-        tasks.add(new ExternalLibrarySetupTask(metadataNode));
         tasks.add(new CheckpointTask());
         tasks.add(new StartLifecycleComponentsTask());
         if (metadataNode) {

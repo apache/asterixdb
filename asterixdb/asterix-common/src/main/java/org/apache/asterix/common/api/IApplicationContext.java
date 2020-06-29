@@ -28,7 +28,6 @@ import org.apache.asterix.common.config.NodeProperties;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
-import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -54,11 +53,6 @@ public interface IApplicationContext {
     MessagingProperties getMessagingProperties();
 
     NodeProperties getNodeProperties();
-
-    /**
-     * @return the library manager which implements {@link org.apache.asterix.common.library.ILibraryManager}
-     */
-    ILibraryManager getLibraryManager();
 
     /**
      * @return the service context

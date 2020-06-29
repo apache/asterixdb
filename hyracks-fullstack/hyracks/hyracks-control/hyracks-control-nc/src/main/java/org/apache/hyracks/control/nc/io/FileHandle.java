@@ -75,7 +75,7 @@ public class FileHandle implements IFileHandle {
         ensureOpen();
     }
 
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         if (raf == null) {
             return;
         }
@@ -100,5 +100,9 @@ public class FileHandle implements IFileHandle {
                 throw HyracksDataException.create(e);
             }
         }
+    }
+
+    public synchronized boolean isOpen() {
+        return raf != null && raf.getChannel().isOpen();
     }
 }

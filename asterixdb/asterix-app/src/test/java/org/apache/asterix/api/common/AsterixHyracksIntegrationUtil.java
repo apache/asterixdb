@@ -199,7 +199,6 @@ public class AsterixHyracksIntegrationUtil {
         List<ILibraryManager> libraryManagers = new ArrayList<>();
         init(deleteOldInstanceData, confDir);
         if (externalLibPath != null && externalLibPath.length() != 0) {
-            libraryManagers.add(((ICcApplicationContext) cc.getApplicationContext()).getLibraryManager());
             for (NodeControllerService nc : ncs) {
                 INcApplicationContext runtimeCtx = (INcApplicationContext) nc.getApplicationContext();
                 libraryManagers.add(runtimeCtx.getLibraryManager());

@@ -222,6 +222,7 @@ public class ExternalDataUtils {
         return value == null ? false : Boolean.valueOf(value);
     }
 
+    // Currently not used.
     public static IRecordReaderFactory<?> createExternalRecordReaderFactory(ILibraryManager libraryManager,
             Map<String, String> configuration) throws AsterixException {
         String readerFactory = configuration.get(ExternalDataConstants.KEY_READER_FACTORY);
@@ -234,14 +235,19 @@ public class ExternalDataUtils {
             throw new AsterixException("The parameter " + ExternalDataConstants.KEY_READER_FACTORY
                     + " must follow the format \"DataverseName.LibraryName#ReaderFactoryFullyQualifiedName\"");
         }
-        String[] dataverseAndLibrary = libraryAndFactory[0].split(".");
+        String[] dataverseAndLibrary = libraryAndFactory[0].split("\\.");
         if (dataverseAndLibrary.length != 2) {
             throw new AsterixException("The parameter " + ExternalDataConstants.KEY_READER_FACTORY
                     + " must follow the format \"DataverseName.LibraryName#ReaderFactoryFullyQualifiedName\"");
         }
         DataverseName dataverseName = DataverseName.createSinglePartName(dataverseAndLibrary[0]); //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
         String libraryName = dataverseAndLibrary[1];
-        ILibrary lib = libraryManager.getLibrary(dataverseName, libraryName);
+        ILibrary lib;
+        try {
+            lib = libraryManager.getLibrary(dataverseName, libraryName);
+        } catch (HyracksDataException e) {
+            throw new AsterixException("Cannot load library", e);
+        }
         if (lib.getLanguage() != ExternalFunctionLanguage.JAVA) {
             throw new AsterixException("Unexpected library language: " + lib.getLanguage());
         }
@@ -253,12 +259,18 @@ public class ExternalDataUtils {
         }
     }
 
+    // Currently not used.
     public static IDataParserFactory createExternalParserFactory(ILibraryManager libraryManager,
             DataverseName dataverse, String parserFactoryName) throws AsterixException {
         try {
             String library = parserFactoryName.substring(0,
                     parserFactoryName.indexOf(ExternalDataConstants.EXTERNAL_LIBRARY_SEPARATOR));
-            ILibrary lib = libraryManager.getLibrary(dataverse, library);
+            ILibrary lib;
+            try {
+                lib = libraryManager.getLibrary(dataverse, library);
+            } catch (HyracksDataException e) {
+                throw new AsterixException("Cannot load library", e);
+            }
             if (lib.getLanguage() != ExternalFunctionLanguage.JAVA) {
                 throw new AsterixException("Unexpected library language: " + lib.getLanguage());
             }

@@ -21,10 +21,11 @@
 package org.apache.asterix.common.library;
 
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ILibrary {
 
     ExternalFunctionLanguage getLanguage();
 
-    void close();
+    void close() throws HyracksDataException;
 }

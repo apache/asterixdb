@@ -46,7 +46,6 @@ import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.external.IAdapterFactoryService;
-import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
@@ -74,7 +73,6 @@ public class CcApplicationContext implements ICcApplicationContext {
     private ICCServiceContext ccServiceCtx;
     private IStorageComponentProvider storageComponentProvider;
     private IGlobalRecoveryManager globalRecoveryManager;
-    private ILibraryManager libraryManager;
     private IResourceIdManager resourceIdManager;
     private CompilerProperties compilerProperties;
     private ExternalProperties externalProperties;
@@ -104,15 +102,14 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final IAdapterFactoryService adapterFactoryService;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
-            ILibraryManager libraryManager, Supplier<IMetadataBootstrap> metadataBootstrapSupplier,
-            IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator ftStrategy,
-            IJobLifecycleListener activeLifeCycleListener, IStorageComponentProvider storageComponentProvider,
-            IMetadataLockManager mdLockManager, IMetadataLockUtil mdLockUtil, IReceptionistFactory receptionistFactory,
+            Supplier<IMetadataBootstrap> metadataBootstrapSupplier, IGlobalRecoveryManager globalRecoveryManager,
+            INcLifecycleCoordinator ftStrategy, IJobLifecycleListener activeLifeCycleListener,
+            IStorageComponentProvider storageComponentProvider, IMetadataLockManager mdLockManager,
+            IMetadataLockUtil mdLockUtil, IReceptionistFactory receptionistFactory,
             IConfigValidatorFactory configValidatorFactory, Object extensionManager,
             IAdapterFactoryService adapterFactoryService) throws AlgebricksException, IOException {
         this.ccServiceCtx = ccServiceCtx;
         this.hcc = hcc;
-        this.libraryManager = libraryManager;
         this.activeLifeCycleListener = activeLifeCycleListener;
         this.extensionManager = extensionManager;
         // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
@@ -216,11 +213,6 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public IGlobalRecoveryManager getGlobalRecoveryManager() {
         return globalRecoveryManager;
-    }
-
-    @Override
-    public ILibraryManager getLibraryManager() {
-        return libraryManager;
     }
 
     @Override

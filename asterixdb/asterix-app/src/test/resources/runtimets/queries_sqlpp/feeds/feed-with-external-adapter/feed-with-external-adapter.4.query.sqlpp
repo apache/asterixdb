@@ -16,22 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.app.message;
+/*
+ * Description  : Feed with an external adapter
+ * Expected Res : Success
+ */
 
-import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.common.metadata.DataverseName;
+use externallibtest;
 
-public class DeleteUdfMessage extends AbstractUdfMessage {
-
-    private static final long serialVersionUID = 3L;
-
-    public DeleteUdfMessage(DataverseName dataverseName, String libraryName, long reqId) {
-        super(dataverseName, libraryName, reqId);
-    }
-
-    @Override
-    protected void handleAction(ILibraryManager mgr, INcApplicationContext appCtx) {
-        mgr.deregister(dataverseName, libraryName);
-    }
-}
+select value t
+from Tweets t
+order by t.tweetid;

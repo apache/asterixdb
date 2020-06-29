@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
@@ -92,8 +91,6 @@ public class ExecutionTestUtil {
         FailedGroup.setName("failed");
 
         List<ILibraryManager> libraryManagers = new ArrayList<>();
-        // Adds the library manager for CC.
-        libraryManagers.add(((ICcApplicationContext) integrationUtil.cc.getApplicationContext()).getLibraryManager());
         // Adds library managers for NCs, one-per-NC.
         for (NodeControllerService nc : integrationUtil.ncs) {
             INcApplicationContext runtimeCtx = (INcApplicationContext) nc.getApplicationContext();
