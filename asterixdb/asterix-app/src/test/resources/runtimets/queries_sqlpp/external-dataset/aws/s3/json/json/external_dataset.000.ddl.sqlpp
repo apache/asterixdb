@@ -68,3 +68,14 @@ create external dataset test4(test) using S3 (
 ("definition"="json-data/reviews/multi-lines-with-nested-objects/json"),
 ("format"="json")
 );
+
+drop dataset test5 if exists;
+create external dataset test5(test) using S3 (
+("accessKeyId"="dummyAccessKey"),
+("secretAccessKey"="dummySecretKey"),
+("region"="us-west-2"),
+("serviceEndpoint"="http://localhost:8001"),
+("container"="playground"),
+("definition"="json-data/single-line/json-array-of-objects"),
+("format"="json")
+);
