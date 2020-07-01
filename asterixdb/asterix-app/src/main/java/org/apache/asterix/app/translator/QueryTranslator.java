@@ -1443,6 +1443,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        List<FeedEventsListener> feedsToStop = new ArrayList<>();
+        List<Dataset> externalDatasetsToDeregister = new ArrayList<>();
         List<JobSpecification> jobsToExecute = new ArrayList<>();
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
@@ -1454,19 +1456,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
                 }
             }
-            // # check whether any function in current dataverse is being used by others
-            List<Function> functionsInDataverse =
-                    MetadataManager.INSTANCE.getDataverseFunctions(mdTxnCtx, dataverseName);
-            for (Function function : functionsInDataverse) {
-                if (isFunctionUsed(mdTxnCtx, function.getSignature(), dataverseName)) {
-                    throw new MetadataException(ErrorCode.METADATA_DROP_FUCTION_IN_USE, sourceLoc,
-                            function.getDataverseName() + "." + function.getName() + "@" + function.getArity());
-                }
-            }
 
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            bActiveTxn = false;
-            // # disconnect all feeds from any datasets in the dataverse.
+            // #. prepare jobs which will drop corresponding feed storage
             ActiveNotificationHandler activeEventHandler =
                     (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
             IActiveEntityEventsListener[] activeListeners = activeEventHandler.getEventListeners();
@@ -1474,47 +1465,34 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 EntityId activeEntityId = listener.getEntityId();
                 if (activeEntityId.getExtensionName().equals(Feed.EXTENSION_NAME)
                         && activeEntityId.getDataverseName().equals(dataverseName)) {
-                    if (listener.getState() != ActivityState.STOPPED) {
-                        ((ActiveEntityEventsListener) listener).stop(metadataProvider);
-                    }
                     FeedEventsListener feedListener = (FeedEventsListener) listener;
-                    mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-                    bActiveTxn = true;
-                    metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                    doDropFeed(hcc, metadataProvider, feedListener.getFeed(), sourceLoc);
-                    MetadataManager.INSTANCE.commitTransaction(metadataProvider.getMetadataTxnContext());
-                    bActiveTxn = false;
+                    feedsToStop.add(feedListener);
+                    jobsToExecute
+                            .add(FeedOperations.buildRemoveFeedStorageJob(metadataProvider, feedListener.getFeed()));
                 }
             }
-            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            bActiveTxn = true;
-            metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
             // #. prepare jobs which will drop corresponding datasets with indexes.
             List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dataverseName);
             for (Dataset dataset : datasets) {
                 String datasetName = dataset.getDatasetName();
+                List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
                 DatasetType dsType = dataset.getDatasetType();
                 if (dsType == DatasetType.INTERNAL) {
-                    List<Index> indexes =
-                            MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
                     for (Index index : indexes) {
                         jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, dataset, sourceLoc));
                     }
-                } else {
-                    // External dataset
-                    List<Index> indexes =
-                            MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
-                    for (int k = 0; k < indexes.size(); k++) {
-                        if (ExternalIndexingOperations.isFileIndex(indexes.get(k))) {
+                } else if (dsType == DatasetType.EXTERNAL) {
+                    for (Index index : indexes) {
+                        if (ExternalIndexingOperations.isFileIndex(index)) {
                             jobsToExecute.add(
                                     ExternalIndexingOperations.buildDropFilesIndexJobSpec(metadataProvider, dataset));
                         } else {
-                            jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(indexes.get(k), metadataProvider, dataset,
-                                    sourceLoc));
+                            jobsToExecute
+                                    .add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, dataset, sourceLoc));
                         }
                     }
-                    ExternalDatasetsRegistry.INSTANCE.removeDatasetInfo(dataset);
+                    externalDatasetsToDeregister.add(dataset);
                 }
             }
 
@@ -1529,8 +1507,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
             // #. mark PendingDropOp on the dataverse record by
             // first, deleting the dataverse record from the DATAVERSE_DATASET
-            // second, inserting the dataverse record with the PendingDropOp value into the
-            // DATAVERSE_DATASET
+            // second, inserting the dataverse record with the PendingDropOp value into the DATAVERSE_DATASET
+            // Note: the delete operation fails if the dataverse cannot be deleted due to metadata dependencies
             MetadataManager.INSTANCE.dropDataverse(mdTxnCtx, dataverseName);
             MetadataManager.INSTANCE.addDataverse(mdTxnCtx,
                     new Dataverse(dataverseName, dv.getDataFormat(), MetadataUtil.PENDING_DROP_OP));
@@ -1538,6 +1516,17 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
+
+            for (Dataset externalDataset : externalDatasetsToDeregister) {
+                ExternalDatasetsRegistry.INSTANCE.removeDatasetInfo(externalDataset);
+            }
+
+            for (FeedEventsListener feedListener : feedsToStop) {
+                if (feedListener.getState() != ActivityState.STOPPED) {
+                    feedListener.stop(metadataProvider);
+                }
+                feedListener.unregister();
+            }
 
             for (JobSpecification jobSpec : jobsToExecute) {
                 runJob(hcc, jobSpec);
@@ -2159,27 +2148,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected boolean isFunctionUsed(MetadataTransactionContext ctx, FunctionSignature signature,
-            DataverseName currentDataverse) throws AlgebricksException {
-        List<Dataverse> allDataverses = MetadataManager.INSTANCE.getDataverses(ctx);
-        for (Dataverse dataverse : allDataverses) {
-            if (dataverse.getDataverseName().equals(currentDataverse)) {
-                continue;
-            }
-            List<Feed> feeds = MetadataManager.INSTANCE.getFeeds(ctx, dataverse.getDataverseName());
-            for (Feed feed : feeds) {
-                List<FeedConnection> feedConnections = MetadataManager.INSTANCE.getFeedConections(ctx,
-                        dataverse.getDataverseName(), feed.getFeedName());
-                for (FeedConnection conn : feedConnections) {
-                    if (conn.containsFunction(signature)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
     protected void handleFunctionDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         FunctionDropStatement stmtDropFunction = (FunctionDropStatement) stmt;
         FunctionSignature signature = stmtDropFunction.getFunctionSignature();
@@ -2200,15 +2168,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
-            // If function == null && stmtDropFunction.getIfExists() == true, commit txn directly.
-            if (function == null && !stmtDropFunction.getIfExists()) {
-                throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature);
-            } else if (function != null) {
-                if (isFunctionUsed(mdTxnCtx, signature, null)) {
-                    throw new MetadataException(ErrorCode.METADATA_DROP_FUCTION_IN_USE, sourceLoc, signature);
-                } else {
-                    MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
+            if (function == null) {
+                if (!stmtDropFunction.getIfExists()) {
+                    throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature);
                 }
+            } else {
+                MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {

@@ -12454,7 +12454,8 @@
     <test-case FilePath="feeds">
       <compilation-unit name="drop-function-used-by-feed">
         <output-dir compare="Text">drop-function-used-by-feed</output-dir>
-        <expected-error>Function experiments.test_func0@1 is being used. It cannot be dropped</expected-error>
+        <expected-error>Cannot drop function experiments.test_func0@1 being used by feed connection TwitterUsers.UserFeed</expected-error>
+        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
@@ -12465,7 +12466,8 @@
     <test-case FilePath="feeds">
       <compilation-unit name="drop-dataverse-with-function-used-by-feed">
         <output-dir compare="Text">drop-dataverse-with-function-used-by-feed</output-dir>
-        <expected-error>Function fundv.test_func0@1 is being used. It cannot be dropped</expected-error>
+        <expected-error>Cannot drop dataverse. Feed connection feeddv.UserFeed depends on function fundv.test_func0@1</expected-error>
+        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">

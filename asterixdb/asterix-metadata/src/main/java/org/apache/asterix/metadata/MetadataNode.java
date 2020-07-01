@@ -914,6 +914,19 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
+    public List<FeedConnection> getAllFeedConnections(TxnId txnId) throws AlgebricksException {
+        try {
+            FeedConnectionTupleTranslator tupleReaderWriter =
+                    tupleTranslatorProvider.getFeedConnectionTupleTranslator(false);
+            List<FeedConnection> results = new ArrayList<>();
+            IValueExtractor<FeedConnection> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            searchIndex(txnId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, null, valueExtractor, results);
+            return results;
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
+        }
+    }
+
     private void confirmDataverseCanBeDeleted(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
         // If a dataset from a DIFFERENT dataverse
         // uses a type from this dataverse
@@ -928,10 +941,16 @@ public class MetadataNode implements IMetadataNode {
                         "Cannot drop dataverse. Type " + dataverseName + "." + set.getItemTypeName()
                                 + " used by dataset " + set.getDataverseName() + "." + set.getDatasetName());
             }
+            if (set.getMetaItemTypeDataverseName() != null
+                    && set.getMetaItemTypeDataverseName().equals(dataverseName)) {
+                throw new AlgebricksException(
+                        "Cannot drop dataverse. Type " + dataverseName + "." + set.getMetaItemTypeName()
+                                + " used by dataset " + set.getDataverseName() + "." + set.getDatasetName());
+            }
         }
 
         // If a function from a DIFFERENT dataverse
-        // uses functions or datatypes from this dataverse
+        // uses datasets, functions or datatypes from this dataverse
         // throw an error
         List<Function> functions = getAllFunctions(txnId);
         for (Function function : functions) {
@@ -961,6 +980,23 @@ public class MetadataNode implements IMetadataNode {
                 }
             }
         }
+
+        // If a feed connection from a DIFFERENT dataverse applies
+        // a function from this dataverse then throw an error
+        List<FeedConnection> feedConnections = getAllFeedConnections(txnId);
+        for (FeedConnection feedConnection : feedConnections) {
+            if (dataverseName.equals(feedConnection.getDataverseName())) {
+                continue;
+            }
+            for (FunctionSignature functionSignature : feedConnection.getAppliedFunctions()) {
+                if (dataverseName.equals(functionSignature.getDataverseName())) {
+                    throw new AlgebricksException("Cannot drop dataverse. Feed connection "
+                            + feedConnection.getDataverseName() + "." + feedConnection.getFeedName()
+                            + " depends on function " + functionSignature.getDataverseName() + "."
+                            + functionSignature.getName() + "@" + functionSignature.getArity());
+                }
+            }
+        }
     }
 
     private void confirmFunctionCanBeDeleted(TxnId txnId, FunctionSignature signature) throws AlgebricksException {
@@ -974,6 +1010,15 @@ public class MetadataNode implements IMetadataNode {
                     throw new AlgebricksException("Cannot drop function " + signature + " being used by function "
                             + function.getDataverseName() + "." + function.getName() + "@" + function.getArity());
                 }
+            }
+        }
+
+        // if any other feed connection uses this function, throw an error
+        List<FeedConnection> feedConnections = getAllFeedConnections(txnId);
+        for (FeedConnection feedConnection : feedConnections) {
+            if (feedConnection.containsFunction(signature)) {
+                throw new AlgebricksException("Cannot drop function " + signature + " being used by feed connection "
+                        + feedConnection.getDatasetName() + "." + feedConnection.getFeedName());
             }
         }
     }
