@@ -306,6 +306,9 @@ public class AbstractSqlppSimpleExpressionVisitor
     @Override
     public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         callExpr.setExprList(visit(callExpr.getExprList(), arg));
+        if (callExpr.hasAggregateFilterExpr()) {
+            callExpr.setAggregateFilterExpr(visit(callExpr.getAggregateFilterExpr(), arg));
+        }
         return callExpr;
     }
 
@@ -322,12 +325,15 @@ public class AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
-        visitWindowExpressionExcludingExprList(winExpr, arg);
+        visitWindowExpressionExcludingExprListAndAggFilter(winExpr, arg);
         winExpr.setExprList(visit(winExpr.getExprList(), arg));
+        if (winExpr.hasAggregateFilterExpr()) {
+            winExpr.setAggregateFilterExpr(visit(winExpr.getAggregateFilterExpr(), arg));
+        }
         return winExpr;
     }
 
-    protected void visitWindowExpressionExcludingExprList(WindowExpression winExpr, ILangExpression arg)
+    protected void visitWindowExpressionExcludingExprListAndAggFilter(WindowExpression winExpr, ILangExpression arg)
             throws CompilationException {
         if (winExpr.hasPartitionList()) {
             winExpr.setPartitionList(visit(winExpr.getPartitionList(), arg));

@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.api.ICommonRequestParameters;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.translator.IStatementExecutor.StatementProperties;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.hyracks.api.result.IResultSet;
 
@@ -43,6 +44,12 @@ public interface IRequestParameters extends ICommonRequestParameters {
      * @return a reference to write the stats of executed queries
      */
     Stats getStats();
+
+    /**
+     * @return a reference on which to write properties of executed queries (e.g. what kind of statement was parsed
+     *         by the parser)
+     */
+    StatementProperties getStatementProperties();
 
     /**
      * @return a reference to write the metadata of executed queries

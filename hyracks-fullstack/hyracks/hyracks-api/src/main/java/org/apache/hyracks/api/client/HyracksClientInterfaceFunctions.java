@@ -386,12 +386,10 @@ public class HyracksClientInterfaceFunctions {
         private static final long serialVersionUID = 1L;
         private final List<URL> binaryURLs;
         private final DeploymentId deploymentId;
-        private final boolean extractFromArchive;
 
-        public CliDeployBinaryFunction(List<URL> binaryURLs, DeploymentId deploymentId, boolean isExtractFromArchive) {
+        public CliDeployBinaryFunction(List<URL> binaryURLs, DeploymentId deploymentId) {
             this.binaryURLs = binaryURLs;
             this.deploymentId = deploymentId;
-            this.extractFromArchive = isExtractFromArchive;
         }
 
         @Override
@@ -405,10 +403,6 @@ public class HyracksClientInterfaceFunctions {
 
         public DeploymentId getDeploymentId() {
             return deploymentId;
-        }
-
-        public boolean isExtractFromArchive() {
-            return extractFromArchive;
         }
     }
 

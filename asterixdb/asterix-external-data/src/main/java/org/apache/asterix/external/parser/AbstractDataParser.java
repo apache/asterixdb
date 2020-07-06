@@ -72,10 +72,10 @@ import org.apache.asterix.om.base.ATime;
 import org.apache.asterix.om.base.AUUID;
 import org.apache.asterix.om.base.AYearMonthDuration;
 import org.apache.asterix.om.base.temporal.ADateParserFactory;
+import org.apache.asterix.om.base.temporal.ADateTimeParserFactory;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
-import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -217,31 +217,14 @@ public abstract class AbstractDataParser implements IDataParser {
     }
 
     protected void parseDate(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
-        long chrononTimeInMs = ADateParserFactory.parseDatePart(buffer, begin, len);
-        short temp = 0;
-        if (chrononTimeInMs < 0 && chrononTimeInMs % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
-            temp = 1;
-        }
-        aDate.setValue((int) (chrononTimeInMs / GregorianCalendarSystem.CHRONON_OF_DAY) - temp);
+        int chrononTimeInDays = ADateParserFactory.parseDatePartInDays(buffer, begin, len);
+        aDate.setValue(chrononTimeInDays);
         dateSerde.serialize(aDate, out);
     }
 
     protected void parseDateTime(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
-        // +1 if it is negative (-)
-
-        int timeOffset = (buffer[begin] == '-') ? 1 : 0;
-
-        timeOffset = timeOffset + 8 + begin;
-
-        if (buffer[timeOffset] != 'T') {
-            timeOffset += 2;
-            if (buffer[timeOffset] != 'T') {
-                throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_INTERVAL_INVALID_DATETIME);
-            }
-        }
-        long chrononTimeInMs = ADateParserFactory.parseDatePart(buffer, begin, timeOffset - begin);
-        chrononTimeInMs += ATimeParserFactory.parseTimePart(buffer, timeOffset + 1, begin + len - timeOffset - 1);
-        aDateTime.setValue(chrononTimeInMs);
+        long chrononDatetimeInMs = ADateTimeParserFactory.parseDateTimePart(buffer, begin, len);
+        aDateTime.setValue(chrononDatetimeInMs);
         datetimeSerde.serialize(aDateTime, out);
     }
 

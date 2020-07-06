@@ -25,25 +25,27 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 
 public class DatasourceAdapter implements IMetadataEntity<DatasourceAdapter> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final AdapterIdentifier adapterIdentifier;
     private final String classname;
     private final AdapterType type;
-    private final String library;
+    //TODO:also need libraryDataverse
+    private final String libraryName;
 
     public DatasourceAdapter(AdapterIdentifier adapterIdentifier, String classname, AdapterType type) {
         this.adapterIdentifier = adapterIdentifier;
         this.classname = classname;
         this.type = type;
-        this.library = null;
+        this.libraryName = null;
     }
 
-    public DatasourceAdapter(AdapterIdentifier adapterIdentifier, String classname, AdapterType type, String library) {
+    public DatasourceAdapter(AdapterIdentifier adapterIdentifier, String classname, AdapterType type,
+            String libraryName) {
         this.adapterIdentifier = adapterIdentifier;
         this.classname = classname;
         this.type = type;
-        this.library = library;
+        this.libraryName = libraryName;
     }
 
     @Override
@@ -68,8 +70,7 @@ public class DatasourceAdapter implements IMetadataEntity<DatasourceAdapter> {
         return type;
     }
 
-    public String getLibrary() {
-        return library;
+    public String getLibraryName() {
+        return libraryName;
     }
-
 }

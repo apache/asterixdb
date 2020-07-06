@@ -29,9 +29,9 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.common.exceptions.WarningCollector;
 import org.apache.asterix.common.exceptions.WarningUtil;
-import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
@@ -147,7 +147,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 BinaryComparatorFactoryProvider.INSTANCE, TypeTraitProvider.INSTANCE, BinaryBooleanInspector.FACTORY,
                 BinaryIntegerInspector.FACTORY, ADMPrinterFactoryProvider.INSTANCE, MissingWriterFactory.INSTANCE, null,
                 new ExpressionRuntimeProvider(new QueryLogicalExpressionJobGen(metadataProvider.getFunctionManager())),
-                ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null, 0);
+                ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null,
+                NoOpWarningCollector.INSTANCE, 0);
     }
 
     @Override
@@ -362,10 +363,9 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         }
 
         private boolean canConstantFold(ScalarFunctionCallExpression function) throws AlgebricksException {
-            // skip external functions that are not implemented in Java
+            // skip external functions because they're not available at compile time (on CC)
             IFunctionInfo fi = function.getFunctionInfo();
-            if (fi instanceof IExternalFunctionInfo
-                    && !ExternalFunctionLanguage.JAVA.equals(((IExternalFunctionInfo) fi).getLanguage())) {
+            if (fi instanceof IExternalFunctionInfo) {
                 return false;
             }
             // skip all functions that would produce records/arrays/multisets (derived types) in their open format

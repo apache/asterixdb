@@ -130,7 +130,7 @@ public class HyracksException extends IOException implements IFormattedException
         return errorCode;
     }
 
-    public Object[] getParams() {
+    public Serializable[] getParams() {
         return params;
     }
 

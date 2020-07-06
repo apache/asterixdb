@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -73,6 +72,7 @@ import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.CreateIndexStatement;
+import org.apache.asterix.lang.common.statement.CreateLibraryStatement;
 import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
@@ -88,6 +88,7 @@ import org.apache.asterix.lang.common.statement.FunctionDropStatement;
 import org.apache.asterix.lang.common.statement.IndexDropStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.InternalDetailsDecl;
+import org.apache.asterix.lang.common.statement.LibraryDropStatement;
 import org.apache.asterix.lang.common.statement.LoadStatement;
 import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.lang.common.statement.NodegroupDecl;
@@ -226,6 +227,11 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
                 callExpr.getFunctionSignature().getName()) + "(");
         printDelimitedExpressions(callExpr.getExprList(), COMMA, step);
         out.print(")");
+        if (callExpr.hasAggregateFilterExpr()) {
+            out.println(" FILTER ( WHERE ");
+            callExpr.getAggregateFilterExpr().accept(this, step + 1);
+            out.println(skip(step) + ")");
+        }
         return null;
     }
 
@@ -791,8 +797,8 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
         out.print(this.generateFullName(cfs.getFunctionSignature().getDataverseName(),
                 cfs.getFunctionSignature().getName()));
         out.print("(");
-        printDelimitedStrings(cfs.getArgs().stream().map(v -> v.getFirst().getValue()).collect(Collectors.toList()),
-                COMMA);
+        printDelimitedStrings(
+                cfs.getParameters().stream().map(v -> v.getFirst().getValue()).collect(Collectors.toList()), COMMA);
         out.println(") {");
         out.println(cfs.getFunctionBody());
         out.println("}" + SEMICOLON);
@@ -845,6 +851,18 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
 
     @Override
     public Void visit(CompactStatement del, Integer step) throws CompilationException {
+        return null;
+    }
+
+    @Override
+    public Void visit(CreateLibraryStatement cls, Integer arg) throws CompilationException {
+        // this statement is internal
+        return null;
+    }
+
+    @Override
+    public Void visit(LibraryDropStatement del, Integer arg) throws CompilationException {
+        // this statement is internal
         return null;
     }
 

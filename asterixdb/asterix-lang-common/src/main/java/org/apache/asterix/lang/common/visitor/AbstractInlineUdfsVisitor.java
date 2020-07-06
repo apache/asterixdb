@@ -132,10 +132,16 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     }
 
     @Override
-    public Boolean visit(CallExpr pf, List<FunctionDecl> arg) throws CompilationException {
-        Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(pf.getExprList(), arg);
-        pf.setExprList(p.second);
-        return p.first;
+    public Boolean visit(CallExpr callExpr, List<FunctionDecl> arg) throws CompilationException {
+        Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(callExpr.getExprList(), arg);
+        callExpr.setExprList(p.second);
+        boolean changed = p.first;
+        if (callExpr.hasAggregateFilterExpr()) {
+            Pair<Boolean, Expression> be = inlineUdfsInExpr(callExpr.getAggregateFilterExpr(), arg);
+            callExpr.setAggregateFilterExpr(be.second);
+            changed |= be.first;
+        }
+        return changed;
     }
 
     @Override
@@ -289,6 +295,10 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         if (implem == null) {
             return new Pair<>(r, expr);
         } else {
+            if (f.hasAggregateFilterExpr()) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_USE_OF_FILTER_CLAUSE,
+                        f.getSourceLocation());
+            }
             // Rewrite the function body itself (without setting unbounded variables to dataset access).
             // TODO(buyingyi): throw an exception for recursive function definition or limit the stack depth.
             implem.setFuncBody(rewriteFunctionBody(implem));

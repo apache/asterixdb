@@ -42,11 +42,18 @@ public interface ILSMMemoryComponent extends ILSMComponent {
     int getWriterCount();
 
     /**
-     * Clear the component and its metadata page completely
+     * Reset the memory component's state after the flush completes
      *
      * @throws HyracksDataException
      */
     void reset() throws HyracksDataException;
+
+    /**
+     * Cleanup the memory component after flush (can be time consuming)
+     *
+     * @throws HyracksDataException
+     */
+    void cleanup() throws HyracksDataException;
 
     /**
      * @return true if there are data in the memory component, false otherwise
@@ -105,6 +112,7 @@ public interface ILSMMemoryComponent extends ILSMComponent {
 
     /**
      * Called when the memory component is flushed to disk
+     *
      * @throws HyracksDataException
      */
     void flushed() throws HyracksDataException;

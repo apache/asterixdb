@@ -151,8 +151,9 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
     }
 
     @Override
-    public void threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
+    public boolean threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
             throws HyracksDataException {
+        boolean cleanup = false;
         switch (opType) {
             case FORCE_MODIFICATION:
             case MODIFICATION:
@@ -168,14 +169,14 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
                 } else {
                     readerCount--;
                     if (state == ComponentState.UNREADABLE_UNWRITABLE && readerCount == 0) {
-                        reset();
+                        cleanup = true;
                     }
                 }
                 break;
             case SEARCH:
                 readerCount--;
                 if (state == ComponentState.UNREADABLE_UNWRITABLE && readerCount == 0) {
-                    reset();
+                    cleanup = true;
                 }
                 break;
             case FLUSH:
@@ -183,25 +184,22 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
                     throw new IllegalStateException("Flush sees an illegal LSM memory compoenent state: " + state);
                 }
                 readerCount--;
-                if (failedOperation) {
+                if (!failedOperation) {
                     // If flush failed, keep the component state to READABLE_UNWRITABLE_FLUSHING
-                    return;
-                }
-                // operation succeeded
-                if (readerCount == 0) {
-                    // TODO: move reset() outside of the synchronized block (on op tracker)
-                    reset();
-                } else {
+                    // operation succeeded
                     state = ComponentState.UNREADABLE_UNWRITABLE;
+                    if (readerCount == 0) {
+                        cleanup = true;
+                    }
                 }
                 break;
             default:
                 throw new UnsupportedOperationException("Unsupported operation " + opType);
         }
-
         if (readerCount <= -1 || writerCount <= -1) {
             throw new IllegalStateException("Invalid reader or writer count " + readerCount + " - " + writerCount);
         }
+        return cleanup;
     }
 
     @Override
@@ -235,7 +233,6 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
         if (filter != null) {
             filter.reset();
         }
-        doReset();
         lsmIndex.memoryComponentsReset();
         // a flush can be pending on a component that just completed its flush... here is when this can happen:
         // primary index has 2 components, secondary index has 2 components.
@@ -248,7 +245,8 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
         }
     }
 
-    protected void doReset() throws HyracksDataException {
+    @Override
+    public void cleanup() throws HyracksDataException {
         getIndex().deactivate();
         getIndex().destroy();
         getIndex().create();

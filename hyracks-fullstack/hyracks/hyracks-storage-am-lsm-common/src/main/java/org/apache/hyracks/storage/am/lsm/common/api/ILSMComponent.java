@@ -95,9 +95,11 @@ public interface ILSMComponent {
      *            whether the operation failed
      * @param isMutableComponent
      *            true if the thread intended to modify the component
+     * @return
+     *        true if extra cleanup is needed for the component
      * @throws HyracksDataException
      */
-    void threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
+    boolean threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
             throws HyracksDataException;
 
     /**

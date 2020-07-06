@@ -41,6 +41,8 @@ public final class ExecuteStatementResponseMessage implements INcAddressedMessag
 
     private IStatementExecutor.Stats stats;
 
+    private IStatementExecutor.StatementProperties statementProperties;
+
     private Throwable error;
 
     private ExecutionPlans executionPlans;
@@ -90,6 +92,14 @@ public final class ExecuteStatementResponseMessage implements INcAddressedMessag
 
     public void setStats(IStatementExecutor.Stats stats) {
         this.stats = stats;
+    }
+
+    public IStatementExecutor.StatementProperties getStatementProperties() {
+        return statementProperties;
+    }
+
+    public void setStatementProperties(IStatementExecutor.StatementProperties statementProperties) {
+        this.statementProperties = statementProperties;
     }
 
     public ExecutionPlans getExecutionPlans() {

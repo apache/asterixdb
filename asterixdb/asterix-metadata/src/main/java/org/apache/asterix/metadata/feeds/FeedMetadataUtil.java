@@ -28,15 +28,15 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
+import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.external.IDataSourceAdapter.AdapterType;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
-import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.external.adapter.factory.ExternalAdapterFactory;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
-import org.apache.asterix.external.library.JavaLibrary;
 import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -49,6 +49,7 @@ import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
+import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -57,6 +58,7 @@ import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 /**
  * A utility class for providing helper functions for feeds TODO: Refactor this
@@ -103,8 +105,8 @@ public class FeedMetadataUtil {
         return feedPolicy;
     }
 
-    public static void validateFeed(Feed feed, MetadataTransactionContext mdTxnCtx, ICcApplicationContext appCtx)
-            throws AlgebricksException {
+    public static void validateFeed(Feed feed, MetadataTransactionContext mdTxnCtx, ICcApplicationContext appCtx,
+            IWarningCollector warningCollector) throws AlgebricksException {
         try {
             Map<String, String> configuration = feed.getConfiguration();
             ARecordType adapterOutputType = getOutputType(feed, configuration.get(ExternalDataConstants.KEY_TYPE_NAME));
@@ -113,7 +115,7 @@ public class FeedMetadataUtil {
             // Get adapter from metadata dataset <Metadata dataverse>
             String adapterName = configuration.get(ExternalDataConstants.KEY_ADAPTER_NAME);
             if (adapterName == null) {
-                throw new AlgebricksException("cannot find adatper name");
+                throw new AlgebricksException("cannot find adapter name");
             }
             DatasourceAdapter adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx,
                     MetadataConstants.METADATA_DATAVERSE_NAME, adapterName);
@@ -131,14 +133,7 @@ public class FeedMetadataUtil {
                         adapterFactory = (ITypedAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
                         break;
                     case EXTERNAL:
-                        String[] anameComponents = adapterName.split("#");
-                        String libraryName = anameComponents[0];
-                        ILibrary lib = appCtx.getLibraryManager().getLibrary(feed.getDataverseName(), libraryName);
-                        if (lib.getLanguage() != ExternalFunctionLanguage.JAVA) {
-                            throw new HyracksDataException("Unexpected library language: " + lib.getLanguage());
-                        }
-                        ClassLoader cl = ((JavaLibrary) lib).getClassLoader();
-                        adapterFactory = (ITypedAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
+                        adapterFactory = createExternalAdapterFactory(mdTxnCtx, adapterEntity, adapterFactoryClassname);
                         break;
                     default:
                         throw new AsterixException("Unknown Adapter type " + adapterType);
@@ -149,7 +144,7 @@ public class FeedMetadataUtil {
             }
             adapterFactory.setOutputType(adapterOutputType);
             adapterFactory.setMetaType(metaType);
-            adapterFactory.configure(appCtx.getServiceContext(), configuration);
+            adapterFactory.configure(appCtx.getServiceContext(), configuration, warningCollector);
             if (metaType == null && configuration.containsKey(ExternalDataConstants.KEY_META_TYPE_NAME)) {
                 metaType = getOutputType(feed, configuration.get(ExternalDataConstants.KEY_META_TYPE_NAME));
                 if (metaType == null) {
@@ -170,6 +165,22 @@ public class FeedMetadataUtil {
         } catch (Exception e) {
             throw new AsterixException("Invalid feed parameters. Exception Message:" + e.getMessage(), e);
         }
+    }
+
+    private static ITypedAdapterFactory createExternalAdapterFactory(MetadataTransactionContext mdTxnCtx,
+            DatasourceAdapter adapterEntity, String adapterFactoryClassname)
+            throws AlgebricksException, RemoteException, HyracksDataException {
+        //TODO:library dataverse must be explicitly specified in the adapter entity
+        DataverseName libraryDataverse = adapterEntity.getAdapterIdentifier().getDataverseName();
+        String libraryName = adapterEntity.getLibraryName();
+        Library library = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, libraryDataverse, libraryName);
+        if (library == null) {
+            throw new CompilationException(ErrorCode.UNKNOWN_LIBRARY, libraryName);
+        }
+        if (!ExternalFunctionLanguage.JAVA.name().equals(library.getLanguage())) {
+            throw new HyracksDataException("Unexpected library language: " + library.getLanguage());
+        }
+        return new ExternalAdapterFactory(libraryDataverse, libraryName, adapterFactoryClassname);
     }
 
     @SuppressWarnings("rawtypes")
@@ -207,24 +218,17 @@ public class FeedMetadataUtil {
                         adapterFactory = (ITypedAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
                         break;
                     case EXTERNAL:
-                        String[] anameComponents = adapterName.split("#");
-                        String libraryName = anameComponents[0];
-                        ILibrary lib = appCtx.getLibraryManager().getLibrary(feed.getDataverseName(), libraryName);
-                        if (lib.getLanguage() != ExternalFunctionLanguage.JAVA) {
-                            throw new HyracksDataException("Unexpected library language: " + lib.getLanguage());
-                        }
-                        ClassLoader cl = ((JavaLibrary) lib).getClassLoader();
-                        adapterFactory = (ITypedAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
+                        adapterFactory = createExternalAdapterFactory(mdTxnCtx, adapterEntity, adapterFactoryClassname);
                         break;
                     default:
                         throw new AsterixException("Unknown Adapter type " + adapterType);
                 }
                 adapterFactory.setOutputType(adapterOutputType);
                 adapterFactory.setMetaType(metaType);
-                adapterFactory.configure(appCtx.getServiceContext(), configuration);
+                adapterFactory.configure(appCtx.getServiceContext(), configuration, NoOpWarningCollector.INSTANCE);
             } else {
                 adapterFactory = AdapterFactoryProvider.getAdapterFactory(appCtx.getServiceContext(), adapterName,
-                        configuration, adapterOutputType, metaType);
+                        configuration, adapterOutputType, metaType, NoOpWarningCollector.INSTANCE);
                 adapterType = IDataSourceAdapter.AdapterType.INTERNAL;
             }
             if (metaType == null) {

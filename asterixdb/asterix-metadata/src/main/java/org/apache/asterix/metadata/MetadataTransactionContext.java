@@ -171,7 +171,7 @@ public class MetadataTransactionContext extends MetadataCache {
     }
 
     public void dropLibrary(DataverseName dataverseName, String libraryName) {
-        Library library = new Library(dataverseName, libraryName);
+        Library library = new Library(dataverseName, libraryName, null, MetadataUtil.PENDING_NO_OP);
         droppedCache.addLibraryIfNotExists(library);
         logAndApply(new MetadataLogicalOperation(library, false));
     }

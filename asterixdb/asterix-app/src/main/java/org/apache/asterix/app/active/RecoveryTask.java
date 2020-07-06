@@ -106,8 +106,8 @@ public class RecoveryTask {
 
     protected Void doRecover(IRetryPolicy policy) throws AlgebricksException, InterruptedException {
         LOGGER.log(level, "Actual Recovery task has started");
-        Exception failure = null;
-        while (policy.retry(failure)) {
+        Exception failure;
+        do {
             synchronized (listener) {
                 while (!cancelRecovery && clusterStateManager.getState() != ClusterState.ACTIVE) {
                     listener.wait();
@@ -139,7 +139,7 @@ public class RecoveryTask {
             } finally {
                 releaseRecoveryLocks(metadataProvider);
             }
-        }
+        } while (policy.retry(failure));
         // Recovery task is essntially over now either through failure or through cancellation(stop)
         synchronized (listener) {
             listener.notifyAll();

@@ -63,12 +63,20 @@ public final class SourceLocation implements Serializable {
         return column;
     }
 
-    public void writeFields(DataOutput output) throws IOException {
-        output.writeInt(line);
-        output.writeInt(column);
+    public static void writeFields(SourceLocation sourceLocation, DataOutput output) throws IOException {
+        if (sourceLocation == null) {
+            output.writeInt(-1);
+        } else {
+            output.writeInt(sourceLocation.getLine());
+            output.writeInt(sourceLocation.getColumn());
+        }
     }
 
     public static SourceLocation create(DataInput dataInput) throws IOException {
-        return new SourceLocation(dataInput.readInt(), dataInput.readInt());
+        int row = dataInput.readInt();
+        if (row == -1) {
+            return null;
+        }
+        return new SourceLocation(row, dataInput.readInt());
     }
 }

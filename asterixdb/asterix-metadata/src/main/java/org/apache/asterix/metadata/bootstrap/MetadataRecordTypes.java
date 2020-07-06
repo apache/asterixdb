@@ -75,7 +75,7 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_IS_PRIMARY = "IsPrimary";
     public static final String FIELD_NAME_KIND = "Kind";
     public static final String FIELD_NAME_LANGUAGE = "Language";
-    public static final String FIELD_NAME_LIBRARY = "Library";
+    public static final String FIELD_NAME_LIBRARY_NAME = "LibraryName";
     public static final String FIELD_NAME_LAST_REFRESH_TIME = "LastRefreshTime";
     public static final String FIELD_NAME_METATYPE_DATAVERSE_NAME = "MetatypeDataverseName";
     public static final String FIELD_NAME_METATYPE_NAME = "MetatypeName";
@@ -95,6 +95,7 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_PROPERTIES = "Properties";
     public static final String FIELD_NAME_RECORD = "Record";
     public static final String FIELD_NAME_RETURN_TYPE = "ReturnType";
+    public static final String FIELD_NAME_RETURN_TYPE_DATAVERSE_NAME = "ReturnTypeDataverseName";
     public static final String FIELD_NAME_SEARCH_KEY = "SearchKey";
     public static final String FIELD_NAME_STATUS = "Status";
     public static final String FIELD_NAME_SYNONYM_NAME = "SynonymName";
@@ -341,7 +342,6 @@ public final class MetadataRecordTypes {
     //open types
     public static final String FUNCTION_ARECORD_FUNCTION_WITHPARAM_LIST_NAME = "WithParams";
     public static final String FUNCTION_ARECORD_FUNCTION_LIBRARY_FIELD_NAME = "Library";
-    public static final String FUNCTION_ARECORD_FUNCTION_RETURN_TYPE_IS_NULLABLE = "ReturnTypeIsNullable";
     public static final String FUNCTION_ARECORD_FUNCTION_NULLCALL_FIELD_NAME = "NullCall";
     public static final String FUNCTION_ARECORD_FUNCTION_DETERMINISTIC_FIELD_NAME = "Deterministic";
     public static final String FUNCTION_ARECORD_FUNCTION_PARAMTYPES_FIELD_NAME = "ParamTypes";
@@ -369,8 +369,6 @@ public final class MetadataRecordTypes {
     public static final int DATASOURCE_ADAPTER_ARECORD_TYPE_FIELD_INDEX = 3;
     public static final int DATASOURCE_ADAPTER_ARECORD_TIMESTAMP_FIELD_INDEX = 4;
     //open types
-
-    public static final String DATASOURCE_ARECORD_FUNCTION_LIBRARY_FIELD_NAME = "Library";
 
     public static final ARecordType DATASOURCE_ADAPTER_RECORDTYPE = createRecordType(
             // RecordTypeName

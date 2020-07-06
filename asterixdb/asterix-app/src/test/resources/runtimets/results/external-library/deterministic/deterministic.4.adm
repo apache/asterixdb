@@ -2,7 +2,7 @@ distribute result [$$1]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$1] <- [{"default": getCapital_default("United States"), "deterministic": { country: "United States", capital: "Washington D.C." }, "not_deterministic": getCapital_not_deterministic("United States")}]
+    assign [$$1] <- [{"default": getCapital_default("United States"), "deterministic": getCapital_deterministic("United States"), "not_deterministic": getCapital_not_deterministic("United States")}]
     -- ASSIGN  |UNPARTITIONED|
       empty-tuple-source
       -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

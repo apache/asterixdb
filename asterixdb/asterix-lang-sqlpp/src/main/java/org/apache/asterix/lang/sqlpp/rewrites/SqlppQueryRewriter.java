@@ -489,6 +489,9 @@ public class SqlppQueryRewriter implements IQueryRewriter {
                     p.first.accept(this, arg);
                 }
             }
+            if (winExpr.hasAggregateFilterExpr()) {
+                winExpr.getAggregateFilterExpr().accept(this, arg);
+            }
             for (Expression expr : winExpr.getExprList()) {
                 expr.accept(this, arg);
             }

@@ -22,20 +22,12 @@ package org.apache.hyracks.control.common.deployment;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -48,7 +40,6 @@ import org.apache.hyracks.api.job.IJobSerializerDeserializer;
 import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.common.context.ServerContext;
-import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -61,11 +52,6 @@ public class DeploymentUtils {
 
     public static final String DEPLOYMENT = "applications";
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String SHIV_SUFFIX = ".pyz";
-    private static final String ZIP_SUFFIX = ".zip";
-    private static final String SHIV_ROOT = "SHIV_ROOT";
-    private static final String SHIV_ENTRY_POINT = "SHIV_ENTRY_POINT";
-    private static final String SHIV_INTERPRETER = "SHIV_INTERPRETER";
 
     /**
      * undeploy an existing deployment
@@ -102,12 +88,13 @@ public class DeploymentUtils {
      * @param container
      *            the container of serailizer/deserializer
      * @param ctx
-     *            the ServerContext * @param isNC
+     *            the ServerContext
+     * @param isNC
      *            true is NC/false is CC
      * @throws HyracksException
      */
     public static void deploy(DeploymentId deploymentId, List<URL> urls, IJobSerializerDeserializerContainer container,
-            ServerContext ctx, boolean isNC, boolean extractFromArchive) throws HyracksException {
+            ServerContext ctx, boolean isNC) throws HyracksException {
         IJobSerializerDeserializer jobSerDe = container.getJobSerializerDeserializer(deploymentId);
         if (jobSerDe == null) {
             jobSerDe = new ClassLoaderJobSerializerDeserializer();
@@ -116,11 +103,7 @@ public class DeploymentUtils {
         String rootDir = ctx.getBaseDir().toString();
         String deploymentDir = rootDir.endsWith(File.separator) ? rootDir + DEPLOYMENT + File.separator + deploymentId
                 : rootDir + File.separator + DEPLOYMENT + File.separator + deploymentId;
-        if (extractFromArchive) {
-            downloadURLs(urls, deploymentDir, isNC, true);
-        } else {
-            jobSerDe.addClassPathURLs(downloadURLs(urls, deploymentDir, isNC, false));
-        }
+        jobSerDe.addClassPathURLs(downloadURLs(urls, deploymentDir, isNC));
     }
 
     /**
@@ -195,8 +178,7 @@ public class DeploymentUtils {
      * @return a list of local file URLs
      * @throws HyracksException
      */
-    private static List<URL> downloadURLs(List<URL> urls, String deploymentDir, boolean isNC,
-            boolean extractFromArchive) throws HyracksException {
+    private static List<URL> downloadURLs(List<URL> urls, String deploymentDir, boolean isNC) throws HyracksException {
         //retry 10 times at maximum for downloading binaries
         int retryCount = 10;
         int tried = 0;
@@ -227,13 +209,6 @@ public class DeploymentUtils {
                             os.close();
                         }
                     }
-                    if (extractFromArchive) {
-                        if (targetFile.getAbsolutePath().endsWith(SHIV_SUFFIX)) {
-                            shiv(targetFile.getAbsolutePath(), deploymentDir);
-                        } else if (targetFile.getAbsolutePath().endsWith(ZIP_SUFFIX)) {
-                            unzip(targetFile.getAbsolutePath(), deploymentDir);
-                        }
-                    }
                     downloadedFileURLs.add(targetFile.toURI().toURL());
                 }
                 return downloadedFileURLs;
@@ -243,62 +218,5 @@ public class DeploymentUtils {
             }
         }
         throw HyracksException.create(trace);
-    }
-
-    public static void unzip(String sourceFile, String outputDirName) throws IOException {
-        try (ZipFile zipFile = new ZipFile(sourceFile)) {
-            Path outputPath = Paths.get(FilenameUtils.normalize(outputDirName));
-            File outputDir = outputPath.toFile();
-            if (!outputDir.exists()) {
-                throw new IOException("Output path doesn't exist");
-            }
-            if (!outputDir.isDirectory()) {
-                throw new IOException("Output path is not a directory");
-            }
-            Enumeration<? extends ZipEntry> entries = zipFile.entries();
-            List<File> createdFiles = new ArrayList<>();
-            while (entries.hasMoreElements()) {
-                ZipEntry entry = entries.nextElement();
-                String normalizedPath = FilenameUtils.normalize(FileUtil.joinPath(outputDirName, entry.getName()));
-                Path candidatePath = Paths.get(normalizedPath);
-                if (!candidatePath.startsWith(outputPath)) {
-                    throw new IOException("Malformed ZIP archive");
-                }
-                File entryDestination = new File(outputDir, entry.getName());
-                if (!entry.isDirectory()) {
-                    entryDestination.getParentFile().mkdirs();
-                    try (InputStream in = zipFile.getInputStream(entry);
-                            OutputStream out = new FileOutputStream(entryDestination)) {
-                        createdFiles.add(entryDestination);
-                        IOUtils.copy(in, out);
-                    } catch (IOException e) {
-                        for (File f : createdFiles) {
-                            if (!f.delete()) {
-                                LOGGER.error("Couldn't clean up file after failed archive extraction: "
-                                        + f.getAbsolutePath());
-                            }
-                        }
-                        throw e;
-                    }
-                }
-            }
-        }
-    }
-
-    public static void shiv(String sourceFile, String outputDir) throws IOException {
-        loadShim(outputDir, "pyro4.pyz");
-        unzip(sourceFile, outputDir);
-        unzip(outputDir + File.separator + "pyro4.pyz", outputDir);
-        loadShim(outputDir, "entrypoint.py");
-    }
-
-    public static void loadShim(String outputDir, String name) throws IOException {
-        try (InputStream is = DeploymentUtils.class.getClassLoader().getResourceAsStream(name)) {
-            if (is != null) {
-                IOUtils.copyLarge(is, new FileOutputStream(new File(outputDir + File.separator + name)));
-            } else {
-                throw new IOException("Classpath does not contain necessary Python resources!");
-            }
-        }
     }
 }

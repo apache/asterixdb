@@ -162,20 +162,18 @@ public class FunctionMapUtil {
      *
      * @param callExpr
      *            The input call expression.
-     * @return a new call expression that calls the corresponding AsterixDB internal function.
      */
-    public static CallExpr normalizedListInputFunctions(CallExpr callExpr) {
+    public static void normalizedListInputFunctions(CallExpr callExpr) {
         FunctionSignature fs = callExpr.getFunctionSignature();
         String internalFuncName = LIST_INPUT_FUNCTION_MAP.get(fs.getName().toLowerCase());
         if (internalFuncName == null) {
-            return callExpr;
+            return;
         }
         callExpr.setFunctionSignature(new FunctionSignature(FunctionConstants.ASTERIX_DV, internalFuncName, 1));
         ListConstructor listConstr =
                 new ListConstructor(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, callExpr.getExprList());
         listConstr.setSourceLocation(callExpr.getSourceLocation());
         callExpr.setExprList(new ArrayList<>(Collections.singletonList(listConstr)));
-        return callExpr;
     }
 
     /**

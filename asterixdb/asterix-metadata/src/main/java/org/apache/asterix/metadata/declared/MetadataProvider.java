@@ -50,6 +50,7 @@ import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
+import org.apache.asterix.external.adapter.factory.ExternalAdapterFactory;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
@@ -62,7 +63,6 @@ import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
 import org.apache.asterix.external.operators.FeedIntakeOperatorDescriptor;
 import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.FeedConstants;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
@@ -134,6 +134,7 @@ import org.apache.hyracks.api.dataflow.value.IResultSerializerFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.result.IResultMetadata;
@@ -487,10 +488,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         policyAccessor, factoryOutput.second);
                 break;
             case EXTERNAL:
-                String libraryName = feed.getConfiguration().get(ExternalDataConstants.KEY_ADAPTER_NAME).trim()
-                        .split(FeedConstants.NamingConstants.LIBRARY_NAME_SEPARATOR)[0];
-                feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feed, libraryName,
-                        adapterFactory.getClass().getName(), recordType, policyAccessor, factoryOutput.second);
+                ExternalAdapterFactory extAdapterFactory = (ExternalAdapterFactory) adapterFactory;
+                feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feed, extAdapterFactory.getLibraryDataverse(),
+                        extAdapterFactory.getLibraryName(), extAdapterFactory.getClassName(), recordType,
+                        policyAccessor, factoryOutput.second);
                 break;
             default:
                 break;
@@ -823,11 +824,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     protected ITypedAdapterFactory getConfiguredAdapterFactory(Dataset dataset, String adapterName,
-            Map<String, String> configuration, ARecordType itemType, ARecordType metaType) throws AlgebricksException {
+            Map<String, String> configuration, ARecordType itemType, ARecordType metaType,
+            IWarningCollector warningCollector) throws AlgebricksException {
         try {
             configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataset.getDataverseName().getCanonicalForm());
-            ITypedAdapterFactory adapterFactory = AdapterFactoryProvider.getAdapterFactory(
-                    getApplicationContext().getServiceContext(), adapterName, configuration, itemType, metaType);
+            ITypedAdapterFactory adapterFactory =
+                    AdapterFactoryProvider.getAdapterFactory(getApplicationContext().getServiceContext(), adapterName,
+                            configuration, itemType, metaType, warningCollector);
 
             // check to see if dataset is indexed
             Index filesIndex =
@@ -900,7 +903,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             ExternalDatasetDetails datasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
             LookupAdapterFactory<?> adapterFactory = AdapterFactoryProvider.getLookupAdapterFactory(
                     getApplicationContext().getServiceContext(), datasetDetails.getProperties(), itemType, ridIndexes,
-                    retainInput, retainMissing, context.getMissingWriterFactory());
+                    retainInput, retainMissing, context.getMissingWriterFactory(), context.getWarningCollector());
             String fileIndexName = IndexingConstants.getFilesIndexName(dataset.getDatasetName());
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc =
                     metadataProvider.getSplitProviderAndConstraints(dataset, fileIndexName);

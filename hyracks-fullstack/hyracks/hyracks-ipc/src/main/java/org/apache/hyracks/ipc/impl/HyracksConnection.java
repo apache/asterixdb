@@ -217,13 +217,12 @@ public final class HyracksConnection implements IHyracksClientConnection {
     public DeploymentId deployBinary(List<String> files) throws Exception {
         /** generate a deployment id */
         DeploymentId deploymentId = new DeploymentId(UUID.randomUUID().toString());
-        deployBinary(deploymentId, files, false);
+        deployBinary(deploymentId, files);
         return deploymentId;
     }
 
     @Override
-    public void deployBinary(DeploymentId deploymentId, List<String> files, boolean extractFromArchive)
-            throws Exception {
+    public void deployBinary(DeploymentId deploymentId, List<String> files) throws Exception {
         List<URL> binaryURLs = new ArrayList<>();
         if (files != null && !files.isEmpty()) {
             CloseableHttpClient hc = new DefaultHttpClient();
@@ -250,7 +249,7 @@ public final class HyracksConnection implements IHyracksClientConnection {
             }
         }
         /** deploy the URLs to the CC and NCs */
-        hci.deployBinary(binaryURLs, deploymentId, extractFromArchive);
+        hci.deployBinary(binaryURLs, deploymentId);
     }
 
     @Override

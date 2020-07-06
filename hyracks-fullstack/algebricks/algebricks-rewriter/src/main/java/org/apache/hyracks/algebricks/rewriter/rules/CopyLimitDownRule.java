@@ -70,8 +70,7 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
             ILogicalOperator candidateOp = candidateOpRef.getValue();
             LogicalOperatorTag candidateOpTag = candidateOp.getOperatorTag();
             if (candidateOp.getInputs().size() > 1 || !candidateOp.isMap()
-                    || candidateOpTag == LogicalOperatorTag.SELECT || candidateOpTag == LogicalOperatorTag.LIMIT
-                    || candidateOpTag == LogicalOperatorTag.UNNEST_MAP) {
+                    || candidateOpTag == LogicalOperatorTag.SELECT || candidateOpTag == LogicalOperatorTag.UNNEST_MAP) {
                 break;
             }
 

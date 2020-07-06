@@ -1,0 +1,67 @@
+DataverseUse test
+Query:
+SELECT [
+FunctionCall asterix.sql-count@1[
+  (
+    SELECT ELEMENT [
+    LiteralExpr [LONG] [1]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#2 ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=#2 ]
+            Field=tenk
+          ]
+          Field=four
+        ]
+        >
+        LiteralExpr [LONG] [0]
+      ]
+  )
+]
+cnt
+FunctionCall asterix.sql-sum@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#3 ]
+        Field=tenk
+      ]
+      Field=four
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#3 ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=#3 ]
+            Field=tenk
+          ]
+          Field=four
+        ]
+        >
+        LiteralExpr [LONG] [0]
+      ]
+  )
+]
+sm
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.tenk]
+  ]
+  AS Variable [ Name=$tenk ]
+]
+Group All
+  GROUP AS Variable [ Name=#1 ]
+  (
+    tenk:=Variable [ Name=$tenk ]
+  )
+

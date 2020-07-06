@@ -92,8 +92,6 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
      *
      * @param jobSpec
      *            Job Specification
-     * @param jobFlags
-     *            Flags
      * @throws Exception
      */
     DeployedJobSpecId deployJobSpec(JobSpecification jobSpec) throws Exception;
@@ -168,13 +166,12 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
 
     /**
      * Deploy files to the cluster
-     *
-     * @param files
-     *            a list of file paths
      * @param deploymentId
      *            the id used to uniquely identify this set of files for management
+     * @param files
+     *            a list of file paths
      */
-    void deployBinary(DeploymentId deploymentId, List<String> files, boolean extractFromArchive) throws Exception;
+    void deployBinary(DeploymentId deploymentId, List<String> files) throws Exception;
 
     /**
      * undeploy a certain deployment

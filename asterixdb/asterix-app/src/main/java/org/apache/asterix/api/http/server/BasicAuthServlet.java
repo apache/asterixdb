@@ -20,6 +20,7 @@ package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.CREDENTIAL_MAP;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
@@ -50,7 +51,6 @@ public abstract class BasicAuthServlet extends AbstractServlet {
 
     @Override
     public void handle(IServletRequest request, IServletResponse response) {
-
         try {
             boolean authorized = authorize(request);
             if (!authorized) {
@@ -89,7 +89,7 @@ public abstract class BasicAuthServlet extends AbstractServlet {
             return false;
         }
         String providedUsername = providedCredentials[0];
-        String storedPw = storedCredentials.get(providedUsername);
+        String storedPw = getStoredCredentials(request).get(providedUsername);
         if (storedPw == null) {
             LOGGER.debug("Invalid username");
             return false;
@@ -101,5 +101,19 @@ public abstract class BasicAuthServlet extends AbstractServlet {
             LOGGER.debug("Wrong password for user " + providedUsername);
             return false;
         }
+    }
+
+    protected Map<String, String> getStoredCredentials(IServletRequest request) {
+        return storedCredentials;
+    }
+
+    public static String hashPassword(String password) {
+        return BCrypt.hashpw(password, BCrypt.gensalt(12));
+    }
+
+    public static String createAuthHeader(String user, String password) {
+        String auth = user + ":" + password;
+        byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.ISO_8859_1));
+        return "Basic " + new String(encodedAuth);
     }
 }

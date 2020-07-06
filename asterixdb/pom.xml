@@ -83,6 +83,7 @@
     <hyracks.version>0.3.5-SNAPSHOT</hyracks.version>
     <hadoop.version>2.8.5</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
+    <log4j.version>2.13.3</log4j.version>
     <awsjavasdk.version>2.10.83</awsjavasdk.version>
 
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
@@ -1365,11 +1366,6 @@
         <version>1.14</version>
       </dependency>
       <dependency>
-        <groupId>commons-lang</groupId>
-        <artifactId>commons-lang</artifactId>
-        <version>2.4</version>
-      </dependency>
-      <dependency>
         <groupId>it.unimi.dsi</groupId>
         <artifactId>fastutil</artifactId>
         <version>8.3.0</version>
@@ -1479,6 +1475,11 @@
             <artifactId>slf4j-api</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>http-client-spi</artifactId>
+        <version>${awsjavasdk.version}</version>
       </dependency>
       <!-- Mock for AWS S3 -->
       <dependency>

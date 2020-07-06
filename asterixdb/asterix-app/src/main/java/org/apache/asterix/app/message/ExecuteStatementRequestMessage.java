@@ -146,10 +146,12 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
                     compilationProvider, storageComponentProvider, new ResponsePrinter(sessionOutput));
             final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
             stats.setProfileType(profileType);
+            final IStatementExecutor.StatementProperties statementProperties =
+                    new IStatementExecutor.StatementProperties();
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
             final IRequestParameters requestParameters = new RequestParameters(requestReference, statementsText, null,
-                    resultProperties, stats, outMetadata, clientContextID, optionalParameters, stmtParams,
-                    multiStatement, statementCategoryRestrictionMask);
+                    resultProperties, stats, statementProperties, outMetadata, clientContextID, optionalParameters,
+                    stmtParams, multiStatement, statementCategoryRestrictionMask);
             translator.compileAndExecute(ccApp.getHcc(), requestParameters);
             translator.getWarnings(warnings, maxWarnings - warnings.size());
             stats.updateTotalWarningsCount(parserTotalWarningsCount);
@@ -157,6 +159,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             responseMsg.setResult(outWriter.toString());
             responseMsg.setMetadata(outMetadata);
             responseMsg.setStats(stats);
+            responseMsg.setStatementProperties(statementProperties);
             responseMsg.setExecutionPlans(translator.getExecutionPlans());
             responseMsg.setWarnings(warnings);
         } catch (AlgebricksException | HyracksException | TokenMgrError

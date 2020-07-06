@@ -19,13 +19,11 @@
 package org.apache.asterix.test.runtime;
 
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
@@ -34,6 +32,7 @@ import org.apache.asterix.testframework.xml.TestSuite;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.util.ThrowingSupplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -92,8 +91,6 @@ public class ExecutionTestUtil {
         FailedGroup.setName("failed");
 
         List<ILibraryManager> libraryManagers = new ArrayList<>();
-        // Adds the library manager for CC.
-        libraryManagers.add(((ICcApplicationContext) integrationUtil.cc.getApplicationContext()).getLibraryManager());
         // Adds library managers for NCs, one-per-NC.
         for (NodeControllerService nc : integrationUtil.ncs) {
             INcApplicationContext runtimeCtx = (INcApplicationContext) nc.getApplicationContext();
@@ -123,8 +120,12 @@ public class ExecutionTestUtil {
             HDFSCluster.getInstance().cleanup();
         }
 
+        saveFailedXml(() -> File.createTempFile("failed", ".xml"));
+    }
+
+    public static void saveFailedXml(ThrowingSupplier<File> destFileSupplier) throws Exception {
         if (FailedGroup != null && FailedGroup.getTestCase().size() > 0) {
-            File temp = File.createTempFile("failed", ".xml");
+            File failedFile = destFileSupplier.get();
             javax.xml.bind.JAXBContext jaxbCtx = null;
             jaxbCtx = javax.xml.bind.JAXBContext.newInstance(TestSuite.class.getPackage().getName());
             javax.xml.bind.Marshaller marshaller = null;
@@ -133,11 +134,12 @@ public class ExecutionTestUtil {
             TestSuite failedSuite = new TestSuite();
             failedSuite.setResultOffsetPath("results");
             failedSuite.setQueryOffsetPath("queries");
+            failedSuite.setQueryFileExtension(".sqlpp");
             failedSuite.getTestGroup().add(FailedGroup);
-            marshaller.marshal(failedSuite, temp);
-            System.err.println("The failed.xml is written to :" + temp.getAbsolutePath()
-                    + ". You can copy it to only.xml by the following cmd:" + "\rcp " + temp.getAbsolutePath() + " "
-                    + Paths.get("./src/test/resources/runtimets/only.xml").toAbsolutePath());
+            marshaller.marshal(failedSuite, failedFile);
+            LOGGER.error("#####");
+            LOGGER.error("##### the failed.xml is written to {}", failedFile.getAbsolutePath());
+            LOGGER.error("#####");
         }
     }
 

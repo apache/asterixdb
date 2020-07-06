@@ -28,10 +28,14 @@ public class Library implements IMetadataEntity<Library> {
 
     private final DataverseName dataverse;
     private final String name;
+    private final String language;
+    private final int pendingOp;
 
-    public Library(DataverseName dataverseName, String libraryName) {
+    public Library(DataverseName dataverseName, String libraryName, String language, int pendingOp) {
         this.dataverse = dataverseName;
         this.name = libraryName;
+        this.language = language;
+        this.pendingOp = pendingOp;
     }
 
     public DataverseName getDataverseName() {
@@ -40,6 +44,14 @@ public class Library implements IMetadataEntity<Library> {
 
     public String getName() {
         return name;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public int getPendingOp() {
+        return pendingOp;
     }
 
     @Override

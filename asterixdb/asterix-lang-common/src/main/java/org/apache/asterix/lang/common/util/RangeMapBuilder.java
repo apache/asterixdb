@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.lang.common.util;
 
+import static org.apache.asterix.om.base.temporal.ATimeParserFactory.parseTimePart;
+
 import java.io.DataOutput;
 import java.util.List;
 
@@ -29,6 +31,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.Literal;
+import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.literal.DoubleLiteral;
@@ -36,11 +39,18 @@ import org.apache.asterix.lang.common.literal.FloatLiteral;
 import org.apache.asterix.lang.common.literal.IntegerLiteral;
 import org.apache.asterix.lang.common.literal.LongIntegerLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
+import org.apache.asterix.om.base.AMutableDate;
+import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableFloat;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableString;
+import org.apache.asterix.om.base.AMutableTime;
+import org.apache.asterix.om.base.temporal.ADateParserFactory;
+import org.apache.asterix.om.base.temporal.ADateTimeParserFactory;
+import org.apache.asterix.om.base.temporal.ATimeParserFactory;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -48,6 +58,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
@@ -59,7 +70,7 @@ public class RangeMapBuilder {
 
     public static RangeMap parseHint(Expression expression) throws CompilationException {
         if (expression.getKind() != Kind.LIST_CONSTRUCTOR_EXPRESSION) {
-            throw new CompilationException("The range hint must be a list.");
+            throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, expression.getSourceLocation());
         }
 
         ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
@@ -74,13 +85,61 @@ public class RangeMapBuilder {
             if (item.getKind() == Kind.LITERAL_EXPRESSION) {
                 parseLiteralToBytes((LiteralExpr) item, out);
                 offsets[i] = abvs.getLength();
+            } else if (item.getKind() == Kind.CALL_EXPRESSION) {
+                parseExpressionToBytes((CallExpr) item, out);
+                offsets[i] = abvs.getLength();
             } else {
-                throw new CompilationException("Expected literal in the range hint");
+                throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, expression.getSourceLocation());
             }
             // TODO Add support for composite fields.
         }
 
         return new RangeMap(1, abvs.getByteArray(), offsets);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void parseExpressionToBytes(CallExpr item, DataOutput out) throws CompilationException {
+        AMutableDate aDate = new AMutableDate(0);
+        AMutableTime aTime = new AMutableTime(0);
+        AMutableDateTime aDateTime = new AMutableDateTime(0L);
+        @SuppressWarnings("rawtypes")
+        ISerializerDeserializer serde;
+
+        //Check if Literal
+        if (!(item.getExprList().get(0).getKind() == Kind.LITERAL_EXPRESSION)) {
+            throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, item.getSourceLocation());
+        }
+        LiteralExpr argumentLiteralExpr = (LiteralExpr) item.getExprList().get(0);
+
+        //Make Sure Literal is String Type
+        if (!(argumentLiteralExpr.getValue().getLiteralType() == Literal.Type.STRING)) {
+            throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, item.getSourceLocation());
+        }
+        String value = argumentLiteralExpr.getValue().toString();
+
+        try {
+            if (BuiltinFunctions.DATE_CONSTRUCTOR.getName().equals(item.getFunctionSignature().getName())) {
+                int chrononTimeInDays = ADateParserFactory.parseDatePartInDays(value, 0, value.length());
+                serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
+                aDate.setValue(chrononTimeInDays);
+                serde.serialize(aDate, out);
+            } else if (BuiltinFunctions.TIME_CONSTRUCTOR.getName().equals(item.getFunctionSignature().getName())) {
+                int chrononTimeInMillis = ATimeParserFactory.parseTimePart(value, 0, value.length());
+                serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ATIME);
+                aTime.setValue(chrononTimeInMillis);
+                serde.serialize(aTime, out);
+            } else if (BuiltinFunctions.DATETIME_CONSTRUCTOR.getName().equals(item.getFunctionSignature().getName())) {
+                long chronoDatetimeInMills = ADateTimeParserFactory.parseDateTimePart(value, 0, value.length());
+                aDateTime.setValue(chronoDatetimeInMills);
+                serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
+                serde.serialize(aDateTime, out);
+            } else {
+                throw new NotImplementedException("The range map builder has not been implemented for "
+                        + item.getFunctionSignature().getName() + " type of expressions.");
+            }
+        } catch (HyracksException e) {
+            throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, e, item.getSourceLocation(), e.getMessage());
+        }
     }
 
     @SuppressWarnings("unchecked")

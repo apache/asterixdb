@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class RecordWithPKTestReaderFactory implements IRecordReaderFactory<RecordWithPK<char[]>> {
 
@@ -48,7 +49,8 @@ public class RecordWithPKTestReaderFactory implements IRecordReaderFactory<Recor
     }
 
     @Override
-    public void configure(IServiceContext serviceCtx, final Map<String, String> configuration) {
+    public void configure(IServiceContext serviceCtx, final Map<String, String> configuration,
+            IWarningCollector warningCollector) {
         this.serviceCtx = serviceCtx;
     }
 

@@ -18,20 +18,25 @@
  */
 package org.apache.asterix.om.types;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.apache.asterix.common.metadata.DataverseName;
 
-public class TypeSignature {
+public class TypeSignature implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final DataverseName dataverseName;
     private final String name;
-    private final String alias;
 
     public TypeSignature(DataverseName dataverseName, String name) {
         this.dataverseName = dataverseName;
         this.name = name;
-        this.alias = (dataverseName != null ? dataverseName.getCanonicalForm() : null) + "@" + name;
+    }
+
+    public TypeSignature(BuiltinType builtinType) {
+        this(null, builtinType.getTypeName());
     }
 
     @Override
@@ -46,12 +51,12 @@ public class TypeSignature {
 
     @Override
     public String toString() {
-        return alias;
+        return (dataverseName != null ? dataverseName.getCanonicalForm() : null) + "@" + name;
     }
 
     @Override
     public int hashCode() {
-        return alias.hashCode();
+        return Objects.hash(dataverseName, name);
     }
 
     public DataverseName getDataverseName() {

@@ -33,22 +33,22 @@ create function myfn004(a:CountryCapitalType, b:[CountryCapitalType])
   returns CountryCapitalType
   language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
 
-create function myfn005(a:string?, b:[bigint]?, c:CountryCapitalType?, d:[CountryCapitalType]?)
-  returns string?
+create function myfn005(a:smallint, b:[bigint], c:CountryCapitalType, d:[CountryCapitalType])
+  returns string
   language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
 
 create function myfn006(a [string])
   returns [string]
   language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
 
-create function myfn007(a {{string}}?)
-  returns {{string}}?
+create function myfn007(a {{string}})
+  returns {{string}}
   language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
 
 create function myfn008(a [CountryCapitalType])
   returns [CountryCapitalType]
   language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
 
-create function myfn009(a {{CountryCapitalType}}?)
-  returns {{CountryCapitalType}}?
-  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+create function externallibtest2.myfn009(a externallibtest.CountryCapitalType)
+  returns externallibtest.CountryCapitalType
+  language java as "testlib2","org.apache.asterix.external.library.CapitalFinderFactory";

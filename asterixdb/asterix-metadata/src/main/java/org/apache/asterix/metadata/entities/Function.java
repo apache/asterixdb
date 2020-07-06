@@ -20,7 +20,6 @@ package org.apache.asterix.metadata.entities;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,32 +27,32 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
-import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeSignature;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 
 public class Function implements IMetadataEntity<Function> {
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     private final FunctionSignature signature;
-    private final List<String> argNames;
-    private final List<IAType> argTypes;
-    private final IAType returnType;
+    private final List<String> paramNames;
+    private final List<TypeSignature> paramTypes;
+    private final TypeSignature returnType;
     private final String body;
     private final String language;
     private final String kind;
     private final String library;
     private final Boolean deterministic; // null for SQL++ and AQL functions
     private final Boolean nullCall; // null for SQL++ and AQL functions
-    private final Map<String, String> params;
+    private final Map<String, String> resources;
     private final List<List<Triple<DataverseName, String, String>>> dependencies;
 
-    public Function(FunctionSignature signature, List<String> argNames, List<IAType> argTypes, IAType returnType,
-            String functionBody, String functionKind, String language, String library, Boolean nullCall,
-            Boolean deterministic, Map<String, String> params,
+    public Function(FunctionSignature signature, List<String> paramNames, List<TypeSignature> paramTypes,
+            TypeSignature returnType, String functionBody, String functionKind, String language, String library,
+            Boolean nullCall, Boolean deterministic, Map<String, String> resources,
             List<List<Triple<DataverseName, String, String>>> dependencies) {
         this.signature = signature;
-        this.argNames = argNames;
-        this.argTypes = argTypes;
+        this.paramNames = paramNames;
+        this.paramTypes = paramTypes;
         this.body = functionBody;
         this.returnType = returnType;
         this.language = language;
@@ -61,7 +60,7 @@ public class Function implements IMetadataEntity<Function> {
         this.library = library;
         this.nullCall = nullCall;
         this.deterministic = deterministic;
-        this.params = params == null ? new HashMap<>() : params;
+        this.resources = resources == null ? Collections.emptyMap() : resources;
         this.dependencies = dependencies == null
                 ? Arrays.asList(Collections.emptyList(), Collections.emptyList(), Collections.emptyList())
                 : dependencies;
@@ -83,19 +82,19 @@ public class Function implements IMetadataEntity<Function> {
         return signature.getArity();
     }
 
-    public List<String> getArgNames() {
-        return argNames;
+    public List<String> getParameterNames() {
+        return paramNames;
     }
 
-    public List<IAType> getArgTypes() {
-        return argTypes;
+    public List<TypeSignature> getParameterTypes() {
+        return paramTypes;
     }
 
     public String getFunctionBody() {
         return body;
     }
 
-    public IAType getReturnType() {
+    public TypeSignature getReturnType() {
         return returnType;
     }
 
@@ -123,8 +122,8 @@ public class Function implements IMetadataEntity<Function> {
         return deterministic;
     }
 
-    public Map<String, String> getParams() {
-        return params;
+    public Map<String, String> getResources() {
+        return resources;
     }
 
     public List<List<Triple<DataverseName, String, String>>> getDependencies() {

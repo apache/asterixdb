@@ -135,6 +135,7 @@ public class AsterixHyracksIntegrationUtil {
         if (deleteOldInstanceData) {
             deleteTransactionLogs();
             removeTestStorageFiles();
+            deleteCCFiles();
         }
         final List<NodeControllerService> nodeControllers = new ArrayList<>();
         for (String nodeId : nodeNames) {
@@ -198,7 +199,6 @@ public class AsterixHyracksIntegrationUtil {
         List<ILibraryManager> libraryManagers = new ArrayList<>();
         init(deleteOldInstanceData, confDir);
         if (externalLibPath != null && externalLibPath.length() != 0) {
-            libraryManagers.add(((ICcApplicationContext) cc.getApplicationContext()).getLibraryManager());
             for (NodeControllerService nc : ncs) {
                 INcApplicationContext runtimeCtx = (INcApplicationContext) nc.getApplicationContext();
                 libraryManagers.add(runtimeCtx.getLibraryManager());
@@ -306,6 +306,7 @@ public class AsterixHyracksIntegrationUtil {
         if (deleteOldInstanceData) {
             deleteTransactionLogs();
             removeTestStorageFiles();
+            deleteCCFiles();
         }
     }
 
@@ -339,6 +340,12 @@ public class AsterixHyracksIntegrationUtil {
             if (log.exists()) {
                 FileUtils.deleteDirectory(log);
             }
+        }
+    }
+
+    private void deleteCCFiles() {
+        if (cc != null) {
+            FileUtils.deleteQuietly(new File(cc.getCCConfig().getRootDir()));
         }
     }
 

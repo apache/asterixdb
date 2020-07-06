@@ -143,12 +143,19 @@ public class CloneAndSubstituteVariablesVisitor extends
     }
 
     @Override
-    public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(CallExpr pf,
+    public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(CallExpr callExpr,
             VariableSubstitutionEnvironment env) throws CompilationException {
-        List<Expression> exprList = VariableCloneAndSubstitutionUtil.visitAndCloneExprList(pf.getExprList(), env, this);
-        CallExpr f = new CallExpr(pf.getFunctionSignature(), exprList);
-        f.setSourceLocation(pf.getSourceLocation());
-        f.addHints(pf.getHints());
+        List<Expression> exprList =
+                VariableCloneAndSubstitutionUtil.visitAndCloneExprList(callExpr.getExprList(), env, this);
+        Expression newFilterExpr = null;
+        if (callExpr.hasAggregateFilterExpr()) {
+            Pair<ILangExpression, VariableSubstitutionEnvironment> paf =
+                    callExpr.getAggregateFilterExpr().accept(this, env);
+            newFilterExpr = (Expression) paf.first;
+        }
+        CallExpr f = new CallExpr(callExpr.getFunctionSignature(), exprList, newFilterExpr);
+        f.setSourceLocation(callExpr.getSourceLocation());
+        f.addHints(callExpr.getHints());
         return new Pair<>(f, env);
     }
 

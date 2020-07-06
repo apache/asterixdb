@@ -24,12 +24,20 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Matcher;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -42,8 +50,13 @@ import org.apache.asterix.external.library.JavaLibrary;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.data.parsers.BooleanParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.FloatParserFactory;
@@ -51,6 +64,15 @@ import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
+
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 
 public class ExternalDataUtils {
 
@@ -200,6 +222,7 @@ public class ExternalDataUtils {
         return value == null ? false : Boolean.valueOf(value);
     }
 
+    // Currently not used.
     public static IRecordReaderFactory<?> createExternalRecordReaderFactory(ILibraryManager libraryManager,
             Map<String, String> configuration) throws AsterixException {
         String readerFactory = configuration.get(ExternalDataConstants.KEY_READER_FACTORY);
@@ -212,14 +235,19 @@ public class ExternalDataUtils {
             throw new AsterixException("The parameter " + ExternalDataConstants.KEY_READER_FACTORY
                     + " must follow the format \"DataverseName.LibraryName#ReaderFactoryFullyQualifiedName\"");
         }
-        String[] dataverseAndLibrary = libraryAndFactory[0].split(".");
+        String[] dataverseAndLibrary = libraryAndFactory[0].split("\\.");
         if (dataverseAndLibrary.length != 2) {
             throw new AsterixException("The parameter " + ExternalDataConstants.KEY_READER_FACTORY
                     + " must follow the format \"DataverseName.LibraryName#ReaderFactoryFullyQualifiedName\"");
         }
         DataverseName dataverseName = DataverseName.createSinglePartName(dataverseAndLibrary[0]); //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
         String libraryName = dataverseAndLibrary[1];
-        ILibrary lib = libraryManager.getLibrary(dataverseName, libraryName);
+        ILibrary lib;
+        try {
+            lib = libraryManager.getLibrary(dataverseName, libraryName);
+        } catch (HyracksDataException e) {
+            throw new AsterixException("Cannot load library", e);
+        }
         if (lib.getLanguage() != ExternalFunctionLanguage.JAVA) {
             throw new AsterixException("Unexpected library language: " + lib.getLanguage());
         }
@@ -231,12 +259,18 @@ public class ExternalDataUtils {
         }
     }
 
+    // Currently not used.
     public static IDataParserFactory createExternalParserFactory(ILibraryManager libraryManager,
             DataverseName dataverse, String parserFactoryName) throws AsterixException {
         try {
             String library = parserFactoryName.substring(0,
                     parserFactoryName.indexOf(ExternalDataConstants.EXTERNAL_LIBRARY_SEPARATOR));
-            ILibrary lib = libraryManager.getLibrary(dataverse, library);
+            ILibrary lib;
+            try {
+                lib = libraryManager.getLibrary(dataverse, library);
+            } catch (HyracksDataException e) {
+                throw new AsterixException("Cannot load library", e);
+            }
             if (lib.getLanguage() != ExternalFunctionLanguage.JAVA) {
                 throw new AsterixException("Unexpected library language: " + lib.getLanguage());
             }
@@ -447,6 +481,278 @@ public class ExternalDataUtils {
         String paramValue = configuration.get(key);
         if (paramValue != null) {
             configuration.put(key, paramValue.toLowerCase().trim());
+        }
+    }
+
+    /**
+     * Validates adapter specific external dataset properties. Specific properties for different adapters should be
+     * validated here
+     *
+     * @param configuration properties
+     */
+    public static void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc,
+            IWarningCollector collector) throws CompilationException {
+        String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
+
+        switch (type) {
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3:
+                ExternalDataUtils.AwsS3.validateProperties(configuration, srcLoc, collector);
+                break;
+            default:
+                // Nothing needs to be done
+                break;
+        }
+    }
+
+    /**
+     * Regex matches all the provided patterns against the provided path
+     *
+     * @param path path to check against
+     *
+     * @return {@code true} if all patterns match, {@code false} otherwise
+     */
+    public static boolean matchPatterns(List<Matcher> matchers, String path) {
+        for (Matcher matcher : matchers) {
+            if (matcher.reset(path).matches()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Converts the wildcard to proper regex
+     *
+     * @param wildcard wildcard pattern to convert
+     *
+     * @return regex expression
+     */
+    public static String wildcardToRegex(String wildcard) {
+        StringBuilder builder = new StringBuilder(wildcard.length());
+        builder.append('^');
+
+        // This keeps an eye on the presence inside or outside a sequence, everything inside a sequence is a literal
+        // e.g ("*" ===> ".*" while "[*]" ===> "[\*]"
+        boolean outsideBracketSequence = true;
+
+        for (int i = 0; i < wildcard.length(); i++) {
+            char c = wildcard.charAt(i);
+            switch (c) {
+                case '*':
+                    builder.append(outsideBracketSequence ? "." : "\\").append(c);
+                    break;
+                case '?':
+                    builder.append(outsideBracketSequence ? "." : "\\?");
+                    break;
+                case '[':
+                    if (outsideBracketSequence) {
+                        outsideBracketSequence = false;
+                        builder.append(c);
+                        if (i + 1 < wildcard.length()) {
+                            if (wildcard.charAt(i + 1) == '!') {
+                                i++;
+                                builder.append('^');
+                            }
+                        }
+                    } else {
+                        // escape the open bracket "[" if we are already inside a bracket sequence
+                        builder.append("\\").append(c);
+                    }
+                    break;
+                case ']':
+                    if (outsideBracketSequence) {
+                        // escape if we are outside bracket sequence
+                        builder.append("\\").append(c);
+                    } else {
+                        // Inside bracket, close it and mark as outside bracket
+                        outsideBracketSequence = true;
+                        builder.append(c);
+                    }
+                    break;
+                // escape special regexp-characters
+                case '(':
+                case ')':
+                case '$':
+                case '^':
+                case '.':
+                case '{':
+                case '}':
+                case '|':
+                case '+':
+                case '=':
+                case '<':
+                case '>':
+                case '!':
+                case '\\':
+                    builder.append("\\").append(c);
+                    break;
+                default:
+                    builder.append(c);
+                    break;
+            }
+        }
+        builder.append('$');
+        return builder.toString();
+    }
+
+    public static class AwsS3 {
+        private AwsS3() {
+            throw new AssertionError("do not instantiate");
+        }
+
+        /**
+         * Builds the S3 client using the provided configuration
+         *
+         * @param configuration properties
+         * @return S3 client
+         * @throws CompilationException CompilationException
+         */
+        public static S3Client buildAwsS3Client(Map<String, String> configuration) throws CompilationException {
+            // TODO(Hussain): Need to ensure that all required parameters are present in a previous step
+            String accessKeyId = configuration.get(ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME);
+            String secretAccessKey = configuration.get(ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME);
+            String regionId = configuration.get(ExternalDataConstants.AwsS3.REGION_FIELD_NAME);
+            String serviceEndpoint = configuration.get(ExternalDataConstants.AwsS3.SERVICE_END_POINT_FIELD_NAME);
+
+            S3ClientBuilder builder = S3Client.builder();
+
+            // Credentials
+            AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+            builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
+
+            // Validate the region
+            List<Region> supportedRegions = S3Client.serviceMetadata().regions();
+            Optional<Region> selectedRegion =
+                    supportedRegions.stream().filter(region -> region.id().equalsIgnoreCase(regionId)).findFirst();
+
+            if (!selectedRegion.isPresent()) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR,
+                        String.format("region %s is not supported", regionId));
+            }
+            builder.region(selectedRegion.get());
+
+            // Validate the service endpoint if present
+            if (serviceEndpoint != null) {
+                try {
+                    URI uri = new URI(serviceEndpoint);
+                    try {
+                        builder.endpointOverride(uri);
+                    } catch (NullPointerException ex) {
+                        throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                    }
+                } catch (URISyntaxException ex) {
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR,
+                            String.format("Invalid service endpoint %s", serviceEndpoint));
+                }
+            }
+
+            return builder.build();
+        }
+
+        /**
+         * Sets the prefix for the list objects builder if it is available
+         *
+         * @param configuration configuration
+         * @param builder builder
+         */
+        public static void setPrefix(Map<String, String> configuration, ListObjectsV2Request.Builder builder) {
+            String definition = configuration.get(ExternalDataConstants.AwsS3.DEFINITION_FIELD_NAME);
+            if (definition != null) {
+                builder.prefix(definition + (!definition.isEmpty() && !definition.endsWith("/") ? "/" : ""));
+            }
+        }
+
+        /**
+         * Validate external dataset properties
+         *
+         * @param configuration properties
+         *
+         * @throws CompilationException Compilation exception
+         */
+        public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
+                IWarningCollector collector) throws CompilationException {
+
+            // check if the format property is present
+            if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
+                throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
+            }
+
+            validateIncludeExclude(configuration);
+
+            // Check if the bucket is present
+            S3Client s3Client = null;
+            try {
+                String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
+                s3Client = buildAwsS3Client(configuration);
+                ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder();
+                setPrefix(configuration, listObjectsBuilder);
+
+                ListObjectsV2Response response =
+                        s3Client.listObjectsV2(listObjectsBuilder.bucket(container).maxKeys(1).build());
+
+                if (response.contents().isEmpty() && collector.shouldWarn()) {
+                    Warning warning =
+                            WarningUtil.forAsterix(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                    collector.warn(warning);
+                }
+
+                // Returns 200 only in case the bucket exists, however, otherwise, throws an exception. However, to
+                // ensure coverage, check if the result is successful as well and not only catch exceptions
+                if (!response.sdkHttpResponse().isSuccessful()) {
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_CONTAINER_NOT_FOUND, container);
+                }
+            } catch (SdkException ex) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+            } finally {
+                if (s3Client != null) {
+                    CleanupUtils.close(s3Client, null);
+                }
+            }
+        }
+
+        /**
+         * @param configuration
+         * @throws CompilationException
+         */
+        public static void validateIncludeExclude(Map<String, String> configuration) throws CompilationException {
+            // Ensure that include and exclude are not provided at the same time + ensure valid format or property
+            List<Map.Entry<String, String>> includes = new ArrayList<>();
+            List<Map.Entry<String, String>> excludes = new ArrayList<>();
+
+            // Accepted formats are include, include#1, include#2, ... etc, same for excludes
+            for (Map.Entry<String, String> entry : configuration.entrySet()) {
+                String key = entry.getKey();
+
+                if (key.equals(ExternalDataConstants.KEY_INCLUDE)) {
+                    includes.add(entry);
+                } else if (key.equals(ExternalDataConstants.KEY_EXCLUDE)) {
+                    excludes.add(entry);
+                } else if (key.startsWith(ExternalDataConstants.KEY_INCLUDE)
+                        || key.startsWith(ExternalDataConstants.KEY_EXCLUDE)) {
+
+                    // Split by the "#", length should be 2, left should be include/exclude, right should be integer
+                    String[] splits = key.split("#");
+
+                    if (key.startsWith(ExternalDataConstants.KEY_INCLUDE) && splits.length == 2
+                            && splits[0].equals(ExternalDataConstants.KEY_INCLUDE)
+                            && NumberUtils.isIntegerNumericString(splits[1])) {
+                        includes.add(entry);
+                    } else if (key.startsWith(ExternalDataConstants.KEY_EXCLUDE) && splits.length == 2
+                            && splits[0].equals(ExternalDataConstants.KEY_EXCLUDE)
+                            && NumberUtils.isIntegerNumericString(splits[1])) {
+                        excludes.add(entry);
+                    } else {
+                        throw new CompilationException(ErrorCode.INVALID_PROPERTY_FORMAT, key);
+                    }
+                }
+            }
+
+            // TODO: Should include/exclude be a common check or S3 specific?
+            // Ensure either include or exclude are provided, but not both of them
+            if (!includes.isEmpty() && !excludes.isEmpty()) {
+                throw new CompilationException(ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME,
+                        ExternalDataConstants.KEY_INCLUDE, ExternalDataConstants.KEY_EXCLUDE);
+            }
         }
     }
 }

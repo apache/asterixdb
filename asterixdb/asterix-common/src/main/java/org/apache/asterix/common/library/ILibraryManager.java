@@ -19,20 +19,21 @@
 
 package org.apache.asterix.common.library;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 
 public interface ILibraryManager {
 
-    void setUpDeployedLibrary(String path) throws IOException, AsterixException;
+    ILibrary getLibrary(DataverseName dataverseName, String libraryName) throws HyracksDataException;
 
-    void scanLibraries(File appDir);
+    void closeLibrary(DataverseName dataverseName, String libraryName) throws HyracksDataException;
 
-    void deregister(DataverseName dv, String name);
+    // deployment helpers
 
-    ILibrary getLibrary(DataverseName dvName, String libraryName);
+    FileReference getLibraryDir(DataverseName dataverseName, String libraryName) throws HyracksDataException;
 
+    void dropLibraryPath(FileReference fileRef) throws HyracksDataException;
+
+    byte[] serializeLibraryDescriptor(LibraryDescriptor libraryDescriptor) throws HyracksDataException;
 }

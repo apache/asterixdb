@@ -45,9 +45,7 @@ public class PushMapOperatorDownThroughProductRule implements IAlgebraicRewriteR
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
-        // Even the LIMIT operator is a map operator, we don't push LIMIT operator into a join
-        // since a new LIMIT under a join can't generate the original result.
-        if (!op1.isMap() || op1.getOperatorTag() == LogicalOperatorTag.LIMIT) {
+        if (!op1.isMap()) {
             return false;
         }
 

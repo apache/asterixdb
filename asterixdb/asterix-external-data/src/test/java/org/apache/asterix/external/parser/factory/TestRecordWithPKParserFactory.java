@@ -54,8 +54,7 @@ public class TestRecordWithPKParserFactory<T> implements IRecordDataParserFactor
         format = configuration.get(ExternalDataConstants.KEY_RECORD_FORMAT);
         parserFormats.add(format);
         parserConf.put(ExternalDataConstants.KEY_FORMAT, format);
-        recordParserFactory =
-                (IRecordDataParserFactory<char[]>) ParserFactoryProvider.getDataParserFactory(null, parserConf);
+        recordParserFactory = (IRecordDataParserFactory<char[]>) ParserFactoryProvider.getDataParserFactory(parserConf);
         recordParserFactory.setRecordType(recordType);
         recordParserFactory.configure(configuration);
     }

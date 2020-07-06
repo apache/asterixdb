@@ -23,6 +23,7 @@ import java.rmi.RemoteException;
 import java.util.concurrent.Executor;
 
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
@@ -134,4 +135,9 @@ public interface INcApplicationContext extends IApplicationContext {
      * @return the cache manager
      */
     ICacheManager getCacheManager();
+
+    /**
+     * @return the library manager
+     */
+    ILibraryManager getLibraryManager();
 }

@@ -66,8 +66,7 @@ public class RemoveUnnecessarySortMergeExchange implements IAlgebraicRewriteRule
                 return false;
             } else if (physicalOp.getOperatorTag() == PhysicalOperatorTag.SORT_MERGE_EXCHANGE) {
                 break;
-            } else if (!currentOp.isMap() || currentOp.getOperatorTag() == LogicalOperatorTag.UNNEST
-                    || currentOp.getOperatorTag() == LogicalOperatorTag.LIMIT) {
+            } else if (!currentOp.isMap() || currentOp.getOperatorTag() == LogicalOperatorTag.UNNEST) {
                 // Do not eliminate sort-merge below input order-sensitive operators.
                 // TODO(buyingyi): once Taewoo merges his limit-push down change,
                 // we need to use his new property in logical operator to check order sensitivity.

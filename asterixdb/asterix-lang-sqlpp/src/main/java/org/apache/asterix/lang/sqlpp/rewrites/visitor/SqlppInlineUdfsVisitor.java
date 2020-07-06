@@ -270,6 +270,11 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
             winExpr.setWindowFieldList(inlinedList.second);
             inlined |= inlinedList.first;
         }
+        if (winExpr.hasAggregateFilterExpr()) {
+            Pair<Boolean, Expression> inlinedExpr = inlineUdfsInExpr(winExpr.getAggregateFilterExpr(), funcs);
+            winExpr.setAggregateFilterExpr(inlinedExpr.second);
+            inlined |= inlinedExpr.first;
+        }
         Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(winExpr.getExprList(), funcs);
         winExpr.setExprList(inlinedList.second);
         inlined |= inlinedList.first;

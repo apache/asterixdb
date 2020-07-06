@@ -37,6 +37,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
+import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.IAObject;
@@ -214,6 +215,38 @@ public interface IStatementExecutor {
 
         public ObjectNode getProfile() {
             return profile;
+        }
+    }
+
+    class StatementProperties implements Serializable {
+        private static final long serialVersionUID = -1L;
+
+        private Statement.Kind kind;
+        private String name;
+
+        public Statement.Kind getKind() {
+            return kind;
+        }
+
+        public void setKind(Statement.Kind kind) {
+            this.kind = kind;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public boolean isValid() {
+            return kind != null && (kind != Statement.Kind.EXTENSION || name != null);
+        }
+
+        @Override
+        public String toString() {
+            return Statement.Kind.EXTENSION == kind ? String.valueOf(name) : String.valueOf(kind);
         }
     }
 

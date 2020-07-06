@@ -26,9 +26,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.ILibrary;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,22 +38,17 @@ public class JavaLibrary implements ILibrary {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public JavaLibrary(String libraryPath) throws AsterixException, MalformedURLException {
-
-        File installDir = new File(libraryPath);
-
-        // get a reference to the specific library dir
-        File libDir = installDir;
+    public JavaLibrary(File libDir) throws HyracksDataException, MalformedURLException {
 
         FilenameFilter jarFileFilter = (dir, name) -> name.endsWith(".jar");
 
         // Get the jar file <Allow only a single jar file>
         String[] jarsInLibDir = libDir.list(jarFileFilter);
         if (jarsInLibDir.length > 1) {
-            throw new AsterixException("Incorrect library structure: found multiple library jars");
+            throw new HyracksDataException("Incorrect library structure: found multiple library jars");
         }
         if (jarsInLibDir.length <= 0) {
-            throw new AsterixException("Incorrect library structure: could not find library jar");
+            throw new HyracksDataException("Incorrect library structure: could not find library jar");
         }
 
         File libJar = new File(libDir, jarsInLibDir[0]);

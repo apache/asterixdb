@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.functions;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -26,10 +27,13 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeSignature;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
@@ -40,31 +44,38 @@ public class ExternalFunctionCompilerUtil {
         // do nothing
     }
 
-    public static IFunctionInfo getExternalFunctionInfo(MetadataTransactionContext txnCtx, Function function)
+    public static IFunctionInfo getExternalFunctionInfo(MetadataProvider metadataProvider, Function function)
             throws AlgebricksException {
 
         String functionKind = function.getKind();
         IFunctionInfo finfo = null;
         if (FunctionKind.SCALAR.toString().equalsIgnoreCase(functionKind)) {
-            finfo = getScalarFunctionInfo(txnCtx, function);
+            finfo = getScalarFunctionInfo(metadataProvider, function);
         } else if (FunctionKind.AGGREGATE.toString().equalsIgnoreCase(functionKind)) {
-            finfo = getAggregateFunctionInfo(txnCtx, function);
+            finfo = getAggregateFunctionInfo(metadataProvider, function);
         } else if (FunctionKind.STATEFUL.toString().equalsIgnoreCase(functionKind)) {
-            finfo = getStatefulFunctionInfo(txnCtx, function);
+            finfo = getStatefulFunctionInfo(metadataProvider, function);
         } else if (FunctionKind.UNNEST.toString().equalsIgnoreCase(functionKind)) {
-            finfo = getUnnestFunctionInfo(txnCtx, function);
+            finfo = getUnnestFunctionInfo(metadataProvider, function);
         }
         return finfo;
     }
 
-    private static IFunctionInfo getScalarFunctionInfo(MetadataTransactionContext txnCtx, Function function)
+    private static IFunctionInfo getScalarFunctionInfo(MetadataProvider metadataProvider, Function function)
             throws AlgebricksException {
         if (function.getDeterministic() == null) {
             throw new AsterixException(ErrorCode.METADATA_ERROR, "");
         }
 
-        IAType returnType = function.getReturnType();
-        IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, function.getArgTypes());
+        List<IAType> paramTypes = new ArrayList<>(function.getParameterTypes().size());
+        for (TypeSignature ts : function.getParameterTypes()) {
+            IAType paramType = resolveFunctionType(ts, metadataProvider);
+            paramTypes.add(paramType);
+        }
+
+        IAType returnType = resolveFunctionType(function.getReturnType(), metadataProvider);
+
+        IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, paramTypes);
 
         ExternalFunctionLanguage lang;
         try {
@@ -75,20 +86,33 @@ public class ExternalFunctionCompilerUtil {
         List<String> externalIdentifier = decodeExternalIdentifier(lang, function.getFunctionBody());
 
         return new ExternalScalarFunctionInfo(function.getSignature().createFunctionIdentifier(), returnType,
-                externalIdentifier, lang, function.getLibrary(), function.getArgTypes(), function.getParams(),
+                externalIdentifier, lang, function.getLibrary(), paramTypes, function.getResources(),
                 function.getDeterministic(), typeComputer);
     }
 
-    private static IFunctionInfo getUnnestFunctionInfo(MetadataTransactionContext txnCtx, Function function) {
+    private static IFunctionInfo getUnnestFunctionInfo(MetadataProvider metadataProvider, Function function) {
         return null;
     }
 
-    private static IFunctionInfo getStatefulFunctionInfo(MetadataTransactionContext txnCtx, Function function) {
+    private static IFunctionInfo getStatefulFunctionInfo(MetadataProvider metadataProvider, Function function) {
         return null;
     }
 
-    private static IFunctionInfo getAggregateFunctionInfo(MetadataTransactionContext txnCtx, Function function) {
+    private static IFunctionInfo getAggregateFunctionInfo(MetadataProvider metadataProvider, Function function) {
         return null;
+    }
+
+    private static IAType resolveFunctionType(TypeSignature typeSignature, MetadataProvider metadataProvider)
+            throws AlgebricksException {
+        String typeName = typeSignature.getName();
+        if (BuiltinType.ANY.getTypeName().equals(typeName)) {
+            return BuiltinType.ANY;
+        }
+        IAType type = BuiltinTypeMap.getBuiltinType(typeName);
+        if (type == null) {
+            type = metadataProvider.findType(typeSignature.getDataverseName(), typeName);
+        }
+        return type;
     }
 
     public static String encodeExternalIdentifier(FunctionSignature functionSignature,

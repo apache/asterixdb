@@ -128,6 +128,10 @@ public interface ILSMIndex extends IIndex {
 
     void addInactiveDiskComponent(ILSMDiskComponent diskComponent);
 
+    List<ILSMMemoryComponent> getInactiveMemoryComponents();
+
+    void addInactiveMemoryComponent(ILSMMemoryComponent memoryComponent);
+
     boolean isCurrentMutableComponentEmpty() throws HyracksDataException;
 
     void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMDiskComponent> diskComponents,

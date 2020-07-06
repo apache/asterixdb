@@ -239,7 +239,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // or an outer scope query) should still be visible.
         Scope newScope = new Scope(scopeChecker, scopeChecker.getPrecedingScope());
         // Puts all group-by variables into the symbol set of the new scope.
-        Set<VariableExpr> gbyKeyVars = new HashSet<>(); // bindings from prior grouping sets //TODO:FIXME:GBY:REVISIT
+        Set<VariableExpr> gbyKeyVars = new HashSet<>(); // bindings from prior grouping sets
         for (List<GbyVariableExpressionPair> gbyPairList : gc.getGbyPairList()) {
             for (GbyVariableExpressionPair gbyKeyVarExpr : gbyPairList) {
                 gbyKeyVarExpr.setExpr(visit(gbyKeyVarExpr.getExpr(), gc));
@@ -391,16 +391,22 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
     @Override
     public Expression visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
-        visitWindowExpressionExcludingExprList(winExpr, arg);
+        visitWindowExpressionExcludingExprListAndAggFilter(winExpr, arg);
         if (winExpr.hasWindowVar()) {
             Scope preScope = scopeChecker.getCurrentScope();
             Scope newScope = scopeChecker.extendCurrentScope();
             VariableExpr windowVar = winExpr.getWindowVar();
             addNewVarSymbolToScope(newScope, windowVar.getVar(), windowVar.getSourceLocation());
             winExpr.setExprList(visit(winExpr.getExprList(), arg));
+            if (winExpr.hasAggregateFilterExpr()) {
+                winExpr.setAggregateFilterExpr(visit(winExpr.getAggregateFilterExpr(), arg));
+            }
             scopeChecker.replaceCurrentScope(preScope);
         } else {
             winExpr.setExprList(visit(winExpr.getExprList(), arg));
+            if (winExpr.hasAggregateFilterExpr()) {
+                winExpr.setAggregateFilterExpr(visit(winExpr.getAggregateFilterExpr(), arg));
+            }
         }
         return winExpr;
     }

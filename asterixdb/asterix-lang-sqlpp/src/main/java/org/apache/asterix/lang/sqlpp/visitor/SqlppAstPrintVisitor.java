@@ -250,21 +250,23 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(CallExpr pf, Integer step) throws CompilationException {
-        FunctionSignature functionSignature = pf.getFunctionSignature();
-        FunctionSignature normalizedFunctionSignature =
-                FunctionMapUtil.normalizeBuiltinFunctionSignature(functionSignature, false, pf.getSourceLocation());
+    public Void visit(CallExpr callExpr, Integer step) throws CompilationException {
+        FunctionSignature functionSignature = callExpr.getFunctionSignature();
+        FunctionSignature normalizedFunctionSignature = FunctionMapUtil
+                .normalizeBuiltinFunctionSignature(functionSignature, false, callExpr.getSourceLocation());
         if (BuiltinFunctions.isBuiltinCompilerFunction(normalizedFunctionSignature, true)) {
             functionSignature = normalizedFunctionSignature;
         }
         //TODO(MULTI_PART_DATAVERSE_NAME):temporary workaround to preserve AST reference results
         if (FunctionUtil.isBuiltinDatasetFunction(functionSignature)) {
-            String singleArg = pf.getExprList().stream().map(LiteralExpr.class::cast).map(LiteralExpr::getValue)
+            String singleArg = callExpr.getExprList().stream().map(LiteralExpr.class::cast).map(LiteralExpr::getValue)
                     .map(StringLiteral.class::cast).map(StringLiteral::getValue).collect(Collectors.joining("."));
             printFunctionCall(functionSignature, 1,
-                    Collections.singletonList(new LiteralExpr(new StringLiteral(singleArg))), step);
+                    Collections.singletonList(new LiteralExpr(new StringLiteral(singleArg))),
+                    callExpr.getAggregateFilterExpr(), step);
         } else {
-            printFunctionCall(functionSignature, functionSignature.getArity(), pf.getExprList(), step);
+            printFunctionCall(functionSignature, functionSignature.getArity(), callExpr.getExprList(),
+                    callExpr.getAggregateFilterExpr(), step);
         }
         return null;
     }
@@ -375,6 +377,11 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
             if (winExpr.hasWindowFieldList()) {
                 printFieldList(step + 1, winExpr.getWindowFieldList());
             }
+        }
+        if (winExpr.hasAggregateFilterExpr()) {
+            out.println(skip(step + 1) + "FILTER (WHERE");
+            winExpr.getAggregateFilterExpr().accept(this, step + 2);
+            out.println(skip(step + 1) + ')');
         }
         out.println(skip(step) + "OVER (");
         if (winExpr.hasPartitionList()) {

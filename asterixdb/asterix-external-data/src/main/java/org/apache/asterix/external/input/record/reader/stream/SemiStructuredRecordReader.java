@@ -142,6 +142,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
                         if (state == State.ARRAY || state == State.AFTER_COMMA) {
                             state = State.NESTED_OBJECT;
                         }
+                        beginLineNumber = lineNumber;
                         startPosn = bufferPosn;
                         hasStarted = true;
                         depth = 1;
@@ -192,16 +193,16 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
                     }
                     isLastCharCR = c == CR;
                 }
-            }
 
-            int appendLength = bufferPosn - startPosn;
-            if (appendLength > 0) {
-                try {
-                    record.append(inputBuffer, startPosn, appendLength);
-                } catch (RuntimeDataException e) {
-                    reader.reset();
-                    bufferPosn = bufferLength = 0;
-                    throw e;
+                int appendLength = bufferPosn - startPosn;
+                if (appendLength > 0) {
+                    try {
+                        record.append(inputBuffer, startPosn, appendLength);
+                    } catch (RuntimeDataException e) {
+                        reader.reset();
+                        bufferPosn = bufferLength = 0;
+                        throw e;
+                    }
                 }
             }
         } while (!hasFinished);

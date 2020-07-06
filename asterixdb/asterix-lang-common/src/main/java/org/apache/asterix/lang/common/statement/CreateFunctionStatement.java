@@ -27,8 +27,8 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
+import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.ConfigurationUtil;
 import org.apache.asterix.lang.common.util.ExpressionUtils;
@@ -42,8 +42,8 @@ public class CreateFunctionStatement extends AbstractStatement {
     private final String functionBody;
     private final Expression functionBodyExpression;
     private final boolean ifNotExists;
-    private final List<Pair<VarIdentifier, IndexedTypeExpression>> args;
-    private final IndexedTypeExpression returnType;
+    private final List<Pair<VarIdentifier, TypeExpression>> paramList;
+    private final TypeExpression returnType;
 
     private final String lang;
     private final String libName;
@@ -52,15 +52,14 @@ public class CreateFunctionStatement extends AbstractStatement {
     private final Boolean nullCall;
     private final AdmObjectNode resources;
 
-    public CreateFunctionStatement(FunctionSignature signature,
-            List<Pair<VarIdentifier, IndexedTypeExpression>> parameterList, IndexedTypeExpression returnType,
+    public CreateFunctionStatement(FunctionSignature signature, List<Pair<VarIdentifier, TypeExpression>> paramList,
             String functionBody, Expression functionBodyExpression, boolean ifNotExists) {
         this.signature = signature;
         this.functionBody = functionBody;
         this.functionBodyExpression = functionBodyExpression;
         this.ifNotExists = ifNotExists;
-        this.args = parameterList;
-        this.returnType = returnType;
+        this.paramList = requireNullTypes(paramList);
+        this.returnType = null; // return type specification is not allowed for inline functions
         this.lang = null;
         this.libName = null;
         this.externalIdentifier = null;
@@ -69,13 +68,13 @@ public class CreateFunctionStatement extends AbstractStatement {
         this.resources = null;
     }
 
-    public CreateFunctionStatement(FunctionSignature signature,
-            List<Pair<VarIdentifier, IndexedTypeExpression>> parameterList, IndexedTypeExpression returnType,
-            boolean deterministic, boolean nullCall, String lang, String libName, List<String> externalIdentifier,
-            RecordConstructor resources, boolean ifNotExists) throws CompilationException {
+    public CreateFunctionStatement(FunctionSignature signature, List<Pair<VarIdentifier, TypeExpression>> paramList,
+            TypeExpression returnType, boolean deterministic, boolean nullCall, String lang, String libName,
+            List<String> externalIdentifier, RecordConstructor resources, boolean ifNotExists)
+            throws CompilationException {
         this.signature = signature;
         this.ifNotExists = ifNotExists;
-        this.args = parameterList;
+        this.paramList = paramList;
         this.returnType = returnType;
         this.deterministic = deterministic;
         this.nullCall = nullCall;
@@ -108,11 +107,11 @@ public class CreateFunctionStatement extends AbstractStatement {
         return functionBodyExpression;
     }
 
-    public List<Pair<VarIdentifier, IndexedTypeExpression>> getArgs() {
-        return args;
+    public List<Pair<VarIdentifier, TypeExpression>> getParameters() {
+        return paramList;
     }
 
-    public IndexedTypeExpression getReturnType() {
+    public TypeExpression getReturnType() {
         return returnType;
     }
 
@@ -152,5 +151,15 @@ public class CreateFunctionStatement extends AbstractStatement {
     @Override
     public byte getCategory() {
         return Category.DDL;
+    }
+
+    private static List<Pair<VarIdentifier, TypeExpression>> requireNullTypes(
+            List<Pair<VarIdentifier, TypeExpression>> paramList) {
+        for (Pair<VarIdentifier, TypeExpression> p : paramList) {
+            if (p.second != null) {
+                throw new IllegalArgumentException(String.valueOf(p.second));
+            }
+        }
+        return paramList;
     }
 }

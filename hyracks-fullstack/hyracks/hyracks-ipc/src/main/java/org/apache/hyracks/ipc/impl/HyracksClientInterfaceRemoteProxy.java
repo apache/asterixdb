@@ -144,11 +144,9 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     }
 
     @Override
-    public void deployBinary(List<URL> binaryURLs, DeploymentId deploymentId, boolean extractFromArchive)
-            throws Exception {
+    public void deployBinary(List<URL> binaryURLs, DeploymentId deploymentId) throws Exception {
         HyracksClientInterfaceFunctions.CliDeployBinaryFunction dbf =
-                new HyracksClientInterfaceFunctions.CliDeployBinaryFunction(binaryURLs, deploymentId,
-                        extractFromArchive);
+                new HyracksClientInterfaceFunctions.CliDeployBinaryFunction(binaryURLs, deploymentId);
         rpci.call(ipcHandle, dbf);
     }
 

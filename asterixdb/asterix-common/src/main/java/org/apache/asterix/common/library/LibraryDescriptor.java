@@ -24,7 +24,6 @@ import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -33,29 +32,35 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class LibraryDescriptor implements IJsonSerializable {
 
     private static final long serialVersionUID = 1L;
-    public static final String DESCRIPTOR_NAME = "descriptor.json";
-    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+
+    private static final String FIELD_LANGUAGE = "lang";
+
+    public static final String FILE_EXT_ZIP = "zip";
+
+    public static final String FILE_EXT_PYZ = "pyz";
+
     /**
      * The library's language
      */
     private final ExternalFunctionLanguage lang;
 
-    public LibraryDescriptor(ExternalFunctionLanguage lang) {
-        this.lang = lang;
+    public LibraryDescriptor(ExternalFunctionLanguage language) {
+        this.lang = language;
     }
 
-    public ExternalFunctionLanguage getLang() {
+    public ExternalFunctionLanguage getLanguage() {
         return lang;
     }
 
     public JsonNode toJson(IPersistedResourceRegistry registry) {
         ObjectNode jsonNode = registry.getClassIdentifier(LibraryDescriptor.class, serialVersionUID);
-        jsonNode.put("lang", lang.name());
+        jsonNode.put(FIELD_LANGUAGE, lang.name());
         return jsonNode;
     }
 
     public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
-        final ExternalFunctionLanguage lang = ExternalFunctionLanguage.valueOf(json.get("lang").asText());
+        String langText = json.get(FIELD_LANGUAGE).asText();
+        ExternalFunctionLanguage lang = ExternalFunctionLanguage.valueOf(langText);
         return new LibraryDescriptor(lang);
     }
 }

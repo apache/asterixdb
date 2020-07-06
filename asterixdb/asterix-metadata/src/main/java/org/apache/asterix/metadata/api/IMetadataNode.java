@@ -803,6 +803,17 @@ public interface IMetadataNode extends Remote, Serializable {
     void updateDataset(TxnId txnId, Dataset dataset) throws AlgebricksException, RemoteException;
 
     /**
+     * update an existing library in the metadata, acquiring local locks on behalf
+     * of the given transaction id.
+     *
+     * @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param library
+     *            updated Library instance.
+     */
+    void updateLibrary(TxnId txnId, Library library) throws AlgebricksException, RemoteException;
+
+    /**
      * Adds an extension entity under the ongoing transaction job id
      *
      * @param txnId

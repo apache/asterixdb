@@ -38,19 +38,16 @@ import org.apache.hyracks.control.nc.NodeControllerService;
  */
 public class DeployBinaryWork extends AbstractWork {
 
-    private DeploymentId deploymentId;
-    private NodeControllerService ncs;
-    private List<URL> binaryURLs;
+    private final DeploymentId deploymentId;
+    private final NodeControllerService ncs;
+    private final List<URL> binaryURLs;
     private final CcId ccId;
-    private final boolean extractFromArchive;
 
-    public DeployBinaryWork(NodeControllerService ncs, DeploymentId deploymentId, List<URL> binaryURLs, CcId ccId,
-            boolean extractFromArchive) {
+    public DeployBinaryWork(NodeControllerService ncs, DeploymentId deploymentId, List<URL> binaryURLs, CcId ccId) {
         this.deploymentId = deploymentId;
         this.ncs = ncs;
         this.binaryURLs = binaryURLs;
         this.ccId = ccId;
-        this.extractFromArchive = extractFromArchive;
     }
 
     @Override
@@ -58,7 +55,7 @@ public class DeployBinaryWork extends AbstractWork {
         DeploymentStatus status;
         try {
             DeploymentUtils.deploy(deploymentId, binaryURLs, ncs.getContext().getJobSerializerDeserializerContainer(),
-                    ncs.getServerContext(), true, extractFromArchive);
+                    ncs.getServerContext(), true);
             status = DeploymentStatus.SUCCEED;
         } catch (Exception e) {
             status = DeploymentStatus.FAIL;

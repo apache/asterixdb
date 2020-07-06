@@ -248,13 +248,14 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
 
     @Override
     public Expression visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
-        // skip variables inside list arguments of window functions (will be resolved by SqlppWindowExpressionVisitor)
+        // skip variables inside list and agg-filter arguments of window functions
+        // (will be resolved by SqlppWindowExpressionVisitor)
         FunctionSignature fs = winExpr.getFunctionSignature();
         FunctionIdentifier winfi = FunctionMapUtil.getInternalWindowFunction(fs);
         if (winfi != null) {
             if (BuiltinFunctions.builtinFunctionHasProperty(winfi,
                     BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG)) {
-                visitWindowExpressionExcludingExprList(winExpr, arg);
+                visitWindowExpressionExcludingExprListAndAggFilter(winExpr, arg);
                 List<Expression> exprList = winExpr.getExprList();
                 List<Expression> newExprList = new ArrayList<>(exprList.size());
                 Iterator<Expression> i = exprList.iterator();
@@ -264,12 +265,15 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                 }
                 winExpr.setExprList(newExprList);
                 return winExpr;
+            } else {
+                return super.visit(winExpr, arg);
             }
         } else if (FunctionMapUtil.isSql92AggregateFunction(fs)) {
-            visitWindowExpressionExcludingExprList(winExpr, arg);
+            visitWindowExpressionExcludingExprListAndAggFilter(winExpr, arg);
             return winExpr;
+        } else {
+            return super.visit(winExpr, arg);
         }
-        return super.visit(winExpr, arg);
     }
 
     static VariableExpr pickContextVar(Collection<VariableExpr> contextVars, VariableExpr usedVar)

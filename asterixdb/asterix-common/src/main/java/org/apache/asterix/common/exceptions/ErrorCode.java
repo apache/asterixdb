@@ -197,12 +197,20 @@ public class ErrorCode {
     public static final int OPERATION_NOT_SUPPORTED_ON_PRIMARY_INDEX = 1105;
     public static final int EXPECTED_CONSTANT_VALUE = 1106;
     public static final int UNEXPECTED_HINT = 1107;
-    public static final int SYNONYM_EXISTS = 1108;
-    public static final int UNKNOWN_SYNONYM = 1109;
-    public static final int UNKNOWN_LIBRARY = 1110;
-    public static final int COMPILATION_GROUPING_SETS_OVERFLOW = 1111;
-    public static final int COMPILATION_GROUPING_OPERATION_INVALID_ARG = 1112;
-    public static final int COMPILATION_UNEXPECTED_ALIAS = 1113;
+    public static final int EXTERNAL_SOURCE_ERROR = 1108;
+    public static final int EXTERNAL_SOURCE_CONTAINER_NOT_FOUND = 1109;
+    public static final int PARAMETERS_NOT_ALLOWED_AT_SAME_TIME = 1110;
+    public static final int PROPERTY_INVALID_VALUE_TYPE = 1111;
+    public static final int INVALID_PROPERTY_FORMAT = 1112;
+    public static final int INVALID_REGEX_PATTERN = 1113;
+    public static final int EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES = 1114;
+    public static final int SYNONYM_EXISTS = 1115;
+    public static final int UNKNOWN_SYNONYM = 1116;
+    public static final int UNKNOWN_LIBRARY = 1117;
+    public static final int COMPILATION_GROUPING_SETS_OVERFLOW = 1118;
+    public static final int COMPILATION_GROUPING_OPERATION_INVALID_ARG = 1119;
+    public static final int COMPILATION_UNEXPECTED_ALIAS = 1120;
+    public static final int COMPILATION_ILLEGAL_USE_OF_FILTER_CLAUSE = 1121;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;
@@ -307,7 +315,6 @@ public class ErrorCode {
     public static final int ACTIVE_RUNTIME_IS_ALREADY_REGISTERED = 3105;
     public static final int ACTIVE_RUNTIME_IS_NOT_REGISTERED = 3106;
     public static final int ACTIVE_EVENT_HANDLER_ALREADY_SUSPENDED = 3107;
-    public static final int METADATA_DROP_FUCTION_IN_USE = 3109;
     public static final int FEED_FAILED_WHILE_GETTING_A_NEW_RECORD = 3110;
     public static final int FEED_START_FEED_WITHOUT_CONNECTION = 3111;
     public static final int PARSER_COLLECTION_ITEM_CANNOT_BE_NULL = 3112;
@@ -316,7 +323,6 @@ public class ErrorCode {
     public static final int FAILED_TO_PARSE_METADATA = 3115;
     public static final int INPUT_DECODE_FAILURE = 3116;
     public static final int FAILED_TO_PARSE_MALFORMED_LOG_RECORD = 3117;
-    public static final int METADATA_DROP_LIBRARY_IN_USE = 3118;
 
     // Lifecycle management errors
     public static final int DUPLICATE_PARTITION_ID = 4000;

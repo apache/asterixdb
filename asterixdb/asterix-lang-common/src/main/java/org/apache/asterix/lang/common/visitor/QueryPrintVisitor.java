@@ -140,20 +140,26 @@ public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<V
     }
 
     @Override
-    public Void visit(CallExpr pf, Integer step) throws CompilationException {
-        return printFunctionCall(pf.getFunctionSignature(), pf.getFunctionSignature().getArity(), pf.getExprList(),
-                step);
+    public Void visit(CallExpr callExpr, Integer step) throws CompilationException {
+        return printFunctionCall(callExpr.getFunctionSignature(), callExpr.getFunctionSignature().getArity(),
+                callExpr.getExprList(), callExpr.getAggregateFilterExpr(), step);
     }
 
-    protected Void printFunctionCall(FunctionSignature fs, int arity, List<Expression> argList, Integer step)
-            throws CompilationException {
+    protected Void printFunctionCall(FunctionSignature fs, int arity, List<Expression> argList,
+            Expression aggFilterExpr, Integer step) throws CompilationException {
         out.print(skip(step) + "FunctionCall ");
         printFunctionSignature(out, fs, arity);
         out.println("[");
         for (Expression expr : argList) {
             expr.accept(this, step + 1);
         }
-        out.println(skip(step) + "]");
+        out.print(skip(step) + "]");
+        if (aggFilterExpr != null) {
+            out.println(" filter [");
+            aggFilterExpr.accept(this, step + 1);
+            out.print(skip(step) + "]");
+        }
+        out.println();
         return null;
     }
 

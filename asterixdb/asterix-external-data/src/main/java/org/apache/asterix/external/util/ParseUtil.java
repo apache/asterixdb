@@ -20,12 +20,9 @@ package org.apache.asterix.external.util;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 
 public class ParseUtil {
-
-    private static final SourceLocation SRC_LOC = new SourceLocation(-1, -1);
 
     private ParseUtil() {
     }
@@ -33,6 +30,6 @@ public class ParseUtil {
     public static void warn(IWarningCollector warningCollector, String dataSourceName, long lineNum, int fieldNum,
             String warnMessage) {
         warningCollector.warn(
-                Warning.forHyracks(SRC_LOC, ErrorCode.PARSING_ERROR, dataSourceName, lineNum, fieldNum, warnMessage));
+                Warning.forHyracks(null, ErrorCode.PARSING_ERROR, dataSourceName, lineNum, fieldNum, warnMessage));
     }
 }

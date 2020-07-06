@@ -20,6 +20,9 @@ package org.apache.hyracks.util;
 
 import java.lang.reflect.Field;
 import java.util.IdentityHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -63,6 +66,8 @@ public class ExitUtil {
     private static final ExitThread exitThread = new ExitThread();
     private static final ShutdownWatchdog watchdogThread = new ShutdownWatchdog();
     private static final MutableLong shutdownHaltDelay = new MutableLong(10 * 60 * 1000L); // 10 minutes default
+    private static final ExecutorService haltThreadDumpExecutor = Executors.newSingleThreadExecutor();
+    private static final long HALT_THREADDUMP_TIMEOUT_SECONDS = 60;
 
     static {
         watchdogThread.start();
@@ -97,11 +102,19 @@ public class ExitUtil {
     }
 
     public static synchronized void halt(int status, Level logLevel) {
-        LOGGER.log(logLevel, "JVM halting with status {}; thread dump at halt: {}", status,
-                ThreadDumpUtil.takeDumpString());
-        // try to give time for the log to be emitted...
-        LogManager.shutdown();
-        Runtime.getRuntime().halt(status);
+        try {
+            Future<?> future = haltThreadDumpExecutor.submit(() -> {
+                LOGGER.log(logLevel, "JVM halting with status {}; thread dump at halt: {}", status,
+                        ThreadDumpUtil.takeDumpString());
+                // try to give time for the log to be emitted...
+                LogManager.shutdown();
+            });
+            future.get(HALT_THREADDUMP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            LOGGER.warn("exception logging thread dump on halt", e);
+        } finally {
+            Runtime.getRuntime().halt(status);
+        }
     }
 
     public static boolean registerShutdownHook(Thread shutdownHook) {

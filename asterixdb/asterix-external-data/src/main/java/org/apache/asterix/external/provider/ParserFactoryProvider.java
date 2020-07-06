@@ -29,11 +29,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 
 public class ParserFactoryProvider {
 
@@ -43,13 +43,13 @@ public class ParserFactoryProvider {
     private ParserFactoryProvider() {
     }
 
-    public static IDataParserFactory getDataParserFactory(ILibraryManager libraryManager,
-            Map<String, String> configuration) throws AsterixException {
+    public static IDataParserFactory getDataParserFactory(Map<String, String> configuration) throws AsterixException {
         IDataParserFactory parserFactory;
         String parserFactoryName = configuration.get(ExternalDataConstants.KEY_PARSER);
         if (ExternalDataUtils.isExternal(parserFactoryName)) {
-            return ExternalDataUtils.createExternalParserFactory(libraryManager,
-                    ExternalDataUtils.getDataverse(configuration), parserFactoryName);
+            //return ExternalDataUtils.createExternalParserFactory(libraryManager,
+            //        ExternalDataUtils.getDataverse(configuration), parserFactoryName);
+            throw new NotImplementedException();
         } else {
             String parserFactoryKey = ExternalDataUtils.getParserFactory(configuration);
             parserFactory = ParserFactoryProvider.getDataParserFactory(parserFactoryKey);

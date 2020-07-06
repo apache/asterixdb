@@ -117,6 +117,7 @@ public class QueryServiceRequestParameters {
     private ResultDelivery mode = ResultDelivery.IMMEDIATE;
     private PlanFormat planFormat = PlanFormat.JSON;
     private ProfileType profileType = ProfileType.COUNTS;
+    private Map<String, String> optionalParams = null;
     private Map<String, JsonNode> statementParams = null;
     private boolean pretty = false;
     private boolean expressionTree = false;
@@ -218,6 +219,14 @@ public class QueryServiceRequestParameters {
     public void setPlanFormat(PlanFormat planFormat) {
         Objects.requireNonNull(planFormat);
         this.planFormat = planFormat;
+    }
+
+    public Map<String, String> getOptionalParams() {
+        return optionalParams;
+    }
+
+    public void setOptionalParams(Map<String, String> optionalParams) {
+        this.optionalParams = optionalParams;
     }
 
     public Map<String, JsonNode> getStatementParams() {
@@ -367,6 +376,7 @@ public class QueryServiceRequestParameters {
         setHost(servlet.host(request));
         setPath(servlet.servletPath(request));
         String contentType = HttpUtil.getContentTypeOnly(request);
+        setOptionalParams(optionalParams);
         try {
             if (HttpUtil.ContentType.APPLICATION_JSON.equals(contentType)) {
                 setParamFromJSON(request, optionalParams);

@@ -42,7 +42,7 @@ public class SqlppListInputFunctionRewriteVisitor extends AbstractSqlppSimpleExp
             newExprList.add(expr.accept(this, arg));
         }
         callExpr.setExprList(newExprList);
-        return FunctionMapUtil.normalizedListInputFunctions(callExpr);
+        FunctionMapUtil.normalizedListInputFunctions(callExpr);
+        return callExpr;
     }
-
 }

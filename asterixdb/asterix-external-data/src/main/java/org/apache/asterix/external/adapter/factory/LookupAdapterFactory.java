@@ -21,7 +21,6 @@ package org.apache.asterix.external.adapter.factory;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.external.api.ILookupReaderFactory;
 import org.apache.asterix.external.api.ILookupRecordReader;
 import org.apache.asterix.external.api.IRecordDataParser;
@@ -34,12 +33,13 @@ import org.apache.asterix.external.provider.LookupReaderFactoryProvider;
 import org.apache.asterix.external.provider.ParserFactoryProvider;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.application.IServiceContext;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class LookupAdapterFactory<T> implements Serializable {
@@ -78,16 +78,14 @@ public class LookupAdapterFactory<T> implements Serializable {
         }
     }
 
-    public void configure(IServiceContext serviceContext, Map<String, String> configuration)
-            throws HyracksDataException, AlgebricksException {
+    public void configure(ICCServiceContext serviceContext, Map<String, String> configuration,
+            IWarningCollector warningCollector) throws HyracksDataException, AlgebricksException {
         this.configuration = configuration;
-        IApplicationContext appCtx = (IApplicationContext) serviceContext.getApplicationContext();
-        readerFactory = LookupReaderFactoryProvider.getLookupReaderFactory(serviceContext, configuration);
-        dataParserFactory = (IRecordDataParserFactory<T>) ParserFactoryProvider
-                .getDataParserFactory(appCtx.getLibraryManager(), configuration);
+        readerFactory =
+                LookupReaderFactoryProvider.getLookupReaderFactory(serviceContext, configuration, warningCollector);
+        dataParserFactory = (IRecordDataParserFactory<T>) ParserFactoryProvider.getDataParserFactory(configuration);
         dataParserFactory.setRecordType(recordType);
-        readerFactory.configure(serviceContext, configuration);
+        readerFactory.configure(serviceContext, configuration, warningCollector);
         dataParserFactory.configure(configuration);
     }
-
 }

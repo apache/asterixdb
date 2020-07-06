@@ -92,7 +92,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
     }
 
     @Override
-    public void threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
+    public boolean threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
             throws HyracksDataException {
         switch (opType) {
             case MERGE:
@@ -122,6 +122,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
         if (readerCount <= -1) {
             throw new IllegalStateException("Invalid LSM disk component readerCount: " + readerCount);
         }
+        return false;
     }
 
     @Override
