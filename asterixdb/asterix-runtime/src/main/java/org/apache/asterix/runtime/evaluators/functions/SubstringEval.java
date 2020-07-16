@@ -106,7 +106,6 @@ class SubstringEval extends AbstractScalarEval {
             ExceptionUtil.warnTypeMismatch(ctx, srcLoc, funID, bytes[offset], 0, ATypeTag.STRING);
             return;
         }
-        // string is in UTF-8?
         string.set(bytes, offset + 1, length - 1);
         array.reset();
         try {
