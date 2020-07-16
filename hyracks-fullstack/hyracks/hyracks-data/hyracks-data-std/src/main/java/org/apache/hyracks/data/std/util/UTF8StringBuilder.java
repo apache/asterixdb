@@ -27,6 +27,12 @@ public class UTF8StringBuilder extends AbstractVarLenObjectBuilder {
         UTF8StringUtil.writeCharAsModifiedUTF8(ch, out);
     }
 
+    public void appendCodePoint(int codePoint) throws IOException {
+        for (char ch : Character.toChars(codePoint)) {
+            appendChar(ch);
+        }
+    }
+
     public void appendString(String string) throws IOException {
         for (int i = 0; i < string.length(); i++) {
             appendChar(string.charAt(i));
