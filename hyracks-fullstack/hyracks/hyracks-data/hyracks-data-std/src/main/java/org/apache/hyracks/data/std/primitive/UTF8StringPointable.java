@@ -20,6 +20,7 @@ package org.apache.hyracks.data.std.primitive;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.lang3.CharSet;
@@ -169,7 +170,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     @Override
     public String toString() {
         try {
-            return new String(bytes, getCharStartOffset(), getUTF8Length(), StandardCharsets.UTF_8.name());
+            return new String(bytes, getCharStartOffset(), getUTF8Length(), "CESU8");
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException(e);
         }
