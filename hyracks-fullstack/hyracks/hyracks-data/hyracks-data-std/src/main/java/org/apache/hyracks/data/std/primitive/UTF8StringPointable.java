@@ -553,9 +553,10 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         builder.finish();
     }
 
+    // ToDo: fix test cases
     public void trim(UTF8StringBuilder builder, GrowableArray out, boolean left, boolean right, CharSet charSet)
             throws IOException {
-        trim(this, builder, out, left, right, charSet);
+        //trim(this, builder, out, left, right, charSet);
     }
 
     /**
@@ -583,11 +584,11 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         int startIndex = 0;
         if (left) {
             while (startIndex < srcUtfLen) {
-                int codepoint = srcPtr.charAt(srcStart + startIndex);
-                if (!charSet.contains(ch)) {
+                int codepoint = srcPtr.codePointAt(srcStart + startIndex);
+                if (!codePointSet.contains(codepoint)) {
                     break;
                 }
-                startIndex += srcPtr.charSize(srcStart + startIndex);
+                startIndex += srcPtr.codePointSize(srcStart + startIndex);
             }
         }
 
@@ -597,9 +598,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             endIndex = startIndex;
             int cursorIndex = startIndex;
             while (cursorIndex < srcUtfLen) {
-                char ch = srcPtr.charAt(srcStart + cursorIndex);
-                cursorIndex += srcPtr.charSize(srcStart + cursorIndex);
-                if (!charSet.contains(ch)) {
+                int codePioint = srcPtr.codePointAt(srcStart + cursorIndex);
+                cursorIndex += srcPtr.codePointSize(srcStart + cursorIndex);
+                if (!codePointSet.contains(codePioint)) {
                     endIndex = cursorIndex;
                 }
             }
