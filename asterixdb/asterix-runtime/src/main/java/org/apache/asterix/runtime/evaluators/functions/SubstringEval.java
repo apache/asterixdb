@@ -97,6 +97,7 @@ class SubstringEval extends AbstractScalarEval {
         }
         int len = mutableInt32.getIntegerValue();
 
+        // bytes is in UTF-8? UTF-16? CESU-8?
         bytes = argString.getByteArray();
         offset = argString.getStartOffset();
         int length = argString.getLength();
@@ -105,6 +106,7 @@ class SubstringEval extends AbstractScalarEval {
             ExceptionUtil.warnTypeMismatch(ctx, srcLoc, funID, bytes[offset], 0, ATypeTag.STRING);
             return;
         }
+        // string is in UTF-8?
         string.set(bytes, offset + 1, length - 1);
         array.reset();
         try {

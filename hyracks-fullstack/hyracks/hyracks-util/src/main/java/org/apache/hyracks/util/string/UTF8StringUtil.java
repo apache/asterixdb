@@ -90,6 +90,33 @@ public class UTF8StringUtil {
         }
     }
 
+    public static int codePointAt(byte[] b, int s) {
+        char c1 = charAt(b, s);
+        // What if c1 is the last char in the byte array? In this case, the byte array is somehow illegal.
+        // Java Character.codePointAtImpl() will return the value of the high surrogate in this case,
+        // while here an exception will be thrown because there is no c2 available in the bytes
+        if (Character.isHighSurrogate(c1)) {
+            s += charSize(b, s);
+            char c2 = charAt(b, s);
+            if (Character.isLowSurrogate(c2)) {
+                return Character.toCodePoint(c1, c2);
+            }
+        }
+        return c1;
+    }
+
+    public static int codePointSize(byte[] b, int s) {
+        char c1 = charAt(b, s);
+        int size1 = charSize(b, s);
+        if (Character.isHighSurrogate(c1)) {
+            // Again, what if there is no c2 in the byte array `b`?
+            s += charSize(b, s);
+            int size2 = charSize(b, s);
+            return size1 + size2;
+        }
+        return size1;
+    }
+
     public static boolean isCharStart(byte[] b, int s) {
         int c = b[s] & 0xff;
         return (c >> 6) != 2;
