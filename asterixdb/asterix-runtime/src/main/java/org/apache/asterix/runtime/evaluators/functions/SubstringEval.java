@@ -97,6 +97,7 @@ class SubstringEval extends AbstractScalarEval {
         }
         int len = mutableInt32.getIntegerValue();
 
+        // bytes is in UTF-8? UTF-16? CESU-8?
         bytes = argString.getByteArray();
         offset = argString.getStartOffset();
         int length = argString.getLength();
