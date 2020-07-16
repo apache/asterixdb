@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -562,19 +563,19 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      *            , whether to trim the left side.
      * @param right
      *            , whether to trim the right side.
-     * @param charSet
-     *            , the chars that should be trimmed.
+     * @param codePointSet
+     *            , the set of code points that should be trimmed.
      * @throws IOException
      */
     public static void trim(UTF8StringPointable srcPtr, UTF8StringBuilder builder, GrowableArray out, boolean left,
-            boolean right, CharSet charSet) throws IOException {
+            boolean right, Set<Integer> codePointSet) throws IOException {
         final int srcUtfLen = srcPtr.getUTF8Length();
         final int srcStart = srcPtr.getMetaDataLength();
         // Finds the start Index (inclusive).
         int startIndex = 0;
         if (left) {
             while (startIndex < srcUtfLen) {
-                char ch = srcPtr.charAt(srcStart + startIndex);
+                int codepoint = srcPtr.charAt(srcStart + startIndex);
                 if (!charSet.contains(ch)) {
                     break;
                 }

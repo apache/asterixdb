@@ -20,6 +20,12 @@
 package org.apache.asterix.runtime.evaluators.functions.utils;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils;
 import org.apache.commons.lang3.CharSet;
@@ -37,7 +43,7 @@ public class StringTrimmer {
     // For the char set to trim.
     private final ByteArrayAccessibleOutputStream lastPatternStorage = new ByteArrayAccessibleOutputStream();
     private final UTF8StringPointable lastPatternPtr = new UTF8StringPointable();
-    private CharSet charSet;
+    private Set<Integer> codePointSet = null;
 
     // For outputting the result.
     private final UTF8StringBuilder resultBuilder;
@@ -65,7 +71,7 @@ public class StringTrimmer {
         this.resultBuilder = resultBuilder;
         this.resultArray = resultArray;
         if (pattern != null) {
-            charSet = CharSet.getInstance(pattern);
+            codePointSet = pattern.codePoints().boxed().collect(Collectors.toSet());
         }
     }
 
@@ -76,10 +82,10 @@ public class StringTrimmer {
      *            , a pattern string.
      */
     public void build(UTF8StringPointable patternPtr) {
-        final boolean newPattern = charSet == null || lastPatternPtr.compareTo(patternPtr) != 0;
+        final boolean newPattern = codePointSet == null || lastPatternPtr.compareTo(patternPtr) != 0;
         if (newPattern) {
             StringEvaluatorUtils.copyResetUTF8Pointable(patternPtr, lastPatternStorage, lastPatternPtr);
-            charSet = CharSet.getInstance(patternPtr.toString());
+            codePointSet = patternPtr.toString().codePoints().boxed().collect(Collectors.toSet());
         }
     }
 
@@ -98,7 +104,7 @@ public class StringTrimmer {
      */
     public void trim(UTF8StringPointable srcPtr, IPointable resultStrPtr, boolean left, boolean right)
             throws IOException {
-        UTF8StringPointable.trim(srcPtr, resultBuilder, resultArray, left, right, charSet);
+        UTF8StringPointable.trim(srcPtr, resultBuilder, resultArray, left, right, codePointSet);
         resultStrPtr.set(resultArray.getByteArray(), 0, resultArray.getLength());
     }
 }
