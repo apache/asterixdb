@@ -234,42 +234,15 @@ public class UTF8StringUtil {
         return 0;
     }
 
-    public static int codePointToUTF8(int c, byte[] outputUTF8) {
-        if (c < 0x80) {
-            outputUTF8[0] = (byte) (c & 0x7F /* mask 7 lsb: 0b1111111 */);
-            return 1;
-        } else if (c < 0x0800) {
-            outputUTF8[0] = (byte) (c >> 6 & 0x1F | 0xC0);
-            outputUTF8[1] = (byte) (c & 0x3F | 0x80);
-            return 2;
-        } else if (c < 0x010000) {
-            outputUTF8[0] = (byte) (c >> 12 & 0x0F | 0xE0);
-            outputUTF8[1] = (byte) (c >> 6 & 0x3F | 0x80);
-            outputUTF8[2] = (byte) (c & 0x3F | 0x80);
-            return 3;
-        } else if (c < 0x200000) {
-            outputUTF8[0] = (byte) (c >> 18 & 0x07 | 0xF0);
-            outputUTF8[1] = (byte) (c >> 12 & 0x3F | 0x80);
-            outputUTF8[2] = (byte) (c >> 6 & 0x3F | 0x80);
-            outputUTF8[3] = (byte) (c & 0x3F | 0x80);
-            return 4;
-        } else if (c < 0x4000000) {
-            outputUTF8[0] = (byte) (c >> 24 & 0x03 | 0xF8);
-            outputUTF8[1] = (byte) (c >> 18 & 0x3F | 0x80);
-            outputUTF8[2] = (byte) (c >> 12 & 0x3F | 0x80);
-            outputUTF8[3] = (byte) (c >> 6 & 0x3F | 0x80);
-            outputUTF8[4] = (byte) (c & 0x3F | 0x80);
-            return 5;
-        } else if (c < 0x80000000) {
-            outputUTF8[0] = (byte) (c >> 30 & 0x01 | 0xFC);
-            outputUTF8[1] = (byte) (c >> 24 & 0x3F | 0x80);
-            outputUTF8[2] = (byte) (c >> 18 & 0x3F | 0x80);
-            outputUTF8[3] = (byte) (c >> 12 & 0x3F | 0x80);
-            outputUTF8[4] = (byte) (c >> 6 & 0x3F | 0x80);
-            outputUTF8[5] = (byte) (c & 0x3F | 0x80);
-            return 6;
+    public static int codePointToUTF8(int codePoint, byte[] outputUTF8) {
+        int count = 0;
+
+        char[] chars = Character.toChars(codePoint);
+        for (int i = 0; i < chars.length; i++) {
+            count += writeToBytes(outputUTF8, count, chars[i]);
         }
-        return 0;
+
+        return count;
     }
 
     /**
