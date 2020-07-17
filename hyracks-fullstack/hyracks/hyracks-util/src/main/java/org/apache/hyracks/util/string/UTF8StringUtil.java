@@ -164,6 +164,7 @@ public class UTF8StringUtil {
         }
     }
 
+    // The result is the number of Java Char (8 bytes) in the string
     public static int getStringLength(byte[] b, int s) {
         int len = getUTFLength(b, s);
         int pos = s + getNumBytesToStoreLength(len);
@@ -174,6 +175,26 @@ public class UTF8StringUtil {
             pos += charSize(b, pos);
         }
         return charCount;
+    }
+
+    public static int getNumCodePoint(byte[] b, int s) {
+        int len = getUTFLength(b, s);
+        int pos = s + getNumBytesToStoreLength(len);
+        int end = pos + len;
+        int codePointCount = 0;
+        while (pos < end) {
+            char ch = charAt(b, pos);
+            // 3 cases here:
+            // * If the current char is a complete unicode character (not part of a surrogate pair), then codePointCount++;
+            // * If the current char is a high surrogate in a surrogate pair, then codePointCount++ for this high surrogate
+            // * If the current char is a low surrogate in a surrogate pair,
+            //       then don't increase the codePointCount because it is increased already for its corresponding high surrogate
+            if (Character.isLowSurrogate(ch) == false) {
+                codePointCount++;
+            }
+            pos += charSize(b, pos);
+        }
+        return codePointCount;
     }
 
     public static int getUTFLength(byte[] b, int s) {
