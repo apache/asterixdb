@@ -631,7 +631,19 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         int srcEnd = srcPtr.getStartOffset() + srcPtr.getLength() - 1;
         for (int cursorIndex = srcEnd; cursorIndex >= srcStart; cursorIndex--) {
             if (UTF8StringUtil.isCharStart(srcPtr.bytes, cursorIndex)) {
+                char ch = UTF8StringUtil.charAt(srcPtr.bytes, cursorIndex);
                 int charSize = UTF8StringUtil.charSize(srcPtr.bytes, cursorIndex);
+
+                if (Character.isLowSurrogate(ch)) {
+                    while (cursorIndex >= srcStart) {
+                        cursorIndex--;
+                        if (UTF8StringUtil.isCharStart(srcPtr.bytes, cursorIndex)) {
+                            charSize += UTF8StringUtil.charSize(srcPtr.bytes, cursorIndex);
+                            break;
+                        }
+                    }
+                }
+
                 builder.appendUtf8StringPointable(srcPtr, cursorIndex, charSize);
             }
         }
