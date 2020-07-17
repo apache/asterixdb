@@ -219,6 +219,10 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return find(src, pattern, ignoreCase, 0);
     }
 
+    public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
+        return findInByteOrCodePoint(src, pattern, ignoreCase, 0, false);
+    }
+
     /**
      * @param src,
      *            the source string.
@@ -232,11 +236,21 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      *         Not including the MetaLength.
      */
     public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase, int startMatch) {
+        return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, true);
+    }
+
+    public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase, int startMatch) {
+        return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, false);
+    }
+
+    // If resultInByte is true, then return the position in bytes, otherwise return the position in code points
+    private static int findInByteOrCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase, int startMatch, boolean resultInByte) {
         int startMatchPos = startMatch;
         final int srcUtfLen = src.getUTF8Length();
         final int pttnUtfLen = pattern.getUTF8Length();
         final int srcStart = src.getMetaDataLength();
         final int pttnStart = pattern.getMetaDataLength();
+        int codePointCount = 0;
 
         int maxStart = srcUtfLen - pttnUtfLen;
         while (startMatchPos <= maxStart) {
@@ -255,7 +269,16 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 c2 += pattern.charSize(pttnStart + c2);
             }
             if (c2 == pttnUtfLen) {
-                return startMatchPos;
+                if (resultInByte) {
+                    return startMatchPos;
+                } else {
+                    return codePointCount;
+                }
+            }
+
+            char ch = src.charAt(srcStart + startMatchPos);
+            if (Character.isLowSurrogate(ch) == false) {
+                codePointCount++;
             }
             startMatchPos += src.charSize(srcStart + startMatchPos);
         }
