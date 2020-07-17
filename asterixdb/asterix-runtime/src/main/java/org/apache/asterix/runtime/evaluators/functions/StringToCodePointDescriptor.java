@@ -105,7 +105,17 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                             int pos = 0;
                             listBuilder.reset(intListType);
                             while (pos < len) {
-                                int codePoint = UTF8StringUtil.UTF8ToCodePoint(serString, start + pos);
+                                int codePoint;
+
+                                char c1 = UTF8StringUtil.charAt(serString, start + pos);
+                                if (Character.isHighSurrogate(c1)) {
+                                    pos += UTF8StringUtil.charSize(serString, start + pos);
+                                    char c2 = UTF8StringUtil.charAt(serString, start + pos);
+                                    codePoint = Character.toCodePoint(c1, c2);
+                                } else {
+                                    codePoint = c1;
+                                }
+
                                 pos += UTF8StringUtil.charSize(serString, start + pos);
 
                                 inputVal.reset();

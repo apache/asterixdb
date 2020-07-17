@@ -205,6 +205,9 @@ public class UTF8StringUtil {
         return VarLenIntEncoderDecoder.getBytesRequired(strlen);
     }
 
+    // The byte array `b` is encoded in UTF-8 on top of UTF-16,
+    // which means an UTF-16-encoded Java char is encoded to 2 or 3 bytes in the byte array
+    // So, it is not possible to reach the following 4, 5 or 6 bytes branch in the following codes
     public static int UTF8ToCodePoint(byte[] b, int s) {
         if (b[s] >> 7 == 0) {
             // 1 byte
