@@ -16,12 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.utils;
 
-package org.apache.hyracks.util;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.regex.Pattern.DOTALL;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME;
 
-public class LogRedactionUtil {
+import java.util.regex.Pattern;
 
-    private static final ILogRedactor DEFAULT_LOG_REDACTOR = new ILogRedactor() {
+import org.apache.hyracks.util.ILogRedactor;
+
+public class RedactionUtil {
+    private RedactionUtil() {
+        throw new AssertionError("do not instantiate");
+    }
+
+    private static final Pattern STATEMENT_PATTERN =
+            Pattern.compile("(" + SECRET_ACCESS_KEY_FIELD_NAME + ").*", CASE_INSENSITIVE | DOTALL);
+    private static final String STATEMENT_REPLACEMENT = "$1...<redacted sensitive data>";
+
+    public static final ILogRedactor LOG_REDACTOR = new ILogRedactor() {
         @Override
         public String userData(String text) {
             return text;
@@ -29,7 +43,7 @@ public class LogRedactionUtil {
 
         @Override
         public String statement(String text) {
-            return text;
+            return STATEMENT_PATTERN.matcher(text).replaceFirst(STATEMENT_REPLACEMENT);
         }
 
         @Override
@@ -37,24 +51,4 @@ public class LogRedactionUtil {
             return text;
         }
     };
-    private static ILogRedactor redactor = DEFAULT_LOG_REDACTOR;
-
-    private LogRedactionUtil() {
-    }
-
-    public static void setRedactor(ILogRedactor redactor) {
-        LogRedactionUtil.redactor = redactor;
-    }
-
-    public static String userData(String text) {
-        return redactor.userData(text);
-    }
-
-    public static String statement(String text) {
-        return redactor.statement(text);
-    }
-
-    public static String unredactUserData(String text) {
-        return redactor.unredactUserData(text);
-    }
 }

@@ -103,10 +103,10 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
             for (Map.Entry<String, String> entry : configuration.entrySet()) {
                 if (entry.getKey().startsWith(KEY_INCLUDE)) {
                     pattern = entry.getValue();
-                    includeMatchers.add(Pattern.compile(ExternalDataUtils.wildcardToRegex(pattern)).matcher(""));
+                    includeMatchers.add(Pattern.compile(ExternalDataUtils.patternToRegex(pattern)).matcher(""));
                 } else if (entry.getKey().startsWith(KEY_EXCLUDE)) {
                     pattern = entry.getValue();
-                    excludeMatchers.add(Pattern.compile(ExternalDataUtils.wildcardToRegex(pattern)).matcher(""));
+                    excludeMatchers.add(Pattern.compile(ExternalDataUtils.patternToRegex(pattern)).matcher(""));
                 }
             }
         } catch (PatternSyntaxException ex) {

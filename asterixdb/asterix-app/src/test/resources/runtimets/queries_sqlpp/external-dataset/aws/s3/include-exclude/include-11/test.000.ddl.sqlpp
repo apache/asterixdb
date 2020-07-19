@@ -16,31 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.util;
 
-public interface ILogRedactor {
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-    /**
-     * Redacts user data argument.
-     *
-     * @param text user data to redact.
-     * @return redacted user data.
-     */
-    String userData(String text);
+drop type test if exists;
+create type test as open {
+};
 
-    /**
-     * Redacts statement argument.
-     *
-     * @param text statement to redact.
-     * @return redacted statement.
-     */
-    String statement(String text);
-
-    /**
-     * Unredacts user data found in the argument.
-     *
-     * @param text text that contains some redacted user data.
-     * @return the text with user data unredacted.
-     */
-    String unredactUserData(String text);
-}
+drop dataset test if exists;
+create external dataset test(test) using S3 (
+("accessKeyId"="dummyAccessKey"),
+("secretAccessKey"="dummySecretKey"),
+("region"="us-west-2"),
+("serviceEndpoint"="http://localhost:8001"),
+("container"="include-exclude"),
+("definition"="data/mixed/"),
+("format"="csv"),
+("header"=false),
+("include"="*.[a-c][a-z][a-z**||\\\\&&--~~]")
+);
