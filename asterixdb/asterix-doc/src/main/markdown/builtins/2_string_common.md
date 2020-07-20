@@ -554,6 +554,8 @@
         substr(string, offset[, length])
 
  * Returns the substring from the given string `string` based on the given start offset `offset` with the optional `length`. 
+ Note that both of the `offset` and `length` are in the unit of code point
+ (e.g. the emoji family 👨‍👩‍👧‍👦 has 7 code points).
  The function uses the 0-based position. Another version of the function uses the 1-based position. Below are the
  aliases for each version:
 
