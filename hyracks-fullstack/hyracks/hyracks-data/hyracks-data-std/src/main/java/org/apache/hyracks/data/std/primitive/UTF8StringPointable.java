@@ -349,9 +349,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      *         {@code false} if substring could not be obtained ({@code charOffset} or {@code charLength}
      *         are less than 0 or starting position is greater than the input length)
      */
-    public boolean substr(int charOffset, int charLength, UTF8StringBuilder builder, GrowableArray out)
+    public boolean substr(int codePointOffset, int codePointLength, UTF8StringBuilder builder, GrowableArray out)
             throws IOException {
-        return substr(this, charOffset, charLength, builder, out);
+        return substr(this, codePointOffset, codePointLength, builder, out);
     }
 
     /**
