@@ -1,0 +1,5 @@
+{
+  '2 people in a 4-people family': SUBSTR("👨‍👨‍👦‍👦", 2, 3),
+  'Korean test 0': SUBSTR('한글', 3,3),
+  'Korean test 1': SUBSTR('한글', 2,2)
+};
