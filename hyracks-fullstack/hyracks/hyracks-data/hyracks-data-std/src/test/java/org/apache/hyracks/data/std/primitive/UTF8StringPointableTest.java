@@ -130,6 +130,7 @@ public class UTF8StringPointableTest {
         GrowableArray storage = new GrowableArray();
         UTF8StringBuilder builder = new UTF8StringBuilder();
 
+        // The middle 2 people of the 4-people-family is a 2-people-family
         STRING_POINTABLE_EMOJI_FAMILY_OF_4.substr(2, 3, builder, storage);
         UTF8StringPointable result = new UTF8StringPointable();
         result.set(storage.getByteArray(), 0, storage.getLength());
