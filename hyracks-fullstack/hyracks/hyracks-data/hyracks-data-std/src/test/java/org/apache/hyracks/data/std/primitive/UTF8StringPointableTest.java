@@ -26,14 +26,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+
 import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.util.string.UTF8StringSample;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class UTF8StringPointableTest {
     public static UTF8StringPointable STRING_EMPTY = generateUTF8Pointable(UTF8StringSample.EMPTY_STRING);
@@ -44,8 +44,10 @@ public class UTF8StringPointableTest {
     public static UTF8StringPointable STRING_LEN_127 = generateUTF8Pointable(UTF8StringSample.STRING_LEN_127);
     public static UTF8StringPointable STRING_LEN_128 = generateUTF8Pointable(UTF8StringSample.STRING_LEN_128);
 
-    public static UTF8StringPointable STRING_POINTABLE_EMOJI_FAMILY_OF_4 = generateUTF8Pointable(STRING_EMOJI_FAMILY_OF_4);
-    public static UTF8StringPointable STRING_POINTABLE_EMOJI_FAMILY_OF_2 = generateUTF8Pointable(STRING_EMOJI_FAMILY_OF_2);
+    public static UTF8StringPointable STRING_POINTABLE_EMOJI_FAMILY_OF_4 =
+            generateUTF8Pointable(STRING_EMOJI_FAMILY_OF_4);
+    public static UTF8StringPointable STRING_POINTABLE_EMOJI_FAMILY_OF_2 =
+            generateUTF8Pointable(STRING_EMOJI_FAMILY_OF_2);
 
     @Test
     public void testGetStringLength() throws Exception {
