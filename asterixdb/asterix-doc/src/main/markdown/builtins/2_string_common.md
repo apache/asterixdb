@@ -435,7 +435,6 @@
 
         reverse("hello");
 
-
  * The expected result is:
 
         "olleh"
