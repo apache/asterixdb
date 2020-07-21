@@ -27,7 +27,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Where
   OperatorExpr [
-    FunctionCall test.word-tokens@1[
+    FunctionCall asterix.word-tokens@1[
       FieldAccessor [
         FieldAccessor [
           Variable [ Name=$o ]
@@ -37,7 +37,7 @@ Where
       ]
     ]
     ~=
-    FunctionCall test.word-tokens@1[
+    FunctionCall asterix.word-tokens@1[
       LiteralExpr [STRING] [Transactions for Cooperative Environments]
     ]
   ]

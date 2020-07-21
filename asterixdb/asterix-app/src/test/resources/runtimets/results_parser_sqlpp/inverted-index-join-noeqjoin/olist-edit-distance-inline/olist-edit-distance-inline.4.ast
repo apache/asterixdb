@@ -38,7 +38,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$ed ]
   :=
-  FunctionCall test.edit-distance@2[
+  FunctionCall asterix.edit-distance@2[
     FieldAccessor [
       Variable [ Name=$a ]
       Field=interests
@@ -51,7 +51,7 @@ Let Variable [ Name=$ed ]
 Where
   OperatorExpr [
     OperatorExpr [
-      FunctionCall test.len@1[
+      FunctionCall asterix.len@1[
         FieldAccessor [
           Variable [ Name=$a ]
           Field=interests
@@ -62,7 +62,7 @@ Where
     ]
     and
     OperatorExpr [
-      FunctionCall test.len@1[
+      FunctionCall asterix.len@1[
         FieldAccessor [
           Variable [ Name=$b ]
           Field=interests

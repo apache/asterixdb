@@ -19,8 +19,9 @@
 
 package org.apache.asterix.lang.aql.rewrites.visitor;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.function.BiFunction;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -28,22 +29,29 @@ import org.apache.asterix.lang.aql.visitor.base.AbstractAqlSimpleExpressionVisit
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
-import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
+import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 
-public class AqlBuiltinFunctionRewriteVisitor extends AbstractAqlSimpleExpressionVisitor {
+public final class AqlFunctionCallResolverVisitor extends AbstractAqlSimpleExpressionVisitor {
+
+    private final MetadataProvider metadataProvider;
+
+    private final Set<FunctionSignature> declaredFunctions;
+
+    private final BiFunction<String, Integer, FunctionSignature> callExprResolver;
+
+    public AqlFunctionCallResolverVisitor(MetadataProvider metadataProvider, List<FunctionDecl> declaredFunctions) {
+        this.metadataProvider = metadataProvider;
+        this.declaredFunctions = FunctionUtil.getFunctionSignatures(declaredFunctions);
+        this.callExprResolver = FunctionUtil.createBuiltinFunctionResolver(metadataProvider);
+    }
 
     @Override
     public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
-        FunctionSignature functionSignature = callExpr.getFunctionSignature();
-        callExpr.setFunctionSignature(CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(functionSignature));
-        List<Expression> newExprList = new ArrayList<>();
-        for (Expression expr : callExpr.getExprList()) {
-            newExprList.add(expr.accept(this, arg));
-        }
-        callExpr.setExprList(newExprList);
-        if (callExpr.hasAggregateFilterExpr()) {
-            callExpr.setAggregateFilterExpr(callExpr.getAggregateFilterExpr().accept(this, arg));
-        }
-        return callExpr;
+        FunctionSignature fs = FunctionUtil.resolveFunctionCall(callExpr.getFunctionSignature(),
+                callExpr.getSourceLocation(), metadataProvider, declaredFunctions, callExprResolver);
+        callExpr.setFunctionSignature(fs);
+        return super.visit(callExpr, arg);
     }
 }

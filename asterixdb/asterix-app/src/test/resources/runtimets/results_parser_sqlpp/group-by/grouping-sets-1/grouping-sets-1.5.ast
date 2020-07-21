@@ -1,36 +1,74 @@
 DataverseUse test
 Query:
-SELECT [
-FunctionCall asterix.sql-sum@1[
-  (
-    SELECT ELEMENT [
-    FieldAccessor [
-      FieldAccessor [
-        Variable [ Name=#2 ]
-        Field=tenk
+SELECT ELEMENT [
+Variable [ Name=#2 ]
+]
+FROM [  (
+    SELECT [
+    FunctionCall asterix.sql-sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=#3 ]
+            Field=tenk
+          ]
+          Field=ten
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS Variable [ Name=#3 ]
+        ]
+      )
+    ]
+    agg_sum
+    ]
+    FROM [      FunctionCall asterix.dataset@1[
+        LiteralExpr [STRING] [test.tenk]
       ]
-      Field=ten
+      AS Variable [ Name=$tenk ]
     ]
-    ]
-    FROM [      Variable [ Name=#1 ]
-      AS Variable [ Name=#2 ]
-    ]
-  )
-]
-agg_sum
-]
-FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [test.tenk]
-  ]
-  AS Variable [ Name=$tenk ]
-]
-Groupby
-  GROUPING SET (
-  )
-  GROUPING SET (
-  ),
-  GROUP AS Variable [ Name=#1 ]
-  (
-    tenk:=Variable [ Name=$tenk ]
-  )
+    Groupby
+      GROUPING SET (
+      )
+      GROUP AS Variable [ Name=#1 ]
+      (
+        tenk:=Variable [ Name=$tenk ]
+      )
 
+    UNION
+      SELECT [
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#4 ]
+              Field=tenk
+            ]
+            Field=ten
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#4 ]
+          ]
+        )
+      ]
+      agg_sum
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        GROUPING SET (
+        )
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+  )
+  AS Variable [ Name=#2 ]
+]

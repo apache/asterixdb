@@ -10,8 +10,8 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$jacc ]
   :=
-  FunctionCall TinySocial.similarity-jaccard-check@3[
-    FunctionCall TinySocial.word-tokens@1[
+  FunctionCall asterix.similarity-jaccard-check@3[
+    FunctionCall asterix.word-tokens@1[
       FieldAccessor [
         FieldAccessor [
           Variable [ Name=$c ]
@@ -20,7 +20,7 @@ Let Variable [ Name=$jacc ]
         Field=name
       ]
     ]
-    FunctionCall TinySocial.word-tokens@1[
+    FunctionCall asterix.word-tokens@1[
       LiteralExpr [STRING] [Nathan Giesen]
     ]
     LiteralExpr [FLOAT] [0.5]

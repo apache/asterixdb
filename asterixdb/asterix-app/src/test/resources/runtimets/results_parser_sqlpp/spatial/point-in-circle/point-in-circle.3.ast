@@ -18,13 +18,13 @@ FROM [  FunctionCall asterix.dataset@1[
   AS Variable [ Name=$o ]
 ]
 Where
-  FunctionCall test.spatial-intersect@2[
+  FunctionCall asterix.spatial-intersect@2[
     FieldAccessor [
       Variable [ Name=$o ]
       Field=point
     ]
-    FunctionCall test.create-circle@2[
-      FunctionCall test.create-point@2[
+    FunctionCall asterix.create-circle@2[
+      FunctionCall asterix.create-point@2[
         LiteralExpr [DOUBLE] [0.0]
         LiteralExpr [DOUBLE] [0.0]
       ]

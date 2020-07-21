@@ -6,7 +6,7 @@ Let Variable [ Name=$txt ]
   LiteralExpr [STRING] [Jürgen S. Generic's Car]
 Let Variable [ Name=$tokens ]
   :=
-  FunctionCall test.gram-tokens@3[
+  FunctionCall asterix.gram-tokens@3[
     Variable [ Name=$txt ]
     LiteralExpr [LONG] [3]
     LiteralExpr [TRUE]

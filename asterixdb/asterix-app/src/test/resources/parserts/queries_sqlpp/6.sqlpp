@@ -22,7 +22,7 @@ from  Users as user
 with  similar_users as (
       select element {'user_name':similar_user.name,'similarity':similarity}
       from  Users as similar_user
-      with  similarity as jaccard_similarity(user.interests,similar_user.interests)
+      with  similarity as similarity_jaccard(user.interests,similar_user.interests)
       where ((user != similar_user) and (similarity >= 0.75))
       order by similarity desc
       limit 10

@@ -1,14 +1,14 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall test.substring@3[
+FunctionCall asterix.substring@3[
   FieldAccessor [
     Variable [ Name=$a ]
     Field=name
   ]
   LiteralExpr [LONG] [3]
   OperatorExpr [
-    FunctionCall test.string-length@1[
+    FunctionCall asterix.string-length@1[
       FieldAccessor [
         Variable [ Name=$a ]
         Field=name

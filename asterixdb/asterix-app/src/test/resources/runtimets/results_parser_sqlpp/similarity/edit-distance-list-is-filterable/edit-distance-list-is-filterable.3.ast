@@ -22,27 +22,27 @@ Let Variable [ Name=$b ]
 Let Variable [ Name=$results ]
   :=
   OrderedListConstructor [
-    FunctionCall test.edit-distance-list-is-filterable@2[
+    FunctionCall asterix.edit-distance-list-is-filterable@2[
       Variable [ Name=$a ]
       LiteralExpr [LONG] [0]
     ]
-    FunctionCall test.edit-distance-list-is-filterable@2[
+    FunctionCall asterix.edit-distance-list-is-filterable@2[
       Variable [ Name=$a ]
       LiteralExpr [LONG] [3]
     ]
-    FunctionCall test.edit-distance-list-is-filterable@2[
+    FunctionCall asterix.edit-distance-list-is-filterable@2[
       Variable [ Name=$b ]
       LiteralExpr [LONG] [0]
     ]
-    FunctionCall test.edit-distance-list-is-filterable@2[
+    FunctionCall asterix.edit-distance-list-is-filterable@2[
       Variable [ Name=$b ]
       LiteralExpr [LONG] [3]
     ]
-    FunctionCall test.edit-distance-list-is-filterable@2[
+    FunctionCall asterix.edit-distance-list-is-filterable@2[
       Variable [ Name=$b ]
       LiteralExpr [LONG] [8]
     ]
-    FunctionCall test.edit-distance-list-is-filterable@2[
+    FunctionCall asterix.edit-distance-list-is-filterable@2[
       Variable [ Name=$b ]
       LiteralExpr [LONG] [11]
     ]

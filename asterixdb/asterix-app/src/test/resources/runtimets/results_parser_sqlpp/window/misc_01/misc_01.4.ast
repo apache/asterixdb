@@ -6,8 +6,14 @@ Let Variable [ Name=$P ]
 SELECT [
 Variable [ Name=$p ]
 p
-WINDOW test.row_number@0[
+WINDOW asterix.row-number-impl@0[
 ]
+  AS Variable [ Name=#2 ]
+  (
+    p:=Variable [ Name=$p ]
+    p:=Variable [ Name=$p ]
+    #1:=Variable [ Name=#1 ]
+  )
 OVER (
   ORDER BY
     Variable [ Name=$p ]
@@ -20,7 +26,7 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$t1 ]
 ,
-  FunctionCall test.range@2[
+  FunctionCall asterix.range@2[
     FieldAccessor [
       Variable [ Name=$t1 ]
       Field=one

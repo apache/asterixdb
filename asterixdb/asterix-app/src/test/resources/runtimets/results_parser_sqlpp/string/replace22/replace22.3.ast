@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result1]
     :
-    FunctionCall test.replace@4[
+    FunctionCall asterix.replace@4[
       LiteralExpr [STRING] [abracadabra]
       LiteralExpr [STRING] []
       LiteralExpr [NULL]
@@ -14,7 +14,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result2]
     :
-    FunctionCall test.replace@4[
+    FunctionCall asterix.replace@4[
       LiteralExpr [STRING] [abracadabra]
       LiteralExpr [STRING] [bra]
       LiteralExpr [STRING] [XXX]
@@ -24,7 +24,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result3]
     :
-    FunctionCall test.replace@4[
+    FunctionCall asterix.replace@4[
       LiteralExpr [NULL]
       LiteralExpr [STRING] [hello world]
       LiteralExpr [STRING] [XxXx]
@@ -34,7 +34,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result4]
     :
-    FunctionCall test.replace@4[
+    FunctionCall asterix.replace@4[
       LiteralExpr [STRING] [abracadabra]
       LiteralExpr [STRING] [bra]
       LiteralExpr [STRING] [XXX]
@@ -44,7 +44,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result5]
     :
-    FunctionCall test.replace@4[
+    FunctionCall asterix.replace@4[
       LiteralExpr [STRING] [abracadabra]
       LiteralExpr [NULL]
       LiteralExpr [STRING] [XXX]
@@ -54,7 +54,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result6]
     :
-    FunctionCall test.replace@4[
+    FunctionCall asterix.replace@4[
       LiteralExpr [STRING] [abracadabra]
       LiteralExpr [STRING] [Bra]
       LiteralExpr [NULL]
@@ -64,7 +64,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result7]
     :
-    FunctionCall test.replace@4[
+    FunctionCall asterix.replace@4[
       LiteralExpr [STRING] [abracadabra]
       LiteralExpr [STRING] [Bra]
       LiteralExpr [STRING] []
@@ -74,7 +74,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result8]
     :
-    FunctionCall test.replace@4[
+    FunctionCall asterix.replace@4[
       LiteralExpr [STRING] [abracadabra]
       LiteralExpr [STRING] []
       LiteralExpr [STRING] [XXX]

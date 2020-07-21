@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result1]
     :
-    FunctionCall test.substring-after@2[
+    FunctionCall asterix.substring-after@2[
       LiteralExpr [STRING] [HEllow]
       LiteralExpr [STRING] []
     ]
@@ -12,7 +12,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result2]
     :
-    FunctionCall test.substring-after@2[
+    FunctionCall asterix.substring-after@2[
       LiteralExpr [STRING] [HEllow]
       LiteralExpr [NULL]
     ]
@@ -20,7 +20,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result3]
     :
-    FunctionCall test.substring-after@2[
+    FunctionCall asterix.substring-after@2[
       LiteralExpr [STRING] []
       LiteralExpr [NULL]
     ]
@@ -28,7 +28,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result4]
     :
-    FunctionCall test.substring-after@2[
+    FunctionCall asterix.substring-after@2[
       LiteralExpr [STRING] []
       LiteralExpr [STRING] []
     ]
@@ -36,7 +36,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result5]
     :
-    FunctionCall test.substring-after@2[
+    FunctionCall asterix.substring-after@2[
       LiteralExpr [NULL]
       LiteralExpr [NULL]
     ]

@@ -30,7 +30,7 @@ import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
 import org.apache.asterix.lang.aql.expression.UnionExpr;
-import org.apache.asterix.lang.aql.rewrites.visitor.AqlBuiltinFunctionRewriteVisitor;
+import org.apache.asterix.lang.aql.rewrites.visitor.AqlFunctionCallResolverVisitor;
 import org.apache.asterix.lang.aql.visitor.AQLInlineUdfsVisitor;
 import org.apache.asterix.lang.aql.visitor.base.IAQLVisitor;
 import org.apache.asterix.lang.common.base.Clause;
@@ -49,7 +49,6 @@ import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
-import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -69,7 +68,7 @@ class AqlQueryRewriter implements IQueryRewriter {
         functionParser = new FunctionParser(parserFactory);
     }
 
-    private void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
+    protected void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
             MetadataProvider metadataProvider, LangRewritingContext context) {
         this.topStatement = topStatement;
         this.context = context;
@@ -85,12 +84,12 @@ class AqlQueryRewriter implements IQueryRewriter {
         if (topStatement.isTopLevel()) {
             wrapInLets();
         }
+        resolveFunctionCalls();
         inlineDeclaredUdfs();
-        rewriteFunctionName();
         topStatement.setVarCounter(context.getVarCounter().get());
     }
 
-    private void wrapInLets() {
+    protected void wrapInLets() {
         // If the top expression of the main statement is not a FLWOR, it wraps
         // it into a let clause.
         if (topStatement == null) {
@@ -108,15 +107,16 @@ class AqlQueryRewriter implements IQueryRewriter {
         }
     }
 
-    private void rewriteFunctionName() throws CompilationException {
+    protected void resolveFunctionCalls() throws CompilationException {
         if (topStatement == null) {
             return;
         }
-        AqlBuiltinFunctionRewriteVisitor visitor = new AqlBuiltinFunctionRewriteVisitor();
+        AqlFunctionCallResolverVisitor visitor =
+                new AqlFunctionCallResolverVisitor(metadataProvider, declaredFunctions);
         topStatement.accept(visitor, null);
     }
 
-    private void inlineDeclaredUdfs() throws CompilationException {
+    protected void inlineDeclaredUdfs() throws CompilationException {
         if (topStatement == null) {
             return;
         }
@@ -128,13 +128,12 @@ class AqlQueryRewriter implements IQueryRewriter {
         List<FunctionDecl> storedFunctionDecls = new ArrayList<>();
         for (Expression topLevelExpr : topStatement.getDirectlyEnclosedExpressions()) {
             storedFunctionDecls.addAll(FunctionUtil.retrieveUsedStoredFunctions(metadataProvider, topLevelExpr, funIds,
-                    null, expr -> getFunctionCalls(expr), functionParser,
-                    (signature, sourceLoc) -> CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(signature)));
+                    null, this::getFunctionCalls, functionParser, metadataProvider.getDefaultDataverseName()));
             declaredFunctions.addAll(storedFunctionDecls);
         }
         if (!declaredFunctions.isEmpty()) {
-            AQLInlineUdfsVisitor visitor = new AQLInlineUdfsVisitor(context, new AQLRewriterFactory(parserFactory),
-                    declaredFunctions, metadataProvider);
+            AQLInlineUdfsVisitor visitor = new AQLInlineUdfsVisitor(context,
+                    new AqlFunctionBodyRewriterFactory(parserFactory), declaredFunctions, metadataProvider);
             while (topStatement.accept(visitor, declaredFunctions)) {
                 // loop until no more changes
             }

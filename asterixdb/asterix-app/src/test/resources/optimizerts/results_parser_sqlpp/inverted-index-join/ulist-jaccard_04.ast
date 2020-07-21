@@ -56,7 +56,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$jacc ]
   :=
-  FunctionCall test.similarity-jaccard@2[
+  FunctionCall asterix.similarity-jaccard@2[
     FieldAccessor [
       Variable [ Name=$a ]
       Field=interests

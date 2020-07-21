@@ -1,83 +1,163 @@
 DataverseUse test
 Query:
-SELECT [
-Variable [ Name=$two ]
-two
-FunctionCall asterix.sql-count@1[
-  (
-    SELECT ELEMENT [
-    LiteralExpr [LONG] [1]
-    ]
-    FROM [      Variable [ Name=#1 ]
-      AS Variable [ Name=#2 ]
-    ]
-    Where
-      OperatorExpr [
-        FieldAccessor [
-          FieldAccessor [
-            Variable [ Name=#2 ]
-            Field=tenk
-          ]
-          Field=four
-        ]
-        >
-        LiteralExpr [LONG] [0]
-      ]
-  )
+SELECT ELEMENT [
+Variable [ Name=#2 ]
 ]
-cnt
-FunctionCall asterix.sql-sum@1[
-  (
-    SELECT ELEMENT [
-    FieldAccessor [
-      FieldAccessor [
-        Variable [ Name=#3 ]
-        Field=tenk
-      ]
-      Field=four
-    ]
-    ]
-    FROM [      Variable [ Name=#1 ]
-      AS Variable [ Name=#3 ]
-    ]
-    Where
-      OperatorExpr [
-        FieldAccessor [
-          FieldAccessor [
-            Variable [ Name=#3 ]
-            Field=tenk
-          ]
-          Field=four
-        ]
-        >
-        LiteralExpr [LONG] [0]
-      ]
-  )
-]
-sm
-]
-FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [test.tenk]
-  ]
-  AS Variable [ Name=$tenk ]
-]
-Groupby
-  GROUPING SET (
+FROM [  (
+    SELECT [
     Variable [ Name=$two ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=two
+    two
+    FunctionCall asterix.sql-count@1[
+      (
+        SELECT ELEMENT [
+        LiteralExpr [LONG] [1]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS Variable [ Name=#3 ]
+        ]
+        Where
+          OperatorExpr [
+            FieldAccessor [
+              FieldAccessor [
+                Variable [ Name=#3 ]
+                Field=tenk
+              ]
+              Field=four
+            ]
+            >
+            LiteralExpr [LONG] [0]
+          ]
+      )
     ]
-  )
-  GROUPING SET (
-  ),
-  GROUP AS Variable [ Name=#1 ]
-  (
-    tenk:=Variable [ Name=$tenk ]
-  )
+    cnt
+    FunctionCall asterix.sql-sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=#4 ]
+            Field=tenk
+          ]
+          Field=four
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS Variable [ Name=#4 ]
+        ]
+        Where
+          OperatorExpr [
+            FieldAccessor [
+              FieldAccessor [
+                Variable [ Name=#4 ]
+                Field=tenk
+              ]
+              Field=four
+            ]
+            >
+            LiteralExpr [LONG] [0]
+          ]
+      )
+    ]
+    sm
+    ]
+    FROM [      FunctionCall asterix.dataset@1[
+        LiteralExpr [STRING] [test.tenk]
+      ]
+      AS Variable [ Name=$tenk ]
+    ]
+    Groupby
+      Variable [ Name=$two ]
+      :=
+      FieldAccessor [
+        Variable [ Name=$tenk ]
+        Field=two
+      ]
+      GROUP AS Variable [ Name=#1 ]
+      (
+        tenk:=Variable [ Name=$tenk ]
+      )
 
+    UNION
+      SELECT [
+      Variable [ Name=$two ]
+      two
+      FunctionCall asterix.sql-count@1[
+        (
+          SELECT ELEMENT [
+          LiteralExpr [LONG] [1]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#5 ]
+          ]
+          Where
+            OperatorExpr [
+              FieldAccessor [
+                FieldAccessor [
+                  Variable [ Name=#5 ]
+                  Field=tenk
+                ]
+                Field=four
+              ]
+              >
+              LiteralExpr [LONG] [0]
+            ]
+        )
+      ]
+      cnt
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#6 ]
+              Field=tenk
+            ]
+            Field=four
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#6 ]
+          ]
+          Where
+            OperatorExpr [
+              FieldAccessor [
+                FieldAccessor [
+                  Variable [ Name=#6 ]
+                  Field=tenk
+                ]
+                Field=four
+              ]
+              >
+              LiteralExpr [LONG] [0]
+            ]
+        )
+      ]
+      sm
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        GROUPING SET (
+        )
+        DECOR
+        Variable [ Name=$two ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+  )
+  AS Variable [ Name=#2 ]
+]
 Orderby
-  Variable [ Name=$two ]
+  FieldAccessor [
+    Variable [ Name=#2 ]
+    Field=two
+  ]
   ASC
 

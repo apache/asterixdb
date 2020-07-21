@@ -16,28 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.lang.aql.rewrites;
 
+import org.apache.asterix.lang.common.base.IParserFactory;
+import org.apache.asterix.lang.common.base.IQueryRewriter;
+import org.apache.asterix.lang.common.base.IRewriterFactory;
+import org.apache.asterix.lang.common.base.IStatementRewriter;
 
-USE gby;
+public class AqlRewriterFactory implements IRewriterFactory {
 
-INSERT INTO Employee (
-   {
-    'id': '123',
-    'job_category': 'Cook',
-    'salary': 2000,
-    'department_id': 'K55'
-   }
-);
+    private final IParserFactory parserFactory;
 
-INSERT INTO Incentive (
-  { 'job_category': 'Cook',
-    'bonus': 1000
-  }
-);
+    public AqlRewriterFactory(IParserFactory parserFactory) {
+        this.parserFactory = parserFactory;
+    }
 
-INSERT INTO SuperStars (
-  {
-    'id': '123'
-  }
-);
+    @Override
+    public IQueryRewriter createQueryRewriter() {
+        return new AqlQueryRewriter(parserFactory);
+    }
 
+    @Override
+    public IStatementRewriter createStatementRewriter() {
+        return new AqlStatementRewriter();
+    }
+
+}

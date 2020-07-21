@@ -14,7 +14,7 @@ FunctionDecl tmp([]) {
         OperatorExpr [
           LiteralExpr [DOUBLE] [0.2]
           *
-          FunctionCall asterix.avg@1[
+          FunctionCall tpch.strict_avg@1[
             (
               SELECT ELEMENT [
               FieldAccessor [

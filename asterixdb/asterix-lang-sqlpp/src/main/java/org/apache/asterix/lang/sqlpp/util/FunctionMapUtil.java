@@ -25,8 +25,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.expression.CallExpr;
@@ -36,7 +34,6 @@ import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class FunctionMapUtil {
 
@@ -112,49 +109,28 @@ public class FunctionMapUtil {
      *         false otherwise.
      */
     public static boolean isCoreAggregateFunction(FunctionSignature fs) {
-        String internalName = getInternalCoreAggregateFunctionName(fs);
-        if (internalName != null) {
-            FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, internalName, fs.getArity());
-            IFunctionInfo finfo = FunctionUtil.getFunctionInfo(fi);
-            return finfo != null && BuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null;
-        }
-        return false;
+        return findInternalCoreAggregateFunction(fs) != null;
     }
 
     /**
-     * Maps a user invoked function signature to a system internal function signature.
+     * Returns a function identifier of an internal core aggregate function
+     * that this SQL++ core aggregate function maps to.
+     * Returns {@code null} if given function is not a SQL++ core aggregate function
      *
-     * @param fs
-     *            the user typed function.
-     * @param checkSql92Aggregate
-     *            enable check if the function is a SQL-92 aggregate function
-     * @param sourceLoc
-     *            the source location of the function call
-     * @return the system internal function.
-     * @throws CompilationException
-     *             if checkSql92Aggregate is true and the function is a SQL-92 aggregate function
+     * @param fs the function signature.
      */
-    public static FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs, boolean checkSql92Aggregate,
-            SourceLocation sourceLoc) throws CompilationException {
-        FunctionSignature ns = CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(fs);
-        String internalName = getInternalCoreAggregateFunctionName(ns);
-        if (internalName != null) {
-            FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, internalName, ns.getArity());
-            IFunctionInfo finfo = FunctionUtil.getFunctionInfo(fi);
-            if (finfo != null && BuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null) {
-                return new FunctionSignature(FunctionConstants.ASTERIX_DV, internalName, ns.getArity());
-            }
-        } else if (checkSql92Aggregate) {
-            if (isSql92AggregateFunction(ns)) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        fs.getName() + " is a SQL-92 aggregate function. The SQL++ core aggregate function "
-                                + sql92ToCoreAggregateFunction(ns).getName()
-                                + " could potentially express the intent.");
-            } else if (getInternalWindowFunction(ns) != null) {
-                throw new CompilationException(ErrorCode.COMPILATION_UNEXPECTED_WINDOW_EXPRESSION, sourceLoc);
-            }
+    public static FunctionIdentifier findInternalCoreAggregateFunction(FunctionSignature fs) {
+        String internalName = getInternalCoreAggregateFunctionName(fs);
+        if (internalName == null) {
+            return null;
         }
-        return new FunctionSignature(ns.getDataverseName(), ns.getName(), ns.getArity());
+        FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, internalName, fs.getArity());
+        IFunctionInfo finfo = FunctionUtil.getFunctionInfo(fi);
+        if (finfo == null) {
+            return null;
+        }
+        FunctionIdentifier fid = finfo.getFunctionIdentifier();
+        return BuiltinFunctions.getAggregateFunction(fid) != null ? fid : null;
     }
 
     /**

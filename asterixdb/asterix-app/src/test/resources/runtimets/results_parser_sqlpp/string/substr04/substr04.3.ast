@@ -3,70 +3,70 @@ SELECT ELEMENT [
 Variable [ Name=$a ]
 ]
 FROM [  OrderedListConstructor [
-    FunctionCall null.substring@3[
+    FunctionCall asterix.substring@3[
       LiteralExpr [STRING] [hello world]
       LiteralExpr [LONG] [6]
       LiteralExpr [LONG] [5]
     ]
-    FunctionCall null.substring@3[
+    FunctionCall asterix.substring@3[
       LiteralExpr [STRING] [hello world]
       LiteralExpr [LONG] [0]
       LiteralExpr [LONG] [11]
     ]
-    FunctionCall null.substring@3[
+    FunctionCall asterix.substring@3[
       LiteralExpr [STRING] [hello world]
       LiteralExpr [LONG] [2]
       LiteralExpr [LONG] [9]
     ]
-    FunctionCall null.substring@3[
+    FunctionCall asterix.substring@3[
       LiteralExpr [STRING] [ABCD]
       LiteralExpr [LONG] [2]
       LiteralExpr [LONG] [2]
     ]
-    FunctionCall null.substring@3[
+    FunctionCall asterix.substring@3[
       LiteralExpr [STRING] [ABCD]
       LiteralExpr [LONG] [0]
       LiteralExpr [LONG] [4]
     ]
-    FunctionCall null.substring@3[
+    FunctionCall asterix.substring@3[
       LiteralExpr [STRING] [UC Irvine]
       LiteralExpr [LONG] [3]
       OperatorExpr [
-        FunctionCall null.string-length@1[
+        FunctionCall asterix.string-length@1[
           LiteralExpr [STRING] [UC Irvine]
         ]
         -
         LiteralExpr [LONG] [3]
       ]
     ]
-    FunctionCall null.substring@3[
+    FunctionCall asterix.substring@3[
       LiteralExpr [STRING] [UC Irvine]
       LiteralExpr [LONG] [0]
-      FunctionCall null.string-length@1[
+      FunctionCall asterix.string-length@1[
         LiteralExpr [STRING] [UC Irvine]
       ]
     ]
-    FunctionCall null.substring@3[
-      FunctionCall null.substring@2[
+    FunctionCall asterix.substring@3[
+      FunctionCall asterix.substring@2[
         LiteralExpr [STRING] [UC Irvine]
         LiteralExpr [LONG] [3]
       ]
       LiteralExpr [LONG] [0]
-      FunctionCall null.string-length@1[
+      FunctionCall asterix.string-length@1[
         LiteralExpr [STRING] [Irvine]
       ]
     ]
-    FunctionCall null.substring@3[
+    FunctionCall asterix.substring@3[
       LiteralExpr [STRING] [ABCD]
       - LiteralExpr [LONG] [3]
       LiteralExpr [LONG] [2]
     ]
-    FunctionCall null.substring@3[
+    FunctionCall asterix.substring@3[
       LiteralExpr [STRING] [ABCD]
       - LiteralExpr [LONG] [10]
       LiteralExpr [LONG] [1]
     ]
-    FunctionCall null.substring@3[
+    FunctionCall asterix.substring@3[
       LiteralExpr [STRING] [ABCD]
       LiteralExpr [LONG] [1]
       - LiteralExpr [LONG] [1]

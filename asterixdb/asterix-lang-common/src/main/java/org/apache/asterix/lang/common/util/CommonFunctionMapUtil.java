@@ -22,9 +22,6 @@ package org.apache.asterix.lang.common.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.om.functions.BuiltinFunctions;
-
 public class CommonFunctionMapUtil {
 
     // Maps from a function name to an another internal function name (i.e., AsterixDB internal name).
@@ -172,26 +169,6 @@ public class CommonFunctionMapUtil {
 
     private CommonFunctionMapUtil() {
 
-    }
-
-    /**
-     * Maps a user invoked function signature to a builtin internal function signature if possible.
-     *
-     * @param fs,
-     *            the signature of an user typed function.
-     * @return the corresponding system internal function signature if it exists, otherwise
-     *         the input function signature.
-     */
-    public static FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs) {
-        String name = fs.getName();
-        String lowerCaseName = name.toLowerCase();
-        String mappedName = getFunctionMapping(lowerCaseName);
-        if (mappedName != null) {
-            return new FunctionSignature(fs.getDataverseName(), mappedName, fs.getArity());
-        }
-        String understoreName = lowerCaseName.replace('_', '-');
-        FunctionSignature newFs = new FunctionSignature(fs.getDataverseName(), understoreName, fs.getArity());
-        return BuiltinFunctions.isBuiltinCompilerFunction(newFs, true) ? newFs : fs;
     }
 
     public static String getFunctionMapping(String alias) {

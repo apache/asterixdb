@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result1]
     :
-    FunctionCall test.substring-after@2[
+    FunctionCall asterix.substring-after@2[
       LiteralExpr [STRING] [HEllow]
       LiteralExpr [STRING] [1]
     ]

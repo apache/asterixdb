@@ -3,7 +3,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [str2]
     :
-    FunctionCall null.substring@2[
+    FunctionCall asterix.substring@2[
       LiteralExpr [STRING] [Hello World]
       LiteralExpr [LONG] [9]
     ]
@@ -11,7 +11,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [str4]
     :
-    FunctionCall null.substring@2[
+    FunctionCall asterix.substring@2[
       LiteralExpr [STRING] [This is a test string]
       LiteralExpr [LONG] [20]
     ]
@@ -19,7 +19,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [str6]
     :
-    FunctionCall null.substring@2[
+    FunctionCall asterix.substring@2[
       LiteralExpr [STRING] [This is a test string]
       LiteralExpr [LONG] [21]
     ]
@@ -27,7 +27,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [str8]
     :
-    FunctionCall null.substring@2[
+    FunctionCall asterix.substring@2[
       LiteralExpr [STRING] [This is a test string]
       LiteralExpr [LONG] [0]
     ]
@@ -35,7 +35,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [str10]
     :
-    FunctionCall null.substring@2[
+    FunctionCall asterix.substring@2[
       LiteralExpr [STRING] [This is a test string]
       - LiteralExpr [LONG] [6]
     ]
@@ -43,8 +43,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [str13]
     :
-    FunctionCall null.substring@2[
-      FunctionCall null.string-concat@1[
+    FunctionCall asterix.substring@2[
+      FunctionCall asterix.string-concat@1[
         OrderedListConstructor [
           LiteralExpr [STRING] [This is a test string]
           LiteralExpr [STRING] [This is a another test string]
@@ -56,11 +56,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [str14]
     :
-    FunctionCall null.substring@2[
+    FunctionCall asterix.substring@2[
       LiteralExpr [STRING] [UC Irvine]
       OperatorExpr [
         OperatorExpr [
-          FunctionCall null.string-length@1[
+          FunctionCall asterix.string-length@1[
             LiteralExpr [STRING] [UC Irvine]
           ]
           div

@@ -39,7 +39,7 @@ Where
         Field=send-time
       ]
       >=
-      FunctionCall OpenSocialNetworkData.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2005-04-13T17:17:22]
       ]
     ]
@@ -50,7 +50,7 @@ Where
         Field=send-time
       ]
       <=
-      FunctionCall OpenSocialNetworkData.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2011-04-13T17:18:22]
       ]
     ]

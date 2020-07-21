@@ -27,9 +27,9 @@ RecordConstructor [
     FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
-        FunctionCall test.ms-from-day-time-duration@1[
-          FunctionCall test.duration-from-interval@1[
-            FunctionCall test.get-overlapping-interval@2[
+        FunctionCall asterix.ms-from-day-time-duration@1[
+          FunctionCall asterix.duration-from-interval@1[
+            FunctionCall asterix.get-overlapping-interval@2[
               Variable [ Name=$bin ]
               FieldAccessor [
                 FieldAccessor [
@@ -56,7 +56,7 @@ FROM [  (
       (
         LiteralExpr [STRING] [interval]
         :
-        FunctionCall test.interval-start-from-time@2[
+        FunctionCall asterix.interval-start-from-time@2[
           FieldAccessor [
             Variable [ Name=$i1 ]
             Field=time
@@ -84,15 +84,15 @@ FROM [  (
   )
   AS Variable [ Name=$i2 ]
 ,
-  FunctionCall test.overlap-bins@3[
+  FunctionCall asterix.overlap-bins@3[
     FieldAccessor [
       Variable [ Name=$i2 ]
       Field=interval
     ]
-    FunctionCall test.time@1[
+    FunctionCall asterix.time@1[
       LiteralExpr [STRING] [00:00:00]
     ]
-    FunctionCall test.day-time-duration@1[
+    FunctionCall asterix.day-time-duration@1[
       LiteralExpr [STRING] [PT1H30M]
     ]
   ]
@@ -109,7 +109,7 @@ Groupby
   )
 
 Orderby
-  FunctionCall test.get-interval-start@1[
+  FunctionCall asterix.get-interval-start@1[
     Variable [ Name=$bin ]
   ]
   ASC

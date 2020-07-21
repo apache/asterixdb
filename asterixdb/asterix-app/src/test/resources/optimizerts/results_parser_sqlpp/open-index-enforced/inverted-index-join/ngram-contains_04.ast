@@ -50,7 +50,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Where
   OperatorExpr [
-    FunctionCall test.contains@2[
+    FunctionCall asterix.contains@2[
       FieldAccessor [
         Variable [ Name=$o1 ]
         Field=title

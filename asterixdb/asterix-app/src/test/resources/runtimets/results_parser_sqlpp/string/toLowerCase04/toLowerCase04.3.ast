@@ -3,8 +3,8 @@ SELECT ELEMENT [
 Variable [ Name=$a ]
 ]
 FROM [  OrderedListConstructor [
-    FunctionCall null.lowercase@1[
-      FunctionCall null.codepoint-to-string@1[
+    FunctionCall asterix.lowercase@1[
+      FunctionCall asterix.codepoint-to-string@1[
         OrderedListConstructor [
           LiteralExpr [LONG] [65]
           LiteralExpr [LONG] [66]
@@ -35,8 +35,8 @@ FROM [  OrderedListConstructor [
         ]
       ]
     ]
-    FunctionCall null.lowercase@1[
-      FunctionCall null.string-concat@1[
+    FunctionCall asterix.lowercase@1[
+      FunctionCall asterix.string-concat@1[
         OrderedListConstructor [
           LiteralExpr [STRING] [ABCDEFGHIJKLMNOP]
           LiteralExpr [STRING] [QRSTUVWXYZ]

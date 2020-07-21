@@ -11,7 +11,7 @@ RecordConstructor [
     LiteralExpr [STRING] [smith]
   )
   (
-    FunctionCall test.lowercase@1[
+    FunctionCall asterix.lowercase@1[
       LiteralExpr [STRING] [NAME]
     ]
     :

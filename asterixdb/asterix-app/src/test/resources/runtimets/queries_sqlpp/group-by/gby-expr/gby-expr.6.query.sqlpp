@@ -16,29 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.lang.aql.rewrites;
 
-import org.apache.asterix.lang.common.base.IParserFactory;
-import org.apache.asterix.lang.common.base.IQueryRewriter;
-import org.apache.asterix.lang.common.base.IRewriterFactory;
-import org.apache.asterix.lang.common.base.IStatementRewriter;
+USE gby;
 
-public class AQLRewriterFactory implements IRewriterFactory {
+/*
+ * Test that builtin function names are compared case-insensitive
+ * when replacing SELECT expression with GROUP BY expression
+ */
 
-    private final IParserFactory parserFactory;
+FROM Employee e
+    JOIN Incentive i ON e.job_category = i.job_category
+    JOIN SuperStars s ON e.id = s.id
+GROUP BY substr(e.department_id, 0)
+SELECT SUBSTR(e.department_id, 0) as deptId, SUM(e.salary + i.bonus) AS star_cost;
 
-    public AQLRewriterFactory(IParserFactory parserFactory) {
-        this.parserFactory = parserFactory;
-    }
-
-    @Override
-    public IQueryRewriter createQueryRewriter() {
-        return new AqlQueryRewriter(parserFactory);
-    }
-
-    @Override
-    public IStatementRewriter createStatementRewriter() {
-        return new AqlStatementRewriter();
-    }
-
-}

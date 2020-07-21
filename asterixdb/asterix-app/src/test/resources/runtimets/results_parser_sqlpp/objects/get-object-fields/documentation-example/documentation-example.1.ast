@@ -1,5 +1,5 @@
 Query:
-FunctionCall null.get-object-fields@1[
+FunctionCall asterix.get-object-fields@1[
   RecordConstructor [
     (
       LiteralExpr [STRING] [id]

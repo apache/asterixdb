@@ -4,13 +4,26 @@ Variable [ Name=$m ]
 m
 Variable [ Name=$t ]
 t
-WINDOW null.sum@1[
-  OperatorExpr [
-    Variable [ Name=$t ]
-    mod
-    LiteralExpr [LONG] [4]
-  ]
+WINDOW asterix.sql-sum@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=#5 ]
+      Field=#2
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#5 ]
+    ]
+  )
 ]
+  AS Variable [ Name=#1 ]
+  (
+    t:=Variable [ Name=$t ]
+    m:=Variable [ Name=$m ]
+    #2:=Variable [ Name=#2 ]
+    #4:=Variable [ Name=#4 ]
+  )
 OVER (
   PARTITION BY
     Variable [ Name=$m ]
@@ -20,13 +33,26 @@ OVER (
   rows between unbounded preceding and current row exclude no others
 )
 sum
-WINDOW null.sum-distinct@1[
-  OperatorExpr [
-    Variable [ Name=$t ]
-    mod
-    LiteralExpr [LONG] [4]
-  ]
+WINDOW asterix.sql-sum-distinct@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=#6 ]
+      Field=#4
+    ]
+    ]
+    FROM [      Variable [ Name=#3 ]
+      AS Variable [ Name=#6 ]
+    ]
+  )
 ]
+  AS Variable [ Name=#3 ]
+  (
+    t:=Variable [ Name=$t ]
+    m:=Variable [ Name=$m ]
+    #2:=Variable [ Name=#2 ]
+    #4:=Variable [ Name=#4 ]
+  )
 OVER (
   PARTITION BY
     Variable [ Name=$m ]
@@ -37,13 +63,27 @@ OVER (
 )
 sum_distinct
 ]
-FROM [  FunctionCall null.range@2[
+FROM [  FunctionCall asterix.range@2[
     LiteralExpr [LONG] [1]
     LiteralExpr [LONG] [20]
   ]
   AS Variable [ Name=$t ]
 ]
 Let Variable [ Name=$m ]
+  :=
+  OperatorExpr [
+    Variable [ Name=$t ]
+    mod
+    LiteralExpr [LONG] [4]
+  ]
+Let Variable [ Name=#2 ]
+  :=
+  OperatorExpr [
+    Variable [ Name=$t ]
+    mod
+    LiteralExpr [LONG] [4]
+  ]
+Let Variable [ Name=#4 ]
   :=
   OperatorExpr [
     Variable [ Name=$t ]

@@ -337,7 +337,7 @@ FunctionDecl tmp2([]) {
       (
         LiteralExpr [STRING] [ps_min_supplycost]
         :
-        FunctionCall asterix.min@1[
+        FunctionCall tpch.STRICT_MIN@1[
           (
             SELECT ELEMENT [
             FieldAccessor [

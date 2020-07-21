@@ -107,7 +107,7 @@ Where
       Field=tweetid
     ]
     <
-    FunctionCall test.int64@1[
+    FunctionCall asterix.int64@1[
       LiteralExpr [STRING] [10]
     ]
   ]

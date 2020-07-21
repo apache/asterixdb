@@ -29,11 +29,14 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -41,6 +44,7 @@ import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
+import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
@@ -52,6 +56,8 @@ import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.test.common.ComparisonException;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -70,6 +76,7 @@ public class ParserTestExecutor extends TestExecutor {
 
     private IParserFactory sqlppParserFactory = new SqlppParserFactory();
     private IRewriterFactory sqlppRewriterFactory = new SqlppRewriterFactory(sqlppParserFactory);
+    private Set<FunctionSignature> createdFunctions = new HashSet<>();
 
     @Override
     public void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,
@@ -130,8 +137,11 @@ public class ParserTestExecutor extends TestExecutor {
         GlobalConfig.ASTERIX_LOGGER.info(queryFile.toString());
         try {
             List<Statement> statements = parser.parse();
-            List<FunctionDecl> functions = getDeclaredFunctions(statements);
             DataverseName dvName = getDefaultDataverse(statements);
+            List<FunctionDecl> functions = getDeclaredFunctions(statements, dvName);
+            List<FunctionSignature> createdFunctionsList = getCreatedFunctions(statements, dvName);
+            createdFunctions.addAll(createdFunctionsList);
+
             MetadataProvider metadataProvider = mock(MetadataProvider.class);
 
             @SuppressWarnings("unchecked")
@@ -139,6 +149,15 @@ public class ParserTestExecutor extends TestExecutor {
             when(metadataProvider.getDefaultDataverseName()).thenReturn(dvName);
             when(metadataProvider.getConfig()).thenReturn(config);
             when(config.get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS)).thenReturn("true");
+            when(metadataProvider.findDataverse(any(DataverseName.class))).thenAnswer(new Answer<Dataverse>() {
+                @Override
+                public Dataverse answer(InvocationOnMock invocation) {
+                    Object[] args = invocation.getArguments();
+                    final Dataverse mockDataverse = mock(Dataverse.class);
+                    when(mockDataverse.getDataverseName()).thenReturn((DataverseName) args[0]);
+                    return mockDataverse;
+                }
+            });
             when(metadataProvider.findDataset(any(DataverseName.class), anyString())).thenAnswer(new Answer<Dataset>() {
                 @Override
                 public Dataset answer(InvocationOnMock invocation) {
@@ -149,6 +168,20 @@ public class ParserTestExecutor extends TestExecutor {
                     return mockDataset;
                 }
             });
+            when(metadataProvider.lookupUserDefinedFunction(any(FunctionSignature.class)))
+                    .thenAnswer(new Answer<Function>() {
+                        @Override
+                        public Function answer(InvocationOnMock invocation) {
+                            Object[] args = invocation.getArguments();
+                            FunctionSignature fs = (FunctionSignature) args[0];
+                            if (!createdFunctions.contains(fs)) {
+                                return null;
+                            }
+                            Function mockFunction = mock(Function.class);
+                            when(mockFunction.getSignature()).thenReturn(fs);
+                            return mockFunction;
+                        }
+                    });
 
             for (Statement st : statements) {
                 if (st.getKind() == Statement.Kind.QUERY) {
@@ -177,14 +210,36 @@ public class ParserTestExecutor extends TestExecutor {
     }
 
     // Extracts declared functions.
-    private List<FunctionDecl> getDeclaredFunctions(List<Statement> statements) {
-        List<FunctionDecl> functionDecls = new ArrayList<FunctionDecl>();
+    private List<FunctionDecl> getDeclaredFunctions(List<Statement> statements, DataverseName defaultDataverseName) {
+        List<FunctionDecl> functionDecls = new ArrayList<>();
         for (Statement st : statements) {
             if (st.getKind() == Statement.Kind.FUNCTION_DECL) {
-                functionDecls.add((FunctionDecl) st);
+                FunctionDecl fds = (FunctionDecl) st;
+                FunctionSignature signature = fds.getSignature();
+                if (signature.getDataverseName() == null) {
+                    signature.setDataverseName(defaultDataverseName);
+                }
+                functionDecls.add(fds);
             }
         }
         return functionDecls;
+    }
+
+    // Extracts created functions.
+    private List<FunctionSignature> getCreatedFunctions(List<Statement> statements,
+            DataverseName defaultDataverseName) {
+        List<FunctionSignature> createdFunctions = new ArrayList<>();
+        for (Statement st : statements) {
+            if (st.getKind() == Statement.Kind.CREATE_FUNCTION) {
+                CreateFunctionStatement cfs = (CreateFunctionStatement) st;
+                FunctionSignature signature = cfs.getFunctionSignature();
+                if (signature.getDataverseName() == null) {
+                    signature = new FunctionSignature(defaultDataverseName, signature.getName(), signature.getArity());
+                }
+                createdFunctions.add(signature);
+            }
+        }
+        return createdFunctions;
     }
 
     // Gets the default dataverse for the input statements.
@@ -208,14 +263,19 @@ public class ParserTestExecutor extends TestExecutor {
                         + "org.apache.asterix.metadata.declared.MetadataProvider, "
                         + "org.apache.asterix.lang.common.rewrites.LangRewritingContext, " + "java.util.Collection)",
                 declaredFunctions, topExpr, metadataProvider, context, null);
-        PA.invokeMethod(rewriter, "inlineColumnAlias()");
+        PA.invokeMethod(rewriter, "resolveFunctionCalls()");
         PA.invokeMethod(rewriter, "generateColumnNames()");
         PA.invokeMethod(rewriter, "substituteGroupbyKeyExpression()");
         PA.invokeMethod(rewriter, "rewriteGroupBys()");
         PA.invokeMethod(rewriter, "rewriteSetOperations()");
+        PA.invokeMethod(rewriter, "inlineColumnAlias()");
+        PA.invokeMethod(rewriter, "rewriteWindowExpressions()");
+        PA.invokeMethod(rewriter, "rewriteGroupingSets()");
         PA.invokeMethod(rewriter, "variableCheckAndRewrite()");
+        PA.invokeMethod(rewriter, "extractAggregatesFromCaseExpressions()");
         PA.invokeMethod(rewriter, "rewriteGroupByAggregationSugar()");
-
+        PA.invokeMethod(rewriter, "rewriteWindowAggregationSugar()");
+        PA.invokeMethod(rewriter, "rewriteSpecialFunctionNames()");
     }
 
 }

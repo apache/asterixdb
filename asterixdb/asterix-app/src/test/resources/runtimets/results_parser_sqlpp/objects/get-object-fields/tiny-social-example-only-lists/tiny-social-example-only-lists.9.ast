@@ -24,7 +24,7 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$r ]
 ,
-  FunctionCall TinySocial.get-object-fields@1[
+  FunctionCall asterix.get-object-fields@1[
     Variable [ Name=$r ]
   ]
   AS Variable [ Name=$f ]

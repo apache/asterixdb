@@ -72,7 +72,7 @@ FROM [  (
 Groupby
   Variable [ Name=$fus ]
   :=
-  FunctionCall test.get-year@1[
+  FunctionCall asterix.get-year@1[
     FieldAccessor [
       Variable [ Name=$i ]
       Field=user-since

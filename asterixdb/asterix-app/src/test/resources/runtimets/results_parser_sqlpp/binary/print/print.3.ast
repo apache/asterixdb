@@ -7,8 +7,8 @@ RecordConstructor [
     (
       SELECT ELEMENT [
       OperatorExpr [
-        FunctionCall test.print-binary@2[
-          FunctionCall test.parse-binary@2[
+        FunctionCall asterix.print-binary@2[
+          FunctionCall asterix.parse-binary@2[
             Variable [ Name=$i ]
             LiteralExpr [STRING] [hex]
           ]
@@ -34,8 +34,8 @@ RecordConstructor [
     (
       SELECT ELEMENT [
       OperatorExpr [
-        FunctionCall test.print-binary@2[
-          FunctionCall test.parse-binary@2[
+        FunctionCall asterix.print-binary@2[
+          FunctionCall asterix.parse-binary@2[
             Variable [ Name=$j ]
             LiteralExpr [STRING] [base64]
           ]
