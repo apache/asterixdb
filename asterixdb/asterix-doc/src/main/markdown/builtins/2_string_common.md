@@ -174,33 +174,6 @@
         "asterixdb"
 
 
-### ltrim ###
- * Syntax:
-
-        ltrim(string[, chars]);
-
- * Returns a new string with all leading characters that appear in `chars` removed.
-   By default, white space is the character to trim.
- * Arguments:
-    * `string` : a `string` to be trimmed,
-    * `chars` : a `string` that contains characters that are used to trim.
- * Return Value:
-    * a trimmed, new `string`,
-    * `missing` if any argument is a `missing` value,
-    * `null` if any argument is a `null` value but no argument is a `missing` value,
-    * any other non-string input value will cause a type error.
-
-
- * Example:
-
-        ltrim("me like x-phone", "eml");
-
-
- * The expected result is:
-
-        " like x-phone"
-
-
 ### position ###
  * Syntax:
 
@@ -467,33 +440,6 @@
 
         "olleh"
 
-### rtrim ###
- * Syntax:
-
-        rtrim(string[, chars]);
-
- * Returns a new string with all trailing characters that appear in `chars` removed.
-   By default, white space is the character to trim.
- * Arguments:
-    * `string` : a `string` to be trimmed,
-    * `chars` : a `string` that contains characters that are used to trim.
- * Return Value:
-    * a trimmed, new `string`,
-    * `missing` if any argument is a `missing` value,
-    * `null` if any argument is a `null` value but no argument is a `missing` value,
-    * any other non-string input value will cause a type error.
-
-
- * Example:
-
-        {
-          "v1": rtrim("i like x-phone", "x-phone"),
-          "v2": rtrim("i like x-phone", "onexph")
-        };
-
- * The expected result is:
-
-        { "v1": "i like ", "v2": "i like " }
 
 ### split ###
  * Syntax:
@@ -554,6 +500,8 @@
         substr(string, offset[, length])
 
  * Returns the substring from the given string `string` based on the given start offset `offset` with the optional `length`. 
+ Note that both of the `offset` and `length` are in the unit of code point
+ (e.g. the emoji family 👨‍👩‍👧‍👦 has 7 code points).
  The function uses the 0-based position. Another version of the function uses the 1-based position. Below are the
  aliases for each version:
 
@@ -592,8 +540,12 @@ The function has an alias `substring`.
 
         trim(string[, chars]);
 
- * Returns a new string with all leading characters that appear in `chars` removed.
+ * Returns a new string with all leading and trailing characters that appear in `chars` removed.
    By default, white space is the character to trim.
+   Note that here one character means one code point.
+   For example, the emoji 4-people-family notation "👩‍👩‍👧‍👦" contains 7 code points,
+   and it is possible to trim a few code points (such as a 2-people-family "👨‍👦") from it.
+   See the following example for more details.
  * Arguments:
     * `string` : a `string` to be trimmed,
     * `chars` : a `string` that contains characters that are used to trim.
@@ -608,10 +560,96 @@ The function has an alias `substring`.
 
         trim("i like x-phone", "xphoen");
 
-
  * The expected result is:
 
         " like "
+
+ * Example with multi-codepoint notation (trim the man and boy from the family of man, woman, girl and boy):
+ 
+       trim("👨‍👩‍👧‍👦", "👨‍👦")
+ 
+ * The expected result is (only woman and girl are left in the family):
+
+         "👩‍👧"
+ 
+ 
+### ltrim ###
+ * Syntax:
+
+        ltrim(string[, chars]);
+
+ * Returns a new string with all leading characters that appear in `chars` removed.
+   By default, white space is the character to trim.
+   Note that here one character means one code point.
+   For example, the emoji 4-people-family notation "👩‍👩‍👧‍👦" contains 7 code points,
+   and it is possible to trim a few code points (such as a 2-people-family "👨‍👦") from it.
+   See the following example for more details.
+ * Arguments:
+    * `string` : a `string` to be trimmed,
+    * `chars` : a `string` that contains characters that are used to trim.
+ * Return Value:
+    * a trimmed, new `string`,
+    * `missing` if any argument is a `missing` value,
+    * `null` if any argument is a `null` value but no argument is a `missing` value,
+    * any other non-string input value will cause a type error.
+
+
+ * Example:
+
+        ltrim("me like x-phone", "eml");
+
+ * The expected result is:
+
+        " like x-phone"
+
+ * Example with multi-codepoint notation (trim the man and boy from the family of man, woman, girl and boy):
+ 
+        ltrim("👨‍👩‍👧‍👦", "👨‍👦")
+ 
+ * The expected result is (only woman, girl and boy are left in the family):
+
+        "👩‍👧‍👦"
+
+
+### rtrim ###
+ * Syntax:
+
+        rtrim(string[, chars]);
+
+ * Returns a new string with all trailing characters that appear in `chars` removed.
+   By default, white space is the character to trim.
+   Note that here one character means one code point.
+   For example, the emoji 4-people-family notation "👩‍👩‍👧‍👦" contains 7 code points,
+   and it is possible to trim a few code points (such as a 2-people-family "👨‍👦") from it.
+   See the following example for more details.
+ * Arguments:
+    * `string` : a `string` to be trimmed,
+    * `chars` : a `string` that contains characters that are used to trim.
+ * Return Value:
+    * a trimmed, new `string`,
+    * `missing` if any argument is a `missing` value,
+    * `null` if any argument is a `null` value but no argument is a `missing` value,
+    * any other non-string input value will cause a type error.
+
+
+ * Example:
+
+        {
+          "v1": rtrim("i like x-phone", "x-phone"),
+          "v2": rtrim("i like x-phone", "onexph")
+        };
+
+ * The expected result is:
+
+        { "v1": "i like ", "v2": "i like x-" }
+
+ * Example with multi-codepoint notation (trim the man and boy from the family of man, woman, girl and boy):
+ 
+        rtrim("👨‍👩‍👧‍👦", "👨‍👦")
+ 
+ * The expected result is (only man, woman and girl are left in the family):
+
+        "👨‍👩‍👧"
 
 
 ### upper ###

@@ -17,25 +17,8 @@
  * under the License.
  */
 
-[
-   trim(""),
-   trim("    "),
-   trim(" abc "),
-   trim("abcd"),
-   trim(null),
-   trim(missing),
-   trim("", "ad "),
-   trim("    ", "ad "),
-   trim(" abc ", "ad "),
-   trim("abcd", "ad "),
-   trim("abc", null),
-   trim(null, "abc"),
-   trim(null, null),
-   trim("abc", missing),
-   trim(missing, "abc"),
-   trim(missing, missing),
-   trim("🇺🇸", "🇺"),
-   trim("👨‍👩‍👧‍👦", "👨‍👦"),
-   ltrim("👨‍👩‍👧‍👦", "👨‍👦"),
-   rtrim("👨‍👩‍👧‍👦", "👨‍👦")
-];
+{
+  '2 people in a 4-people family': SUBSTR("👨‍👨‍👦‍👦", 2, 3),
+  'Korean test 0': SUBSTR('한글', 3,3),
+  'Korean test 1': SUBSTR('한글', 2,2)
+};
