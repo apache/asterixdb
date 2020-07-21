@@ -23,8 +23,17 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class UTF8StringBuilder extends AbstractVarLenObjectBuilder {
 
+    private final char[] tmpCharsForCodePointConversion = new char[2];
+
     public void appendChar(char ch) throws IOException {
         UTF8StringUtil.writeCharAsModifiedUTF8(ch, out);
+    }
+
+    public void appendCodePoint(int codePoint) throws IOException {
+        int numChar = Character.toChars(codePoint, tmpCharsForCodePointConversion, 0);
+        for (int i = 0; i < numChar; i++) {
+            appendChar(tmpCharsForCodePointConversion[i]);
+        }
     }
 
     public void appendString(String string) throws IOException {

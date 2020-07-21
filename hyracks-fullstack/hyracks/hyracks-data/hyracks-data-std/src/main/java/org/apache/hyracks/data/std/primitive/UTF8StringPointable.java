@@ -114,6 +114,14 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return UTF8StringUtil.charSize(bytes, start + offset);
     }
 
+    public int codePointAt(int offset) {
+        return UTF8StringUtil.codePointAt(bytes, start + offset);
+    }
+
+    public int codePointSize(int offset) {
+        return UTF8StringUtil.codePointSize(bytes, start + offset);
+    }
+
     /**
      * Gets the length of the string in characters.
      * The first time call will need to go through the entire string, the following call will just return the pre-caculated result
@@ -337,43 +345,45 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     }
 
     /**
+     * Return the substring. Note that the offset and length are in the unit of code point.
      * @return {@code true} if substring was successfully written into given {@code out}, or
-     *         {@code false} if substring could not be obtained ({@code charOffset} or {@code charLength}
+     *         {@code false} if substring could not be obtained ({@code codePointOffset} or {@code codePointLength}
      *         are less than 0 or starting position is greater than the input length)
      */
-    public boolean substr(int charOffset, int charLength, UTF8StringBuilder builder, GrowableArray out)
+    public boolean substr(int codePointOffset, int codePointLength, UTF8StringBuilder builder, GrowableArray out)
             throws IOException {
-        return substr(this, charOffset, charLength, builder, out);
+        return substr(this, codePointOffset, codePointLength, builder, out);
     }
 
     /**
+     * Return the substring. Note that the offset and length are in the unit of code point.
      * @return {@code true} if substring was successfully written into given {@code out}, or
-     *         {@code false} if substring could not be obtained ({@code charOffset} or {@code charLength}
+     *         {@code false} if substring could not be obtained ({@code codePointOffset} or {@code codePointLength}
      *         are less than 0 or starting position is greater than the input length)
      */
-    public static boolean substr(UTF8StringPointable src, int charOffset, int charLength, UTF8StringBuilder builder,
-            GrowableArray out) throws IOException {
-        if (charOffset < 0 || charLength < 0) {
+    public static boolean substr(UTF8StringPointable src, int codePointOffset, int codePointLength,
+            UTF8StringBuilder builder, GrowableArray out) throws IOException {
+        if (codePointOffset < 0 || codePointLength < 0) {
             return false;
         }
 
         int utfLen = src.getUTF8Length();
-        int chIdx = 0;
+        int codePointIdx = 0;
         int byteIdx = 0;
-        while (byteIdx < utfLen && chIdx < charOffset) {
-            byteIdx += src.charSize(src.getMetaDataLength() + byteIdx);
-            chIdx++;
+        while (byteIdx < utfLen && codePointIdx < codePointOffset) {
+            byteIdx += src.codePointSize(src.getMetaDataLength() + byteIdx);
+            codePointIdx++;
         }
         if (byteIdx >= utfLen) {
             return false;
         }
 
-        builder.reset(out, Math.min(utfLen - byteIdx, (int) (charLength * 1.0 * byteIdx / chIdx)));
-        chIdx = 0;
-        while (byteIdx < utfLen && chIdx < charLength) {
-            builder.appendChar(src.charAt(src.getMetaDataLength() + byteIdx));
-            chIdx++;
-            byteIdx += src.charSize(src.getMetaDataLength() + byteIdx);
+        builder.reset(out, Math.min(utfLen - byteIdx, (int) (codePointLength * 1.0 * byteIdx / codePointIdx)));
+        codePointIdx = 0;
+        while (byteIdx < utfLen && codePointIdx < codePointLength) {
+            builder.appendCodePoint(src.codePointAt(src.getMetaDataLength() + byteIdx));
+            codePointIdx++;
+            byteIdx += src.codePointSize(src.getMetaDataLength() + byteIdx);
         }
         builder.finish();
         return true;
