@@ -560,16 +560,13 @@ The function has an alias `substring`.
 
         trim("i like x-phone", "xphoen");
 
-
  * The expected result is:
 
         " like "
 
-
  * Example with multi-codepoint notation (trim the man and boy from the family of man, woman, girl and boy):
  
        trim("👨‍👩‍👧‍👦", "👨‍👦")
- 
  
  * The expected result is (only woman and girl are left in the family):
 
@@ -601,16 +598,13 @@ The function has an alias `substring`.
 
         ltrim("me like x-phone", "eml");
 
-
  * The expected result is:
 
         " like x-phone"
 
-
  * Example with multi-codepoint notation (trim the man and boy from the family of man, woman, girl and boy):
  
         ltrim("👨‍👩‍👧‍👦", "👨‍👦")
- 
  
  * The expected result is (only woman, girl and boy are left in the family):
 
@@ -647,13 +641,11 @@ The function has an alias `substring`.
 
  * The expected result is:
 
-        { "v1": "i like ", "v2": "i like " }
-
+        { "v1": "i like ", "v2": "i like x-" }
 
  * Example with multi-codepoint notation (trim the man and boy from the family of man, woman, girl and boy):
  
         rtrim("👨‍👩‍👧‍👦", "👨‍👦")
- 
  
  * The expected result is (only man, woman and girl are left in the family):
 
