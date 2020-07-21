@@ -22,5 +22,6 @@
    "t2": reverse(""),
    "t3": reverse("abcd"),
    "t4": string_to_codepoint(reverse("a\u00D7\u2103\u00F7\u2109b")),
-   "t5": ( from ["ab", "abc", "abcd"] t select value reverse(t) order by t )
- }
+   "t5": ( from ["ab", "abc", "abcd"] t select value reverse(t) order by t ),
+   "t6": reverse("🇨🇳")
+ };
