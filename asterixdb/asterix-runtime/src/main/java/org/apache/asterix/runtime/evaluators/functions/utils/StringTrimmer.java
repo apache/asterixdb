@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils;
 import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -34,6 +35,7 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 /**
  * A wrapper for string trim methods.
@@ -71,7 +73,7 @@ public class StringTrimmer {
         this.resultBuilder = resultBuilder;
         this.resultArray = resultArray;
         if (pattern != null) {
-            codePointSet = pattern.codePoints().boxed().collect(Collectors.toSet());
+            codePointSet = UTF8StringUtil.getCodePointSetFromString(pattern);
         }
     }
 
@@ -85,7 +87,7 @@ public class StringTrimmer {
         final boolean newPattern = codePointSet == null || lastPatternPtr.compareTo(patternPtr) != 0;
         if (newPattern) {
             StringEvaluatorUtils.copyResetUTF8Pointable(patternPtr, lastPatternStorage, lastPatternPtr);
-            codePointSet = patternPtr.toString().codePoints().boxed().collect(Collectors.toSet());
+            codePointSet = UTF8StringUtil.getCodePointSetFromString(patternPtr.toString());
         }
     }
 
@@ -107,4 +109,5 @@ public class StringTrimmer {
         UTF8StringPointable.trim(srcPtr, resultBuilder, resultArray, left, right, codePointSet);
         resultStrPtr.set(resultArray.getByteArray(), 0, resultArray.getLength());
     }
+
 }

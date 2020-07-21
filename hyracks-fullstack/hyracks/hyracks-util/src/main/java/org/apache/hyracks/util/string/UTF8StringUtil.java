@@ -25,7 +25,10 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UTFDataFormatException;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 /**
@@ -726,5 +729,9 @@ public class UTF8StringUtil {
             tempBytes = writer.tempBytes;
         }
         return tempBytes;
+    }
+
+    public static Set<Integer> getCodePointSetFromString(String str) {
+        return str.codePoints().boxed().collect(Collectors.toSet());
     }
 }

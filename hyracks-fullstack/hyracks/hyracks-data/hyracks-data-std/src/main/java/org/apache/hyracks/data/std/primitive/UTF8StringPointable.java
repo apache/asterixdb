@@ -555,10 +555,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         builder.finish();
     }
 
-    // ToDo: fix test cases
-    public void trim(UTF8StringBuilder builder, GrowableArray out, boolean left, boolean right, CharSet charSet)
+    public void trim(UTF8StringBuilder builder, GrowableArray out, boolean left, boolean right, Set<Integer> codePointSet)
             throws IOException {
-        //trim(this, builder, out, left, right, charSet);
+        trim(this, builder, out, left, right, codePointSet);
     }
 
     /**
