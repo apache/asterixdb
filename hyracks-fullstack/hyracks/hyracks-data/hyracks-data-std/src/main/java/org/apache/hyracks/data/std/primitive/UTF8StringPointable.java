@@ -20,11 +20,8 @@ package org.apache.hyracks.data.std.primitive;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
-import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
@@ -555,8 +552,8 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         builder.finish();
     }
 
-    public void trim(UTF8StringBuilder builder, GrowableArray out, boolean left, boolean right, Set<Integer> codePointSet)
-            throws IOException {
+    public void trim(UTF8StringBuilder builder, GrowableArray out, boolean left, boolean right,
+            Set<Integer> codePointSet) throws IOException {
         trim(this, builder, out, left, right, codePointSet);
     }
 

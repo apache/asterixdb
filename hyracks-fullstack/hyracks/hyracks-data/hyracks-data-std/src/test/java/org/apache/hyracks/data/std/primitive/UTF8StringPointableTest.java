@@ -231,7 +231,7 @@ public class UTF8StringPointableTest {
         GrowableArray storage = new GrowableArray();
         UTF8StringPointable result = new UTF8StringPointable();
         UTF8StringPointable input = generateUTF8Pointable("  this is it.i am;here.  ");
-        Set<Integer> spaceCodePointSet = new HashSet<Integer>(Arrays.asList((int)' '));
+        Set<Integer> spaceCodePointSet = new HashSet<Integer>(Arrays.asList((int) ' '));
 
         // Trims both sides.
         input.trim(builder, storage, true, true, spaceCodePointSet);

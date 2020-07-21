@@ -20,16 +20,9 @@
 package org.apache.asterix.runtime.evaluators.functions.utils;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils;
-import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
