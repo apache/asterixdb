@@ -106,7 +106,8 @@ public class UTF8StringUtil {
             if (Character.isLowSurrogate(c2)) {
                 return Character.toCodePoint(c1, c2);
             } else {
-                throw new IllegalArgumentException("decoding error: the high surrogate is not followed by a low surrogate");
+                throw new IllegalArgumentException(
+                        "decoding error: the high surrogate is not followed by a low surrogate");
             }
         }
 
