@@ -48,7 +48,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Where
   OperatorExpr [
-    FunctionCall test.spatial-intersect@2[
+    FunctionCall asterix.spatial-intersect@2[
       FieldAccessor [
         Variable [ Name=$a ]
         Field=point

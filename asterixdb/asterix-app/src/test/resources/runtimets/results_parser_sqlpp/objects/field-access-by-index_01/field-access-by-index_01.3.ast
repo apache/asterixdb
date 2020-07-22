@@ -1,7 +1,7 @@
 DataverseUse test
 Set import-private-functions=true
 Query:
-FunctionCall test.field-access-by-index@2[
+FunctionCall asterix.field-access-by-index@2[
   RecordConstructor [
     (
       LiteralExpr [STRING] [foo1]
@@ -24,7 +24,7 @@ FunctionCall test.field-access-by-index@2[
       LiteralExpr [LONG] [40]
     )
   ]
-  FunctionCall test.int32@1[
+  FunctionCall asterix.int32@1[
     LiteralExpr [STRING] [2]
   ]
 ]

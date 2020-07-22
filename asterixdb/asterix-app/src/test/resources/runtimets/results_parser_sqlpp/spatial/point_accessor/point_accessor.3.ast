@@ -4,8 +4,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [x-coordinate]
     :
-    FunctionCall test.get-x@1[
-      FunctionCall test.create-point@2[
+    FunctionCall asterix.get-x@1[
+      FunctionCall asterix.create-point@2[
         LiteralExpr [DOUBLE] [2.3]
         LiteralExpr [DOUBLE] [5.0]
       ]
@@ -14,8 +14,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [y-coordinate]
     :
-    FunctionCall test.get-y@1[
-      FunctionCall test.create-point@2[
+    FunctionCall asterix.get-y@1[
+      FunctionCall asterix.create-point@2[
         LiteralExpr [DOUBLE] [2.3]
         LiteralExpr [DOUBLE] [5.0]
       ]

@@ -11,14 +11,14 @@ FROM [  FunctionCall asterix.dataset@1[
 Where
   OperatorExpr [
     OperatorExpr [
-      FunctionCall test.similarity-jaccard@2[
-        FunctionCall test.word-tokens@1[
+      FunctionCall asterix.similarity-jaccard@2[
+        FunctionCall asterix.word-tokens@1[
           FieldAccessor [
             Variable [ Name=$m ]
             Field=message
           ]
         ]
-        FunctionCall test.word-tokens@1[
+        FunctionCall asterix.word-tokens@1[
           LiteralExpr [STRING] [love sprint at&t verizon]
         ]
       ]
@@ -32,7 +32,7 @@ Where
         Field=send-time
       ]
       <
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2012-12-20T10:10:00]
       ]
     ]

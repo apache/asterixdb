@@ -1,4 +1,4 @@
 DataverseUse test
 Query:
-FunctionCall test.tinyint@0[
+FunctionCall asterix.tinyint@0[
 ]

@@ -55,7 +55,7 @@ RecordConstructor [
       ]
       Let Variable [ Name=$sim ]
         :=
-        FunctionCall test.similarity-jaccard-check@3[
+        FunctionCall asterix.similarity-jaccard-check@3[
           FieldAccessor [
             Variable [ Name=$t1 ]
             Field=referred-topics
@@ -108,7 +108,7 @@ Where
       Field=tweetid
     ]
     >
-    FunctionCall test.int64@1[
+    FunctionCall asterix.int64@1[
       LiteralExpr [STRING] [240]
     ]
   ]

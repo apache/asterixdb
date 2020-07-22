@@ -29,10 +29,10 @@ Where
       ]
       >=
       OperatorExpr [
-        FunctionCall emergencyTest.current-datetime@0[
+        FunctionCall asterix.current-datetime@0[
         ]
         -
-        FunctionCall emergencyTest.day-time-duration@1[
+        FunctionCall asterix.day-time-duration@1[
           LiteralExpr [STRING] [PT10H]
         ]
       ]

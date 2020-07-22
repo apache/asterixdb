@@ -57,7 +57,7 @@ FROM [  (
           ]
         ]
         Satifies [
-          FunctionCall test.contains@2[
+          FunctionCall asterix.contains@2[
             Variable [ Name=$topic ]
             LiteralExpr [STRING] [verizon]
           ]

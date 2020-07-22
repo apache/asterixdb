@@ -42,8 +42,8 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$jacc ]
   :=
-  FunctionCall test.similarity-jaccard@2[
-    FunctionCall test.gram-tokens@3[
+  FunctionCall asterix.similarity-jaccard@2[
+    FunctionCall asterix.gram-tokens@3[
       FieldAccessor [
         Variable [ Name=$a ]
         Field=title
@@ -51,7 +51,7 @@ Let Variable [ Name=$jacc ]
       LiteralExpr [LONG] [3]
       LiteralExpr [FALSE]
     ]
-    FunctionCall test.gram-tokens@3[
+    FunctionCall asterix.gram-tokens@3[
       FieldAccessor [
         Variable [ Name=$b ]
         Field=title

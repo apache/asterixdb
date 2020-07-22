@@ -47,7 +47,7 @@ Where
       ]
     ]
     Satifies [
-      FunctionCall test.contains@2[
+      FunctionCall asterix.contains@2[
         Variable [ Name=$reftopic ]
         LiteralExpr [STRING] [verizon]
       ]

@@ -33,7 +33,7 @@ RecordConstructor [
       ]
       Where
         OperatorExpr [
-          FunctionCall TinySocial.spatial-distance@2[
+          FunctionCall asterix.spatial-distance@2[
             FieldAccessor [
               Variable [ Name=$t ]
               Field=sender-location

@@ -4,8 +4,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [date-string-1]
     :
-    FunctionCall test.print-date@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.print-date@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [-0123-01-30]
       ]
       LiteralExpr [STRING] [YY/M/D]
@@ -14,8 +14,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [date-string-2]
     :
-    FunctionCall test.print-date@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.print-date@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [-0123-01-30]
       ]
       LiteralExpr [STRING] [MMM DD, YYYY]
@@ -24,8 +24,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [date-string-3]
     :
-    FunctionCall test.print-date@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.print-date@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [-0123-01-30]
       ]
       LiteralExpr [STRING] [YYYY/MM/DD]
@@ -34,8 +34,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [time-string-1]
     :
-    FunctionCall test.print-time@2[
-      FunctionCall test.time@1[
+    FunctionCall asterix.print-time@2[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [08:07:29.030Z]
       ]
       LiteralExpr [STRING] [h.m.s.nn a z]
@@ -44,8 +44,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [time-string-2]
     :
-    FunctionCall test.print-time@2[
-      FunctionCall test.time@1[
+    FunctionCall asterix.print-time@2[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [08:07:29.030Z]
       ]
       LiteralExpr [STRING] [hh.mm.ss.nnn a z]
@@ -54,8 +54,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [datetime-string-1]
     :
-    FunctionCall test.print-datetime@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.print-datetime@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [0137-12-31T23:59:59.999+08:00]
       ]
       LiteralExpr [STRING] [MMM DD h:m:s.nnn a YY z]
@@ -64,8 +64,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [datetime-string-2]
     :
-    FunctionCall test.print-datetime@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.print-datetime@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [0137-12-31T23:59:59.999+08:00]
       ]
       LiteralExpr [STRING] [YYYY/MMM/DD h:m:s.nnnz a]
@@ -74,8 +74,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [datetime-string-3]
     :
-    FunctionCall test.print-datetime@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.print-datetime@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [0137-12-31T23:59:59.999+08:00]
       ]
       LiteralExpr [STRING] [YYYY-MM-DDThh:mm:ss.nnnz]
@@ -84,8 +84,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [datetime-string-4]
     :
-    FunctionCall test.print-datetime@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.print-datetime@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [1000-10-10T10:10:10.100+00:00]
       ]
       LiteralExpr [STRING] [YYYY-MM-DDThh:mm:ss.nnnz]

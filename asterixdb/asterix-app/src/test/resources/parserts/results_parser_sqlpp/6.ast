@@ -48,7 +48,7 @@ Let Variable [ Name=$similar_users ]
     ]
     Let Variable [ Name=$similarity ]
       :=
-      FunctionCall null.jaccard_similarity@2[
+      FunctionCall asterix.similarity-jaccard@2[
         FieldAccessor [
           Variable [ Name=$user ]
           Field=interests

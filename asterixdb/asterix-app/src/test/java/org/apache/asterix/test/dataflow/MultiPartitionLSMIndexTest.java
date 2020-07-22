@@ -68,6 +68,7 @@ import org.apache.hyracks.storage.am.lsm.btree.impl.IVirtualBufferCacheCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -284,7 +285,6 @@ public class MultiPartitionLSMIndexTest {
                                 }
                             }
                         }
-                        System.out.println("Proceed to flush");
                     }
                 }
             });
@@ -338,29 +338,35 @@ public class MultiPartitionLSMIndexTest {
                 }
             }
             // The memory component has been allocated. now we allow the first actor to proceed to schedule flush
-            MutableBoolean flushStarted = new MutableBoolean(false);
+            MutableBoolean flushCompleted = new MutableBoolean(false);
             primaryLsmBtrees[0].addFlushCallback(new ITestOpCallback<Semaphore>() {
                 @Override
                 public void before(Semaphore t) {
-                    synchronized (flushStarted) {
-                        flushStarted.setValue(true);
-                        flushStarted.notifyAll();
-                    }
                 }
 
                 @Override
                 public void after(Semaphore t) {
+                    synchronized (flushCompleted) {
+                        flushCompleted.setValue(true);
+                        flushCompleted.notifyAll();
+                    }
                 }
             });
             synchronized (proceedToScheduleFlush) {
                 proceedToScheduleFlush.setValue(true);
                 proceedToScheduleFlush.notifyAll();
             }
-            // Now we need to know that the flush has been scheduled
-            synchronized (flushStarted) {
-                while (!flushStarted.booleanValue()) {
-                    flushStarted.wait(100);
+            // Must wait for the flush to complete. Otherwise, the GVBC may flush partition 1
+            synchronized (flushCompleted) {
+                while (!flushCompleted.booleanValue()) {
+                    flushCompleted.wait();
                 }
+            }
+
+            IVirtualBufferCache gvbc = ncAppCtx.getVirtualBufferCache();
+            while (gvbc.getUsage() > gvbc.getPageBudget() / 2) {
+                // ensure the memory component pages of lsm tree 0 are freed
+                Thread.sleep(100);
             }
 
             // we now allow the allocation to proceed
@@ -373,6 +379,7 @@ public class MultiPartitionLSMIndexTest {
             primaryLsmBtrees[1].clearAllocateCallbacks();
             // check the Ids of the memory components of partition 1
             // This shows the bug
+            Assert.assertNotEquals(null, primaryLsmBtrees[1].getCurrentMemoryComponent().getId());
             Assert.assertEquals(primaryLsmBtrees[1].getCurrentMemoryComponent().getId(),
                     secondaryLsmBtrees[1].getCurrentMemoryComponent().getId());
         } catch (Throwable e) {

@@ -34,17 +34,17 @@ FROM [  FunctionCall asterix.dataset@1[
 Groupby
   Variable [ Name=$d ]
   :=
-  FunctionCall test.interval-bin@3[
-    FunctionCall test.get-time-from-datetime@1[
+  FunctionCall asterix.interval-bin@3[
+    FunctionCall asterix.get-time-from-datetime@1[
       FieldAccessor [
         Variable [ Name=$i ]
         Field=timestamp
       ]
     ]
-    FunctionCall test.time@1[
+    FunctionCall asterix.time@1[
       LiteralExpr [STRING] [00:00:00.000Z]
     ]
-    FunctionCall test.day-time-duration@1[
+    FunctionCall asterix.day-time-duration@1[
       LiteralExpr [STRING] [PT10M]
     ]
   ]
@@ -54,7 +54,7 @@ Groupby
   )
 
 Orderby
-  FunctionCall test.get-interval-start@1[
+  FunctionCall asterix.get-interval-start@1[
     Variable [ Name=$d ]
   ]
   ASC

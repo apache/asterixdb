@@ -32,7 +32,7 @@ Where
       Field=supvrid
     ]
     =
-    FunctionCall test.int32@1[
+    FunctionCall asterix.int32@1[
       LiteralExpr [STRING] [1]
     ]
   ]

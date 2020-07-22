@@ -6,12 +6,12 @@ FunctionCall asterix.sum@1[
     Variable [ Name=$x ]
     ]
     FROM [      OrderedListConstructor [
-        FunctionCall null.float@1[
+        FunctionCall asterix.float@1[
           LiteralExpr [STRING] [2.0]
         ]
         LiteralExpr [STRING] [hello world]
         LiteralExpr [LONG] [93847382783847382]
-        FunctionCall null.date@1[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [2013-01-01]
         ]
       ]

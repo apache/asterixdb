@@ -2,19 +2,19 @@ DataverseUse test
 Query:
 Let Variable [ Name=$line ]
   :=
-  FunctionCall test.create-line@2[
-    FunctionCall test.create-point@2[
+  FunctionCall asterix.create-line@2[
+    FunctionCall asterix.create-point@2[
       LiteralExpr [DOUBLE] [100.6]
       LiteralExpr [DOUBLE] [999.4]
     ]
-    FunctionCall test.create-point@2[
+    FunctionCall asterix.create-point@2[
       - LiteralExpr [DOUBLE] [872.0]
       - LiteralExpr [DOUBLE] [876.9]
     ]
   ]
 Let Variable [ Name=$line_list ]
   :=
-  FunctionCall test.get-points@1[
+  FunctionCall asterix.get-points@1[
     Variable [ Name=$line ]
   ]
 SELECT ELEMENT [

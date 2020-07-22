@@ -32,7 +32,7 @@ Where
       Field=supvrid
     ]
     =
-    FunctionCall test.point@1[
+    FunctionCall asterix.point@1[
       LiteralExpr [STRING] [80.10d, -10E5]
     ]
   ]

@@ -1,7 +1,7 @@
 DataverseUse TinySocial
 Query:
 SELECT ELEMENT [
-FunctionCall TinySocial.get-object-field-value@2[
+FunctionCall asterix.get-object-field-value@2[
   FieldAccessor [
     Variable [ Name=$m ]
     Field=user

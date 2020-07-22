@@ -4,7 +4,7 @@ SELECT ELEMENT [
 FunctionCall asterix.avg@1[
   (
     SELECT ELEMENT [
-    FunctionCall TinySocial.string-length@1[
+    FunctionCall asterix.string-length@1[
       FieldAccessor [
         Variable [ Name=$message ]
         Field=message

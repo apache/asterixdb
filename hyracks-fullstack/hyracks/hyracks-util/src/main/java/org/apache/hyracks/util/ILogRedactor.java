@@ -29,6 +29,14 @@ public interface ILogRedactor {
     String userData(String text);
 
     /**
+     * Redacts statement argument.
+     *
+     * @param text statement to redact.
+     * @return redacted statement.
+     */
+    String statement(String text);
+
+    /**
      * Unredacts user data found in the argument.
      *
      * @param text text that contains some redacted user data.

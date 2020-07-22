@@ -11,7 +11,7 @@ FunctionDecl revenue([]) {
       (
         LiteralExpr [STRING] [total_revenue]
         :
-        FunctionCall asterix.sum@1[
+        FunctionCall tpch.STRICT_SUM@1[
           (
             SELECT ELEMENT [
             OperatorExpr [

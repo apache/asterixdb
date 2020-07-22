@@ -1,0 +1,65 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Test common expression extraction
+ */
+
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+
+USE test;
+
+CREATE TYPE test.TestType AS
+{
+  id : INTEGER
+};
+
+CREATE DATASET t1(TestType) PRIMARY KEY id;
+
+WITH DT_PATTERN AS "YYYY-MM-DDThh:mm:ss"
+
+SELECT
+  v2.c11,
+  v1.c3,
+  SUM(v1.c4)
+FROM (
+  SELECT
+    c1,
+    c2,
+    GET_MONTH(PRINT_DATETIME(PARSE_DATETIME(c1,DT_PATTERN),DT_PATTERN)) AS c3,
+    (CASE WHEN CONTAINS(c2, "x") THEN 1 ELSE 0 END) AS c4
+  FROM test.t1
+) AS v1
+INNER JOIN (
+  SELECT
+    GET_HOUR(DURATION_FROM_INTERVAL(INTERVAL(
+      PARSE_DATETIME(PRINT_DATETIME(CURRENT_DATETIME(),DT_PATTERN),DT_PATTERN),
+      PARSE_DATETIME(MAX(PRINT_DATETIME(PARSE_DATETIME(t1.c5,DT_PATTERN),DT_PATTERN)),DT_PATTERN)
+    ))) AS c11
+  FROM test.t1
+) AS v2 ON TRUE
+WHERE
+  GET_DAY(DURATION_FROM_INTERVAL(INTERVAL(
+    PARSE_DATETIME(PRINT_DATETIME(CURRENT_DATETIME(),DT_PATTERN),DT_PATTERN),
+    PARSE_DATETIME(v1.c1,DT_PATTERN)
+  ))) <= 30
+  AND
+  (v1.c2 NOT IN ["a","b","c","d"])
+GROUP BY
+  v1.c3, v2.c11;

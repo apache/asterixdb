@@ -9,11 +9,11 @@ Let Variable [ Name=$b ]
 Let Variable [ Name=$results ]
   :=
   OrderedListConstructor [
-    FunctionCall test.edit-distance@2[
+    FunctionCall asterix.edit-distance@2[
       Variable [ Name=$a ]
       Variable [ Name=$b ]
     ]
-    FunctionCall test.edit-distance@2[
+    FunctionCall asterix.edit-distance@2[
       Variable [ Name=$b ]
       Variable [ Name=$a ]
     ]

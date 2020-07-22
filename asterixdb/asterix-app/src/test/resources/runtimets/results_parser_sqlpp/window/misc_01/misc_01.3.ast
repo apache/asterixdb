@@ -14,12 +14,12 @@ FunctionCall asterix.sql-min@1[
   (
     SELECT ELEMENT [
     FieldAccessor [
-      Variable [ Name=#2 ]
+      Variable [ Name=#4 ]
       Field=rank_result_delta
     ]
     ]
     FROM [      Variable [ Name=#1 ]
-      AS Variable [ Name=#2 ]
+      AS Variable [ Name=#4 ]
     ]
   )
 ]
@@ -28,12 +28,12 @@ FunctionCall asterix.sql-max@1[
   (
     SELECT ELEMENT [
     FieldAccessor [
-      Variable [ Name=#3 ]
+      Variable [ Name=#5 ]
       Field=rank_result_delta
     ]
     ]
     FROM [      Variable [ Name=#1 ]
-      AS Variable [ Name=#3 ]
+      AS Variable [ Name=#5 ]
     ]
   )
 ]
@@ -42,12 +42,12 @@ FunctionCall asterix.sql-min@1[
   (
     SELECT ELEMENT [
     FieldAccessor [
-      Variable [ Name=#4 ]
+      Variable [ Name=#6 ]
       Field=percent_rank_result_delta
     ]
     ]
     FROM [      Variable [ Name=#1 ]
-      AS Variable [ Name=#4 ]
+      AS Variable [ Name=#6 ]
     ]
   )
 ]
@@ -56,12 +56,12 @@ FunctionCall asterix.sql-max@1[
   (
     SELECT ELEMENT [
     FieldAccessor [
-      Variable [ Name=#5 ]
+      Variable [ Name=#7 ]
       Field=percent_rank_result_delta
     ]
     ]
     FROM [      Variable [ Name=#1 ]
-      AS Variable [ Name=#5 ]
+      AS Variable [ Name=#7 ]
     ]
   )
 ]
@@ -72,7 +72,7 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$t1 ]
 ,
-  FunctionCall test.range@2[
+  FunctionCall asterix.range@2[
     FieldAccessor [
       Variable [ Name=$t1 ]
       Field=one
@@ -81,7 +81,7 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$p ]
 ,
-  FunctionCall test.range@2[
+  FunctionCall asterix.range@2[
     FieldAccessor [
       Variable [ Name=$t1 ]
       Field=one
@@ -90,7 +90,7 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$n ]
 ,
-  FunctionCall test.range@2[
+  FunctionCall asterix.range@2[
     FieldAccessor [
       Variable [ Name=$t1 ]
       Field=one
@@ -116,8 +116,16 @@ Let Variable [ Name=$rank_result_expected ]
   ]
 Let Variable [ Name=$rank_result_actual ]
   :=
-  WINDOW test.rank@0[
+  WINDOW asterix.rank-impl@-1[
   ]
+    AS Variable [ Name=#2 ]
+    (
+      t1:=Variable [ Name=$t1 ]
+      p:=Variable [ Name=$p ]
+      n:=Variable [ Name=$n ]
+      d:=Variable [ Name=$d ]
+      rank_result_expected:=Variable [ Name=$rank_result_expected ]
+    )
   OVER (
     PARTITION BY
       FieldAccessor [
@@ -157,8 +165,19 @@ Let Variable [ Name=$percent_rank_result_expected ]
   ]
 Let Variable [ Name=$percent_rank_result_actual ]
   :=
-  WINDOW test.percent_rank@0[
+  WINDOW asterix.percent-rank-impl@-1[
   ]
+    AS Variable [ Name=#3 ]
+    (
+      t1:=Variable [ Name=$t1 ]
+      p:=Variable [ Name=$p ]
+      n:=Variable [ Name=$n ]
+      d:=Variable [ Name=$d ]
+      rank_result_expected:=Variable [ Name=$rank_result_expected ]
+      rank_result_actual:=Variable [ Name=$rank_result_actual ]
+      rank_result_delta:=Variable [ Name=$rank_result_delta ]
+      percent_rank_result_expected:=Variable [ Name=$percent_rank_result_expected ]
+    )
   OVER (
     PARTITION BY
       FieldAccessor [

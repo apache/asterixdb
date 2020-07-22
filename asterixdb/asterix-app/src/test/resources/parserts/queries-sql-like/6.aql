@@ -19,7 +19,7 @@
 from $user in dataset('Users')
 with $similar_users :=
    from $similar_user in dataset('Users')
-   with $similarity := jaccard_similarity($user.interests, $similar_user.interests)
+   with $similarity := similarity_jaccard($user.interests, $similar_user.interests)
    where $user != $similar_user
    and $similarity >= .75
    order by $similarity desc

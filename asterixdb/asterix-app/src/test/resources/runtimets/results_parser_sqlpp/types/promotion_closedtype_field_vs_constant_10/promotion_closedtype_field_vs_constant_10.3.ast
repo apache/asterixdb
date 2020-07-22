@@ -32,7 +32,7 @@ Where
       Field=worksince
     ]
     =
-    FunctionCall test.float@1[
+    FunctionCall asterix.float@1[
       LiteralExpr [STRING] [2001]
     ]
   ]

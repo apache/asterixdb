@@ -63,7 +63,7 @@ Let Variable [ Name=$idDBLP ]
   ]
 Let Variable [ Name=$unrankedTokensDBLP ]
   :=
-  FunctionCall fj-dblp-csx.counthashed-word-tokens@1[
+  FunctionCall asterix.counthashed-word-tokens@1[
     FieldAccessor [
       Variable [ Name=$paperDBLP ]
       Field=title
@@ -114,7 +114,7 @@ Let Variable [ Name=$idCSX ]
   ]
 Let Variable [ Name=$unrankedTokensCSX ]
   :=
-  FunctionCall fj-dblp-csx.counthashed-word-tokens@1[
+  FunctionCall asterix.counthashed-word-tokens@1[
     FieldAccessor [
       Variable [ Name=$paperCSX ]
       Field=title

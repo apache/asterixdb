@@ -34,7 +34,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [execution-time]
     :
-    FunctionCall twitter.current-datetime@0[
+    FunctionCall asterix.current-datetime@0[
     ]
   )
   (
@@ -60,7 +60,7 @@ FROM [  FunctionCall asterix.dataset@1[
     ]
     Let Variable [ Name=$circle ]
       :=
-      FunctionCall twitter.create-circle@2[
+      FunctionCall asterix.create-circle@2[
         FieldAccessor [
           Variable [ Name=$tweet ]
           Field=location
@@ -68,7 +68,7 @@ FROM [  FunctionCall asterix.dataset@1[
         LiteralExpr [DOUBLE] [30.0]
       ]
     Where
-      FunctionCall twitter.spatial-intersect@2[
+      FunctionCall asterix.spatial-intersect@2[
         FieldAccessor [
           Variable [ Name=$tweet ]
           Field=sender-location

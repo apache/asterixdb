@@ -77,12 +77,12 @@ FROM [  FunctionCall asterix.dataset@1[
       ]
       AS Variable [ Name=$paperLeft ]
 ,
-      FunctionCall fuzzyjoin.subset-collection@3[
+      FunctionCall asterix.subset-collection@3[
         FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [fuzzyjoin.tokensLeft]
         ]
         LiteralExpr [LONG] [0]
-        FunctionCall fuzzyjoin.prefix-len-jaccard@2[
+        FunctionCall asterix.prefix-len-jaccard@2[
           FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [fuzzyjoin.lenLeft]
           ]
@@ -96,12 +96,12 @@ FROM [  FunctionCall asterix.dataset@1[
       ]
       AS Variable [ Name=$paperRight ]
 ,
-      FunctionCall fuzzyjoin.subset-collection@3[
+      FunctionCall asterix.subset-collection@3[
         FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [fuzzyjoin.tokensRight]
         ]
         LiteralExpr [LONG] [0]
-        FunctionCall fuzzyjoin.prefix-len-jaccard@2[
+        FunctionCall asterix.prefix-len-jaccard@2[
           FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [fuzzyjoin.lenRight]
           ]
@@ -112,8 +112,8 @@ FROM [  FunctionCall asterix.dataset@1[
     ]
     Let Variable [ Name=$lenLeft ]
       :=
-      FunctionCall fuzzyjoin.len@1[
-        FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+      FunctionCall asterix.len@1[
+        FunctionCall asterix.counthashed-word-tokens@1[
           FieldAccessor [
             Variable [ Name=$paperLeft ]
             Field=title
@@ -126,7 +126,7 @@ FROM [  FunctionCall asterix.dataset@1[
         SELECT ELEMENT [
         Variable [ Name=$i ]
         ]
-        FROM [          FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+        FROM [          FunctionCall asterix.counthashed-word-tokens@1[
             FieldAccessor [
               Variable [ Name=$paperLeft ]
               Field=title
@@ -143,7 +143,7 @@ FROM [  FunctionCall asterix.dataset@1[
               ]
               AS Variable [ Name=$paper ]
 ,
-              FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+              FunctionCall asterix.counthashed-word-tokens@1[
                 FieldAccessor [
                   Variable [ Name=$paper ]
                   Field=title
@@ -181,7 +181,7 @@ FROM [  FunctionCall asterix.dataset@1[
 
           )
           AS Variable [ Name=$tokenRanked ]
- AT 
+ AT
 Variable [ Name=$i ]
         ]
         Where
@@ -197,8 +197,8 @@ Variable [ Name=$i ]
       )
     Let Variable [ Name=$lenRight ]
       :=
-      FunctionCall fuzzyjoin.len@1[
-        FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+      FunctionCall asterix.len@1[
+        FunctionCall asterix.counthashed-word-tokens@1[
           FieldAccessor [
             Variable [ Name=$paperRight ]
             Field=title
@@ -211,7 +211,7 @@ Variable [ Name=$i ]
         SELECT ELEMENT [
         Variable [ Name=$i ]
         ]
-        FROM [          FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+        FROM [          FunctionCall asterix.counthashed-word-tokens@1[
             FieldAccessor [
               Variable [ Name=$paperRight ]
               Field=title
@@ -228,7 +228,7 @@ Variable [ Name=$i ]
               ]
               AS Variable [ Name=$paper ]
 ,
-              FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+              FunctionCall asterix.counthashed-word-tokens@1[
                 FieldAccessor [
                   Variable [ Name=$paper ]
                   Field=title
@@ -266,7 +266,7 @@ Variable [ Name=$i ]
 
           )
           AS Variable [ Name=$tokenRanked ]
- AT 
+ AT
 Variable [ Name=$i ]
         ]
         Where
@@ -282,7 +282,7 @@ Variable [ Name=$i ]
       )
     Let Variable [ Name=$sim ]
       :=
-      FunctionCall fuzzyjoin.similarity-jaccard-prefix@6[
+      FunctionCall asterix.similarity-jaccard-prefix@6[
         Variable [ Name=$lenLeft ]
         Variable [ Name=$tokensLeft ]
         Variable [ Name=$lenRight ]

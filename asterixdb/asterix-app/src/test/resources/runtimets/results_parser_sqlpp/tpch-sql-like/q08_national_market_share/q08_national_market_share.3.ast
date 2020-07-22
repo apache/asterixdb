@@ -450,7 +450,7 @@ FROM [  (
     ]
     Let Variable [ Name=$o_year ]
       :=
-      FunctionCall tpch.get-year@1[
+      FunctionCall asterix.get-year@1[
         FieldAccessor [
           Variable [ Name=$slnrcop ]
           Field=o_orderdate

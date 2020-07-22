@@ -32,7 +32,7 @@ Where
       Field=age
     ]
     =
-    FunctionCall test.float@1[
+    FunctionCall asterix.float@1[
       LiteralExpr [STRING] [1]
     ]
   ]

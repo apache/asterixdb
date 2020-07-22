@@ -4,12 +4,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [start1]
     :
-    FunctionCall test.get-interval-start@1[
-      FunctionCall test.interval@2[
-        FunctionCall test.date@1[
+    FunctionCall asterix.get-interval-start@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [2010-10-30]
         ]
-        FunctionCall test.date@1[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [2013-04-01]
         ]
       ]
@@ -18,12 +18,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [end1]
     :
-    FunctionCall test.get-interval-end@1[
-      FunctionCall test.interval@2[
-        FunctionCall test.date@1[
+    FunctionCall asterix.get-interval-end@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [2010-10-30]
         ]
-        FunctionCall test.date@1[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [2013-04-01]
         ]
       ]
@@ -32,12 +32,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [start2]
     :
-    FunctionCall test.get-interval-start@1[
-      FunctionCall test.interval@2[
-        FunctionCall test.time@1[
+    FunctionCall asterix.get-interval-start@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.time@1[
           LiteralExpr [STRING] [08:09:10.234Z]
         ]
-        FunctionCall test.time@1[
+        FunctionCall asterix.time@1[
           LiteralExpr [STRING] [203040567+0800]
         ]
       ]
@@ -46,12 +46,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [end2]
     :
-    FunctionCall test.get-interval-end@1[
-      FunctionCall test.interval@2[
-        FunctionCall test.time@1[
+    FunctionCall asterix.get-interval-end@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.time@1[
           LiteralExpr [STRING] [08:09:10.234Z]
         ]
-        FunctionCall test.time@1[
+        FunctionCall asterix.time@1[
           LiteralExpr [STRING] [203040567+0800]
         ]
       ]
@@ -60,16 +60,16 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [start3]
     :
-    FunctionCall test.get-interval-start@1[
-      FunctionCall test.interval@2[
-        FunctionCall test.datetime@1[
+    FunctionCall asterix.get-interval-start@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [2009-09-01T00:00:00.000+08:00]
         ]
-        FunctionCall test.datetime-from-date-time@2[
-          FunctionCall test.date@1[
+        FunctionCall asterix.datetime-from-date-time@2[
+          FunctionCall asterix.date@1[
             LiteralExpr [STRING] [2013-04-04]
           ]
-          FunctionCall test.time@1[
+          FunctionCall asterix.time@1[
             LiteralExpr [STRING] [00:00:00.000+08:00]
           ]
         ]
@@ -79,16 +79,16 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [end3]
     :
-    FunctionCall test.get-interval-end@1[
-      FunctionCall test.interval@2[
-        FunctionCall test.datetime@1[
+    FunctionCall asterix.get-interval-end@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [2009-09-01T00:00:00.000+08:00]
         ]
-        FunctionCall test.datetime-from-date-time@2[
-          FunctionCall test.date@1[
+        FunctionCall asterix.datetime-from-date-time@2[
+          FunctionCall asterix.date@1[
             LiteralExpr [STRING] [2013-04-04]
           ]
-          FunctionCall test.time@1[
+          FunctionCall asterix.time@1[
             LiteralExpr [STRING] [00:00:00.000+08:00]
           ]
         ]

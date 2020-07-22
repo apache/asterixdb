@@ -31,7 +31,7 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$t ]
 ,
-  FunctionCall twitter.word-tokens@1[
+  FunctionCall asterix.word-tokens@1[
     FieldAccessor [
       Variable [ Name=$t ]
       Field=text

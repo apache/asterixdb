@@ -20,7 +20,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$eda ]
   :=
-  FunctionCall test.edit-distance-check@3[
+  FunctionCall asterix.edit-distance-check@3[
     FieldAccessor [
       Variable [ Name=$o ]
       Field=authors
@@ -30,7 +30,7 @@ Let Variable [ Name=$eda ]
   ]
 Let Variable [ Name=$edb ]
   :=
-  FunctionCall test.edit-distance-check@3[
+  FunctionCall asterix.edit-distance-check@3[
     FieldAccessor [
       Variable [ Name=$o ]
       Field=authors

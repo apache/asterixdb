@@ -16,7 +16,7 @@ Where
         Field=user-since
       ]
       >=
-      FunctionCall TinySocial.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2010-07-22T00:00:00]
       ]
     ]
@@ -27,7 +27,7 @@ Where
         Field=user-since
       ]
       <=
-      FunctionCall TinySocial.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2012-07-29T23:59:59]
       ]
     ]

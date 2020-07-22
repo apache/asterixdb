@@ -30,6 +30,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.utils.RegExpMatcher;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -65,10 +66,13 @@ public class StringRegExpSplitDescriptor extends AbstractScalarFunctionDynamicDe
                     private final AbstractCollectionType collectionType =
                             new AOrderedListType(BuiltinType.ASTRING, BuiltinType.ASTRING.getTypeName());
 
+                    private final RegExpMatcher matcher = new RegExpMatcher();
+
                     @Override
                     protected void process(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr,
                             IPointable result) throws HyracksDataException {
-                        String[] splits = srcPtr.toString().split(patternPtr.toString());
+                        matcher.build(srcPtr, patternPtr);
+                        String[] splits = matcher.split();
 
                         // Result is a list of type strings
                         listBuilder.reset(collectionType);

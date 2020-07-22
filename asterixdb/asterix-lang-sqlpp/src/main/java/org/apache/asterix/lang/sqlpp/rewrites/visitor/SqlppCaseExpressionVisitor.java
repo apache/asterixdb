@@ -31,28 +31,23 @@ import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.literal.TrueLiteral;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
-import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
-import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 
-public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpressionVisitor {
-
-    @Override
-    public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
-        //TODO(buyingyi): rewrite SQL temporal functions
-        callExpr.setFunctionSignature(FunctionMapUtil.normalizeBuiltinFunctionSignature(callExpr.getFunctionSignature(),
-                true, callExpr.getSourceLocation()));
-        return super.visit(callExpr, arg);
-    }
-
-    @Override
-    public Expression visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
-        winExpr.setFunctionSignature(FunctionMapUtil.normalizeBuiltinFunctionSignature(winExpr.getFunctionSignature(),
-                true, winExpr.getSourceLocation()));
-        return super.visit(winExpr, arg);
-    }
+/**
+ * CASE expression rewritings:
+ * <ul>
+ * <li>
+ * Normalize WHEN expressions so that it can have correct NULL/MISSING semantics as well
+ * as type promotion semantics.
+ * </li>
+ * <li>
+ * If the CASE expression does not contain a subquery then rewrite it to a switch-case function call.
+ * </li>
+ * </ul>
+ */
+public final class SqlppCaseExpressionVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     @Override
     public Expression visit(CaseExpression caseExpr, ILangExpression arg) throws CompilationException {
@@ -84,10 +79,9 @@ public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpre
     // Normalizes WHEN expressions so that it can have correct NULL/MISSING semantics as well
     // as type promotion semantics.
     private CaseExpression normalizeCaseExpr(CaseExpression caseExpr) throws CompilationException {
-        LiteralExpr trueLiteral = new LiteralExpr(TrueLiteral.INSTANCE);
-        trueLiteral.setSourceLocation(caseExpr.getSourceLocation());
         Expression conditionExpr = caseExpr.getConditionExpr();
-        if (trueLiteral.equals(conditionExpr)) {
+        if (conditionExpr.getKind() == Expression.Kind.LITERAL_EXPRESSION
+                && ((LiteralExpr) conditionExpr).getValue().equals(TrueLiteral.INSTANCE)) {
             return caseExpr;
         }
         List<Expression> normalizedWhenExprs = new ArrayList<>();
@@ -99,10 +93,11 @@ public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpre
             operatorExpr.setSourceLocation(expr.getSourceLocation());
             normalizedWhenExprs.add(operatorExpr);
         }
+        LiteralExpr trueLiteral = new LiteralExpr(TrueLiteral.INSTANCE);
+        trueLiteral.setSourceLocation(caseExpr.getSourceLocation());
         CaseExpression newCaseExpr =
                 new CaseExpression(trueLiteral, normalizedWhenExprs, caseExpr.getThenExprs(), caseExpr.getElseExpr());
         newCaseExpr.setSourceLocation(caseExpr.getSourceLocation());
         return newCaseExpr;
     }
-
 }

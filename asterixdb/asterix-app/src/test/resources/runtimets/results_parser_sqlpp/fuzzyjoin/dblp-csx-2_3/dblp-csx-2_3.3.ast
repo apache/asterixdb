@@ -28,13 +28,13 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$paperDBLP ]
 ,
-  FunctionCall fuzzyjoin.subset-collection@3[
+  FunctionCall asterix.subset-collection@3[
     FunctionCall asterix.dataset@1[
       LiteralExpr [STRING] [fuzzyjoin.tokensDBLP]
     ]
     LiteralExpr [LONG] [0]
-    FunctionCall fuzzyjoin.prefix-len-jaccard@2[
-      FunctionCall fuzzyjoin.len@1[
+    FunctionCall asterix.prefix-len-jaccard@2[
+      FunctionCall asterix.len@1[
         FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [fuzzyjoin.tokensDBLP]
         ]
@@ -49,13 +49,13 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$paperCSX ]
 ,
-  FunctionCall fuzzyjoin.subset-collection@3[
+  FunctionCall asterix.subset-collection@3[
     FunctionCall asterix.dataset@1[
       LiteralExpr [STRING] [fuzzyjoin.tokensCSX]
     ]
     LiteralExpr [LONG] [0]
-    FunctionCall fuzzyjoin.prefix-len-jaccard@2[
-      FunctionCall fuzzyjoin.len@1[
+    FunctionCall asterix.prefix-len-jaccard@2[
+      FunctionCall asterix.len@1[
         FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [fuzzyjoin.tokensCSX]
         ]
@@ -77,7 +77,7 @@ Let Variable [ Name=$tokensDBLP ]
     SELECT ELEMENT [
     Variable [ Name=$i ]
     ]
-    FROM [      FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+    FROM [      FunctionCall asterix.counthashed-word-tokens@1[
         FieldAccessor [
           Variable [ Name=$paperDBLP ]
           Field=title
@@ -94,7 +94,7 @@ Let Variable [ Name=$tokensDBLP ]
           ]
           AS Variable [ Name=$paper ]
 ,
-          FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+          FunctionCall asterix.counthashed-word-tokens@1[
             FieldAccessor [
               Variable [ Name=$paper ]
               Field=title
@@ -165,7 +165,7 @@ Let Variable [ Name=$tokensCSX ]
     SELECT ELEMENT [
     Variable [ Name=$i ]
     ]
-    FROM [      FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+    FROM [      FunctionCall asterix.counthashed-word-tokens@1[
         FieldAccessor [
           Variable [ Name=$paperCSX ]
           Field=title
@@ -182,7 +182,7 @@ Let Variable [ Name=$tokensCSX ]
           ]
           AS Variable [ Name=$paper ]
 ,
-          FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+          FunctionCall asterix.counthashed-word-tokens@1[
             FieldAccessor [
               Variable [ Name=$paper ]
               Field=title
@@ -243,9 +243,9 @@ Variable [ Name=$i ]
   )
 Let Variable [ Name=$sim ]
   :=
-  FunctionCall fuzzyjoin.similarity-jaccard-prefix@6[
-    FunctionCall fuzzyjoin.len@1[
-      FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+  FunctionCall asterix.similarity-jaccard-prefix@6[
+    FunctionCall asterix.len@1[
+      FunctionCall asterix.counthashed-word-tokens@1[
         FieldAccessor [
           Variable [ Name=$paperDBLP ]
           Field=title
@@ -253,8 +253,8 @@ Let Variable [ Name=$sim ]
       ]
     ]
     Variable [ Name=$tokensDBLP ]
-    FunctionCall fuzzyjoin.len@1[
-      FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+    FunctionCall asterix.len@1[
+      FunctionCall asterix.counthashed-word-tokens@1[
         FieldAccessor [
           Variable [ Name=$paperCSX ]
           Field=title

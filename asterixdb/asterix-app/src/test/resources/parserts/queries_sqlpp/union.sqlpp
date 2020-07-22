@@ -17,6 +17,17 @@
  * under the License.
  */
 
+declare function foo1() {
+  []
+};
+
+declare function foo2() {
+  []
+};
+
+declare function foo3() {
+  []
+};
 
 select element l
 from  foo1() as l

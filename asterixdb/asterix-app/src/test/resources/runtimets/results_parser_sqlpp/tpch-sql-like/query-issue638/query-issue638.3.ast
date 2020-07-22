@@ -344,7 +344,7 @@ FROM [  (
         ]
         Where
           OperatorExpr [
-            FunctionCall tpch.contains@2[
+            FunctionCall asterix.contains@2[
               FieldAccessor [
                 Variable [ Name=$p ]
                 Field=p_name
@@ -400,7 +400,7 @@ FROM [  (
       ]
     Let Variable [ Name=$o_year ]
       :=
-      FunctionCall tpch.get-year@1[
+      FunctionCall asterix.get-year@1[
         FieldAccessor [
           Variable [ Name=$o ]
           Field=o_orderdate

@@ -24,12 +24,12 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$distance ]
   :=
-  FunctionCall test.spatial-distance@2[
+  FunctionCall asterix.spatial-distance@2[
     FieldAccessor [
       Variable [ Name=$o ]
       Field=point
     ]
-    FunctionCall test.create-point@2[
+    FunctionCall asterix.create-point@2[
       LiteralExpr [DOUBLE] [0.0]
       LiteralExpr [DOUBLE] [0.0]
     ]

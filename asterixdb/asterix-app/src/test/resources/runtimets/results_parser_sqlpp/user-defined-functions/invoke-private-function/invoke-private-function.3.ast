@@ -91,35 +91,35 @@ Let Variable [ Name=$h ]
 Let Variable [ Name=$results ]
   :=
   OrderedListConstructor [
-    FunctionCall test.similarity-jaccard@2[
+    FunctionCall asterix.similarity-jaccard@2[
       Variable [ Name=$a ]
       Variable [ Name=$b ]
     ]
-    FunctionCall test.similarity-jaccard@2[
+    FunctionCall asterix.similarity-jaccard@2[
       Variable [ Name=$b ]
       Variable [ Name=$a ]
     ]
-    FunctionCall test.similarity-jaccard@2[
+    FunctionCall asterix.similarity-jaccard@2[
       Variable [ Name=$c ]
       Variable [ Name=$d ]
     ]
-    FunctionCall test.similarity-jaccard@2[
+    FunctionCall asterix.similarity-jaccard@2[
       Variable [ Name=$d ]
       Variable [ Name=$c ]
     ]
-    FunctionCall test.similarity-jaccard@2[
+    FunctionCall asterix.similarity-jaccard@2[
       Variable [ Name=$e ]
       Variable [ Name=$f ]
     ]
-    FunctionCall test.similarity-jaccard@2[
+    FunctionCall asterix.similarity-jaccard@2[
       Variable [ Name=$f ]
       Variable [ Name=$e ]
     ]
-    FunctionCall test.similarity-jaccard@2[
+    FunctionCall asterix.similarity-jaccard@2[
       Variable [ Name=$g ]
       Variable [ Name=$h ]
     ]
-    FunctionCall test.similarity-jaccard@2[
+    FunctionCall asterix.similarity-jaccard@2[
       Variable [ Name=$h ]
       Variable [ Name=$g ]
     ]

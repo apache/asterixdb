@@ -36,7 +36,7 @@ count
   Groupby
     Variable [ Name=$min ]
     :=
-    FunctionCall TinySocial.get-minute@1[
+    FunctionCall asterix.get-minute@1[
       FieldAccessor [
         FieldAccessor [
           Variable [ Name=$k ]
@@ -65,7 +65,7 @@ FROM [  FunctionCall asterix.dataset@1[
 Groupby
   Variable [ Name=$h ]
   :=
-  FunctionCall TinySocial.get-hour@1[
+  FunctionCall asterix.get-hour@1[
     FieldAccessor [
       Variable [ Name=$t ]
       Field=send-time
