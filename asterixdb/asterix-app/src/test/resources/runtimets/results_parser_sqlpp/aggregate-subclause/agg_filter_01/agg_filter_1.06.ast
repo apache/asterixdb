@@ -16,9 +16,28 @@ FieldAccessor [
   Field=tenthous
 ]
 tenthous
-WINDOW test.count@1[
-  Variable [ Name=$tenthous ]
+WINDOW asterix.sql-count@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#7 ]
+        Field=tenk
+      ]
+      Field=tenthous
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#7 ]
+    ]
+  )
 ]
+  AS Variable [ Name=#1 ]
+  (
+    tenk:=Variable [ Name=$tenk ]
+    #4:=Variable [ Name=#4 ]
+    #6:=Variable [ Name=#6 ]
+  )
 OVER (
   ORDER BY
     FieldAccessor [
@@ -28,9 +47,28 @@ OVER (
     ASC
 )
 cnt
-WINDOW test.sum@1[
-  Variable [ Name=$tenthous ]
+WINDOW asterix.sql-sum@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#8 ]
+        Field=tenk
+      ]
+      Field=tenthous
+    ]
+    ]
+    FROM [      Variable [ Name=#2 ]
+      AS Variable [ Name=#8 ]
+    ]
+  )
 ]
+  AS Variable [ Name=#2 ]
+  (
+    tenk:=Variable [ Name=$tenk ]
+    #4:=Variable [ Name=#4 ]
+    #6:=Variable [ Name=#6 ]
+  )
 OVER (
   ORDER BY
     FieldAccessor [
@@ -40,15 +78,32 @@ OVER (
     ASC
 )
 sm
-WINDOW test.count@1[
-  Variable [ Name=$tenthous ]
-]
-  FILTER (WHERE
-    OperatorExpr [
-      Variable [ Name=$twothous ]
-      =
-      LiteralExpr [LONG] [0]
+WINDOW asterix.sql-count@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#9 ]
+        Field=tenk
+      ]
+      Field=tenthous
     ]
+    ]
+    FROM [      Variable [ Name=#3 ]
+      AS Variable [ Name=#9 ]
+    ]
+    Where
+      FieldAccessor [
+        Variable [ Name=#9 ]
+        Field=#4
+      ]
+  )
+]
+  AS Variable [ Name=#3 ]
+  (
+    tenk:=Variable [ Name=$tenk ]
+    #4:=Variable [ Name=#4 ]
+    #6:=Variable [ Name=#6 ]
   )
 OVER (
   ORDER BY
@@ -59,15 +114,32 @@ OVER (
     ASC
 )
 cnt_filter
-WINDOW test.sum@1[
-  Variable [ Name=$tenthous ]
-]
-  FILTER (WHERE
-    OperatorExpr [
-      Variable [ Name=$twothous ]
-      =
-      LiteralExpr [LONG] [0]
+WINDOW asterix.sql-sum@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#10 ]
+        Field=tenk
+      ]
+      Field=tenthous
     ]
+    ]
+    FROM [      Variable [ Name=#5 ]
+      AS Variable [ Name=#10 ]
+    ]
+    Where
+      FieldAccessor [
+        Variable [ Name=#10 ]
+        Field=#6
+      ]
+  )
+]
+  AS Variable [ Name=#5 ]
+  (
+    tenk:=Variable [ Name=$tenk ]
+    #4:=Variable [ Name=#4 ]
+    #6:=Variable [ Name=#6 ]
   )
 OVER (
   ORDER BY
@@ -89,6 +161,26 @@ Where
     FieldAccessor [
       Variable [ Name=$tenk ]
       Field=thousand
+    ]
+    =
+    LiteralExpr [LONG] [0]
+  ]
+Let Variable [ Name=#4 ]
+  :=
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=twothous
+    ]
+    =
+    LiteralExpr [LONG] [0]
+  ]
+Let Variable [ Name=#6 ]
+  :=
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=twothous
     ]
     =
     LiteralExpr [LONG] [0]

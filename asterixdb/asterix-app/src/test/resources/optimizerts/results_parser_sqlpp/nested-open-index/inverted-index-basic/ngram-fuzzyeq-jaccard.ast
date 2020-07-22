@@ -28,7 +28,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Where
   OperatorExpr [
-    FunctionCall test.gram-tokens@3[
+    FunctionCall asterix.gram-tokens@3[
       FieldAccessor [
         FieldAccessor [
           Variable [ Name=$o ]
@@ -40,7 +40,7 @@ Where
       LiteralExpr [FALSE]
     ]
     ~=
-    FunctionCall test.gram-tokens@3[
+    FunctionCall asterix.gram-tokens@3[
       LiteralExpr [STRING] [Transactions for Cooperative Environments]
       LiteralExpr [LONG] [3]
       LiteralExpr [FALSE]

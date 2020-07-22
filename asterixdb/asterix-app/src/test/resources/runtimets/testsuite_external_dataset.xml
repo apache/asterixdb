@@ -232,7 +232,16 @@
     <test-case FilePath="external-dataset">
       <compilation-unit name="aws/s3/include-exclude/include-10">
         <output-dir compare="Text">aws/s3/include-exclude/include-10</output-dir>
-        <expected-error>Invalid pattern *[abc][.*</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-11">
+        <output-dir compare="Text">aws/s3/include-exclude/include-11</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/include-exclude/include-12">
+        <output-dir compare="Text">aws/s3/include-exclude/include-12</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

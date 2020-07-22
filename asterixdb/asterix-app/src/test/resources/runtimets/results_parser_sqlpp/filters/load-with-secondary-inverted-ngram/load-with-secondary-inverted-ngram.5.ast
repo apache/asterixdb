@@ -10,7 +10,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Where
   OperatorExpr [
-    FunctionCall test.contains@2[
+    FunctionCall asterix.contains@2[
       FieldAccessor [
         Variable [ Name=$m ]
         Field=message
@@ -24,7 +24,7 @@ Where
         Field=send-time
       ]
       <
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2012-12-20T10:10:00]
       ]
     ]

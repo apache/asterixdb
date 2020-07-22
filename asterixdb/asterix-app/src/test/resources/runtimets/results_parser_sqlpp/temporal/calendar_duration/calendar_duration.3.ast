@@ -5,11 +5,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cduration1]
     :
-    FunctionCall test.calendar-duration-from-datetime@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.calendar-duration-from-datetime@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [1987-11-19T23:49:23.938]
       ]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P7382DT39283M3921.329S]
       ]
     ]
@@ -19,25 +19,25 @@ RecordConstructor [
     :
     OperatorExpr [
       OperatorExpr [
-        FunctionCall test.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [1987-11-19T23:49:23.938]
         ]
         +
-        FunctionCall test.duration@1[
+        FunctionCall asterix.duration@1[
           LiteralExpr [STRING] [P7382DT39283M3921.329S]
         ]
       ]
       =
       OperatorExpr [
-        FunctionCall test.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [1987-11-19T23:49:23.938]
         ]
         +
-        FunctionCall test.calendar-duration-from-datetime@2[
-          FunctionCall test.datetime@1[
+        FunctionCall asterix.calendar-duration-from-datetime@2[
+          FunctionCall asterix.datetime@1[
             LiteralExpr [STRING] [1987-11-19T23:49:23.938]
           ]
-          FunctionCall test.duration@1[
+          FunctionCall asterix.duration@1[
             LiteralExpr [STRING] [P7382DT39283M3921.329S]
           ]
         ]
@@ -47,11 +47,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cduration2]
     :
-    FunctionCall test.calendar-duration-from-datetime@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.calendar-duration-from-datetime@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [1987-11-19T23:49:23.938]
       ]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [-PT63H398212M3219.328S]
       ]
     ]
@@ -61,25 +61,25 @@ RecordConstructor [
     :
     OperatorExpr [
       OperatorExpr [
-        FunctionCall test.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [1987-11-19T23:49:23.938]
         ]
         +
-        FunctionCall test.duration@1[
+        FunctionCall asterix.duration@1[
           LiteralExpr [STRING] [-PT63H398212M3219.328S]
         ]
       ]
       =
       OperatorExpr [
-        FunctionCall test.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [1987-11-19T23:49:23.938]
         ]
         +
-        FunctionCall test.calendar-duration-from-datetime@2[
-          FunctionCall test.datetime@1[
+        FunctionCall asterix.calendar-duration-from-datetime@2[
+          FunctionCall asterix.datetime@1[
             LiteralExpr [STRING] [1987-11-19T23:49:23.938]
           ]
-          FunctionCall test.duration@1[
+          FunctionCall asterix.duration@1[
             LiteralExpr [STRING] [-PT63H398212M3219.328S]
           ]
         ]
@@ -89,11 +89,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cduration3]
     :
-    FunctionCall test.calendar-duration-from-datetime@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.calendar-duration-from-datetime@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [1987-11-19T23:49:23.938]
       ]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P1Y90M]
       ]
     ]
@@ -103,25 +103,25 @@ RecordConstructor [
     :
     OperatorExpr [
       OperatorExpr [
-        FunctionCall test.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [1987-11-19T23:49:23.938]
         ]
         +
-        FunctionCall test.duration@1[
+        FunctionCall asterix.duration@1[
           LiteralExpr [STRING] [P1Y90M]
         ]
       ]
       =
       OperatorExpr [
-        FunctionCall test.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [1987-11-19T23:49:23.938]
         ]
         +
-        FunctionCall test.calendar-duration-from-datetime@2[
-          FunctionCall test.datetime@1[
+        FunctionCall asterix.calendar-duration-from-datetime@2[
+          FunctionCall asterix.datetime@1[
             LiteralExpr [STRING] [1987-11-19T23:49:23.938]
           ]
-          FunctionCall test.duration@1[
+          FunctionCall asterix.duration@1[
             LiteralExpr [STRING] [P1Y90M]
           ]
         ]
@@ -131,11 +131,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cduration4]
     :
-    FunctionCall test.calendar-duration-from-datetime@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.calendar-duration-from-datetime@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [1987-11-19T23:49:23.938]
       ]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [-P3Y89M4089DT47382.983S]
       ]
     ]
@@ -145,25 +145,25 @@ RecordConstructor [
     :
     OperatorExpr [
       OperatorExpr [
-        FunctionCall test.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [1987-11-19T23:49:23.938]
         ]
         +
-        FunctionCall test.duration@1[
+        FunctionCall asterix.duration@1[
           LiteralExpr [STRING] [-P3Y89M4089DT47382.983S]
         ]
       ]
       =
       OperatorExpr [
-        FunctionCall test.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [1987-11-19T23:49:23.938]
         ]
         +
-        FunctionCall test.calendar-duration-from-datetime@2[
-          FunctionCall test.datetime@1[
+        FunctionCall asterix.calendar-duration-from-datetime@2[
+          FunctionCall asterix.datetime@1[
             LiteralExpr [STRING] [1987-11-19T23:49:23.938]
           ]
-          FunctionCall test.duration@1[
+          FunctionCall asterix.duration@1[
             LiteralExpr [STRING] [-P3Y89M4089DT47382.983S]
           ]
         ]
@@ -173,11 +173,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cduration5]
     :
-    FunctionCall test.calendar-duration-from-date@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.calendar-duration-from-date@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [-1328-10-23]
       ]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P7382DT39283M3921.329S]
       ]
     ]
@@ -187,25 +187,25 @@ RecordConstructor [
     :
     OperatorExpr [
       OperatorExpr [
-        FunctionCall test.date@1[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [-1328-10-23]
         ]
         +
-        FunctionCall test.duration@1[
+        FunctionCall asterix.duration@1[
           LiteralExpr [STRING] [P7382DT39283M3921.329S]
         ]
       ]
       =
       OperatorExpr [
-        FunctionCall test.date@1[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [-1328-10-23]
         ]
         +
-        FunctionCall test.calendar-duration-from-date@2[
-          FunctionCall test.date@1[
+        FunctionCall asterix.calendar-duration-from-date@2[
+          FunctionCall asterix.date@1[
             LiteralExpr [STRING] [-1328-10-23]
           ]
-          FunctionCall test.duration@1[
+          FunctionCall asterix.duration@1[
             LiteralExpr [STRING] [P7382DT39283M3921.329S]
           ]
         ]
@@ -215,11 +215,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cduration6]
     :
-    FunctionCall test.calendar-duration-from-date@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.calendar-duration-from-date@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [-1328-10-23]
       ]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [-PT63H398212M3219.328S]
       ]
     ]
@@ -229,25 +229,25 @@ RecordConstructor [
     :
     OperatorExpr [
       OperatorExpr [
-        FunctionCall test.date@1[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [-1328-10-23]
         ]
         +
-        FunctionCall test.duration@1[
+        FunctionCall asterix.duration@1[
           LiteralExpr [STRING] [-PT63H398212M3219.328S]
         ]
       ]
       =
       OperatorExpr [
-        FunctionCall test.date@1[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [-1328-10-23]
         ]
         +
-        FunctionCall test.calendar-duration-from-date@2[
-          FunctionCall test.date@1[
+        FunctionCall asterix.calendar-duration-from-date@2[
+          FunctionCall asterix.date@1[
             LiteralExpr [STRING] [-1328-10-23]
           ]
-          FunctionCall test.duration@1[
+          FunctionCall asterix.duration@1[
             LiteralExpr [STRING] [-PT63H398212M3219.328S]
           ]
         ]
@@ -257,11 +257,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cduration7]
     :
-    FunctionCall test.calendar-duration-from-date@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.calendar-duration-from-date@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [-1328-10-23]
       ]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P1Y90M]
       ]
     ]
@@ -271,25 +271,25 @@ RecordConstructor [
     :
     OperatorExpr [
       OperatorExpr [
-        FunctionCall test.date@1[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [-1328-10-23]
         ]
         +
-        FunctionCall test.duration@1[
+        FunctionCall asterix.duration@1[
           LiteralExpr [STRING] [P1Y90M]
         ]
       ]
       =
       OperatorExpr [
-        FunctionCall test.date@1[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [-1328-10-23]
         ]
         +
-        FunctionCall test.calendar-duration-from-date@2[
-          FunctionCall test.date@1[
+        FunctionCall asterix.calendar-duration-from-date@2[
+          FunctionCall asterix.date@1[
             LiteralExpr [STRING] [-1328-10-23]
           ]
-          FunctionCall test.duration@1[
+          FunctionCall asterix.duration@1[
             LiteralExpr [STRING] [P1Y90M]
           ]
         ]
@@ -299,11 +299,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cduration8]
     :
-    FunctionCall test.calendar-duration-from-date@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.calendar-duration-from-date@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [-1328-10-23]
       ]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [-P3Y89M4089DT47382.983S]
       ]
     ]
@@ -313,25 +313,25 @@ RecordConstructor [
     :
     OperatorExpr [
       OperatorExpr [
-        FunctionCall test.date@1[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [-1328-10-23]
         ]
         +
-        FunctionCall test.duration@1[
+        FunctionCall asterix.duration@1[
           LiteralExpr [STRING] [-P3Y89M4089DT47382.983S]
         ]
       ]
       =
       OperatorExpr [
-        FunctionCall test.date@1[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [-1328-10-23]
         ]
         +
-        FunctionCall test.calendar-duration-from-date@2[
-          FunctionCall test.date@1[
+        FunctionCall asterix.calendar-duration-from-date@2[
+          FunctionCall asterix.date@1[
             LiteralExpr [STRING] [-1328-10-23]
           ]
-          FunctionCall test.duration@1[
+          FunctionCall asterix.duration@1[
             LiteralExpr [STRING] [-P3Y89M4089DT47382.983S]
           ]
         ]
@@ -341,9 +341,9 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cduration-null-1]
     :
-    FunctionCall test.calendar-duration-from-datetime@2[
+    FunctionCall asterix.calendar-duration-from-datetime@2[
       LiteralExpr [NULL]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P7382DT39283M3921.329S]
       ]
     ]
@@ -351,8 +351,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cduration-null-2]
     :
-    FunctionCall test.calendar-duration-from-datetime@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.calendar-duration-from-datetime@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [1987-11-19T23:49:23.938]
       ]
       LiteralExpr [NULL]
@@ -361,9 +361,9 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cduration-null-3]
     :
-    FunctionCall test.calendar-duration-from-date@2[
+    FunctionCall asterix.calendar-duration-from-date@2[
       LiteralExpr [NULL]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P7382DT39283M3921.329S]
       ]
     ]
@@ -371,8 +371,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cduration-null-4]
     :
-    FunctionCall test.calendar-duration-from-date@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.calendar-duration-from-date@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [-1328-10-23]
       ]
       LiteralExpr [NULL]

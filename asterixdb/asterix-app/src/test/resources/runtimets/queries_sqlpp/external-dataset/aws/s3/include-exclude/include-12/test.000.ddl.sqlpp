@@ -17,23 +17,25 @@
  * under the License.
  */
 
-DROP DATAVERSE gby IF EXISTS;
-CREATE DATAVERSE gby;
+ // This test case matches nothing for "include", but has extreme cases and complicated pattern, expected is to not fail
 
-USE gby;
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-CREATE TYPE EmployeeType AS {
-  id : string
+drop type test if exists;
+create type test as open {
 };
 
-CREATE TYPE IncentiveType AS {
-  job_category: string
-};
-
-CREATE TYPE SuperStarType AS {
-  id : string
-};
-
-CREATE DATASET Employee(EmployeeType) PRIMARY KEY id;
-CREATE DATASET Incentive(IncentiveType) PRIMARY KEY job_category;
-CREATE DATASET SuperStars(SuperStarType) PRIMARY KEY id;
+drop dataset test if exists;
+create external dataset test(test) using S3 (
+("accessKeyId"="dummyAccessKey"),
+("secretAccessKey"="dummySecretKey"),
+("region"="us-west-2"),
+("serviceEndpoint"="http://localhost:8001"),
+("container"="include-exclude"),
+("definition"="data/mixed/"),
+("format"="csv"),
+("header"=false),
+("include"="[][!][^]]]]*[![*a-zA--&&^$||0-9B$\\*&&]*&&[^a-b||0--9][[[")
+);

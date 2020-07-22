@@ -9,7 +9,7 @@ FROM [  FunctionCall asterix.dataset@1[
   AS Variable [ Name=$c ]
 ]
 Where
-  FunctionCall TinySocial.spatial-intersect@2[
+  FunctionCall asterix.spatial-intersect@2[
     FieldAccessor [
       FieldAccessor [
         Variable [ Name=$c ]
@@ -17,12 +17,12 @@ Where
       ]
       Field=sender-location
     ]
-    FunctionCall TinySocial.create-rectangle@2[
-      FunctionCall TinySocial.create-point@2[
+    FunctionCall asterix.create-rectangle@2[
+      FunctionCall asterix.create-point@2[
         LiteralExpr [DOUBLE] [0.0]
         LiteralExpr [DOUBLE] [0.0]
       ]
-      FunctionCall TinySocial.create-point@2[
+      FunctionCall asterix.create-point@2[
         LiteralExpr [DOUBLE] [50.0]
         LiteralExpr [DOUBLE] [80.0]
       ]

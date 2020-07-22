@@ -57,8 +57,8 @@ FROM [  FunctionCall asterix.dataset@1[
 Where
   OperatorExpr [
     IndexAccessor [
-      FunctionCall test.similarity-jaccard-check@3[
-        FunctionCall test.word-tokens@1[
+      FunctionCall asterix.similarity-jaccard-check@3[
+        FunctionCall asterix.word-tokens@1[
           FieldAccessor [
             FieldAccessor [
               Variable [ Name=$a ]
@@ -67,7 +67,7 @@ Where
             Field=title
           ]
         ]
-        FunctionCall test.word-tokens@1[
+        FunctionCall asterix.word-tokens@1[
           FieldAccessor [
             FieldAccessor [
               Variable [ Name=$b ]

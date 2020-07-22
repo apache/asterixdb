@@ -91,6 +91,7 @@ import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.Receptionist;
 import org.apache.asterix.util.MetadataBuiltinFunctions;
+import org.apache.asterix.utils.RedactionUtil;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -112,6 +113,7 @@ import org.apache.hyracks.http.server.HttpServerConfig;
 import org.apache.hyracks.http.server.HttpServerConfigBuilder;
 import org.apache.hyracks.http.server.WebManager;
 import org.apache.hyracks.ipc.impl.HyracksConnection;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.LoggingConfigUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -231,6 +233,7 @@ public class CCApplication extends BaseCCApplication {
     public void configureLoggingLevel(Level level) {
         super.configureLoggingLevel(level);
         LoggingConfigUtil.defaultIfMissing(GlobalConfig.ASTERIX_LOGGER_NAME, level);
+        LogRedactionUtil.setRedactor(RedactionUtil.LOG_REDACTOR);
     }
 
     protected List<AsterixExtension> getExtensions() throws Exception {

@@ -3,7 +3,7 @@ Set import-private-functions=true
 Query:
 SELECT ELEMENT [
 OrderedListConstructor [
-  FunctionCall test.similarity-jaccard-prefix@6[
+  FunctionCall asterix.similarity-jaccard-prefix@6[
     LiteralExpr [LONG] [3]
     OrderedListConstructor [
       LiteralExpr [LONG] [1]
@@ -19,7 +19,7 @@ OrderedListConstructor [
     LiteralExpr [LONG] [1]
     LiteralExpr [FLOAT] [1.0]
   ]
-  FunctionCall test.similarity-jaccard-prefix@6[
+  FunctionCall asterix.similarity-jaccard-prefix@6[
     LiteralExpr [LONG] [3]
     OrderedListConstructor [
       LiteralExpr [LONG] [1]
@@ -35,7 +35,7 @@ OrderedListConstructor [
     LiteralExpr [LONG] [1]
     LiteralExpr [FLOAT] [0.5]
   ]
-  FunctionCall test.similarity-jaccard-prefix@6[
+  FunctionCall asterix.similarity-jaccard-prefix@6[
     LiteralExpr [LONG] [3]
     OrderedListConstructor [
       LiteralExpr [LONG] [1]
@@ -51,7 +51,7 @@ OrderedListConstructor [
     LiteralExpr [LONG] [1]
     LiteralExpr [FLOAT] [0.6]
   ]
-  FunctionCall test.similarity-jaccard-prefix@6[
+  FunctionCall asterix.similarity-jaccard-prefix@6[
     LiteralExpr [LONG] [3]
     OrderedListConstructor [
       LiteralExpr [LONG] [1]
@@ -67,7 +67,7 @@ OrderedListConstructor [
     LiteralExpr [LONG] [1]
     LiteralExpr [FLOAT] [0.5]
   ]
-  FunctionCall test.similarity-jaccard-prefix@6[
+  FunctionCall asterix.similarity-jaccard-prefix@6[
     LiteralExpr [LONG] [4]
     OrderedListConstructor [
       LiteralExpr [LONG] [1]
@@ -83,7 +83,7 @@ OrderedListConstructor [
     LiteralExpr [LONG] [1]
     LiteralExpr [FLOAT] [0.5]
   ]
-  FunctionCall test.similarity-jaccard-prefix@6[
+  FunctionCall asterix.similarity-jaccard-prefix@6[
     LiteralExpr [LONG] [4]
     OrderedListConstructor [
       LiteralExpr [LONG] [1]

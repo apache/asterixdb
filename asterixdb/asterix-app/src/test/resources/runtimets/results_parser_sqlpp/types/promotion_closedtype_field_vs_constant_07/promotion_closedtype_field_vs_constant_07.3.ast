@@ -32,7 +32,7 @@ Where
       Field=worksince
     ]
     =
-    FunctionCall test.int16@1[
+    FunctionCall asterix.int16@1[
       LiteralExpr [STRING] [2001]
     ]
   ]

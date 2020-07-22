@@ -19,6 +19,7 @@
 package org.apache.asterix.utils;
 
 import static org.apache.asterix.app.translator.QueryTranslator.abort;
+import static org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 
 import java.rmi.RemoteException;
@@ -129,7 +130,9 @@ public class RebalanceUtil {
                         sourceDataset.getDatasetName(), sourceDataset.getNodeGroupName(), sourceNodes,
                         targetDataset.getNodeGroupName(), targetNcNames);
                 // Rebalances the source dataset into the target dataset.
-                rebalance(sourceDataset, targetDataset, metadataProvider, hcc, datasetRebalanceCallback);
+                if (sourceDataset.getDatasetType() != DatasetType.EXTERNAL) {
+                    rebalance(sourceDataset, targetDataset, metadataProvider, hcc, datasetRebalanceCallback);
+                }
             } else {
                 targetDataset = null;
                 // if this the last NC in the cluster, just drop the dataset
@@ -353,6 +356,9 @@ public class RebalanceUtil {
     // Drops dataset files of a given dataset.
     private static void dropDatasetFiles(Dataset dataset, MetadataProvider metadataProvider,
             IHyracksClientConnection hcc) throws Exception {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            return;
+        }
         List<JobSpecification> jobs = new ArrayList<>();
         List<Index> indexes = metadataProvider.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
         for (Index index : indexes) {

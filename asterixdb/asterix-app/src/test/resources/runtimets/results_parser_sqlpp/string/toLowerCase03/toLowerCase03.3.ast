@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall test.lowercase@1[
+FunctionCall asterix.lowercase@1[
   FieldAccessor [
     Variable [ Name=$l ]
     Field=name

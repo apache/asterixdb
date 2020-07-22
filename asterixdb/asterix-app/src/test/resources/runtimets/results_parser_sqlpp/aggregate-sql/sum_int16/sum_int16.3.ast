@@ -7,13 +7,13 @@ FunctionCall asterix.sql-sum@1[
     Variable [ Name=$x ]
     ]
     FROM [      OrderedListConstructor [
-        FunctionCall test.int16@1[
+        FunctionCall asterix.int16@1[
           LiteralExpr [STRING] [1]
         ]
-        FunctionCall test.int16@1[
+        FunctionCall asterix.int16@1[
           LiteralExpr [STRING] [2]
         ]
-        FunctionCall test.int16@1[
+        FunctionCall asterix.int16@1[
           LiteralExpr [STRING] [3]
         ]
       ]

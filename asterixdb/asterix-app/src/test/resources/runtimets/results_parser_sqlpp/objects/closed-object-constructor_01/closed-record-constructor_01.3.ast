@@ -2,7 +2,7 @@ DataverseUse test
 Set import-private-functions=true
 Query:
 SELECT ELEMENT [
-FunctionCall test.closed-object-constructor@8[
+FunctionCall asterix.closed-object-constructor@8[
   LiteralExpr [STRING] [foo1]
   LiteralExpr [LONG] [10]
   LiteralExpr [STRING] [bar1]

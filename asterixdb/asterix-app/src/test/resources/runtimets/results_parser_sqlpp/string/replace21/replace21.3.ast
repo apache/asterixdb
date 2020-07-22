@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result1]
     :
-    FunctionCall test.replace@4[
+    FunctionCall asterix.replace@4[
       LiteralExpr [STRING] [abracadabra]
       LiteralExpr [STRING] [Bra]
       LiteralExpr [STRING] [kkk]
@@ -14,7 +14,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result2]
     :
-    FunctionCall test.replace@4[
+    FunctionCall asterix.replace@4[
       LiteralExpr [STRING] [abracadabra]
       LiteralExpr [STRING] [Bra]
       LiteralExpr [STRING] [kkk]
@@ -24,7 +24,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result3]
     :
-    FunctionCall test.replace@4[
+    FunctionCall asterix.replace@4[
       LiteralExpr [STRING] [helloworld]
       LiteralExpr [STRING] [hello world]
       LiteralExpr [STRING] [kkk]

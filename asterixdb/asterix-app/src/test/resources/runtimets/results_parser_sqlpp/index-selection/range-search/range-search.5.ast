@@ -28,9 +28,9 @@ Where
       OperatorExpr [
         LiteralExpr [LONG] [100]
         +
-        FunctionCall test.to-bigint@1[
+        FunctionCall asterix.to-bigint@1[
           OperatorExpr [
-            FunctionCall test.random@0[
+            FunctionCall asterix.random@0[
             ]
             /
             LiteralExpr [LONG] [2]
@@ -48,9 +48,9 @@ Where
       OperatorExpr [
         LiteralExpr [LONG] [5]
         +
-        FunctionCall test.to-bigint@1[
+        FunctionCall asterix.to-bigint@1[
           OperatorExpr [
-            FunctionCall test.random@0[
+            FunctionCall asterix.random@0[
             ]
             /
             LiteralExpr [LONG] [2]

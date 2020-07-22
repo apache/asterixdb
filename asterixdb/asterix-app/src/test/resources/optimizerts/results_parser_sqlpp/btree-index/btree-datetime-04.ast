@@ -24,6 +24,6 @@ Where
       Field=timestamp
     ]
     >=
-    FunctionCall emergencyTest.current-datetime@0[
+    FunctionCall asterix.current-datetime@0[
     ]
   ]

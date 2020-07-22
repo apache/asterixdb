@@ -2843,7 +2843,7 @@
     <test-case FilePath="aggregate-sql-sugar">
       <compilation-unit name="array_agg_negative">
         <output-dir compare="Text">array_agg</output-dir>
-        <expected-error>ASX1079: Compilation error: array_agg is a SQL-92 aggregate function. The SQL++ core aggregate function strict_arrayagg could potentially express the intent.</expected-error>
+        <expected-error>ASX1079: Compilation error: arrayagg is a SQL-92 aggregate function. The SQL++ core aggregate function strict_arrayagg could potentially express the intent.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql-sugar">
@@ -3013,7 +3013,7 @@
     <test-case FilePath="array_fun">
       <compilation-unit name="array_slice/array_slice_exception_result">
         <output-dir compare="Text">array_slice/array_slice_exception_result</output-dir>
-        <expected-error>Compilation error</expected-error>
+        <expected-error>ASX1081: Cannot find function with name TinySocial.array_slice@0</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="array_fun">
@@ -5393,7 +5393,7 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q07_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>COUNT is a SQL-92 aggregate function. The SQL++ core aggregate function array_count could potentially express the intent.</expected-error>
+        <expected-error>count is a SQL-92 aggregate function. The SQL++ core aggregate function array_count could potentially express the intent.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
@@ -5599,16 +5599,6 @@
     <test-case FilePath="group-by">
       <compilation-unit name="gby-expr">
         <output-dir compare="Text">gby-expr</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="group-by">
-      <compilation-unit name="gby-expr-2">
-        <output-dir compare="Text">gby-expr-2</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="group-by">
-      <compilation-unit name="gby-expr-3">
-        <output-dir compare="Text">gby-expr-3</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
@@ -11702,13 +11692,13 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-5">
         <output-dir compare="Text">bad-function-ddl-5</output-dir>
-        <expected-error>function experiments.function_that_does_not_exist@0 is not defined</expected-error>
+        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist@0</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-6">
         <output-dir compare="Text">bad-function-ddl-6</output-dir>
-        <expected-error>function experiments.function_that_does_not_exist@2 is not defined</expected-error>
+        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist@2</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -11726,13 +11716,13 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-9">
         <output-dir compare="Text">bad-function-ddl-9</output-dir>
-        <expected-error>function experiments.function_that_does_not_exist@0 which is undefined</expected-error>
+        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist@0</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-10">
         <output-dir compare="Text">bad-function-ddl-10</output-dir>
-        <expected-error>function experiments.f0@2 which is undefined</expected-error>
+        <expected-error>ASX1081: Cannot find function with name experiments.f0@2</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -11802,7 +11792,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-ASTERIXDB-1652">
         <output-dir compare="Text">query-ASTERIXDB-1652-2</output-dir>
-        <expected-error>In function call "test.length(...)", the dataverse "test" cannot be found!</expected-error>
+        <expected-error>ASX1063: Cannot find dataverse with name test</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -11833,7 +11823,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
-        <expected-error>function test.printName@0 is not defined</expected-error>
+        <expected-error>ASX1081: Cannot find function with name test.printName@0</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12001,7 +11991,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="f01">
         <output-dir compare="Text">f01</output-dir>
-        <expected-error>function test.tinyint@0 is not defined</expected-error>
+        <expected-error>ASX1081: Cannot find function with name test.tinyint@0</expected-error>
       </compilation-unit>
     </test-case>
     <!-- This test case is not valid anymore since we do not required "IMPORT_PRIVATE_FUNCTIONS" flag anymore -->
@@ -14282,7 +14272,7 @@
         <expected-error>ASX0002: Type mismatch</expected-error>
         <expected-error>ASX1104: Invalid modifier FROM FIRST/LAST for function</expected-error>
         <expected-error>ASX1037: Invalid query parameter compiler.windowmemory</expected-error>
-        <expected-error>ASX1102: Expected window or aggregate function, got: unknown_func</expected-error>
+        <expected-error>ASX1102: Expected window or aggregate function, got: lowercase</expected-error>
         <expected-error>ASX1079: Compilation error: count is a SQL-92 aggregate function</expected-error>
         <expected-error>ASX1104: Invalid modifier RESPECT/IGNORE NULLS for function</expected-error>
         <expected-error>ASX1104: Invalid modifier RESPECT/IGNORE NULLS for function</expected-error>

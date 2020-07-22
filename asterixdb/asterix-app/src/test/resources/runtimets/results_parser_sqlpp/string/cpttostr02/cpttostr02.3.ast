@@ -3,7 +3,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [c1]
     :
-    FunctionCall null.codepoint-to-string@1[
+    FunctionCall asterix.codepoint-to-string@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [65]
         LiteralExpr [LONG] [66]
@@ -37,7 +37,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [c2]
     :
-    FunctionCall null.codepoint-to-string@1[
+    FunctionCall asterix.codepoint-to-string@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [97]
         LiteralExpr [LONG] [98]
@@ -71,7 +71,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [c3]
     :
-    FunctionCall null.codepoint-to-string@1[
+    FunctionCall asterix.codepoint-to-string@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [33]
         LiteralExpr [LONG] [34]

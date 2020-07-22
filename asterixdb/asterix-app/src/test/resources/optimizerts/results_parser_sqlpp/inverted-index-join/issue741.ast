@@ -50,7 +50,7 @@ RecordConstructor [
       ]
       Let Variable [ Name=$sim ]
         :=
-        FunctionCall test.similarity-jaccard-check@3[
+        FunctionCall asterix.similarity-jaccard-check@3[
           FieldAccessor [
             Variable [ Name=$t ]
             Field=referred_topics
@@ -97,7 +97,7 @@ Where
         Field=send_time
       ]
       >=
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2011-06-18T14:10:17]
       ]
     ]
@@ -108,7 +108,7 @@ Where
         Field=send_time
       ]
       <
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2011-06-18T15:10:17]
       ]
     ]

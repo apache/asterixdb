@@ -15,7 +15,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [user-lottery_numbers-len]
     :
-    FunctionCall test.len@1[
+    FunctionCall asterix.len@1[
       FieldAccessor [
         Variable [ Name=$user ]
         Field=lottery_numbers
@@ -25,7 +25,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [visitor-lottery_numbers-len]
     :
-    FunctionCall test.len@1[
+    FunctionCall asterix.len@1[
       FieldAccessor [
         Variable [ Name=$visitor ]
         Field=lottery_numbers
@@ -46,14 +46,14 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Where
   OperatorExpr [
-    FunctionCall test.len@1[
+    FunctionCall asterix.len@1[
       FieldAccessor [
         Variable [ Name=$user ]
         Field=lottery_numbers
       ]
     ]
     =
-    FunctionCall test.len@1[
+    FunctionCall asterix.len@1[
       FieldAccessor [
         Variable [ Name=$visitor ]
         Field=lottery_numbers

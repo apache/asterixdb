@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [f1]
     :
-    FunctionCall test.codepoint-to-string@1[
+    FunctionCall asterix.codepoint-to-string@1[
       OrderedListConstructor [
       ]
     ]
@@ -12,7 +12,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [f2]
     :
-    FunctionCall test.codepoint-to-string@1[
+    FunctionCall asterix.codepoint-to-string@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [97]
         LiteralExpr [LONG] [98]

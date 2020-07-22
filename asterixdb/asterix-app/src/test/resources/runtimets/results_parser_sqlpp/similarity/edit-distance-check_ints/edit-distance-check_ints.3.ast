@@ -24,22 +24,22 @@ Let Variable [ Name=$b ]
 Let Variable [ Name=$results ]
   :=
   OrderedListConstructor [
-    FunctionCall test.edit-distance-check@3[
+    FunctionCall asterix.edit-distance-check@3[
       Variable [ Name=$a ]
       Variable [ Name=$b ]
       LiteralExpr [LONG] [3]
     ]
-    FunctionCall test.edit-distance-check@3[
+    FunctionCall asterix.edit-distance-check@3[
       Variable [ Name=$b ]
       Variable [ Name=$a ]
       LiteralExpr [LONG] [3]
     ]
-    FunctionCall test.edit-distance-check@3[
+    FunctionCall asterix.edit-distance-check@3[
       Variable [ Name=$a ]
       Variable [ Name=$b ]
       LiteralExpr [LONG] [2]
     ]
-    FunctionCall test.edit-distance-check@3[
+    FunctionCall asterix.edit-distance-check@3[
       Variable [ Name=$b ]
       Variable [ Name=$a ]
       LiteralExpr [LONG] [2]

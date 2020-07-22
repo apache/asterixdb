@@ -1,8 +1,23 @@
+FunctionDecl foo1([]) {
+  OrderedListConstructor [
+  ]
+}
+
+FunctionDecl foo2([]) {
+  OrderedListConstructor [
+  ]
+}
+
+FunctionDecl foo3([]) {
+  OrderedListConstructor [
+  ]
+}
+
 Query:
 SELECT ELEMENT [
 Variable [ Name=$l ]
 ]
-FROM [  FunctionCall null.foo1@0[
+FROM [  FunctionCall Default.foo1@0[
   ]
   AS Variable [ Name=$l ]
 ]
@@ -10,7 +25,7 @@ UNION ALL
   SELECT ELEMENT [
   Variable [ Name=$l ]
   ]
-  FROM [    FunctionCall null.foo2@0[
+  FROM [    FunctionCall Default.foo2@0[
     ]
     AS Variable [ Name=$l ]
   ]
@@ -18,7 +33,7 @@ UNION ALL
   SELECT ELEMENT [
   Variable [ Name=$l ]
   ]
-  FROM [    FunctionCall null.foo3@0[
+  FROM [    FunctionCall Default.foo3@0[
     ]
     AS Variable [ Name=$l ]
   ]

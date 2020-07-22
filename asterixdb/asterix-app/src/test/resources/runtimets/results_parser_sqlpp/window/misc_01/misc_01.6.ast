@@ -6,7 +6,7 @@ FieldAccessor [
   Field=c1
 ]
 c1
-WINDOW test.array_sum@1[
+WINDOW asterix.sql-sum@1[
   (
     SELECT ELEMENT [
     FieldAccessor [
@@ -23,6 +23,9 @@ WINDOW test.array_sum@1[
   )
 ]
   AS Variable [ Name=$w ]
+  (
+    t1:=Variable [ Name=$t1 ]
+  )
 OVER (
   PARTITION BY
     OperatorExpr [

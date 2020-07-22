@@ -16,7 +16,7 @@ Let Variable [ Name=$sample ]
       (
         LiteralExpr [STRING] [t]
         :
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [2000-01-01T01:00:00]
         ]
       )
@@ -40,7 +40,7 @@ Let Variable [ Name=$sample ]
       (
         LiteralExpr [STRING] [t]
         :
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [2000-01-01T01:01:00]
         ]
       )
@@ -64,7 +64,7 @@ Let Variable [ Name=$sample ]
       (
         LiteralExpr [STRING] [t]
         :
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [2000-01-01T01:02:00]
         ]
       )
@@ -88,7 +88,7 @@ Let Variable [ Name=$sample ]
       (
         LiteralExpr [STRING] [t]
         :
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [2000-01-01T01:03:00]
         ]
       )
@@ -112,7 +112,7 @@ Let Variable [ Name=$sample ]
       (
         LiteralExpr [STRING] [t]
         :
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [2000-01-01T01:04:00]
         ]
       )
@@ -136,7 +136,7 @@ Let Variable [ Name=$sample ]
       (
         LiteralExpr [STRING] [t]
         :
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [2000-01-01T01:05:00]
         ]
       )

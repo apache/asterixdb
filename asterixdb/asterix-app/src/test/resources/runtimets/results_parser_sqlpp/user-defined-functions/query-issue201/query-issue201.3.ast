@@ -2,7 +2,7 @@ Set import-private-functions=true
 Query:
 Let Variable [ Name=$x ]
   :=
-  FunctionCall null.range@2[
+  FunctionCall asterix.range@2[
     LiteralExpr [LONG] [1]
     LiteralExpr [LONG] [100]
   ]

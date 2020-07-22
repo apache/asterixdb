@@ -4,20 +4,20 @@ RecordConstructor [
     LiteralExpr [STRING] [interval0]
     :
     OperatorExpr [
-      FunctionCall null.interval@2[
-        FunctionCall null.datetime@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
         ]
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [19991112T124935948-0700]
         ]
       ]
       >
-      FunctionCall null.interval@2[
-        FunctionCall null.datetime@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [-1983-11-19T02:43:57.938+08:00]
         ]
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [19991112T124935948-0700]
         ]
       ]
@@ -27,20 +27,20 @@ RecordConstructor [
     LiteralExpr [STRING] [interval1]
     :
     OperatorExpr [
-      FunctionCall null.interval@2[
-        FunctionCall null.datetime@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [-1983-11-19T02:43:57.938+08:00]
         ]
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [19991112T124935948-0700]
         ]
       ]
       <
-      FunctionCall null.interval@2[
-        FunctionCall null.datetime@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
         ]
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [19991112T124935948-0700]
         ]
       ]
@@ -50,20 +50,20 @@ RecordConstructor [
     LiteralExpr [STRING] [interval2]
     :
     OperatorExpr [
-      FunctionCall null.interval@2[
-        FunctionCall null.datetime@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
         ]
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [19991112T124935948-0700]
         ]
       ]
       >=
-      FunctionCall null.interval@2[
-        FunctionCall null.datetime@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [-1983-11-19T02:43:57.938+08:00]
         ]
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [19991112T124935948-0700]
         ]
       ]
@@ -73,20 +73,20 @@ RecordConstructor [
     LiteralExpr [STRING] [interval3]
     :
     OperatorExpr [
-      FunctionCall null.interval@2[
-        FunctionCall null.datetime@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [-1983-11-19T02:43:57.938+08:00]
         ]
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [19991112T124935948-0700]
         ]
       ]
       <=
-      FunctionCall null.interval@2[
-        FunctionCall null.datetime@1[
+      FunctionCall asterix.interval@2[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
         ]
-        FunctionCall null.datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [19991112T124935948-0700]
         ]
       ]

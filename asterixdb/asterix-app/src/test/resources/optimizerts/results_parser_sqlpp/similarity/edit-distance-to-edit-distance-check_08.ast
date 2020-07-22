@@ -23,7 +23,7 @@ Where
   OperatorExpr [
     LiteralExpr [LONG] [2]
     <
-    FunctionCall test.edit-distance@2[
+    FunctionCall asterix.edit-distance@2[
       FieldAccessor [
         Variable [ Name=$o ]
         Field=authors

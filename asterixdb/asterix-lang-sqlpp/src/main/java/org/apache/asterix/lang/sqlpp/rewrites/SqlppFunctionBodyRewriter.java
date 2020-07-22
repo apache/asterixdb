@@ -42,6 +42,9 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Sets up parameters.
         setup(declaredFunctions, topStatement, metadataProvider, context, externalVars);
 
+        // Resolves function calls
+        resolveFunctionCalls();
+
         // Generates column names.
         generateColumnNames();
 
@@ -64,11 +67,14 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Must run after rewriteSetOperations() and before variableCheckAndRewrite()
         rewriteGroupingSets();
 
+        // Window expression core rewrites.
+        rewriteWindowExpressions();
+
         // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
         variableCheckAndRewrite();
 
         //  Extracts SQL-92 aggregate functions from CASE/IF expressions into LET clauses
-        rewriteCaseExpressions();
+        extractAggregatesFromCaseExpressions();
 
         // Rewrites SQL-92 global aggregations.
         rewriteGroupByAggregationSugar();
@@ -78,6 +84,9 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
 
         // Rewrites like/not-like expressions.
         rewriteOperatorExpression();
+
+        // Normalizes CASE expressions and rewrites simple ones into switch-case()
+        rewriteCaseExpressions();
 
         // Rewrites several variable-arg functions into their corresponding internal list-input functions.
         rewriteListInputFunctions();

@@ -44,9 +44,9 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
  * Extracts SQL-92 aggregate functions from CASE/IF expressions into LET clauses,
  * so they can be pushed into GROUPBY subplans by the optimizer.
  */
-public final class SqlppCaseRewriteVisitor extends AbstractSqlppExpressionExtractionVisitor {
+public final class SqlppCaseAggregateExtractionVisitor extends AbstractSqlppExpressionExtractionVisitor {
 
-    public SqlppCaseRewriteVisitor(LangRewritingContext context) {
+    public SqlppCaseAggregateExtractionVisitor(LangRewritingContext context) {
         super(context);
     }
 

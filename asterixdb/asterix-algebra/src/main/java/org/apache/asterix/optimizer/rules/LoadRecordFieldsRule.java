@@ -292,7 +292,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
         VariableUtilities.getLiveVariables(assign, liveInputVars);
         usedVariables.removeAll(liveInputVars);
         if (usedVariables.isEmpty()) {
-            assign.getExpressions().get(0).setValue(fldExpr);
+            assign.getExpressions().get(0).setValue(fldExpr.cloneExpression());
             return true;
         } else {
             return false;

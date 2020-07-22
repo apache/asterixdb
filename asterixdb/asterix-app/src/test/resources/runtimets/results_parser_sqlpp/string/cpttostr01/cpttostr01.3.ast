@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall test.codepoint-to-string@1[
+FunctionCall asterix.codepoint-to-string@1[
   FieldAccessor [
     Variable [ Name=$l ]
     Field=cpt

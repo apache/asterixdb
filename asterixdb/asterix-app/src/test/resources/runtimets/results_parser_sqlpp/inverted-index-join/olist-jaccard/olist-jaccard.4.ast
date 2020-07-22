@@ -27,7 +27,7 @@ FROM [  FunctionCall asterix.dataset@1[
 Where
   OperatorExpr [
     OperatorExpr [
-      FunctionCall test.similarity-jaccard@2[
+      FunctionCall asterix.similarity-jaccard@2[
         FieldAccessor [
           Variable [ Name=$a ]
           Field=interests
@@ -54,7 +54,7 @@ Where
     ]
     and
     OperatorExpr [
-      FunctionCall test.len@1[
+      FunctionCall asterix.len@1[
         FieldAccessor [
           Variable [ Name=$a ]
           Field=interests
@@ -65,7 +65,7 @@ Where
     ]
     and
     OperatorExpr [
-      FunctionCall test.len@1[
+      FunctionCall asterix.len@1[
         FieldAccessor [
           Variable [ Name=$b ]
           Field=interests

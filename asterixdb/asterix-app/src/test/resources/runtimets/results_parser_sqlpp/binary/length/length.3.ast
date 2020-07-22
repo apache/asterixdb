@@ -4,8 +4,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result1]
     :
-    FunctionCall test.binary-length@1[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.binary-length@1[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] [00AA]
       ]
     ]
@@ -13,8 +13,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result2]
     :
-    FunctionCall test.binary-length@1[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.binary-length@1[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] []
       ]
     ]
@@ -22,7 +22,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result3]
     :
-    FunctionCall test.binary-length@1[
+    FunctionCall asterix.binary-length@1[
       LiteralExpr [NULL]
     ]
   )

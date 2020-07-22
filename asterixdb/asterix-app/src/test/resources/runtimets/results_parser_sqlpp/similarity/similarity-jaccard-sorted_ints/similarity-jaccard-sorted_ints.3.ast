@@ -42,19 +42,19 @@ Let Variable [ Name=$d ]
 Let Variable [ Name=$results ]
   :=
   OrderedListConstructor [
-    FunctionCall test.similarity-jaccard-sorted@2[
+    FunctionCall asterix.similarity-jaccard-sorted@2[
       Variable [ Name=$a ]
       Variable [ Name=$b ]
     ]
-    FunctionCall test.similarity-jaccard-sorted@2[
+    FunctionCall asterix.similarity-jaccard-sorted@2[
       Variable [ Name=$b ]
       Variable [ Name=$a ]
     ]
-    FunctionCall test.similarity-jaccard-sorted@2[
+    FunctionCall asterix.similarity-jaccard-sorted@2[
       Variable [ Name=$c ]
       Variable [ Name=$d ]
     ]
-    FunctionCall test.similarity-jaccard-sorted@2[
+    FunctionCall asterix.similarity-jaccard-sorted@2[
       Variable [ Name=$d ]
       Variable [ Name=$c ]
     ]

@@ -17,27 +17,16 @@
  * under the License.
  */
 
-
 USE gby;
 
-INSERT INTO Employee (
-   {
-    'id': '123',
-    'job_category': 'Cook',
-    'salary': 2000,
-    'department_id': 'K55'
-   }
-);
+/*
+ * Test that builtin function names are compared case-insensitive
+ * when replacing SELECT expression with GROUP BY expression
+ */
 
-INSERT INTO Incentive (
-  { 'job_category': 'Cook',
-    'bonus': 1000
-  }
-);
-
-INSERT INTO SuperStars (
-  {
-    'id': '123'
-  }
-);
+FROM Employee e
+    JOIN Incentive i ON e.job_category = i.job_category
+    JOIN SuperStars s ON e.id = s.id
+GROUP BY substr(e.department_id, 0)
+SELECT SUBSTR(e.department_id, 0) as deptId, SUM(e.salary + i.bonus) AS star_cost;
 

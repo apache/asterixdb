@@ -4,22 +4,22 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [string1]
     :
-    FunctionCall test.string@1[
+    FunctionCall asterix.string@1[
       LiteralExpr [STRING] [true]
     ]
   )
   (
     LiteralExpr [STRING] [string2]
     :
-    FunctionCall test.string@1[
+    FunctionCall asterix.string@1[
       LiteralExpr [STRING] [false"]
     ]
   )
   (
     LiteralExpr [STRING] [string3]
     :
-    FunctionCall test.string@1[
-      FunctionCall test.int8@1[
+    FunctionCall asterix.string@1[
+      FunctionCall asterix.int8@1[
         LiteralExpr [STRING] [8]
       ]
     ]
@@ -27,8 +27,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [string4]
     :
-    FunctionCall test.string@1[
-      FunctionCall test.int16@1[
+    FunctionCall asterix.string@1[
+      FunctionCall asterix.int16@1[
         LiteralExpr [STRING] [16]
       ]
     ]
@@ -36,8 +36,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [string5]
     :
-    FunctionCall test.string@1[
-      FunctionCall test.int32@1[
+    FunctionCall asterix.string@1[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [32]
       ]
     ]
@@ -45,8 +45,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [string6]
     :
-    FunctionCall test.string@1[
-      FunctionCall test.int64@1[
+    FunctionCall asterix.string@1[
+      FunctionCall asterix.int64@1[
         LiteralExpr [STRING] [64]
       ]
     ]
@@ -54,8 +54,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [string7]
     :
-    FunctionCall test.string@1[
-      FunctionCall test.float@1[
+    FunctionCall asterix.string@1[
+      FunctionCall asterix.float@1[
         LiteralExpr [STRING] [1.25]
       ]
     ]
@@ -63,8 +63,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [string8]
     :
-    FunctionCall test.string@1[
-      FunctionCall test.double@1[
+    FunctionCall asterix.string@1[
+      FunctionCall asterix.double@1[
         LiteralExpr [STRING] [2.5]
       ]
     ]

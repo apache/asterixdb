@@ -17,27 +17,5 @@
  * under the License.
  */
 
-
-USE gby;
-
-INSERT INTO Employee (
-   {
-    'id': '123',
-    'job_category': 'Cook',
-    'salary': 2000,
-    'department_id': 'K55'
-   }
-);
-
-INSERT INTO Incentive (
-  { 'job_category': 'Cook',
-    'bonus': 1000
-  }
-);
-
-INSERT INTO SuperStars (
-  {
-    'id': '123'
-  }
-);
-
+use test;
+select count(*) as `count` from test;

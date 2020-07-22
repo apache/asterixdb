@@ -9,7 +9,7 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$paper ]
 ,
-  FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+  FunctionCall asterix.counthashed-word-tokens@1[
     FieldAccessor [
       Variable [ Name=$paper ]
       Field=title

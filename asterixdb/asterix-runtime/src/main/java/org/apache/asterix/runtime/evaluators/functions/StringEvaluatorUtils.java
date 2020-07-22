@@ -60,8 +60,8 @@ public final class StringEvaluatorUtils {
         return destString;
     }
 
-    static final char[] RESERVED_REGEX_CHARS = new char[] { '\\', '(', ')', '[', ']', '{', '}', '.', '^', '$', '*', '|',
-            '+', '?', '<', '>', '-', '=', '!' };
+    public static final char[] RESERVED_REGEX_CHARS = new char[] { '\\', '(', ')', '[', ']', '{', '}', '.', '^', '$',
+            '*', '|', '+', '?', '<', '>', '-', '=', '!' };
 
     static {
         Arrays.sort(RESERVED_REGEX_CHARS);

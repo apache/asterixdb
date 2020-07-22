@@ -5,25 +5,25 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [datetime1]
     :
-    FunctionCall test.datetime-from-unix-time-in-ms@1[
+    FunctionCall asterix.datetime-from-unix-time-in-ms@1[
       LiteralExpr [LONG] [956007429]
     ]
   )
   (
     LiteralExpr [STRING] [datetime1secs]
     :
-    FunctionCall test.datetime-from-unix-time-in-secs@1[
+    FunctionCall asterix.datetime-from-unix-time-in-secs@1[
       LiteralExpr [LONG] [1356048000]
     ]
   )
   (
     LiteralExpr [STRING] [datetime2]
     :
-    FunctionCall test.datetime-from-date-time@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.datetime-from-date-time@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [1327-12-02]
       ]
-      FunctionCall test.time@1[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [15:35:49.938-0800]
       ]
     ]
@@ -32,21 +32,21 @@ RecordConstructor [
     LiteralExpr [STRING] [datetime3]
     :
     OperatorExpr [
-      FunctionCall test.datetime-from-unix-time-in-ms@1[
+      FunctionCall asterix.datetime-from-unix-time-in-ms@1[
         LiteralExpr [LONG] [956007429]
       ]
       +
       OperatorExpr [
-        FunctionCall test.datetime-from-date-time@2[
-          FunctionCall test.date@1[
+        FunctionCall asterix.datetime-from-date-time@2[
+          FunctionCall asterix.date@1[
             LiteralExpr [STRING] [1327-12-02]
           ]
-          FunctionCall test.time@1[
+          FunctionCall asterix.time@1[
             LiteralExpr [STRING] [15:35:49.938-0800]
           ]
         ]
         -
-        FunctionCall test.datetime-from-unix-time-in-ms@1[
+        FunctionCall asterix.datetime-from-unix-time-in-ms@1[
           LiteralExpr [LONG] [956007429]
         ]
       ]
@@ -56,11 +56,11 @@ RecordConstructor [
     LiteralExpr [STRING] [datetime4]
     :
     OperatorExpr [
-      FunctionCall test.datetime-from-unix-time-in-ms@1[
+      FunctionCall asterix.datetime-from-unix-time-in-ms@1[
         LiteralExpr [LONG] [956007429]
       ]
       -
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P1MT1S]
       ]
     ]
@@ -69,11 +69,11 @@ RecordConstructor [
     LiteralExpr [STRING] [datetime5]
     :
     OperatorExpr [
-      FunctionCall test.datetime-from-unix-time-in-ms@1[
+      FunctionCall asterix.datetime-from-unix-time-in-ms@1[
         LiteralExpr [LONG] [956007429]
       ]
       +
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P1MT1S]
       ]
     ]
@@ -81,8 +81,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [unixms1]
     :
-    FunctionCall test.unix-time-from-datetime-in-ms@1[
-      FunctionCall test.datetime-from-unix-time-in-ms@1[
+    FunctionCall asterix.unix-time-from-datetime-in-ms@1[
+      FunctionCall asterix.datetime-from-unix-time-in-ms@1[
         LiteralExpr [LONG] [956007429]
       ]
     ]
@@ -90,8 +90,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [unixsecs1]
     :
-    FunctionCall test.unix-time-from-datetime-in-secs@1[
-      FunctionCall test.datetime-from-unix-time-in-secs@1[
+    FunctionCall asterix.unix-time-from-datetime-in-secs@1[
+      FunctionCall asterix.datetime-from-unix-time-in-secs@1[
         LiteralExpr [LONG] [1356048000]
       ]
     ]
@@ -100,16 +100,16 @@ RecordConstructor [
     LiteralExpr [STRING] [duration1]
     :
     OperatorExpr [
-      FunctionCall test.datetime-from-date-time@2[
-        FunctionCall test.date@1[
+      FunctionCall asterix.datetime-from-date-time@2[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [1327-12-02]
         ]
-        FunctionCall test.time@1[
+        FunctionCall asterix.time@1[
           LiteralExpr [STRING] [15:35:49.938-0800]
         ]
       ]
       -
-      FunctionCall test.datetime-from-unix-time-in-ms@1[
+      FunctionCall asterix.datetime-from-unix-time-in-ms@1[
         LiteralExpr [LONG] [956007429]
       ]
     ]
@@ -118,32 +118,32 @@ RecordConstructor [
     LiteralExpr [STRING] [c1]
     :
     OperatorExpr [
-      FunctionCall test.datetime-from-unix-time-in-ms@1[
+      FunctionCall asterix.datetime-from-unix-time-in-ms@1[
         LiteralExpr [LONG] [956007429]
       ]
       =
       OperatorExpr [
         OperatorExpr [
-          FunctionCall test.datetime-from-unix-time-in-ms@1[
+          FunctionCall asterix.datetime-from-unix-time-in-ms@1[
             LiteralExpr [LONG] [956007429]
           ]
           -
           OperatorExpr [
-            FunctionCall test.datetime-from-unix-time-in-ms@1[
+            FunctionCall asterix.datetime-from-unix-time-in-ms@1[
               LiteralExpr [LONG] [956007429]
             ]
             +
             OperatorExpr [
-              FunctionCall test.datetime-from-date-time@2[
-                FunctionCall test.date@1[
+              FunctionCall asterix.datetime-from-date-time@2[
+                FunctionCall asterix.date@1[
                   LiteralExpr [STRING] [1327-12-02]
                 ]
-                FunctionCall test.time@1[
+                FunctionCall asterix.time@1[
                   LiteralExpr [STRING] [15:35:49.938-0800]
                 ]
               ]
               -
-              FunctionCall test.datetime-from-unix-time-in-ms@1[
+              FunctionCall asterix.datetime-from-unix-time-in-ms@1[
                 LiteralExpr [LONG] [956007429]
               ]
             ]
@@ -151,21 +151,21 @@ RecordConstructor [
         ]
         +
         OperatorExpr [
-          FunctionCall test.datetime-from-unix-time-in-ms@1[
+          FunctionCall asterix.datetime-from-unix-time-in-ms@1[
             LiteralExpr [LONG] [956007429]
           ]
           +
           OperatorExpr [
-            FunctionCall test.datetime-from-date-time@2[
-              FunctionCall test.date@1[
+            FunctionCall asterix.datetime-from-date-time@2[
+              FunctionCall asterix.date@1[
                 LiteralExpr [STRING] [1327-12-02]
               ]
-              FunctionCall test.time@1[
+              FunctionCall asterix.time@1[
                 LiteralExpr [STRING] [15:35:49.938-0800]
               ]
             ]
             -
-            FunctionCall test.datetime-from-unix-time-in-ms@1[
+            FunctionCall asterix.datetime-from-unix-time-in-ms@1[
               LiteralExpr [LONG] [956007429]
             ]
           ]
@@ -176,37 +176,37 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [null1]
     :
-    FunctionCall test.datetime-from-unix-time-in-ms@1[
+    FunctionCall asterix.datetime-from-unix-time-in-ms@1[
       LiteralExpr [NULL]
     ]
   )
   (
     LiteralExpr [STRING] [null1secs]
     :
-    FunctionCall test.datetime-from-unix-time-in-secs@1[
+    FunctionCall asterix.datetime-from-unix-time-in-secs@1[
       LiteralExpr [NULL]
     ]
   )
   (
     LiteralExpr [STRING] [nullunixms1]
     :
-    FunctionCall test.unix-time-from-datetime-in-ms@1[
+    FunctionCall asterix.unix-time-from-datetime-in-ms@1[
       LiteralExpr [NULL]
     ]
   )
   (
     LiteralExpr [STRING] [nullunixsecs1]
     :
-    FunctionCall test.unix-time-from-datetime-in-secs@1[
+    FunctionCall asterix.unix-time-from-datetime-in-secs@1[
       LiteralExpr [NULL]
     ]
   )
   (
     LiteralExpr [STRING] [null2]
     :
-    FunctionCall test.datetime-from-date-time@2[
+    FunctionCall asterix.datetime-from-date-time@2[
       LiteralExpr [NULL]
-      FunctionCall test.time@1[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [15:35:49.938-0800]
       ]
     ]
@@ -214,8 +214,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [null3]
     :
-    FunctionCall test.datetime-from-date-time@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.datetime-from-date-time@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [1327-12-02]
       ]
       LiteralExpr [NULL]
@@ -227,7 +227,7 @@ RecordConstructor [
     OperatorExpr [
       LiteralExpr [NULL]
       -
-      FunctionCall test.datetime-from-unix-time-in-ms@1[
+      FunctionCall asterix.datetime-from-unix-time-in-ms@1[
         LiteralExpr [LONG] [956007429]
       ]
     ]
@@ -236,11 +236,11 @@ RecordConstructor [
     LiteralExpr [STRING] [null5]
     :
     OperatorExpr [
-      FunctionCall test.datetime-from-date-time@2[
-        FunctionCall test.date@1[
+      FunctionCall asterix.datetime-from-date-time@2[
+        FunctionCall asterix.date@1[
           LiteralExpr [STRING] [1327-12-02]
         ]
-        FunctionCall test.time@1[
+        FunctionCall asterix.time@1[
           LiteralExpr [STRING] [15:35:49.938-0800]
         ]
       ]
@@ -255,16 +255,16 @@ RecordConstructor [
       LiteralExpr [NULL]
       +
       OperatorExpr [
-        FunctionCall test.datetime-from-date-time@2[
-          FunctionCall test.date@1[
+        FunctionCall asterix.datetime-from-date-time@2[
+          FunctionCall asterix.date@1[
             LiteralExpr [STRING] [1327-12-02]
           ]
-          FunctionCall test.time@1[
+          FunctionCall asterix.time@1[
             LiteralExpr [STRING] [15:35:49.938-0800]
           ]
         ]
         -
-        FunctionCall test.datetime-from-unix-time-in-ms@1[
+        FunctionCall asterix.datetime-from-unix-time-in-ms@1[
           LiteralExpr [LONG] [956007429]
         ]
       ]
@@ -274,7 +274,7 @@ RecordConstructor [
     LiteralExpr [STRING] [null7]
     :
     OperatorExpr [
-      FunctionCall test.datetime-from-unix-time-in-ms@1[
+      FunctionCall asterix.datetime-from-unix-time-in-ms@1[
         LiteralExpr [LONG] [956007429]
       ]
       +

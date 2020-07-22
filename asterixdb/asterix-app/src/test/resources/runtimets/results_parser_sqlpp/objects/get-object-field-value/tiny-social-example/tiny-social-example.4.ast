@@ -8,14 +8,14 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$r ]
 ,
-  FunctionCall TinySocial.get-object-fields@1[
+  FunctionCall asterix.get-object-fields@1[
     Variable [ Name=$r ]
   ]
   AS Variable [ Name=$f ]
 ]
 Let Variable [ Name=$result ]
   :=
-  FunctionCall TinySocial.get-object-field-value@2[
+  FunctionCall asterix.get-object-field-value@2[
     Variable [ Name=$r ]
     FieldAccessor [
       Variable [ Name=$f ]

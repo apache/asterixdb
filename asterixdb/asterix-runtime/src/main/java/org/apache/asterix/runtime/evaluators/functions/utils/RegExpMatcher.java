@@ -209,4 +209,13 @@ public class RegExpMatcher {
         matcher.appendTail(resultBuf);
         return resultBuf.toString();
     }
+
+    /**
+     * Splits the provided source string using the provided regular expression.
+     *
+     * @return the string split tokens
+     */
+    public String[] split() {
+        return pattern.split(charSeq);
+    }
 }

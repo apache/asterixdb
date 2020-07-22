@@ -3,26 +3,26 @@ SELECT ELEMENT [
 Variable [ Name=$a ]
 ]
 FROM [  OrderedListConstructor [
-    FunctionCall null.string-concat@1[
+    FunctionCall asterix.string-concat@1[
       OrderedListConstructor [
-        FunctionCall null.codepoint-to-string@1[
-          FunctionCall null.string-to-codepoint@1[
+        FunctionCall asterix.codepoint-to-string@1[
+          FunctionCall asterix.string-to-codepoint@1[
             LiteralExpr [STRING] [ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]
           ]
         ]
-        FunctionCall null.codepoint-to-string@1[
-          FunctionCall null.string-to-codepoint@1[
+        FunctionCall asterix.codepoint-to-string@1[
+          FunctionCall asterix.string-to-codepoint@1[
             LiteralExpr [STRING] [ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]
           ]
         ]
-        FunctionCall null.codepoint-to-string@1[
-          FunctionCall null.string-to-codepoint@1[
+        FunctionCall asterix.codepoint-to-string@1[
+          FunctionCall asterix.string-to-codepoint@1[
             LiteralExpr [STRING] [ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]
           ]
         ]
       ]
     ]
-    FunctionCall null.string-concat@1[
+    FunctionCall asterix.string-concat@1[
       OrderedListConstructor [
         LiteralExpr [STRING] [ ]
         LiteralExpr [STRING] [a]
@@ -42,7 +42,7 @@ FROM [  OrderedListConstructor [
         LiteralExpr [STRING] [ ]
       ]
     ]
-    FunctionCall null.string-concat@1[
+    FunctionCall asterix.string-concat@1[
       OrderedListConstructor [
         LiteralExpr [STRING] [This is a test]
         LiteralExpr [STRING] [and all tests must pass]

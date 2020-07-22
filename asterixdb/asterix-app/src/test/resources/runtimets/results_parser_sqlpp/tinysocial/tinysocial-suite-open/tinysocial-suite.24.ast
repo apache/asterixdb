@@ -64,7 +64,7 @@ Let Variable [ Name=#2 ]
   ]
 Let Variable [ Name=#3 ]
   :=
-  FunctionCall TinySocial.substring@2[
+  FunctionCall asterix.substring@2[
     FieldAccessor [
       Variable [ Name=$message ]
       Field=message
