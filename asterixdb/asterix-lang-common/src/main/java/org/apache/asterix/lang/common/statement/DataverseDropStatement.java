@@ -28,10 +28,16 @@ public class DataverseDropStatement extends AbstractStatement {
 
     private DataverseName dataverseName;
     private boolean ifExists;
+    private boolean ifEmpty;
 
     public DataverseDropStatement(DataverseName dataverseName, boolean ifExists) {
+        this(dataverseName, ifExists, false);
+    }
+
+    public DataverseDropStatement(DataverseName dataverseName, boolean ifExists, boolean ifEmpty) {
         this.dataverseName = dataverseName;
         this.ifExists = ifExists;
+        this.ifEmpty = ifEmpty;
     }
 
     @Override
@@ -45,6 +51,10 @@ public class DataverseDropStatement extends AbstractStatement {
 
     public boolean getIfExists() {
         return ifExists;
+    }
+
+    public boolean getIfEmpty() {
+        return ifEmpty;
     }
 
     @Override
