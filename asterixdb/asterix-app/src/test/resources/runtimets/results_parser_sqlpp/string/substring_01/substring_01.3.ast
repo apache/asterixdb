@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall test.substring@3[
+FunctionCall asterix.substring@3[
   Variable [ Name=$x ]
   LiteralExpr [LONG] [1]
   LiteralExpr [LONG] [3]

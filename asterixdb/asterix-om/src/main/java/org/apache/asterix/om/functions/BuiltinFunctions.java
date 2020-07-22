@@ -3094,22 +3094,21 @@ public class BuiltinFunctions {
     }
 
     public static boolean isBuiltinCompilerFunction(FunctionSignature signature, boolean includePrivateFunctions) {
-        FunctionIdentifier fi =
-                new FunctionIdentifier(FunctionConstants.ASTERIX_NS, signature.getName(), signature.getArity());
-        IFunctionInfo finfo = getAsterixFunctionInfo(fi);
-        if (builtinPublicFunctionsSet.keySet().contains(finfo)
-                || (includePrivateFunctions && builtinPrivateFunctionsSet.keySet().contains(finfo))) {
-            return true;
-        }
-        fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, signature.getName(),
-                signature.getArity());
-        finfo = getAsterixFunctionInfo(fi);
-        if (builtinPublicFunctionsSet.keySet().contains(finfo)
-                || (includePrivateFunctions && builtinPrivateFunctionsSet.keySet().contains(finfo))) {
-            return true;
-        }
+        return getBuiltinCompilerFunction(signature.getName(), signature.getArity(), includePrivateFunctions) != null;
+    }
 
-        return false;
+    public static FunctionIdentifier getBuiltinCompilerFunction(String name, int arity,
+            boolean includePrivateFunctions) {
+        FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, name, arity);
+        IFunctionInfo finfo = getAsterixFunctionInfo(fi);
+        if (builtinPublicFunctionsSet.containsKey(finfo)
+                || (includePrivateFunctions && builtinPrivateFunctionsSet.containsKey(finfo))) {
+            return fi;
+        }
+        fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, name, arity);
+        finfo = getAsterixFunctionInfo(fi);
+        return builtinPublicFunctionsSet.containsKey(finfo)
+                || (includePrivateFunctions && builtinPrivateFunctionsSet.containsKey(finfo)) ? fi : null;
     }
 
     public static boolean isBuiltinAggregateFunction(FunctionIdentifier fi) {

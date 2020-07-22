@@ -28,6 +28,11 @@ public class LogRedactionUtil {
         }
 
         @Override
+        public String statement(String text) {
+            return text;
+        }
+
+        @Override
         public String unredactUserData(String text) {
             return text;
         }
@@ -43,6 +48,10 @@ public class LogRedactionUtil {
 
     public static String userData(String text) {
         return redactor.userData(text);
+    }
+
+    public static String statement(String text) {
+        return redactor.statement(text);
     }
 
     public static String unredactUserData(String text) {

@@ -58,8 +58,8 @@ FROM [  FunctionCall asterix.dataset@1[
 Where
   OperatorExpr [
     OperatorExpr [
-      FunctionCall test.similarity-jaccard@2[
-        FunctionCall test.gram-tokens@3[
+      FunctionCall asterix.similarity-jaccard@2[
+        FunctionCall asterix.gram-tokens@3[
           FieldAccessor [
             FieldAccessor [
               Variable [ Name=$a ]
@@ -70,7 +70,7 @@ Where
           LiteralExpr [LONG] [3]
           LiteralExpr [FALSE]
         ]
-        FunctionCall test.gram-tokens@3[
+        FunctionCall asterix.gram-tokens@3[
           FieldAccessor [
             FieldAccessor [
               Variable [ Name=$b ]

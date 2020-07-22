@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [root]
     :
-    Variable [ Name=#1 ]
+    Variable [ Name=#2 ]
   )
 ]
 ]
@@ -20,12 +20,12 @@ Groupby
     Variable [ Name=$t ]
     Field=id
   ]
-  GROUP AS Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=#1 ]
   (
     t:=Variable [ Name=$t ]
   )
 
-Let Variable [ Name=#1 ]
+Let Variable [ Name=#2 ]
   :=
   FunctionCall asterix.sql-sum@1[
     (
@@ -48,12 +48,12 @@ Let Variable [ Name=#1 ]
         ]
       ]
       ]
-      FROM [        Variable [ Name=#2 ]
+      FROM [        Variable [ Name=#1 ]
         AS Variable [ Name=#3 ]
       ]
     )
   ]
 Orderby
-  Variable [ Name=#1 ]
+  Variable [ Name=#2 ]
   ASC
 

@@ -11,7 +11,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$paper_tokens ]
   :=
-  FunctionCall test.word-tokens@1[
+  FunctionCall asterix.word-tokens@1[
     FieldAccessor [
       Variable [ Name=$paper ]
       Field=title
@@ -19,12 +19,12 @@ Let Variable [ Name=$paper_tokens ]
   ]
 Let Variable [ Name=$query_tokens ]
   :=
-  FunctionCall test.word-tokens@1[
+  FunctionCall asterix.word-tokens@1[
     LiteralExpr [STRING] [Cooperative Transactions for Environments]
   ]
 Where
   OperatorExpr [
-    FunctionCall test.similarity-jaccard-sorted@2[
+    FunctionCall asterix.similarity-jaccard-sorted@2[
       Variable [ Name=$paper_tokens ]
       Variable [ Name=$query_tokens ]
     ]

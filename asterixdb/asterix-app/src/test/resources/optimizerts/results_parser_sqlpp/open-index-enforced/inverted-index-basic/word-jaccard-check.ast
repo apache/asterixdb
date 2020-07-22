@@ -20,14 +20,14 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Where
   IndexAccessor [
-    FunctionCall test.similarity-jaccard-check@3[
-      FunctionCall test.word-tokens@1[
+    FunctionCall asterix.similarity-jaccard-check@3[
+      FunctionCall asterix.word-tokens@1[
         FieldAccessor [
           Variable [ Name=$o ]
           Field=title
         ]
       ]
-      FunctionCall test.word-tokens@1[
+      FunctionCall asterix.word-tokens@1[
         LiteralExpr [STRING] [Transactions for Cooperative Environments]
       ]
       LiteralExpr [FLOAT] [0.5]

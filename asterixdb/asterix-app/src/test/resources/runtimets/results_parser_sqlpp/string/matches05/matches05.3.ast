@@ -9,7 +9,7 @@ FROM [  FunctionCall asterix.dataset@1[
   AS Variable [ Name=$l ]
 ]
 Where
-  FunctionCall test.matches@2[
+  FunctionCall asterix.matches@2[
     FieldAccessor [
       Variable [ Name=$l ]
       Field=fname

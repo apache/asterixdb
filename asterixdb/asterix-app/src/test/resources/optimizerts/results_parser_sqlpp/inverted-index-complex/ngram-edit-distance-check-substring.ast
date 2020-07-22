@@ -38,8 +38,8 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Where
   IndexAccessor [
-    FunctionCall test.edit-distance-check@3[
-      FunctionCall test.substring@3[
+    FunctionCall asterix.edit-distance-check@3[
+      FunctionCall asterix.substring@3[
         FieldAccessor [
           Variable [ Name=$paper ]
           Field=title

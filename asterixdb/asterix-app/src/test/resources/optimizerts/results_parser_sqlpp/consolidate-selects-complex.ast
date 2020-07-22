@@ -32,7 +32,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$paper_tokens ]
   :=
-  FunctionCall test.word-tokens@1[
+  FunctionCall asterix.word-tokens@1[
     FieldAccessor [
       Variable [ Name=$paper ]
       Field=title
@@ -40,26 +40,26 @@ Let Variable [ Name=$paper_tokens ]
   ]
 Let Variable [ Name=$query_tokens ]
   :=
-  FunctionCall test.word-tokens@1[
+  FunctionCall asterix.word-tokens@1[
     LiteralExpr [STRING] [Transactions for Cooperative Environments]
   ]
 Let Variable [ Name=$jacca ]
   :=
-  FunctionCall test.similarity-jaccard-check@3[
+  FunctionCall asterix.similarity-jaccard-check@3[
     Variable [ Name=$paper_tokens ]
     Variable [ Name=$query_tokens ]
     LiteralExpr [FLOAT] [0.8]
   ]
 Let Variable [ Name=$jaccb ]
   :=
-  FunctionCall test.similarity-jaccard-check@3[
+  FunctionCall asterix.similarity-jaccard-check@3[
     Variable [ Name=$paper_tokens ]
     Variable [ Name=$query_tokens ]
     LiteralExpr [FLOAT] [0.5]
   ]
 Let Variable [ Name=$jaccc ]
   :=
-  FunctionCall test.similarity-jaccard-check@3[
+  FunctionCall asterix.similarity-jaccard-check@3[
     Variable [ Name=$paper_tokens ]
     Variable [ Name=$query_tokens ]
     LiteralExpr [FLOAT] [0.3]

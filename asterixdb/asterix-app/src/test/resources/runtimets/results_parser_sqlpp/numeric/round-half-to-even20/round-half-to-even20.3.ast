@@ -4,8 +4,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [f0]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.int8@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.int8@1[
         LiteralExpr [STRING] [-0]
       ]
       LiteralExpr [LONG] [2]
@@ -14,8 +14,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [f1]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.int16@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.int16@1[
         LiteralExpr [STRING] [-0]
       ]
       LiteralExpr [LONG] [2]
@@ -24,8 +24,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [f2]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.int32@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [-0]
       ]
       LiteralExpr [LONG] [2]
@@ -34,8 +34,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [f3]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.int64@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.int64@1[
         LiteralExpr [STRING] [-0]
       ]
       LiteralExpr [LONG] [2]
@@ -44,8 +44,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [f4]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.int8@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.int8@1[
         LiteralExpr [STRING] [0]
       ]
       LiteralExpr [LONG] [2]
@@ -54,8 +54,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [f5]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.int16@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.int16@1[
         LiteralExpr [STRING] [0]
       ]
       LiteralExpr [LONG] [2]
@@ -64,8 +64,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [f6]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.int32@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [0]
       ]
       LiteralExpr [LONG] [2]
@@ -74,8 +74,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [f7]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.int64@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.int64@1[
         LiteralExpr [STRING] [0]
       ]
       LiteralExpr [LONG] [2]

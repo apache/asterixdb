@@ -4,8 +4,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [d0]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.float@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.float@1[
         LiteralExpr [STRING] [0.555]
       ]
       LiteralExpr [LONG] [2]
@@ -14,8 +14,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [d1]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.float@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.float@1[
         LiteralExpr [STRING] [0.322]
       ]
       LiteralExpr [LONG] [2]
@@ -24,8 +24,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [d2]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.float@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.float@1[
         LiteralExpr [STRING] [NaN]
       ]
       LiteralExpr [LONG] [3]
@@ -34,8 +34,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [d3]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.float@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.float@1[
         LiteralExpr [STRING] [INF]
       ]
       LiteralExpr [LONG] [4]
@@ -44,8 +44,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [d4]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.float@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.float@1[
         LiteralExpr [STRING] [-INF]
       ]
       LiteralExpr [LONG] [5]
@@ -54,8 +54,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [d5]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.float@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.float@1[
         LiteralExpr [STRING] [-0.0]
       ]
       LiteralExpr [LONG] [6]
@@ -64,8 +64,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [d6]
     :
-    FunctionCall test.round-half-to-even@2[
-      FunctionCall test.float@1[
+    FunctionCall asterix.round-half-to-even@2[
+      FunctionCall asterix.float@1[
         LiteralExpr [STRING] [0.0]
       ]
       LiteralExpr [LONG] [0]

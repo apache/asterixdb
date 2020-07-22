@@ -891,8 +891,7 @@ abstract class LangExpressionToPlanTranslator
     private AbstractFunctionCallExpression lookupUserDefinedFunction(FunctionSignature signature,
             List<Mutable<ILogicalExpression>> args, SourceLocation sourceLoc) throws CompilationException {
         try {
-            Function function =
-                    FunctionUtil.lookupUserDefinedFunctionDecl(metadataProvider.getMetadataTxnContext(), signature);
+            Function function = metadataProvider.lookupUserDefinedFunction(signature);
             if (function == null) {
                 return null;
             }

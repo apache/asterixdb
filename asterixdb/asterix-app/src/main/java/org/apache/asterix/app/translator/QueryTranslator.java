@@ -267,7 +267,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         this.sessionOutput = output;
         this.sessionConfig = output.config();
         this.compilationProvider = compilationProvider;
-        declaredFunctions = getDeclaredFunctions(statements);
+        declaredFunctions = new ArrayList<>();
         apiFramework = new APIFramework(compilationProvider);
         rewriterFactory = compilationProvider.getRewriterFactory();
         activeDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
@@ -281,16 +281,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     public SessionOutput getSessionOutput() {
         return sessionOutput;
-    }
-
-    protected List<FunctionDecl> getDeclaredFunctions(List<Statement> statements) {
-        List<FunctionDecl> functionDecls = new ArrayList<>();
-        for (Statement st : statements) {
-            if (st.getKind() == Statement.Kind.FUNCTION_DECL) {
-                functionDecls.add((FunctionDecl) st);
-            }
-        }
-        return functionDecls;
     }
 
     @Override
@@ -450,7 +440,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         outputFile = result.second;
                         break;
                     case FUNCTION_DECL:
-                        // No op
+                        handleDeclareFunctionStatement(stmt);
                         break;
                     case EXTENSION:
                         final ExtensionStatement extStmt = (ExtensionStatement) stmt;
@@ -1937,6 +1927,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         } finally {
             metadataProvider.getLocks().unlock();
         }
+    }
+
+    protected void handleDeclareFunctionStatement(Statement stmt) {
+        FunctionDecl fds = (FunctionDecl) stmt;
+        FunctionSignature signature = fds.getSignature();
+        signature.setDataverseName(getActiveDataverseName(signature.getDataverseName()));
+        declaredFunctions.add(fds);
     }
 
     protected void handleCreateFunctionStatement(MetadataProvider metadataProvider, Statement stmt,

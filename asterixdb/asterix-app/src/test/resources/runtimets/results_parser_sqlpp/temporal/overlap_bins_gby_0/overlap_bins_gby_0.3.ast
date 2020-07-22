@@ -18,7 +18,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [overlap]
     :
-    FunctionCall test.get-overlapping-interval@2[
+    FunctionCall asterix.get-overlapping-interval@2[
       FieldAccessor [
         Variable [ Name=$gen0 ]
         Field=bin
@@ -72,8 +72,8 @@ FROM [  (
       )
       AS Variable [ Name=$i ]
 ,
-      FunctionCall test.overlap-bins@3[
-        FunctionCall test.interval-start-from-time@2[
+      FunctionCall asterix.overlap-bins@3[
+        FunctionCall asterix.interval-start-from-time@2[
           FieldAccessor [
             Variable [ Name=$i ]
             Field=time
@@ -83,10 +83,10 @@ FROM [  (
             Field=duration
           ]
         ]
-        FunctionCall test.time@1[
+        FunctionCall asterix.time@1[
           LiteralExpr [STRING] [00:00:00]
         ]
-        FunctionCall test.day-time-duration@1[
+        FunctionCall asterix.day-time-duration@1[
           LiteralExpr [STRING] [PT1H30M]
         ]
       ]
@@ -103,7 +103,7 @@ FROM [  (
       )
 
     Orderby
-      FunctionCall test.get-interval-start@1[
+      FunctionCall asterix.get-interval-start@1[
         Variable [ Name=$bin ]
       ]
       ASC
@@ -119,7 +119,7 @@ FROM [  (
 ]
 Let Variable [ Name=$itv ]
   :=
-  FunctionCall test.interval-start-from-time@2[
+  FunctionCall asterix.interval-start-from-time@2[
     FieldAccessor [
       Variable [ Name=$x ]
       Field=time
@@ -130,7 +130,7 @@ Let Variable [ Name=$itv ]
     ]
   ]
 Orderby
-  FunctionCall test.get-interval-start@1[
+  FunctionCall asterix.get-interval-start@1[
     FieldAccessor [
       Variable [ Name=$gen0 ]
       Field=bin
@@ -139,7 +139,7 @@ Orderby
   ASC
   Variable [ Name=$itv ]
   ASC
-  FunctionCall test.get-overlapping-interval@2[
+  FunctionCall asterix.get-overlapping-interval@2[
     FieldAccessor [
       Variable [ Name=$gen0 ]
       Field=bin

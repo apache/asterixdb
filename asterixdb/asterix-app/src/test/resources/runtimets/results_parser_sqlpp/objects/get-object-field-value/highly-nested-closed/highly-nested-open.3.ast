@@ -10,7 +10,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$result ]
   :=
-  FunctionCall test.get-object-field-value@2[
+  FunctionCall asterix.get-object-field-value@2[
     Variable [ Name=$test ]
     LiteralExpr [STRING] [class]
   ]

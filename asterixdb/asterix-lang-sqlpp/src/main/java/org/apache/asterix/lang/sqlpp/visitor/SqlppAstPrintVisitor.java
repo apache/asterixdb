@@ -57,9 +57,7 @@ import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
-import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVisitor<Void, Integer> {
@@ -252,11 +250,6 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     @Override
     public Void visit(CallExpr callExpr, Integer step) throws CompilationException {
         FunctionSignature functionSignature = callExpr.getFunctionSignature();
-        FunctionSignature normalizedFunctionSignature = FunctionMapUtil
-                .normalizeBuiltinFunctionSignature(functionSignature, false, callExpr.getSourceLocation());
-        if (BuiltinFunctions.isBuiltinCompilerFunction(normalizedFunctionSignature, true)) {
-            functionSignature = normalizedFunctionSignature;
-        }
         //TODO(MULTI_PART_DATAVERSE_NAME):temporary workaround to preserve AST reference results
         if (FunctionUtil.isBuiltinDatasetFunction(functionSignature)) {
             String singleArg = callExpr.getExprList().stream().map(LiteralExpr.class::cast).map(LiteralExpr::getValue)

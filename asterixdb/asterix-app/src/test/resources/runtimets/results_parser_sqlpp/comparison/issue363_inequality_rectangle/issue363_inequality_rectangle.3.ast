@@ -4,11 +4,11 @@ RecordConstructor [
     LiteralExpr [STRING] [rectangle0]
     :
     OperatorExpr [
-      FunctionCall null.rectangle@1[
+      FunctionCall asterix.rectangle@1[
         LiteralExpr [STRING] [0.1234,-1.00e-10 5.5487,0.48765]
       ]
       >
-      FunctionCall null.rectangle@1[
+      FunctionCall asterix.rectangle@1[
         LiteralExpr [STRING] [0.5678,-1.00e-10 5.5487,0.48765]
       ]
     ]
@@ -17,11 +17,11 @@ RecordConstructor [
     LiteralExpr [STRING] [rectangle1]
     :
     OperatorExpr [
-      FunctionCall null.rectangle@1[
+      FunctionCall asterix.rectangle@1[
         LiteralExpr [STRING] [0.5678,-1.00e-10 5.5487,0.48765]
       ]
       <
-      FunctionCall null.rectangle@1[
+      FunctionCall asterix.rectangle@1[
         LiteralExpr [STRING] [0.1234,-1.00e-10 5.5487,0.48765]
       ]
     ]
@@ -30,11 +30,11 @@ RecordConstructor [
     LiteralExpr [STRING] [rectangle2]
     :
     OperatorExpr [
-      FunctionCall null.rectangle@1[
+      FunctionCall asterix.rectangle@1[
         LiteralExpr [STRING] [0.1234,-1.00e-10 5.5487,0.48765]
       ]
       >=
-      FunctionCall null.rectangle@1[
+      FunctionCall asterix.rectangle@1[
         LiteralExpr [STRING] [0.5678,-1.00e-10 5.5487,0.48765]
       ]
     ]
@@ -43,11 +43,11 @@ RecordConstructor [
     LiteralExpr [STRING] [rectangle3]
     :
     OperatorExpr [
-      FunctionCall null.rectangle@1[
+      FunctionCall asterix.rectangle@1[
         LiteralExpr [STRING] [0.5678,-1.00e-10 5.5487,0.48765]
       ]
       <=
-      FunctionCall null.rectangle@1[
+      FunctionCall asterix.rectangle@1[
         LiteralExpr [STRING] [0.1234,-1.00e-10 5.5487,0.48765]
       ]
     ]

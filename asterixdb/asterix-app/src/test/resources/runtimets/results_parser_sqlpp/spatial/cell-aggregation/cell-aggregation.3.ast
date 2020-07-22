@@ -25,12 +25,12 @@ Let Variable [ Name=$grid ]
     Groupby
       Variable [ Name=$c ]
       :=
-      FunctionCall test.spatial-cell@4[
+      FunctionCall asterix.spatial-cell@4[
         FieldAccessor [
           Variable [ Name=$o ]
           Field=loc
         ]
-        FunctionCall test.create-point@2[
+        FunctionCall asterix.create-point@2[
           LiteralExpr [DOUBLE] [0.0]
           LiteralExpr [DOUBLE] [0.0]
         ]

@@ -10,7 +10,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [length]
     :
-    FunctionCall test.string-length@1[
+    FunctionCall asterix.string-length@1[
       Variable [ Name=$comment ]
     ]
   )
@@ -47,7 +47,7 @@ Groupby
 Orderby
   Variable [ Name=$id ]
   ASC
-  FunctionCall test.string-length@1[
+  FunctionCall asterix.string-length@1[
     Variable [ Name=$comment ]
   ]
   ASC

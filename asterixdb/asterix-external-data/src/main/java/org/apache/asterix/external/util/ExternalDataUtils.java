@@ -23,10 +23,12 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
+import static org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils.RESERVED_REGEX_CHARS;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -523,76 +525,91 @@ public class ExternalDataUtils {
     /**
      * Converts the wildcard to proper regex
      *
-     * @param wildcard wildcard pattern to convert
+     * @param pattern wildcard pattern to convert
      *
      * @return regex expression
      */
-    public static String wildcardToRegex(String wildcard) {
-        StringBuilder builder = new StringBuilder(wildcard.length());
-        builder.append('^');
+    public static String patternToRegex(String pattern) {
+        int charPosition = 0;
+        int patternLength = pattern.length();
+        StringBuilder stuffBuilder = new StringBuilder();
+        StringBuilder result = new StringBuilder();
 
-        // This keeps an eye on the presence inside or outside a sequence, everything inside a sequence is a literal
-        // e.g ("*" ===> ".*" while "[*]" ===> "[\*]"
-        boolean outsideBracketSequence = true;
+        while (charPosition < patternLength) {
+            char c = pattern.charAt(charPosition);
+            charPosition++;
 
-        for (int i = 0; i < wildcard.length(); i++) {
-            char c = wildcard.charAt(i);
             switch (c) {
                 case '*':
-                    builder.append(outsideBracketSequence ? "." : "\\").append(c);
+                    result.append(".*");
                     break;
                 case '?':
-                    builder.append(outsideBracketSequence ? "." : "\\?");
+                    result.append(".");
                     break;
                 case '[':
-                    if (outsideBracketSequence) {
-                        outsideBracketSequence = false;
-                        builder.append(c);
-                        if (i + 1 < wildcard.length()) {
-                            if (wildcard.charAt(i + 1) == '!') {
-                                i++;
-                                builder.append('^');
-                            }
+                    int closingBracketPosition = charPosition;
+                    if (closingBracketPosition < patternLength && pattern.charAt(closingBracketPosition) == '!') {
+                        closingBracketPosition++;
+                    }
+
+                    // 2 cases can happen here:
+                    // 1- Empty character class [] which is invalid for java, so treat ] as literal and find another
+                    // closing bracket, if no closing bracket is found, the whole thing is a literal
+                    // 2- Negated empty class [!] converted to [^] which is invalid for java, so treat ] as literal and
+                    // find another closing bracket, if no closing bracket is found, the whole thing is a literal
+                    if (closingBracketPosition < patternLength && pattern.charAt(closingBracketPosition) == ']') {
+                        closingBracketPosition++;
+                    }
+
+                    // No [] and [!] cases, search for the closing bracket
+                    while (closingBracketPosition < patternLength && pattern.charAt(closingBracketPosition) != ']') {
+                        closingBracketPosition++;
+                    }
+
+                    // No closing bracket found (or [] or [!]), escape the opening bracket, treat it as literals
+                    if (closingBracketPosition >= patternLength) {
+                        result.append("\\[");
+                    } else {
+                        // Found closing bracket, get the stuff in between the found the character class ("[" and "]")
+                        String stuff = pattern.substring(charPosition, closingBracketPosition);
+
+                        stuffBuilder.setLength(0);
+                        int stuffCharPos = 0;
+
+                        // If first character in the character class is "!" then convert it to "^"
+                        if (stuff.charAt(0) == '!') {
+                            stuffBuilder.append('^');
+                            stuffCharPos++; // ignore first character when escaping metacharacters next step
                         }
-                    } else {
-                        // escape the open bracket "[" if we are already inside a bracket sequence
-                        builder.append("\\").append(c);
+
+                        for (; stuffCharPos < stuff.length(); stuffCharPos++) {
+                            char stuffChar = stuff.charAt(stuffCharPos);
+                            if (stuffChar != '-' && Arrays.binarySearch(RESERVED_REGEX_CHARS, stuffChar) >= 0) {
+                                stuffBuilder.append("\\");
+                            }
+                            stuffBuilder.append(stuffChar);
+                        }
+
+                        String stuffEscaped = stuffBuilder.toString();
+
+                        // Escape the set operations
+                        stuffEscaped = stuffEscaped.replace("&&", "\\&\\&").replace("~~", "\\~\\~")
+                                .replace("||", "\\|\\|").replace("--", "\\-\\-");
+
+                        result.append("[").append(stuffEscaped).append("]");
+                        charPosition = closingBracketPosition + 1;
                     }
-                    break;
-                case ']':
-                    if (outsideBracketSequence) {
-                        // escape if we are outside bracket sequence
-                        builder.append("\\").append(c);
-                    } else {
-                        // Inside bracket, close it and mark as outside bracket
-                        outsideBracketSequence = true;
-                        builder.append(c);
-                    }
-                    break;
-                // escape special regexp-characters
-                case '(':
-                case ')':
-                case '$':
-                case '^':
-                case '.':
-                case '{':
-                case '}':
-                case '|':
-                case '+':
-                case '=':
-                case '<':
-                case '>':
-                case '!':
-                case '\\':
-                    builder.append("\\").append(c);
                     break;
                 default:
-                    builder.append(c);
+                    if (Arrays.binarySearch(RESERVED_REGEX_CHARS, c) >= 0) {
+                        result.append("\\");
+                    }
+                    result.append(c);
                     break;
             }
         }
-        builder.append('$');
-        return builder.toString();
+
+        return result.toString();
     }
 
     public static class AwsS3 {

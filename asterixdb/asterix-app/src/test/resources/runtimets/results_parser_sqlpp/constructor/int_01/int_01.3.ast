@@ -4,71 +4,71 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [int8]
     :
-    FunctionCall test.int8@1[
+    FunctionCall asterix.int8@1[
       LiteralExpr [STRING] [+80i8]
     ]
   )
   (
     LiteralExpr [STRING] [int16]
     :
-    FunctionCall test.int16@1[
+    FunctionCall asterix.int16@1[
       LiteralExpr [STRING] [160]
     ]
   )
   (
     LiteralExpr [STRING] [int32]
     :
-    FunctionCall test.int32@1[
+    FunctionCall asterix.int32@1[
       LiteralExpr [STRING] [+320i32]
     ]
   )
   (
     LiteralExpr [STRING] [int64]
     :
-    FunctionCall test.int64@1[
+    FunctionCall asterix.int64@1[
       LiteralExpr [STRING] [640]
     ]
   )
   (
     LiteralExpr [STRING] [int8_2]
     :
-    FunctionCall test.int8@1[
+    FunctionCall asterix.int8@1[
       LiteralExpr [STRING] [-80]
     ]
   )
   (
     LiteralExpr [STRING] [int16_2]
     :
-    FunctionCall test.int16@1[
+    FunctionCall asterix.int16@1[
       LiteralExpr [STRING] [-160i16]
     ]
   )
   (
     LiteralExpr [STRING] [int32_2]
     :
-    FunctionCall test.int32@1[
+    FunctionCall asterix.int32@1[
       LiteralExpr [STRING] [-320]
     ]
   )
   (
     LiteralExpr [STRING] [int64_2]
     :
-    FunctionCall test.int64@1[
+    FunctionCall asterix.int64@1[
       LiteralExpr [STRING] [-640i64]
     ]
   )
   (
     LiteralExpr [STRING] [int64_min]
     :
-    FunctionCall test.int64@1[
+    FunctionCall asterix.int64@1[
       LiteralExpr [STRING] [-9223372036854775808]
     ]
   )
   (
     LiteralExpr [STRING] [int8_3]
     :
-    FunctionCall test.int8@1[
-      FunctionCall test.int8@1[
+    FunctionCall asterix.int8@1[
+      FunctionCall asterix.int8@1[
         LiteralExpr [STRING] [+80i8]
       ]
     ]
@@ -76,8 +76,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [int16_3]
     :
-    FunctionCall test.int16@1[
-      FunctionCall test.int16@1[
+    FunctionCall asterix.int16@1[
+      FunctionCall asterix.int16@1[
         LiteralExpr [STRING] [160]
       ]
     ]
@@ -85,8 +85,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [int32_3]
     :
-    FunctionCall test.int32@1[
-      FunctionCall test.int32@1[
+    FunctionCall asterix.int32@1[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [+320i32]
       ]
     ]
@@ -94,8 +94,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [int64_3]
     :
-    FunctionCall test.int64@1[
-      FunctionCall test.int64@1[
+    FunctionCall asterix.int64@1[
+      FunctionCall asterix.int64@1[
         LiteralExpr [STRING] [640]
       ]
     ]

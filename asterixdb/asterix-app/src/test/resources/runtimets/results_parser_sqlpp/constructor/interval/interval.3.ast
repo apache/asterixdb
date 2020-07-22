@@ -4,11 +4,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval41]
     :
-    FunctionCall test.interval-start-from-date@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.interval-start-from-date@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [0001-12-27]
       ]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P3Y394DT48H398.483S]
       ]
     ]
@@ -16,9 +16,9 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval42]
     :
-    FunctionCall test.interval-start-from-date@2[
+    FunctionCall asterix.interval-start-from-date@2[
       LiteralExpr [STRING] [0001-12-27]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P3Y394DT48H398.483S]
       ]
     ]
@@ -26,8 +26,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval43]
     :
-    FunctionCall test.interval-start-from-date@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.interval-start-from-date@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [0001-12-27]
       ]
       LiteralExpr [STRING] [P3Y394DT48H398.483S]
@@ -36,7 +36,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval44]
     :
-    FunctionCall test.interval-start-from-date@2[
+    FunctionCall asterix.interval-start-from-date@2[
       LiteralExpr [STRING] [0001-12-27]
       LiteralExpr [STRING] [P3Y394DT48H398.483S]
     ]
@@ -44,9 +44,9 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval45]
     :
-    FunctionCall test.interval-start-from-date@2[
+    FunctionCall asterix.interval-start-from-date@2[
       LiteralExpr [NULL]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P3Y394DT48H398.483S]
       ]
     ]
@@ -54,8 +54,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval46]
     :
-    FunctionCall test.interval-start-from-date@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.interval-start-from-date@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [0001-12-27]
       ]
       LiteralExpr [NULL]
@@ -64,11 +64,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval51]
     :
-    FunctionCall test.interval-start-from-time@2[
-      FunctionCall test.time@1[
+    FunctionCall asterix.interval-start-from-time@2[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [20:03:20.948]
       ]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P60DT48M389.938S]
       ]
     ]
@@ -76,9 +76,9 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval52]
     :
-    FunctionCall test.interval-start-from-time@2[
+    FunctionCall asterix.interval-start-from-time@2[
       LiteralExpr [STRING] [20:03:20.948]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P60DT48M389.938S]
       ]
     ]
@@ -86,8 +86,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval53]
     :
-    FunctionCall test.interval-start-from-time@2[
-      FunctionCall test.time@1[
+    FunctionCall asterix.interval-start-from-time@2[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [20:03:20.948]
       ]
       LiteralExpr [STRING] [P60DT48M389.938S]
@@ -96,7 +96,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval54]
     :
-    FunctionCall test.interval-start-from-time@2[
+    FunctionCall asterix.interval-start-from-time@2[
       LiteralExpr [STRING] [20:03:20.948]
       LiteralExpr [STRING] [P60DT48M389.938S]
     ]
@@ -104,9 +104,9 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval55]
     :
-    FunctionCall test.interval-start-from-time@2[
+    FunctionCall asterix.interval-start-from-time@2[
       LiteralExpr [NULL]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P60DT48M389.938S]
       ]
     ]
@@ -114,8 +114,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval56]
     :
-    FunctionCall test.interval-start-from-time@2[
-      FunctionCall test.time@1[
+    FunctionCall asterix.interval-start-from-time@2[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [20:03:20.948]
       ]
       LiteralExpr [NULL]
@@ -124,11 +124,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval61]
     :
-    FunctionCall test.interval-start-from-datetime@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.interval-start-from-datetime@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [-2043-11-19T15:32:39.293]
       ]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P439Y3M20DT20H39M58.949S]
       ]
     ]
@@ -136,9 +136,9 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval62]
     :
-    FunctionCall test.interval-start-from-datetime@2[
+    FunctionCall asterix.interval-start-from-datetime@2[
       LiteralExpr [STRING] [-2043-11-19T15:32:39.293]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P439Y3M20DT20H39M58.949S]
       ]
     ]
@@ -146,8 +146,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval63]
     :
-    FunctionCall test.interval-start-from-datetime@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.interval-start-from-datetime@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [-2043-11-19T15:32:39.293]
       ]
       LiteralExpr [STRING] [P439Y3M20DT20H39M58.949S]
@@ -156,7 +156,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval64]
     :
-    FunctionCall test.interval-start-from-datetime@2[
+    FunctionCall asterix.interval-start-from-datetime@2[
       LiteralExpr [STRING] [-2043-11-19T15:32:39.293]
       LiteralExpr [STRING] [P439Y3M20DT20H39M58.949S]
     ]
@@ -164,9 +164,9 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval65]
     :
-    FunctionCall test.interval-start-from-datetime@2[
+    FunctionCall asterix.interval-start-from-datetime@2[
       LiteralExpr [NULL]
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P439Y3M20DT20H39M58.949S]
       ]
     ]
@@ -174,8 +174,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval66]
     :
-    FunctionCall test.interval-start-from-datetime@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.interval-start-from-datetime@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [-2043-11-19T15:32:39.293]
       ]
       LiteralExpr [NULL]
@@ -184,11 +184,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval71]
     :
-    FunctionCall test.interval@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.interval@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [2010-10-30]
       ]
-      FunctionCall test.date@1[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [2012-10-21]
       ]
     ]
@@ -196,9 +196,9 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval72]
     :
-    FunctionCall test.interval@2[
+    FunctionCall asterix.interval@2[
       LiteralExpr [NULL]
-      FunctionCall test.date@1[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [2012-10-21]
       ]
     ]
@@ -206,8 +206,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval73]
     :
-    FunctionCall test.interval@2[
-      FunctionCall test.date@1[
+    FunctionCall asterix.interval@2[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [2010-10-30]
       ]
       LiteralExpr [NULL]
@@ -216,11 +216,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval74]
     :
-    FunctionCall test.interval@2[
-      FunctionCall test.time@1[
+    FunctionCall asterix.interval@2[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [03:04:05.678-11:00]
       ]
-      FunctionCall test.time@1[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [232425267+0200]
       ]
     ]
@@ -228,9 +228,9 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval75]
     :
-    FunctionCall test.interval@2[
+    FunctionCall asterix.interval@2[
       LiteralExpr [NULL]
-      FunctionCall test.time@1[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [232425267+0200]
       ]
     ]
@@ -238,8 +238,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval76]
     :
-    FunctionCall test.interval@2[
-      FunctionCall test.time@1[
+    FunctionCall asterix.interval@2[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [03:04:05.678-11:00]
       ]
       LiteralExpr [NULL]
@@ -248,11 +248,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval77]
     :
-    FunctionCall test.interval@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.interval@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
       ]
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [19991112T124935948-0700]
       ]
     ]
@@ -260,9 +260,9 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval78]
     :
-    FunctionCall test.interval@2[
+    FunctionCall asterix.interval@2[
       LiteralExpr [NULL]
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [19991112T124935948-0700]
       ]
     ]
@@ -270,8 +270,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [interval79]
     :
-    FunctionCall test.interval@2[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.interval@2[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
       ]
       LiteralExpr [NULL]

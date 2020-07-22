@@ -4,14 +4,14 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [bin1]
     :
-    FunctionCall test.interval-bin@3[
-      FunctionCall test.date@1[
+    FunctionCall asterix.interval-bin@3[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [2010-10-30]
       ]
-      FunctionCall test.date@1[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [1990-01-01]
       ]
-      FunctionCall test.year-month-duration@1[
+      FunctionCall asterix.year-month-duration@1[
         LiteralExpr [STRING] [P1Y]
       ]
     ]
@@ -19,14 +19,14 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [bin2]
     :
-    FunctionCall test.interval-bin@3[
-      FunctionCall test.date@1[
+    FunctionCall asterix.interval-bin@3[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [2010-10-30]
       ]
-      FunctionCall test.date@1[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [-1990-01-01]
       ]
-      FunctionCall test.year-month-duration@1[
+      FunctionCall asterix.year-month-duration@1[
         LiteralExpr [STRING] [P1Y]
       ]
     ]
@@ -34,14 +34,14 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [bin3]
     :
-    FunctionCall test.interval-bin@3[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.interval-bin@3[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [-1987-11-19T23:49:23.938]
       ]
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [1990-01-01T00:00:00.000Z]
       ]
-      FunctionCall test.year-month-duration@1[
+      FunctionCall asterix.year-month-duration@1[
         LiteralExpr [STRING] [P6M]
       ]
     ]
@@ -49,14 +49,14 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [bin4]
     :
-    FunctionCall test.interval-bin@3[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.interval-bin@3[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [-1987-11-19T23:49:23.938]
       ]
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [-1990-01-01T00:00:00.000Z]
       ]
-      FunctionCall test.day-time-duration@1[
+      FunctionCall asterix.day-time-duration@1[
         LiteralExpr [STRING] [PT12H]
       ]
     ]
@@ -64,14 +64,14 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [bin5]
     :
-    FunctionCall test.interval-bin@3[
-      FunctionCall test.time@1[
+    FunctionCall asterix.interval-bin@3[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [12:23:34.930+07:00]
       ]
-      FunctionCall test.time@1[
+      FunctionCall asterix.time@1[
         LiteralExpr [STRING] [12:00:00]
       ]
-      FunctionCall test.day-time-duration@1[
+      FunctionCall asterix.day-time-duration@1[
         LiteralExpr [STRING] [PT2H]
       ]
     ]
@@ -79,12 +79,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [bin6]
     :
-    FunctionCall test.interval-bin@3[
+    FunctionCall asterix.interval-bin@3[
       LiteralExpr [NULL]
-      FunctionCall test.date@1[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [-0023-01-01]
       ]
-      FunctionCall test.year-month-duration@1[
+      FunctionCall asterix.year-month-duration@1[
         LiteralExpr [STRING] [P6M]
       ]
     ]
@@ -92,12 +92,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [bin7]
     :
-    FunctionCall test.interval-bin@3[
-      FunctionCall test.date@1[
+    FunctionCall asterix.interval-bin@3[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [2010-10-30]
       ]
       LiteralExpr [NULL]
-      FunctionCall test.year-month-duration@1[
+      FunctionCall asterix.year-month-duration@1[
         LiteralExpr [STRING] [P6M]
       ]
     ]
@@ -105,11 +105,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [bin8]
     :
-    FunctionCall test.interval-bin@3[
-      FunctionCall test.date@1[
+    FunctionCall asterix.interval-bin@3[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [2010-10-30]
       ]
-      FunctionCall test.date@1[
+      FunctionCall asterix.date@1[
         LiteralExpr [STRING] [-0023-01-01]
       ]
       LiteralExpr [NULL]

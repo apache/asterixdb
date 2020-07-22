@@ -5,11 +5,11 @@ RecordConstructor [
     LiteralExpr [STRING] [result1]
     :
     OperatorExpr [
-      FunctionCall test.int32@1[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [+3]
       ]
       >
-      FunctionCall test.int8@1[
+      FunctionCall asterix.int8@1[
         LiteralExpr [STRING] [+1]
       ]
     ]
@@ -18,11 +18,11 @@ RecordConstructor [
     LiteralExpr [STRING] [result2]
     :
     OperatorExpr [
-      FunctionCall test.int32@1[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [+3]
       ]
       >=
-      FunctionCall test.int16@1[
+      FunctionCall asterix.int16@1[
         LiteralExpr [STRING] [2]
       ]
     ]
@@ -31,11 +31,11 @@ RecordConstructor [
     LiteralExpr [STRING] [result3]
     :
     OperatorExpr [
-      FunctionCall test.int32@1[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [+3]
       ]
       <
-      FunctionCall test.int32@1[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [+3]
       ]
     ]
@@ -44,11 +44,11 @@ RecordConstructor [
     LiteralExpr [STRING] [result4]
     :
     OperatorExpr [
-      FunctionCall test.int32@1[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [+3]
       ]
       <=
-      FunctionCall test.int64@1[
+      FunctionCall asterix.int64@1[
         LiteralExpr [STRING] [-4]
       ]
     ]
@@ -57,11 +57,11 @@ RecordConstructor [
     LiteralExpr [STRING] [result5]
     :
     OperatorExpr [
-      FunctionCall test.int32@1[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [+3]
       ]
       =
-      FunctionCall test.float@1[
+      FunctionCall asterix.float@1[
         LiteralExpr [STRING] [-5.5f]
       ]
     ]
@@ -70,11 +70,11 @@ RecordConstructor [
     LiteralExpr [STRING] [result6]
     :
     OperatorExpr [
-      FunctionCall test.int32@1[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [+3]
       ]
       !=
-      FunctionCall test.double@1[
+      FunctionCall asterix.double@1[
         LiteralExpr [STRING] [-6.5d]
       ]
     ]

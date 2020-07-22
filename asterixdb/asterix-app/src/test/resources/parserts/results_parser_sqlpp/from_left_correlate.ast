@@ -27,7 +27,7 @@ FROM [  UnorderedListConstructor [
       (
         LiteralExpr [STRING] [location]
         :
-        FunctionCall test_022.point@1[
+        FunctionCall asterix.point@1[
           LiteralExpr [STRING] [0.0,0.0]
         ]
       )
@@ -41,7 +41,7 @@ FROM [  UnorderedListConstructor [
       (
         LiteralExpr [STRING] [location]
         :
-        FunctionCall test_022.point@1[
+        FunctionCall asterix.point@1[
           LiteralExpr [STRING] [0.0,1.0]
         ]
       )
@@ -55,7 +55,7 @@ FROM [  UnorderedListConstructor [
       (
         LiteralExpr [STRING] [location]
         :
-        FunctionCall test_022.point@1[
+        FunctionCall asterix.point@1[
           LiteralExpr [STRING] [0.0,1.0]
         ]
       )

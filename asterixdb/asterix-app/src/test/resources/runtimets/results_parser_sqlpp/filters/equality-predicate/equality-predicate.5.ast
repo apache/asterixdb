@@ -15,7 +15,7 @@ Where
       Field=send-time
     ]
     =
-    FunctionCall test.datetime@1[
+    FunctionCall asterix.datetime@1[
       LiteralExpr [STRING] [2014-01-20T10:10:00]
     ]
   ]

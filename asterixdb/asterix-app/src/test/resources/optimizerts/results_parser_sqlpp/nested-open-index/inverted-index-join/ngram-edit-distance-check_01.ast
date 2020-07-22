@@ -57,7 +57,7 @@ FROM [  FunctionCall asterix.dataset@1[
 Where
   OperatorExpr [
     IndexAccessor [
-      FunctionCall test.edit-distance-check@3[
+      FunctionCall asterix.edit-distance-check@3[
         FieldAccessor [
           FieldAccessor [
             Variable [ Name=$a ]

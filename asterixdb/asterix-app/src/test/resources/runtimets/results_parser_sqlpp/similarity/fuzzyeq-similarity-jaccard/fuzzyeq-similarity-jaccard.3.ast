@@ -12,14 +12,14 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Where
   OperatorExpr [
-    FunctionCall test.word-tokens@1[
+    FunctionCall asterix.word-tokens@1[
       FieldAccessor [
         Variable [ Name=$paper ]
         Field=title
       ]
     ]
     ~=
-    FunctionCall test.word-tokens@1[
+    FunctionCall asterix.word-tokens@1[
       LiteralExpr [STRING] [Transactions for Cooperative Environments]
     ]
   ]

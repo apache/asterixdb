@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall test.string-length@1[
+FunctionCall asterix.string-length@1[
   FieldAccessor [
     Variable [ Name=$l ]
     Field=name

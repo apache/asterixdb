@@ -20,9 +20,13 @@
 package org.apache.hyracks.data.std.primitive;
 
 import static org.apache.hyracks.data.std.primitive.UTF8StringPointable.generateUTF8Pointable;
+import static org.apache.hyracks.util.string.UTF8StringSample.STRING_EMOJI_FAMILY_OF_2;
+import static org.apache.hyracks.util.string.UTF8StringSample.STRING_EMOJI_FAMILY_OF_4;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
 
 import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.data.std.util.GrowableArray;
@@ -39,6 +43,11 @@ public class UTF8StringPointableTest {
 
     public static UTF8StringPointable STRING_LEN_127 = generateUTF8Pointable(UTF8StringSample.STRING_LEN_127);
     public static UTF8StringPointable STRING_LEN_128 = generateUTF8Pointable(UTF8StringSample.STRING_LEN_128);
+
+    public static UTF8StringPointable STRING_POINTABLE_EMOJI_FAMILY_OF_4 =
+            generateUTF8Pointable(STRING_EMOJI_FAMILY_OF_4);
+    public static UTF8StringPointable STRING_POINTABLE_EMOJI_FAMILY_OF_2 =
+            generateUTF8Pointable(STRING_EMOJI_FAMILY_OF_2);
 
     @Test
     public void testGetStringLength() throws Exception {
@@ -116,6 +125,19 @@ public class UTF8StringPointableTest {
         STRING_UTF8_MIX.substr(0, UTF8StringSample.STRING_UTF8_MIX.length(), builder, storage);
         result.set(storage.getByteArray(), 0, storage.getLength());
         assertEquals(0, STRING_UTF8_MIX.compareTo(result));
+    }
+
+    @Test
+    public void testSubstrWithMultiCodePointCharacter() throws IOException {
+        GrowableArray storage = new GrowableArray();
+        UTF8StringBuilder builder = new UTF8StringBuilder();
+
+        // The middle 2 people of the 4-people-family is a 2-people-family
+        STRING_POINTABLE_EMOJI_FAMILY_OF_4.substr(2, 3, builder, storage);
+        UTF8StringPointable result = new UTF8StringPointable();
+        result.set(storage.getByteArray(), 0, storage.getLength());
+
+        assertEquals(0, STRING_POINTABLE_EMOJI_FAMILY_OF_2.compareTo(result));
     }
 
     @Test

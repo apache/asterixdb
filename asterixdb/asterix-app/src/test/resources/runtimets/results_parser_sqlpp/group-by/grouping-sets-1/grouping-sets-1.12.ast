@@ -42,9 +42,7 @@ Groupby
 
 Let Variable [ Name=#2 ]
   :=
-  FunctionCall test.grouping@1[
-    Variable [ Name=$two ]
-  ]
+  LiteralExpr [LONG] [0]
 Orderby
   Variable [ Name=$two ]
   ASC

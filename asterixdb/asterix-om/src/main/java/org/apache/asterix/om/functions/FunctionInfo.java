@@ -19,6 +19,7 @@
 package org.apache.asterix.om.functions;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -62,7 +63,8 @@ public class FunctionInfo implements IFunctionInfo {
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return Objects.hash(functionIdentifier.getNamespace(), functionIdentifier.getName(),
+                functionIdentifier.getArity());
     }
 
     @Override

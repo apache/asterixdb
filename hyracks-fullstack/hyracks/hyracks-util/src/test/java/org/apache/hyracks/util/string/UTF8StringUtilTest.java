@@ -30,6 +30,7 @@ import static org.apache.hyracks.util.string.UTF8StringUtil.charSize;
 import static org.apache.hyracks.util.string.UTF8StringUtil.compareTo;
 import static org.apache.hyracks.util.string.UTF8StringUtil.getModifiedUTF8Len;
 import static org.apache.hyracks.util.string.UTF8StringUtil.getNumBytesToStoreLength;
+import static org.apache.hyracks.util.string.UTF8StringUtil.getNumCodePoint;
 import static org.apache.hyracks.util.string.UTF8StringUtil.getStringLength;
 import static org.apache.hyracks.util.string.UTF8StringUtil.getUTF8StringInArray;
 import static org.apache.hyracks.util.string.UTF8StringUtil.getUTFLength;
@@ -174,6 +175,15 @@ public class UTF8StringUtilTest {
         assertEquals("Irvine", getUTF8StringInArray(bytes, 45, 6));
         // test number
         assertEquals("23333", getUTF8StringInArray(bytes, 52, 5));
+    }
+
+    @Test
+    public void testGetNumCodePoint() {
+        String str = "\uD83D\uDC69\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66";
+        assertEquals(getNumCodePoint(writeStringToBytes(str), 0), 7);
+
+        str = "\uD83D\uDC69\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66\uD83C\uDDE8\uD83C\uDDF3";
+        assertEquals(getNumCodePoint(writeStringToBytes(str), 0), 9);
     }
 
 }

@@ -4,28 +4,28 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [int8]
     :
-    - FunctionCall test.int8@1[
+    - FunctionCall asterix.int8@1[
   LiteralExpr [STRING] [+80]
 ]
   )
   (
     LiteralExpr [STRING] [int16]
     :
-    - FunctionCall test.int16@1[
+    - FunctionCall asterix.int16@1[
   LiteralExpr [STRING] [160]
 ]
   )
   (
     LiteralExpr [STRING] [int32]
     :
-    - FunctionCall test.int32@1[
+    - FunctionCall asterix.int32@1[
   LiteralExpr [STRING] [+320]
 ]
   )
   (
     LiteralExpr [STRING] [int64]
     :
-    - FunctionCall test.int64@1[
+    - FunctionCall asterix.int64@1[
   LiteralExpr [STRING] [-640]
 ]
   )

@@ -6,7 +6,7 @@ RecordConstructor [
     :
     (
       SELECT ELEMENT [
-      WINDOW test.array_avg@1[
+      WINDOW asterix.sql-avg@1[
         (
           SELECT ELEMENT [
           FieldAccessor [
@@ -23,6 +23,9 @@ RecordConstructor [
         )
       ]
         AS Variable [ Name=$w ]
+        (
+          x:=Variable [ Name=$x ]
+        )
       OVER (
       )
       ]

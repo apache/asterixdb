@@ -25,13 +25,13 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$paperDBLP ]
 ,
-  FunctionCall fuzzyjoin.subset-collection@3[
+  FunctionCall asterix.subset-collection@3[
     FunctionCall asterix.dataset@1[
       LiteralExpr [STRING] [fuzzyjoin.tokensDBLP]
     ]
     LiteralExpr [LONG] [0]
-    FunctionCall fuzzyjoin.prefix-len-jaccard@2[
-      FunctionCall fuzzyjoin.len@1[
+    FunctionCall asterix.prefix-len-jaccard@2[
+      FunctionCall asterix.len@1[
         FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [fuzzyjoin.tokensDBLP]
         ]
@@ -49,7 +49,7 @@ Let Variable [ Name=$idDBLP ]
   ]
 Let Variable [ Name=$tokensUnrankedDBLP ]
   :=
-  FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+  FunctionCall asterix.counthashed-word-tokens@1[
     FieldAccessor [
       Variable [ Name=$paperDBLP ]
       Field=title
@@ -57,7 +57,7 @@ Let Variable [ Name=$tokensUnrankedDBLP ]
   ]
 Let Variable [ Name=$lenDBLP ]
   :=
-  FunctionCall fuzzyjoin.len@1[
+  FunctionCall asterix.len@1[
     Variable [ Name=$tokensUnrankedDBLP ]
   ]
 Let Variable [ Name=$tokensDBLP ]

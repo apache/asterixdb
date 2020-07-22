@@ -92,28 +92,45 @@ public class UTF8StringUtil {
 
     public static int codePointAt(byte[] b, int s) {
         char c1 = charAt(b, s);
-        // What if c1 is the last char in the byte array? In this case, the byte array is somehow illegal.
-        // Java Character.codePointAtImpl() will return the value of the high surrogate in this case,
-        // while here an exception will be thrown because there is no c2 available in the bytes
+
+        if (Character.isLowSurrogate(c1)) {
+            // In this case, the index s doesn't point to a correct position
+            throw new IllegalArgumentException("decoding error: got a low surrogate without a high surrogate");
+        }
+
         if (Character.isHighSurrogate(c1)) {
+            // If c1 is the a high surrogate and also the last char in the byte array (that means the byte array is somehow illegal),
+            // then an exception will be thrown because there is no low surrogate (c2) available in the byte array
             s += charSize(b, s);
             char c2 = charAt(b, s);
             if (Character.isLowSurrogate(c2)) {
                 return Character.toCodePoint(c1, c2);
+            } else {
+                throw new IllegalArgumentException(
+                        "decoding error: the high surrogate is not followed by a low surrogate");
             }
         }
+
         return c1;
     }
 
     public static int codePointSize(byte[] b, int s) {
         char c1 = charAt(b, s);
         int size1 = charSize(b, s);
+
+        if (Character.isLowSurrogate(c1)) {
+            throw new IllegalArgumentException("decoding error: got a low surrogate without a high surrogate");
+        }
+
         if (Character.isHighSurrogate(c1)) {
-            // Again, what if there is no c2 in the byte array `b`?
+            // Similar to the above codePointAt(),
+            // if c1 is the a high surrogate and also the last char in the byte array (that means the byte array is somehow illegal),
+            // then an exception will be thrown because there is no low surrogate available in the byte array
             s += charSize(b, s);
             int size2 = charSize(b, s);
             return size1 + size2;
         }
+
         return size1;
     }
 

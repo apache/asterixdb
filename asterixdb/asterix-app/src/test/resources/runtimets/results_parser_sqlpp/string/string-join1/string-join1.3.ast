@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result0]
     :
-    FunctionCall test.string-join@2[
+    FunctionCall asterix.string-join@2[
       OrderedListConstructor [
         LiteralExpr [STRING] [aa]
         LiteralExpr [STRING] [25991]
@@ -17,7 +17,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result1]
     :
-    FunctionCall test.string-join@2[
+    FunctionCall asterix.string-join@2[
       OrderedListConstructor [
         LiteralExpr [STRING] [aa]
         LiteralExpr [STRING] [25991]

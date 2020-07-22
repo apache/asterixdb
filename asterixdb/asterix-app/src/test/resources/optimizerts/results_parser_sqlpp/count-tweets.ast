@@ -49,7 +49,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$tokens ]
   :=
-  FunctionCall twitter.word-tokens@1[
+  FunctionCall asterix.word-tokens@1[
     FieldAccessor [
       Variable [ Name=$t ]
       Field=text
