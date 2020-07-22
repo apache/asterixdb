@@ -20,8 +20,6 @@ package org.apache.hyracks.data.std.primitive;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 import org.apache.commons.lang3.CharSet;
@@ -239,12 +237,14 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, true);
     }
 
-    public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase, int startMatch) {
+    public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase,
+            int startMatch) {
         return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, false);
     }
 
     // If resultInByte is true, then return the position in bytes, otherwise return the position in code points
-    private static int findInByteOrCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase, int startMatch, boolean resultInByte) {
+    private static int findInByteOrCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase,
+            int startMatch, boolean resultInByte) {
         int startMatchPos = startMatch;
         final int srcUtfLen = src.getUTF8Length();
         final int pttnUtfLen = pattern.getUTF8Length();
