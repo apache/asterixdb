@@ -422,6 +422,8 @@
         reverse(string)
 
  * Returns a string formed by reversing characters in the input `string`.
+ For characters of multiple code points, code point is the minimal unit to reverse.
+ See the following examples for more details.
  * Arguments:
     * `string` : a `string` to be reversed
  * Return Value:
@@ -432,12 +434,20 @@
         * the first argument is any other non-string value
 
  * Example:
-
         reverse("hello");
 
  * The expected result is:
 
         "olleh"
+
+* Example of multi-code-point character (Korean):
+
+        reverse("한글");
+
+* The expected result is
+ (the Korean characters are splitted into code points and then the code points are reversed):
+
+        "ᆯᅳᄀᆫᅡᄒ"
 
 
 ### split ###
