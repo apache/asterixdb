@@ -2,11 +2,11 @@ DataverseUse test
 Query:
 SELECT ELEMENT [
 OrderedListConstructor [
-  FunctionCall test.contains@2[
+  FunctionCall asterix.contains@2[
     Variable [ Name=$x ]
     LiteralExpr [STRING] [ofo]
   ]
-  FunctionCall test.contains@2[
+  FunctionCall asterix.contains@2[
     Variable [ Name=$y ]
     LiteralExpr [STRING] [ofo]
   ]

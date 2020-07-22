@@ -61,7 +61,7 @@ RecordConstructor [
       ]
       Where
         OperatorExpr [
-          FunctionCall test.spatial-intersect@2[
+          FunctionCall asterix.spatial-intersect@2[
             FieldAccessor [
               FieldAccessor [
                 Variable [ Name=$t2 ]
@@ -111,7 +111,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$n ]
   :=
-  FunctionCall test.create-circle@2[
+  FunctionCall asterix.create-circle@2[
     FieldAccessor [
       FieldAccessor [
         Variable [ Name=$t1 ]
@@ -131,7 +131,7 @@ Where
       Field=tweetid
     ]
     <
-    FunctionCall test.int64@1[
+    FunctionCall asterix.int64@1[
       LiteralExpr [STRING] [10]
     ]
   ]

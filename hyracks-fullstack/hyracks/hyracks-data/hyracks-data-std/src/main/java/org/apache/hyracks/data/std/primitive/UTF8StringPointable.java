@@ -370,18 +370,20 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     }
 
     /**
+     * Return the substring. Note that the offset and length are in the unit of code point.
      * @return {@code true} if substring was successfully written into given {@code out}, or
-     *         {@code false} if substring could not be obtained ({@code charOffset} or {@code charLength}
+     *         {@code false} if substring could not be obtained ({@code codePointOffset} or {@code codePointLength}
      *         are less than 0 or starting position is greater than the input length)
      */
-    public boolean substr(int charOffset, int charLength, UTF8StringBuilder builder, GrowableArray out)
+    public boolean substr(int codePointOffset, int codePointLength, UTF8StringBuilder builder, GrowableArray out)
             throws IOException {
-        return substr(this, charOffset, charLength, builder, out);
+        return substr(this, codePointOffset, codePointLength, builder, out);
     }
 
     /**
+     * Return the substring. Note that the offset and length are in the unit of code point.
      * @return {@code true} if substring was successfully written into given {@code out}, or
-     *         {@code false} if substring could not be obtained ({@code charOffset} or {@code charLength}
+     *         {@code false} if substring could not be obtained ({@code codePointOffset} or {@code codePointLength}
      *         are less than 0 or starting position is greater than the input length)
      */
     public static boolean substr(UTF8StringPointable src, int codePointOffset, int codePointLength,

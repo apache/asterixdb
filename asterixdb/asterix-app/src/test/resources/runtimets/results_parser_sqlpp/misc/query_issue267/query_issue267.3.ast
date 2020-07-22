@@ -16,14 +16,14 @@ FROM [  FunctionCall asterix.dataset@1[
 Where
   OperatorExpr [
     OperatorExpr [
-      FunctionCall test.lowercase@1[
+      FunctionCall asterix.lowercase@1[
         FieldAccessor [
           Variable [ Name=$m ]
           Field=name
         ]
       ]
       =
-      FunctionCall test.lowercase@1[
+      FunctionCall asterix.lowercase@1[
         FieldAccessor [
           Variable [ Name=$l ]
           Field=name
@@ -32,14 +32,14 @@ Where
     ]
     and
     OperatorExpr [
-      FunctionCall test.string-length@1[
+      FunctionCall asterix.string-length@1[
         FieldAccessor [
           Variable [ Name=$m ]
           Field=name
         ]
       ]
       =
-      FunctionCall test.string-length@1[
+      FunctionCall asterix.string-length@1[
         FieldAccessor [
           Variable [ Name=$l ]
           Field=name

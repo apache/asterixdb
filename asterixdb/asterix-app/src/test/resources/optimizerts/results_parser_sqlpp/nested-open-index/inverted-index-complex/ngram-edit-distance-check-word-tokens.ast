@@ -46,7 +46,7 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$paper ]
 ,
-  FunctionCall test.word-tokens@1[
+  FunctionCall asterix.word-tokens@1[
     FieldAccessor [
       FieldAccessor [
         Variable [ Name=$paper ]
@@ -59,7 +59,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Where
   IndexAccessor [
-    FunctionCall test.edit-distance-check@3[
+    FunctionCall asterix.edit-distance-check@3[
       Variable [ Name=$word ]
       LiteralExpr [STRING] [Multmedia]
       LiteralExpr [LONG] [1]

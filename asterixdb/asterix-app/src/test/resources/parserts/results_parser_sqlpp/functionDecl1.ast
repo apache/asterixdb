@@ -101,7 +101,7 @@ FunctionDecl calculate([$events]) {
 Query:
 Let Variable [ Name=$result ]
   :=
-  FunctionCall null.calculate@1[
+  FunctionCall Default.calculate@1[
     (
       SELECT ELEMENT [
       Variable [ Name=$e ]

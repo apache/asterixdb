@@ -28,14 +28,14 @@ FROM [  FunctionCall asterix.dataset@1[
 Where
   OperatorExpr [
     OperatorExpr [
-      FunctionCall fuzzyjoin.word-tokens@1[
+      FunctionCall asterix.word-tokens@1[
         FieldAccessor [
           Variable [ Name=$dblp ]
           Field=title
         ]
       ]
       ~=
-      FunctionCall fuzzyjoin.word-tokens@1[
+      FunctionCall asterix.word-tokens@1[
         FieldAccessor [
           Variable [ Name=$dblp2 ]
           Field=title

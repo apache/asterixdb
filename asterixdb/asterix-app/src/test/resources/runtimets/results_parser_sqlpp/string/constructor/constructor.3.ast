@@ -17,7 +17,7 @@ Let Variable [ Name=$d ]
     Variable [ Name=$c ]
   ]
 SELECT ELEMENT [
-FunctionCall test.string@1[
+FunctionCall asterix.string@1[
   Variable [ Name=$x ]
 ]
 ]

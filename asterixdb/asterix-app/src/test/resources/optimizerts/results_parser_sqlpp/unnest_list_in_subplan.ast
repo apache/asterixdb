@@ -45,7 +45,7 @@ Let Variable [ Name=$idDBLP ]
   ]
 Let Variable [ Name=$tokensUnrankedDBLP ]
   :=
-  FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+  FunctionCall asterix.counthashed-word-tokens@1[
     FieldAccessor [
       Variable [ Name=$paperDBLP ]
       Field=title

@@ -4,7 +4,7 @@ Query:
 SELECT ELEMENT [
 Variable [ Name=$l ]
 ]
-FROM [  FunctionCall test.subset-collection@3[
+FROM [  FunctionCall asterix.subset-collection@3[
     OrderedListConstructor [
       LiteralExpr [STRING] [a]
       LiteralExpr [STRING] [b]

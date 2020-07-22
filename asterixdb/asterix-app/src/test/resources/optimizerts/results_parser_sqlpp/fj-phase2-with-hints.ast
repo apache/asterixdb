@@ -35,7 +35,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$unrankedTokensDBLP ]
   :=
-  FunctionCall fuzzyjoin_078.counthashed-word-tokens@1[
+  FunctionCall asterix.counthashed-word-tokens@1[
     FieldAccessor [
       Variable [ Name=$paperDBLP ]
       Field=title
@@ -59,7 +59,7 @@ Let Variable [ Name=$tokensDBLP ]
           ]
           AS Variable [ Name=$paper ]
 ,
-          FunctionCall fuzzyjoin_078.counthashed-word-tokens@1[
+          FunctionCall asterix.counthashed-word-tokens@1[
             FieldAccessor [
               Variable [ Name=$paper ]
               Field=title

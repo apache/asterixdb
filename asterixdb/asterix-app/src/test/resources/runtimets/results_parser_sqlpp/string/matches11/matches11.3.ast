@@ -4,23 +4,23 @@ Variable [ Name=$a ]
 ]
 FROM [  OrderedListConstructor [
     LiteralExpr [NULL]
-    FunctionCall null.matches@2[
+    FunctionCall asterix.matches@2[
       LiteralExpr [STRING] [hello]
       LiteralExpr [NULL]
     ]
-    FunctionCall null.matches@2[
+    FunctionCall asterix.matches@2[
       LiteralExpr [STRING] [hello]
       LiteralExpr [STRING] [helllo]
     ]
-    FunctionCall null.matches@2[
+    FunctionCall asterix.matches@2[
       LiteralExpr [STRING] [hello]
       LiteralExpr [STRING] [ ]
     ]
-    FunctionCall null.matches@2[
+    FunctionCall asterix.matches@2[
       LiteralExpr [NULL]
       LiteralExpr [STRING] [hello]
     ]
-    FunctionCall null.matches@2[
+    FunctionCall asterix.matches@2[
       LiteralExpr [STRING] [hello]
       LiteralExpr [STRING] [[^a-z]]
     ]

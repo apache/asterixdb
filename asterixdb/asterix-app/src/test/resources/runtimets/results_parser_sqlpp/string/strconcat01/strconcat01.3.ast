@@ -5,7 +5,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [Full Name]
     :
-    FunctionCall test.string-concat@1[
+    FunctionCall asterix.string-concat@1[
       OrderedListConstructor [
         FieldAccessor [
           Variable [ Name=$l ]

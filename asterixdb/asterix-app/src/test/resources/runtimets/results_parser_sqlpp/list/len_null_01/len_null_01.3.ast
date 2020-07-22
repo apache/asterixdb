@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [len1]
     :
-    FunctionCall test.len@1[
+    FunctionCall asterix.len@1[
       OrderedListConstructor [
       ]
     ]

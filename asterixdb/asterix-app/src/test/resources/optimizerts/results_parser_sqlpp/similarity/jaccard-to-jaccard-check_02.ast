@@ -23,14 +23,14 @@ Where
   OperatorExpr [
     LiteralExpr [FLOAT] [0.8]
     <=
-    FunctionCall test.similarity-jaccard@2[
-      FunctionCall test.word-tokens@1[
+    FunctionCall asterix.similarity-jaccard@2[
+      FunctionCall asterix.word-tokens@1[
         FieldAccessor [
           Variable [ Name=$paper ]
           Field=title
         ]
       ]
-      FunctionCall test.word-tokens@1[
+      FunctionCall asterix.word-tokens@1[
         LiteralExpr [STRING] [Transactions for Cooperative Environments]
       ]
     ]

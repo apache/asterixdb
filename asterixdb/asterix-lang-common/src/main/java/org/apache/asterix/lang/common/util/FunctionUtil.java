@@ -22,9 +22,11 @@ package org.apache.asterix.lang.common.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -40,10 +42,9 @@ import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.parser.FunctionParser;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
-import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
+import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.BuiltinType;
@@ -116,10 +117,69 @@ public class FunctionUtil {
         Set<CallExpr> getFunctionCalls(Expression expression) throws CompilationException;
     }
 
-    @FunctionalInterface
-    public interface IFunctionNormalizer {
-        FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs, SourceLocation sourceLoc)
-                throws CompilationException;
+    public static FunctionSignature resolveFunctionCall(FunctionSignature fs, SourceLocation sourceLoc,
+            MetadataProvider metadataProvider, Set<FunctionSignature> declaredFunctions,
+            BiFunction<String, Integer, FunctionSignature> builtinFunctionResolver) throws CompilationException {
+        int arity = fs.getArity();
+        DataverseName dataverse = fs.getDataverseName();
+        if (dataverse == null) {
+            dataverse = metadataProvider.getDefaultDataverseName();
+        }
+        boolean isBuiltinFuncDataverse =
+                dataverse.equals(FunctionConstants.ASTERIX_DV) || dataverse.equals(FunctionConstants.ALGEBRICKS_DV);
+
+        if (!isBuiltinFuncDataverse) {
+            // attempt to resolve to a user-defined function
+            FunctionSignature fsWithDv =
+                    fs.getDataverseName() == null ? new FunctionSignature(dataverse, fs.getName(), arity) : fs;
+            if (declaredFunctions.contains(fsWithDv)) {
+                return fsWithDv;
+            }
+            try {
+                Function function = metadataProvider.lookupUserDefinedFunction(fsWithDv);
+                if (function != null) {
+                    return fsWithDv;
+                }
+            } catch (AlgebricksException e) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
+            }
+
+            // fail if the dataverse was specified in the function call but this dataverse does not exist
+            if (fs.getDataverseName() != null) {
+                Dataverse dv;
+                try {
+                    dv = metadataProvider.findDataverse(dataverse);
+                } catch (AlgebricksException e) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
+                }
+                if (dv == null) {
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverse);
+                }
+            }
+        }
+
+        // attempt to resolve to a built-in function
+        String name = fs.getName().toLowerCase();
+        String mappedName = CommonFunctionMapUtil.getFunctionMapping(name);
+        if (mappedName != null) {
+            name = mappedName;
+        }
+        FunctionSignature fsBuiltin = builtinFunctionResolver.apply(name, arity);
+        if (fsBuiltin == null) {
+            throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, fs);
+        }
+        return fsBuiltin;
+    }
+
+    public static BiFunction<String, Integer, FunctionSignature> createBuiltinFunctionResolver(
+            MetadataProvider metadataProvider) {
+        boolean includePrivateFunctions = getImportPrivateFunctions(metadataProvider);
+        return (name, arity) -> {
+            String builtinName = name.replace('_', '-');
+            FunctionIdentifier builtinId =
+                    BuiltinFunctions.getBuiltinCompilerFunction(builtinName, arity, includePrivateFunctions);
+            return builtinId != null ? new FunctionSignature(builtinId) : null;
+        };
     }
 
     /**
@@ -137,80 +197,48 @@ public class FunctionUtil {
      *            for collecting function calls in the <code>expression</code>
      * @param functionParser,
      *            for parsing stored functions in the string represetnation.
-     * @param functionNormalizer,
-     *            for normalizing function names.
+     * @param defaultDataverse
      * @throws CompilationException
      */
     public static List<FunctionDecl> retrieveUsedStoredFunctions(MetadataProvider metadataProvider,
             Expression expression, List<FunctionSignature> declaredFunctions, List<FunctionDecl> inputFunctionDecls,
-            IFunctionCollector functionCollector, FunctionParser functionParser, IFunctionNormalizer functionNormalizer)
+            IFunctionCollector functionCollector, FunctionParser functionParser, DataverseName defaultDataverse)
             throws CompilationException {
         List<FunctionDecl> functionDecls =
                 inputFunctionDecls == null ? new ArrayList<>() : new ArrayList<>(inputFunctionDecls);
         if (expression == null) {
             return functionDecls;
         }
-        String value = (String) metadataProvider.getConfig().get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS);
-        boolean includePrivateFunctions = (value != null) && Boolean.parseBoolean(value.toLowerCase());
         Set<CallExpr> functionCalls = functionCollector.getFunctionCalls(expression);
         for (CallExpr functionCall : functionCalls) {
-            FunctionSignature signature = functionCall.getFunctionSignature();
-            if (declaredFunctions != null && declaredFunctions.contains(signature)) {
+            FunctionSignature fs = functionCall.getFunctionSignature();
+            FunctionSignature fsWithDv = fs.getDataverseName() != null ? fs
+                    : new FunctionSignature(defaultDataverse, fs.getName(), fs.getArity());
+            if (declaredFunctions != null && declaredFunctions.contains(fsWithDv)) {
                 continue;
-            }
-            if (signature.getDataverseName() == null) {
-                signature.setDataverseName(metadataProvider.getDefaultDataverseName());
-            }
-            DataverseName namespace = signature.getDataverseName();
-            // Checks the existence of the referred dataverse.
-            try {
-                if (!namespace.equals(FunctionConstants.ASTERIX_DV)
-                        && !namespace.equals(FunctionConstants.ALGEBRICKS_DV)
-                        && metadataProvider.findDataverse(namespace) == null) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, functionCall.getSourceLocation(),
-                            "In function call \"" + namespace + "." + signature.getName() + "(...)\", the dataverse \""
-                                    + namespace + "\" cannot be found!");
-                }
-            } catch (AlgebricksException e) {
-                throw new CompilationException(e);
             }
             Function function;
             try {
-                function = lookupUserDefinedFunctionDecl(metadataProvider.getMetadataTxnContext(), signature);
+                function = metadataProvider.lookupUserDefinedFunction(fsWithDv);
             } catch (AlgebricksException e) {
-                throw new CompilationException(e);
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, functionCall.getSourceLocation(),
+                        e.toString());
             }
-            if (function == null) {
-                FunctionSignature normalizedSignature = functionNormalizer == null ? signature
-                        : functionNormalizer.normalizeBuiltinFunctionSignature(signature,
-                                functionCall.getSourceLocation());
-                if (BuiltinFunctions.isBuiltinCompilerFunction(normalizedSignature, includePrivateFunctions)) {
-                    continue;
-                }
-                StringBuilder messageBuilder = new StringBuilder();
-                if (!functionDecls.isEmpty()) {
-                    messageBuilder.append("function " + functionDecls.get(functionDecls.size() - 1).getSignature()
-                            + " depends upon function " + signature + " which is undefined");
-                } else {
-                    messageBuilder.append("function " + signature + " is not defined");
-                }
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, functionCall.getSourceLocation(),
-                        messageBuilder.toString());
+            if (function == null || !functionParser.getLanguage().equals(function.getLanguage())) {
+                // the function is either unknown, builtin, or in a different language.
+                // either way we ignore it here because it will be handled by the function inlining rule later
+                continue;
             }
 
-            if (functionParser.getLanguage().equals(function.getLanguage())) {
-                FunctionDecl functionDecl = functionParser.getFunctionDecl(function);
-                if (functionDecl != null) {
-                    if (functionDecls.contains(functionDecl)) {
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, functionCall.getSourceLocation(),
-                                "Recursive invocation " + functionDecls.get(functionDecls.size() - 1).getSignature()
-                                        + " <==> " + functionDecl.getSignature());
-                    }
-                    functionDecls.add(functionDecl);
-                    functionDecls = retrieveUsedStoredFunctions(metadataProvider, functionDecl.getFuncBody(),
-                            declaredFunctions, functionDecls, functionCollector, functionParser, functionNormalizer);
-                }
+            FunctionDecl functionDecl = functionParser.getFunctionDecl(function);
+            if (functionDecls.contains(functionDecl)) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, functionCall.getSourceLocation(),
+                        "Recursive invocation " + functionDecls.get(functionDecls.size() - 1).getSignature() + " <==> "
+                                + functionDecl.getSignature());
             }
+            functionDecls.add(functionDecl);
+            functionDecls = retrieveUsedStoredFunctions(metadataProvider, functionDecl.getFuncBody(), declaredFunctions,
+                    functionDecls, functionCollector, functionParser, function.getDataverseName());
         }
         return functionDecls;
     }
@@ -258,14 +286,6 @@ public class FunctionUtil {
         dependencies.add(functionDependencies);
         dependencies.add(typeDependencies);
         return dependencies;
-    }
-
-    public static Function lookupUserDefinedFunctionDecl(MetadataTransactionContext mdTxnCtx,
-            FunctionSignature signature) throws AlgebricksException {
-        if (signature.getDataverseName() == null) {
-            return null;
-        }
-        return MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
     }
 
     public static boolean isBuiltinDatasetFunction(FunctionSignature fs) {
@@ -324,5 +344,21 @@ public class FunctionUtil {
 
     private static String getStringConstant(Mutable<ILogicalExpression> arg) {
         return ConstantExpressionUtil.getStringConstant(arg.getValue());
+    }
+
+    private static boolean getImportPrivateFunctions(MetadataProvider metadataProvider) {
+        String value = (String) metadataProvider.getConfig().get(IMPORT_PRIVATE_FUNCTIONS);
+        return (value != null) && Boolean.parseBoolean(value.toLowerCase());
+    }
+
+    public static Set<FunctionSignature> getFunctionSignatures(List<FunctionDecl> declaredFunctions) {
+        if (declaredFunctions == null || declaredFunctions.isEmpty()) {
+            return Collections.emptySet();
+        }
+        Set<FunctionSignature> result = new HashSet<>();
+        for (FunctionDecl fd : declaredFunctions) {
+            result.add(fd.getSignature());
+        }
+        return result;
     }
 }

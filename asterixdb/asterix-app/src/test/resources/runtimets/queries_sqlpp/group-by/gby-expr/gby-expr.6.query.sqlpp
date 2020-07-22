@@ -17,23 +17,16 @@
  * under the License.
  */
 
-DROP DATAVERSE gby IF EXISTS;
-CREATE DATAVERSE gby;
-
 USE gby;
 
-CREATE TYPE EmployeeType AS {
-  id : string
-};
+/*
+ * Test that builtin function names are compared case-insensitive
+ * when replacing SELECT expression with GROUP BY expression
+ */
 
-CREATE TYPE IncentiveType AS {
-  job_category: string
-};
+FROM Employee e
+    JOIN Incentive i ON e.job_category = i.job_category
+    JOIN SuperStars s ON e.id = s.id
+GROUP BY substr(e.department_id, 0)
+SELECT SUBSTR(e.department_id, 0) as deptId, SUM(e.salary + i.bonus) AS star_cost;
 
-CREATE TYPE SuperStarType AS {
-  id : string
-};
-
-CREATE DATASET Employee(EmployeeType) PRIMARY KEY id;
-CREATE DATASET Incentive(IncentiveType) PRIMARY KEY job_category;
-CREATE DATASET SuperStars(SuperStarType) PRIMARY KEY id;

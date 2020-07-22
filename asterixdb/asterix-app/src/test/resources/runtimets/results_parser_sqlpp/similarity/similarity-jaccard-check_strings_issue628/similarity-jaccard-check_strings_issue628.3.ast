@@ -56,17 +56,17 @@ Let Variable [ Name=$v5 ]
 Let Variable [ Name=$results ]
   :=
   OrderedListConstructor [
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$v1 ]
       Variable [ Name=$v2 ]
       LiteralExpr [FLOAT] [0.5]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$v1 ]
       Variable [ Name=$v3 ]
       LiteralExpr [FLOAT] [0.5]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$v4 ]
       Variable [ Name=$v5 ]
       LiteralExpr [FLOAT] [0.5]

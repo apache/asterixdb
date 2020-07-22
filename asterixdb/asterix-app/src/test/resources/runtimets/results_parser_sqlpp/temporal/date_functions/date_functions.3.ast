@@ -5,15 +5,15 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [date1]
     :
-    FunctionCall test.date-from-unix-time-in-days@1[
+    FunctionCall asterix.date-from-unix-time-in-days@1[
       LiteralExpr [LONG] [15600]
     ]
   )
   (
     LiteralExpr [STRING] [date2]
     :
-    FunctionCall test.get-date-from-datetime@1[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.get-date-from-datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
       ]
     ]
@@ -21,8 +21,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [date3]
     :
-    FunctionCall test.get-date-from-datetime@1[
-      FunctionCall test.datetime@1[
+    FunctionCall asterix.get-date-from-datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2012-10-11T02:30:23+03:00]
       ]
     ]
@@ -31,11 +31,11 @@ RecordConstructor [
     LiteralExpr [STRING] [date4]
     :
     OperatorExpr [
-      FunctionCall test.date-from-unix-time-in-days@1[
+      FunctionCall asterix.date-from-unix-time-in-days@1[
         LiteralExpr [LONG] [15600]
       ]
       +
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [-P2Y1M90DT30H]
       ]
     ]
@@ -44,13 +44,13 @@ RecordConstructor [
     LiteralExpr [STRING] [date5]
     :
     OperatorExpr [
-      FunctionCall test.get-date-from-datetime@1[
-        FunctionCall test.datetime@1[
+      FunctionCall asterix.get-date-from-datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
         ]
       ]
       +
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [P300Y900MT360000M]
       ]
     ]
@@ -58,8 +58,8 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [unix1]
     :
-    FunctionCall test.unix-time-from-date-in-days@1[
-      FunctionCall test.date-from-unix-time-in-days@1[
+    FunctionCall asterix.unix-time-from-date-in-days@1[
+      FunctionCall asterix.date-from-unix-time-in-days@1[
         LiteralExpr [LONG] [15600]
       ]
     ]
@@ -69,19 +69,19 @@ RecordConstructor [
     :
     OperatorExpr [
       OperatorExpr [
-        FunctionCall test.get-date-from-datetime@1[
-          FunctionCall test.datetime@1[
+        FunctionCall asterix.get-date-from-datetime@1[
+          FunctionCall asterix.datetime@1[
             LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
           ]
         ]
         +
-        FunctionCall test.duration@1[
+        FunctionCall asterix.duration@1[
           LiteralExpr [STRING] [P300Y900MT360000M]
         ]
       ]
       -
-      FunctionCall test.get-date-from-datetime@1[
-        FunctionCall test.datetime@1[
+      FunctionCall asterix.get-date-from-datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
         ]
       ]
@@ -92,16 +92,16 @@ RecordConstructor [
     :
     OperatorExpr [
       OperatorExpr [
-        FunctionCall test.date-from-unix-time-in-days@1[
+        FunctionCall asterix.date-from-unix-time-in-days@1[
           LiteralExpr [LONG] [15600]
         ]
         +
-        FunctionCall test.duration@1[
+        FunctionCall asterix.duration@1[
           LiteralExpr [STRING] [-P2Y1M90DT30H]
         ]
       ]
       -
-      FunctionCall test.date-from-unix-time-in-days@1[
+      FunctionCall asterix.date-from-unix-time-in-days@1[
         LiteralExpr [LONG] [15600]
       ]
     ]
@@ -110,32 +110,32 @@ RecordConstructor [
     LiteralExpr [STRING] [c1]
     :
     OperatorExpr [
-      FunctionCall test.date-from-unix-time-in-days@1[
+      FunctionCall asterix.date-from-unix-time-in-days@1[
         LiteralExpr [LONG] [15600]
       ]
       =
       OperatorExpr [
         OperatorExpr [
-          FunctionCall test.date-from-unix-time-in-days@1[
+          FunctionCall asterix.date-from-unix-time-in-days@1[
             LiteralExpr [LONG] [15600]
           ]
           +
-          FunctionCall test.duration@1[
+          FunctionCall asterix.duration@1[
             LiteralExpr [STRING] [-P2Y1M90DT30H]
           ]
         ]
         +
         OperatorExpr [
-          FunctionCall test.date-from-unix-time-in-days@1[
+          FunctionCall asterix.date-from-unix-time-in-days@1[
             LiteralExpr [LONG] [15600]
           ]
           -
           OperatorExpr [
-            FunctionCall test.date-from-unix-time-in-days@1[
+            FunctionCall asterix.date-from-unix-time-in-days@1[
               LiteralExpr [LONG] [15600]
             ]
             +
-            FunctionCall test.duration@1[
+            FunctionCall asterix.duration@1[
               LiteralExpr [STRING] [-P2Y1M90DT30H]
             ]
           ]
@@ -147,40 +147,40 @@ RecordConstructor [
     LiteralExpr [STRING] [c2]
     :
     OperatorExpr [
-      FunctionCall test.get-date-from-datetime@1[
-        FunctionCall test.datetime@1[
+      FunctionCall asterix.get-date-from-datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
         ]
       ]
       =
       OperatorExpr [
         OperatorExpr [
-          FunctionCall test.get-date-from-datetime@1[
-            FunctionCall test.datetime@1[
+          FunctionCall asterix.get-date-from-datetime@1[
+            FunctionCall asterix.datetime@1[
               LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
             ]
           ]
           +
-          FunctionCall test.duration@1[
+          FunctionCall asterix.duration@1[
             LiteralExpr [STRING] [P300Y900MT360000M]
           ]
         ]
         +
         OperatorExpr [
-          FunctionCall test.get-date-from-datetime@1[
-            FunctionCall test.datetime@1[
+          FunctionCall asterix.get-date-from-datetime@1[
+            FunctionCall asterix.datetime@1[
               LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
             ]
           ]
           -
           OperatorExpr [
-            FunctionCall test.get-date-from-datetime@1[
-              FunctionCall test.datetime@1[
+            FunctionCall asterix.get-date-from-datetime@1[
+              FunctionCall asterix.datetime@1[
                 LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
               ]
             ]
             +
-            FunctionCall test.duration@1[
+            FunctionCall asterix.duration@1[
               LiteralExpr [STRING] [P300Y900MT360000M]
             ]
           ]
@@ -191,21 +191,21 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [null1]
     :
-    FunctionCall test.date-from-unix-time-in-days@1[
+    FunctionCall asterix.date-from-unix-time-in-days@1[
       LiteralExpr [NULL]
     ]
   )
   (
     LiteralExpr [STRING] [nullunix1]
     :
-    FunctionCall test.unix-time-from-date-in-days@1[
+    FunctionCall asterix.unix-time-from-date-in-days@1[
       LiteralExpr [NULL]
     ]
   )
   (
     LiteralExpr [STRING] [null2]
     :
-    FunctionCall test.get-date-from-datetime@1[
+    FunctionCall asterix.get-date-from-datetime@1[
       LiteralExpr [NULL]
     ]
   )
@@ -215,7 +215,7 @@ RecordConstructor [
     OperatorExpr [
       LiteralExpr [NULL]
       +
-      FunctionCall test.duration@1[
+      FunctionCall asterix.duration@1[
         LiteralExpr [STRING] [-P2Y1M90DT30H]
       ]
     ]
@@ -224,7 +224,7 @@ RecordConstructor [
     LiteralExpr [STRING] [null4]
     :
     OperatorExpr [
-      FunctionCall test.date-from-unix-time-in-days@1[
+      FunctionCall asterix.date-from-unix-time-in-days@1[
         LiteralExpr [LONG] [15600]
       ]
       +
@@ -237,8 +237,8 @@ RecordConstructor [
     OperatorExpr [
       LiteralExpr [NULL]
       -
-      FunctionCall test.get-date-from-datetime@1[
-        FunctionCall test.datetime@1[
+      FunctionCall asterix.get-date-from-datetime@1[
+        FunctionCall asterix.datetime@1[
           LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
         ]
       ]
@@ -249,13 +249,13 @@ RecordConstructor [
     :
     OperatorExpr [
       OperatorExpr [
-        FunctionCall test.get-date-from-datetime@1[
-          FunctionCall test.datetime@1[
+        FunctionCall asterix.get-date-from-datetime@1[
+          FunctionCall asterix.datetime@1[
             LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
           ]
         ]
         +
-        FunctionCall test.duration@1[
+        FunctionCall asterix.duration@1[
           LiteralExpr [STRING] [P300Y900MT360000M]
         ]
       ]

@@ -70,62 +70,62 @@ Let Variable [ Name=$f ]
 Let Variable [ Name=$results ]
   :=
   OrderedListConstructor [
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$a ]
       Variable [ Name=$b ]
       LiteralExpr [FLOAT] [0.0]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$b ]
       Variable [ Name=$a ]
       LiteralExpr [FLOAT] [0.0]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$a ]
       Variable [ Name=$b ]
       LiteralExpr [FLOAT] [0.1]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$b ]
       Variable [ Name=$a ]
       LiteralExpr [FLOAT] [0.1]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$c ]
       Variable [ Name=$d ]
       LiteralExpr [FLOAT] [0.6]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$d ]
       Variable [ Name=$c ]
       LiteralExpr [FLOAT] [0.6]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$c ]
       Variable [ Name=$d ]
       LiteralExpr [FLOAT] [0.8]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$d ]
       Variable [ Name=$c ]
       LiteralExpr [FLOAT] [0.8]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$e ]
       Variable [ Name=$f ]
       LiteralExpr [FLOAT] [0.05]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$f ]
       Variable [ Name=$e ]
       LiteralExpr [FLOAT] [0.05]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$e ]
       Variable [ Name=$f ]
       LiteralExpr [FLOAT] [0.8]
     ]
-    FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall asterix.similarity-jaccard-check@3[
       Variable [ Name=$f ]
       Variable [ Name=$e ]
       LiteralExpr [FLOAT] [0.8]

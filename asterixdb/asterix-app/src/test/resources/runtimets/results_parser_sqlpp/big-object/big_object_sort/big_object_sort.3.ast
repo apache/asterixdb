@@ -21,7 +21,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [len-comment]
     :
-    FunctionCall test.string-length@1[
+    FunctionCall asterix.string-length@1[
       FieldAccessor [
         Variable [ Name=$o ]
         Field=o_comment

@@ -3,7 +3,7 @@ FunctionDecl function with spaces([$a, $b]) {
 }
 
 Query:
-FunctionCall null.function with spaces@2[
+FunctionCall Default.function with spaces@2[
   LiteralExpr [LONG] [1]
   LiteralExpr [LONG] [2]
 ]

@@ -92,28 +92,45 @@ public class UTF8StringUtil {
 
     public static int codePointAt(byte[] b, int s) {
         char c1 = charAt(b, s);
-        // What if c1 is the last char in the byte array? In this case, the byte array is somehow illegal.
-        // Java Character.codePointAtImpl() will return the value of the high surrogate in this case,
-        // while here an exception will be thrown because there is no c2 available in the bytes
+
+        if (Character.isLowSurrogate(c1)) {
+            // In this case, the index s doesn't point to a correct position
+            throw new IllegalArgumentException("decoding error: got a low surrogate without a high surrogate");
+        }
+
         if (Character.isHighSurrogate(c1)) {
+            // If c1 is the a high surrogate and also the last char in the byte array (that means the byte array is somehow illegal),
+            // then an exception will be thrown because there is no low surrogate (c2) available in the byte array
             s += charSize(b, s);
             char c2 = charAt(b, s);
             if (Character.isLowSurrogate(c2)) {
                 return Character.toCodePoint(c1, c2);
+            } else {
+                throw new IllegalArgumentException(
+                        "decoding error: the high surrogate is not followed by a low surrogate");
             }
         }
+
         return c1;
     }
 
     public static int codePointSize(byte[] b, int s) {
         char c1 = charAt(b, s);
         int size1 = charSize(b, s);
+
+        if (Character.isLowSurrogate(c1)) {
+            throw new IllegalArgumentException("decoding error: got a low surrogate without a high surrogate");
+        }
+
         if (Character.isHighSurrogate(c1)) {
-            // Again, what if there is no c2 in the byte array `b`?
+            // Similar to the above codePointAt(),
+            // if c1 is the a high surrogate and also the last char in the byte array (that means the byte array is somehow illegal),
+            // then an exception will be thrown because there is no low surrogate available in the byte array
             s += charSize(b, s);
             int size2 = charSize(b, s);
             return size1 + size2;
         }
+
         return size1;
     }
 
@@ -164,7 +181,6 @@ public class UTF8StringUtil {
         }
     }
 
-    // The result is the number of Java Char (8 bytes) in the string
     public static int getStringLength(byte[] b, int s) {
         int len = getUTFLength(b, s);
         int pos = s + getNumBytesToStoreLength(len);
@@ -177,26 +193,6 @@ public class UTF8StringUtil {
         return charCount;
     }
 
-    public static int getNumCodePoint(byte[] b, int s) {
-        int len = getUTFLength(b, s);
-        int pos = s + getNumBytesToStoreLength(len);
-        int end = pos + len;
-        int codePointCount = 0;
-        while (pos < end) {
-            char ch = charAt(b, pos);
-            // 3 cases here:
-            // * If the current char is a complete unicode character (not part of a surrogate pair), then codePointCount++;
-            // * If the current char is a high surrogate in a surrogate pair, then codePointCount++ for this high surrogate
-            // * If the current char is a low surrogate in a surrogate pair,
-            //       then don't increase the codePointCount because it is increased already for its corresponding high surrogate
-            if (Character.isLowSurrogate(ch) == false) {
-                codePointCount++;
-            }
-            pos += charSize(b, pos);
-        }
-        return codePointCount;
-    }
-
     public static int getUTFLength(byte[] b, int s) {
         return VarLenIntEncoderDecoder.decode(b, s);
     }
@@ -205,9 +201,6 @@ public class UTF8StringUtil {
         return VarLenIntEncoderDecoder.getBytesRequired(strlen);
     }
 
-    // The byte array `b` is encoded in UTF-8 on top of UTF-16,
-    // which means an UTF-16-encoded Java char is encoded to 2 or 3 bytes in the byte array
-    // So, it is not possible to reach the following 4, 5 or 6 bytes branch in the following codes
     public static int UTF8ToCodePoint(byte[] b, int s) {
         if (b[s] >> 7 == 0) {
             // 1 byte
@@ -234,15 +227,42 @@ public class UTF8StringUtil {
         return 0;
     }
 
-    public static int codePointToUTF8(int codePoint, byte[] outputUTF8) {
-        int count = 0;
-
-        char[] chars = Character.toChars(codePoint);
-        for (int i = 0; i < chars.length; i++) {
-            count += writeToBytes(outputUTF8, count, chars[i]);
+    public static int codePointToUTF8(int c, byte[] outputUTF8) {
+        if (c < 0x80) {
+            outputUTF8[0] = (byte) (c & 0x7F /* mask 7 lsb: 0b1111111 */);
+            return 1;
+        } else if (c < 0x0800) {
+            outputUTF8[0] = (byte) (c >> 6 & 0x1F | 0xC0);
+            outputUTF8[1] = (byte) (c & 0x3F | 0x80);
+            return 2;
+        } else if (c < 0x010000) {
+            outputUTF8[0] = (byte) (c >> 12 & 0x0F | 0xE0);
+            outputUTF8[1] = (byte) (c >> 6 & 0x3F | 0x80);
+            outputUTF8[2] = (byte) (c & 0x3F | 0x80);
+            return 3;
+        } else if (c < 0x200000) {
+            outputUTF8[0] = (byte) (c >> 18 & 0x07 | 0xF0);
+            outputUTF8[1] = (byte) (c >> 12 & 0x3F | 0x80);
+            outputUTF8[2] = (byte) (c >> 6 & 0x3F | 0x80);
+            outputUTF8[3] = (byte) (c & 0x3F | 0x80);
+            return 4;
+        } else if (c < 0x4000000) {
+            outputUTF8[0] = (byte) (c >> 24 & 0x03 | 0xF8);
+            outputUTF8[1] = (byte) (c >> 18 & 0x3F | 0x80);
+            outputUTF8[2] = (byte) (c >> 12 & 0x3F | 0x80);
+            outputUTF8[3] = (byte) (c >> 6 & 0x3F | 0x80);
+            outputUTF8[4] = (byte) (c & 0x3F | 0x80);
+            return 5;
+        } else if (c < 0x80000000) {
+            outputUTF8[0] = (byte) (c >> 30 & 0x01 | 0xFC);
+            outputUTF8[1] = (byte) (c >> 24 & 0x3F | 0x80);
+            outputUTF8[2] = (byte) (c >> 18 & 0x3F | 0x80);
+            outputUTF8[3] = (byte) (c >> 12 & 0x3F | 0x80);
+            outputUTF8[4] = (byte) (c >> 6 & 0x3F | 0x80);
+            outputUTF8[5] = (byte) (c & 0x3F | 0x80);
+            return 6;
         }
-
-        return count;
+        return 0;
     }
 
     /**

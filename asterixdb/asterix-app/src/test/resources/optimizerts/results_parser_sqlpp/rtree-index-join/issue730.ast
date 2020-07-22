@@ -49,7 +49,7 @@ RecordConstructor [
         AS Variable [ Name=$t2 ]
       ]
       Where
-        FunctionCall test.spatial-intersect@2[
+        FunctionCall asterix.spatial-intersect@2[
           FieldAccessor [
             Variable [ Name=$t2 ]
             Field=sender_location
@@ -67,7 +67,7 @@ FROM [  FunctionCall asterix.dataset@1[
 ]
 Let Variable [ Name=$n ]
   :=
-  FunctionCall test.create-circle@2[
+  FunctionCall asterix.create-circle@2[
     FieldAccessor [
       Variable [ Name=$t1 ]
       Field=sender_location
@@ -82,7 +82,7 @@ Where
         Field=send_time
       ]
       >=
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2011-06-18T14:10:17]
       ]
     ]
@@ -93,7 +93,7 @@ Where
         Field=send_time
       ]
       <
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2011-06-18T15:10:17]
       ]
     ]

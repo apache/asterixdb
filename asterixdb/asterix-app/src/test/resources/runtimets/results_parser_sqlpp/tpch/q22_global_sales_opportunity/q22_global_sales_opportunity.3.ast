@@ -22,7 +22,7 @@ FunctionDecl q22_customer_tmp([]) {
       (
         LiteralExpr [STRING] [cntrycode]
         :
-        FunctionCall tpch.substring@3[
+        FunctionCall tpch.SUBSTR@3[
           FieldAccessor [
             Variable [ Name=$c ]
             Field=c_phone

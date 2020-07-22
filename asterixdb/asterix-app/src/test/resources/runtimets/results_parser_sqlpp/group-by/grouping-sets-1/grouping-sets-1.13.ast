@@ -1,228 +1,787 @@
 DataverseUse test
 Query:
-SELECT [
-Variable [ Name=$two ]
-two
-Variable [ Name=$four ]
-four
-Variable [ Name=$ten ]
-ten
-Variable [ Name=$twenty ]
-twenty
-Variable [ Name=#2 ]
-grp
-FunctionCall asterix.sql-sum@1[
-  (
-    SELECT ELEMENT [
-    FieldAccessor [
-      FieldAccessor [
-        Variable [ Name=#3 ]
-        Field=tenk
+SELECT ELEMENT [
+Variable [ Name=#3 ]
+]
+FROM [  (
+    SELECT [
+    Variable [ Name=$two ]
+    two
+    Variable [ Name=$four ]
+    four
+    Variable [ Name=$ten ]
+    ten
+    Variable [ Name=$twenty ]
+    twenty
+    Variable [ Name=#2 ]
+    grp
+    FunctionCall asterix.sql-sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=#4 ]
+            Field=tenk
+          ]
+          Field=hundred
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS Variable [ Name=#4 ]
+        ]
+      )
+    ]
+    agg_sum
+    ]
+    FROM [      FunctionCall asterix.dataset@1[
+        LiteralExpr [STRING] [test.tenk]
       ]
-      Field=hundred
+      AS Variable [ Name=$tenk ]
     ]
-    ]
-    FROM [      Variable [ Name=#1 ]
-      AS Variable [ Name=#3 ]
-    ]
-  )
-]
-agg_sum
-]
-FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [test.tenk]
-  ]
-  AS Variable [ Name=$tenk ]
-]
-Groupby
-  GROUPING SET (
-    Variable [ Name=$two ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=two
-    ]
-    Variable [ Name=$four ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=four
-    ]
-    Variable [ Name=$ten ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=ten
-    ]
-    Variable [ Name=$twenty ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=twenty
-    ]
-  )
-  GROUPING SET (
-    Variable [ Name=$two ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=two
-    ]
-    Variable [ Name=$four ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=four
-    ]
-    Variable [ Name=$ten ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=ten
-    ]
-  ),
-  GROUPING SET (
-    Variable [ Name=$two ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=two
-    ]
-    Variable [ Name=$four ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=four
-    ]
-    Variable [ Name=$twenty ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=twenty
-    ]
-  ),
-  GROUPING SET (
-    Variable [ Name=$two ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=two
-    ]
-    Variable [ Name=$four ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=four
-    ]
-  ),
-  GROUPING SET (
-    Variable [ Name=$two ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=two
-    ]
-    Variable [ Name=$ten ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=ten
-    ]
-    Variable [ Name=$twenty ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=twenty
-    ]
-  ),
-  GROUPING SET (
-    Variable [ Name=$two ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=two
-    ]
-    Variable [ Name=$ten ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=ten
-    ]
-  ),
-  GROUPING SET (
-    Variable [ Name=$two ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=two
-    ]
-    Variable [ Name=$twenty ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=twenty
-    ]
-  ),
-  GROUPING SET (
-    Variable [ Name=$two ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=two
-    ]
-  ),
-  GROUPING SET (
-    Variable [ Name=$ten ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=ten
-    ]
-    Variable [ Name=$twenty ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=twenty
-    ]
-  ),
-  GROUPING SET (
-    Variable [ Name=$ten ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=ten
-    ]
-  ),
-  GROUPING SET (
-    Variable [ Name=$twenty ]
-    :=
-    FieldAccessor [
-      Variable [ Name=$tenk ]
-      Field=twenty
-    ]
-  ),
-  GROUPING SET (
-  ),
-  GROUP AS Variable [ Name=#1 ]
-  (
-    tenk:=Variable [ Name=$tenk ]
-  )
+    Groupby
+      Variable [ Name=$two ]
+      :=
+      FieldAccessor [
+        Variable [ Name=$tenk ]
+        Field=two
+      ]
+      Variable [ Name=$four ]
+      :=
+      FieldAccessor [
+        Variable [ Name=$tenk ]
+        Field=four
+      ]
+      Variable [ Name=$ten ]
+      :=
+      FieldAccessor [
+        Variable [ Name=$tenk ]
+        Field=ten
+      ]
+      Variable [ Name=$twenty ]
+      :=
+      FieldAccessor [
+        Variable [ Name=$tenk ]
+        Field=twenty
+      ]
+      GROUP AS Variable [ Name=#1 ]
+      (
+        tenk:=Variable [ Name=$tenk ]
+      )
 
-Let Variable [ Name=#2 ]
-  :=
-  FunctionCall test.grouping@4[
-    Variable [ Name=$two ]
-    Variable [ Name=$four ]
-    Variable [ Name=$ten ]
-    Variable [ Name=$twenty ]
-  ]
+    Let Variable [ Name=#2 ]
+      :=
+      LiteralExpr [LONG] [0]
+    UNION
+      SELECT [
+      Variable [ Name=$two ]
+      two
+      Variable [ Name=$four ]
+      four
+      Variable [ Name=$ten ]
+      ten
+      Variable [ Name=$twenty ]
+      twenty
+      Variable [ Name=#2 ]
+      grp
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#5 ]
+              Field=tenk
+            ]
+            Field=hundred
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#5 ]
+          ]
+        )
+      ]
+      agg_sum
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        Variable [ Name=$two ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=two
+        ]
+        Variable [ Name=$four ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=four
+        ]
+        Variable [ Name=$ten ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=ten
+        ]
+        DECOR
+        Variable [ Name=$twenty ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=#2 ]
+        :=
+        LiteralExpr [LONG] [1]
+    UNION
+      SELECT [
+      Variable [ Name=$two ]
+      two
+      Variable [ Name=$four ]
+      four
+      Variable [ Name=$ten ]
+      ten
+      Variable [ Name=$twenty ]
+      twenty
+      Variable [ Name=#2 ]
+      grp
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#6 ]
+              Field=tenk
+            ]
+            Field=hundred
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#6 ]
+          ]
+        )
+      ]
+      agg_sum
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        Variable [ Name=$two ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=two
+        ]
+        Variable [ Name=$four ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=four
+        ]
+        Variable [ Name=$twenty ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=twenty
+        ]
+        DECOR
+        Variable [ Name=$ten ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=#2 ]
+        :=
+        LiteralExpr [LONG] [2]
+    UNION
+      SELECT [
+      Variable [ Name=$two ]
+      two
+      Variable [ Name=$four ]
+      four
+      Variable [ Name=$ten ]
+      ten
+      Variable [ Name=$twenty ]
+      twenty
+      Variable [ Name=#2 ]
+      grp
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#7 ]
+              Field=tenk
+            ]
+            Field=hundred
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#7 ]
+          ]
+        )
+      ]
+      agg_sum
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        Variable [ Name=$two ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=two
+        ]
+        Variable [ Name=$four ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=four
+        ]
+        DECOR
+        Variable [ Name=$ten ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$twenty ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=#2 ]
+        :=
+        LiteralExpr [LONG] [3]
+    UNION
+      SELECT [
+      Variable [ Name=$two ]
+      two
+      Variable [ Name=$four ]
+      four
+      Variable [ Name=$ten ]
+      ten
+      Variable [ Name=$twenty ]
+      twenty
+      Variable [ Name=#2 ]
+      grp
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#8 ]
+              Field=tenk
+            ]
+            Field=hundred
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#8 ]
+          ]
+        )
+      ]
+      agg_sum
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        Variable [ Name=$two ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=two
+        ]
+        Variable [ Name=$ten ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=ten
+        ]
+        Variable [ Name=$twenty ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=twenty
+        ]
+        DECOR
+        Variable [ Name=$four ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=#2 ]
+        :=
+        LiteralExpr [LONG] [4]
+    UNION
+      SELECT [
+      Variable [ Name=$two ]
+      two
+      Variable [ Name=$four ]
+      four
+      Variable [ Name=$ten ]
+      ten
+      Variable [ Name=$twenty ]
+      twenty
+      Variable [ Name=#2 ]
+      grp
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#9 ]
+              Field=tenk
+            ]
+            Field=hundred
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#9 ]
+          ]
+        )
+      ]
+      agg_sum
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        Variable [ Name=$two ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=two
+        ]
+        Variable [ Name=$ten ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=ten
+        ]
+        DECOR
+        Variable [ Name=$four ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$twenty ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=#2 ]
+        :=
+        LiteralExpr [LONG] [5]
+    UNION
+      SELECT [
+      Variable [ Name=$two ]
+      two
+      Variable [ Name=$four ]
+      four
+      Variable [ Name=$ten ]
+      ten
+      Variable [ Name=$twenty ]
+      twenty
+      Variable [ Name=#2 ]
+      grp
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#10 ]
+              Field=tenk
+            ]
+            Field=hundred
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#10 ]
+          ]
+        )
+      ]
+      agg_sum
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        Variable [ Name=$two ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=two
+        ]
+        Variable [ Name=$twenty ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=twenty
+        ]
+        DECOR
+        Variable [ Name=$four ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$ten ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=#2 ]
+        :=
+        LiteralExpr [LONG] [6]
+    UNION
+      SELECT [
+      Variable [ Name=$two ]
+      two
+      Variable [ Name=$four ]
+      four
+      Variable [ Name=$ten ]
+      ten
+      Variable [ Name=$twenty ]
+      twenty
+      Variable [ Name=#2 ]
+      grp
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#11 ]
+              Field=tenk
+            ]
+            Field=hundred
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#11 ]
+          ]
+        )
+      ]
+      agg_sum
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        Variable [ Name=$two ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=two
+        ]
+        DECOR
+        Variable [ Name=$four ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$ten ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$twenty ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=#2 ]
+        :=
+        LiteralExpr [LONG] [7]
+    UNION
+      SELECT [
+      Variable [ Name=$two ]
+      two
+      Variable [ Name=$four ]
+      four
+      Variable [ Name=$ten ]
+      ten
+      Variable [ Name=$twenty ]
+      twenty
+      Variable [ Name=#2 ]
+      grp
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#12 ]
+              Field=tenk
+            ]
+            Field=hundred
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#12 ]
+          ]
+        )
+      ]
+      agg_sum
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        Variable [ Name=$ten ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=ten
+        ]
+        Variable [ Name=$twenty ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=twenty
+        ]
+        DECOR
+        Variable [ Name=$two ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$four ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=#2 ]
+        :=
+        LiteralExpr [LONG] [12]
+    UNION
+      SELECT [
+      Variable [ Name=$two ]
+      two
+      Variable [ Name=$four ]
+      four
+      Variable [ Name=$ten ]
+      ten
+      Variable [ Name=$twenty ]
+      twenty
+      Variable [ Name=#2 ]
+      grp
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#13 ]
+              Field=tenk
+            ]
+            Field=hundred
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#13 ]
+          ]
+        )
+      ]
+      agg_sum
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        Variable [ Name=$ten ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=ten
+        ]
+        DECOR
+        Variable [ Name=$two ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$four ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$twenty ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=#2 ]
+        :=
+        LiteralExpr [LONG] [13]
+    UNION
+      SELECT [
+      Variable [ Name=$two ]
+      two
+      Variable [ Name=$four ]
+      four
+      Variable [ Name=$ten ]
+      ten
+      Variable [ Name=$twenty ]
+      twenty
+      Variable [ Name=#2 ]
+      grp
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#14 ]
+              Field=tenk
+            ]
+            Field=hundred
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#14 ]
+          ]
+        )
+      ]
+      agg_sum
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        Variable [ Name=$twenty ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=twenty
+        ]
+        DECOR
+        Variable [ Name=$two ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$four ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$ten ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=#2 ]
+        :=
+        LiteralExpr [LONG] [14]
+    UNION
+      SELECT [
+      Variable [ Name=$two ]
+      two
+      Variable [ Name=$four ]
+      four
+      Variable [ Name=$ten ]
+      ten
+      Variable [ Name=$twenty ]
+      twenty
+      Variable [ Name=#2 ]
+      grp
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#15 ]
+              Field=tenk
+            ]
+            Field=hundred
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#15 ]
+          ]
+        )
+      ]
+      agg_sum
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        GROUPING SET (
+        )
+        DECOR
+        Variable [ Name=$two ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$four ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$ten ]
+        :=
+        LiteralExpr [NULL]
+        Variable [ Name=$twenty ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=#2 ]
+        :=
+        LiteralExpr [LONG] [15]
+  )
+  AS Variable [ Name=#3 ]
+]
 Orderby
-  Variable [ Name=$two ]
+  FieldAccessor [
+    Variable [ Name=#3 ]
+    Field=two
+  ]
   ASC
-  Variable [ Name=$four ]
+  FieldAccessor [
+    Variable [ Name=#3 ]
+    Field=four
+  ]
   ASC
-  Variable [ Name=$ten ]
+  FieldAccessor [
+    Variable [ Name=#3 ]
+    Field=ten
+  ]
   ASC
-  Variable [ Name=$twenty ]
+  FieldAccessor [
+    Variable [ Name=#3 ]
+    Field=twenty
+  ]
   ASC
 

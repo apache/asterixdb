@@ -39,7 +39,7 @@ Let Variable [ Name=$k ]
     ]
   ]
 SELECT ELEMENT [
-FunctionCall test.string-concat@1[
+FunctionCall asterix.string-concat@1[
   OrderedListConstructor [
     FieldAccessor [
       Variable [ Name=$x ]

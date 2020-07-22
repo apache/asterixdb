@@ -16,8 +16,12 @@ p
     Field=c1
   ]
   c1
-  WINDOW test.row_number@0[
+  WINDOW asterix.row-number-impl@0[
   ]
+    AS Variable [ Name=#1 ]
+    (
+      g:=Variable [ Name=$g ]
+    )
   OVER (
     ORDER BY
       FieldAccessor [
@@ -52,7 +56,7 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$t1 ]
 ,
-  FunctionCall test.range@2[
+  FunctionCall asterix.range@2[
     FieldAccessor [
       Variable [ Name=$t1 ]
       Field=one

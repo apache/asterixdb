@@ -4,13 +4,13 @@ Let Variable [ Name=$i8 ]
   :=
   FunctionCall asterix.sql-min@1[
     OrderedListConstructor [
-      FunctionCall test.int8@1[
+      FunctionCall asterix.int8@1[
         LiteralExpr [STRING] [1]
       ]
-      FunctionCall test.int8@1[
+      FunctionCall asterix.int8@1[
         LiteralExpr [STRING] [2]
       ]
-      FunctionCall test.int8@1[
+      FunctionCall asterix.int8@1[
         LiteralExpr [STRING] [3]
       ]
       LiteralExpr [NULL]
@@ -20,13 +20,13 @@ Let Variable [ Name=$i16 ]
   :=
   FunctionCall asterix.sql-min@1[
     OrderedListConstructor [
-      FunctionCall test.int16@1[
+      FunctionCall asterix.int16@1[
         LiteralExpr [STRING] [1]
       ]
-      FunctionCall test.int16@1[
+      FunctionCall asterix.int16@1[
         LiteralExpr [STRING] [2]
       ]
-      FunctionCall test.int16@1[
+      FunctionCall asterix.int16@1[
         LiteralExpr [STRING] [3]
       ]
       LiteralExpr [NULL]
@@ -36,13 +36,13 @@ Let Variable [ Name=$i32 ]
   :=
   FunctionCall asterix.sql-min@1[
     OrderedListConstructor [
-      FunctionCall test.int32@1[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [1]
       ]
-      FunctionCall test.int32@1[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [2]
       ]
-      FunctionCall test.int32@1[
+      FunctionCall asterix.int32@1[
         LiteralExpr [STRING] [3]
       ]
       LiteralExpr [NULL]
@@ -52,13 +52,13 @@ Let Variable [ Name=$i64 ]
   :=
   FunctionCall asterix.sql-min@1[
     OrderedListConstructor [
-      FunctionCall test.int64@1[
+      FunctionCall asterix.int64@1[
         LiteralExpr [STRING] [1]
       ]
-      FunctionCall test.int64@1[
+      FunctionCall asterix.int64@1[
         LiteralExpr [STRING] [2]
       ]
-      FunctionCall test.int64@1[
+      FunctionCall asterix.int64@1[
         LiteralExpr [STRING] [3]
       ]
       LiteralExpr [NULL]
@@ -68,13 +68,13 @@ Let Variable [ Name=$f ]
   :=
   FunctionCall asterix.sql-min@1[
     OrderedListConstructor [
-      FunctionCall test.float@1[
+      FunctionCall asterix.float@1[
         LiteralExpr [STRING] [1]
       ]
-      FunctionCall test.float@1[
+      FunctionCall asterix.float@1[
         LiteralExpr [STRING] [2]
       ]
-      FunctionCall test.float@1[
+      FunctionCall asterix.float@1[
         LiteralExpr [STRING] [3]
       ]
       LiteralExpr [NULL]
@@ -84,13 +84,13 @@ Let Variable [ Name=$d ]
   :=
   FunctionCall asterix.sql-min@1[
     OrderedListConstructor [
-      FunctionCall test.double@1[
+      FunctionCall asterix.double@1[
         LiteralExpr [STRING] [1]
       ]
-      FunctionCall test.double@1[
+      FunctionCall asterix.double@1[
         LiteralExpr [STRING] [2]
       ]
-      FunctionCall test.double@1[
+      FunctionCall asterix.double@1[
         LiteralExpr [STRING] [3]
       ]
       LiteralExpr [NULL]
@@ -110,13 +110,13 @@ Let Variable [ Name=$dt ]
   :=
   FunctionCall asterix.sql-min@1[
     OrderedListConstructor [
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2012-03-01T00:00:00Z]
       ]
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2012-01-01T00:00:00Z]
       ]
-      FunctionCall test.datetime@1[
+      FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [2012-02-01T00:00:00Z]
       ]
       LiteralExpr [NULL]

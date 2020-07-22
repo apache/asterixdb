@@ -47,6 +47,7 @@ public class IndexBuilder implements IIndexBuilder {
     protected final IResourceFactory localResourceFactory;
     protected final boolean durable;
     private final IResourceIdFactory resourceIdFactory;
+    private final String resourceRelPath;
 
     /*
      * Ideally, we should not pass resource id factory to the constructor since we can obtain it through
@@ -62,6 +63,7 @@ public class IndexBuilder implements IIndexBuilder {
         this.localResourceFactory = localResourceFactory;
         this.durable = durable;
         this.resourceRef = resourceRef;
+        resourceRelPath = resourceRef.getRelativePath();
     }
 
     @Override
@@ -72,35 +74,34 @@ public class IndexBuilder implements IIndexBuilder {
             // physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource Id).
             // Once the index has been created, a new resource Id can be generated.
             ILocalResourceRepository localResourceRepository = storageManager.getLocalResourceRepository(ctx);
-            LocalResource lr = localResourceRepository.get(resourceRef.getRelativePath());
+            LocalResource lr = localResourceRepository.get(resourceRelPath);
             long resourceId = lr == null ? -1 : lr.getId();
             if (resourceId != -1) {
-                localResourceRepository.delete(resourceRef.getRelativePath());
+                localResourceRepository.delete(resourceRelPath);
             }
             resourceId = resourceIdFactory.createId();
             IResource resource = localResourceFactory.createResource(resourceRef);
             lr = new LocalResource(resourceId, ITreeIndexFrame.Constants.VERSION, durable, resource);
-            IIndex index = lcManager.get(resourceRef.getRelativePath());
+            IIndex index = lcManager.get(resourceRelPath);
             if (index != null) {
                 //how is this right?????????? <needs to be fixed>
                 //The reason for this is to handle many cases such as:
                 //1. Crash while delete index is running (we don't do global cleanup on restart)
                 //2. Node leaves and then join with old data
-                LOGGER.log(Level.WARN,
-                        "Removing existing index on index create for the index: " + resourceRef.getRelativePath());
-                lcManager.unregister(resourceRef.getRelativePath());
+                LOGGER.log(Level.WARN, "Removing existing index on index create for the index: " + resourceRelPath);
+                lcManager.unregister(resourceRelPath);
                 index.destroy();
             } else {
-                if (resourceRef.getFile().exists()) {
+                final FileReference resolvedResourceRef = ctx.getIoManager().resolve(resourceRelPath);
+                if (resolvedResourceRef.getFile().exists()) {
                     // Index is not registered but the index file exists
                     // This is another big problem that we need to disallow soon
                     // We can only disallow this if we have a global cleanup after crash
                     // on reboot
-                    LOGGER.log(Level.WARN,
-                            "Deleting " + resourceRef.getRelativePath()
-                                    + " on index create. The index is not registered"
-                                    + " but the file exists in the filesystem");
-                    IoUtil.delete(resourceRef);
+                    LOGGER.warn(
+                            "Deleting {} on index create. The index is not registered but the file exists in the filesystem",
+                            resolvedResourceRef);
+                    IoUtil.delete(resolvedResourceRef);
                 }
                 index = resource.createInstance(ctx);
             }
@@ -110,7 +111,7 @@ public class IndexBuilder implements IIndexBuilder {
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             }
-            lcManager.register(resourceRef.getRelativePath(), index);
+            lcManager.register(resourceRelPath, index);
         }
     }
 }

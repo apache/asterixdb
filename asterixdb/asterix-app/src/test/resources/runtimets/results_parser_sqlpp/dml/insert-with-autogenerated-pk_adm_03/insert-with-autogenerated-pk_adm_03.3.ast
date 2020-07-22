@@ -9,7 +9,7 @@ FROM [  FunctionCall asterix.dataset@1[
   AS Variable [ Name=$o ]
 ]
 Where
-  FunctionCall test.contains@2[
+  FunctionCall asterix.contains@2[
     FieldAccessor [
       Variable [ Name=$o ]
       Field=title

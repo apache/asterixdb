@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall test.substring@2[
+FunctionCall asterix.substring@2[
   FieldAccessor [
     Variable [ Name=$a ]
     Field=name

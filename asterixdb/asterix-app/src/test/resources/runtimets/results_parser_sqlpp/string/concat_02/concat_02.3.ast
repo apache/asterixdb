@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [a]
     :
-    FunctionCall test.string-concat@1[
+    FunctionCall asterix.string-concat@1[
       OrderedListConstructor [
         LiteralExpr [NULL]
       ]
@@ -13,7 +13,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [b]
     :
-    FunctionCall test.string-concat@1[
+    FunctionCall asterix.string-concat@1[
       OrderedListConstructor [
         LiteralExpr [NULL]
         LiteralExpr [STRING] [foo]
@@ -23,7 +23,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [c]
     :
-    FunctionCall test.string-concat@1[
+    FunctionCall asterix.string-concat@1[
       OrderedListConstructor [
         LiteralExpr [STRING] [foo]
         LiteralExpr [NULL]

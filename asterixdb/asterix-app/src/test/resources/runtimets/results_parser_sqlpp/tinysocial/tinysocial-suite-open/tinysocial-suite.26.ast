@@ -6,7 +6,7 @@ organization
 FunctionCall asterix.sql-avg@1[
   (
     SELECT ELEMENT [
-    FunctionCall TinySocial.get-year@1[
+    FunctionCall asterix.get-year@1[
       FieldAccessor [
         FieldAccessor [
           Variable [ Name=#2 ]
@@ -42,7 +42,7 @@ count
 FunctionCall asterix.sql-sum@1[
   (
     SELECT ELEMENT [
-    FunctionCall TinySocial.get-year@1[
+    FunctionCall asterix.get-year@1[
       FieldAccessor [
         FieldAccessor [
           Variable [ Name=#4 ]

@@ -4,21 +4,21 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result1]
     :
-    FunctionCall test.uppercase@1[
+    FunctionCall asterix.uppercase@1[
       LiteralExpr [STRING] [Hellow]
     ]
   )
   (
     LiteralExpr [STRING] [result2]
     :
-    FunctionCall test.uppercase@1[
+    FunctionCall asterix.uppercase@1[
       LiteralExpr [STRING] []
     ]
   )
   (
     LiteralExpr [STRING] [result3]
     :
-    FunctionCall test.uppercase@1[
+    FunctionCall asterix.uppercase@1[
       LiteralExpr [NULL]
     ]
   )

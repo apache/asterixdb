@@ -317,7 +317,7 @@ FROM [  (
 ]
 Let Variable [ Name=$l_year0 ]
   :=
-  FunctionCall tpch.get-year@1[
+  FunctionCall asterix.get-year@1[
     FieldAccessor [
       Variable [ Name=$locs ]
       Field=l_shipdate

@@ -37,7 +37,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [date-after]
     :
-    FunctionCall temp.date@1[
+    FunctionCall asterix.date@1[
       FieldAccessor [
         Variable [ Name=$i ]
         Field=date
@@ -55,7 +55,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [time-after]
     :
-    FunctionCall temp.time@1[
+    FunctionCall asterix.time@1[
       FieldAccessor [
         Variable [ Name=$i ]
         Field=time
@@ -73,7 +73,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [datetime-after]
     :
-    FunctionCall temp.datetime@1[
+    FunctionCall asterix.datetime@1[
       FieldAccessor [
         Variable [ Name=$i ]
         Field=datetime

@@ -58,7 +58,7 @@ FROM [  FunctionCall asterix.dataset@1[
 Where
   OperatorExpr [
     OperatorExpr [
-      FunctionCall test.word-tokens@1[
+      FunctionCall asterix.word-tokens@1[
         FieldAccessor [
           FieldAccessor [
             Variable [ Name=$a ]
@@ -68,7 +68,7 @@ Where
         ]
       ]
       ~=
-      FunctionCall test.word-tokens@1[
+      FunctionCall asterix.word-tokens@1[
         FieldAccessor [
           FieldAccessor [
             Variable [ Name=$b ]

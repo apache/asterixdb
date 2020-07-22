@@ -51,8 +51,7 @@ public final class CheckNonFunctionalExpressionVisitor extends AbstractSqlppCont
             }
         } else {
             try {
-                Function function =
-                        FunctionUtil.lookupUserDefinedFunctionDecl(metadataProvider.getMetadataTxnContext(), fs);
+                Function function = metadataProvider.lookupUserDefinedFunction(fs);
                 if (function != null && function.getDeterministic() != null && !function.getDeterministic()) {
                     return true;
                 }

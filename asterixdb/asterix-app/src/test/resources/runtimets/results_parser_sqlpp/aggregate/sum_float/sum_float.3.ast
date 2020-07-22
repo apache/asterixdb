@@ -7,13 +7,13 @@ FunctionCall asterix.sum@1[
     Variable [ Name=$x ]
     ]
     FROM [      OrderedListConstructor [
-        FunctionCall test.float@1[
+        FunctionCall asterix.float@1[
           LiteralExpr [STRING] [1]
         ]
-        FunctionCall test.float@1[
+        FunctionCall asterix.float@1[
           LiteralExpr [STRING] [2]
         ]
-        FunctionCall test.float@1[
+        FunctionCall asterix.float@1[
           LiteralExpr [STRING] [3]
         ]
       ]

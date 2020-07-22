@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [result1]
     :
-    FunctionCall test.matches@3[
+    FunctionCall asterix.matches@3[
       LiteralExpr [STRING] [abracadabra]
       LiteralExpr [STRING] [Bra]
       LiteralExpr [STRING] [i]

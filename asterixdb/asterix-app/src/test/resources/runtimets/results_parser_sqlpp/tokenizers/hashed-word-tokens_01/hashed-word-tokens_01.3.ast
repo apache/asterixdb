@@ -6,7 +6,7 @@ Let Variable [ Name=$txt ]
   LiteralExpr [STRING] [Hello World, I would like to inform you of the importance of Foo Bar. Yes, Foo Bar. Jürgen.]
 Let Variable [ Name=$tokens ]
   :=
-  FunctionCall test.hashed-word-tokens@1[
+  FunctionCall asterix.hashed-word-tokens@1[
     Variable [ Name=$txt ]
   ]
 SELECT ELEMENT [

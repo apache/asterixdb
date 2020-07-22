@@ -2,182 +2,182 @@ DataverseUse test
 Query:
 OrderedListConstructor [
   OperatorExpr [
-    FunctionCall test.sub-binary@2[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@2[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] []
       ]
       LiteralExpr [LONG] [0]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] []
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@2[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@2[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] []
       ]
       LiteralExpr [LONG] [1]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] []
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@2[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@2[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] []
       ]
       - LiteralExpr [LONG] [1]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] []
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@3[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@3[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
       LiteralExpr [LONG] [0]
-      FunctionCall test.binary-length@1[
-        FunctionCall test.hex@1[
+      FunctionCall asterix.binary-length@1[
+        FunctionCall asterix.hex@1[
           LiteralExpr [STRING] [aabbccdd]
         ]
       ]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] [aabbccdd]
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@3[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@3[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
       LiteralExpr [LONG] [1]
       LiteralExpr [LONG] [1]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] [bb]
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@2[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@2[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
       LiteralExpr [LONG] [1]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] [bbccdd]
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@3[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@3[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
       LiteralExpr [LONG] [4]
       LiteralExpr [LONG] [0]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] []
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@3[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@3[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
       LiteralExpr [LONG] [3]
       LiteralExpr [LONG] [1]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] [dd]
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@3[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@3[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
       LiteralExpr [LONG] [1]
       LiteralExpr [LONG] [2]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] [bbcc]
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@2[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@2[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
       LiteralExpr [LONG] [0]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] [aabbccdd]
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@2[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@2[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
       - LiteralExpr [LONG] [1]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] [aabbccdd]
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@3[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@3[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
       LiteralExpr [LONG] [0]
       LiteralExpr [LONG] [256]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] [aabbccdd]
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@3[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@3[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
       LiteralExpr [LONG] [1]
       LiteralExpr [LONG] [256]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] [bbccdd]
     ]
   ]
   OperatorExpr [
-    FunctionCall test.sub-binary@3[
-      FunctionCall test.hex@1[
+    FunctionCall asterix.sub-binary@3[
+      FunctionCall asterix.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
       LiteralExpr [LONG] [1]
       - LiteralExpr [LONG] [1]
     ]
     =
-    FunctionCall test.hex@1[
+    FunctionCall asterix.hex@1[
       LiteralExpr [STRING] []
     ]
   ]

@@ -104,7 +104,7 @@ Let Variable [ Name=$avg ]
       ]
       Let Variable [ Name=$phone_substr ]
         :=
-        FunctionCall tpch.substring@3[
+        FunctionCall asterix.substring@3[
           FieldAccessor [
             Variable [ Name=$c ]
             Field=c_phone

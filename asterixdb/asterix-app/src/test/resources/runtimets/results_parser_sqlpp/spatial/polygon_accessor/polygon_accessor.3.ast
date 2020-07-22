@@ -2,7 +2,7 @@ DataverseUse test
 Query:
 Let Variable [ Name=$polygon ]
   :=
-  FunctionCall test.create-polygon@1[
+  FunctionCall asterix.create-polygon@1[
     OrderedListConstructor [
       LiteralExpr [DOUBLE] [1.0]
       LiteralExpr [DOUBLE] [1.0]
@@ -16,7 +16,7 @@ Let Variable [ Name=$polygon ]
   ]
 Let Variable [ Name=$polygon_list ]
   :=
-  FunctionCall test.get-points@1[
+  FunctionCall asterix.get-points@1[
     Variable [ Name=$polygon ]
   ]
 SELECT ELEMENT [

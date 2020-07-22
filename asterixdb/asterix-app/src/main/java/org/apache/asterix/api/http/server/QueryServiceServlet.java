@@ -279,7 +279,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             if (forceReadOnly) {
                 param.setReadOnly(true);
             }
-            LOGGER.info(() -> "handleRequest: " + LogRedactionUtil.userData(param.toString()));
+            LOGGER.info(() -> "handleRequest: " + LogRedactionUtil.statement(param.toString()));
             delivery = param.getMode();
             setSessionConfig(sessionOutput, param, delivery);
             final ResultProperties resultProperties = new ResultProperties(delivery, param.getMaxResultReads());
@@ -427,10 +427,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         if (t instanceof org.apache.asterix.aqlplus.parser.TokenMgrError || t instanceof TokenMgrError
                 || t instanceof AlgebricksException) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("handleException: {}: {}", t.getMessage(), LogRedactionUtil.userData(param.toString()), t);
+                LOGGER.debug("handleException: {}: {}", t.getMessage(), LogRedactionUtil.statement(param.toString()),
+                        t);
             } else {
                 LOGGER.info(() -> "handleException: " + t.getMessage() + ": "
-                        + LogRedactionUtil.userData(param.toString()));
+                        + LogRedactionUtil.statement(param.toString()));
             }
             executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
         } else if (t instanceof HyracksException) {

@@ -187,7 +187,7 @@ public class APIFramework {
             generateExpressionTree(q);
         }
         IQueryRewriter rw = rewriterFactory.createQueryRewriter();
-        rw.rewrite(declaredFunctions, q, metadataProvider,
+        rw.rewrite(new ArrayList<>(declaredFunctions), q, metadataProvider,
                 new LangRewritingContext(q.getVarCounter(), warningCollector), inlineUdfs, externalVars);
         return new Pair<>(q, q.getVarCounter());
     }

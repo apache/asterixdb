@@ -96,7 +96,7 @@ RecordConstructor [
       ]
       Let Variable [ Name=$sim ]
         :=
-        FunctionCall test.edit-distance-check@3[
+        FunctionCall asterix.edit-distance-check@3[
           FieldAccessor [
             FieldAccessor [
               Variable [ Name=$t1 ]
@@ -167,7 +167,7 @@ Where
       Field=tweetid
     ]
     >
-    FunctionCall test.int64@1[
+    FunctionCall asterix.int64@1[
       LiteralExpr [STRING] [240]
     ]
   ]

@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -41,6 +40,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.external.IDataSourceAdapter;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.asterix.common.storage.ICompressionManager;
@@ -81,6 +81,7 @@ import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
+import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
@@ -180,7 +181,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private boolean blockingOperatorDisabled = false;
 
     public static MetadataProvider create(ICcApplicationContext appCtx, Dataverse defaultDataverse) {
-        Function<ICcApplicationContext, IMetadataProvider<?, ?>> factory =
+        java.util.function.Function<ICcApplicationContext, IMetadataProvider<?, ?>> factory =
                 ((ICCExtensionManager) appCtx.getExtensionManager()).getMetadataProviderFactory();
         MetadataProvider mp = factory != null ? (MetadataProvider) factory.apply(appCtx) : new MetadataProvider(appCtx);
         mp.setDefaultDataverse(defaultDataverse);
@@ -444,6 +445,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     @Override
     public IFunctionInfo lookupFunction(FunctionIdentifier fid) {
         return BuiltinFunctions.lookupFunction(fid);
+    }
+
+    public Function lookupUserDefinedFunction(FunctionSignature signature) throws AlgebricksException {
+        if (signature.getDataverseName() == null) {
+            return null;
+        }
+        return MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
     }
 
     @Override

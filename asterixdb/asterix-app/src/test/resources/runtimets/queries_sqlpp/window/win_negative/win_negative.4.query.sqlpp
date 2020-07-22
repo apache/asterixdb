@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description  : Test error message for an unknown window function
+ * Description  : Test error message for a non-window function
  *              : with identifier resolution
  * Expected Res : FAILURE
  */
@@ -25,4 +25,4 @@
 from (
   from range(1, 2) x, range(1, 2) y select x, y
 ) t
-select unknown_func(x) over (partition by y)
+select lower(x) over (partition by y)
