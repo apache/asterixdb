@@ -9493,6 +9493,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="position/offset0/pos0_multi_code_point">
+        <output-dir compare="Text">position/offset0/pos0_multi_code_point</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="position/offset0/position0">
         <output-dir compare="Text">position/offset0/position0</output-dir>
       </compilation-unit>

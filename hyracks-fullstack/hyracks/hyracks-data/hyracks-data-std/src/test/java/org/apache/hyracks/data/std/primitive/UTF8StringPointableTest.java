@@ -20,6 +20,7 @@
 package org.apache.hyracks.data.std.primitive;
 
 import static org.apache.hyracks.data.std.primitive.UTF8StringPointable.generateUTF8Pointable;
+import static org.apache.hyracks.util.string.UTF8StringSample.EMOJI_BASKETBALL;
 import static org.apache.hyracks.util.string.UTF8StringSample.STRING_EMOJI_FAMILY_OF_2;
 import static org.apache.hyracks.util.string.UTF8StringSample.STRING_EMOJI_FAMILY_OF_4;
 import static org.junit.Assert.assertEquals;
@@ -50,7 +51,7 @@ public class UTF8StringPointableTest {
             generateUTF8Pointable(STRING_EMOJI_FAMILY_OF_2);
 
     @Test
-    public void testGetStringLength() throws Exception {
+    public void testGetStringUTF8Length() throws Exception {
         UTF8StringPointable utf8Ptr = generateUTF8Pointable(UTF8StringSample.STRING_LEN_127);
         assertEquals(127, utf8Ptr.getUTF8Length());
         assertEquals(1, utf8Ptr.getMetaDataLength());
@@ -61,6 +62,16 @@ public class UTF8StringPointableTest {
         assertEquals(128, utf8Ptr.getUTF8Length());
         assertEquals(2, utf8Ptr.getMetaDataLength());
         assertEquals(128, utf8Ptr.getStringLength());
+    }
+
+    @Test
+    public void testFindInCodePoint() {
+        UTF8StringPointable strp = generateUTF8Pointable(STRING_EMOJI_FAMILY_OF_4 + EMOJI_BASKETBALL);
+        UTF8StringPointable pattern = generateUTF8Pointable(EMOJI_BASKETBALL);
+
+        assertEquals(UTF8StringPointable.findInCodePoint(strp, pattern, false), 7);
+
+        assertEquals(UTF8StringPointable.findInCodePoint(strp, pattern, true), 7);
     }
 
     @Test
