@@ -181,6 +181,7 @@ public class UTF8StringUtil {
         }
     }
 
+    // The result is the number of Java Char (8 bytes) in the string
     public static int getStringLength(byte[] b, int s) {
         int len = getUTFLength(b, s);
         int pos = s + getNumBytesToStoreLength(len);
@@ -193,6 +194,26 @@ public class UTF8StringUtil {
         return charCount;
     }
 
+    public static int getNumCodePoint(byte[] b, int s) {
+        int len = getUTFLength(b, s);
+        int pos = s + getNumBytesToStoreLength(len);
+        int end = pos + len;
+        int codePointCount = 0;
+        while (pos < end) {
+            char ch = charAt(b, pos);
+            // 3 cases here:
+            // * If the current char is a complete unicode character (not part of a surrogate pair), then codePointCount++;
+            // * If the current char is a high surrogate in a surrogate pair, then codePointCount++ for this high surrogate
+            // * If the current char is a low surrogate in a surrogate pair,
+            //       then don't increase the codePointCount because it is increased already for its corresponding high surrogate
+            if (Character.isLowSurrogate(ch) == false) {
+                codePointCount++;
+            }
+            pos += charSize(b, pos);
+        }
+        return codePointCount;
+    }
+
     public static int getUTFLength(byte[] b, int s) {
         return VarLenIntEncoderDecoder.decode(b, s);
     }
@@ -201,68 +222,15 @@ public class UTF8StringUtil {
         return VarLenIntEncoderDecoder.getBytesRequired(strlen);
     }
 
-    public static int UTF8ToCodePoint(byte[] b, int s) {
-        if (b[s] >> 7 == 0) {
-            // 1 byte
-            return b[s];
-        } else if ((b[s] & 0xe0) == 0xc0) { /*0xe0 = 0b1110000*/
-            // 2 bytes
-            return (b[s] & 0x1f) << 6 | /*0x3f = 0b00111111*/
-                    (b[s + 1] & 0x3f);
-        } else if ((b[s] & 0xf0) == 0xe0) {
-            // 3bytes
-            return (b[s] & 0xf) << 12 | (b[s + 1] & 0x3f) << 6 | (b[s + 2] & 0x3f);
-        } else if ((b[s] & 0xf8) == 0xf0) {
-            // 4bytes
-            return (b[s] & 0x7) << 18 | (b[s + 1] & 0x3f) << 12 | (b[s + 2] & 0x3f) << 6 | (b[s + 3] & 0x3f);
-        } else if ((b[s] & 0xfc) == 0xf8) {
-            // 5bytes
-            return (b[s] & 0x3) << 24 | (b[s + 1] & 0x3f) << 18 | (b[s + 2] & 0x3f) << 12 | (b[s + 3] & 0x3f) << 6
-                    | (b[s + 4] & 0x3f);
-        } else if ((b[s] & 0xfe) == 0xfc) {
-            // 6bytes
-            return (b[s] & 0x1) << 30 | (b[s + 1] & 0x3f) << 24 | (b[s + 2] & 0x3f) << 18 | (b[s + 3] & 0x3f) << 12
-                    | (b[s + 4] & 0x3f) << 6 | (b[s + 5] & 0x3f);
-        }
-        return 0;
-    }
+    public static int codePointToUTF8(int codePoint, byte[] outputUTF8) {
+        int count = 0;
 
-    public static int codePointToUTF8(int c, byte[] outputUTF8) {
-        if (c < 0x80) {
-            outputUTF8[0] = (byte) (c & 0x7F /* mask 7 lsb: 0b1111111 */);
-            return 1;
-        } else if (c < 0x0800) {
-            outputUTF8[0] = (byte) (c >> 6 & 0x1F | 0xC0);
-            outputUTF8[1] = (byte) (c & 0x3F | 0x80);
-            return 2;
-        } else if (c < 0x010000) {
-            outputUTF8[0] = (byte) (c >> 12 & 0x0F | 0xE0);
-            outputUTF8[1] = (byte) (c >> 6 & 0x3F | 0x80);
-            outputUTF8[2] = (byte) (c & 0x3F | 0x80);
-            return 3;
-        } else if (c < 0x200000) {
-            outputUTF8[0] = (byte) (c >> 18 & 0x07 | 0xF0);
-            outputUTF8[1] = (byte) (c >> 12 & 0x3F | 0x80);
-            outputUTF8[2] = (byte) (c >> 6 & 0x3F | 0x80);
-            outputUTF8[3] = (byte) (c & 0x3F | 0x80);
-            return 4;
-        } else if (c < 0x4000000) {
-            outputUTF8[0] = (byte) (c >> 24 & 0x03 | 0xF8);
-            outputUTF8[1] = (byte) (c >> 18 & 0x3F | 0x80);
-            outputUTF8[2] = (byte) (c >> 12 & 0x3F | 0x80);
-            outputUTF8[3] = (byte) (c >> 6 & 0x3F | 0x80);
-            outputUTF8[4] = (byte) (c & 0x3F | 0x80);
-            return 5;
-        } else if (c < 0x80000000) {
-            outputUTF8[0] = (byte) (c >> 30 & 0x01 | 0xFC);
-            outputUTF8[1] = (byte) (c >> 24 & 0x3F | 0x80);
-            outputUTF8[2] = (byte) (c >> 18 & 0x3F | 0x80);
-            outputUTF8[3] = (byte) (c >> 12 & 0x3F | 0x80);
-            outputUTF8[4] = (byte) (c >> 6 & 0x3F | 0x80);
-            outputUTF8[5] = (byte) (c & 0x3F | 0x80);
-            return 6;
+        char[] chars = Character.toChars(codePoint);
+        for (int i = 0; i < chars.length; i++) {
+            count += writeToBytes(outputUTF8, count, chars[i]);
         }
-        return 0;
+
+        return count;
     }
 
     /**
