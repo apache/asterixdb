@@ -27,7 +27,6 @@ import java.io.OutputStream;
 import java.io.UTFDataFormatException;
 import java.util.PrimitiveIterator;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
