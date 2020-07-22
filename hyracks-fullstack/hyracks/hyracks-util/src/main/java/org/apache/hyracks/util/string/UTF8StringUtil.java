@@ -25,6 +25,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UTFDataFormatException;
+import java.util.PrimitiveIterator;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -731,7 +732,12 @@ public class UTF8StringUtil {
         return tempBytes;
     }
 
-    public static Set<Integer> getCodePointSetFromString(String str) {
-        return str.codePoints().boxed().collect(Collectors.toSet());
+    public static void getCodePointSetFromString(Set<Integer> codePointSet, String str) {
+        codePointSet.clear();
+        PrimitiveIterator.OfInt it = str.codePoints().iterator();
+
+        while (it.hasNext()) {
+            codePointSet.add(it.nextInt());
+        }
     }
 }

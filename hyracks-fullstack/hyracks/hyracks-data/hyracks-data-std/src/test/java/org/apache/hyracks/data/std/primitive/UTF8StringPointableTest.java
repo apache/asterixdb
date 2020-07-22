@@ -270,7 +270,8 @@ public class UTF8StringPointableTest {
         UTF8StringPointable input = generateUTF8Pointable("  this is it.i am;here.  ");
 
         String pattern = " hert.";
-        Set<Integer> codePointSet = UTF8StringUtil.getCodePointSetFromString(pattern);
+        Set<Integer> codePointSet = new HashSet<>();
+        UTF8StringUtil.getCodePointSetFromString(codePointSet, pattern);
 
         // Trims both sides.
         input.trim(builder, storage, true, true, codePointSet);
@@ -295,7 +296,7 @@ public class UTF8StringPointableTest {
         // Test Emoji trim
         input = STRING_POINTABLE_EMOJI_FAMILY_OF_4;
         pattern = "👨👦";
-        codePointSet = UTF8StringUtil.getCodePointSetFromString(pattern);
+        UTF8StringUtil.getCodePointSetFromString(codePointSet, pattern);
 
         // Trim left
         storage.reset();

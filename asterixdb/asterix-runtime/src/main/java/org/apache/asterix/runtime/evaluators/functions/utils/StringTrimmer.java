@@ -20,6 +20,7 @@
 package org.apache.asterix.runtime.evaluators.functions.utils;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils;
@@ -38,7 +39,7 @@ public class StringTrimmer {
     // For the char set to trim.
     private final ByteArrayAccessibleOutputStream lastPatternStorage = new ByteArrayAccessibleOutputStream();
     private final UTF8StringPointable lastPatternPtr = new UTF8StringPointable();
-    private Set<Integer> codePointSet = null;
+    private Set<Integer> codePointSet = new HashSet<>();
 
     // For outputting the result.
     private final UTF8StringBuilder resultBuilder;
@@ -66,7 +67,7 @@ public class StringTrimmer {
         this.resultBuilder = resultBuilder;
         this.resultArray = resultArray;
         if (pattern != null) {
-            codePointSet = UTF8StringUtil.getCodePointSetFromString(pattern);
+            UTF8StringUtil.getCodePointSetFromString(codePointSet, pattern);
         }
     }
 
@@ -80,7 +81,7 @@ public class StringTrimmer {
         final boolean newPattern = codePointSet == null || lastPatternPtr.compareTo(patternPtr) != 0;
         if (newPattern) {
             StringEvaluatorUtils.copyResetUTF8Pointable(patternPtr, lastPatternStorage, lastPatternPtr);
-            codePointSet = UTF8StringUtil.getCodePointSetFromString(patternPtr.toString());
+            UTF8StringUtil.getCodePointSetFromString(codePointSet, patternPtr.toString());
         }
     }
 
