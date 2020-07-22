@@ -132,6 +132,8 @@
         length(string)
 
  * Returns the length of the string `string`.
+ Note that the length is in the unit of code point.
+ See the following examples for more details.
  * Arguments:
     * `string` : a `string` or `null` that represents the string to be checked.
  * Return Value:
@@ -144,10 +146,17 @@
 
         length("test string");
 
-
  * The expected result is:
 
         11
+
+ * Example:
+
+        length("👩‍👩‍👧‍👦");
+
+ * The expected result is (the emoji character 👩‍👩‍👧‍👦 has 7 code points):
+
+        7
 
 
 ### lower ###
