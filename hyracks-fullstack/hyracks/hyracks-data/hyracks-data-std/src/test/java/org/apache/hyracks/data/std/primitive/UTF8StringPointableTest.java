@@ -325,4 +325,30 @@ public class UTF8StringPointableTest {
         assertEquals(0, expected.compareTo(result));
     }
 
+    @Test
+    public void testReverse() throws Exception {
+        UTF8StringBuilder builder = new UTF8StringBuilder();
+        GrowableArray storage = new GrowableArray();
+        UTF8StringPointable result = new UTF8StringPointable();
+        UTF8StringPointable input = generateUTF8Pointable(" I'd like to reverse ");
+        UTF8StringPointable expected = generateUTF8Pointable(" esrever ot ekil d'I ");
+
+        UTF8StringPointable.reverse(input, builder, storage);
+        result.set(storage.getByteArray(), 0, storage.getLength());
+        assertEquals(0, expected.compareTo(result));
+    }
+
+    @Test
+    public void testReverseWithEmoji() throws IOException {
+        UTF8StringBuilder builder = new UTF8StringBuilder();
+        GrowableArray storage = new GrowableArray();
+        UTF8StringPointable result = new UTF8StringPointable();
+        UTF8StringPointable input = generateUTF8Pointable("\uD83C\uDDE8\uD83C\uDDF3"); // CN flag
+        UTF8StringPointable expected = generateUTF8Pointable("\uD83C\uDDF3\uD83C\uDDE8"); // NC flag
+
+        UTF8StringPointable.reverse(input, builder, storage);
+        result.set(storage.getByteArray(), 0, storage.getLength());
+        assertEquals(0, expected.compareTo(result));
+    }
+
 }
