@@ -22,12 +22,14 @@ package org.apache.asterix.runtime.evaluators.functions.utils;
 import java.io.IOException;
 
 import org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils;
-import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
+
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 
 /**
  * A wrapper for string trim methods.
@@ -37,7 +39,7 @@ public class StringTrimmer {
     // For the char set to trim.
     private final ByteArrayAccessibleOutputStream lastPatternStorage = new ByteArrayAccessibleOutputStream();
     private final UTF8StringPointable lastPatternPtr = new UTF8StringPointable();
-    private CharSet charSet;
+    private IntSet codePointSet = new IntArraySet();
 
     // For outputting the result.
     private final UTF8StringBuilder resultBuilder;
@@ -61,11 +63,12 @@ public class StringTrimmer {
      * @param pattern
      *            , the string that is used to construct the charset for trimming.
      */
-    public StringTrimmer(UTF8StringBuilder resultBuilder, GrowableArray resultArray, String pattern) {
+    public StringTrimmer(UTF8StringBuilder resultBuilder, GrowableArray resultArray, UTF8StringPointable pattern) {
         this.resultBuilder = resultBuilder;
         this.resultArray = resultArray;
         if (pattern != null) {
-            charSet = CharSet.getInstance(pattern);
+            codePointSet.clear();
+            pattern.getCodePoints(codePointSet);
         }
     }
 
@@ -76,10 +79,11 @@ public class StringTrimmer {
      *            , a pattern string.
      */
     public void build(UTF8StringPointable patternPtr) {
-        final boolean newPattern = charSet == null || lastPatternPtr.compareTo(patternPtr) != 0;
+        final boolean newPattern = (codePointSet.size() == 0) || lastPatternPtr.compareTo(patternPtr) != 0;
         if (newPattern) {
             StringEvaluatorUtils.copyResetUTF8Pointable(patternPtr, lastPatternStorage, lastPatternPtr);
-            charSet = CharSet.getInstance(patternPtr.toString());
+            codePointSet.clear();
+            patternPtr.getCodePoints(codePointSet);
         }
     }
 
@@ -98,7 +102,8 @@ public class StringTrimmer {
      */
     public void trim(UTF8StringPointable srcPtr, IPointable resultStrPtr, boolean left, boolean right)
             throws IOException {
-        UTF8StringPointable.trim(srcPtr, resultBuilder, resultArray, left, right, charSet);
+        srcPtr.trim(resultBuilder, resultArray, left, right, codePointSet);
         resultStrPtr.set(resultArray.getByteArray(), 0, resultArray.getLength());
     }
+
 }

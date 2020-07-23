@@ -19,10 +19,8 @@
 package org.apache.hyracks.data.std.primitive;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 
-import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
@@ -38,6 +36,8 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import it.unimi.dsi.fastutil.ints.IntCollection;
+
 public final class UTF8StringPointable extends AbstractPointable implements IHashable, IComparable {
 
     public static final UTF8StringPointableFactory FACTORY = new UTF8StringPointableFactory();
@@ -49,6 +49,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     private int metaLength;
     private int hashValue;
     private int stringLength;
+
+    public static final UTF8StringPointable SPACE_STRING_POINTABLE = generateUTF8Pointable(" ");
+    public static final Charset CESU8_CHARSET = Charset.forName("CESU8");
 
     /**
      * reset those meta length.
@@ -122,6 +125,18 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return UTF8StringUtil.codePointSize(bytes, start + offset);
     }
 
+    public void getCodePoints(IntCollection codePointSet) {
+        int byteIdx = 0;
+        while (byteIdx < utf8Length) {
+            codePointSet.add(codePointAt(metaLength + byteIdx));
+            byteIdx += codePointSize(metaLength + byteIdx);
+        }
+
+        if (byteIdx != utf8Length) {
+            throw new IllegalArgumentException("Decoding error: malformed bytes");
+        }
+    }
+
     /**
      * Gets the length of the string in characters.
      * The first time call will need to go through the entire string, the following call will just return the pre-caculated result
@@ -176,11 +191,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
 
     @Override
     public String toString() {
-        try {
-            return new String(bytes, getCharStartOffset(), getUTF8Length(), StandardCharsets.UTF_8.name());
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException(e);
-        }
+        return new String(bytes, getCharStartOffset(), getUTF8Length(), CESU8_CHARSET);
     }
 
     public int ignoreCaseCompareTo(UTF8StringPointable other) {
@@ -553,16 +564,11 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         builder.finish();
     }
 
-    public void trim(UTF8StringBuilder builder, GrowableArray out, boolean left, boolean right, CharSet charSet)
-            throws IOException {
-        trim(this, builder, out, left, right, charSet);
-    }
-
     /**
      * Generates a trimmed string of an input source string.
      *
      * @param srcPtr
-     *            , the input source string.
+     *            , the input source string
      * @param builder
      *            , the result string builder.
      * @param out
@@ -571,23 +577,23 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      *            , whether to trim the left side.
      * @param right
      *            , whether to trim the right side.
-     * @param charSet
-     *            , the chars that should be trimmed.
+     * @param codePointSet
+     *            , the set of code points that should be trimmed.
      * @throws IOException
      */
     public static void trim(UTF8StringPointable srcPtr, UTF8StringBuilder builder, GrowableArray out, boolean left,
-            boolean right, CharSet charSet) throws IOException {
+            boolean right, IntCollection codePointSet) throws IOException {
         final int srcUtfLen = srcPtr.getUTF8Length();
         final int srcStart = srcPtr.getMetaDataLength();
         // Finds the start Index (inclusive).
         int startIndex = 0;
         if (left) {
             while (startIndex < srcUtfLen) {
-                char ch = srcPtr.charAt(srcStart + startIndex);
-                if (!charSet.contains(ch)) {
+                int codepoint = srcPtr.codePointAt(srcStart + startIndex);
+                if (!codePointSet.contains(codepoint)) {
                     break;
                 }
-                startIndex += srcPtr.charSize(srcStart + startIndex);
+                startIndex += srcPtr.codePointSize(srcStart + startIndex);
             }
         }
 
@@ -597,9 +603,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             endIndex = startIndex;
             int cursorIndex = startIndex;
             while (cursorIndex < srcUtfLen) {
-                char ch = srcPtr.charAt(srcStart + cursorIndex);
-                cursorIndex += srcPtr.charSize(srcStart + cursorIndex);
-                if (!charSet.contains(ch)) {
+                int codePioint = srcPtr.codePointAt(srcStart + cursorIndex);
+                cursorIndex += srcPtr.codePointSize(srcStart + cursorIndex);
+                if (!codePointSet.contains(codePioint)) {
                     endIndex = cursorIndex;
                 }
             }
@@ -610,6 +616,26 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         builder.reset(out, len);
         builder.appendUtf8StringPointable(srcPtr, srcPtr.getStartOffset() + srcStart + startIndex, len);
         builder.finish();
+    }
+
+    /**
+     * Generates a trimmed string from the original string.
+     *
+     * @param builder
+     *            , the result string builder.
+     * @param out
+     *            , the storage for the output string.
+     * @param left
+     *            , whether to trim the left side.
+     * @param right
+     *            , whether to trim the right side.
+     * @param codePointSet
+     *            , the set of code points that should be trimmed.
+     * @throws IOException
+     */
+    public void trim(UTF8StringBuilder builder, GrowableArray out, boolean left, boolean right,
+            IntCollection codePointSet) throws IOException {
+        trim(this, builder, out, left, right, codePointSet);
     }
 
     /**

@@ -27,13 +27,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.Arrays;
 
-import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.util.string.UTF8StringSample;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.junit.Test;
+
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntCollection;
 
 public class UTF8StringPointableTest {
     public static UTF8StringPointable STRING_EMPTY = generateUTF8Pointable(UTF8StringSample.EMPTY_STRING);
@@ -229,25 +232,34 @@ public class UTF8StringPointableTest {
         GrowableArray storage = new GrowableArray();
         UTF8StringPointable result = new UTF8StringPointable();
         UTF8StringPointable input = generateUTF8Pointable("  this is it.i am;here.  ");
+        IntCollection spaceCodePointSet = new IntArraySet(Arrays.asList((int) ' '));
 
         // Trims both sides.
-        input.trim(builder, storage, true, true, CharSet.getInstance(" "));
+        input.trim(builder, storage, true, true, spaceCodePointSet);
         result.set(storage.getByteArray(), 0, storage.getLength());
         UTF8StringPointable expected = generateUTF8Pointable("this is it.i am;here.");
         assertEquals(0, expected.compareTo(result));
 
         // Only trims the right side.
         storage.reset();
-        input.trim(builder, storage, false, true, CharSet.getInstance(" "));
+        input.trim(builder, storage, false, true, spaceCodePointSet);
         result.set(storage.getByteArray(), 0, storage.getLength());
         expected = generateUTF8Pointable("  this is it.i am;here.");
         assertEquals(0, expected.compareTo(result));
 
         // Only trims the left side.
         storage.reset();
-        input.trim(builder, storage, true, false, CharSet.getInstance(" "));
+        input.trim(builder, storage, true, false, spaceCodePointSet);
         result.set(storage.getByteArray(), 0, storage.getLength());
         expected = generateUTF8Pointable("this is it.i am;here.  ");
+        assertEquals(0, expected.compareTo(result));
+
+        // Only trims the left side in case of emoji
+        input = STRING_POINTABLE_EMOJI_FAMILY_OF_4;
+        storage.reset();
+        input.trim(builder, storage, true, false, spaceCodePointSet);
+        result.set(storage.getByteArray(), 0, storage.getLength());
+        expected = STRING_POINTABLE_EMOJI_FAMILY_OF_4;
         assertEquals(0, expected.compareTo(result));
     }
 
@@ -258,24 +270,58 @@ public class UTF8StringPointableTest {
         UTF8StringPointable result = new UTF8StringPointable();
         UTF8StringPointable input = generateUTF8Pointable("  this is it.i am;here.  ");
 
+        String pattern = " hert.";
+        UTF8StringPointable patternPointable = generateUTF8Pointable(pattern);
+        IntCollection codePointSet = new IntArraySet();
+        codePointSet.clear();
+        patternPointable.getCodePoints(codePointSet);
+
         // Trims both sides.
-        input.trim(builder, storage, true, true, CharSet.getInstance(" hert."));
+        input.trim(builder, storage, true, true, codePointSet);
         result.set(storage.getByteArray(), 0, storage.getLength());
         UTF8StringPointable expected = generateUTF8Pointable("is is it.i am;");
         assertEquals(0, expected.compareTo(result));
 
         // Only trims the right side.
         storage.reset();
-        input.trim(builder, storage, false, true, CharSet.getInstance(" hert."));
+        input.trim(builder, storage, false, true, codePointSet);
         result.set(storage.getByteArray(), 0, storage.getLength());
         expected = generateUTF8Pointable("  this is it.i am;");
         assertEquals(0, expected.compareTo(result));
 
         // Only trims the left side.
         storage.reset();
-        input.trim(builder, storage, true, false, CharSet.getInstance(" hert."));
+        input.trim(builder, storage, true, false, codePointSet);
         result.set(storage.getByteArray(), 0, storage.getLength());
         expected = generateUTF8Pointable("is is it.i am;here.  ");
+        assertEquals(0, expected.compareTo(result));
+
+        // Test Emoji trim
+        input = STRING_POINTABLE_EMOJI_FAMILY_OF_4;
+        pattern = "👨👦";
+        patternPointable = generateUTF8Pointable(pattern);
+        codePointSet.clear();
+        patternPointable.getCodePoints(codePointSet);
+
+        // Trim left
+        storage.reset();
+        input.trim(builder, storage, true, false, codePointSet);
+        result.set(storage.getByteArray(), 0, storage.getLength());
+        expected = generateUTF8Pointable("\u200D" + "👨‍👦‍👦");
+        assertEquals(0, expected.compareTo(result));
+
+        // Trim right
+        storage.reset();
+        input.trim(builder, storage, false, true, codePointSet);
+        result.set(storage.getByteArray(), 0, storage.getLength());
+        expected = generateUTF8Pointable("👨‍👨‍👦" + "\u200D");
+        assertEquals(0, expected.compareTo(result));
+
+        // Trim left and right
+        storage.reset();
+        input.trim(builder, storage, true, true, codePointSet);
+        result.set(storage.getByteArray(), 0, storage.getLength());
+        expected = generateUTF8Pointable("\u200D" + "👨‍👦" + "\u200D");
         assertEquals(0, expected.compareTo(result));
     }
 

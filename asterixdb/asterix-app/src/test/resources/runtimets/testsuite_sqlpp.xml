@@ -9408,11 +9408,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="ltrim">
-        <output-dir compare="Text">ltrim</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
       <compilation-unit name="matches02">
         <output-dir compare="Text">matches02</output-dir>
       </compilation-unit>
@@ -9768,11 +9763,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="rtrim">
-        <output-dir compare="Text">rtrim</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
       <compilation-unit name="split">
         <output-dir compare="Text">split</output-dir>
       </compilation-unit>
@@ -10020,6 +10010,16 @@
     <test-case FilePath="string">
       <compilation-unit name="trim">
         <output-dir compare="Text">trim</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="ltrim">
+        <output-dir compare="Text">ltrim</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="rtrim">
+        <output-dir compare="Text">rtrim</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
