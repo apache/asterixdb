@@ -2212,7 +2212,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return false;
                 } else {
-                    throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature);
+                    throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature.toString(false));
                 }
             }
 
