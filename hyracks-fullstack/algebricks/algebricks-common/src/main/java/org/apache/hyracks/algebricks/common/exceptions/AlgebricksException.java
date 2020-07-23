@@ -135,7 +135,7 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
         return errorCode;
     }
 
-    public Object[] getParams() {
+    public Serializable[] getParams() {
         return params;
     }
 
