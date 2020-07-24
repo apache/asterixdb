@@ -91,7 +91,7 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                                         ATypeTag.STRING);
                                 return;
                             }
-                            int len = UTF8StringUtil.getUTFLength(serString, offset + 1);
+                            int len = UTF8StringUtil.getNumCodePoint(serString, offset + 1);
                             result.setValue(len);
                             int64Serde.serialize(result, out);
                             resultPointable.set(resultStorage);
