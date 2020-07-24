@@ -19,6 +19,7 @@
 package org.apache.hyracks.data.std.primitive;
 
 import static org.apache.hyracks.util.string.UTF8StringUtil.HIGH_SURROGATE_WITHOUT_LOW_SURROGATE;
+import static org.apache.hyracks.util.string.UTF8StringUtil.LOW_SURROGATE_WITHOUT_HIGH_SURROGATE;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -39,7 +40,6 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import it.unimi.dsi.fastutil.ints.IntCollection;
-import static org.apache.hyracks.util.string.UTF8StringUtil.LOW_SURROGATE_WITHOUT_HIGH_SURROGATE;
 
 public final class UTF8StringPointable extends AbstractPointable implements IHashable, IComparable {
 
