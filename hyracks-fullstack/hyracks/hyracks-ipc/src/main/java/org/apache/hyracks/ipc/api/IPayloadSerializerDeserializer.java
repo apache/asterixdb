@@ -21,7 +21,7 @@ package org.apache.hyracks.ipc.api;
 import java.nio.ByteBuffer;
 
 public interface IPayloadSerializerDeserializer {
-    public Object deserializeObject(ByteBuffer buffer, int length) throws Exception;
+    public Object deserializeObject(ByteBuffer buffer, int length, byte flag) throws Exception;
 
     public Exception deserializeException(ByteBuffer buffer, int length) throws Exception;
 

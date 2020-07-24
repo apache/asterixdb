@@ -31,5 +31,7 @@ public interface IIPCHandle {
 
     public Object getAttachment();
 
+    public int getAttachmentLen();
+
     public boolean isConnected();
 }

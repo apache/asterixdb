@@ -22,7 +22,6 @@
              ResultOffsetPath="results"
              QueryOffsetPath="queries_sqlpp"
              QueryFileExtension=".sqlpp">
-
   <test-group name="external-library-python">
     <test-case FilePath="external-library">
       <compilation-unit name="mysentiment">
@@ -32,7 +31,18 @@
     <test-case FilePath="external-library">
       <compilation-unit name="python-fn-escape">
         <output-dir compare="Text">python-fn-escape</output-dir>
-        <expected-error>'NoneType' object is not callable</expected-error>
+        <expected-error>ImportError: Module was not found in library</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="py_nested_access">
+        <output-dir compare="Clean-JSON">py_nested_access</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library" check-warnings="true">
+      <compilation-unit name="py_function_error">
+        <output-dir compare="Clean-JSON">py_function_error</output-dir>
+        <expected-warn>ASX0201: External UDF returned exception. Returned exception was: ArithmeticError: oof</expected-warn>
       </compilation-unit>
     </test-case>
   </test-group>

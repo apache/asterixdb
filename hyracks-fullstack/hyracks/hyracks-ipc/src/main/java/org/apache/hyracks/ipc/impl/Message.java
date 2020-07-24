@@ -22,18 +22,18 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.ipc.api.IPayloadSerializerDeserializer;
 
-class Message {
+public class Message {
     private static final int MSG_SIZE_SIZE = 4;
 
-    private static final int HEADER_SIZE = 17;
+    public static final int HEADER_SIZE = 17;
 
-    static final byte INITIAL_REQ = 1;
+    public static final byte INITIAL_REQ = 1;
 
-    static final byte INITIAL_ACK = 2;
+    public static final byte INITIAL_ACK = 2;
 
-    static final byte ERROR = 3;
+    public static final byte ERROR = 3;
 
-    static final byte NORMAL = 0;
+    public static final byte NORMAL = 0;
 
     private IPCHandle ipcHandle;
 
@@ -45,7 +45,9 @@ class Message {
 
     private Object payload;
 
-    Message(IPCHandle ipcHandle) {
+    private int payloadLen;
+
+    public Message(IPCHandle ipcHandle) {
         this.ipcHandle = ipcHandle;
     }
 
@@ -53,31 +55,31 @@ class Message {
         return ipcHandle;
     }
 
-    void setMessageId(long messageId) {
+    public void setMessageId(long messageId) {
         this.messageId = messageId;
     }
 
-    long getMessageId() {
+    public long getMessageId() {
         return messageId;
     }
 
-    void setRequestMessageId(long requestMessageId) {
+    public void setRequestMessageId(long requestMessageId) {
         this.requestMessageId = requestMessageId;
     }
 
-    long getRequestMessageId() {
+    public long getRequestMessageId() {
         return requestMessageId;
     }
 
-    void setFlag(byte flag) {
+    public void setFlag(byte flag) {
         this.flag = flag;
     }
 
-    byte getFlag() {
+    public byte getFlag() {
         return flag;
     }
 
-    void setPayload(Object payload) {
+    public void setPayload(Object payload) {
         this.payload = payload;
     }
 
@@ -85,15 +87,19 @@ class Message {
         return payload;
     }
 
-    static boolean hasMessage(ByteBuffer buffer) {
+    int getPayloadLen() {
+        return payloadLen;
+    }
+
+    public static boolean hasMessage(ByteBuffer buffer) {
         if (buffer.remaining() < MSG_SIZE_SIZE) {
             return false;
         }
         int msgSize = buffer.getInt(buffer.position());
-        return buffer.remaining() >= msgSize + MSG_SIZE_SIZE;
+        return msgSize > 0 && buffer.remaining() >= msgSize + MSG_SIZE_SIZE;
     }
 
-    void read(ByteBuffer buffer) throws Exception {
+    public void read(ByteBuffer buffer) throws Exception {
         assert hasMessage(buffer);
         int msgSize = buffer.getInt();
         messageId = buffer.getLong();
@@ -101,27 +107,47 @@ class Message {
         flag = buffer.get();
         int finalPosition = buffer.position() + msgSize - HEADER_SIZE;
         int length = msgSize - HEADER_SIZE;
+        payloadLen = length;
         try {
             IPayloadSerializerDeserializer serde = ipcHandle.getIPCSystem().getSerializerDeserializer();
-            payload = flag == ERROR ? serde.deserializeException(buffer, length)
-                    : serde.deserializeObject(buffer, length);
+            switch (flag) {
+                case NORMAL:
+                case INITIAL_ACK:
+                case INITIAL_REQ:
+                    payload = serde.deserializeObject(buffer, length, flag);
+                    break;
+                case ERROR:
+                    payload = serde.deserializeException(buffer, length);
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unknown message flag");
+            }
+
         } finally {
             buffer.position(finalPosition);
         }
     }
 
-    boolean write(ByteBuffer buffer) throws Exception {
+    public boolean write(ByteBuffer buffer) throws Exception {
         IPayloadSerializerDeserializer serde = ipcHandle.getIPCSystem().getSerializerDeserializer();
+        return write(buffer, serde);
+    }
+
+    public boolean write(ByteBuffer buffer, IPayloadSerializerDeserializer serde) throws Exception {
         byte[] bytes = flag == ERROR ? serde.serializeException((Exception) payload) : serde.serializeObject(payload);
         if (buffer.remaining() >= MSG_SIZE_SIZE + HEADER_SIZE + bytes.length) {
-            buffer.putInt(HEADER_SIZE + bytes.length);
-            buffer.putLong(messageId);
-            buffer.putLong(requestMessageId);
-            buffer.put(flag);
+            writeHeader(buffer, bytes.length, messageId, requestMessageId, flag);
             buffer.put(bytes);
             return true;
         }
         return false;
+    }
+
+    public static void writeHeader(ByteBuffer buffer, int dlen, long messageId, long requestMessageId, byte flag) {
+        buffer.putInt(HEADER_SIZE + dlen);
+        buffer.putLong(messageId);
+        buffer.putLong(requestMessageId);
+        buffer.put(flag);
     }
 
     @Override

@@ -65,6 +65,11 @@ class ReconnectingIPCHandle implements IIPCHandle {
     }
 
     @Override
+    public int getAttachmentLen() {
+        return delegate.getAttachmentLen();
+    }
+
+    @Override
     public boolean isConnected() {
         return delegate.isConnected();
     }

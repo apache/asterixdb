@@ -185,6 +185,11 @@ public class UTF8StringUtil {
     public static int getStringLength(byte[] b, int s) {
         int len = getUTFLength(b, s);
         int pos = s + getNumBytesToStoreLength(len);
+        return getStringLength(b, pos, len);
+    }
+
+    public static int getStringLength(byte[] b, int offs, int len) {
+        int pos = offs;
         int end = pos + len;
         int charCount = 0;
         while (pos < end) {

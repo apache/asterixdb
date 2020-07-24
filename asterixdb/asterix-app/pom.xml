@@ -208,7 +208,7 @@
             </configuration>
           </execution>
           <execution>
-            <id>shiv-pyro-shim</id>
+            <id>shiv-msgpack-shim</id>
             <phase>${pyro-shim.stage}</phase>
             <goals>
               <goal>exec</goal>
@@ -218,8 +218,8 @@
               <workingDirectory>${project.build.directory}</workingDirectory>
               <arguments>
                 <argument>-o </argument>
-                <argument>${project.build.directory}${file.separator}classes${file.separator}pyro4.pyz</argument>
-                <argument>pyro4</argument>
+                <argument>${project.build.directory}${file.separator}classes${file.separator}msgpack.pyz</argument>
+                <argument>msgpack</argument>
               </arguments>
               <environmentVariables>
                 <VIRTUALENV>${project.build.directory}</VIRTUALENV>

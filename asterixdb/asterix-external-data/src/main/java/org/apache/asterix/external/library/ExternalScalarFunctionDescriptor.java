@@ -47,7 +47,7 @@ public class ExternalScalarFunctionDescriptor extends AbstractScalarFunctionDyna
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
-        return new ExternalScalarFunctionEvaluatorFactory(finfo, args, argTypes);
+        return new ExternalScalarFunctionEvaluatorFactory(finfo, args, argTypes, sourceLoc);
     }
 
     @Override

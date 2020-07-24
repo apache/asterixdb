@@ -25,6 +25,7 @@ import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ExternalScalarFunctionEvaluatorFactory implements IScalarEvaluatorFactory {
 
@@ -32,12 +33,14 @@ public class ExternalScalarFunctionEvaluatorFactory implements IScalarEvaluatorF
     private final IExternalFunctionInfo finfo;
     private final IScalarEvaluatorFactory[] args;
     private final IAType[] argTypes;
+    private final SourceLocation sourceLoc;
 
     public ExternalScalarFunctionEvaluatorFactory(IExternalFunctionInfo finfo, IScalarEvaluatorFactory[] args,
-            IAType[] argTypes) {
+            IAType[] argTypes, SourceLocation sourceLoc) {
         this.finfo = finfo;
         this.args = args;
         this.argTypes = argTypes;
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
@@ -46,7 +49,7 @@ public class ExternalScalarFunctionEvaluatorFactory implements IScalarEvaluatorF
             case JAVA:
                 return new ExternalScalarJavaFunctionEvaluator(finfo, args, argTypes, ctx);
             case PYTHON:
-                return new ExternalScalarPythonFunctionEvaluator(finfo, args, argTypes, ctx);
+                return new ExternalScalarPythonFunctionEvaluator(finfo, args, argTypes, ctx, sourceLoc);
             default:
                 throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND,
                         finfo.getLanguage());
