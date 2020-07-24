@@ -3013,7 +3013,7 @@
     <test-case FilePath="array_fun">
       <compilation-unit name="array_slice/array_slice_exception_result">
         <output-dir compare="Text">array_slice/array_slice_exception_result</output-dir>
-        <expected-error>ASX1081: Cannot find function with name TinySocial.array_slice@0</expected-error>
+        <expected-error>ASX1081: Cannot find function with name TinySocial.array_slice</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="array_fun">
@@ -9413,11 +9413,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="ltrim">
-        <output-dir compare="Text">ltrim</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
       <compilation-unit name="matches02">
         <output-dir compare="Text">matches02</output-dir>
       </compilation-unit>
@@ -9783,11 +9778,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="rtrim">
-        <output-dir compare="Text">rtrim</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
       <compilation-unit name="split">
         <output-dir compare="Text">split</output-dir>
       </compilation-unit>
@@ -10035,6 +10025,16 @@
     <test-case FilePath="string">
       <compilation-unit name="trim">
         <output-dir compare="Text">trim</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="ltrim">
+        <output-dir compare="Text">ltrim</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="rtrim">
+        <output-dir compare="Text">rtrim</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -11707,13 +11707,13 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-5">
         <output-dir compare="Text">bad-function-ddl-5</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist@0</expected-error>
+        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-6">
         <output-dir compare="Text">bad-function-ddl-6</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist@2</expected-error>
+        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -11731,13 +11731,13 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-9">
         <output-dir compare="Text">bad-function-ddl-9</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist@0</expected-error>
+        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-10">
         <output-dir compare="Text">bad-function-ddl-10</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.f0@2</expected-error>
+        <expected-error>ASX1081: Cannot find function with name experiments.f0</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -11838,7 +11838,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
-        <expected-error>ASX1081: Cannot find function with name test.printName@0</expected-error>
+        <expected-error>ASX1081: Cannot find function with name test.printName</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12006,7 +12006,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="f01">
         <output-dir compare="Text">f01</output-dir>
-        <expected-error>ASX1081: Cannot find function with name test.tinyint@0</expected-error>
+        <expected-error>ASX1081: Cannot find function with name test.tinyint</expected-error>
       </compilation-unit>
     </test-case>
     <!-- This test case is not valid anymore since we do not required "IMPORT_PRIVATE_FUNCTIONS" flag anymore -->

@@ -52,7 +52,7 @@ FunctionDecl calculate([$events]) {
 
     Let Variable [ Name=$sig_sponsorship_count ]
       :=
-      FunctionCall null.count@1[
+      FunctionCall count@1[
         Variable [ Name=$es ]
       ]
     Let Variable [ Name=$by_chapter ]
@@ -68,7 +68,7 @@ FunctionDecl calculate([$events]) {
           (
             LiteralExpr [STRING] [escount]
             :
-            FunctionCall null.count@1[
+            FunctionCall count@1[
               Variable [ Name=$es ]
             ]
           )

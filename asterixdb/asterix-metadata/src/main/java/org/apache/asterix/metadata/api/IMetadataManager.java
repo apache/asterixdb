@@ -150,6 +150,16 @@ public interface IMetadataManager extends IMetadataBootstrap {
     void dropDataverse(MetadataTransactionContext ctx, DataverseName dataverseName) throws AlgebricksException;
 
     /**
+     * Returns {@code true} if the dataverse with given name is not empty
+     * (i.e. contains any datatypes, datasets or any other entities).
+     *  @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            Name of the dataverse.
+     */
+    boolean isDataverseNotEmpty(MetadataTransactionContext ctx, DataverseName dataverseName) throws AlgebricksException;
+
+    /**
      * Inserts a new dataset into the metadata.
      *
      * @param ctx

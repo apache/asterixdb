@@ -140,12 +140,22 @@ public interface IMetadataNode extends Remote, Serializable {
      *
      * @param txnId
      *            A globally unique id for an active metadata transaction.
-     * @return A list of dataset instances.
+     * @param dataverseName
+     *            Name of the dataverse to drop.
      * @throws AlgebricksException
      *             For example, if the dataverse does not exist.
-     * @throws RemoteException
      */
     void dropDataverse(TxnId txnId, DataverseName dataverseName) throws AlgebricksException, RemoteException;
+
+    /**
+     * Returns {@code true} if given dataverse is not empty
+     * (i.e. contains any datatypes, datasets or any other entities).
+     *  @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataverseName
+     *            Name of the dataverse
+     */
+    boolean isDataverseNotEmpty(TxnId txnId, DataverseName dataverseName) throws AlgebricksException, RemoteException;
 
     /**
      * Inserts a new dataset into the metadata, acquiring local locks on behalf of

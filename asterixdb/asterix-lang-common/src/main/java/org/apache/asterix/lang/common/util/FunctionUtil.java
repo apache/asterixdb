@@ -166,7 +166,7 @@ public class FunctionUtil {
         }
         FunctionSignature fsBuiltin = builtinFunctionResolver.apply(name, arity);
         if (fsBuiltin == null) {
-            throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, fs);
+            throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, fs.toString(false));
         }
         return fsBuiltin;
     }

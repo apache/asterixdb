@@ -596,6 +596,18 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
+    public boolean isDataverseNotEmpty(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
+        return !getDataverseDatatypes(txnId, dataverseName).isEmpty()
+                || !getDataverseDatasets(txnId, dataverseName).isEmpty()
+                || !getDataverseLibraries(txnId, dataverseName).isEmpty()
+                || !getDataverseAdapters(txnId, dataverseName).isEmpty()
+                || !getDataverseFunctions(txnId, dataverseName).isEmpty()
+                || !getDataverseFeedPolicies(txnId, dataverseName).isEmpty()
+                || !getDataverseFeeds(txnId, dataverseName).isEmpty()
+                || !getDataverseSynonyms(txnId, dataverseName).isEmpty();
+    }
+
+    @Override
     public void dropDataset(TxnId txnId, DataverseName dataverseName, String datasetName) throws AlgebricksException {
         dropDataset(txnId, dataverseName, datasetName, false);
     }

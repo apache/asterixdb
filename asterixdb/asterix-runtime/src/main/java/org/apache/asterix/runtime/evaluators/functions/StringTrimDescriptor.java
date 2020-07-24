@@ -60,7 +60,8 @@ public class StringTrimDescriptor extends AbstractScalarFunctionDynamicDescripto
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
                 return new AbstractUnaryStringStringEval(ctx, args[0], StringTrimDescriptor.this.getIdentifier(),
                         sourceLoc) {
-                    private StringTrimmer stringTrimmer = new StringTrimmer(resultBuilder, resultArray, " ");
+                    private StringTrimmer stringTrimmer =
+                            new StringTrimmer(resultBuilder, resultArray, UTF8StringPointable.SPACE_STRING_POINTABLE);
 
                     @Override
                     protected void process(UTF8StringPointable srcPtr, IPointable resultStrPtr) throws IOException {

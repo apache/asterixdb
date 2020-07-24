@@ -845,7 +845,7 @@ abstract class LangExpressionToPlanTranslator
         AbstractFunctionCallExpression f = lookupFunction(signature, args, sourceLoc);
 
         if (f == null) {
-            throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature.getName());
+            throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature.toString(false));
         }
 
         if (fcall.hasAggregateFilterExpr()) {
