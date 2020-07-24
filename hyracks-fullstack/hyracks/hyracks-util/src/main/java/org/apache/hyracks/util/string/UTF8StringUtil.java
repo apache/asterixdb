@@ -34,6 +34,11 @@ import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
  */
 public class UTF8StringUtil {
 
+    public static final String LOW_SURROGATE_WITHOUT_HIGH_SURROGATE =
+            "Decoding error: got a low surrogate without a leading high surrogate";
+    public static final String HIGH_SURROGATE_WITHOUT_LOW_SURROGATE =
+            "Decoding error: got a high surrogate without a following low surrogate";
+
     private UTF8StringUtil() {
     }
 

@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.data.std.primitive;
 
+import static org.apache.hyracks.util.string.UTF8StringUtil.HIGH_SURROGATE_WITHOUT_LOW_SURROGATE;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 
@@ -37,6 +39,7 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import it.unimi.dsi.fastutil.ints.IntCollection;
+import static org.apache.hyracks.util.string.UTF8StringUtil.LOW_SURROGATE_WITHOUT_HIGH_SURROGATE;
 
 public final class UTF8StringPointable extends AbstractPointable implements IHashable, IComparable {
 
@@ -264,6 +267,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         int codePointCount = 0;
 
         int maxStart = srcUtfLen - pttnUtfLen;
+        boolean prevHighSurrogate = false;
         while (startMatchPos <= maxStart) {
             int c1 = startMatchPos;
             int c2 = 0;
@@ -279,18 +283,35 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 c1 += src.charSize(srcStart + c1);
                 c2 += pattern.charSize(pttnStart + c2);
             }
+
             if (c2 == pttnUtfLen) {
                 if (resultInByte) {
                     return startMatchPos;
                 } else {
+                    if (prevHighSurrogate == true) {
+                        throw new IllegalArgumentException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
+                    }
                     return codePointCount;
                 }
             }
 
-            char ch = src.charAt(srcStart + startMatchPos);
-            if (Character.isLowSurrogate(ch) == false) {
-                codePointCount++;
+            // The result is counted in code point instead of bytes
+            if (resultInByte == false) {
+                char ch = src.charAt(srcStart + startMatchPos);
+                if (Character.isHighSurrogate(ch)) {
+                    prevHighSurrogate = true;
+                } else if (Character.isLowSurrogate(ch)) {
+                    if (prevHighSurrogate == true) {
+                        codePointCount++;
+                        prevHighSurrogate = false;
+                    } else {
+                        throw new IllegalArgumentException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
+                    }
+                } else {
+                    codePointCount++;
+                }
             }
+
             startMatchPos += src.charSize(srcStart + startMatchPos);
         }
         return -1;
