@@ -231,6 +231,15 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return find(src, pattern, ignoreCase, 0);
     }
 
+    /**
+     * @param src,
+     *            the source string.
+     * @param pattern,
+     *            the pattern string.
+     * @param ignoreCase,
+     *            to ignore case or not.
+     * @return the offset in the unit of code point of the first character of the matching string. Not including the MetaLength.
+     */
     public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
         return findInByteOrCodePoint(src, pattern, ignoreCase, 0, false);
     }
@@ -251,6 +260,17 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, true);
     }
 
+    /**
+     * @param src,
+     *            the source string.
+     * @param pattern,
+     *            the pattern string.
+     * @param ignoreCase,
+     *            to ignore case or not.
+     * @param startMatch,
+     *            the start offset.
+     * @return the offset in the unit of code point of the first character of the matching string. Not including the MetaLength.
+     */
     public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase,
             int startMatch) {
         return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, false);
@@ -276,6 +296,14 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 char ch2 = pattern.charAt(pttnStart + c2);
 
                 if (ch1 != ch2) {
+                    // Currently, the ignoreCase is only valid for one-surrogate characters
+                    // (e.g. characters whose UTF-16 encoding is 2-byte (1 Java char) instead of 4-byte (2 Java chars).
+                    // We may need to support the two-surrogate characters in the future
+                    //
+                    // Another edge case is that one letter may have different forms of lower cases in different languages
+                    // For example, the letter I may have "i" as the lower case in English but "ı" in Turkish.
+                    // We may need to use methods such as String.toLowerCase(Locale locale) to support other languages in the future
+                    // Reference: https://stackoverflow.com/questions/11063102/using-locales-with-javas-tolowercase-and-touppercase
                     if (!ignoreCase || Character.toLowerCase(ch1) != Character.toLowerCase(ch2)) {
                         break;
                     }
