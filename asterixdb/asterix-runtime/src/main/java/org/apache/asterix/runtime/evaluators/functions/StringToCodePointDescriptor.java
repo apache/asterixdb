@@ -112,6 +112,8 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                                     pos += UTF8StringUtil.charSize(serString, start + pos);
                                     char c2 = UTF8StringUtil.charAt(serString, start + pos);
                                     codePoint = Character.toCodePoint(c1, c2);
+                                } else if (Character.isLowSurrogate(c1)) {
+                                    throw new IllegalArgumentException(".....");
                                 } else {
                                     codePoint = c1;
                                 }
