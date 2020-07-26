@@ -512,7 +512,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DataverseName dvName = stmtCreateDataverse.getDataverseName();
         lockUtil.createDataverseBegin(lockManager, metadataProvider.getLocks(), dvName);
         try {
-            doCreateDataverseStatement(metadataProvider, stmtCreateDataverse);
+            doCreateDataverseStatement(metadataProvider, stmtCreateDataverse, requestParameters);
         } finally {
             metadataProvider.getLocks().unlock();
         }
@@ -520,7 +520,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     @SuppressWarnings("squid:S00112")
     protected boolean doCreateDataverseStatement(MetadataProvider metadataProvider,
-            CreateDataverseStatement stmtCreateDataverse) throws Exception {
+            CreateDataverseStatement stmtCreateDataverse, IRequestParameters requestParameters) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
@@ -929,18 +929,23 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     public void handleCreateIndexStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
-        SourceLocation sourceLoc = stmtCreateIndex.getSourceLocation();
         DataverseName dataverseName = getActiveDataverseName(stmtCreateIndex.getDataverseName());
         String datasetName = stmtCreateIndex.getDatasetName().getValue();
-        String indexName = stmtCreateIndex.getIndexName().getValue();
-        IndexType indexType = stmtCreateIndex.getIndexType();
-        List<Integer> keySourceIndicators = stmtCreateIndex.getFieldSourceIndicators();
-        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        boolean isSecondaryPrimary = stmtCreateIndex.getFieldExprs().isEmpty();
-        Dataset ds;
-        Index index;
         lockUtil.createIndexBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        try {
+            doCreateIndex(metadataProvider, stmtCreateIndex, dataverseName, datasetName, hcc, requestParameters);
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
+    }
+
+    protected void doCreateIndex(MetadataProvider metadataProvider, CreateIndexStatement stmtCreateIndex,
+            DataverseName dataverseName, String datasetName, IHyracksClientConnection hcc,
+            IRequestParameters requestParameters) throws Exception {
+        SourceLocation sourceLoc = stmtCreateIndex.getSourceLocation();
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
             // Check if the dataverse exists
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
@@ -948,16 +953,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
             }
 
-            ds = metadataProvider.findDataset(dataverseName, datasetName);
+            Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
             if (ds == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
                         dataverseName);
             }
 
             DatasetType datasetType = ds.getDatasetType();
+            IndexType indexType = stmtCreateIndex.getIndexType();
+            boolean isSecondaryPrimary = stmtCreateIndex.getFieldExprs().isEmpty();
             validateIndexType(datasetType, indexType, isSecondaryPrimary, sourceLoc);
 
-            index = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
+            String indexName = stmtCreateIndex.getIndexName().getValue();
+            Index index = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
                     datasetName, indexName);
             if (index != null) {
                 if (stmtCreateIndex.getIfNotExists()) {
@@ -968,9 +976,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
-            // find keySourceIndicators for secondary primary index since the parser isn't aware of them
+            List<Integer> keySourceIndicators;
             if (isSecondaryPrimary && datasetType == DatasetType.INTERNAL) {
+                // find keySourceIndicators for secondary primary index since the parser isn't aware of them
                 keySourceIndicators = ((InternalDatasetDetails) ds.getDatasetDetails()).getKeySourceIndicator();
+            } else {
+                keySourceIndicators = stmtCreateIndex.getFieldSourceIndicators();
             }
             // disable creating an index on meta fields (fields with source indicator == 1 are meta fields)
             if (keySourceIndicators.stream().anyMatch(fieldSource -> fieldSource == 1) && !isSecondaryPrimary) {
@@ -1094,13 +1105,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Index newIndex = new Index(dataverseName, datasetName, indexName, indexType, indexFields,
                     keySourceIndicators, indexFieldTypes, stmtCreateIndex.getGramLength(), overridesFieldTypes,
                     stmtCreateIndex.isEnforced(), false, MetadataUtil.PENDING_ADD_OP);
-            doCreateIndex(hcc, metadataProvider, ds, newIndex, jobFlags, sourceLoc);
-        } finally {
-            metadataProvider.getLocks().unlock();
+
+            bActiveTxn = false; // doCreateIndexImpl() takes over the current transaction
+            doCreateIndexImpl(hcc, metadataProvider, ds, newIndex, jobFlags, sourceLoc);
+
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                abort(e, e, mdTxnCtx);
+            }
+            throw e;
         }
     }
 
-    protected void doCreateIndex(IHyracksClientConnection hcc, MetadataProvider metadataProvider, Dataset ds,
+    private void doCreateIndexImpl(IHyracksClientConnection hcc, MetadataProvider metadataProvider, Dataset ds,
             Index index, EnumSet<JobFlag> jobFlags, SourceLocation sourceLoc) throws Exception {
         ProgressState progress = ProgressState.NO_PROGRESS;
         boolean bActiveTxn = true;
@@ -1447,6 +1464,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
+            if (stmtDropDataverse.getIfEmpty() && isDataverseNotEmpty(dataverseName, mdTxnCtx)) {
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                return false;
+            }
+
+            validateDataverseStateBeforeDrop(metadataProvider, dv, sourceLoc);
+
             // #. prepare jobs which will drop corresponding feed storage
             ActiveNotificationHandler activeEventHandler =
                     (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
@@ -1580,6 +1604,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
+    protected boolean isDataverseNotEmpty(DataverseName dataverseName, MetadataTransactionContext mdTxnCtx)
+            throws AlgebricksException {
+        return MetadataManager.INSTANCE.isDataverseNotEmpty(mdTxnCtx, dataverseName);
+    }
+
+    protected void validateDataverseStateBeforeDrop(MetadataProvider metadataProvider, Dataverse dataverse,
+            SourceLocation sourceLoc) throws AlgebricksException {
+        // may be overriden by product extensions for additional checks before dropping the dataverse
+    }
+
     public void handleDatasetDropStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         DropDatasetStatement stmtDelete = (DropDatasetStatement) stmt;
@@ -1596,7 +1630,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    public void doDropDataset(DataverseName dataverseName, String datasetName, MetadataProvider metadataProvider,
+    protected boolean doDropDataset(DataverseName dataverseName, String datasetName, MetadataProvider metadataProvider,
             boolean ifExists, IHyracksClientConnection hcc, IRequestParameters requestParameters,
             boolean dropCorrespondingNodeGroup, SourceLocation sourceLoc) throws Exception {
         MutableObject<ProgressState> progress = new MutableObject<>(ProgressState.NO_PROGRESS);
@@ -1615,7 +1649,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (ds == null) {
                 if (ifExists) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
-                    return;
+                    return false;
                 } else {
                     throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
                             dataverseName);
@@ -1656,6 +1690,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
+            return true;
         } catch (Exception e) {
             if (bActiveTxn.booleanValue()) {
                 abort(e, e, mdTxnCtx.getValue());
@@ -1693,20 +1728,31 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void handleIndexDropStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
-
         IndexDropStatement stmtIndexDrop = (IndexDropStatement) stmt;
-        SourceLocation sourceLoc = stmtIndexDrop.getSourceLocation();
-        String datasetName = stmtIndexDrop.getDatasetName().getValue();
         DataverseName dataverseName = getActiveDataverseName(stmtIndexDrop.getDataverseName());
+        String datasetName = stmtIndexDrop.getDatasetName().getValue();
+        lockUtil.dropIndexBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        try {
+            doDropIndex(metadataProvider, stmtIndexDrop, dataverseName, datasetName, hcc, requestParameters);
+        } finally {
+            metadataProvider.getLocks().unlock();
+            ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
+        }
+    }
+
+    protected boolean doDropIndex(MetadataProvider metadataProvider, IndexDropStatement stmtIndexDrop,
+            DataverseName dataverseName, String datasetName, IHyracksClientConnection hcc,
+            IRequestParameters requestParameters) throws Exception {
+        SourceLocation sourceLoc = stmtIndexDrop.getSourceLocation();
         String indexName = stmtIndexDrop.getIndexName().getValue();
         ProgressState progress = ProgressState.NO_PROGRESS;
+        List<JobSpecification> jobsToExecute = new ArrayList<>();
+        // For external index
+        boolean dropFilesIndex = false;
+
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        List<JobSpecification> jobsToExecute = new ArrayList<>();
-        lockUtil.dropIndexBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
-        // For external index
-        boolean dropFilesIndex = false;
         try {
             Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
             if (ds == null) {
@@ -1718,7 +1764,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 if (index == null) {
                     if (stmtIndexDrop.getIfExists()) {
                         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                        return;
+                        return false;
                     } else {
                         throw new CompilationException(ErrorCode.UNKNOWN_INDEX, sourceLoc, indexName);
                     }
@@ -1759,7 +1805,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 if (index == null) {
                     if (stmtIndexDrop.getIfExists()) {
                         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                        return;
+                        return false;
                     } else {
                         throw new CompilationException(ErrorCode.UNKNOWN_INDEX, sourceLoc, indexName);
                     }
@@ -1825,7 +1871,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-
+            return true;
         } catch (Exception e) {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
@@ -1863,10 +1909,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             throw e;
-
-        } finally {
-            metadataProvider.getLocks().unlock();
-            ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
         }
     }
 
@@ -2158,7 +2200,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void doDropFunction(MetadataProvider metadataProvider, FunctionDropStatement stmtDropFunction,
+    protected boolean doDropFunction(MetadataProvider metadataProvider, FunctionDropStatement stmtDropFunction,
             FunctionSignature signature) throws Exception {
         SourceLocation sourceLoc = stmtDropFunction.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -2166,13 +2208,17 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
             if (function == null) {
-                if (!stmtDropFunction.getIfExists()) {
-                    throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature);
+                if (stmtDropFunction.getIfExists()) {
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return false;
+                } else {
+                    throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature.toString(false));
                 }
-            } else {
-                MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
             }
+
+            MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return true;
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
@@ -2428,7 +2474,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void doDropSynonym(MetadataProvider metadataProvider, SynonymDropStatement stmtSynDrop,
+    protected boolean doDropSynonym(MetadataProvider metadataProvider, SynonymDropStatement stmtSynDrop,
             DataverseName dataverseName, String synonymName) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -2437,12 +2483,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (synonym == null) {
                 if (stmtSynDrop.getIfExists()) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                    return;
+                    return false;
                 }
                 throw new CompilationException(ErrorCode.UNKNOWN_SYNONYM, stmtSynDrop.getSourceLocation(), synonymName);
             }
             MetadataManager.INSTANCE.dropSynonym(mdTxnCtx, dataverseName, synonymName);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return true;
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;

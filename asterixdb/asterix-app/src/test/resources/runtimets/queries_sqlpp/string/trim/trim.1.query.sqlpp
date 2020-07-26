@@ -33,5 +33,9 @@
    trim(null, null),
    trim("abc", missing),
    trim(missing, "abc"),
-   trim(missing, missing)
+   trim(missing, missing),
+   trim("🇺🇸", "🇺"),
+   trim("👨‍👩‍👧‍👦", "👨‍👦"),
+   ltrim("👨‍👩‍👧‍👦", "👨‍👦"),
+   rtrim("👨‍👩‍👧‍👦", "👨‍👦")
 ];

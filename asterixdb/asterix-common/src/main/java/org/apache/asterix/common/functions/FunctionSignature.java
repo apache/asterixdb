@@ -61,11 +61,15 @@ public class FunctionSignature implements Serializable {
     }
 
     public String toString(boolean includeArity) {
-        String namespaceCanonicalForm = dataverseName != null ? dataverseName.getCanonicalForm() : null;
-        int len = (namespaceCanonicalForm != null ? namespaceCanonicalForm.length() : 4) + 1 + name.length()
+        boolean dataverseNameExists = dataverseName != null;
+        String dataverseCanonicalName = dataverseNameExists ? dataverseName.getCanonicalForm() : null;
+        int len = (dataverseNameExists ? dataverseCanonicalName.length() + 1 : 0) + name.length()
                 + (includeArity ? 3 : 0);
         StringBuilder sb = new StringBuilder(len);
-        sb.append(namespaceCanonicalForm).append('.').append(name);
+        if (dataverseNameExists) {
+            sb.append(dataverseCanonicalName).append('.');
+        }
+        sb.append(name);
         if (includeArity) {
             sb.append('@').append(arity);
         }

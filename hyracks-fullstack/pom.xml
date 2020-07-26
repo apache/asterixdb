@@ -283,6 +283,11 @@
         <artifactId>maven-plugin-api</artifactId>
         <version>3.6.3</version>
       </dependency>
+      <dependency>
+        <groupId>it.unimi.dsi</groupId>
+        <artifactId>fastutil</artifactId>
+        <version>8.3.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <build>

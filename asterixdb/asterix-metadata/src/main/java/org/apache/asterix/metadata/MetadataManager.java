@@ -180,6 +180,16 @@ public abstract class MetadataManager implements IMetadataManager {
     }
 
     @Override
+    public boolean isDataverseNotEmpty(MetadataTransactionContext ctx, DataverseName dataverseName)
+            throws AlgebricksException {
+        try {
+            return metadataNode.isDataverseNotEmpty(ctx.getTxnId(), dataverseName);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+    }
+
+    @Override
     public List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws AlgebricksException {
         try {
             return metadataNode.getDataverses(ctx.getTxnId());

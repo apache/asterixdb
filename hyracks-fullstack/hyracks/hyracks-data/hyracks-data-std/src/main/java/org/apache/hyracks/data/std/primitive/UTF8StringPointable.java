@@ -19,10 +19,8 @@
 package org.apache.hyracks.data.std.primitive;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.Set;
+import java.nio.charset.Charset;
 
-import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
@@ -38,6 +36,8 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import it.unimi.dsi.fastutil.ints.IntCollection;
+
 public final class UTF8StringPointable extends AbstractPointable implements IHashable, IComparable {
 
     public static final UTF8StringPointableFactory FACTORY = new UTF8StringPointableFactory();
@@ -49,6 +49,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     private int metaLength;
     private int hashValue;
     private int stringLength;
+
+    public static final UTF8StringPointable SPACE_STRING_POINTABLE = generateUTF8Pointable(" ");
+    public static final Charset CESU8_CHARSET = Charset.forName("CESU8");
 
     /**
      * reset those meta length.
@@ -122,6 +125,18 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return UTF8StringUtil.codePointSize(bytes, start + offset);
     }
 
+    public void getCodePoints(IntCollection codePointSet) {
+        int byteIdx = 0;
+        while (byteIdx < utf8Length) {
+            codePointSet.add(codePointAt(metaLength + byteIdx));
+            byteIdx += codePointSize(metaLength + byteIdx);
+        }
+
+        if (byteIdx != utf8Length) {
+            throw new IllegalArgumentException("Decoding error: malformed bytes");
+        }
+    }
+
     /**
      * Gets the length of the string in characters.
      * The first time call will need to go through the entire string, the following call will just return the pre-caculated result
@@ -176,11 +191,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
 
     @Override
     public String toString() {
-        try {
-            return new String(bytes, getCharStartOffset(), getUTF8Length(), "CESU8");
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException(e);
-        }
+        return new String(bytes, getCharStartOffset(), getUTF8Length(), CESU8_CHARSET);
     }
 
     public int ignoreCaseCompareTo(UTF8StringPointable other) {
@@ -217,10 +228,6 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return find(src, pattern, ignoreCase, 0);
     }
 
-    public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
-        return findInByteOrCodePoint(src, pattern, ignoreCase, 0, false);
-    }
-
     /**
      * @param src,
      *            the source string.
@@ -234,23 +241,11 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      *         Not including the MetaLength.
      */
     public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase, int startMatch) {
-        return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, true);
-    }
-
-    public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase,
-            int startMatch) {
-        return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, false);
-    }
-
-    // If resultInByte is true, then return the position in bytes, otherwise return the position in code points
-    private static int findInByteOrCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase,
-            int startMatch, boolean resultInByte) {
         int startMatchPos = startMatch;
         final int srcUtfLen = src.getUTF8Length();
         final int pttnUtfLen = pattern.getUTF8Length();
         final int srcStart = src.getMetaDataLength();
         final int pttnStart = pattern.getMetaDataLength();
-        int codePointCount = 0;
 
         int maxStart = srcUtfLen - pttnUtfLen;
         while (startMatchPos <= maxStart) {
@@ -269,16 +264,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 c2 += pattern.charSize(pttnStart + c2);
             }
             if (c2 == pttnUtfLen) {
-                if (resultInByte) {
-                    return startMatchPos;
-                } else {
-                    return codePointCount;
-                }
-            }
-
-            char ch = src.charAt(srcStart + startMatchPos);
-            if (Character.isLowSurrogate(ch) == false) {
-                codePointCount++;
+                return startMatchPos;
             }
             startMatchPos += src.charSize(srcStart + startMatchPos);
         }
@@ -578,17 +564,11 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         builder.finish();
     }
 
-    // ToDo: fix test cases
-    public void trim(UTF8StringBuilder builder, GrowableArray out, boolean left, boolean right, CharSet charSet)
-            throws IOException {
-        //trim(this, builder, out, left, right, charSet);
-    }
-
     /**
      * Generates a trimmed string of an input source string.
      *
      * @param srcPtr
-     *            , the input source string.
+     *            , the input source string
      * @param builder
      *            , the result string builder.
      * @param out
@@ -602,7 +582,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      * @throws IOException
      */
     public static void trim(UTF8StringPointable srcPtr, UTF8StringBuilder builder, GrowableArray out, boolean left,
-            boolean right, Set<Integer> codePointSet) throws IOException {
+            boolean right, IntCollection codePointSet) throws IOException {
         final int srcUtfLen = srcPtr.getUTF8Length();
         final int srcStart = srcPtr.getMetaDataLength();
         // Finds the start Index (inclusive).
@@ -639,6 +619,26 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     }
 
     /**
+     * Generates a trimmed string from the original string.
+     *
+     * @param builder
+     *            , the result string builder.
+     * @param out
+     *            , the storage for the output string.
+     * @param left
+     *            , whether to trim the left side.
+     * @param right
+     *            , whether to trim the right side.
+     * @param codePointSet
+     *            , the set of code points that should be trimmed.
+     * @throws IOException
+     */
+    public void trim(UTF8StringBuilder builder, GrowableArray out, boolean left, boolean right,
+            IntCollection codePointSet) throws IOException {
+        trim(this, builder, out, left, right, codePointSet);
+    }
+
+    /**
      * Generates a reversed string from an input source string
      *
      * @param srcPtr
@@ -663,10 +663,18 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                     while (cursorIndex >= srcStart) {
                         cursorIndex--;
                         if (UTF8StringUtil.isCharStart(srcPtr.bytes, cursorIndex)) {
+                            ch = UTF8StringUtil.charAt(srcPtr.bytes, cursorIndex);
+                            if (Character.isHighSurrogate(ch) == false) {
+                                throw new IllegalArgumentException(
+                                        "Decoding Error: no corresponding high surrogate found for the following low surrogate");
+                            }
+
                             charSize += UTF8StringUtil.charSize(srcPtr.bytes, cursorIndex);
                             break;
                         }
                     }
+                } else if (Character.isHighSurrogate(ch)) {
+                    throw new IllegalArgumentException("Decoding Error: get a high surrogate without low surrogate");
                 }
 
                 builder.appendUtf8StringPointable(srcPtr, cursorIndex, charSize);
