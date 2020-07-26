@@ -34,6 +34,11 @@ import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
  */
 public class UTF8StringUtil {
 
+    public static final String LOW_SURROGATE_WITHOUT_HIGH_SURROGATE =
+            "Decoding error: got a low surrogate without a leading high surrogate";
+    public static final String HIGH_SURROGATE_WITHOUT_LOW_SURROGATE =
+            "Decoding error: got a high surrogate without a following low surrogate";
+
     private UTF8StringUtil() {
     }
 
@@ -95,7 +100,7 @@ public class UTF8StringUtil {
 
         if (Character.isLowSurrogate(c1)) {
             // In this case, the index s doesn't point to a correct position
-            throw new IllegalArgumentException("decoding error: got a low surrogate without a high surrogate");
+            throw new IllegalArgumentException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
         }
 
         if (Character.isHighSurrogate(c1)) {
@@ -106,8 +111,7 @@ public class UTF8StringUtil {
             if (Character.isLowSurrogate(c2)) {
                 return Character.toCodePoint(c1, c2);
             } else {
-                throw new IllegalArgumentException(
-                        "decoding error: the high surrogate is not followed by a low surrogate");
+                throw new IllegalArgumentException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
             }
         }
 
@@ -119,7 +123,7 @@ public class UTF8StringUtil {
         int size1 = charSize(b, s);
 
         if (Character.isLowSurrogate(c1)) {
-            throw new IllegalArgumentException("decoding error: got a low surrogate without a high surrogate");
+            throw new IllegalArgumentException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
         }
 
         if (Character.isHighSurrogate(c1)) {
@@ -208,12 +212,10 @@ public class UTF8StringUtil {
                 if (Character.isLowSurrogate(ch)) {
                     codePointCount++;
                 } else {
-                    throw new IllegalArgumentException(
-                            "Decoding error: get a high surrogate without a following low surrogate when counting number of code points");
+                    throw new IllegalArgumentException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
                 }
             } else if (Character.isLowSurrogate(ch)) {
-                throw new IllegalArgumentException(
-                        "Decoding error: get a low surrogate without a leading high surrogate when counting number of code points");
+                throw new IllegalArgumentException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
             } else {
                 // A single-Java-Char code point (not a surrogate pair)
                 codePointCount++;

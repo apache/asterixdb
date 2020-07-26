@@ -42,6 +42,7 @@ public class UTF8StringSample {
     public static final String STRING_EMOJI_FAMILY_OF_4 =
             "\uD83D\uDC68\u200D\uD83D\uDC68\u200D\uD83D\uDC66\u200D\uD83D\uDC66";
     public static final String STRING_EMOJI_FAMILY_OF_2 = "\uD83D\uDC68\u200D\uD83D\uDC66";
+    public static final String EMOJI_BASKETBALL = "\uD83C\uDFC0";
 
     public static final String STRING_LEN_127 = generateStringRepeatBy(ONE_ASCII_CHAR, 127);
     public static final String STRING_LEN_128 = generateStringRepeatBy(ONE_ASCII_CHAR, 128);

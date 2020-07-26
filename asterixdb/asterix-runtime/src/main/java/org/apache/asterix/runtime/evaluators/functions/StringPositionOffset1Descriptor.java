@@ -48,7 +48,7 @@ public class StringPositionOffset1Descriptor extends AbstractScalarFunctionDynam
 
                     @Override
                     protected int compute(UTF8StringPointable left, UTF8StringPointable right) {
-                        int pos = UTF8StringPointable.find(left, right, false);
+                        int pos = UTF8StringPointable.findInCodePoint(left, right, false);
                         return pos < 0 ? pos : pos + 1;
                     }
                 };
