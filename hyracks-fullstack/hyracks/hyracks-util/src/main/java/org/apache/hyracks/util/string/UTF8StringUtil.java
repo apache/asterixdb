@@ -111,8 +111,7 @@ public class UTF8StringUtil {
             if (Character.isLowSurrogate(c2)) {
                 return Character.toCodePoint(c1, c2);
             } else {
-                throw new IllegalArgumentException(
-                        HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
+                throw new IllegalArgumentException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
             }
         }
 
@@ -213,12 +212,10 @@ public class UTF8StringUtil {
                 if (Character.isLowSurrogate(ch)) {
                     codePointCount++;
                 } else {
-                    throw new IllegalArgumentException(
-                            HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
+                    throw new IllegalArgumentException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
                 }
             } else if (Character.isLowSurrogate(ch)) {
-                throw new IllegalArgumentException(
-                        LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
+                throw new IllegalArgumentException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
             } else {
                 // A single-Java-Char code point (not a surrogate pair)
                 codePointCount++;
