@@ -205,25 +205,8 @@ public class UTF8StringUtil {
         int end = pos + len;
         int codePointCount = 0;
         while (pos < end) {
-            char ch = charAt(b, pos);
-
-            if (Character.isHighSurrogate(ch)) {
-                pos += charSize(b, pos);
-                ch = charAt(b, pos);
-                if (Character.isLowSurrogate(ch)) {
-                    codePointCount++;
-                } else {
-                    throw new IllegalArgumentException(
-                            "Decoding error: get a high surrogate without a following low surrogate when counting number of code points");
-                }
-            } else if (Character.isLowSurrogate(ch)) {
-                throw new IllegalArgumentException(
-                        "Decoding error: get a low surrogate without a leading high surrogate when counting number of code points");
-            } else {
-                // A single-Java-Char code point (not a surrogate pair)
-                codePointCount++;
-            }
-            pos += charSize(b, pos);
+            codePointCount++;
+            pos += codePointSize(b, pos);
         }
 
         return codePointCount;
