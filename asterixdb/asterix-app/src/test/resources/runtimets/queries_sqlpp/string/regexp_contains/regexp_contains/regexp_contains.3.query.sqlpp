@@ -34,6 +34,7 @@ from [
       REGEXP_CONTAINS('FFFFFFFF','[\\p{XDigit}]'),
       REGEXP_CONTAINS('abcdefgh','[\\p{javaLowerCase}]'),
       REGEXP_CONTAINS('ABCDEF','[\\p{javaLowerCase}]'),
-      REGEXP_CONTAINS(`codepoint-to-string`([163]),'[\\p{Sc}]')
+      REGEXP_CONTAINS(`codepoint-to-string`([163]),'[\\p{Sc}]'),
+      REGEXP_CONTAINS('👩‍👩‍👧‍👦','👩‍👩‍👧‍👦')
      ] as a
 ;
