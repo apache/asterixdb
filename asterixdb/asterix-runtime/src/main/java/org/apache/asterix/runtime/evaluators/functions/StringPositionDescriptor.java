@@ -48,7 +48,7 @@ public class StringPositionDescriptor extends AbstractScalarFunctionDynamicDescr
 
                     @Override
                     protected int compute(UTF8StringPointable left, UTF8StringPointable right) {
-                        return UTF8StringPointable.find(left, right, false);
+                        return UTF8StringPointable.findInCodePoint(left, right, false);
                     }
                 };
             }

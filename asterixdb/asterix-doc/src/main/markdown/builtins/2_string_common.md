@@ -226,10 +226,13 @@
 
         position(string, string_pattern)
 
- * Returns the first position of `string_pattern` within `string`. The function returns the 0-based position. Another
+ * Returns the first position of `string_pattern` within `string`.
+  The result is counted in the unit of code points.
+ See the following example for more details.
+
+ * The function returns the 0-based position. Another
  version of the function returns the 1-based position. Below are the aliases for each version:
 
- * Aliases:
     * 0-based: `position`, `pos`, `position0`, `pos0`.
     * 1-based: `position1`, `pos1`.
 
@@ -249,13 +252,20 @@
           "v1": position("ppphonepp", "phone"),
           "v2": position("hone", "phone"),
           "v3": position1("ppphonepp", "phone"),
-          "v4": position1("hone", "phone"),
+          "v4": position1("hone", "phone")
         };
-
 
  * The expected result is:
 
         { "v1": 2, "v2": -1, v3": 3, "v4": -1 }
+
+ * Example of multi-code-point character:
+
+        position("👩‍👩‍👧‍👦🏀", "🏀");
+
+ * The expected result is (the emoji family character has 7 code points):
+
+        7
 
 
 ### regexp_contains ###

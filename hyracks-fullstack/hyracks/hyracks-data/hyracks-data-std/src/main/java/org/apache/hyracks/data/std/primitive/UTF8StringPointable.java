@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.data.std.primitive;
 
+import static org.apache.hyracks.util.string.UTF8StringUtil.HIGH_SURROGATE_WITHOUT_LOW_SURROGATE;
+import static org.apache.hyracks.util.string.UTF8StringUtil.LOW_SURROGATE_WITHOUT_HIGH_SURROGATE;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 
@@ -235,19 +238,56 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      *            the pattern string.
      * @param ignoreCase,
      *            to ignore case or not.
+     * @return the offset in the unit of code point of the first character of the matching string. Not including the MetaLength.
+     */
+    public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
+        return findInByteOrCodePoint(src, pattern, ignoreCase, 0, false);
+    }
+
+    /**
+     * @param src,
+     *            the source string.
+     * @param pattern,
+     *            the pattern string.
+     * @param ignoreCase,
+     *            to ignore case or not.
      * @param startMatch,
      *            the start offset.
      * @return the byte offset of the first character of the matching string after <code>startMatchPos}</code>.
      *         Not including the MetaLength.
      */
     public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase, int startMatch) {
+        return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, true);
+    }
+
+    /**
+     * @param src,
+     *            the source string.
+     * @param pattern,
+     *            the pattern string.
+     * @param ignoreCase,
+     *            to ignore case or not.
+     * @param startMatch,
+     *            the start offset.
+     * @return the offset in the unit of code point of the first character of the matching string. Not including the MetaLength.
+     */
+    public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase,
+            int startMatch) {
+        return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, false);
+    }
+
+    // If resultInByte is true, then return the position in bytes, otherwise return the position in code points
+    private static int findInByteOrCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase,
+            int startMatch, boolean resultInByte) {
         int startMatchPos = startMatch;
         final int srcUtfLen = src.getUTF8Length();
         final int pttnUtfLen = pattern.getUTF8Length();
         final int srcStart = src.getMetaDataLength();
         final int pttnStart = pattern.getMetaDataLength();
+        int codePointCount = 0;
 
         int maxStart = srcUtfLen - pttnUtfLen;
+        boolean prevHighSurrogate = false;
         while (startMatchPos <= maxStart) {
             int c1 = startMatchPos;
             int c2 = 0;
@@ -256,6 +296,14 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 char ch2 = pattern.charAt(pttnStart + c2);
 
                 if (ch1 != ch2) {
+                    // Currently, the ignoreCase is only valid for one-surrogate characters
+                    // (e.g. characters whose UTF-16 encoding is 2-byte (1 Java char) instead of 4-byte (2 Java chars).
+                    // We may need to support the two-surrogate characters in the future
+                    //
+                    // Another edge case is that one letter may have different forms of lower cases in different languages
+                    // For example, the letter I may have "i" as the lower case in English but "ı" in Turkish.
+                    // We may need to use methods such as String.toLowerCase(Locale locale) to support other languages in the future
+                    // Reference: https://stackoverflow.com/questions/11063102/using-locales-with-javas-tolowercase-and-touppercase
                     if (!ignoreCase || Character.toLowerCase(ch1) != Character.toLowerCase(ch2)) {
                         break;
                     }
@@ -263,9 +311,35 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 c1 += src.charSize(srcStart + c1);
                 c2 += pattern.charSize(pttnStart + c2);
             }
+
             if (c2 == pttnUtfLen) {
-                return startMatchPos;
+                if (resultInByte) {
+                    return startMatchPos;
+                } else {
+                    if (prevHighSurrogate == true) {
+                        throw new IllegalArgumentException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
+                    }
+                    return codePointCount;
+                }
             }
+
+            // The result is counted in code point instead of bytes
+            if (resultInByte == false) {
+                char ch = src.charAt(srcStart + startMatchPos);
+                if (Character.isHighSurrogate(ch)) {
+                    prevHighSurrogate = true;
+                } else if (Character.isLowSurrogate(ch)) {
+                    if (prevHighSurrogate == true) {
+                        codePointCount++;
+                        prevHighSurrogate = false;
+                    } else {
+                        throw new IllegalArgumentException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
+                    }
+                } else {
+                    codePointCount++;
+                }
+            }
+
             startMatchPos += src.charSize(srcStart + startMatchPos);
         }
         return -1;
