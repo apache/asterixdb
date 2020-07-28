@@ -17,6 +17,7 @@
  * under the License.
  */
 
-string_to_codepoint("👩‍👩‍👧‍👦");
-codepoint_to_string([ 128105, 8205, 128105, 8205, 128103, 8205, 128102 ]);
-
+[
+    string_to_codepoint("👩‍👩‍👧‍👦"),
+    codepoint_to_string([ 128105, 8205, 128105, 8205, 128103, 8205, 128102 ])
+];
