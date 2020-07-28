@@ -316,7 +316,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 if (resultInByte) {
                     return startMatchPos;
                 } else {
-                    if (prevHighSurrogate == true) {
+                    if (prevHighSurrogate) {
                         throw new IllegalArgumentException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
                     }
                     return codePointCount;
@@ -329,7 +329,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 if (Character.isHighSurrogate(ch)) {
                     prevHighSurrogate = true;
                 } else if (Character.isLowSurrogate(ch)) {
-                    if (prevHighSurrogate == true) {
+                    if (prevHighSurrogate) {
                         codePointCount++;
                         prevHighSurrogate = false;
                     } else {

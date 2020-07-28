@@ -72,9 +72,9 @@ public class UTF8StringPointableTest {
         UTF8StringPointable strp = generateUTF8Pointable(STRING_EMOJI_FAMILY_OF_4 + EMOJI_BASKETBALL);
         UTF8StringPointable pattern = generateUTF8Pointable(EMOJI_BASKETBALL);
 
-        assertEquals(UTF8StringPointable.findInCodePoint(strp, pattern, false), 7);
+        assertEquals(7, UTF8StringPointable.findInCodePoint(strp, pattern, false));
 
-        assertEquals(UTF8StringPointable.findInCodePoint(strp, pattern, true), 7);
+        assertEquals(7, UTF8StringPointable.findInCodePoint(strp, pattern, true));
     }
 
     @Test

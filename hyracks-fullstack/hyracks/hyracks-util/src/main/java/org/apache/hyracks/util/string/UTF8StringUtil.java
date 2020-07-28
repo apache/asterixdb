@@ -130,7 +130,7 @@ public class UTF8StringUtil {
             // Similar to the above codePointAt(),
             // if c1 is the a high surrogate and also the last char in the byte array (that means the byte array is somehow illegal),
             // then an exception will be thrown because there is no low surrogate available in the byte array
-            s += charSize(b, s);
+            s += size1;
             int size2 = charSize(b, s);
             return size1 + size2;
         }
