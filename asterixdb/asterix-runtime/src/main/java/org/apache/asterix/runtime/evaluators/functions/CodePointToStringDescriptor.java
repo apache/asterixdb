@@ -70,6 +70,7 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                     private final byte[] currentUTF8 = new byte[6];
                     private final byte[] tempStoreForLength = new byte[5];
                     private final FunctionIdentifier fid = getIdentifier();
+                    private final char[] tempCharPair = new char[2];
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -121,7 +122,7 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                                 if (!returnNull) {
                                     int codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
                                             fid.getName(), 0, serOrderedList, itemOffset, itemTagPosition);
-                                    utf_8_len += UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
+                                    utf_8_len += UTF8StringUtil.codePointToUTF8(codePoint, tempCharPair, currentUTF8);
                                 }
                             }
                             if (returnNull) {
@@ -142,7 +143,7 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                                 }
                                 int codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
                                         fid.getName(), 0, serOrderedList, itemOffset, itemTagPosition);
-                                utf_8_len = UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
+                                utf_8_len = UTF8StringUtil.codePointToUTF8(codePoint, tempCharPair, currentUTF8);
                                 for (int j = 0; j < utf_8_len; j++) {
                                     out.writeByte(currentUTF8[j]);
                                 }

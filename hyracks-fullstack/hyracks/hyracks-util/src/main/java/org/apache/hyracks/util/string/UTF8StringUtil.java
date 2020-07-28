@@ -224,15 +224,14 @@ public class UTF8StringUtil {
         return VarLenIntEncoderDecoder.getBytesRequired(strlen);
     }
 
-    public static int codePointToUTF8(int codePoint, byte[] outputUTF8) {
-        int count = 0;
-
-        char[] chars = Character.toChars(codePoint);
-        for (int i = 0; i < chars.length; i++) {
-            count += writeToBytes(outputUTF8, count, chars[i]);
+    public static int codePointToUTF8(int codePoint, char[] tempChars, byte[] outputUTF8) {
+        int len = 0;
+        int numChars = Character.toChars(codePoint, tempChars, 0);
+        for (int i = 0; i < numChars; i++) {
+            len += writeToBytes(outputUTF8, len, tempChars[i]);
         }
 
-        return count;
+        return len;
     }
 
     /**
