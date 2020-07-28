@@ -257,7 +257,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         FileReference appDir =
                 ioManager.resolveAbsolutePath(getServiceContext().getServerCtx().getAppDir().getAbsolutePath());
         libraryManager = new ExternalLibraryManager(ncs, persistedResourceRegistry, appDir);
-        libraryManager.initStorage(resetStorageData);
+        libraryManager.initialize(resetStorageData);
 
         /*
          * The order of registration is important. The buffer cache must registered before recovery and transaction

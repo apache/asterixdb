@@ -34,11 +34,6 @@ import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
  */
 public class UTF8StringUtil {
 
-    public static final String LOW_SURROGATE_WITHOUT_HIGH_SURROGATE =
-            "Decoding error: got a low surrogate without a leading high surrogate";
-    public static final String HIGH_SURROGATE_WITHOUT_LOW_SURROGATE =
-            "Decoding error: got a high surrogate without a following low surrogate";
-
     private UTF8StringUtil() {
     }
 
@@ -189,6 +184,11 @@ public class UTF8StringUtil {
     public static int getStringLength(byte[] b, int s) {
         int len = getUTFLength(b, s);
         int pos = s + getNumBytesToStoreLength(len);
+        return getStringLength(b, pos, len);
+    }
+
+    public static int getStringLength(byte[] b, int offs, int len) {
+        int pos = offs;
         int end = pos + len;
         int charCount = 0;
         while (pos < end) {
@@ -204,23 +204,8 @@ public class UTF8StringUtil {
         int end = pos + len;
         int codePointCount = 0;
         while (pos < end) {
-            char ch = charAt(b, pos);
-
-            if (Character.isHighSurrogate(ch)) {
-                pos += charSize(b, pos);
-                ch = charAt(b, pos);
-                if (Character.isLowSurrogate(ch)) {
-                    codePointCount++;
-                } else {
-                    throw new IllegalArgumentException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
-                }
-            } else if (Character.isLowSurrogate(ch)) {
-                throw new IllegalArgumentException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
-            } else {
-                // A single-Java-Char code point (not a surrogate pair)
-                codePointCount++;
-            }
-            pos += charSize(b, pos);
+            codePointCount++;
+            pos += codePointSize(b, pos);
         }
 
         return codePointCount;

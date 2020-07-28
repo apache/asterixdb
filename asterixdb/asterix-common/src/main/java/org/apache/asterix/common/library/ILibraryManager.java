@@ -20,8 +20,10 @@
 package org.apache.asterix.common.library;
 
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.external.ipc.ExternalFunctionResultRouter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.ipc.impl.IPCSystem;
 
 public interface ILibraryManager {
 
@@ -36,4 +38,8 @@ public interface ILibraryManager {
     void dropLibraryPath(FileReference fileRef) throws HyracksDataException;
 
     byte[] serializeLibraryDescriptor(LibraryDescriptor libraryDescriptor) throws HyracksDataException;
+
+    ExternalFunctionResultRouter getRouter();
+
+    IPCSystem getIPCI();
 }

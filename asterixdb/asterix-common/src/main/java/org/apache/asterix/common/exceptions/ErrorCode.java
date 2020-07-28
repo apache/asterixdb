@@ -88,6 +88,7 @@ public class ErrorCode {
     public static final int UNSUPPORTED_JRE = 100;
 
     public static final int EXTERNAL_UDF_RESULT_TYPE_ERROR = 200;
+    public static final int EXTERNAL_UDF_EXCEPTION = 201;
 
     // Compilation errors
     public static final int PARSE_ERROR = 1001;

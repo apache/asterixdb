@@ -445,14 +445,6 @@
       <artifactId>guava</artifactId>
     </dependency>
     <dependency>
-        <groupId>net.razorvine</groupId>
-        <artifactId>pyrolite</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>net.razorvine</groupId>
-      <artifactId>serpent</artifactId>
-    </dependency>
-    <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>http-client-spi</artifactId>
     </dependency>
@@ -471,6 +463,10 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>auth</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.msgpack</groupId>
+        <artifactId>msgpack-core</artifactId>
     </dependency>
   </dependencies>
 </project>

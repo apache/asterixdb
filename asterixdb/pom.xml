@@ -1488,14 +1488,9 @@
         <version>4.5.11</version>
       </dependency>
       <dependency>
-        <groupId>net.razorvine</groupId>
-        <artifactId>pyrolite</artifactId>
-        <version>4.30</version>
-      </dependency>
-      <dependency>
-        <groupId>net.razorvine</groupId>
-        <artifactId>serpent</artifactId>
-        <version>1.23</version>
+        <groupId>org.msgpack</groupId>
+        <artifactId>msgpack-core</artifactId>
+        <version>0.8.20</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

@@ -39,6 +39,8 @@ final class IPCHandle implements IIPCHandle {
 
     private Object attachment;
 
+    private int attachmentLen;
+
     private ByteBuffer inBuffer;
 
     private ByteBuffer outBuffer;
@@ -93,6 +95,11 @@ final class IPCHandle implements IIPCHandle {
     @Override
     public Object getAttachment() {
         return attachment;
+    }
+
+    @Override
+    public int getAttachmentLen() {
+        return attachmentLen;
     }
 
     SelectionKey getKey() {
@@ -178,6 +185,7 @@ final class IPCHandle implements IIPCHandle {
                     throw new IllegalStateException();
                 }
             } else {
+                attachmentLen = message.getPayloadLen();
                 system.deliverIncomingMessage(message);
             }
         }
