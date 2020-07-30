@@ -1643,7 +1643,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // Check if the dataverse exists
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx.getValue(), dataverseName);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                if (ifExists) {
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
+                    return false;
+                } else {
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                }
             }
             Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
             if (ds == null) {

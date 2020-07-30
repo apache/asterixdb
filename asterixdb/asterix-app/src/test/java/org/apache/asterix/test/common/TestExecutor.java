@@ -68,6 +68,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -1622,11 +1623,20 @@ public class TestExecutor {
     protected static boolean isExpected(Exception e, CompilationUnit cUnit) {
         final List<String> expErrors = cUnit.getExpectedError();
         for (String exp : expErrors) {
-            if (e.toString().contains(exp)) {
+            if (e.toString().contains(exp) || containsPattern(e.toString(), exp)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean containsPattern(String exception, String maybePattern) {
+        try {
+            return Pattern.compile(maybePattern).matcher(exception).find();
+        } catch (PatternSyntaxException pse) {
+            // ignore, this isn't always a legal pattern
+            return false;
+        }
     }
 
     public int getTimeoutSecs(String statement) {
@@ -2070,7 +2080,7 @@ public class TestExecutor {
             // Get the expected exception
             expectedError = expectedErrors.get(numOfErrors - 1);
             String actualError = e.toString();
-            if (!actualError.contains(expectedError)) {
+            if (!actualError.contains(expectedError) && !containsPattern(actualError, expectedError)) {
                 LOGGER.error("Expected to find the following in error text: +++++{}+++++", expectedError);
                 return true;
             }
