@@ -51,8 +51,11 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    /** Whether the incoming frame has a message that this operator should handle **/
+    private final boolean hasMessage;
+
     /** Runtime node pushable corresponding to the core feed operator **/
-    private AbstractUnaryInputUnaryOutputOperatorNodePushable insertOperator;
+    private final AbstractUnaryInputUnaryOutputOperatorNodePushable insertOperator;
 
     /**
      * A policy accessor that ensures dyanmic decisions for a feed are taken
@@ -92,10 +95,11 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     private final long traceCategory;
 
-    public FeedMetaStoreNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
-            int partition, int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
-            Map<String, String> feedPolicyProperties, FeedMetaOperatorDescriptor feedMetaOperatorDescriptor)
-            throws HyracksDataException {
+    FeedMetaStoreNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider, int partition,
+            int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
+            Map<String, String> feedPolicyProperties, FeedMetaOperatorDescriptor feedMetaOperatorDescriptor,
+            boolean hasMessage) throws HyracksDataException {
+        this.hasMessage = hasMessage;
         this.ctx = ctx;
         this.insertOperator = (AbstractUnaryInputUnaryOutputOperatorNodePushable) ((IActivity) coreOperator)
                 .createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
@@ -104,8 +108,13 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         this.connectionId = feedConnectionId;
         this.feedManager = (ActiveManager) ((INcApplicationContext) ctx.getJobletContext().getServiceContext()
                 .getApplicationContext()).getActiveManager();
-        this.message = new VSizeFrame(ctx);
-        TaskUtil.put(HyracksConstants.KEY_MESSAGE, message, ctx);
+        if (hasMessage) {
+            this.message = new VSizeFrame(ctx);
+            TaskUtil.put(HyracksConstants.KEY_MESSAGE, message, ctx);
+        } else {
+            this.message = null;
+        }
+
         this.recordDescProvider = recordDescProvider;
         this.opDesc = feedMetaOperatorDescriptor;
         tracer = ctx.getJobletContext().getServiceContext().getTracer();
@@ -147,7 +156,9 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         long tid = tracer.durationB("Ingestion-Store", traceCategory, null);
         try {
-            FeedUtils.processFeedMessage(buffer, message, fta);
+            if (hasMessage) {
+                FeedUtils.processFeedMessage(buffer, message, fta);
+            }
             writer.nextFrame(buffer);
         } catch (Exception e) {
             LOGGER.log(Level.WARN, "Failure Processing a frame at store side", e);

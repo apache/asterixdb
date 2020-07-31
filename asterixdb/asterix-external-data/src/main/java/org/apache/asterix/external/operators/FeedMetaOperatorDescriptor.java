@@ -67,14 +67,17 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
     private final Map<String, String> feedPolicyProperties;
 
     /**
-     * type for the feed runtime associated with the operator.
+     * Type for the feed runtime associated with the operator.
      * Possible values: COMPUTE, STORE, OTHER
      **/
     private final FeedRuntimeType runtimeType;
 
+    /** Whether the incoming frame has a message that this operator should handle **/
+    private final boolean hasMessage;
+
     public FeedMetaOperatorDescriptor(final JobSpecification spec, final FeedConnectionId feedConnectionId,
             final IOperatorDescriptor coreOperatorDescriptor, final Map<String, String> feedPolicyProperties,
-            final FeedRuntimeType runtimeType) {
+            final FeedRuntimeType runtimeType, boolean hasMessage) {
         super(spec, coreOperatorDescriptor.getInputArity(), coreOperatorDescriptor.getOutputArity());
         this.feedConnectionId = feedConnectionId;
         this.feedPolicyProperties = feedPolicyProperties;
@@ -83,6 +86,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         }
         this.coreOperator = coreOperatorDescriptor;
         this.runtimeType = runtimeType;
+        this.hasMessage = hasMessage;
     }
 
     @Override
@@ -97,7 +101,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
                 break;
             case STORE:
                 nodePushable = new FeedMetaStoreNodePushable(ctx, recordDescProvider, partition, nPartitions,
-                        coreOperator, feedConnectionId, feedPolicyProperties, this);
+                        coreOperator, feedConnectionId, feedPolicyProperties, this, hasMessage);
                 break;
             default:
                 throw new RuntimeDataException(ErrorCode.OPERATORS_FEED_META_OPERATOR_DESCRIPTOR_INVALID_RUNTIME,

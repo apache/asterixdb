@@ -309,7 +309,7 @@ public class FeedOperations {
                 if (opDesc instanceof LSMTreeInsertDeleteOperatorDescriptor
                         && ((LSMTreeInsertDeleteOperatorDescriptor) opDesc).isPrimary()) {
                     metaOp = new FeedMetaOperatorDescriptor(jobSpec, feedConnectionId, opDesc,
-                            feedPolicyEntity.getProperties(), FeedRuntimeType.STORE);
+                            feedPolicyEntity.getProperties(), FeedRuntimeType.STORE, true);
                     opId = metaOp.getOperatorId();
                     opDesc.setOperatorId(opId);
                 } else {
@@ -323,7 +323,7 @@ public class FeedOperations {
                             // anything on the network interface needs to be message compatible
                             if (connectorDesc instanceof MToNPartitioningConnectorDescriptor) {
                                 metaOp = new FeedMetaOperatorDescriptor(jobSpec, feedConnectionId, opDesc,
-                                        feedPolicyEntity.getProperties(), FeedRuntimeType.COMPUTE);
+                                        feedPolicyEntity.getProperties(), FeedRuntimeType.COMPUTE, true);
                                 opId = metaOp.getOperatorId();
                                 opDesc.setOperatorId(opId);
                             }
