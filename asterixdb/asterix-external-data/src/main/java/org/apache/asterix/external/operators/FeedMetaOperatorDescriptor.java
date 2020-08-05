@@ -72,7 +72,9 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
      **/
     private final FeedRuntimeType runtimeType;
 
-    /** Whether the incoming frame has a message that this operator should handle **/
+    /**
+     * Whether the incoming frame has a message that this operator should handle.
+     **/
     private final boolean hasMessage;
 
     public FeedMetaOperatorDescriptor(final JobSpecification spec, final FeedConnectionId feedConnectionId,

@@ -51,10 +51,14 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    /** Whether the incoming frame has a message that this operator should handle **/
+    /**
+     * Whether the incoming frame has a message that this operator should handle
+     **/
     private final boolean hasMessage;
 
-    /** Runtime node pushable corresponding to the core feed operator **/
+    /**
+     * Runtime node pushable corresponding to the core feed operator
+     **/
     private final AbstractUnaryInputUnaryOutputOperatorNodePushable insertOperator;
 
     /**
@@ -75,10 +79,14 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
      **/
     private final int partition;
 
-    /** Type associated with the core feed operator **/
+    /**
+     * Type associated with the core feed operator
+     **/
     private final FeedRuntimeType runtimeType = FeedRuntimeType.STORE;
 
-    /** The (singleton) instance of IFeedManager **/
+    /**
+     * The (singleton) instance of IFeedManager
+     **/
     private final ActiveManager feedManager;
 
     private FrameTupleAccessor fta;
