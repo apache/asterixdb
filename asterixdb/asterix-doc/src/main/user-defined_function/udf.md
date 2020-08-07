@@ -71,15 +71,14 @@ Any response other than `200` indicates an error in deployment.
 
 In the AsterixDB source release, we provide several sample UDFs that you can try out.
 You need to build the AsterixDB source to get the compiled UDF package. It can be found under
-the `asterixdb-external` sub-project. Assuming that these UDFs have been installed into the `udfs` dataverse and `testlib` library,
+the `asterixdb-external` sub-project. Assuming that these UDFs have been installed into the `testlib` library in`udfs` dataverse,
 here is an example that uses the sample UDF `mysum` to compute the sum of two input integers.
 
     USE udfs;
 
     CREATE FUNCTION mysum(a: int32, b: int32)
-    RETURNS int32
-    LANGUAGE JAVA
-    AS "testlib","org.apache.asterix.external.library.MySumFactory";
+      RETURNS int32
+      AS "org.apache.asterix.external.library.MySumFactory" AT testlib;
 
 ## <a id="PythonUDF">Creating a Python UDF</a>
 
@@ -118,7 +117,7 @@ scikit-learn here (our method is obviously better!), but it's just included as a
 
     shiv -o lib.pyz --site-packages . scikit-learn
 
-Then, deploy it the same as the Java UDF was, with the library name `pylib`
+Then, deploy it the same as the Java UDF was, with the library name `pylib` in `udfs` dataverse
 
     curl -v -u admin:admin -X POST -F 'data=@./lib.pyz' localhost:19002/admin/udf/udfs/pylib
 
@@ -127,24 +126,31 @@ With the library deployed, we can define a function within it for use. For examp
 
     USE udfs;
 
-    CREATE FUNCTION sentiment(a)
-    LANGUAGE PYTHON DETERMINISTIC
-    AS "pylib","sentiment_mod:sent_model";
+    CREATE FUNCTION sentiment(a) 
+      AS "sentiment_mod", "sent_model.sentiment" AT pylib;
 
-By default, AsterixDB will treat all external functions as `NOT DETERMINISTIC`. Loosely this means the result might
-change depending on when the function is called, regardless of the input. This function behaves the same on each input,
-so we can safely call it `DETERMINISTIC`. This will enable better optimization of queries including this function.
+By default, AsterixDB will treat all external functions as deterministic. It means the function must return the same
+result for the same input, irrespective of when or how many times the function is called on that input. 
+This particular function behaves the same on each input, so it satisfies the deterministic property. 
+This enables better optimization of queries including this function.
+If a function is not deterministic then it should be declared as such by using `WITH` sub-clause:
+
+    USE udfs;
+
+    CREATE FUNCTION sentiment(a)
+      AS "sentiment_mod", "sent_model.sentiment" AT pylib
+      WITH { "deterministic": false }
 
 With the function now defined, it can then be used as any other scalar SQL++ function would be. For example:
 
     USE udfs;
 
     INSERT INTO Tweets([
-    {"id":1, "msg":"spam is great"},
-    {"id":2, "msg":"i will not eat green eggs and ham"},
-    {"id":3, "msg":"bacon is better"}]);
+      {"id":1, "msg":"spam is great"},
+      {"id":2, "msg":"i will not eat green eggs and ham"},
+      {"id":3, "msg":"bacon is better"}
+    ]);
 
-    USE udfs;
     SELECT t.msg as msg, sentiment(t.msg) as sentiment
     FROM Tweets t;
 
@@ -191,12 +197,12 @@ Please refer to section [Data Ingestion](feeds.html) if you have any trouble in 
 
 Then we define the function we want to apply to the feed
 
-   USE udfs;
+    USE udfs;
 
-   CREATE FUNCTION addMentionedUsers(t: TweetType)
-   RETURNS TweetType
-   LANGUAGE JAVA as "testlib","org.apache.asterix.external.library.AddMentionedUsersFactory"
-   WITH {"textFieldName": "text"};
+    CREATE FUNCTION addMentionedUsers(t: TweetType)
+      RETURNS TweetType
+      AS "org.apache.asterix.external.library.AddMentionedUsersFactory" AT testlib
+      WITH { "resources": { "textFieldName": "text" } };
 
 After creating the feed, we attach the UDF onto the feed pipeline and start the feed with following statements:
 

@@ -18,4 +18,5 @@
  */
  USE externallibtest;
 
-create function mysum(a: int32, b: int32) returns int32 language java as "testlib","org.apache.asterix.external.library.MySumFactory";
+create function mysum(a: int32, b: int32) returns int32
+  as "org.apache.asterix.external.library.MySumFactory" at testlib;

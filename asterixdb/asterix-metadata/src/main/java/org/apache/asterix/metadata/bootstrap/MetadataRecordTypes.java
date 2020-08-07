@@ -75,6 +75,7 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_IS_PRIMARY = "IsPrimary";
     public static final String FIELD_NAME_KIND = "Kind";
     public static final String FIELD_NAME_LANGUAGE = "Language";
+    public static final String FIELD_NAME_LIBRARY_DATAVERSE_NAME = "LibraryDataverseName";
     public static final String FIELD_NAME_LIBRARY_NAME = "LibraryName";
     public static final String FIELD_NAME_LAST_REFRESH_TIME = "LastRefreshTime";
     public static final String FIELD_NAME_METATYPE_DATAVERSE_NAME = "MetatypeDataverseName";
@@ -340,11 +341,15 @@ public final class MetadataRecordTypes {
     public static final int FUNCTION_ARECORD_FUNCTION_KIND_FIELD_INDEX = 7;
     public static final int FUNCTION_ARECORD_FUNCTION_DEPENDENCIES_FIELD_INDEX = 8;
     //open types
-    public static final String FUNCTION_ARECORD_FUNCTION_WITHPARAM_LIST_NAME = "WithParams";
-    public static final String FUNCTION_ARECORD_FUNCTION_LIBRARY_FIELD_NAME = "Library";
+    public static final String FUNCTION_ARECORD_FUNCTION_RESOURCES_FIELD_NAME = "Resources";
     public static final String FUNCTION_ARECORD_FUNCTION_NULLCALL_FIELD_NAME = "NullCall";
     public static final String FUNCTION_ARECORD_FUNCTION_DETERMINISTIC_FIELD_NAME = "Deterministic";
     public static final String FUNCTION_ARECORD_FUNCTION_PARAMTYPES_FIELD_NAME = "ParamTypes";
+    public static final String FUNCTION_ARECORD_FUNCTION_EXTERNAL_IDENTIFIER_FIELD_NAME = "ExternalIdentifier";
+    @Deprecated // back-compat
+    public static final String FUNCTION_ARECORD_FUNCTION_LIBRARY_FIELD_NAME = "Library";
+    @Deprecated // back-compat
+    public static final String FUNCTION_ARECORD_FUNCTION_WITHPARAMS_FIELD_NAME = "WithParams";
 
     public static final ARecordType FUNCTION_RECORDTYPE = createRecordType(
             // RecordTypeName

@@ -19,4 +19,5 @@
 
 use test;
 
-create function warning() language python as "testlib","roundtrip:Tests";
+create function warning()
+  as "roundtrip", "Tests.warning" at testlib;

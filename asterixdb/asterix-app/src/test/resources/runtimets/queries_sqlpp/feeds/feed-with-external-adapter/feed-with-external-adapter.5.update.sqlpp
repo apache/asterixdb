@@ -16,7 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- USE externallibtest;
+/*
+ * Description  : Feed with an external adapter
+ * Expected Res : Success
+ */
 
-create function sentiment(s)
-  as "sentiment", "TweetSent.sentiment" at testlib;
+use externallibtest;
+
+disconnect feed TweetFeed from dataset Tweets;
+drop feed TweetFeed;
+drop adapter TweetAdapter;

@@ -19,4 +19,5 @@
 
 use test;
 
-create function roundtrip(s) language python as "testlib","roundtrip:Tests";
+create function roundtrip(s)
+  as "roundtrip", "Tests.roundtrip" at testlib;

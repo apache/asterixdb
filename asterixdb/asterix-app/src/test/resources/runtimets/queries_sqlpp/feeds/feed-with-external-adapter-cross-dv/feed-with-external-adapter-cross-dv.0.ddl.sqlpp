@@ -16,7 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- USE externallibtest;
+/*
+ * Description  : Feed with an external adapter. Test different dataverses.
+ * Expected Res : Success
+ */
 
-create function sentiment(s)
-  as "sentiment", "TweetSent.sentiment" at testlib;
+drop dataverse externallibtest if exists;
+create dataverse externallibtest;
+
+drop dataverse externallibtest2 if exists;
+create dataverse externallibtest2;

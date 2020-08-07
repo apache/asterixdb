@@ -18,5 +18,6 @@
  */
 use externallibtest;
 
-create function typeValidation(a: int32, b: float, c:string, d:double, e:boolean, f:date, g: datetime) returns string language java as "testlib","org.apache.asterix.external.library.TypeValidationFunctionFactory";
+create function typeValidation(a: int32, b: float, c:string, d:double, e:boolean, f:date, g: datetime) returns string
+  as "org.apache.asterix.external.library.TypeValidationFunctionFactory" at testlib;
 

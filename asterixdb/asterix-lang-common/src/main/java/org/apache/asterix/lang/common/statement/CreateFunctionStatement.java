@@ -18,12 +18,13 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
@@ -33,10 +34,20 @@ import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.ConfigurationUtil;
 import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.asterix.object.base.AdmBooleanNode;
 import org.apache.asterix.object.base.AdmObjectNode;
+import org.apache.asterix.object.base.AdmStringNode;
+import org.apache.asterix.object.base.IAdmNode;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class CreateFunctionStatement extends AbstractStatement {
+
+    private static final String NULLCALL_FIELD_NAME = "null-call";
+    private static final boolean NULLCALL_DEFAULT = false;
+    private static final String DETERMINISTIC_FIELD_NAME = "deterministic";
+    private static final boolean DETERMINISTIC_DEFAULT = true;
+    private static final String RESOURCES_FIELD_NAME = "resources";
 
     private final FunctionSignature signature;
     private final String functionBody;
@@ -45,12 +56,10 @@ public class CreateFunctionStatement extends AbstractStatement {
     private final List<Pair<VarIdentifier, TypeExpression>> paramList;
     private final TypeExpression returnType;
 
-    private final String lang;
-    private final String libName;
+    private final DataverseName libraryDataverseName;
+    private final String libraryName;
     private final List<String> externalIdentifier;
-    private final Boolean deterministic;
-    private final Boolean nullCall;
-    private final AdmObjectNode resources;
+    private final AdmObjectNode options;
 
     public CreateFunctionStatement(FunctionSignature signature, List<Pair<VarIdentifier, TypeExpression>> paramList,
             String functionBody, Expression functionBodyExpression, boolean ifNotExists) {
@@ -58,30 +67,26 @@ public class CreateFunctionStatement extends AbstractStatement {
         this.functionBody = functionBody;
         this.functionBodyExpression = functionBodyExpression;
         this.ifNotExists = ifNotExists;
-        this.paramList = requireNullTypes(paramList);
+        this.paramList = requireNullTypes(paramList); // parameter type specification is not allowed for inline functions
         this.returnType = null; // return type specification is not allowed for inline functions
-        this.lang = null;
-        this.libName = null;
+        this.libraryDataverseName = null;
+        this.libraryName = null;
         this.externalIdentifier = null;
-        this.deterministic = null;
-        this.nullCall = null;
-        this.resources = null;
+        this.options = null;
     }
 
     public CreateFunctionStatement(FunctionSignature signature, List<Pair<VarIdentifier, TypeExpression>> paramList,
-            TypeExpression returnType, boolean deterministic, boolean nullCall, String lang, String libName,
-            List<String> externalIdentifier, RecordConstructor resources, boolean ifNotExists)
+            TypeExpression returnType, DataverseName libraryDataverseName, String libraryName,
+            List<String> externalIdentifier, RecordConstructor options, boolean ifNotExists)
             throws CompilationException {
         this.signature = signature;
         this.ifNotExists = ifNotExists;
         this.paramList = paramList;
         this.returnType = returnType;
-        this.deterministic = deterministic;
-        this.nullCall = nullCall;
-        this.lang = lang;
-        this.libName = libName;
+        this.libraryDataverseName = libraryDataverseName;
+        this.libraryName = libraryName;
         this.externalIdentifier = externalIdentifier;
-        this.resources = resources == null ? null : ExpressionUtils.toNode(resources);
+        this.options = options == null ? null : ExpressionUtils.toNode(options);
         this.functionBody = null;
         this.functionBodyExpression = null;
     }
@@ -123,24 +128,50 @@ public class CreateFunctionStatement extends AbstractStatement {
         return externalIdentifier;
     }
 
-    public String getLibName() {
-        return libName;
+    public DataverseName getLibraryDataverseName() {
+        return libraryDataverseName;
     }
 
-    public String getLang() {
-        return lang;
+    public String getLibraryName() {
+        return libraryName;
     }
 
-    public Boolean getDeterministic() {
-        return deterministic;
+    public boolean getNullCall() throws CompilationException {
+        Boolean nullCall = getBooleanOption(NULLCALL_FIELD_NAME);
+        return nullCall != null ? nullCall : NULLCALL_DEFAULT;
     }
 
-    public Boolean getNullCall() {
-        return nullCall;
+    public boolean getDeterministic() throws CompilationException {
+        Boolean deterministic = getBooleanOption(DETERMINISTIC_FIELD_NAME);
+        return deterministic != null ? deterministic : DETERMINISTIC_DEFAULT;
+    }
+
+    private Boolean getBooleanOption(String optionName) throws CompilationException {
+        IAdmNode value = getOption(optionName);
+        if (value == null) {
+            return null;
+        }
+        switch (value.getType()) {
+            case BOOLEAN:
+                return ((AdmBooleanNode) value).get();
+            case STRING:
+                return Boolean.parseBoolean(((AdmStringNode) value).get());
+            default:
+                throw new CompilationException(ErrorCode.FIELD_NOT_OF_TYPE, getSourceLocation(), optionName,
+                        ATypeTag.BOOLEAN, value.getType());
+        }
     }
 
     public Map<String, String> getResources() throws CompilationException {
-        return resources != null ? ConfigurationUtil.toProperties(resources) : Collections.emptyMap();
+        IAdmNode value = getOption(RESOURCES_FIELD_NAME);
+        if (value == null) {
+            return null;
+        }
+        if (value.getType() != ATypeTag.OBJECT) {
+            throw new CompilationException(ErrorCode.FIELD_NOT_OF_TYPE, getSourceLocation(), RESOURCES_FIELD_NAME,
+                    ATypeTag.OBJECT, value.getType());
+        }
+        return ConfigurationUtil.toProperties((AdmObjectNode) value);
     }
 
     @Override
@@ -153,6 +184,10 @@ public class CreateFunctionStatement extends AbstractStatement {
         return Category.DDL;
     }
 
+    private IAdmNode getOption(String optionName) {
+        return options != null ? options.get(optionName) : null;
+    }
+
     private static List<Pair<VarIdentifier, TypeExpression>> requireNullTypes(
             List<Pair<VarIdentifier, TypeExpression>> paramList) {
         for (Pair<VarIdentifier, TypeExpression> p : paramList) {
@@ -162,4 +197,5 @@ public class CreateFunctionStatement extends AbstractStatement {
         }
         return paramList;
     }
+
 }

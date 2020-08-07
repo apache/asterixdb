@@ -29,9 +29,12 @@ public final class LibraryDropStatement extends AbstractStatement {
     private final DataverseName dataverseName;
     private final String libraryName;
 
-    public LibraryDropStatement(DataverseName dataverseName, String libraryName) {
+    private final boolean ifExists;
+
+    public LibraryDropStatement(DataverseName dataverseName, String libraryName, boolean ifExists) {
         this.dataverseName = dataverseName;
         this.libraryName = libraryName;
+        this.ifExists = ifExists;
     }
 
     public DataverseName getDataverseName() {
@@ -40,6 +43,10 @@ public final class LibraryDropStatement extends AbstractStatement {
 
     public String getLibraryName() {
         return libraryName;
+    }
+
+    public boolean getIfExists() {
+        return ifExists;
     }
 
     @Override

@@ -19,4 +19,5 @@
 
 use externallibtest;
 
-create function getCapital(a) language java as "testlib","org.apache.asterix.external.library.OpenCapitalFinderFactory";
+create function getCapital(a)
+  as "org.apache.asterix.external.library.OpenCapitalFinderFactory" at testlib;

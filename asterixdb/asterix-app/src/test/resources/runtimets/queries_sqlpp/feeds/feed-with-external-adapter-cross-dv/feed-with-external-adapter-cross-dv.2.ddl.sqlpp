@@ -16,7 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- USE externallibtest;
+/*
+ * Description  : Feed with an external adapter
+ * Expected Res : Success
+ */
 
-create function sentiment(s)
-  as "sentiment", "TweetSent.sentiment" at testlib;
+/* test drop adapter if exists */
+drop adapter externallibtest.TweetAdapter if exists;
+
+create adapter externallibtest.TweetAdapter
+  as "org.apache.asterix.external.library.adapter.TestTypedAdapterFactory" at externallibtest2.testlib;
+
+/* test create adapter if not exists */
+create adapter externallibtest.TweetAdapter if not exists
+  as "org.apache.asterix.external.library.adapter.TestTypedAdapterFactory" at externallibtest2.testlib;
+
+create type externallibtest.TweetType as open {
+    tweetid: int64
+};
+
+create dataset externallibtest.Tweets(TweetType) primary key tweetid;
+
+create feed externallibtest.TweetFeed with {
+  "adapter-name": "TweetAdapter",
+  "type-name" : "TweetType",
+  "num_output_records": 4
+};

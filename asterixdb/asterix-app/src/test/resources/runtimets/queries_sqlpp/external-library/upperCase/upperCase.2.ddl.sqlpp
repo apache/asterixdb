@@ -18,5 +18,6 @@
  */
 USE externallibtest;
 
-create function toUpper(t: TextType) returns TextType language java as "testlib","org.apache.asterix.external.library.UpperCaseFactory";
+create function toUpper(t: TextType) returns TextType
+  as "org.apache.asterix.external.library.UpperCaseFactory" at testlib;
 

@@ -213,6 +213,11 @@ public class ErrorCode {
     public static final int COMPILATION_UNEXPECTED_ALIAS = 1120;
     public static final int COMPILATION_ILLEGAL_USE_OF_FILTER_CLAUSE = 1121;
     public static final int COMPILATION_BAD_FUNCTION_DEFINITION = 1122;
+    public static final int FUNCTION_EXISTS = 1123;
+    public static final int ADAPTER_EXISTS = 1124;
+    public static final int UNKNOWN_ADAPTER = 1125;
+    public static final int INVALID_EXTERNAL_IDENTIFIER_SIZE = 1126;
+    public static final int UNSUPPORTED_ADAPTER_LANGUAGE = 1127;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

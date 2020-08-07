@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionFactory;
@@ -48,21 +47,20 @@ class ExternalScalarJavaFunctionEvaluator extends ExternalScalarFunctionEvaluato
             IEvaluatorContext context) throws HyracksDataException {
         super(finfo, args, argTypes, context);
 
-        DataverseName functionDataverse = FunctionSignature.getDataverseName(finfo.getFunctionIdentifier());
-        String functionLibrary = finfo.getLibrary();
+        DataverseName libraryDataverseName = finfo.getLibraryDataverseName();
+        String libraryName = finfo.getLibraryName();
+        JavaLibrary library = (JavaLibrary) libraryManager.getLibrary(libraryDataverseName, libraryName);
 
-        functionHelper = new JavaFunctionHelper(finfo, argTypes, resultBuffer);
-        JavaLibrary lib = (JavaLibrary) libraryManager.getLibrary(functionDataverse, functionLibrary);
-        ClassLoader libraryClassLoader = lib.getClassLoader();
-        String classname = finfo.getExternalIdentifier().get(0).trim();
+        String classname = finfo.getExternalIdentifier().get(0);
         try {
-            Class<?> clazz = Class.forName(classname, true, libraryClassLoader);
+            Class<?> clazz = Class.forName(classname, true, library.getClassLoader());
             IFunctionFactory externalFunctionFactory = (IFunctionFactory) clazz.newInstance();
             externalFunctionInstance = (IExternalScalarFunction) externalFunctionFactory.getExternalFunction();
         } catch (Exception e) {
             throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNABLE_TO_LOAD_CLASS, e, classname);
         }
 
+        functionHelper = new JavaFunctionHelper(finfo, argTypes, resultBuffer);
         try {
             externalFunctionInstance.initialize(functionHelper);
         } catch (Exception e) {

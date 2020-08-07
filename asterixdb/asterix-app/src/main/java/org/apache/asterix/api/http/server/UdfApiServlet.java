@@ -238,7 +238,7 @@ public class UdfApiServlet extends BasicAuthServlet {
         }
         try {
             IRequestReference requestReference = receptionist.welcome(request);
-            LibraryDropStatement stmt = new LibraryDropStatement(libraryName.first, libraryName.second);
+            LibraryDropStatement stmt = new LibraryDropStatement(libraryName.first, libraryName.second, false);
             executeStatement(stmt, requestReference);
             response.setStatus(HttpResponseStatus.OK);
         } catch (Exception e) {

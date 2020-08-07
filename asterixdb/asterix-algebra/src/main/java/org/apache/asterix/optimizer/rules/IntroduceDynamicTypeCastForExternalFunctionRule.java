@@ -20,8 +20,8 @@
 package org.apache.asterix.optimizer.rules;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.metadata.functions.ExternalScalarFunctionInfo;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.ExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -78,7 +78,7 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
         for (int i = 0; i < funcCallExpr.getArguments().size(); i++) {
             Mutable<ILogicalExpression> argExpr = funcCallExpr.getArguments().get(i);
             inputType = (IAType) op.computeOutputTypeEnvironment(context).getType(argExpr.getValue());
-            reqArgType = ((ExternalScalarFunctionInfo) funcCallExpr.getFunctionInfo()).getArgumentTypes().get(i);
+            reqArgType = ((ExternalFunctionInfo) funcCallExpr.getFunctionInfo()).getParameterTypes().get(i);
 
             if (reqArgType.getTypeTag() == ATypeTag.OBJECT) {
                 castFlag = !IntroduceDynamicTypeCastRule.compatible((ARecordType) reqArgType, inputType,

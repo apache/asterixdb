@@ -67,14 +67,14 @@ public class JavaFunctionHelper implements IFunctionHelper {
         this.outputProvider = outputProvider;
         this.pointableVisitor = new JObjectPointableVisitor();
         this.pointableAllocator = new PointableAllocator();
-        this.arguments = new IJObject[finfo.getArgumentList().size()];
+        this.arguments = new IJObject[finfo.getParameterTypes().size()];
         int index = 0;
-        for (IAType param : finfo.getArgumentList()) {
+        for (IAType param : finfo.getParameterTypes()) {
             this.arguments[index++] = objectPool.allocate(param);
         }
         this.resultHolder = objectPool.allocate(finfo.getReturnType());
         this.poolTypeInfo = new HashMap<>();
-        this.parameters = finfo.getParams();
+        this.parameters = finfo.getResources();
         this.argTypes = argTypes;
 
     }

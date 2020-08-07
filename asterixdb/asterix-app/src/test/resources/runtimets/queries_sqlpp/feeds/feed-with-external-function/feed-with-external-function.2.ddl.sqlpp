@@ -24,5 +24,7 @@
 
 use udfs;
 
-create function addMentionedUsers(t: TweetType) returns TweetType language java as "testlib","org.apache.asterix.external.library.AddMentionedUsersFactory" WITH {"textFieldName": "text"};
+create function addMentionedUsers(t: TweetType) returns TweetType
+  as "org.apache.asterix.external.library.AddMentionedUsersFactory" at testlib
+  with { "resources": {"textFieldName": "text"} };
 

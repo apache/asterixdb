@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.om.functions.ExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.IAType;
@@ -30,19 +31,12 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ExternalScalarFunctionInfo extends ExternalFunctionInfo {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
-    public ExternalScalarFunctionInfo(String namespace, String library, String name, int arity, IAType returnType,
-            List<String> externalIdentifier, ExternalFunctionLanguage language, List<IAType> argumentTypes,
-            Map<String, String> params, boolean deterministic, IResultTypeComputer rtc) {
-        super(namespace, name, arity, FunctionKind.SCALAR, argumentTypes, returnType, rtc, language, library,
-                externalIdentifier, params, deterministic);
-    }
-
-    public ExternalScalarFunctionInfo(FunctionIdentifier fid, IAType returnType, List<String> externalIdentifier,
-            ExternalFunctionLanguage language, String library, List<IAType> argumentTypes, Map<String, String> params,
-            boolean deterministic, IResultTypeComputer rtc) {
-        super(fid, FunctionKind.SCALAR, argumentTypes, returnType, rtc, language, library, externalIdentifier, params,
-                deterministic);
+    public ExternalScalarFunctionInfo(FunctionIdentifier fid, List<IAType> parameterTypes, IAType returnType,
+            IResultTypeComputer rtc, ExternalFunctionLanguage language, DataverseName libraryDataverseName,
+            String libraryName, List<String> externalIdentifier, Map<String, String> resources, boolean deterministic) {
+        super(fid, FunctionKind.SCALAR, parameterTypes, returnType, rtc, language, libraryDataverseName, libraryName,
+                externalIdentifier, resources, deterministic);
     }
 }

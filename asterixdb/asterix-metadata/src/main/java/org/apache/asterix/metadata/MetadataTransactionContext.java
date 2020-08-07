@@ -158,14 +158,15 @@ public class MetadataTransactionContext extends MetadataCache {
     }
 
     public void dropFunction(FunctionSignature signature) {
-        Function function = new Function(signature, null, null, null, null, null, null, null, false, false, null, null);
+        Function function =
+                new Function(signature, null, null, null, null, null, null, null, null, null, false, false, null, null);
         droppedCache.addFunctionIfNotExists(function);
         logAndApply(new MetadataLogicalOperation(function, false));
     }
 
     public void dropAdapter(DataverseName dataverseName, String adapterName) {
         AdapterIdentifier adapterIdentifier = new AdapterIdentifier(dataverseName, adapterName);
-        DatasourceAdapter adapter = new DatasourceAdapter(adapterIdentifier, null, null);
+        DatasourceAdapter adapter = new DatasourceAdapter(adapterIdentifier, null, null, null, null);
         droppedCache.addAdapterIfNotExists(adapter);
         logAndApply(new MetadataLogicalOperation(adapter, false));
     }

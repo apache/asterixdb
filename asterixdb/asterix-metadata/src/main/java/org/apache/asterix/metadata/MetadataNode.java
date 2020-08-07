@@ -1061,7 +1061,8 @@ public class MetadataNode implements IMetadataNode {
             throws AlgebricksException {
         List<Function> functions = getAllFunctions(txnId);
         for (Function function : functions) {
-            if (libraryName.equals(function.getLibrary()) && dataverseName.equals(function.getDataverseName())) {
+            if (libraryName.equals(function.getLibraryName())
+                    && dataverseName.equals(function.getLibraryDataverseName())) {
                 throw new AlgebricksException(
                         "Cannot drop library " + dataverseName + '.' + libraryName + " being used by funciton "
                                 + function.getDataverseName() + '.' + function.getName() + '@' + function.getArity());
@@ -1074,7 +1075,7 @@ public class MetadataNode implements IMetadataNode {
         List<DatasourceAdapter> adapters = getAllAdapters(txnId);
         for (DatasourceAdapter adapter : adapters) {
             if (libraryName.equals(adapter.getLibraryName())
-                    && adapter.getAdapterIdentifier().getDataverseName().equals(dataverseName)) {
+                    && dataverseName.equals(adapter.getLibraryDataverseName())) {
                 throw new AlgebricksException("Cannot drop library " + dataverseName + '.' + libraryName
                         + " being used by adapter " + adapter.getAdapterIdentifier().getDataverseName() + '.'
                         + adapter.getAdapterIdentifier().getName());

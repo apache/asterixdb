@@ -19,4 +19,5 @@
 
 use externallibtest;
 
-create function addHashTagsInPlace(t: Tweet) returns ProcessedTweet language java as "testlib","org.apache.asterix.external.library.AddHashTagsInPlaceFactory";
+create function addHashTagsInPlace(t: Tweet) returns ProcessedTweet
+  as "org.apache.asterix.external.library.AddHashTagsInPlaceFactory" at testlib;

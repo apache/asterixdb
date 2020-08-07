@@ -56,12 +56,21 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
                 ((AString) adapterRecord.getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_TYPE_FIELD_INDEX))
                         .getStringValue());
 
+        DataverseName libraryDataverseName = null;
+        String libraryName = null;
         int libraryNameIdx = adapterRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_LIBRARY_NAME);
-        String libraryName =
-                libraryNameIdx >= 0 ? ((AString) adapterRecord.getValueByPos(libraryNameIdx)).getStringValue() : null;
+        if (libraryNameIdx >= 0) {
+            libraryName = ((AString) adapterRecord.getValueByPos(libraryNameIdx)).getStringValue();
+            int libraryDataverseNameIdx =
+                    adapterRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_LIBRARY_DATAVERSE_NAME);
+            libraryDataverseName = libraryDataverseNameIdx >= 0
+                    ? DataverseName.createFromCanonicalForm(
+                            ((AString) adapterRecord.getValueByPos(libraryDataverseNameIdx)).getStringValue())
+                    : dataverseName;
+        }
 
-        return new DatasourceAdapter(new AdapterIdentifier(dataverseName, adapterName), classname, adapterType,
-                libraryName);
+        return new DatasourceAdapter(new AdapterIdentifier(dataverseName, adapterName), adapterType, classname,
+                libraryDataverseName, libraryName);
     }
 
     @Override
@@ -132,6 +141,15 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
         if (adapter.getLibraryName() == null) {
             return;
         }
+
+        fieldName.reset();
+        aString.setValue(MetadataRecordTypes.FIELD_NAME_LIBRARY_DATAVERSE_NAME);
+        stringSerde.serialize(aString, fieldName.getDataOutput());
+        fieldValue.reset();
+        aString.setValue(adapter.getLibraryDataverseName().getCanonicalForm());
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        recordBuilder.addField(fieldName, fieldValue);
+
         fieldName.reset();
         aString.setValue(MetadataRecordTypes.FIELD_NAME_LIBRARY_NAME);
         stringSerde.serialize(aString, fieldName.getDataOutput());

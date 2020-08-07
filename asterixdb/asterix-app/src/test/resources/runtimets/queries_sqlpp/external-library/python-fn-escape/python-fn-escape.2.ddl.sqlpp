@@ -18,4 +18,5 @@
  */
  USE externallibtest;
 
-create function system(s: string) language python as "testlib","os";
+create function system(s: string)
+  as "os", "system" at testlib;

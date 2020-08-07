@@ -20,35 +20,35 @@
 use externallibtest;
 
 create function myfn001()
-  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+  as "org.apache.asterix.external.library.CapitalFinderFactory" at testlib;
 
 create function myfn002(a)
-  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+  as "org.apache.asterix.external.library.CapitalFinderFactory" at testlib;
 
 create function myfn003(a:string, b:[bigint], c:{{boolean}})
   returns string
-  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+  as "org.apache.asterix.external.library.CapitalFinderFactory" at testlib;
 
 create function myfn004(a:CountryCapitalType, b:[CountryCapitalType])
   returns CountryCapitalType
-  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+  as "org.apache.asterix.external.library.CapitalFinderFactory" at testlib;
 
 create function myfn005(a:smallint, b:[bigint], c:CountryCapitalType, d:[CountryCapitalType])
   returns string
-  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+  as "org.apache.asterix.external.library.CapitalFinderFactory" at testlib;
 
 create function myfn006(a [string])
   returns [string]
-  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+  as "org.apache.asterix.external.library.CapitalFinderFactory" at testlib;
 
 create function myfn007(a {{string}})
   returns {{string}}
-  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+  as "org.apache.asterix.external.library.CapitalFinderFactory" at testlib;
 
 create function myfn008(a [CountryCapitalType])
   returns [CountryCapitalType]
-  language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+  as "org.apache.asterix.external.library.CapitalFinderFactory" at testlib;
 
 create function externallibtest2.myfn009(a externallibtest.CountryCapitalType)
   returns externallibtest.CountryCapitalType
-  language java as "testlib2","org.apache.asterix.external.library.CapitalFinderFactory";
+  as "org.apache.asterix.external.library.CapitalFinderFactory" at testlib2;

@@ -170,8 +170,7 @@ public class FeedMetadataUtil {
     private static ITypedAdapterFactory createExternalAdapterFactory(MetadataTransactionContext mdTxnCtx,
             DatasourceAdapter adapterEntity, String adapterFactoryClassname)
             throws AlgebricksException, RemoteException, HyracksDataException {
-        //TODO:library dataverse must be explicitly specified in the adapter entity
-        DataverseName libraryDataverse = adapterEntity.getAdapterIdentifier().getDataverseName();
+        DataverseName libraryDataverse = adapterEntity.getLibraryDataverseName();
         String libraryName = adapterEntity.getLibraryName();
         Library library = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, libraryDataverse, libraryName);
         if (library == null) {

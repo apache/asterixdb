@@ -81,8 +81,8 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
         File pythonPath = new File(ctx.getServiceContext().getAppConfig().getString(NCConfig.Option.PYTHON_HOME));
         DataverseName dataverseName = FunctionSignature.getDataverseName(finfo.getFunctionIdentifier());
         try {
-            libraryEvaluator = PythonLibraryEvaluator.getInstance(dataverseName, finfo, libraryManager, router, ipcSys,
-                    pythonPath, ctx.getTaskContext(), ctx.getWarningCollector(), sourceLoc);
+            libraryEvaluator = PythonLibraryEvaluator.getInstance(finfo, libraryManager, router, ipcSys, pythonPath,
+                    ctx.getTaskContext(), ctx.getWarningCollector(), sourceLoc);
         } catch (IOException | AsterixException e) {
             throw new HyracksDataException("Failed to initialize Python", e);
         }
@@ -150,16 +150,19 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
         public void initialize() throws IOException, AsterixException {
             PythonLibraryEvaluatorId fnId = (PythonLibraryEvaluatorId) id;
             List<String> externalIdents = finfo.getExternalIdentifier();
-            PythonLibrary library = (PythonLibrary) libMgr.getLibrary(fnId.dataverseName, fnId.libraryName);
+            PythonLibrary library = (PythonLibrary) libMgr.getLibrary(fnId.libraryDataverseName, fnId.libraryName);
             String wd = library.getFile().getAbsolutePath();
             String packageModule = externalIdents.get(0);
-            String clazz = "None";
+            String clazz;
             String fn;
-            if (externalIdents.size() > 2) {
-                clazz = externalIdents.get(1);
-                fn = externalIdents.get(2);
+            String externalIdent1 = externalIdents.get(1);
+            int idx = externalIdent1.lastIndexOf('.');
+            if (idx >= 0) {
+                clazz = externalIdent1.substring(0, idx);
+                fn = externalIdent1.substring(idx + 1);
             } else {
-                fn = externalIdents.get(1);
+                clazz = "None";
+                fn = externalIdent1;
             }
             this.fn = fn;
             this.clazz = clazz;
@@ -188,23 +191,25 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
 
         @Override
         public void deallocate() {
-            boolean dead = false;
-            try {
-                p.destroy();
-                dead = p.waitFor(100, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                //gonna kill it anyway
-            }
-            if (!dead) {
-                p.destroyForcibly();
+            if (p != null) {
+                boolean dead = false;
+                try {
+                    p.destroy();
+                    dead = p.waitFor(100, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    //gonna kill it anyway
+                }
+                if (!dead) {
+                    p.destroyForcibly();
+                }
             }
         }
 
-        private static PythonLibraryEvaluator getInstance(DataverseName dataverseName, IExternalFunctionInfo finfo,
-                ILibraryManager libMgr, ExternalFunctionResultRouter router, IPCSystem ipcSys, File pythonHome,
-                IHyracksTaskContext ctx, IWarningCollector warningCollector, SourceLocation sourceLoc)
-                throws IOException, AsterixException {
-            PythonLibraryEvaluatorId evaluatorId = new PythonLibraryEvaluatorId(dataverseName, finfo.getLibrary());
+        private static PythonLibraryEvaluator getInstance(IExternalFunctionInfo finfo, ILibraryManager libMgr,
+                ExternalFunctionResultRouter router, IPCSystem ipcSys, File pythonHome, IHyracksTaskContext ctx,
+                IWarningCollector warningCollector, SourceLocation sourceLoc) throws IOException, AsterixException {
+            PythonLibraryEvaluatorId evaluatorId =
+                    new PythonLibraryEvaluatorId(finfo.getLibraryDataverseName(), finfo.getLibraryName());
             PythonLibraryEvaluator evaluator = (PythonLibraryEvaluator) ctx.getStateObject(evaluatorId);
             if (evaluator == null) {
                 evaluator = new PythonLibraryEvaluator(ctx.getJobletContext().getJobId(), evaluatorId, finfo, libMgr,
@@ -219,12 +224,12 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
 
     private static final class PythonLibraryEvaluatorId {
 
-        private final DataverseName dataverseName;
+        private final DataverseName libraryDataverseName;
 
         private final String libraryName;
 
-        private PythonLibraryEvaluatorId(DataverseName dataverseName, String libraryName) {
-            this.dataverseName = Objects.requireNonNull(dataverseName);
+        private PythonLibraryEvaluatorId(DataverseName libraryDataverseName, String libraryName) {
+            this.libraryDataverseName = Objects.requireNonNull(libraryDataverseName);
             this.libraryName = Objects.requireNonNull(libraryName);
         }
 
@@ -235,12 +240,12 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
             if (o == null || getClass() != o.getClass())
                 return false;
             PythonLibraryEvaluatorId that = (PythonLibraryEvaluatorId) o;
-            return dataverseName.equals(that.dataverseName) && libraryName.equals(that.libraryName);
+            return libraryDataverseName.equals(that.libraryDataverseName) && libraryName.equals(that.libraryName);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(dataverseName, libraryName);
+            return Objects.hash(libraryDataverseName, libraryName);
         }
     }
 

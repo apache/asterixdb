@@ -20,10 +20,12 @@
 use externallibtest;
 
 create function getCapital_default(a: string) returns CountryCapitalType
-language java as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+  as "org.apache.asterix.external.library.CapitalFinderFactory" at testlib;
 
 create function getCapital_deterministic(a: string) returns CountryCapitalType
-language java deterministic as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+  as "org.apache.asterix.external.library.CapitalFinderFactory" at testlib
+  with { "deterministic": true };
 
 create function getCapital_not_deterministic(a: string) returns CountryCapitalType
-language java not deterministic as "testlib","org.apache.asterix.external.library.CapitalFinderFactory";
+  as "org.apache.asterix.external.library.CapitalFinderFactory" at testlib
+  with { "deterministic": false };

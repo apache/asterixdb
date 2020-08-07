@@ -40,15 +40,18 @@ public class Function implements IMetadataEntity<Function> {
     private final String body;
     private final String language;
     private final String kind;
-    private final String library;
+    private final DataverseName libraryDataverseName;
+    private final String libraryName;
+    private final List<String> externalIdentifier;
     private final Boolean deterministic; // null for SQL++ and AQL functions
     private final Boolean nullCall; // null for SQL++ and AQL functions
     private final Map<String, String> resources;
     private final List<List<Triple<DataverseName, String, String>>> dependencies;
 
     public Function(FunctionSignature signature, List<String> paramNames, List<TypeSignature> paramTypes,
-            TypeSignature returnType, String functionBody, String functionKind, String language, String library,
-            Boolean nullCall, Boolean deterministic, Map<String, String> resources,
+            TypeSignature returnType, String functionBody, String functionKind, String language,
+            DataverseName libraryDataverseName, String libraryName, List<String> externalIdentifier, Boolean nullCall,
+            Boolean deterministic, Map<String, String> resources,
             List<List<Triple<DataverseName, String, String>>> dependencies) {
         this.signature = signature;
         this.paramNames = paramNames;
@@ -57,7 +60,9 @@ public class Function implements IMetadataEntity<Function> {
         this.returnType = returnType;
         this.language = language;
         this.kind = functionKind;
-        this.library = library;
+        this.libraryDataverseName = libraryDataverseName;
+        this.libraryName = libraryName;
+        this.externalIdentifier = externalIdentifier;
         this.nullCall = nullCall;
         this.deterministic = deterministic;
         this.resources = resources == null ? Collections.emptyMap() : resources;
@@ -107,11 +112,19 @@ public class Function implements IMetadataEntity<Function> {
     }
 
     public boolean isExternal() {
-        return library != null;
+        return externalIdentifier != null;
     }
 
-    public String getLibrary() {
-        return library;
+    public DataverseName getLibraryDataverseName() {
+        return libraryDataverseName;
+    }
+
+    public String getLibraryName() {
+        return libraryName;
+    }
+
+    public List<String> getExternalIdentifier() {
+        return externalIdentifier;
     }
 
     public Boolean getNullCall() {

@@ -16,6 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- USE externallibtest;
 
-create function mysum(a: int32, b: int32) returns int32 language java as "testlib","org.apache.asterix.external.library.MySumFactory";
+create function externallibtest.mysum(a: int32, b: int32) returns int32
+  as "org.apache.asterix.external.library.MySumFactory" at externallibtest.testlib;
+
+/* test if not exists */
+create function externallibtest.mysum if not exists (a: int32, b: int32) returns int32
+  as "org.apache.asterix.external.library.MySumFactory" at externallibtest.testlib;
+

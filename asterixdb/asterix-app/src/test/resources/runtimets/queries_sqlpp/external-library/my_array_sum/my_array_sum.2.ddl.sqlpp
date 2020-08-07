@@ -16,7 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- use externallibtest;
 
+/*
+ * Use library in a different dataverse
+ */
 
-create function my_array_sum(a: [int32]) returns int32 language java as "testlib","org.apache.asterix.external.library.MyArraySumFactory";
+use externallibtest;
+
+create function my_array_sum(a: [int32]) returns int32
+  as "org.apache.asterix.external.library.MyArraySumFactory" at externallibtest2.testlib;

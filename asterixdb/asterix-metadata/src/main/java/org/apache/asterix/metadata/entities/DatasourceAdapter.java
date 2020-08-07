@@ -19,32 +19,27 @@
 package org.apache.asterix.metadata.entities;
 
 import org.apache.asterix.common.external.IDataSourceAdapter.AdapterType;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 
 public class DatasourceAdapter implements IMetadataEntity<DatasourceAdapter> {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     private final AdapterIdentifier adapterIdentifier;
     private final String classname;
     private final AdapterType type;
-    //TODO:also need libraryDataverse
+    private final DataverseName libraryDataverseName;
     private final String libraryName;
 
-    public DatasourceAdapter(AdapterIdentifier adapterIdentifier, String classname, AdapterType type) {
+    public DatasourceAdapter(AdapterIdentifier adapterIdentifier, AdapterType type, String classname,
+            DataverseName libraryDataverseName, String libraryName) {
         this.adapterIdentifier = adapterIdentifier;
-        this.classname = classname;
         this.type = type;
-        this.libraryName = null;
-    }
-
-    public DatasourceAdapter(AdapterIdentifier adapterIdentifier, String classname, AdapterType type,
-            String libraryName) {
-        this.adapterIdentifier = adapterIdentifier;
         this.classname = classname;
-        this.type = type;
+        this.libraryDataverseName = libraryDataverseName;
         this.libraryName = libraryName;
     }
 
@@ -68,6 +63,10 @@ public class DatasourceAdapter implements IMetadataEntity<DatasourceAdapter> {
 
     public AdapterType getType() {
         return type;
+    }
+
+    public DataverseName getLibraryDataverseName() {
+        return libraryDataverseName;
     }
 
     public String getLibraryName() {

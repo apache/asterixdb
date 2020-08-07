@@ -33,7 +33,6 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -818,7 +817,7 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
     @Override
     public Void visit(CreateAdapterStatement cfs, Integer step) throws CompilationException {
         out.print(skip(step) + CREATE + " adapter");
-        out.print(this.generateFullName(cfs.getAdapterId().getDataverseName(), cfs.getAdapterId().getName()));
+        out.print(this.generateFullName(cfs.getDataverseName(), cfs.getAdapterName()));
         out.println(SEMICOLON);
         out.println();
         return null;
@@ -827,9 +826,8 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
     @Override
     public Void visit(AdapterDropStatement del, Integer step) throws CompilationException {
         out.print(skip(step) + "drop adapter ");
-        AdapterIdentifier funcSignature = del.getAdapterIdentifier();
-        out.print(funcSignature.toString());
-        out.println(SEMICOLON);
+        out.print(generateFullName(del.getDataverseName(), del.getAdapterName()));
+        out.println(generateIfExists(del.getIfExists()) + SEMICOLON);
         return null;
     }
 

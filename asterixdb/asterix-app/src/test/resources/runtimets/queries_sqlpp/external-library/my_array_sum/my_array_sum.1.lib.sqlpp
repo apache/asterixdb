@@ -16,4 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-install externallibtest testlib admin admin target/data/externallib/asterix-external-data-testlib.zip
+install externallibtest2 testlib admin admin target/data/externallib/asterix-external-data-testlib.zip

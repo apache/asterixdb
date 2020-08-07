@@ -18,28 +18,35 @@
  */
 package org.apache.asterix.lang.common.statement;
 
+import java.util.List;
+
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class CreateAdapterStatement extends AbstractStatement {
 
-    private final AdapterIdentifier signature;
+    private final DataverseName dataverseName;
 
-    String lang;
-    String libName;
-    String externalIdent;
-    boolean ifNotExists;
+    private final String adapterName;
 
-    public CreateAdapterStatement(AdapterIdentifier signature, String lang, String libName, String externalIdent,
-            boolean ifNotExists) {
-        this.signature = signature;
-        this.lang = lang;
-        this.libName = libName;
-        this.externalIdent = externalIdent;
+    private final DataverseName libraryDataverseName;
+
+    private final String libraryName;
+
+    private final List<String> externalIdentifier;
+
+    private final boolean ifNotExists;
+
+    public CreateAdapterStatement(DataverseName dataverseName, String adapterName, DataverseName libraryDataverseName,
+            String libraryName, List<String> externalIdentifier, boolean ifNotExists) {
+        this.dataverseName = dataverseName;
+        this.adapterName = adapterName;
+        this.libraryDataverseName = libraryDataverseName;
+        this.libraryName = libraryName;
+        this.externalIdentifier = externalIdentifier;
         this.ifNotExists = ifNotExists;
-
     }
 
     @Override
@@ -47,20 +54,28 @@ public class CreateAdapterStatement extends AbstractStatement {
         return Kind.CREATE_ADAPTER;
     }
 
-    public AdapterIdentifier getAdapterId() {
-        return signature;
+    public DataverseName getDataverseName() {
+        return dataverseName;
     }
 
-    public String getLibName() {
-        return libName;
+    public String getAdapterName() {
+        return adapterName;
     }
 
-    public String getExternalIdent() {
-        return externalIdent;
+    public DataverseName getLibraryDataverseName() {
+        return libraryDataverseName;
     }
 
-    public String getLang() {
-        return lang;
+    public String getLibraryName() {
+        return libraryName;
+    }
+
+    public List<String> getExternalIdentifier() {
+        return externalIdentifier;
+    }
+
+    public boolean getIfNotExists() {
+        return ifNotExists;
     }
 
     @Override
@@ -72,5 +87,4 @@ public class CreateAdapterStatement extends AbstractStatement {
     public byte getCategory() {
         return Category.DDL;
     }
-
 }

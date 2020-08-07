@@ -23,8 +23,15 @@
 
 use externallibtest;
 
-create adapter TweetAdapter language java as "testlib",
-  "org.apache.asterix.external.library.adapter.TestTypedAdapterFactory";
+/* test drop adapter if exists */
+drop adapter TweetAdapter if exists;
+
+create adapter TweetAdapter
+  as "org.apache.asterix.external.library.adapter.TestTypedAdapterFactory" at testlib;
+
+/* test create adapter if not exists */
+create adapter TweetAdapter if not exists
+  as "org.apache.asterix.external.library.adapter.TestTypedAdapterFactory" at testlib;
 
 create type TweetType as open {
     tweetid: int64

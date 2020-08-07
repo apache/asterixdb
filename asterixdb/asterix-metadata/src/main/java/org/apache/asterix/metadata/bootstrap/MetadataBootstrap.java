@@ -318,7 +318,7 @@ public class MetadataBootstrap {
             String adapterName =
                     ((ITypedAdapterFactory) (Class.forName(adapterFactoryClassName).newInstance())).getAlias();
             return new DatasourceAdapter(new AdapterIdentifier(MetadataConstants.METADATA_DATAVERSE_NAME, adapterName),
-                    adapterFactoryClassName, IDataSourceAdapter.AdapterType.INTERNAL);
+                    IDataSourceAdapter.AdapterType.INTERNAL, adapterFactoryClassName, null, null);
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             throw new MetadataException("Unable to instantiate builtin Adapter", e);
         }

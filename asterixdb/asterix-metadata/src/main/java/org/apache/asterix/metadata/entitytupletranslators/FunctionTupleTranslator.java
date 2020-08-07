@@ -20,20 +20,25 @@
 package org.apache.asterix.metadata.entitytupletranslators;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_LIBRARY_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_RETURN_TYPE_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_TYPE;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_VALUE;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DETERMINISTIC_FIELD_NAME;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_EXTERNAL_IDENTIFIER_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_LIBRARY_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_NULLCALL_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_PARAMTYPES_FIELD_NAME;
-import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_WITHPARAM_LIST_NAME;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_RESOURCES_FIELD_NAME;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_WITHPARAMS_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.PROPERTIES_NAME_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.PROPERTIES_VALUE_FIELD_NAME;
 
 import java.io.DataOutput;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +46,9 @@ import java.util.Map;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
@@ -60,6 +68,7 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.TypeSignature;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -93,7 +102,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         }
     }
 
-    protected Function createMetadataEntityFromARecord(ARecord functionRecord) {
+    protected Function createMetadataEntityFromARecord(ARecord functionRecord) throws AlgebricksException {
         String dataverseCanonicalName =
                 ((AString) functionRecord.getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_DATAVERSENAME_FIELD_INDEX))
                         .getStringValue();
@@ -125,11 +134,41 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         String functionKind =
                 ((AString) functionRecord.getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_KIND_FIELD_INDEX))
                         .getStringValue();
-        String functionLibrary = getString(functionRecord, FUNCTION_ARECORD_FUNCTION_LIBRARY_FIELD_NAME);
-        Boolean nullCall = getBoolean(functionRecord, FUNCTION_ARECORD_FUNCTION_NULLCALL_FIELD_NAME);
-        Boolean deterministic = getBoolean(functionRecord, FUNCTION_ARECORD_FUNCTION_DETERMINISTIC_FIELD_NAME);
 
-        Map<String, String> resources = getResources(functionRecord);
+        Map<String, String> resources = null;
+        DataverseName libraryDataverseName = null;
+        String libraryName;
+        List<String> externalIdentifier = null;
+        AOrderedList externalIdentifierList =
+                getOrderedList(functionRecord, FUNCTION_ARECORD_FUNCTION_EXTERNAL_IDENTIFIER_FIELD_NAME);
+        if (externalIdentifierList != null) {
+            externalIdentifier = new ArrayList<>(externalIdentifierList.size());
+            IACursor externalIdentifierCursor = externalIdentifierList.getCursor();
+            while (externalIdentifierCursor.next()) {
+                externalIdentifierList.add(externalIdentifierCursor.get());
+            }
+            libraryName = getString(functionRecord, MetadataRecordTypes.FIELD_NAME_LIBRARY_NAME);
+            String libraryDataverseCanonicalName = getString(functionRecord, FIELD_NAME_LIBRARY_DATAVERSE_NAME);
+            libraryDataverseName = DataverseName.createFromCanonicalForm(libraryDataverseCanonicalName);
+            resources = getResources(functionRecord, FUNCTION_ARECORD_FUNCTION_RESOURCES_FIELD_NAME);
+            definition = null;
+        } else {
+            // back-compat. get external identifier from function body
+            libraryName = getString(functionRecord, FUNCTION_ARECORD_FUNCTION_LIBRARY_FIELD_NAME);
+            if (libraryName != null) {
+                libraryDataverseName = dataverseName;
+                externalIdentifier =
+                        decodeExternalIdentifierBackCompat(definition, ExternalFunctionLanguage.valueOf(language));
+                resources = getResources(functionRecord, FUNCTION_ARECORD_FUNCTION_WITHPARAMS_FIELD_NAME);
+            }
+        }
+
+        Boolean nullCall = null;
+        Boolean deterministic = null;
+        if (externalIdentifier != null) {
+            nullCall = getBoolean(functionRecord, FUNCTION_ARECORD_FUNCTION_NULLCALL_FIELD_NAME);
+            deterministic = getBoolean(functionRecord, FUNCTION_ARECORD_FUNCTION_DETERMINISTIC_FIELD_NAME);
+        }
 
         IACursor dependenciesCursor = ((AOrderedList) functionRecord
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEPENDENCIES_FIELD_INDEX)).getCursor();
@@ -148,7 +187,8 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         FunctionSignature signature = new FunctionSignature(dataverseName, functionName, arity);
 
         return new Function(signature, paramNames, paramTypes, returnType, definition, functionKind, language,
-                functionLibrary, nullCall, deterministic, resources, dependencies);
+                libraryDataverseName, libraryName, externalIdentifier, nullCall, deterministic, resources,
+                dependencies);
     }
 
     private List<TypeSignature> getParamTypes(ARecord functionRecord, int arity, DataverseName functionDataverseName) {
@@ -201,11 +241,12 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         return new Triple<>(dataverseName, second, third);
     }
 
-    private Map<String, String> getResources(ARecord functionRecord) {
-        Map<String, String> adaptorConfiguration = new HashMap<>();
+    private Map<String, String> getResources(ARecord functionRecord, String resourcesFieldName) {
+        Map<String, String> adaptorConfiguration = null;
         final ARecordType functionType = functionRecord.getType();
-        final int functionLibraryIdx = functionType.getFieldIndex(FUNCTION_ARECORD_FUNCTION_WITHPARAM_LIST_NAME);
+        final int functionLibraryIdx = functionType.getFieldIndex(resourcesFieldName);
         if (functionLibraryIdx >= 0) {
+            adaptorConfiguration = new HashMap<>();
             IACursor cursor = ((AOrderedList) functionRecord.getValueByPos(functionLibraryIdx)).getCursor();
             while (cursor.next()) {
                 ARecord field = (ARecord) cursor.get();
@@ -222,14 +263,20 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
 
     private String getString(ARecord aRecord, String fieldName) {
         final ARecordType functionType = aRecord.getType();
-        final int functionLibraryIdx = functionType.getFieldIndex(fieldName);
-        return functionLibraryIdx >= 0 ? ((AString) aRecord.getValueByPos(functionLibraryIdx)).getStringValue() : null;
+        final int fieldIndex = functionType.getFieldIndex(fieldName);
+        return fieldIndex >= 0 ? ((AString) aRecord.getValueByPos(fieldIndex)).getStringValue() : null;
     }
 
     private Boolean getBoolean(ARecord aRecord, String fieldName) {
         final ARecordType functionType = aRecord.getType();
         final int fieldIndex = functionType.getFieldIndex(fieldName);
         return fieldIndex >= 0 ? ((ABoolean) aRecord.getValueByPos(fieldIndex)).getBoolean() : null;
+    }
+
+    private AOrderedList getOrderedList(ARecord aRecord, String fieldName) {
+        final ARecordType aRecordType = aRecord.getType();
+        final int fieldIndex = aRecordType.getFieldIndex(fieldName);
+        return fieldIndex >= 0 ? ((AOrderedList) aRecord.getValueByPos(fieldIndex)) : null;
     }
 
     @Override
@@ -295,7 +342,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
 
         // write field 5
         fieldValue.reset();
-        aString.setValue(function.getFunctionBody());
+        aString.setValue(function.isExternal() ? "" : function.getFunctionBody());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEFINITION_FIELD_INDEX, fieldValue);
 
@@ -375,7 +422,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         listBuilder.write(fieldValue.getDataOutput(), true);
 
         fieldName.reset();
-        aString.setValue(FUNCTION_ARECORD_FUNCTION_WITHPARAM_LIST_NAME);
+        aString.setValue(FUNCTION_ARECORD_FUNCTION_RESOURCES_FIELD_NAME);
         stringSerde.serialize(aString, fieldName.getDataOutput());
 
         recordBuilder.addField(fieldName, fieldValue);
@@ -402,15 +449,40 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
     }
 
     protected void writeLibrary(Function function) throws HyracksDataException {
-        if (function.getLibrary() == null) {
+        if (!function.isExternal()) {
             return;
         }
+
         fieldName.reset();
-        aString.setValue(FUNCTION_ARECORD_FUNCTION_LIBRARY_FIELD_NAME);
+        aString.setValue(FIELD_NAME_LIBRARY_DATAVERSE_NAME);
         stringSerde.serialize(aString, fieldName.getDataOutput());
         fieldValue.reset();
-        aString.setValue(function.getLibrary());
+        aString.setValue(function.getLibraryDataverseName().getCanonicalForm());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
+        recordBuilder.addField(fieldName, fieldValue);
+
+        fieldName.reset();
+        aString.setValue(MetadataRecordTypes.FIELD_NAME_LIBRARY_NAME);
+        stringSerde.serialize(aString, fieldName.getDataOutput());
+        fieldValue.reset();
+        aString.setValue(function.getLibraryName());
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        recordBuilder.addField(fieldName, fieldValue);
+
+        fieldName.reset();
+        aString.setValue(FUNCTION_ARECORD_FUNCTION_EXTERNAL_IDENTIFIER_FIELD_NAME);
+        stringSerde.serialize(aString, fieldName.getDataOutput());
+        OrderedListBuilder listBuilder = new OrderedListBuilder();
+        ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
+        listBuilder.reset(stringList);
+        for (String externalIdPart : function.getExternalIdentifier()) {
+            itemValue.reset();
+            aString.setValue(externalIdPart);
+            stringSerde.serialize(aString, itemValue.getDataOutput());
+            listBuilder.addItem(itemValue);
+        }
+        fieldValue.reset();
+        listBuilder.write(fieldValue.getDataOutput(), true);
         recordBuilder.addField(fieldName, fieldValue);
     }
 
@@ -519,5 +591,39 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
             dependencySubnames.add(dependency.third);
         }
         return dependencySubnames;
+    }
+
+    // back-compat
+    private static List<String> decodeExternalIdentifierBackCompat(String encodedValue,
+            ExternalFunctionLanguage language) throws AlgebricksException {
+        switch (language) {
+            case JAVA:
+                // input: class
+                //
+                // output:
+                // [0] = class
+                return Collections.singletonList(encodedValue);
+
+            case PYTHON:
+                // input:
+                //  case 1 (method): package.module:class.method
+                //  case 2 (function): package.module:function
+                //
+                // output:
+                //  case 1:
+                //    [0] = package.module
+                //    [1] = class.method
+                //  case 2:
+                //    [0] = package.module
+                //    [1] = function
+                int idx = encodedValue.lastIndexOf(':');
+                if (idx < 0) {
+                    throw new AsterixException(ErrorCode.METADATA_ERROR, encodedValue);
+                }
+                return Arrays.asList(encodedValue.substring(0, idx), encodedValue.substring(idx + 1));
+
+            default:
+                throw new AsterixException(ErrorCode.METADATA_ERROR, language);
+        }
     }
 }

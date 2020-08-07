@@ -138,11 +138,14 @@ public class MetadataLockUtil implements IMetadataLockUtil {
 
     @Override
     public void createFunctionBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
-            String functionName, String libraryName) throws AlgebricksException {
+            String functionName, DataverseName libraryDataverseName, String libraryName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
         lockMgr.acquireFunctionWriteLock(locks, dataverseName, functionName);
         if (libraryName != null) {
-            lockMgr.acquireLibraryReadLock(locks, dataverseName, libraryName);
+            if (!dataverseName.equals(libraryDataverseName)) {
+                lockMgr.acquireDataverseReadLock(locks, libraryDataverseName);
+            }
+            lockMgr.acquireLibraryReadLock(locks, libraryDataverseName, libraryName);
         }
     }
 
@@ -155,11 +158,14 @@ public class MetadataLockUtil implements IMetadataLockUtil {
 
     @Override
     public void createAdapterBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
-            String adapterName, String libraryName) throws AlgebricksException {
+            String adapterName, DataverseName libraryDataverseName, String libraryName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
         lockMgr.acquireAdapterWriteLock(locks, dataverseName, adapterName);
         if (libraryName != null) {
-            lockMgr.acquireLibraryReadLock(locks, dataverseName, libraryName);
+            if (!dataverseName.equals(libraryDataverseName)) {
+                lockMgr.acquireDataverseReadLock(locks, libraryDataverseName);
+            }
+            lockMgr.acquireLibraryReadLock(locks, libraryDataverseName, libraryName);
         }
     }
 

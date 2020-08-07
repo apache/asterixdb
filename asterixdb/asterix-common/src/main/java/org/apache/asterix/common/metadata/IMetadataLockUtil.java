@@ -83,7 +83,7 @@ public interface IMetadataLockUtil {
     // Function helpers
 
     void createFunctionBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
-            String functionName, String libraryName) throws AlgebricksException;
+            String functionName, DataverseName libraryDataverseName, String libraryName) throws AlgebricksException;
 
     void dropFunctionBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
             String functionName) throws AlgebricksException;
@@ -91,7 +91,7 @@ public interface IMetadataLockUtil {
     // Adapter helpers
 
     void createAdapterBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
-            String adapterName, String libraryName) throws AlgebricksException;
+            String adapterName, DataverseName libraryDataverseName, String libraryName) throws AlgebricksException;
 
     void dropAdapterBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
             String adapterName) throws AlgebricksException;

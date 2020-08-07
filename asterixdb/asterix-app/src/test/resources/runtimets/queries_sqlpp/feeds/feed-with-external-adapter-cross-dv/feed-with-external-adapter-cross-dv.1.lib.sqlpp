@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- USE externallibtest;
+/*
+ * Description  : Feed with an external adapter
+ * Expected Res : Success
+ */
 
-create function sentiment(s)
-  as "sentiment", "TweetSent.sentiment" at testlib;
+install externallibtest2 testlib admin admin target/data/externallib/asterix-external-data-testlib.zip

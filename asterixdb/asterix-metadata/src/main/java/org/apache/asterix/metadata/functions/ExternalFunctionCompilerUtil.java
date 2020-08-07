@@ -19,14 +19,12 @@
 package org.apache.asterix.metadata.functions;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Function;
@@ -37,6 +35,7 @@ import org.apache.asterix.om.types.TypeSignature;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ExternalFunctionCompilerUtil {
 
@@ -77,17 +76,11 @@ public class ExternalFunctionCompilerUtil {
 
         IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, paramTypes);
 
-        ExternalFunctionLanguage lang;
-        try {
-            lang = ExternalFunctionLanguage.valueOf(function.getLanguage());
-        } catch (IllegalArgumentException e) {
-            throw new AsterixException(ErrorCode.METADATA_ERROR, function.getLanguage());
-        }
-        List<String> externalIdentifier = decodeExternalIdentifier(lang, function.getFunctionBody());
+        ExternalFunctionLanguage lang = getExternalFunctionLanguage(function.getLanguage());
 
-        return new ExternalScalarFunctionInfo(function.getSignature().createFunctionIdentifier(), returnType,
-                externalIdentifier, lang, function.getLibrary(), paramTypes, function.getResources(),
-                function.getDeterministic(), typeComputer);
+        return new ExternalScalarFunctionInfo(function.getSignature().createFunctionIdentifier(), paramTypes,
+                returnType, typeComputer, lang, function.getLibraryDataverseName(), function.getLibraryName(),
+                function.getExternalIdentifier(), function.getResources(), function.getDeterministic());
     }
 
     private static IFunctionInfo getUnnestFunctionInfo(MetadataProvider metadataProvider, Function function) {
@@ -115,79 +108,31 @@ public class ExternalFunctionCompilerUtil {
         return type;
     }
 
-    public static String encodeExternalIdentifier(FunctionSignature functionSignature,
-            ExternalFunctionLanguage language, List<String> identList) throws AlgebricksException {
-        switch (language) {
-            case JAVA:
-                // input:
-                // [0] = package.class
-                //
-                // output: package.class
-
-                return identList.get(0);
-
-            case PYTHON:
-                // input: either a method or a top-level function
-                // [0] = package.module(:class)?
-                // [1] = (function_or_method)? - if missing then defaults to declared function name
-                //
-                // output:
-                // case 1 (method): package.module:class.method
-                // case 2 (function): package.module:function
-
-                String ident0 = identList.get(0);
-                String ident1 = identList.size() > 1 ? identList.get(1) : functionSignature.getName();
-                boolean classExists = ident0.indexOf(':') > 0;
-                return ident0 + (classExists ? '.' : ':') + ident1;
-
-            default:
-                throw new AsterixException(ErrorCode.COMPILATION_ERROR, language);
+    public static ExternalFunctionLanguage getExternalFunctionLanguage(String language) throws AsterixException {
+        try {
+            return ExternalFunctionLanguage.valueOf(language);
+        } catch (IllegalArgumentException e) {
+            throw new AsterixException(ErrorCode.METADATA_ERROR, language);
         }
     }
 
-    public static List<String> decodeExternalIdentifier(ExternalFunctionLanguage language, String encodedValue)
-            throws AlgebricksException {
+    public static void validateExternalIdentifier(List<String> externalIdentifier, ExternalFunctionLanguage language,
+            SourceLocation sourceLoc) throws CompilationException {
+        int expectedSize;
         switch (language) {
             case JAVA:
-                // input: class
-                //
-                // output:
-                // [0] = class
-                return Collections.singletonList(encodedValue);
-
+                expectedSize = 1;
+                break;
             case PYTHON:
-                // input:
-                //  case 1 (method): package.module:class.method
-                //  case 2 (function): package.module:function
-                //
-                // output:
-                //  case 1:
-                //    [0] = package.module
-                //    [1] = class
-                //    [2] = method
-                //  case 2:
-                //    [0] = package.module
-                //    [1] = function
-
-                int d1 = encodedValue.indexOf(':');
-                if (d1 <= 0) {
-                    throw new AsterixException(ErrorCode.COMPILATION_ERROR, encodedValue);
-                }
-                String moduleName = encodedValue.substring(0, d1);
-                int d2 = encodedValue.lastIndexOf('.');
-                if (d2 > d1) {
-                    // class.method
-                    String className = encodedValue.substring(d1 + 1, d2);
-                    String methodName = encodedValue.substring(d2 + 1);
-                    return Arrays.asList(moduleName, className, methodName);
-                } else {
-                    // function
-                    String functionName = encodedValue.substring(d1 + 1);
-                    return Arrays.asList(moduleName, functionName);
-                }
-
+                expectedSize = 2;
+                break;
             default:
-                throw new AsterixException(ErrorCode.COMPILATION_ERROR, language);
+                throw new CompilationException(ErrorCode.METADATA_ERROR, language.name());
+        }
+        int actualSize = externalIdentifier.size();
+        if (actualSize != expectedSize) {
+            throw new CompilationException(ErrorCode.INVALID_EXTERNAL_IDENTIFIER_SIZE, sourceLoc,
+                    String.valueOf(actualSize), language.name());
         }
     }
 }
