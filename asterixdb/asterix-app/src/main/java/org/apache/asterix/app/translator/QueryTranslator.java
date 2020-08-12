@@ -1095,7 +1095,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     ITypeTraits typeTrait = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
 
                     // If it is not a fixed length
-                    if (typeTrait.getFixedLength() < 0) {
+                    if (!typeTrait.isFixedLength()) {
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                                 "The keyword or ngram index -" + indexName + " cannot be created on the dataset -"
                                         + datasetName + " due to its variable-length primary key field - "
