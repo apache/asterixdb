@@ -59,6 +59,7 @@ import org.apache.asterix.common.annotations.IRecordFieldDataGen;
 import org.apache.asterix.common.annotations.InsertRandIntDataGen;
 import org.apache.asterix.common.annotations.ListDataGen;
 import org.apache.asterix.common.annotations.ListValFileDataGen;
+import org.apache.asterix.common.annotations.RangeAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
@@ -263,7 +264,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
        public DataverseName dataverse;
        public String library;
        public String function;
-       public SqlppHint hint;
+       public Token hintToken;
        public SourceLocation sourceLoc;
     }
 
@@ -2286,19 +2287,19 @@ UnorderedListTypeDefinition UnorderedListTypeDef(boolean allowRecordTypeDef) thr
 
 FunctionName FunctionName() throws ParseException:
 {
-  Triple<List<String>, SourceLocation, SqlppHint> prefix = null;
+  Triple<List<String>, SourceLocation, Token> prefix = null;
   String suffix = null;
 }
 {
   // Note: there's a copy of this production in PrimaryExpr() (LOOKAHEAD for FunctionCallExpr())
   //       that copy must be kept in sync with this code
   prefix = MultipartIdentifierWithHints(SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
-    SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT)
+    SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.RANGE_HINT)
   (<SHARP> suffix = Identifier())?
   {
     FunctionName result = new FunctionName();
     result.sourceLoc = prefix.second;
-    result.hint = prefix.third;
+    result.hintToken = prefix.third;
     List<String> list = prefix.first;
     int ln = list.size();
     String last = list.get(ln - 1);
@@ -2442,7 +2443,7 @@ String StringLiteral() throws ParseException:
 
 List<String> MultipartIdentifier() throws ParseException:
 {
-  Triple<List<String>, SourceLocation, SqlppHint> result = null;
+  Triple<List<String>, SourceLocation, Token> result = null;
 }
 {
   result = MultipartIdentifierWithHints(null)
@@ -2451,12 +2452,12 @@ List<String> MultipartIdentifier() throws ParseException:
   }
 }
 
-Triple<List<String>, SourceLocation, SqlppHint> MultipartIdentifierWithHints(SqlppHint... expectedHints)
+Triple<List<String>, SourceLocation, Token> MultipartIdentifierWithHints(SqlppHint... expectedHints)
   throws ParseException:
 {
   List<String> list = new ArrayList<String>();
   SourceLocation sourceLoc = null;
-  SqlppHint hint = null;
+  Token hint = null;
   String item = null;
 }
 {
@@ -2465,15 +2466,12 @@ Triple<List<String>, SourceLocation, SqlppHint> MultipartIdentifierWithHints(Sql
     list.add(item);
     sourceLoc = getSourceLocation(token);
     if (expectedHints != null && expectedHints.length > 0) {
-      Token hintToken = fetchHint(token, expectedHints);
-      if (hintToken != null) {
-        hint = hintToken.hint;
-      }
+      hint = fetchHint(token, expectedHints);
     }
   }
   (<DOT> item = Identifier() { list.add(item); } )*
   {
-    return new Triple<List<String>, SourceLocation, SqlppHint>(list, sourceLoc, hint);
+    return new Triple<List<String>, SourceLocation, Token>(list, sourceLoc, hint);
   }
 }
 
@@ -3442,13 +3440,26 @@ Expression FunctionCallExpr() throws ParseException:
       return windowExpr;
     } else {
       CallExpr callExpr = new CallExpr(signature, argList, filterExpr);
-      if (funcName.hint != null) {
-        switch (funcName.hint) {
+      if (funcName.hintToken != null) {
+        switch (funcName.hintToken.hint) {
           case INDEXED_NESTED_LOOP_JOIN_HINT:
             callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
             break;
           case SKIP_SECONDARY_INDEX_SEARCH_HINT:
             callExpr.addHint(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE);
+            break;
+          case RANGE_HINT:
+            try {
+              RangeAnnotation rangeAnn = new RangeAnnotation();
+              rangeAnn.setObject((Object) RangeMapBuilder.parseHint(parseExpression(funcName.hintToken.hintParams)));
+              callExpr.addHint(rangeAnn);
+            } catch (CompilationException e) {
+              {
+                  SqlppParseException e2 = new SqlppParseException(getSourceLocation(funcName.hintToken), e.getMessage());
+                  e2.initCause(e);
+                  throw e2;
+              }
+            }
             break;
         }
       }

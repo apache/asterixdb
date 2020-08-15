@@ -42,8 +42,8 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
     private final IFramePool pool;
     private final IFrameFreeSlotPolicy policy;
     private final IAppendDeletableFrameTupleAccessor accessor;
-    private final ArrayList<ByteBuffer> frames;
-    private final RecordDescriptor recordDescriptor;
+    protected final ArrayList<ByteBuffer> frames;
+    protected final RecordDescriptor recordDescriptor;
     private int numTuples;
     private int statsReOrg;
 

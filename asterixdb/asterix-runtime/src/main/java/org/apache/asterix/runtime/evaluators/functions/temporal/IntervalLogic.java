@@ -25,7 +25,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
-class IntervalLogic {
+public class IntervalLogic {
 
     private final IBinaryComparator comp;
     private final ArrayBackedValueStorage s1 = new ArrayBackedValueStorage();
@@ -33,7 +33,7 @@ class IntervalLogic {
     private final ArrayBackedValueStorage s2 = new ArrayBackedValueStorage();
     private final ArrayBackedValueStorage e2 = new ArrayBackedValueStorage();
 
-    IntervalLogic() {
+    public IntervalLogic() {
         comp = BinaryComparatorFactoryProvider.INSTANCE
                 .getBinaryComparatorFactory(BuiltinType.ANY, BuiltinType.ANY, true).createBinaryComparator();
     }
@@ -47,7 +47,7 @@ class IntervalLogic {
      * @throws HyracksDataException IOException
      * @see #after(AIntervalPointable, AIntervalPointable)
      */
-    boolean before(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean before(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         e1.reset();
         s2.reset();
         ip1.getTaggedEnd(e1.getDataOutput());
@@ -56,7 +56,7 @@ class IntervalLogic {
                 s2.getStartOffset(), s2.getLength()) < 0;
     }
 
-    boolean after(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean after(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         return before(ip2, ip1);
     }
 
@@ -69,7 +69,7 @@ class IntervalLogic {
      * @throws HyracksDataException IOException
      * @see #metBy(AIntervalPointable, AIntervalPointable)
      */
-    boolean meets(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean meets(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         e1.reset();
         s2.reset();
         ip1.getTaggedEnd(e1.getDataOutput());
@@ -78,7 +78,7 @@ class IntervalLogic {
                 s2.getStartOffset(), s2.getLength()) == 0;
     }
 
-    boolean metBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean metBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         return meets(ip2, ip1);
     }
 
@@ -91,7 +91,7 @@ class IntervalLogic {
      * @throws HyracksDataException IOException
      * @see #overlappedBy(AIntervalPointable, AIntervalPointable)
      */
-    boolean overlaps(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean overlaps(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         s1.reset();
         e1.reset();
         s2.reset();
@@ -108,7 +108,7 @@ class IntervalLogic {
                         e2.getStartOffset(), e2.getLength()) < 0;
     }
 
-    boolean overlappedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean overlappedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         return overlaps(ip2, ip1);
     }
 
@@ -120,7 +120,7 @@ class IntervalLogic {
      * @throws HyracksDataException IOException
      * @return boolean
      */
-    boolean overlapping(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean overlapping(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         s1.reset();
         e1.reset();
         s2.reset();
@@ -144,7 +144,7 @@ class IntervalLogic {
      * @throws HyracksDataException IOException
      * @see #startedBy(AIntervalPointable, AIntervalPointable)
      */
-    boolean starts(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean starts(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         s1.reset();
         e1.reset();
         s2.reset();
@@ -159,7 +159,7 @@ class IntervalLogic {
                         e2.getStartOffset(), e2.getLength()) <= 0;
     }
 
-    boolean startedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean startedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         return starts(ip2, ip1);
     }
 
@@ -172,7 +172,7 @@ class IntervalLogic {
      * @throws HyracksDataException IOException
      * @see #coveredBy(AIntervalPointable, AIntervalPointable)
      */
-    boolean covers(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean covers(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         s1.reset();
         e1.reset();
         s2.reset();
@@ -187,7 +187,7 @@ class IntervalLogic {
                         e2.getStartOffset(), e2.getLength()) >= 0;
     }
 
-    boolean coveredBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean coveredBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         return covers(ip2, ip1);
     }
 
@@ -200,7 +200,7 @@ class IntervalLogic {
      * @throws HyracksDataException IOException
      * @see #endedBy(AIntervalPointable, AIntervalPointable)
      */
-    boolean ends(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean ends(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         s1.reset();
         e1.reset();
         s2.reset();
@@ -215,7 +215,7 @@ class IntervalLogic {
                         e2.getStartOffset(), e2.getLength()) == 0;
     }
 
-    boolean endedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
+    public boolean endedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         return ends(ip2, ip1);
     }
 }

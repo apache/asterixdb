@@ -70,6 +70,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartiti
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.MicroStableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.PartialBroadcastRangeFollowingExchangePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.PartialBroadcastRangeIntersectExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionExchangePOperator;
@@ -90,6 +92,8 @@ import org.apache.hyracks.algebricks.core.algebra.properties.LocalGroupingProper
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderedPartitionedProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.PartialBroadcastOrderedFollowingProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.PartialBroadcastOrderedIntersectProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.PropertiesUtil;
 import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
@@ -601,6 +605,18 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                     pop = new RandomPartitionExchangePOperator(nd);
                     break;
                 }
+                case PARTIAL_BROADCAST_ORDERED_FOLLOWING: {
+                    PartialBroadcastOrderedFollowingProperty pbp = (PartialBroadcastOrderedFollowingProperty) pp;
+                    pop = new PartialBroadcastRangeFollowingExchangePOperator(pbp.getOrderColumns(),
+                            pbp.getNodeDomain(), pbp.getRangeMap());
+                    break;
+                }
+                case PARTIAL_BROADCAST_ORDERED_INTERSECT: {
+                    PartialBroadcastOrderedIntersectProperty pbp = (PartialBroadcastOrderedIntersectProperty) pp;
+                    pop = new PartialBroadcastRangeIntersectExchangePOperator(pbp.getIntervalColumns(),
+                            pbp.getNodeDomain(), pbp.getRangeMap());
+                    break;
+                }
                 default: {
                     throw new NotImplementedException("Enforcer for " + pp.getPartitioningType()
                             + " partitioning type has not been implemented.");
@@ -678,14 +694,16 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
     private IPhysicalOperator createRangePartitionerConnector(AbstractLogicalOperator parentOp, INodeDomain domain,
             IPartitioningProperty requiredPartitioning, int childIndex, IOptimizationContext ctx)
             throws AlgebricksException {
-        // options for range partitioning: 1. static range map, 2. dynamic range map computed at run time
+        // options for range partitioning: 1. Range Map from Hint computed at run time 2. static range map, 3. dynamic range map computed at run time
         List<OrderColumn> partitioningColumns = ((OrderedPartitionedProperty) requiredPartitioning).getOrderColumns();
-        if (parentOp.getAnnotations().containsKey(OperatorAnnotations.USE_STATIC_RANGE)) {
-            RangeMap rangeMap = (RangeMap) parentOp.getAnnotations().get(OperatorAnnotations.USE_STATIC_RANGE);
+        RangeMap rangeMap = ((OrderedPartitionedProperty) requiredPartitioning).getRangeMap();
+        if (rangeMap != null) {
             return new RangePartitionExchangePOperator(partitioningColumns, domain, rangeMap);
-        } else {
-            return createDynamicRangePartitionExchangePOperator(parentOp, ctx, domain, partitioningColumns, childIndex);
+        } else if (parentOp.getAnnotations().containsKey(OperatorAnnotations.USE_STATIC_RANGE)) {
+            RangeMap map = (RangeMap) parentOp.getAnnotations().get(OperatorAnnotations.USE_STATIC_RANGE);
+            return new RangePartitionExchangePOperator(partitioningColumns, domain, map);
         }
+        return createDynamicRangePartitionExchangePOperator(parentOp, ctx, domain, partitioningColumns, childIndex);
     }
 
     private IPhysicalOperator createDynamicRangePartitionExchangePOperator(AbstractLogicalOperator parentOp,
@@ -732,7 +750,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         parentOp.getInputs().set(childIndex, forwardRef);
         parentOp.recomputeSchema();
         ctx.computeAndSetTypeEnvironmentForOperator(parentOp);
-        return new RangePartitionExchangePOperator(partitioningColumns, rangeMapKey, targetDomain);
+        return new RangePartitionExchangePOperator(partitioningColumns, targetDomain, rangeMapKey);
     }
 
     private static ReplicateOperator createReplicateOperator(Mutable<ILogicalOperator> inputOperator,

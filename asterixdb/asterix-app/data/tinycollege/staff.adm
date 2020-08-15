@@ -1,7 +1,8 @@
-{ "id": 14, "name": "Alex", "office": "A", "employment": interval(date("2003-01-01"), date("2008-01-01")) }
-{ "id": 13, "name": "Elisabeth", "office": "B", "employment": interval(date("2002-01-01"), date("2010-01-01")) }
-{ "id": 16, "name": "Franklin", "office": "A", "employment": interval(date("2004-01-01"), date("2009-01-01")) }
-{ "id": 15, "name": "Henry", "office": "C", "employment": interval(date("2003-01-01"), date("2008-01-01")) }
-{ "id": 17, "name": "Maryann", "office": "B", "employment": interval(date("2006-01-01"), date("2010-01-01")) }
-{ "id": 11, "name": "Vicky", "office": "D", "employment": interval(date("2001-01-01"), date("2010-01-01")) }
-{ "id": 12, "name": "Zack", "office": "A", "employment": interval(date("2002-01-01"), date("2003-01-01")) }
+{ "id": 14, "name": "Alex", "office": "A", "employment": interval(date("2003-01-01"), date("2008-01-01")), "vacation": interval(datetime("2003-01-01T00:00:00.0"), datetime("2008-01-01T00:00:00.0")), "office_hours": interval(time("03:00:00.0+00:00"), time("08:00:00.0+00:00"))}
+{ "id": 13, "name": "Elisabeth", "office": "B", "employment": interval(date("2002-01-01"), date("2010-01-01")), "vacation": interval(datetime("2002-01-01T00:00:00.0"), datetime("2010-01-01T00:00:00.0")), "office_hours": interval(time("02:00:00.0+00:00"), time("10:00:00.0+00:00"))}
+{ "id": 16, "name": "Franklin", "office": "A", "employment": interval(date("2004-01-01"), date("2009-01-01")), "vacation": interval(datetime("2004-01-01T00:00:00.0"), datetime("2009-01-01T00:00:00.0")), "office_hours": interval(time("04:00:00.0+00:00"), time("09:00:00.0+00:00"))}
+{ "id": 15, "name": "Henry", "office": "C", "employment": interval(date("2003-01-01"), date("2008-01-01")), "vacation": interval(datetime("2003-01-01T00:00:00.0"), datetime("2008-01-01T00:00:00.0")), "office_hours": interval(time("03:00:00.0+00:00"), time("08:00:00.0+00:00"))}
+{ "id": 17, "name": "MaryAnn", "office": "B", "employment": interval(date("2006-01-01"), date("2010-01-01")), "vacation": interval(datetime("2006-01-01T00:00:00.0"), datetime("2010-01-01T00:00:00.0")), "office_hours": interval(time("06:00:00.0+00:00"), time("10:00:00.0+00:00"))}
+{ "id": 11, "name": "Vicky", "office": "D", "employment": interval(date("2001-01-01"), date("2010-01-01")), "vacation": interval(datetime("2001-01-01T00:00:00.0"), datetime("2010-01-01T00:00:00.0")), "office_hours": interval(time("01:00:00.0+00:00"), time("10:00:00.0+00:00"))}
+{ "id": 12, "name": "Zack", "office": "A", "employment": interval(date("2002-01-01"), date("2003-01-01")), "vacation": interval(datetime("2002-01-01T00:00:00.0"), datetime("2003-01-01T00:00:00.0")), "office_hours": interval(time("02:00:00.0+00:00"), time("03:00:00.0+00:00"))}
+{ "id": 18, "name": "Jake", "office": "C", "employment": interval(date("2006-01-01"), date("2008-01-01")), "vacation": interval(datetime("2006-01-01T00:00:00.0"), datetime("2008-01-01T00:00:00.0")), "office_hours": interval(time("06:00:00.0+00:00"), time("08:00:00.0+00:00"))}

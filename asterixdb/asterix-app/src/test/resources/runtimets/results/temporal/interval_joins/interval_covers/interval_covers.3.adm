@@ -3,9 +3,9 @@
 { "staff": "Elisabeth", "student": "Steve" }
 { "staff": "Elisabeth", "student": "Tess" }
 { "staff": "Franklin", "student": "Karen" }
-{ "staff": "Maryann", "student": "Karen" }
-{ "staff": "Maryann", "student": "Steve" }
-{ "staff": "Maryann", "student": "Tess" }
+{ "staff": "MaryAnn", "student": "Karen" }
+{ "staff": "MaryAnn", "student": "Steve" }
+{ "staff": "MaryAnn", "student": "Tess" }
 { "staff": "Vicky", "student": "Charles" }
 { "staff": "Vicky", "student": "Frank" }
 { "staff": "Vicky", "student": "Karen" }

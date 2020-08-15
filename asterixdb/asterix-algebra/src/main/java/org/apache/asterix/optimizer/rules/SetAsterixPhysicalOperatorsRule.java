@@ -34,6 +34,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
 import org.apache.asterix.optimizer.rules.am.BTreeJobGenParams;
+import org.apache.asterix.optimizer.rules.util.AsterixJoinUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -53,6 +54,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
@@ -76,6 +79,26 @@ public final class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysical
 
         private AsterixPhysicalOperatorFactoryVisitor(IOptimizationContext context) {
             super(context);
+        }
+
+        @Override
+        public IPhysicalOperator visitInnerJoinOperator(InnerJoinOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            AsterixJoinUtils.setJoinAlgorithmAndExchangeAlgo(op, topLevelOp, context);
+            if (op.getPhysicalOperator() != null) {
+                return op.getPhysicalOperator();
+            }
+            return super.visitInnerJoinOperator(op, topLevelOp);
+        }
+
+        @Override
+        public IPhysicalOperator visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            AsterixJoinUtils.setJoinAlgorithmAndExchangeAlgo(op, topLevelOp, context);
+            if (op.getPhysicalOperator() != null) {
+                return op.getPhysicalOperator();
+            }
+            return super.visitLeftOuterJoinOperator(op, topLevelOp);
         }
 
         @Override

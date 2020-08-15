@@ -19,12 +19,14 @@
 /*
  * Description      :   Check temporal join functionality for interval
  * Expected Result  :   Success
- * Date             :   26th Jun, 2015
+ * Date             :   10th Aug, 2020
  */
 
 use TinyCollege;
 
 select element { "staff" : f.name, "student" : d.name }
 from Students as d, Staff as f
-where `interval-after`(f.employment, d.attendance)
+where
+/*+ range [date("2003-06-30"), date("2005-12-31"), date("2008-06-30")] */
+interval_after(f.employment, d.attendance)
 order by f.name, d.name;

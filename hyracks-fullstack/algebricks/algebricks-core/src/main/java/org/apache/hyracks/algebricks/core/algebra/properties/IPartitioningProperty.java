@@ -50,7 +50,27 @@ public interface IPartitioningProperty extends IStructuralProperty {
          * Data is range partitioned (only used on data that has a total order).
          * The partitions are order based on the data range.
          */
-        ORDERED_PARTITIONED
+        ORDERED_PARTITIONED,
+        /**
+         * Data is partially replicated as follows:
+         * <ol>
+         * <li>partition the data according to the {@link #ORDERED_PARTITIONED} layout
+         * <li>then replicate each tuple in each partition to those partitions that correspond to higher ranges
+         *     than the range of this tuple's original partition
+         * </ol>
+         */
+        PARTIAL_BROADCAST_ORDERED_FOLLOWING,
+        /**
+         * Data is partially replicated as follows:
+         * <ol>
+         * <li>assume there are two columns "start" and "end"
+         * <li>partition the data according to the {@link #ORDERED_PARTITIONED} layout on the "start" column
+         * <li>then replicate each tuple in each partition to those partitions that correspond to higher ranges
+         *     than the range of this tuple's original partition, excluding those partitions that start at a range
+         *     higher than the "end" column
+         * </ol>
+         */
+        PARTIAL_BROADCAST_ORDERED_INTERSECT
     }
 
     INodeDomain DOMAIN_FOR_UNPARTITIONED_DATA = new INodeDomain() {

@@ -181,6 +181,32 @@ public class PropertiesUtil {
                     }
                 }
             }
+            case PARTIAL_BROADCAST_ORDERED_FOLLOWING: {
+                switch (dlvd.getPartitioningType()) {
+                    case PARTIAL_BROADCAST_ORDERED_FOLLOWING: {
+                        PartialBroadcastOrderedFollowingProperty pr = (PartialBroadcastOrderedFollowingProperty) reqd;
+                        PartialBroadcastOrderedFollowingProperty pd = (PartialBroadcastOrderedFollowingProperty) dlvd;
+                        return pr.getOrderColumns().equals(pd.getOrderColumns())
+                                && pr.getRangeMap().equals(pd.getRangeMap());
+                    }
+                    default: {
+                        return false;
+                    }
+                }
+            }
+            case PARTIAL_BROADCAST_ORDERED_INTERSECT: {
+                switch (dlvd.getPartitioningType()) {
+                    case PARTIAL_BROADCAST_ORDERED_INTERSECT: {
+                        PartialBroadcastOrderedIntersectProperty pr = (PartialBroadcastOrderedIntersectProperty) reqd;
+                        PartialBroadcastOrderedIntersectProperty pd = (PartialBroadcastOrderedIntersectProperty) dlvd;
+                        return pr.getIntervalColumns().equals(pd.getIntervalColumns())
+                                && pr.getRangeMap().equals(pd.getRangeMap());
+                    }
+                    default: {
+                        return false;
+                    }
+                }
+            }
             default: {
                 return (dlvd.getPartitioningType() == reqd.getPartitioningType());
             }

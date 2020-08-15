@@ -19,7 +19,9 @@
 /*
  * Description      :   Check temporal join functionality for interval
  * Expected Result  :   Success
- * Date             :   26th Jun, 2015
+ * Date             :   10th Aug, 2020
+ * Note             :   Range hint is not picked for interval starts because it is not implemented
+ *                  :   It will default to Hybrid Has Join.
  */
 
 drop dataverse TinyCollege if exists;
@@ -29,7 +31,9 @@ use TinyCollege;
 create type StaffType as open {
         name: string,
         office: string,
-        employment: interval
+        employment: interval,
+        vacation: interval,
+        office_hours: interval
 };
 create dataset Staff(StaffType)
 primary key name;
@@ -38,7 +42,9 @@ primary key name;
 create type StudentType as open {
         name: string,
         office: string,
-        attendance: interval
+        attendance: interval,
+        break: interval,
+        work_hours: interval
 };
 create dataset Students(StudentType)
 primary key name;

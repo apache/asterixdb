@@ -19,12 +19,16 @@
 /*
  * Description      :   Check temporal join functionality for interval
  * Expected Result  :   Success
- * Date             :   26th Jun, 2015
+ * Date             :   10th Aug, 2020
+ * Note             :   Range hint is not picked for interval starts because it is not implemented
+ *                  :   It will default to Hybrid Has Join.
  */
 
 use TinyCollege;
 
 select element { "staff" : f.name, "student" : d.name }
 from Students as d, Staff as f
-where `interval-starts`(d.attendance, f.employment)
+where
+/*+ range [date("2003-06-30"), date("2005-12-31"), date("2008-06-30")] */
+interval_starts(d.attendance, f.employment)
 order by f.name, d.name;

@@ -17,9 +17,9 @@
  * under the License.
  */
 /*
- * Description      :   Check temporal join functionality for interval
+ * Description      :   Check temporal join functionality for interval overlapping
  * Expected Result  :   Success
- * Date             :   21th Oct, 2019
+ * Date             :   10th Aug, 2019
  */
 
 drop dataverse TinyCollege if exists;
@@ -43,6 +43,8 @@ create type StudentType as open {
 create dataset Students(StudentType)
 primary key name;
 
-select element { "staff" : f.name, "student" : d.name }
+select element {  "staff" : f.name, "student" : d.name }
 from Staff as f, Students as d
-where `interval-overlapping`(f.employment, d.attendance);
+where
+/*+ range [date("2003-06-30"), date("2005-12-31"), date("2008-06-30")] */
+interval_overlapping(f.employment, d.attendance);
