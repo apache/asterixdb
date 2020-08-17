@@ -204,7 +204,7 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
                             newGbyNestedPlans.add(new ALogicalPlanImpl(rootOpRef));
 
                             upperSubplanRootRefIterator.remove();
-                            changed |= true;
+                            changed = true;
                             break;
                         }
                     }
@@ -212,10 +212,12 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
 
                 if (upperSubplanRootRefs.isEmpty()) {
                     subplanNestedPlanIterator.remove();
+                    changed = true;
                 }
             }
             if (subplan.getNestedPlans().isEmpty()) {
                 subplanOperatorIterator.remove();
+                changed = true;
             }
         }
 
@@ -228,7 +230,7 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
         parent.getInputs().get(0).setValue(gby);
 
         // Removes unnecessary pipelines inside the group by operator.
-        cleanup(currentRootRef.getValue(), gby);
+        changed |= cleanup(currentRootRef.getValue(), gby);
 
         // Computes type environments.
         context.computeAndSetTypeEnvironmentForOperator(gby);
@@ -245,7 +247,8 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
      *            the group-by operator.
      * @throws AlgebricksException
      */
-    private void cleanup(ILogicalOperator rootOp, GroupByOperator gby) throws AlgebricksException {
+    private boolean cleanup(ILogicalOperator rootOp, GroupByOperator gby) throws AlgebricksException {
+        boolean changed = false;
         Set<LogicalVariable> freeVars = new HashSet<>();
         OperatorPropertiesUtil.getFreeVariablesInPath(rootOp, gby, freeVars);
         Iterator<ILogicalPlan> nestedPlanIterator = gby.getNestedPlans().iterator();
@@ -259,16 +262,20 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
                     if (!freeVars.contains(aggOp.getVariables().get(varIndex))) {
                         aggOp.getVariables().remove(varIndex);
                         aggOp.getExpressions().remove(varIndex);
+                        changed = true;
                     }
                 }
                 if (aggOp.getVariables().isEmpty()) {
                     nestRootRefIterator.remove();
+                    changed = true;
                 }
             }
             if (nestedPlan.getRoots().isEmpty()) {
                 nestedPlanIterator.remove();
+                changed = true;
             }
         }
+        return changed;
     }
 
     private Mutable<ILogicalOperator> downToNts(Mutable<ILogicalOperator> opRef) {

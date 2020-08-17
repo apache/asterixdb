@@ -792,6 +792,9 @@ public class BTreeAccessMethod implements IAccessMethod {
             } else {
                 keyVar = ((VariableReferenceExpression) searchKeyExpr).getVariableReference();
                 if (constExpression != null) {
+                    if (constExpression.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                        constExpression = constExpression.cloneExpression();
+                    }
                     assignKeyExprList.add(new MutableObject<>(constExpression));
                     assignKeyVarList.add(constExprVars[i]);
                 }

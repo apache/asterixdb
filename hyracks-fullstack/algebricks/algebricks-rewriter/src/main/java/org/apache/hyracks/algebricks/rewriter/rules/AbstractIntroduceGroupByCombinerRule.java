@@ -87,7 +87,7 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
             if (!newGbyLiveVars.contains(usedVar)) {
                 // Let the left-hand side of gbyOp's decoration expressions populated through the combiner group-by without
                 // any intermediate assignment.
-                newGbyOp.addDecorExpression(null, p.second.getValue());
+                newGbyOp.addDecorExpression(null, p.second.getValue().cloneExpression());
                 newGbyLiveVars.add(usedVar);
             }
         }
