@@ -18,9 +18,13 @@
  */
 package org.apache.asterix.optimizer.rules;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -39,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
@@ -89,6 +94,7 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
         VariableReferenceExpression varEx = null;
         IAType valType = null;
         HashSet<AsterixConstantValue> values = new HashSet<AsterixConstantValue>();
+        Map<Object, IExpressionAnnotation> allAnnotations = Collections.emptyMap();
 
         for (Mutable<ILogicalExpression> arg : args) {
             AbstractFunctionCallExpression fctCall;
@@ -128,6 +134,12 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
             if (!(haveVar && haveConst)) {
                 return false;
             }
+            if (!fctCall.getAnnotations().isEmpty()) {
+                if (allAnnotations.isEmpty()) {
+                    allAnnotations = new HashMap<>();
+                }
+                allAnnotations.putAll(fctCall.getAnnotations());
+            }
         }
 
         SourceLocation sourceLoc = select.getSourceLocation();
@@ -142,8 +154,9 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
 
         ILogicalExpression cExp = new ConstantExpression(new AsterixConstantValue(list));
         Mutable<ILogicalExpression> mutCExp = new MutableObject<>(cExp);
-        IFunctionInfo scanFctInfo = BuiltinFunctions.getAsterixFunctionInfo(BuiltinFunctions.SCAN_COLLECTION);
-        UnnestingFunctionCallExpression scanExp = new UnnestingFunctionCallExpression(scanFctInfo, mutCExp);
+        UnnestingFunctionCallExpression scanExp = new UnnestingFunctionCallExpression(
+                BuiltinFunctions.getAsterixFunctionInfo(BuiltinFunctions.SCAN_COLLECTION));
+        scanExp.getArguments().add(mutCExp);
         scanExp.setSourceLocation(sourceLoc);
         LogicalVariable scanVar = context.newVar();
         UnnestOperator unn = new UnnestOperator(scanVar, new MutableObject<>(scanExp));
@@ -158,11 +171,14 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
         scanVarRef.setSourceLocation(sourceLoc);
         eqExp.getArguments().add(new MutableObject<>(scanVarRef));
         eqExp.getArguments().add(new MutableObject<>(varEx.cloneExpression()));
-        eqExp.getAnnotations().put(IndexedNLJoinExpressionAnnotation.INSTANCE,
-                IndexedNLJoinExpressionAnnotation.INSTANCE);
+        if (!allAnnotations.containsKey(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE)) {
+            eqExp.getAnnotations().put(IndexedNLJoinExpressionAnnotation.INSTANCE,
+                    IndexedNLJoinExpressionAnnotation.INSTANCE);
+        }
         BroadcastExpressionAnnotation bcast = new BroadcastExpressionAnnotation();
         bcast.setObject(BroadcastExpressionAnnotation.BroadcastSide.LEFT); // Broadcast the OR predicates branch.
         eqExp.getAnnotations().put(bcast, bcast);
+        eqExp.getAnnotations().putAll(allAnnotations);
 
         InnerJoinOperator jOp = new InnerJoinOperator(new MutableObject<>(eqExp));
         jOp.setSourceLocation(sourceLoc);
