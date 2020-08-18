@@ -3970,7 +3970,7 @@
     <test-case FilePath="ddl/create-index">
       <compilation-unit name="create-inverted-index-with-variable-length-primary-key">
         <output-dir compare="Text">create-inverted-index-with-variable-length-primary-key</output-dir>
-        <expected-error>ASX1079: Compilation error: The keyword or ngram index -MyIndex cannot be created on the dataset -MyDataset due to its variable-length primary key field - [myKey] (in line 33, at column 1)</expected-error>
+        <expected-error>ASX1079: Compilation error: The keyword or ngram index MyIndex cannot be created on the dataset MyDataset due to its variable-length primary key field [myKey] (in line 33, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">

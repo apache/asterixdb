@@ -1097,8 +1097,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     // If it is not a fixed length
                     if (!typeTrait.isFixedLength()) {
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "The keyword or ngram index -" + indexName + " cannot be created on the dataset -"
-                                        + datasetName + " due to its variable-length primary key field - "
+                                "The keyword or ngram index " + indexName + " cannot be created on the dataset "
+                                        + datasetName + " due to its variable-length primary key field "
                                         + partitioningKey);
                     }
 
