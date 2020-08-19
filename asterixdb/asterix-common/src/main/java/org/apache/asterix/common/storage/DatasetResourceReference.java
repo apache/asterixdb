@@ -19,6 +19,7 @@
 package org.apache.asterix.common.storage;
 
 import java.nio.file.Paths;
+import java.util.Objects;
 
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.utils.StorageConstants;
@@ -35,6 +36,7 @@ public class DatasetResourceReference extends ResourceReference {
     }
 
     public static DatasetResourceReference of(LocalResource localResource) {
+        Objects.requireNonNull(localResource);
         return parse(localResource);
     }
 
