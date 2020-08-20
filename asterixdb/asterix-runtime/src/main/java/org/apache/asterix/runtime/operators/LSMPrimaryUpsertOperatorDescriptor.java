@@ -36,13 +36,13 @@ import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallbackFacto
 public class LSMPrimaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final IFrameOperationCallbackFactory frameOpCallbackFactory;
-    private final ARecordType recordType;
-    private final int filterIndex;
-    private ISearchOperationCallbackFactory searchOpCallbackFactory;
-    private final int numPrimaryKeys;
-    private final IMissingWriterFactory missingWriterFactory;
-    private final boolean hasSecondaries;
+    protected final IFrameOperationCallbackFactory frameOpCallbackFactory;
+    protected final ARecordType recordType;
+    protected final int filterIndex;
+    protected ISearchOperationCallbackFactory searchOpCallbackFactory;
+    protected final int numPrimaryKeys;
+    protected final IMissingWriterFactory missingWriterFactory;
+    protected final boolean hasSecondaries;
 
     public LSMPrimaryUpsertOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, IIndexDataflowHelperFactory indexHelperFactory,

@@ -48,11 +48,11 @@ import org.apache.hyracks.storage.common.IIndexAccessParameters;
 public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
     public static final String KEY_INDEX = "Index";
-    private final boolean isPrimary;
-    private final SourceLocation sourceLoc;
+    protected final boolean isPrimary;
+    protected final SourceLocation sourceLoc;
     // This class has both lsmIndex and index (in super class) pointing to the same object
     private AbstractLSMIndex lsmIndex;
-    private int i = 0;
+    protected int i = 0;
 
     /**
      * The following three variables are used to keep track of the information regarding flushing partial frame such as
@@ -64,9 +64,9 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
      * ==> captured in currentTupleIdx variable
      * These variables are reset for each frame, i.e., whenever nextFrame() is called, these variables are reset.
      */
-    private boolean flushedPartialTuples;
-    private int currentTupleIdx;
-    private int lastFlushedTupleIdx;
+    protected boolean flushedPartialTuples;
+    protected int currentTupleIdx;
+    protected int lastFlushedTupleIdx;
 
     public LSMInsertDeleteOperatorNodePushable(IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
             RecordDescriptor inputRecDesc, IndexOperation op, boolean isPrimary,

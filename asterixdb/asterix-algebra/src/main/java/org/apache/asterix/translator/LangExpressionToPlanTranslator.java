@@ -443,7 +443,7 @@ abstract class LangExpressionToPlanTranslator
         return plan;
     }
 
-    private ILogicalOperator translateDelete(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
+    protected ILogicalOperator translateDelete(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
             List<Mutable<ILogicalExpression>> varRefsForLoading,
             List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator assign,
             ICompiledDmlStatement stmt) throws AlgebricksException {
@@ -464,7 +464,7 @@ abstract class LangExpressionToPlanTranslator
         return leafOperator;
     }
 
-    private ILogicalOperator translateUpsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
+    protected ILogicalOperator translateUpsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
             List<Mutable<ILogicalExpression>> varRefsForLoading,
             List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator assign,
             List<String> additionalFilteringField, LogicalVariable unnestVar, ILogicalOperator topOp,
@@ -579,7 +579,7 @@ abstract class LangExpressionToPlanTranslator
         return processReturningExpression(rootOperator, upsertOp, compiledUpsert, resultMetadata);
     }
 
-    private ILogicalOperator translateInsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
+    protected ILogicalOperator translateInsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
             List<Mutable<ILogicalExpression>> varRefsForLoading,
             List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator assign,
             ICompiledDmlStatement stmt, IResultMetadata resultMetadata) throws AlgebricksException {
@@ -609,7 +609,7 @@ abstract class LangExpressionToPlanTranslator
 
     // Stitches the translated operators for the returning expression into the query
     // plan.
-    private ILogicalOperator processReturningExpression(ILogicalOperator inputOperator,
+    protected ILogicalOperator processReturningExpression(ILogicalOperator inputOperator,
             InsertDeleteUpsertOperator insertOp, CompiledInsertStatement compiledInsert, IResultMetadata resultMetadata)
             throws AlgebricksException {
         Expression returnExpression = compiledInsert.getReturnExpression();
@@ -651,7 +651,7 @@ abstract class LangExpressionToPlanTranslator
         return distResultOperator;
     }
 
-    private DatasetDataSource validateDatasetInfo(MetadataProvider metadataProvider, DataverseName dataverseName,
+    protected DatasetDataSource validateDatasetInfo(MetadataProvider metadataProvider, DataverseName dataverseName,
             String datasetName, SourceLocation sourceLoc) throws AlgebricksException {
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
@@ -671,7 +671,7 @@ abstract class LangExpressionToPlanTranslator
                 dataset.getDatasetDetails(), domain);
     }
 
-    private FileSplit getDefaultOutputFileLocation(ICcApplicationContext appCtx) throws AlgebricksException {
+    protected FileSplit getDefaultOutputFileLocation(ICcApplicationContext appCtx) throws AlgebricksException {
         String outputDir = System.getProperty("java.io.tmpDir");
         String filePath =
                 outputDir + System.getProperty("file.separator") + OUTPUT_FILE_PREFIX + outputFileID.incrementAndGet();
@@ -1760,7 +1760,7 @@ abstract class LangExpressionToPlanTranslator
      *            the query plan.
      * @throws CompilationException
      */
-    private void eliminateSharedOperatorReferenceForPlan(ILogicalPlan plan) throws CompilationException {
+    protected void eliminateSharedOperatorReferenceForPlan(ILogicalPlan plan) throws CompilationException {
         for (Mutable<ILogicalOperator> opRef : plan.getRoots()) {
             Set<Mutable<ILogicalOperator>> opRefSet = new HashSet<>();
             eliminateSharedOperatorReference(opRef, opRefSet);

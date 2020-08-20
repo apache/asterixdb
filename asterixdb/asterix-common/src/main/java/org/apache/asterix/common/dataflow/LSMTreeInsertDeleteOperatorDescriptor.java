@@ -33,7 +33,7 @@ import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdat
 public class LSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexInsertUpdateDeleteOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final boolean isPrimary;
+    protected final boolean isPrimary;
 
     public LSMTreeInsertDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, IndexOperation op, IIndexDataflowHelperFactory indexHelperFactory,

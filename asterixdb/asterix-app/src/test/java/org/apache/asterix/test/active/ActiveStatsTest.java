@@ -107,7 +107,7 @@ public class ActiveStatsTest {
         // Add event listener
         ActiveEntityEventsListener eventsListener = new DummyFeedEventsListener(statementExecutor, appCtx, null,
                 entityId, datasetList, partitionConstraint, FeedIntakeOperatorNodePushable.class.getSimpleName(),
-                NoRetryPolicyFactory.INSTANCE, null, Collections.emptyList());
+                NoRetryPolicyFactory.INSTANCE, null, Collections.emptyList(), Language.SQLPP);
         // Register mock runtime
         NCAppRuntimeContext nc1AppCtx =
                 (NCAppRuntimeContext) ExecutionTestUtil.integrationUtil.ncs[0].getApplicationContext();

@@ -26,6 +26,7 @@ import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveEntityEventSubscriber;
 import org.apache.asterix.active.IRetryPolicyFactory;
+import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -50,14 +51,17 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
 
     private final Feed feed;
     private final List<FeedConnection> feedConnections;
+    private final ILangExtension.Language translatorLang;
 
     public FeedEventsListener(IStatementExecutor statementExecutor, ICcApplicationContext appCtx,
             IHyracksClientConnection hcc, EntityId entityId, List<Dataset> datasets,
             AlgebricksAbsolutePartitionConstraint locations, String runtimeName, IRetryPolicyFactory retryPolicyFactory,
-            Feed feed, final List<FeedConnection> feedConnections) throws HyracksDataException {
+            Feed feed, final List<FeedConnection> feedConnections, ILangExtension.Language translatorLang)
+            throws HyracksDataException {
         super(statementExecutor, appCtx, hcc, entityId, datasets, locations, runtimeName, retryPolicyFactory);
         this.feed = feed;
         this.feedConnections = feedConnections;
+        this.translatorLang = translatorLang;
     }
 
     @Override
@@ -94,8 +98,8 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
     @Override
     protected JobId compileAndStartJob(MetadataProvider mdProvider) throws HyracksDataException {
         try {
-            Pair<JobSpecification, AlgebricksAbsolutePartitionConstraint> jobInfo =
-                    FeedOperations.buildStartFeedJob(mdProvider, feed, feedConnections, statementExecutor, hcc);
+            Pair<JobSpecification, AlgebricksAbsolutePartitionConstraint> jobInfo = FeedOperations
+                    .buildStartFeedJob(mdProvider, feed, feedConnections, statementExecutor, hcc, translatorLang);
             JobSpecification feedJob = jobInfo.getLeft();
             feedJob.setProperty(ActiveNotificationHandler.ACTIVE_ENTITY_PROPERTY_NAME, entityId);
             // TODO(Yingyi): currently we do not check IFrameWriter protocol violations for Feed jobs.

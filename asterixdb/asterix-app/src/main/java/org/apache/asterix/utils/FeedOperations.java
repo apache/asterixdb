@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.app.translator.QueryTranslator;
@@ -450,7 +451,8 @@ public class FeedOperations {
 
     public static Pair<JobSpecification, AlgebricksAbsolutePartitionConstraint> buildStartFeedJob(
             MetadataProvider metadataProvider, Feed feed, List<FeedConnection> feedConnections,
-            IStatementExecutor statementExecutor, IHyracksClientConnection hcc) throws Exception {
+            IStatementExecutor statementExecutor, IHyracksClientConnection hcc, ILangExtension.Language translatorLang)
+            throws Exception {
         FeedPolicyAccessor fpa = new FeedPolicyAccessor(new HashMap<>());
         Pair<JobSpecification, ITypedAdapterFactory> intakeInfo = buildFeedIntakeJobSpec(feed, metadataProvider, fpa);
         List<JobSpecification> jobsList = new ArrayList<>();
@@ -465,8 +467,9 @@ public class FeedOperations {
         metadataProvider.getConfig().put(FeedActivityDetails.COLLECT_LOCATIONS,
                 StringUtils.join(ingestionLocations, ','));
         // TODO: Once we deprecated AQL, this extra queryTranslator can be removed.
-        IStatementExecutor translator =
-                getSQLPPTranslator(metadataProvider, ((QueryTranslator) statementExecutor).getSessionOutput());
+        IStatementExecutor translator = translatorLang == ILangExtension.Language.AQL
+                ? getSQLPPTranslator(metadataProvider, ((QueryTranslator) statementExecutor).getSessionOutput())
+                : statementExecutor;
         // Add connection job
         for (FeedConnection feedConnection : feedConnections) {
             JobSpecification connectionJob =

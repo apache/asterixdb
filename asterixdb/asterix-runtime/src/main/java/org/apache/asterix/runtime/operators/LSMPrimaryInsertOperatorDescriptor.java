@@ -34,10 +34,10 @@ public class LSMPrimaryInsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
 
     private static final long serialVersionUID = 1L;
 
-    private final IIndexDataflowHelperFactory keyIndexHelperFactory;
-    private final ISearchOperationCallbackFactory searchOpCallbackFactory;
-    private final int numOfPrimaryKeys;
-    private final int[] filterFields;
+    protected final IIndexDataflowHelperFactory keyIndexHelperFactory;
+    protected final ISearchOperationCallbackFactory searchOpCallbackFactory;
+    protected final int numOfPrimaryKeys;
+    protected final int[] filterFields;
 
     public LSMPrimaryInsertOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, IIndexDataflowHelperFactory indexHelperFactory,

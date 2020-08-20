@@ -26,6 +26,7 @@ import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveEntityEventSubscriber;
 import org.apache.asterix.active.IRetryPolicyFactory;
+import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.app.active.FeedEventsListener;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.external.feed.watch.WaitForStateSubscriber;
@@ -43,9 +44,10 @@ public class DummyFeedEventsListener extends FeedEventsListener {
     public DummyFeedEventsListener(IStatementExecutor statementExecutor, ICcApplicationContext appCtx,
             IHyracksClientConnection hcc, EntityId entityId, List<Dataset> datasets,
             AlgebricksAbsolutePartitionConstraint locations, String runtimeName, IRetryPolicyFactory retryPolicyFactory,
-            Feed feed, List<FeedConnection> feedConnections) throws HyracksDataException {
+            Feed feed, List<FeedConnection> feedConnections, ILangExtension.Language translatorLang)
+            throws HyracksDataException {
         super(statementExecutor, appCtx, hcc, entityId, datasets, locations, runtimeName, retryPolicyFactory, feed,
-                feedConnections);
+                feedConnections, translatorLang);
     }
 
     @Override

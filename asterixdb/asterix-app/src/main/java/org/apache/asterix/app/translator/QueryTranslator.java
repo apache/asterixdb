@@ -1986,7 +1986,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         declaredFunctions.add(fds);
     }
 
-    protected void handleCreateFunctionStatement(MetadataProvider metadataProvider, Statement stmt,
+    public void handleCreateFunctionStatement(MetadataProvider metadataProvider, Statement stmt,
             IStatementRewriter stmtRewriter) throws Exception {
         CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
         FunctionSignature signature = cfs.getFunctionSignature();
@@ -2985,7 +2985,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    private void handleStartFeedStatement(MetadataProvider metadataProvider, Statement stmt,
+    protected void handleStartFeedStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
         StartFeedStatement sfs = (StartFeedStatement) stmt;
         SourceLocation sourceLoc = sfs.getSourceLocation();
@@ -3024,7 +3024,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 listener = new FeedEventsListener(this, metadataProvider.getApplicationContext(), hcc, entityId,
                         datasets, null, FeedIntakeOperatorNodePushable.class.getSimpleName(),
-                        NoRetryPolicyFactory.INSTANCE, feed, feedConnections);
+                        NoRetryPolicyFactory.INSTANCE, feed, feedConnections, compilationProvider.getLanguage());
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             committed = true;
@@ -3039,7 +3039,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    private void handleStopFeedStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleStopFeedStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         StopFeedStatement sfst = (StopFeedStatement) stmt;
         SourceLocation sourceLoc = sfst.getSourceLocation();
         DataverseName dataverseName = getActiveDataverseName(sfst.getDataverseName());
