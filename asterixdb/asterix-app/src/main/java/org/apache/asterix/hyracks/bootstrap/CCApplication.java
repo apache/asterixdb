@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.asterix.api.http.IQueryWebServerRegistrant;
 import org.apache.asterix.api.http.server.ActiveStatsApiServlet;
 import org.apache.asterix.api.http.server.ApiServlet;
+import org.apache.asterix.api.http.server.BasicAuthServlet;
 import org.apache.asterix.api.http.server.CcQueryCancellationServlet;
 import org.apache.asterix.api.http.server.ClusterApiServlet;
 import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
@@ -350,9 +351,10 @@ public class CCApplication extends BaseCCApplication {
             case Servlets.ACTIVE_STATS:
                 return new ActiveStatsApiServlet(appCtx, ctx, paths);
             case Servlets.UDF:
-                return new UdfApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(SQLPP),
-                        getStatementExecutorFactory(), componentProvider, server.getScheme(),
-                        server.getAddress().getPort());
+                return new BasicAuthServlet(ctx,
+                        new UdfApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(SQLPP),
+                                getStatementExecutorFactory(), componentProvider, server.getScheme(),
+                                server.getAddress().getPort()));
             default:
                 throw new IllegalStateException(key);
         }

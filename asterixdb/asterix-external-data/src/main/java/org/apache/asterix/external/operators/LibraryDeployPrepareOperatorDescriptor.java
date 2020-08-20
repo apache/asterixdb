@@ -20,6 +20,7 @@
 package org.apache.asterix.external.operators;
 
 import static org.apache.asterix.external.library.ExternalLibraryManager.DESCRIPTOR_FILE_NAME;
+import static org.apache.hyracks.control.common.controllers.NCConfig.Option.PYTHON_USE_BUNDLED_MSGPACK;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -161,7 +162,9 @@ public class LibraryDeployPrepareOperatorDescriptor extends AbstractLibraryOpera
                             // shouldn't happen
                             throw new IOException("Unexpected file type: " + fileExt);
                         }
-                        shiv(targetFile, stageDir, contentsDir);
+                        boolean extractMsgPack = ctx.getJobletContext().getServiceContext().getAppConfig()
+                                .getBoolean(PYTHON_USE_BUNDLED_MSGPACK);
+                        shiv(targetFile, stageDir, contentsDir, extractMsgPack);
                         break;
                     default:
                         // shouldn't happen
@@ -285,20 +288,22 @@ public class LibraryDeployPrepareOperatorDescriptor extends AbstractLibraryOpera
                 }
             }
 
-            private void shiv(FileReference sourceFile, FileReference stageDir, FileReference contentsDir)
-                    throws IOException {
+            private void shiv(FileReference sourceFile, FileReference stageDir, FileReference contentsDir,
+                    boolean writeMsgpack) throws IOException {
                 FileReference msgpack = stageDir.getChild("msgpack.pyz");
-                writeShim(msgpack);
+                if (writeMsgpack) {
+                    writeShim(msgpack, writeMsgpack);
+                    File msgPackFolder = new File(contentsDir.getRelativePath(), "ipc");
+                    FileReference msgPackFolderRef =
+                            new FileReference(contentsDir.getDeviceHandle(), msgPackFolder.getPath());
+                    unzip(msgpack, msgPackFolderRef);
+                    Files.delete(msgpack.getFile().toPath());
+                }
                 unzip(sourceFile, contentsDir);
-                File msgPackFolder = new File(contentsDir.getRelativePath(), "ipc");
-                FileReference msgPackFolderRef =
-                        new FileReference(contentsDir.getDeviceHandle(), msgPackFolder.getPath());
-                unzip(msgpack, msgPackFolderRef);
-                writeShim(contentsDir.getChild("entrypoint.py"));
-                Files.delete(msgpack.getFile().toPath());
+                writeShim(contentsDir.getChild("entrypoint.py"), false);
             }
 
-            private void writeShim(FileReference outputFile) throws IOException {
+            private boolean writeShim(FileReference outputFile, boolean optional) throws IOException {
                 InputStream is = getClass().getClassLoader().getResourceAsStream(outputFile.getFile().getName());
                 if (is == null) {
                     throw new IOException("Classpath does not contain necessary Python resources!");
@@ -308,6 +313,7 @@ public class LibraryDeployPrepareOperatorDescriptor extends AbstractLibraryOpera
                 } finally {
                     is.close();
                 }
+                return true;
             }
 
             private void writeDescriptor(FileReference descFile, LibraryDescriptor desc) throws IOException {

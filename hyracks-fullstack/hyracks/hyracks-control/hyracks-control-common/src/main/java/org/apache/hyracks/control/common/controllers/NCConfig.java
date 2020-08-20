@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.control.common.controllers;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
@@ -91,7 +92,10 @@ public class NCConfig extends ControllerConfig {
         KEY_STORE_PASSWORD(STRING, (String) null),
         IO_WORKERS_PER_PARTITION(POSITIVE_INTEGER, 2),
         IO_QUEUE_SIZE(POSITIVE_INTEGER, 10),
-        PYTHON_HOME(STRING, "/usr/bin/python3");
+        PYTHON_CMD(STRING, (String) null),
+        PYTHON_ADDITIONAL_PACKAGES(STRING, (String) null),
+        PYTHON_USE_BUNDLED_MSGPACK(BOOLEAN, true),
+        PYTHON_ARGS(STRING_ARRAY, (String[]) null);
 
         private final IOptionType parser;
         private final String defaultValueDescription;
@@ -224,8 +228,14 @@ public class NCConfig extends ControllerConfig {
                     return "Number of threads per partition used to write and read from storage";
                 case IO_QUEUE_SIZE:
                     return "Length of the queue used for requests to write and read";
-                case PYTHON_HOME:
-                    return "Path to python interpreter";
+                case PYTHON_CMD:
+                    return "Absolute path to python interpreter. Defaults to environmental Python3";
+                case PYTHON_ADDITIONAL_PACKAGES:
+                    return "List of additional paths, separated by a path separator character, to add to sys.path behind msgpack and library package paths";
+                case PYTHON_USE_BUNDLED_MSGPACK:
+                    return "True to include bundled msgpack on Python sys.path, false to use system-provided msgpack";
+                case PYTHON_ARGS:
+                    return "Python args to pass to Python interpreter";
                 default:
                     throw new IllegalStateException("Not yet implemented: " + this);
             }

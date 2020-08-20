@@ -19,6 +19,7 @@
 package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.api.http.server.ServletConstants.SYS_AUTH_HEADER;
 import static org.apache.asterix.common.functions.ExternalFunctionLanguage.JAVA;
 import static org.apache.asterix.common.functions.ExternalFunctionLanguage.PYTHON;
 
@@ -63,7 +64,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullWriter;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.application.ICCServiceContext;
@@ -74,12 +74,12 @@ import org.apache.hyracks.control.common.context.ServerContext;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
+import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpScheme;
@@ -87,22 +87,21 @@ import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 
-public class UdfApiServlet extends BasicAuthServlet {
+public class UdfApiServlet extends AbstractServlet {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final ICcApplicationContext appCtx;
+    protected final ICcApplicationContext appCtx;
     private final ClusterControllerService ccs;
     private final HttpScheme httpServerProtocol;
     private final int httpServerPort;
 
-    private final ILangCompilationProvider compilationProvider;
-    private final IStatementExecutorFactory statementExecutorFactory;
-    private final IStorageComponentProvider componentProvider;
-    private final IReceptionist receptionist;
-    private final Path workingDir;
-    private Map<String, String> sysCredentials;
-    private String sysAuthHeader;
+    protected final ILangCompilationProvider compilationProvider;
+    protected final IStatementExecutorFactory statementExecutorFactory;
+    protected final IStorageComponentProvider componentProvider;
+    protected final IReceptionist receptionist;
+    protected final Path workingDir;
+    protected String sysAuthHeader;
 
     public UdfApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx,
             ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory,
@@ -124,23 +123,15 @@ public class UdfApiServlet extends BasicAuthServlet {
 
     @Override
     public void init() throws IOException {
-        super.init();
         initAuth();
         initStorage();
     }
 
-    private void initAuth() {
-        // generate internal user
-        String sysUser;
-        do {
-            sysUser = generateRandomString(32);
-        } while (storedCredentials.containsKey(sysUser));
-        String sysPassword = generateRandomString(128);
-        this.sysCredentials = Collections.singletonMap(sysUser, hashPassword(sysPassword));
-        this.sysAuthHeader = createAuthHeader(sysUser, sysPassword);
+    protected void initAuth() {
+        sysAuthHeader = (String) ctx.get(SYS_AUTH_HEADER);
     }
 
-    private void initStorage() throws IOException {
+    protected void initStorage() throws IOException {
         // prepare working directory
         if (Files.isDirectory(workingDir)) {
             try {
@@ -152,6 +143,10 @@ public class UdfApiServlet extends BasicAuthServlet {
             Files.deleteIfExists(workingDir);
             FileUtil.forceMkdirs(workingDir.toFile());
         }
+    }
+
+    protected Map<String, String> additionalHttpHeadersFromRequest(IServletRequest request) {
+        return Collections.emptyMap();
     }
 
     @Override
@@ -197,7 +192,7 @@ public class UdfApiServlet extends BasicAuthServlet {
                 URI downloadURI = createDownloadURI(libraryTempFile);
                 CreateLibraryStatement stmt = new CreateLibraryStatement(libraryName.first, libraryName.second,
                         language, downloadURI, true, sysAuthHeader);
-                executeStatement(stmt, requestReference);
+                executeStatement(stmt, requestReference, request);
                 response.setStatus(HttpResponseStatus.OK);
             } catch (Exception e) {
                 response.setStatus(toHttpErrorStatus(e));
@@ -218,13 +213,12 @@ public class UdfApiServlet extends BasicAuthServlet {
         }
     }
 
-    private URI createDownloadURI(Path file) throws Exception {
+    protected URI createDownloadURI(Path file) throws Exception {
         String path = paths[0].substring(0, trims[0]) + '/' + file.getFileName();
         String host = getHyracksClientConnection().getHost();
         return new URI(httpServerProtocol.toString(), null, host, httpServerPort, path, null, null);
     }
 
-    @Override
     protected void delete(IServletRequest request, IServletResponse response) {
         IClusterManagementWork.ClusterState clusterState = appCtx.getClusterStateManager().getState();
         if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
@@ -239,7 +233,7 @@ public class UdfApiServlet extends BasicAuthServlet {
         try {
             IRequestReference requestReference = receptionist.welcome(request);
             LibraryDropStatement stmt = new LibraryDropStatement(libraryName.first, libraryName.second, false);
-            executeStatement(stmt, requestReference);
+            executeStatement(stmt, requestReference, request);
             response.setStatus(HttpResponseStatus.OK);
         } catch (Exception e) {
             response.setStatus(toHttpErrorStatus(e));
@@ -250,21 +244,21 @@ public class UdfApiServlet extends BasicAuthServlet {
         }
     }
 
-    private void executeStatement(Statement statement, IRequestReference requestReference) throws Exception {
+    protected void executeStatement(Statement statement, IRequestReference requestReference, IServletRequest request)
+            throws Exception {
         SessionOutput sessionOutput = new SessionOutput(new SessionConfig(SessionConfig.OutputFormat.ADM),
                 new PrintWriter(NullWriter.NULL_WRITER));
         ResponsePrinter printer = new ResponsePrinter(sessionOutput);
         ResultProperties resultProperties = new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE, 1);
         IRequestParameters requestParams = new RequestParameters(requestReference, "", null, resultProperties,
                 new IStatementExecutor.Stats(), new IStatementExecutor.StatementProperties(), null, null,
-                Collections.emptyMap(), Collections.emptyMap(), false);
+                additionalHttpHeadersFromRequest(request), Collections.emptyMap(), false);
         MetadataManager.INSTANCE.init();
         IStatementExecutor translator = statementExecutorFactory.create(appCtx, Collections.singletonList(statement),
                 sessionOutput, compilationProvider, componentProvider, printer);
         translator.compileAndExecute(getHyracksClientConnection(), requestParams);
     }
 
-    @Override
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
         IClusterManagementWork.ClusterState clusterState = appCtx.getClusterStateManager().getState();
         if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
@@ -287,7 +281,7 @@ public class UdfApiServlet extends BasicAuthServlet {
         readFromFile(filePath, response);
     }
 
-    private IHyracksClientConnection getHyracksClientConnection() throws Exception { // NOSONAR
+    protected IHyracksClientConnection getHyracksClientConnection() throws Exception { // NOSONAR
         IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
         if (hcc == null) {
             throw new RuntimeDataException(ErrorCode.PROPERTY_NOT_SET, HYRACKS_CONNECTION_ATTR);
@@ -295,13 +289,7 @@ public class UdfApiServlet extends BasicAuthServlet {
         return hcc;
     }
 
-    @Override
-    protected Map<String, String> getStoredCredentials(IServletRequest request) {
-        return request.getHttpRequest().method().equals(HttpMethod.GET) ? sysCredentials
-                : super.getStoredCredentials(request);
-    }
-
-    private Pair<DataverseName, String> parseLibraryName(IServletRequest request) throws IllegalArgumentException {
+    protected Pair<DataverseName, String> parseLibraryName(IServletRequest request) throws IllegalArgumentException {
         String[] path = StringUtils.split(localPath(request), '/');
         int ln = path.length;
         if (ln < 2) {
@@ -312,7 +300,7 @@ public class UdfApiServlet extends BasicAuthServlet {
         return new Pair<>(dataverseName, libraryName);
     }
 
-    private static ExternalFunctionLanguage getLanguageByFileExtension(String fileExtension) {
+    protected static ExternalFunctionLanguage getLanguageByFileExtension(String fileExtension) {
         switch (fileExtension) {
             case LibraryDescriptor.FILE_EXT_ZIP:
                 return JAVA;
@@ -323,7 +311,7 @@ public class UdfApiServlet extends BasicAuthServlet {
         }
     }
 
-    private HttpResponseStatus toHttpErrorStatus(Exception e) {
+    protected HttpResponseStatus toHttpErrorStatus(Exception e) {
         if (e instanceof IFormattedException) {
             IFormattedException fe = (IFormattedException) e;
             if (ErrorCode.ASTERIX.equals(fe.getComponent())) {
@@ -335,10 +323,6 @@ public class UdfApiServlet extends BasicAuthServlet {
             }
         }
         return HttpResponseStatus.INTERNAL_SERVER_ERROR;
-    }
-
-    private static String generateRandomString(int size) {
-        return RandomStringUtils.randomAlphanumeric(size);
     }
 
     protected void readFromFile(Path filePath, IServletResponse response) throws Exception {

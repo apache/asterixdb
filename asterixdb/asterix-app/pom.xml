@@ -37,8 +37,8 @@
     <root.dir>${basedir}/..</root.dir>
     <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
     <sonar.sources>pom.xml,src/main/java,src/main/resources</sonar.sources>
-    <pip.path>${project.build.directory}${file.separator}bin${file.separator}pip3</pip.path>
-    <shiv.path>${project.build.directory}${file.separator}bin${file.separator}shiv</shiv.path>
+    <pip.path>${project.build.directory}/bin/pip3</pip.path>
+    <shiv.path>${project.build.directory}/bin/shiv</shiv.path>
   </properties>
   <build>
     <plugins>
@@ -382,8 +382,8 @@
         </os>
       </activation>
       <properties>
-        <pip.path>${project.build.directory}${file.separator}Scripts${file.separator}pip3.exe</pip.path>
-        <shiv.path>${project.build.directory}${file.separator}Scripts${file.separator}shiv.exe</shiv.path>
+        <pip.path>${project.build.directory}\Scripts\pip3.exe</pip.path>
+        <shiv.path>${project.build.directory}\Scripts\shiv.exe</shiv.path>
       </properties>
     </profile>
     <profile>
@@ -827,9 +827,9 @@
       <artifactId>commons-csv</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpmime</artifactId>
-        <scope>test</scope>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpmime</artifactId>
+      <scope>test</scope>
     </dependency>
     <!-- AWS -->
     <dependency>

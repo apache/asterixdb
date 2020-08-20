@@ -16,8 +16,12 @@
 # under the License.
 
 import sys
-sys.path.insert(0, './site-packages/')
-sys.path.insert(len(sys.path)-1, './ipc/site-packages')
+from os import pathsep
+addr = str(sys.argv[1])
+port = str(sys.argv[2])
+paths = sys.argv[3]
+for p in paths.split(pathsep):
+    sys.path.append(p)
 from struct import *
 import signal
 import msgpack
@@ -239,8 +243,6 @@ class Wrapper(object):
         self.disconnect_sock()
 
 
-addr = str(sys.argv[1])
-port = str(sys.argv[2])
 wrap = Wrapper()
 wrap.connect_sock(addr, port)
 signal.signal(signal.SIGTERM, wrap.disconnect_sock)

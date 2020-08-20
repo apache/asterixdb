@@ -26,6 +26,7 @@ public class ServletConstants {
     public static final String RUNNING_QUERIES_ATTR = "org.apache.asterix.RUNINNG_QUERIES";
     public static final String SERVICE_CONTEXT_ATTR = "org.apache.asterix.SERVICE_CONTEXT";
     public static final String CREDENTIAL_MAP = "org.apache.asterix.CREDENTIAL_MAP";
+    public static final String SYS_AUTH_HEADER = "org.apache.asterix.SYS_AUTH_HEADER";
 
     private ServletConstants() {
     }

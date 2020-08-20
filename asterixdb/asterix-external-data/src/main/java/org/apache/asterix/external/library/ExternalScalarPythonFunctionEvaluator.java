@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.WarningUtil;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.ipc.ExternalFunctionResultRouter;
@@ -45,6 +46,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -71,18 +73,47 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
     private final ByteBuffer outputWrapper;
     private final IEvaluatorContext evaluatorContext;
     private static final String ENTRYPOINT = "entrypoint.py";
+    private static final String SITE_PACKAGES = "site-packages";
 
     private final IPointable[] argValues;
 
     ExternalScalarPythonFunctionEvaluator(IExternalFunctionInfo finfo, IScalarEvaluatorFactory[] args,
             IAType[] argTypes, IEvaluatorContext ctx, SourceLocation sourceLoc) throws HyracksDataException {
         super(finfo, args, argTypes, ctx);
+        IApplicationConfig cfg = ctx.getServiceContext().getAppConfig();
+        String pythonPathCmd = cfg.getString(NCConfig.Option.PYTHON_CMD);
+        List<String> pythonArgs = new ArrayList<>();
+        if (pythonPathCmd == null) {
+            //if absolute path to interpreter is not specified, use environmental python
+            pythonPathCmd = "/usr/bin/env";
+            pythonArgs.add("python3");
+        }
+        File pythonPath = new File(pythonPathCmd);
+        List<String> sitePkgs = new ArrayList<>();
+        sitePkgs.add(SITE_PACKAGES);
+        String addlSitePackagesRaw =
+                ctx.getServiceContext().getAppConfig().getString((NCConfig.Option.PYTHON_ADDITIONAL_PACKAGES));
+        if (addlSitePackagesRaw != null) {
+            sitePkgs.addAll(Arrays.asList(addlSitePackagesRaw.split(File.pathSeparator)));
+        }
+        if (cfg.getBoolean(NCConfig.Option.PYTHON_USE_BUNDLED_MSGPACK)) {
+            sitePkgs.add("ipc" + File.separator + SITE_PACKAGES + File.separator);
+        }
+        String[] pythonArgsRaw = ctx.getServiceContext().getAppConfig().getStringArray(NCConfig.Option.PYTHON_ARGS);
+        if (pythonArgsRaw != null) {
+            pythonArgs.addAll(Arrays.asList(pythonArgsRaw));
+        }
+        StringBuilder sitePackagesPathBuilder = new StringBuilder();
+        for (int i = 0; i < sitePkgs.size() - 1; i++) {
+            sitePackagesPathBuilder.append(sitePkgs.get(i));
+            sitePackagesPathBuilder.append(File.pathSeparator);
+        }
+        sitePackagesPathBuilder.append(sitePkgs.get(sitePkgs.size() - 1));
 
-        File pythonPath = new File(ctx.getServiceContext().getAppConfig().getString(NCConfig.Option.PYTHON_HOME));
-        DataverseName dataverseName = FunctionSignature.getDataverseName(finfo.getFunctionIdentifier());
         try {
             libraryEvaluator = PythonLibraryEvaluator.getInstance(finfo, libraryManager, router, ipcSys, pythonPath,
-                    ctx.getTaskContext(), ctx.getWarningCollector(), sourceLoc);
+                    ctx.getTaskContext(), sitePackagesPathBuilder.toString(), pythonArgs, ctx.getWarningCollector(),
+                    sourceLoc);
         } catch (IOException | AsterixException e) {
             throw new HyracksDataException("Failed to initialize Python", e);
         }
@@ -128,17 +159,22 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
         String module;
         String clazz;
         String fn;
+        String sitePkgs;
+        List<String> pythonArgs;
         TaskAttemptId task;
         IWarningCollector warningCollector;
         SourceLocation sourceLoc;
 
         private PythonLibraryEvaluator(JobId jobId, PythonLibraryEvaluatorId evaluatorId, IExternalFunctionInfo finfo,
-                ILibraryManager libMgr, File pythonHome, ExternalFunctionResultRouter router, IPCSystem ipcSys,
-                TaskAttemptId task, IWarningCollector warningCollector, SourceLocation sourceLoc) {
+                ILibraryManager libMgr, File pythonHome, String sitePkgs, List<String> pythonArgs,
+                ExternalFunctionResultRouter router, IPCSystem ipcSys, TaskAttemptId task,
+                IWarningCollector warningCollector, SourceLocation sourceLoc) {
             super(jobId, evaluatorId);
             this.finfo = finfo;
             this.libMgr = libMgr;
             this.pythonHome = pythonHome;
+            this.sitePkgs = sitePkgs;
+            this.pythonArgs = pythonArgs;
             this.router = router;
             this.task = task;
             this.ipcSys = ipcSys;
@@ -168,8 +204,14 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
             this.clazz = clazz;
             this.module = packageModule;
             int port = ipcSys.getSocketAddress().getPort();
-            ProcessBuilder pb = new ProcessBuilder(pythonHome.getAbsolutePath(), ENTRYPOINT,
-                    InetAddress.getLoopbackAddress().getHostAddress(), Integer.toString(port));
+            List<String> args = new ArrayList<>();
+            args.add(pythonHome.getAbsolutePath());
+            args.addAll(pythonArgs);
+            args.add(ENTRYPOINT);
+            args.add(InetAddress.getLoopbackAddress().getHostAddress());
+            args.add(Integer.toString(port));
+            args.add(sitePkgs);
+            ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
             pb.directory(new File(wd));
             p = pb.start();
             proto = new PythonIPCProto(p.getOutputStream(), router, ipcSys);
@@ -207,13 +249,15 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
 
         private static PythonLibraryEvaluator getInstance(IExternalFunctionInfo finfo, ILibraryManager libMgr,
                 ExternalFunctionResultRouter router, IPCSystem ipcSys, File pythonHome, IHyracksTaskContext ctx,
-                IWarningCollector warningCollector, SourceLocation sourceLoc) throws IOException, AsterixException {
+                String sitePkgs, List<String> pythonArgs, IWarningCollector warningCollector, SourceLocation sourceLoc)
+                throws IOException, AsterixException {
             PythonLibraryEvaluatorId evaluatorId =
                     new PythonLibraryEvaluatorId(finfo.getLibraryDataverseName(), finfo.getLibraryName());
             PythonLibraryEvaluator evaluator = (PythonLibraryEvaluator) ctx.getStateObject(evaluatorId);
             if (evaluator == null) {
                 evaluator = new PythonLibraryEvaluator(ctx.getJobletContext().getJobId(), evaluatorId, finfo, libMgr,
-                        pythonHome, router, ipcSys, ctx.getTaskAttemptId(), warningCollector, sourceLoc);
+                        pythonHome, sitePkgs, pythonArgs, router, ipcSys, ctx.getTaskAttemptId(), warningCollector,
+                        sourceLoc);
                 ctx.registerDeallocatable(evaluator);
                 evaluator.initialize();
                 ctx.setStateObject(evaluator);
