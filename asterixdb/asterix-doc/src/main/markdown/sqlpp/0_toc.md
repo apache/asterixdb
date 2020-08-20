@@ -99,5 +99,6 @@
 * [Appendix 1. Reserved Keywords](#Reserved_keywords)
 * [Appendix 2. Performance Tuning](#Performance_tuning)
       * [Parallelism Parameter](#Parallelism_parameter)
+      * [Interval Joins](#Interval_joins)
       * [Memory Parameters](#Memory_parameters)
 * [Appendix 3. Variable Bindings and Name Resolution](#Variable_bindings_and_name_resolution)
