@@ -259,7 +259,7 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
 
     @Override
     public synchronized void scheduled(ILSMIOOperation operation) throws HyracksDataException {
-        dsInfo.declareActiveIOOperation();
+        dsInfo.declareActiveIOOperation(operation.getIOOpertionType());
         if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH) {
             pendingFlushes++;
             FlushOperation flush = (FlushOperation) operation;
@@ -282,7 +282,7 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
                         pendingFlushes == 0 ? firstLsnForCurrentMemoryComponent : (Long) map.get(KEY_FLUSH_LOG_LSN);
             }
         }
-        dsInfo.undeclareActiveIOOperation();
+        dsInfo.undeclareActiveIOOperation(operation.getIOOpertionType());
     }
 
     public synchronized boolean hasPendingFlush() {

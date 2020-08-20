@@ -38,6 +38,7 @@ import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
+import org.apache.asterix.common.storage.StorageIOStats;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogType;
@@ -517,6 +518,16 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                 dsr.getDatasetInfo().waitForIO();
             }
         }
+    }
+
+    @Override
+    public StorageIOStats getDatasetsIOStats() {
+        StorageIOStats stats = new StorageIOStats();
+        for (DatasetResource dsr : datasets.values()) {
+            stats.addPendingFlushes(dsr.getDatasetInfo().getPendingFlushes());
+            stats.addPendingMerges(dsr.getDatasetInfo().getPendingMerges());
+        }
+        return stats;
     }
 
     private void closeIndex(IndexInfo indexInfo) throws HyracksDataException {
