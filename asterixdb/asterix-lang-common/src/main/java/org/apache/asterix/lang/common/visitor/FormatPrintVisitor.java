@@ -455,10 +455,6 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
             out.print(" using " + revertStringToQuoted(externalDetails.getAdapter()));
             printConfiguration(externalDetails.getProperties());
         }
-        String nodeGroupName = dd.getNodegroupName();
-        if (nodeGroupName != null) {
-            out.print(" on " + nodeGroupName);
-        }
         Map<String, String> hints = dd.getHints();
         if (dd.getHints().size() > 0) {
             out.print(" hints ");
