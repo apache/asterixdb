@@ -45,7 +45,7 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  dataset MyData(MyRecord) primary key id on group1;
+create  dataset MyData(MyRecord) primary key id WITH {"node-group":{"name":"group1"}};
 
 load  dataset MyData using localfs ((`path`=`asterix_nc1://data/spatial/spatialData.json`),("format"="adm")) pre-sorted;
 

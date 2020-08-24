@@ -58,9 +58,9 @@ create  nodegroup group_test  on
     asterix_nc1;
 
 create dataset LineItem(LineItemType)
-  primary key l_orderkey, l_linenumber on group_test;
+  primary key l_orderkey, l_linenumber with {"node-group":{"name":"group_test"}};
 create dataset Orders(OrderType)
-  primary key o_orderkey on group_test;
+  primary key o_orderkey with {"node-group":{"name":"group_test"}};
 
 create index lineitem_shipdateIx on LineItem (l_shipdate);
 create index lineitem_receiptdateIx on LineItem (l_receiptdate);

@@ -43,9 +43,9 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  dataset Users(UserType) primary key uid on group1;
+create  dataset Users(UserType) primary key uid WITH {"node-group":{"name":"group1"}};
 
-create  dataset Visitors(VisitorType) primary key vid on group1;
+create  dataset Visitors(VisitorType) primary key vid WITH {"node-group":{"name":"group1"}};
 
 write output to asterix_nc1:"/tmp/pull-select-above-eq-join.adm";
 select element {'uid':user.uid,'vid':visitor.vid}

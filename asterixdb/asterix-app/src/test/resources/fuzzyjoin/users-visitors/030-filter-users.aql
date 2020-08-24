@@ -28,7 +28,7 @@ declare type UserType as open {
 declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset Users(UserType) 
-  primary key uid on group1;
+  primary key uid with {"node-group":{"name":"group1"}};
 
 write output to asterix_nc1:'/tmp/users.adm';
 

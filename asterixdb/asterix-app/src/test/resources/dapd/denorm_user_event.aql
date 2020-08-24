@@ -45,8 +45,8 @@ declare type EventType as {
 
 declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
-declare dataset Users(UserType) primary key u_name on group1;
-declare dataset Events(EventType) primary key e_name on group1;
+declare dataset Users(UserType) primary key u_name with {"node-group":{"name":"group1"}};
+declare dataset Events(EventType) primary key e_name with {"node-group":{"name":"group1"}};
 
 write output to asterix_nc1:"/tmp/denorm_user_event.adm";
 

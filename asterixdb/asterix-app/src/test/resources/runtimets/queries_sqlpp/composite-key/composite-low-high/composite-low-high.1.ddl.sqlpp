@@ -40,4 +40,4 @@ create  nodegroup group_test on
 
 create dataset Points(PointType)
 primary key x, y
-on group_test;
+WITH {"node-group":{"name":"group_test"}};;

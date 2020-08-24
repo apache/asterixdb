@@ -55,7 +55,7 @@ create type CustomerType as closed {
 create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset Customers(CustomerType)
-  primary key cid, name on group1;
+  primary key cid, name with {"node-group":{"name":"group1"}};
 
 create nodegroup group1 on asterix_nc1, asterix_nc2;
 

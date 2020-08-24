@@ -40,7 +40,7 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  dataset Orders(OrderType) primary key o_orderkey on group1;
+create  dataset Orders(OrderType) primary key o_orderkey WITH {"node-group":{"name":"group1"}};
 
 load  dataset Orders using localfs ((`path`=`asterix_nc1://data/tpch0.001/orders.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`)) pre-sorted;
 

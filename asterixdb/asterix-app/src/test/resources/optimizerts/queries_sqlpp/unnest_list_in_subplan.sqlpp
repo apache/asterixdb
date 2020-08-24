@@ -42,9 +42,9 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  dataset DBLP(DBLPType) primary key id on group1;
+create  dataset DBLP(DBLPType) primary key id WITH {"node-group":{"name":"group1"}};
 
-create  dataset TOKENSRANKEDADM(TOKENSRANKEDADMType) primary key rank on group1;
+create  dataset TOKENSRANKEDADM(TOKENSRANKEDADMType) primary key rank WITH {"node-group":{"name":"group1"}};
 
 write output to asterix_nc1:"rttest/unnest_list_in_subplan.adm";
 select element {'id':idDBLP,'tokens':tokensDBLP}

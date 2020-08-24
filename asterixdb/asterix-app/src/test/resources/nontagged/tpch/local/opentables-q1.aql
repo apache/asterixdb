@@ -28,7 +28,7 @@ declare nodegroup group1 on asterix_nc1, asterix_nc2;
 set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 declare dataset LineItems(LineItemType)
-  primary key l_orderkey, l_linenumber on group1;
+  primary key l_orderkey, l_linenumber with {"node-group":{"name":"group1"}};
 
 write output to asterix_nc1:"/home/yasser/Dropbox/Research/data/results/result_tpch_open_1.adm";
 

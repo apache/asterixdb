@@ -30,7 +30,7 @@ declare type OrderType as open {
 declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset Orders(OrderType)
-  primary key oid on group1;
+  primary key oid with {"node-group":{"name":"group1"}};
 
 load dataset Orders 
 using localfs

@@ -52,7 +52,7 @@ create type EventType as closed {
 
 create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
-create dataset Event(EventType) primary key name on group1;
+create dataset Event(EventType) primary key name with {"node-group":{"name":"group1"}};
 
 write output to asterix_nc1:"/tmp/q2.adm";
 

@@ -38,7 +38,7 @@ create type DBLPOpenType as open {
 create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset DBLP(DBLPType)
-  primary key id on group1;
+  primary key id with {"node-group":{"name":"group1"}};
 
 create dataset DBLPOpen(DBLPOpenType)
-  primary key id on group1;
+  primary key id with {"node-group":{"name":"group1"}};

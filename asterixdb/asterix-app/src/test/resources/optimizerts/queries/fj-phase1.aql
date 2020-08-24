@@ -37,10 +37,10 @@ create type VisitorType as open {
 create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset Users(UserType) 
-  primary key uid on group1;
+  primary key uid with {"node-group":{"name":"group1"}};
 
 create dataset Visitors(VisitorType) 
-  primary key vid on group1;
+  primary key vid with {"node-group":{"name":"group1"}};
 
 
 // set simfunction "jaccard";

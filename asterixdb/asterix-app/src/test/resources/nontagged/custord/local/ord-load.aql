@@ -33,6 +33,6 @@ declare nodegroup group1 on asterix_nc1, asterix_nc2;
 set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 declare dataset Orders(OrderType)
-  primary key oid on group1;
+  primary key oid with {"node-group":{"name":"group1"}};
 
 load dataset Orders from asterix_nc1:"/home/yasser/Dropbox/Research/data/orderData.json";

@@ -48,10 +48,10 @@ create type LineIDType as closed {
 create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset LineItems_q1(LineItemType)
-  primary key l_orderkey on group1;
+  primary key l_orderkey with {"node-group":{"name":"group1"}};
 
 create dataset LineID(LineIDType)
-  primary key l_orderkey on group1;
+  primary key l_orderkey with {"node-group":{"name":"group1"}};
 
 create index idx_LineID_partkey on LineID(l_partkey);
 create index idx_LineID_suppkey on LineID(l_suppkey);

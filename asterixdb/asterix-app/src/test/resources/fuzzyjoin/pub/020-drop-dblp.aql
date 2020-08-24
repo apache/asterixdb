@@ -29,6 +29,6 @@ declare type DBLPType as open {
 declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset DBLP(DBLPType) 
-  primary key id on group1;
+  primary key id with {"node-group":{"name":"group1"}};
 
 drop dataset DBLP;

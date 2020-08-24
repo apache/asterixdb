@@ -52,6 +52,12 @@ public class DatasetDeclParametersUtil {
     public static final String STORAGE_BLOCK_COMPRESSION_SCHEME_PARAMETER_NAME = "scheme";
 
     /* ***********************************************
+     * Node Group Parameters
+     * ***********************************************
+     */
+    public static final String NODE_GROUP_NAME = "node-group";
+    public static final String NODE_GROUP_NAME_PARAMETER_NAME = "name";
+    /* ***********************************************
      * Private members
      * ***********************************************
      */
@@ -79,9 +85,11 @@ public class DatasetDeclParametersUtil {
     }
 
     private static ARecordType getWithObjectType() {
-        final String[] withNames = { MERGE_POLICY_PARAMETER_NAME, STORAGE_BLOCK_COMPRESSION_PARAMETER_NAME };
+        final String[] withNames =
+                { MERGE_POLICY_PARAMETER_NAME, STORAGE_BLOCK_COMPRESSION_PARAMETER_NAME, NODE_GROUP_NAME };
         final IAType[] withTypes = { AUnionType.createUnknownableType(getMergePolicyType()),
-                AUnionType.createUnknownableType(getStorageBlockCompressionType()) };
+                AUnionType.createUnknownableType(getStorageBlockCompressionType()),
+                AUnionType.createUnknownableType(getNodeGroupType()) };
         return new ARecordType("withObject", withNames, withTypes, false);
     }
 
@@ -112,5 +120,11 @@ public class DatasetDeclParametersUtil {
         final String[] schemeName = { STORAGE_BLOCK_COMPRESSION_SCHEME_PARAMETER_NAME };
         final IAType[] schemeType = { BuiltinType.ASTRING };
         return new ARecordType(STORAGE_BLOCK_COMPRESSION_PARAMETER_NAME, schemeName, schemeType, false);
+    }
+
+    private static ARecordType getNodeGroupType() {
+        final String[] schemeName = { NODE_GROUP_NAME_PARAMETER_NAME };
+        final IAType[] schemeType = { BuiltinType.ASTRING };
+        return new ARecordType(NODE_GROUP_NAME, schemeName, schemeType, false);
     }
 }

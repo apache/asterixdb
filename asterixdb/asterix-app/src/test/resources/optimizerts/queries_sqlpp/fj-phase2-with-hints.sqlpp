@@ -36,7 +36,7 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  dataset DBLP_fuzzyjoin_078(DBLPType) primary key id on group1;
+create  dataset DBLP_fuzzyjoin_078(DBLPType) primary key id WITH {"node-group":{"name":"group1"}};
 
 write output to asterix_nc1:"rttest/fuzzyjoin_078.adm";
 select element {'id':paperDBLP.id,'tokens':tokensDBLP}

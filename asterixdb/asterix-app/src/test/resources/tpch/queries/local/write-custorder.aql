@@ -68,13 +68,13 @@ declare type CustOrderType as closed {
 declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
 declare dataset LineItems(LineItemType)
-  primary key l_orderkey, l_linenumber on group1;
+  primary key l_orderkey, l_linenumber with {"node-group":{"name":"group1"}};
 declare dataset Orders(OrderType)
-  primary key o_orderkey on group1;
+  primary key o_orderkey with {"node-group":{"name":"group1"}};
 declare dataset Customers(CustomerType) 
-  primary key c_custkey on group1;
+  primary key c_custkey with {"node-group":{"name":"group1"}};
 declare dataset CustOrder(CustOrderType)
-  primary key co_custkey on group1;
+  primary key co_custkey with {"node-group":{"name":"group1"}};
 
 insert into dataset CustOrder 
 ( for $c in dataset('Customers')

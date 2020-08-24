@@ -43,8 +43,8 @@ nested : DBLPOpenType
 }
 
 create dataset DBLPtmp(DBLPClosedType)
-  primary key id on group1;
+  primary key id with {"node-group":{"name":"group1"}};
 
 create dataset DBLP(DBLPType)
-  primary key nested.id on group1;
+  primary key nested.id with {"node-group":{"name":"group1"}};
 

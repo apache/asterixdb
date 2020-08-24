@@ -54,9 +54,9 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  dataset LineItems_q1(LineItemType) primary key l_orderkey on group1;
+create  dataset LineItems_q1(LineItemType) primary key l_orderkey WITH {"node-group":{"name":"group1"}};
 
-create  dataset LineID(LineIDType) primary key l_orderkey on group1;
+create  dataset LineID(LineIDType) primary key l_orderkey WITH {"node-group":{"name":"group1"}};
 
 delete from LineItems_q1
  where l_shipdate <= '1998-09-02';

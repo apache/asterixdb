@@ -43,8 +43,9 @@ create  nodegroup group_test  on
     asterix_nc1;
 
 create dataset TweetMessages(TweetMessageType)
-primary key tweetid on group_test
-hints(cardinality=100);
+primary key tweetid
+hints(cardinality=100)
+with {"node-group":{"name":"group_test"}};
 
 create index twTimeIdx on TweetMessages(send-time) type btree;
 create index twLocationIdx on TweetMessages(user.sender-location) type rtree;

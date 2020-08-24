@@ -639,8 +639,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             metaItemTypeAnonymous = true; // doesn't matter
         }
 
-        Identifier ngNameId = dd.getNodegroupName();
-        String nodegroupName = ngNameId == null ? null : ngNameId.getValue();
+        String nodegroupName = dd.getNodegroupName();
         String compactionPolicy = dd.getCompactionPolicy();
         boolean defaultCompactionPolicy = compactionPolicy == null;
 
@@ -665,7 +664,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         MutableObject<ProgressState> progress = new MutableObject<>(ProgressState.NO_PROGRESS);
         SourceLocation sourceLoc = dd.getSourceLocation();
         DatasetType dsType = dd.getDatasetType();
-        Identifier ngNameId = dd.getNodegroupName();
+        String ngNameId = dd.getNodegroupName();
         String compactionPolicy = dd.getCompactionPolicy();
         Map<String, String> compactionPolicyProperties = dd.getCompactionPolicyProperties();
         String compressionScheme = metadataProvider.getCompressionManager()
@@ -714,7 +713,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
                             String.valueOf(itemTypeExpr.getTypeKind()));
             }
-            String ngName = ngNameId != null ? ngNameId.getValue()
+            String ngName = ngNameId != null ? ngNameId
                     : configureNodegroupForDataset(appCtx, dd.getHints(), dataverseName, datasetName, metadataProvider,
                             sourceLoc);
 

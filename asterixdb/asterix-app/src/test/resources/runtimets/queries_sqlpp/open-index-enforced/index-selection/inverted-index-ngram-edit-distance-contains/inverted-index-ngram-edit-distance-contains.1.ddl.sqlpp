@@ -44,7 +44,7 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  dataset DBLPtmp(DBLPType) primary key id on group1;
+create  dataset DBLPtmp(DBLPType) primary key id WITH {"node-group":{"name":"group1"}};
 
-create  dataset DBLP(DBLPOpenType) primary key id on group1;
+create  dataset DBLP(DBLPOpenType) primary key id WITH {"node-group":{"name":"group1"}};
 

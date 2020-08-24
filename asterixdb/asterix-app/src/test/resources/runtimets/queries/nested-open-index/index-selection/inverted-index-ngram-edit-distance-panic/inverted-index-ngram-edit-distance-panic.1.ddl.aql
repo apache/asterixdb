@@ -42,7 +42,7 @@ nested : DBLPOpenType
 create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset DBLPtmp(DBLPTypetmp)
-  primary key id on group1;
+  primary key id with {"node-group":{"name":"group1"}};
 
 create dataset DBLP(DBLPType)
-  primary key nested.id on group1;
+  primary key nested.id with {"node-group":{"name":"group1"}};

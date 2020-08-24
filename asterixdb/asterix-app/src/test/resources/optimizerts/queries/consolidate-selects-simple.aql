@@ -26,7 +26,7 @@ create type CustomerType as closed {
   c_address: string, 
   c_nationkey: int32, 
   c_phone: string, 
-  c_acctbal: double, 
+  c_acctbal: double,
   c_mktsegment: string,
   c_comment: string
 }
@@ -34,7 +34,7 @@ create type CustomerType as closed {
 create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
 
 create dataset Customers(CustomerType) 
-  primary key c_custkey on group1;
+  primary key c_custkey with {"node-group":{"name":"group1"}};
 
 write output to asterix_nc1:"rttest/consolidate-selects-simple.aql";
 

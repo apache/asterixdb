@@ -112,8 +112,8 @@ public class MetadataTxnTest {
         testExecutor.executeSqlppUpdateOrDdl("CREATE nodegroup " + nodeGroup + " on asterix_nc2;", format);
         // create original dataset
         testExecutor.executeSqlppUpdateOrDdl("CREATE TYPE KeyType AS { id: int };", format);
-        testExecutor.executeSqlppUpdateOrDdl(
-                "CREATE DATASET " + datasetName + "(KeyType) PRIMARY KEY id on " + nodeGroup + ";", format);
+        testExecutor.executeSqlppUpdateOrDdl("CREATE DATASET " + datasetName
+                + "(KeyType) PRIMARY KEY id WITH {\"node-group\":{\"name\":\"" + nodeGroup + "\"}};", format);
         // find source dataset
         Dataset sourceDataset;
         MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);

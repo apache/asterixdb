@@ -41,7 +41,7 @@ declare type AddressType as closed {
 
 declare nodegroup group1 on asterix_nc1, asterix_nc2;
 
-declare dataset User(UserType) primary key name on group1;
+declare dataset User(UserType) primary key name with {"node-group":{"name":"group1"}};
 
 write output to asterix_nc1:"/tmp/q1.adm";
 

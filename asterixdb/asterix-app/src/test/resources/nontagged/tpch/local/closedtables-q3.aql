@@ -67,9 +67,9 @@ set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 declare dataset LineItems(LineItemType)
   primary key l_orderkey, l_linenumber on group1;
 declare dataset Orders(OrderType)
-  primary key o_orderkey on group1;
+  primary key o_orderkey with {"node-group":{"name":"group1"}};
 declare dataset Customers(CustomerType) 
-  primary key c_custkey on group1;
+  primary key c_custkey with {"node-group":{"name":"group1"}};
 
 write output to asterix_nc1:"/home/yasser/Dropbox/Research/data/results/result_tpch_closed_3.adm";
 

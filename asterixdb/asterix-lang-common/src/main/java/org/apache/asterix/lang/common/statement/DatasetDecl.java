@@ -40,7 +40,6 @@ public class DatasetDecl extends AbstractStatement {
     protected final DataverseName dataverse;
     protected final TypeExpression itemType;
     protected final TypeExpression metaItemType;
-    protected final Identifier nodegroupName;
     protected final DatasetType datasetType;
     protected final IDatasetDetailsDecl datasetDetailsDecl;
     protected final Map<String, String> hints;
@@ -48,13 +47,12 @@ public class DatasetDecl extends AbstractStatement {
     protected final boolean ifNotExists;
 
     public DatasetDecl(DataverseName dataverse, Identifier name, TypeExpression itemType, TypeExpression metaItemType,
-            Identifier nodeGroupName, Map<String, String> hints, DatasetType datasetType, IDatasetDetailsDecl idd,
-            RecordConstructor withRecord, boolean ifNotExists) throws CompilationException {
+            Map<String, String> hints, DatasetType datasetType, IDatasetDetailsDecl idd, RecordConstructor withRecord,
+            boolean ifNotExists) throws CompilationException {
         this.dataverse = dataverse;
         this.name = name;
         this.itemType = itemType;
         this.metaItemType = metaItemType;
-        this.nodegroupName = nodeGroupName;
         this.hints = hints;
         this.withObjectNode = DatasetDeclParametersUtil.validateAndGetWithObjectNode(withRecord, datasetType);
         this.ifNotExists = ifNotExists;
@@ -86,8 +84,12 @@ public class DatasetDecl extends AbstractStatement {
         return metaItemType;
     }
 
-    public Identifier getNodegroupName() {
-        return nodegroupName;
+    public String getNodegroupName() {
+        AdmObjectNode nodeGroupObj = (AdmObjectNode) withObjectNode.get(DatasetDeclParametersUtil.NODE_GROUP_NAME);
+        if (nodeGroupObj == null) {
+            return null;
+        }
+        return nodeGroupObj.getOptionalString(DatasetDeclParametersUtil.NODE_GROUP_NAME_PARAMETER_NAME);
     }
 
     private AdmObjectNode getMergePolicyObject() {
