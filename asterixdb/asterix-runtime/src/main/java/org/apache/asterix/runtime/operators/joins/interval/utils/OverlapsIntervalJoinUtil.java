@@ -23,12 +23,12 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class OverlapsIntervalJoinUtil extends AbstractIntervalJoinUtil {
 
-    public OverlapsIntervalJoinUtil(int[] keysLeft, int[] keysRight) {
-        super(keysLeft[0], keysRight[0]);
+    public OverlapsIntervalJoinUtil(int buildKey, int probeKey) {
+        super(buildKey, probeKey);
     }
 
     @Override
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws HyracksDataException {
-        return il.overlaps(ipLeft, ipRight);
+    public boolean compareInterval(AIntervalPointable ipBuild, AIntervalPointable ipProbe) throws HyracksDataException {
+        return il.overlaps(ipBuild, ipProbe);
     }
 }

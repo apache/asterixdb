@@ -26,8 +26,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class OverlappingIntervalJoinUtil extends AbstractIntervalJoinUtil {
     private final long partitionStart;
 
-    public OverlappingIntervalJoinUtil(int[] keysLeft, int[] keysRight, long partitionStart) {
-        super(keysLeft[0], keysRight[0]);
+    public OverlappingIntervalJoinUtil(int buildKey, int probeKey, long partitionStart) {
+        super(buildKey, probeKey);
         this.partitionStart = partitionStart;
     }
 
@@ -35,54 +35,49 @@ public class OverlappingIntervalJoinUtil extends AbstractIntervalJoinUtil {
      * Right (second argument) interval starts before left (first argument) interval ends.
      */
     @Override
-    public boolean checkToSaveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) {
-        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
-        long end1 = IntervalJoinUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
-        return start0 < end1;
+    public boolean checkToSaveInMemory(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex) {
+        long buildStart = IntervalJoinUtil.getIntervalStart(buildAccessor, buildTupleIndex, idBuild);
+        long probeEnd = IntervalJoinUtil.getIntervalEnd(probeAccessor, probeTupleIndex, idProbe);
+        return buildStart < probeEnd;
     }
 
     /**
      * Right (second argument) interval starts before left (first argument) interval ends.
      */
     @Override
-    public boolean checkForEarlyExit(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) {
-        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleIndex, idRight);
-        long end0 = IntervalJoinUtil.getIntervalEnd(accessorLeft, leftTupleIndex, idLeft);
-        return end0 <= start1;
+    public boolean checkForEarlyExit(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex) {
+        long probeStart = IntervalJoinUtil.getIntervalStart(probeAccessor, probeTupleIndex, idProbe);
+        long buildEnd = IntervalJoinUtil.getIntervalEnd(buildAccessor, buildTupleIndex, idBuild);
+        return buildEnd <= probeStart;
     }
 
     /**
      * Left (first argument) interval starts after the Right (second argument) interval ends.
      */
     @Override
-    public boolean checkToRemoveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) {
-        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleIndex, idLeft);
-        long end1 = IntervalJoinUtil.getIntervalEnd(accessorRight, rightTupleIndex, idRight);
-        return start0 >= end1;
+    public boolean checkToRemoveInMemory(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex) {
+        long buildStart = IntervalJoinUtil.getIntervalStart(buildAccessor, buildTupleIndex, idBuild);
+        long probeEnd = IntervalJoinUtil.getIntervalEnd(probeAccessor, probeTupleIndex, idProbe);
+        return buildStart >= probeEnd;
     }
 
     @Override
-    public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex, boolean reversed) throws HyracksDataException {
-        if (reversed) {
-            IntervalJoinUtil.getIntervalPointable(accessorLeft, leftTupleIndex, idLeft, ipRight);
-            IntervalJoinUtil.getIntervalPointable(accessorRight, rightTupleIndex, idRight, ipLeft);
-        } else {
-            IntervalJoinUtil.getIntervalPointable(accessorLeft, leftTupleIndex, idLeft, ipLeft);
-            IntervalJoinUtil.getIntervalPointable(accessorRight, rightTupleIndex, idRight, ipRight);
-        }
-        if (ipLeft.getStartValue() < partitionStart && ipRight.getStartValue() < partitionStart) {
+    public boolean checkToSaveInResult(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex) throws HyracksDataException {
+        IntervalJoinUtil.getIntervalPointable(buildAccessor, buildTupleIndex, idBuild, ipBuild);
+        IntervalJoinUtil.getIntervalPointable(probeAccessor, probeTupleIndex, idProbe, ipProbe);
+        if (ipBuild.getStartValue() < partitionStart && ipProbe.getStartValue() < partitionStart) {
             // These tuples match in a different partition
             return false;
         }
-        return compareInterval(ipLeft, ipRight);
+        return compareInterval(ipBuild, ipProbe);
     }
 
     @Override
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws HyracksDataException {
-        return il.overlapping(ipLeft, ipRight);
+    public boolean compareInterval(AIntervalPointable ipBuild, AIntervalPointable ipProbe) throws HyracksDataException {
+        return il.overlapping(ipBuild, ipProbe);
     }
 }

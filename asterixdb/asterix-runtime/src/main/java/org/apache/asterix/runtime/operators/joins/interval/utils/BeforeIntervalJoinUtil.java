@@ -25,38 +25,38 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class BeforeIntervalJoinUtil extends AbstractIntervalJoinUtil {
 
-    public BeforeIntervalJoinUtil(int[] keysLeft, int[] keysRight) {
-        super(keysLeft[0], keysRight[0]);
+    public BeforeIntervalJoinUtil(int buildKey, int probeKey) {
+        super(buildKey, probeKey);
     }
 
     @Override
-    public boolean checkToSaveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleID,
-            IFrameTupleAccessor accessorRight, int rightTupleID) {
-        long start0 = IntervalJoinUtil.getIntervalStart(accessorLeft, leftTupleID, idRight);
-        long start1 = IntervalJoinUtil.getIntervalStart(accessorRight, rightTupleID, idRight);
-        return start0 <= start1;
+    public boolean checkToSaveInMemory(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex) {
+        long buildStart = IntervalJoinUtil.getIntervalStart(buildAccessor, buildTupleIndex, idBuild);
+        long probeStart = IntervalJoinUtil.getIntervalStart(probeAccessor, probeTupleIndex, idProbe);
+        return buildStart < probeStart;
     }
 
     @Override
-    public boolean checkToRemoveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) {
+    public boolean checkToRemoveInMemory(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex) {
+        return !checkToSaveInMemory(buildAccessor, buildTupleIndex, probeAccessor, probeTupleIndex);
+    }
+
+    @Override
+    public boolean checkForEarlyExit(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex) {
         return false;
     }
 
     @Override
-    public boolean checkForEarlyExit(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) {
-        return false;
+    public boolean compareInterval(AIntervalPointable ipBuild, AIntervalPointable ipProbe) throws HyracksDataException {
+        return il.before(ipBuild, ipProbe);
     }
 
     @Override
-    public boolean checkIfMoreMatches(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) {
+    public boolean checkToLoadNextProbeTuple(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex) {
         return true;
-    }
-
-    @Override
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws HyracksDataException {
-        return il.before(ipLeft, ipRight);
     }
 }

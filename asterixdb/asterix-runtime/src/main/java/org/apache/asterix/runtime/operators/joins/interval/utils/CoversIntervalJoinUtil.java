@@ -23,12 +23,12 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class CoversIntervalJoinUtil extends AbstractIntervalJoinUtil {
 
-    public CoversIntervalJoinUtil(int[] keysLeft, int[] keysRight) {
-        super(keysLeft[0], keysRight[0]);
+    public CoversIntervalJoinUtil(int buildKey, int probeKey) {
+        super(buildKey, probeKey);
     }
 
     @Override
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws HyracksDataException {
-        return il.covers(ipLeft, ipRight);
+    public boolean compareInterval(AIntervalPointable ipBuild, AIntervalPointable ipProbe) throws HyracksDataException {
+        return il.covers(ipBuild, ipProbe);
     }
 }

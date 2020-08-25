@@ -171,14 +171,14 @@ public class IntervalMergeJoinPOperator extends AbstractJoinPOperator {
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
-        int[] keysLeft = JobGenHelper.variablesToFieldIndexes(keysLeftBranch, inputSchemas[0]);
-        int[] keysRight = JobGenHelper.variablesToFieldIndexes(keysRightBranch, inputSchemas[1]);
+        int[] keysBuild = JobGenHelper.variablesToFieldIndexes(keysLeftBranch, inputSchemas[0]);
+        int[] keysProbe = JobGenHelper.variablesToFieldIndexes(keysRightBranch, inputSchemas[1]);
 
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         RecordDescriptor recordDescriptor =
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
 
-        IOperatorDescriptor opDesc = getIntervalOperatorDescriptor(keysLeft, keysRight, spec, recordDescriptor, mjcf);
+        IOperatorDescriptor opDesc = getIntervalOperatorDescriptor(keysBuild, keysProbe, spec, recordDescriptor, mjcf);
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
         ILogicalOperator src1 = op.getInputs().get(0).getValue();
@@ -187,9 +187,9 @@ public class IntervalMergeJoinPOperator extends AbstractJoinPOperator {
         builder.contributeGraphEdge(src2, 0, op, 1);
     }
 
-    IOperatorDescriptor getIntervalOperatorDescriptor(int[] keysLeft, int[] keysRight, IOperatorDescriptorRegistry spec,
-            RecordDescriptor recordDescriptor, IIntervalJoinUtilFactory mjcf) {
-        return new IntervalMergeJoinOperatorDescriptor(spec, memSizeInFrames, keysLeft, keysRight, recordDescriptor,
+    IOperatorDescriptor getIntervalOperatorDescriptor(int[] keysBuild, int[] keysProbe,
+            IOperatorDescriptorRegistry spec, RecordDescriptor recordDescriptor, IIntervalJoinUtilFactory mjcf) {
+        return new IntervalMergeJoinOperatorDescriptor(spec, memSizeInFrames, keysBuild, keysProbe, recordDescriptor,
                 mjcf);
     }
 }

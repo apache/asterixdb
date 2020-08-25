@@ -29,74 +29,74 @@ public interface IIntervalJoinUtil {
      * The memory is used to check the right tuple with the remaining left tuples.
      * The check is true if the next left tuple could still match with this right tuple.
      *
-     * @param accessorLeft
-     * @param accessorRight
+     * @param buildAccessor
+     * @param probeAccessor
      * @return boolean
      * @throws HyracksDataException
      */
-    boolean checkToSaveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex, IFrameTupleAccessor accessorRight,
-            int rightTupleIndex) throws HyracksDataException;
+    boolean checkToSaveInMemory(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex);
 
     /**
      * Check to see if the right tuple should be removed from memory during the merge join.
      * The memory is used to check the right tuple with the remaining left tuples.
      * The check is true if the next left tuple is NOT able match with this right tuple.
      *
-     * @param accessorLeft
-     * @param accessorRight
+     * @param buildAccessor
+     * @param probeAccessor
      * @return boolean
      * @throws HyracksDataException
      */
-    boolean checkToRemoveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
-            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException;
-
-    /**
-     * Check to see if the left tuple should continue checking for matches.
-     * The check is true if the next left tuple is NOT able match with this right tuple.
-     *
-     * @param accessorLeft
-     * @param accessorRight
-     * @return boolean
-     * @throws HyracksDataException
-     */
-    boolean checkIfMoreMatches(IFrameTupleAccessor accessorLeft, int leftTupleIndex, IFrameTupleAccessor accessorRight,
-            int rightTupleIndex) throws HyracksDataException;
+    boolean checkToRemoveInMemory(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex);
 
     /**
      * Check to see if tuples match join condition
      * The check is true if they match.
      *
-     * @param accessorLeft
-     * @param leftTupleIndex
-     * @param accessorRight
-     * @param rightTupleIndex
+     * @param buildAccessor
+     * @param buildTupleIndex
+     * @param probeAccessor
+     * @param probeTupleIndex
      * @return boolean
      * @throws HyracksDataException
      */
-    boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex, IFrameTupleAccessor accessorRight,
-            int rightTupleIndex, boolean reversed) throws HyracksDataException;
+    boolean checkToSaveInResult(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex) throws HyracksDataException;
 
     /**
      * Check to see if the interval matches the join condition.
      * The check is true if it matches.
      *
-     * @param ipLeft
-     * @param ipRight
+     * @param ipBuild
+     * @param ipProbe
      * @return boolean
      * @throws HyracksDataException
      */
-    boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws HyracksDataException;
+    boolean compareInterval(AIntervalPointable ipBuild, AIntervalPointable ipProbe) throws HyracksDataException;
 
     /**
      * Check to see if the left tuple should stop checking for matches.
      * The check is true if there can be no more matches
      *
-     * @param accessorLeft
-     * @param accessorRight
+     * @param buildAccessor
+     * @param probeAccessor
      * @return boolean
      * @throws HyracksDataException
      */
-    boolean checkForEarlyExit(IFrameTupleAccessor accessorLeft, int leftTupleIndex, IFrameTupleAccessor accessorRight,
-            int rightTupleIndex) throws HyracksDataException;
+    boolean checkForEarlyExit(IFrameTupleAccessor buildAccessor, int buildTupleIndex, IFrameTupleAccessor probeAccessor,
+            int probeTupleIndex);
+
+    /**
+     * Check if next tuple should be loaded into memory.
+     * The check is true if there are more tuples
+     *
+     * @param buildAccessor
+     * @param probeAccessor
+     * @return boolean
+     * @throws HyracksDataException
+     */
+    boolean checkToLoadNextProbeTuple(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex);
 
 }

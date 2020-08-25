@@ -35,7 +35,7 @@ public class OverlappingIntervalJoinUtilFactory implements IIntervalJoinUtilFact
     }
 
     @Override
-    public IIntervalJoinUtil createIntervalMergeJoinChecker(int[] keys0, int[] keys1, IHyracksTaskContext ctx,
+    public IIntervalJoinUtil createIntervalMergeJoinUtil(int buildKey, int probeKey, IHyracksTaskContext ctx,
             int nPartitions) throws HyracksDataException {
         int fieldIndex = 0;
         int partition = ctx.getTaskAttemptId().getTaskId().getPartition();
@@ -66,6 +66,6 @@ public class OverlappingIntervalJoinUtilFactory implements IIntervalJoinUtilFact
                     throw new HyracksDataException("RangeMap type is not supported");
             }
         }
-        return new OverlappingIntervalJoinUtil(keys0, keys1, partitionStart);
+        return new OverlappingIntervalJoinUtil(buildKey, probeKey, partitionStart);
     }
 }

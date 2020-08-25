@@ -24,8 +24,8 @@ public class BeforeIntervalJoinUtilFactory implements IIntervalJoinUtilFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IIntervalJoinUtil createIntervalMergeJoinChecker(int[] keys0, int[] keys1, IHyracksTaskContext ctx,
+    public IIntervalJoinUtil createIntervalMergeJoinUtil(int buildKey, int probeKey, IHyracksTaskContext ctx,
             int nPartitions) {
-        return new BeforeIntervalJoinUtil(keys0, keys1);
+        return new BeforeIntervalJoinUtil(buildKey, probeKey);
     }
 }

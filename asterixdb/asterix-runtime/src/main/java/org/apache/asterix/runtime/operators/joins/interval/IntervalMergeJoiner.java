@@ -86,17 +86,14 @@ public class IntervalMergeJoiner {
     protected final FrameTupleAppender resultAppender;
     protected final ITupleAccessor[] inputAccessor;
 
-    protected long[] frameCounts = { 0, 0 };
-    protected long[] tupleCounts = { 0, 0 };
-
     public IntervalMergeJoiner(IHyracksTaskContext ctx, int memorySize, IIntervalJoinUtil mjc, int buildKeys,
             int probeKeys, RecordDescriptor buildRd, RecordDescriptor probeRd) throws HyracksDataException {
         this.mjc = mjc;
 
         // Memory (probe buffer)
-        if (memorySize < 1) {
+        if (memorySize < 5) {
             throw new HyracksDataException(
-                    "MergeJoiner does not have enough memory (needs > 0, got " + memorySize + ").");
+                    "MergeJoiner does not have enough memory (needs > 4, got " + memorySize + ").");
         }
 
         inputAccessor = new TupleAccessor[JOIN_PARTITIONS];
@@ -107,7 +104,8 @@ public class IntervalMergeJoiner {
         inputBuffer[BUILD_PARTITION] = new VSizeFrame(ctx);
         inputBuffer[PROBE_PARTITION] = new VSizeFrame(ctx);
 
-        framePool = new DeallocatableFramePool(ctx, (memorySize) * ctx.getInitialFrameSize());
+        //Two frames are used for the runfile stream, and one frame for each input (2 outputs).
+        framePool = new DeallocatableFramePool(ctx, (memorySize - 4) * ctx.getInitialFrameSize());
         bufferManager = new IntervalVariableDeletableTupleMemoryManager(framePool, probeRd);
         memoryAccessor = ((IntervalVariableDeletableTupleMemoryManager) bufferManager).createTupleAccessor();
 
@@ -145,8 +143,10 @@ public class IntervalMergeJoiner {
 
         TupleStatus buildTs = loadBuildTuple();
         TupleStatus probeTs = loadProbeTuple();
-        while (buildTs.isLoaded() && (probeTs.isLoaded() || memoryHasTuples())) {
-            if (probeTs.isLoaded()) {
+        while (buildTs.isLoaded() && probeTs.isLoaded()) {
+            if (probeTs.isLoaded() && mjc.checkToLoadNextProbeTuple(inputAccessor[BUILD_PARTITION],
+                    inputAccessor[BUILD_PARTITION].getTupleId(), inputAccessor[PROBE_PARTITION],
+                    inputAccessor[PROBE_PARTITION].getTupleId())) {
                 // Right side from stream
                 processProbeTuple(writer);
                 probeTs = loadProbeTuple();
@@ -159,6 +159,14 @@ public class IntervalMergeJoiner {
     }
 
     public void processProbeClose(IFrameWriter writer) throws HyracksDataException {
+
+        TupleStatus buildTs = loadBuildTuple();
+        while (buildTs.isLoaded() && memoryHasTuples()) {
+            // Left side from stream
+            processBuildTuple(writer);
+            buildTs = loadBuildTuple();
+        }
+
         resultAppender.write(writer, true);
         runFileStream.close();
         runFileStream.removeRunFile();
