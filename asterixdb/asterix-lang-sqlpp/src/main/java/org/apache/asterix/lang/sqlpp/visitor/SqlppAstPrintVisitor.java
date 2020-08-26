@@ -359,7 +359,9 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
 
     @Override
     public Void visit(WindowExpression winExpr, Integer step) throws CompilationException {
-        out.println(skip(step) + "WINDOW " + winExpr.getFunctionSignature() + "[");
+        out.print(skip(step) + "WINDOW ");
+        printFunctionSignature(out, winExpr.getFunctionSignature(), winExpr.getFunctionSignature().getArity());
+        out.println("[");
         for (Expression expr : winExpr.getExprList()) {
             expr.accept(this, step + 1);
         }

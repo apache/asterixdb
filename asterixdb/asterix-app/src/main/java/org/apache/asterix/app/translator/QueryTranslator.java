@@ -673,6 +673,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         Dataset dataset = null;
+        Datatype itemTypeEntity = null, metaItemTypeEntity = null;
+        boolean itemTypeAdded = false, metaItemTypeAdded = false;
         try {
             // Check if the dataverse exists
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
@@ -690,8 +692,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new CompilationException(ErrorCode.DATASET_EXISTS, sourceLoc, datasetName, dataverseName);
                 }
             }
-            Datatype itemTypeEntity;
+
             IAType itemType;
+            boolean itemTypeIsInline = false;
             switch (itemTypeExpr.getTypeKind()) {
                 case TYPEREFERENCE:
                     itemTypeEntity = metadataProvider.findTypeEntity(itemTypeDataverseName, itemTypeName);
@@ -707,7 +710,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     itemType = translateType(itemTypeDataverseName, itemTypeName, itemTypeExpr, mdTxnCtx);
                     validateDatasetItemType(dsType, itemType, false, sourceLoc);
                     itemTypeEntity = new Datatype(itemTypeDataverseName, itemTypeName, itemType, true);
-                    MetadataManager.INSTANCE.addDatatype(mdTxnCtx, itemTypeEntity);
+                    itemTypeIsInline = true;
                     break;
                 default:
                     throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
@@ -723,13 +726,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             } else {
                 validateCompactionPolicy(compactionPolicy, compactionPolicyProperties, mdTxnCtx, false, sourceLoc);
             }
+
+            IAType metaItemType = null;
+            boolean metaItemTypeIsInline = false;
             switch (dsType) {
                 case INTERNAL:
-                    IAType metaItemType = null;
                     if (metaItemTypeExpr != null) {
                         switch (metaItemTypeExpr.getTypeKind()) {
                             case TYPEREFERENCE:
-                                Datatype metaItemTypeEntity =
+                                metaItemTypeEntity =
                                         metadataProvider.findTypeEntity(metaItemTypeDataverseName, metaItemTypeName);
                                 if (metaItemTypeEntity == null || metaItemTypeEntity.getIsAnonymous()) {
                                     // anonymous types cannot be referred from CREATE DATASET
@@ -743,8 +748,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 metaItemType = translateType(metaItemTypeDataverseName, metaItemTypeName,
                                         metaItemTypeExpr, mdTxnCtx);
                                 validateDatasetItemType(dsType, metaItemType, true, sourceLoc);
-                                MetadataManager.INSTANCE.addDatatype(mdTxnCtx,
-                                        new Datatype(metaItemTypeDataverseName, metaItemTypeName, metaItemType, true));
+                                metaItemTypeEntity =
+                                        new Datatype(metaItemTypeDataverseName, metaItemTypeName, metaItemType, true);
+                                metaItemTypeIsInline = true;
                                 break;
                             default:
                                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
@@ -803,6 +809,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     datasetDetails, dd.getHints(), dsType, DatasetIdFactory.generateDatasetId(),
                     MetadataUtil.PENDING_ADD_OP, compressionScheme);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
+
+            if (itemTypeIsInline) {
+                MetadataManager.INSTANCE.addDatatype(mdTxnCtx, itemTypeEntity);
+                itemTypeAdded = true;
+            }
+            if (metaItemTypeIsInline) {
+                MetadataManager.INSTANCE.addDatatype(mdTxnCtx, metaItemTypeEntity);
+                metaItemTypeAdded = true;
+            }
+
             if (dsType == DatasetType.INTERNAL) {
                 JobSpecification jobSpec = DatasetUtil.createDatasetJobSpec(dataset, metadataProvider);
 
@@ -858,8 +874,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
                 try {
-                    MetadataManager.INSTANCE.dropDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
-                            datasetName);
+                    MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
+                    if (itemTypeAdded) {
+                        MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, itemTypeEntity.getDataverseName(),
+                                itemTypeEntity.getDatatypeName());
+                    }
+                    if (metaItemTypeAdded) {
+                        MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, metaItemTypeEntity.getDataverseName(),
+                                metaItemTypeEntity.getDatatypeName());
+                    }
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 } catch (Exception e2) {
                     e.addSuppressed(e2);
@@ -1664,37 +1687,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             validateDatasetState(metadataProvider, ds, sourceLoc);
 
-            // prepare to drop item and meta types if they were created as inline types
-            DataverseName itemTypeDataverseName = ds.getItemTypeDataverseName();
-            String itemTypeName = ds.getItemTypeName();
-            boolean isInlineItemType = TypeUtil.isDatasetInlineTypeName(ds, itemTypeDataverseName, itemTypeName);
-            if (isInlineItemType) {
-                lockUtil.dropTypeBegin(lockManager, metadataProvider.getLocks(), itemTypeDataverseName, itemTypeName);
-            }
-            DataverseName metaTypeDataverseName = ds.getMetaItemTypeDataverseName();
-            String metaTypeName = ds.getMetaItemTypeName();
-            boolean isInlineMetaType =
-                    metaTypeName != null && TypeUtil.isDatasetInlineTypeName(ds, metaTypeDataverseName, metaTypeName);
-            if (isInlineMetaType) {
-                lockUtil.dropTypeBegin(lockManager, metadataProvider.getLocks(), metaTypeDataverseName, metaTypeName);
-            }
-            Datatype inlineItemType = isInlineItemType
-                    ? MetadataManager.INSTANCE.getDatatype(mdTxnCtx.getValue(), itemTypeDataverseName, itemTypeName)
-                    : null;
-            Datatype inlineMetaType = isInlineMetaType
-                    ? MetadataManager.INSTANCE.getDatatype(mdTxnCtx.getValue(), metaTypeDataverseName, metaTypeName)
-                    : null;
-
             ds.drop(metadataProvider, mdTxnCtx, jobsToExecute, bActiveTxn, progress, hcc, dropCorrespondingNodeGroup,
                     sourceLoc);
-
-            // drop inline item and meta types
-            if (isInlineItemType && inlineItemType.getIsAnonymous()) {
-                MetadataManager.INSTANCE.dropDatatype(mdTxnCtx.getValue(), itemTypeDataverseName, itemTypeName);
-            }
-            if (isInlineMetaType && inlineMetaType.getIsAnonymous()) {
-                MetadataManager.INSTANCE.dropDatatype(mdTxnCtx.getValue(), metaTypeDataverseName, metaTypeName);
-            }
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
             return true;
@@ -2011,8 +2005,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void doCreateFunction(MetadataProvider metadataProvider, CreateFunctionStatement cfs,
-            FunctionSignature signature, IStatementRewriter stmtRewriter) throws Exception {
-        DataverseName dataverseName = signature.getDataverseName();
+            FunctionSignature functionSignature, IStatementRewriter stmtRewriter) throws Exception {
+        DataverseName dataverseName = functionSignature.getDataverseName();
         SourceLocation sourceLoc = cfs.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -2021,45 +2015,85 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (dv == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
             }
-            Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
-            if (function != null) {
-                if (cfs.getIfNotExists()) {
+            List<TypeSignature> existingInlineTypes;
+            Function existingFunction = MetadataManager.INSTANCE.getFunction(mdTxnCtx, functionSignature);
+            if (existingFunction != null) {
+                if (cfs.getReplaceIfExists()) {
+                    if (cfs.getIfNotExists()) {
+                        throw new CompilationException(ErrorCode.PARSE_ERROR, cfs.getSourceLocation(), "IF NOT EXISTS");
+                    }
+                } else if (cfs.getIfNotExists()) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return;
+                } else {
+                    throw new CompilationException(ErrorCode.FUNCTION_EXISTS, cfs.getSourceLocation(),
+                            functionSignature.toString(false));
                 }
-                throw new CompilationException(ErrorCode.FUNCTION_EXISTS, cfs.getSourceLocation(),
-                        signature.toString(false));
+                existingInlineTypes = TypeUtil.getFunctionInlineTypes(existingFunction);
+            } else {
+                existingInlineTypes = Collections.emptyList();
             }
 
-            boolean isExternal = cfs.isExternal();
-            List<Pair<VarIdentifier, TypeExpression>> paramList = cfs.getParameters();
-            int paramCount = paramList.size();
-            List<VarIdentifier> paramVars = new ArrayList<>(paramCount);
-            List<String> paramNames = new ArrayList<>(paramCount);
-            List<TypeSignature> paramTypes = new ArrayList<>(paramCount);
-            LinkedHashSet<TypeSignature> dependentTypes = new LinkedHashSet<>();
+            Map<TypeSignature, Datatype> newInlineTypes;
+            Function function;
+            if (cfs.isExternal()) {
+                List<Pair<VarIdentifier, TypeExpression>> paramList = cfs.getParameters();
+                int paramCount = paramList.size();
+                List<String> paramNames = new ArrayList<>(paramCount);
+                List<TypeSignature> paramTypes = new ArrayList<>(paramCount);
+                LinkedHashSet<TypeSignature> depTypes = new LinkedHashSet<>();
+                newInlineTypes = new HashMap<>();
 
-            for (int i = 0; i < paramCount; i++) {
-                Pair<VarIdentifier, TypeExpression> paramPair = paramList.get(i);
-                VarIdentifier paramName = paramPair.getFirst();
-                TypeExpression paramTypeExpr = paramPair.getSecond();
-                Pair<TypeSignature, TypeSignature> paramType = translateFunctionParameterType(signature, i,
-                        paramTypeExpr, isExternal, sourceLoc, metadataProvider, mdTxnCtx);
-                paramVars.add(paramName);
-                paramNames.add(stmtRewriter.toFunctionParameterName(paramName));
-                paramTypes.add(paramType.first);
-                if (paramType.second != null) {
-                    dependentTypes.add(paramType.second);
+                for (int i = 0; i < paramCount; i++) {
+                    Pair<VarIdentifier, TypeExpression> paramPair = paramList.get(i);
+                    TypeSignature paramTypeSignature;
+                    TypeSignature paramDepTypeSignature;
+                    Datatype paramInlineTypeEntity;
+                    TypeExpression paramTypeExpr = paramPair.getSecond();
+                    if (paramTypeExpr != null) {
+                        Triple<TypeSignature, TypeSignature, Datatype> paramTypeInfo = translateFunctionParameterType(
+                                functionSignature, i, paramTypeExpr, sourceLoc, metadataProvider, mdTxnCtx);
+                        paramTypeSignature = paramTypeInfo.first;
+                        paramDepTypeSignature = paramTypeInfo.second;
+                        paramInlineTypeEntity = paramTypeInfo.third;
+                    } else {
+                        paramTypeSignature = null; // == any
+                        paramDepTypeSignature = null;
+                        paramInlineTypeEntity = null;
+                    }
+                    paramTypes.add(paramTypeSignature); // null == any
+                    if (paramDepTypeSignature != null) {
+                        depTypes.add(paramDepTypeSignature);
+                    }
+                    if (paramInlineTypeEntity != null) {
+                        newInlineTypes.put(paramTypeSignature, paramInlineTypeEntity);
+                    }
+                    VarIdentifier paramName = paramPair.getFirst();
+                    paramNames.add(stmtRewriter.toFunctionParameterName(paramName));
                 }
-            }
 
-            if (isExternal) {
+                TypeSignature returnTypeSignature;
+                TypeSignature returnDepTypeSignature;
+                Datatype returnInlineTypeEntity;
                 TypeExpression returnTypeExpr = cfs.getReturnType();
-                Pair<TypeSignature, TypeSignature> returnType = translateFunctionParameterType(signature, -1,
-                        returnTypeExpr, isExternal, sourceLoc, metadataProvider, mdTxnCtx);
-                if (returnType.second != null) {
-                    dependentTypes.add(returnType.second);
+                if (returnTypeExpr != null) {
+                    Triple<TypeSignature, TypeSignature, Datatype> returnTypeInfo = translateFunctionParameterType(
+                            functionSignature, -1, returnTypeExpr, sourceLoc, metadataProvider, mdTxnCtx);
+                    returnTypeSignature = returnTypeInfo.first;
+                    returnDepTypeSignature = returnTypeInfo.second;
+                    returnInlineTypeEntity = returnTypeInfo.third;
+                } else {
+                    returnTypeSignature = null; // == any
+                    returnDepTypeSignature = null;
+                    returnInlineTypeEntity = null;
                 }
+                if (returnDepTypeSignature != null) {
+                    depTypes.add(returnDepTypeSignature);
+                }
+                if (returnInlineTypeEntity != null) {
+                    newInlineTypes.put(returnTypeSignature, returnInlineTypeEntity);
+                }
+
                 DataverseName libraryDataverseName = cfs.getLibraryDataverseName();
                 if (libraryDataverseName == null) {
                     libraryDataverseName = dataverseName;
@@ -2075,14 +2109,28 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 List<String> externalIdentifier = cfs.getExternalIdentifier();
                 ExternalFunctionCompilerUtil.validateExternalIdentifier(externalIdentifier, language,
                         cfs.getSourceLocation());
-
                 List<List<Triple<DataverseName, String, String>>> dependencies =
-                        FunctionUtil.getExternalFunctionDependencies(dependentTypes);
-                function = new Function(signature, paramNames, paramTypes, returnType.first, null,
+                        FunctionUtil.getExternalFunctionDependencies(depTypes);
+
+                function = new Function(functionSignature, paramNames, paramTypes, returnTypeSignature, null,
                         FunctionKind.SCALAR.toString(), library.getLanguage(), libraryDataverseName, libraryName,
                         externalIdentifier, cfs.getNullCall(), cfs.getDeterministic(), cfs.getResources(),
                         dependencies);
             } else {
+                List<Pair<VarIdentifier, TypeExpression>> paramList = cfs.getParameters();
+                int paramCount = paramList.size();
+                List<VarIdentifier> paramVars = new ArrayList<>(paramCount);
+                List<String> paramNames = new ArrayList<>(paramCount);
+                for (Pair<VarIdentifier, TypeExpression> paramPair : paramList) {
+                    VarIdentifier paramName = paramPair.getFirst();
+                    paramVars.add(paramName);
+                    paramNames.add(stmtRewriter.toFunctionParameterName(paramName));
+                    if (paramPair.getSecond() != null) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                                paramName.toString());
+                    }
+                }
+
                 //Check whether the function is use-able
                 metadataProvider.setDefaultDataverse(dv);
                 Query wrappedQuery = new Query(false);
@@ -2091,18 +2139,40 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 wrappedQuery.setTopLevel(false);
                 apiFramework.reWriteQuery(declaredFunctions, metadataProvider, wrappedQuery, sessionOutput, false,
                         paramVars, warningCollector);
-                List<List<Triple<DataverseName, String, String>>> dependencies =
-                        FunctionUtil.getFunctionDependencies(rewriterFactory.createQueryRewriter(),
-                                cfs.getFunctionBodyExpression(), metadataProvider, dependentTypes);
-                function = new Function(signature, paramNames, paramTypes, TypeUtil.ANY_TYPE_SIGNATURE,
-                        cfs.getFunctionBody(), FunctionKind.SCALAR.toString(),
-                        compilationProvider.getParserFactory().getLanguage(), null, null, null, null, null, null,
-                        dependencies);
+                List<List<Triple<DataverseName, String, String>>> dependencies = FunctionUtil.getFunctionDependencies(
+                        rewriterFactory.createQueryRewriter(), cfs.getFunctionBodyExpression(), metadataProvider);
+
+                newInlineTypes = Collections.emptyMap();
+                function = new Function(functionSignature, paramNames, null, null, cfs.getFunctionBody(),
+                        FunctionKind.SCALAR.toString(), compilationProvider.getParserFactory().getLanguage(), null,
+                        null, null, null, null, null, dependencies);
             }
 
-            MetadataManager.INSTANCE.addFunction(mdTxnCtx, function);
+            if (existingFunction == null) {
+                // add new function and its inline types
+                for (Datatype newInlineType : newInlineTypes.values()) {
+                    MetadataManager.INSTANCE.addDatatype(mdTxnCtx, newInlineType);
+                }
+                MetadataManager.INSTANCE.addFunction(mdTxnCtx, function);
+            } else {
+                // replace existing function and its inline types
+                for (TypeSignature existingInlineType : existingInlineTypes) {
+                    Datatype newInlineType =
+                            newInlineTypes.isEmpty() ? null : newInlineTypes.remove(existingInlineType);
+                    if (newInlineType == null) {
+                        MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, existingInlineType.getDataverseName(),
+                                existingInlineType.getName());
+                    } else {
+                        MetadataManager.INSTANCE.updateDatatype(mdTxnCtx, newInlineType);
+                    }
+                }
+                for (Datatype inlineType : newInlineTypes.values()) {
+                    MetadataManager.INSTANCE.addDatatype(mdTxnCtx, inlineType);
+                }
+                MetadataManager.INSTANCE.updateFunction(mdTxnCtx, function);
+            }
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Installed function: " + signature);
+                LOGGER.info("Installed function: " + functionSignature);
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
@@ -2111,20 +2181,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    private Pair<TypeSignature, TypeSignature> translateFunctionParameterType(FunctionSignature functionSignature,
-            int paramIdx, TypeExpression paramTypeExpr, boolean isExternalFunction, SourceLocation sourceLoc,
+    private Triple<TypeSignature, TypeSignature, Datatype> translateFunctionParameterType(
+            FunctionSignature functionSignature, int paramIdx, TypeExpression paramTypeExpr, SourceLocation sourceLoc,
             MetadataProvider metadataProvider, MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
-        if (paramTypeExpr == null) {
-            return new Pair<>(TypeUtil.ANY_TYPE_SIGNATURE, null);
-        }
-
-        if (!isExternalFunction) {
-            // grammar doesn't allow parameter types for inline functions
-            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc);
-        }
-
-        TypeSignature resultType, dependentType;
-
+        TypeSignature paramTypeSignature, depTypeSignature;
+        Datatype paramInlineTypeEntity = null;
         switch (paramTypeExpr.getTypeKind()) {
             case TYPEREFERENCE:
                 TypeReferenceExpression paramTypeRefExpr = (TypeReferenceExpression) paramTypeExpr;
@@ -2132,19 +2193,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 BuiltinType builtinType = BuiltinTypeMap.getBuiltinType(paramTypeName);
                 if (builtinType != null) {
                     // built-in type
-                    resultType = new TypeSignature(builtinType);
-                    dependentType = null;
+                    paramTypeSignature = new TypeSignature(builtinType);
+                    depTypeSignature = null;
                 } else {
                     // user-defined type
                     DataverseName paramTypeDataverseName = paramTypeRefExpr.getIdent().first;
                     if (paramTypeDataverseName == null) {
                         paramTypeDataverseName = functionSignature.getDataverseName();
                     }
-                    IAType paramType = metadataProvider.findType(paramTypeDataverseName, paramTypeName);
-                    if (paramType == null) {
+                    Datatype paramTypeEntity = metadataProvider.findTypeEntity(paramTypeDataverseName, paramTypeName);
+                    if (paramTypeEntity == null || paramTypeEntity.getIsAnonymous()) {
                         throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, paramTypeName);
                     }
-                    resultType = dependentType = new TypeSignature(paramTypeDataverseName, paramTypeName);
+                    paramTypeSignature = depTypeSignature = new TypeSignature(paramTypeDataverseName, paramTypeName);
                 }
                 break;
             case ORDEREDLIST:
@@ -2153,25 +2214,24 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 paramTypeName = TypeUtil.createFunctionParameterTypeName(functionSignature.getName(),
                         functionSignature.getArity(), paramIdx);
                 IAType paramType = translateType(paramTypeDataverseName, paramTypeName, paramTypeExpr, mdTxnCtx);
-                MetadataManager.INSTANCE.addDatatype(mdTxnCtx,
-                        new Datatype(paramTypeDataverseName, paramTypeName, paramType, true));
-                resultType = new TypeSignature(paramTypeDataverseName, paramTypeName);
-                dependentType = FunctionUtil.getTypeDependencyFromFunctionParameter(paramTypeExpr,
-                        functionSignature.getDataverseName());
+                paramTypeSignature = new TypeSignature(paramTypeDataverseName, paramTypeName);
+                depTypeSignature =
+                        FunctionUtil.getTypeDependencyFromFunctionParameter(paramTypeExpr, paramTypeDataverseName);
+                paramInlineTypeEntity = new Datatype(paramTypeDataverseName, paramTypeName, paramType, true);
                 break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc);
         }
 
-        return new Pair<>(resultType, dependentType);
+        return new Triple<>(paramTypeSignature, depTypeSignature, paramInlineTypeEntity);
     }
 
     protected void handleFunctionDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         FunctionDropStatement stmtDropFunction = (FunctionDropStatement) stmt;
         FunctionSignature signature = stmtDropFunction.getFunctionSignature();
-        signature.setDataverseName(getActiveDataverseName(signature.getDataverseName()));
-        lockUtil.dropFunctionBegin(lockManager, metadataProvider.getLocks(), signature.getDataverseName(),
-                signature.getName());
+        DataverseName dataverseName = getActiveDataverseName(signature.getDataverseName());
+        signature.setDataverseName(dataverseName);
+        lockUtil.dropFunctionBegin(lockManager, metadataProvider.getLocks(), dataverseName, signature.getName());
         try {
             doDropFunction(metadataProvider, stmtDropFunction, signature);
         } finally {
@@ -2181,18 +2241,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected boolean doDropFunction(MetadataProvider metadataProvider, FunctionDropStatement stmtDropFunction,
             FunctionSignature signature) throws Exception {
+        DataverseName dataverseName = signature.getDataverseName();
         SourceLocation sourceLoc = stmtDropFunction.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
-            Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, signature.getDataverseName());
+            Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
             if (dataverse == null) {
                 if (stmtDropFunction.getIfExists()) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return false;
                 } else {
-                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc,
-                            signature.getDataverseName());
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
                 }
             }
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
@@ -2201,11 +2261,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return false;
                 } else {
-                    throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature.toString(false));
+                    throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature.toString());
                 }
             }
 
+            List<TypeSignature> inlineTypes = TypeUtil.getFunctionInlineTypes(function);
+
             MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
+            for (TypeSignature inlineType : inlineTypes) {
+                MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, inlineType.getDataverseName(), inlineType.getName());
+            }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {

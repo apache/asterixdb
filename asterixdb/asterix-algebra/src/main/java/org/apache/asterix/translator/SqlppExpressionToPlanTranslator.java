@@ -113,6 +113,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCall
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestNonMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestOperator;
@@ -1071,11 +1072,12 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         List<Expression> fargs = winExpr.getExprList();
 
         FunctionSignature fs = winExpr.getFunctionSignature();
-        FunctionIdentifier fi = getBuiltinFunctionIdentifier(fs.getName(), fs.getArity());
-        if (fi == null) {
+        IFunctionInfo finfo = BuiltinFunctions.getBuiltinFunctionInfo(fs.createFunctionIdentifier());
+        if (finfo == null) {
             throw new CompilationException(ErrorCode.COMPILATION_EXPECTED_WINDOW_FUNCTION, winExpr.getSourceLocation(),
                     fs.getName());
         }
+        FunctionIdentifier fi = finfo.getFunctionIdentifier();
         boolean isWin = BuiltinFunctions.isWindowFunction(fi);
         boolean isWinAgg = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
                 BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG);

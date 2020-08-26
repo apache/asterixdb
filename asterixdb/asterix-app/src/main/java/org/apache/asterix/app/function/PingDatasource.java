@@ -31,7 +31,7 @@ public class PingDatasource extends FunctionDataSource {
     private static final DataSourceId PING_DATASOURCE_ID = createDataSourceId(PingRewriter.PING);
 
     public PingDatasource(INodeDomain domain) throws AlgebricksException {
-        super(PING_DATASOURCE_ID, domain);
+        super(PING_DATASOURCE_ID, PingRewriter.PING, domain);
     }
 
     @Override

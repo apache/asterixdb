@@ -33,7 +33,7 @@ import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 
-public final class AqlFunctionCallResolverVisitor extends AbstractAqlSimpleExpressionVisitor {
+public class AqlFunctionCallResolverVisitor extends AbstractAqlSimpleExpressionVisitor {
 
     private final MetadataProvider metadataProvider;
 
@@ -44,7 +44,7 @@ public final class AqlFunctionCallResolverVisitor extends AbstractAqlSimpleExpre
     public AqlFunctionCallResolverVisitor(MetadataProvider metadataProvider, List<FunctionDecl> declaredFunctions) {
         this.metadataProvider = metadataProvider;
         this.declaredFunctions = FunctionUtil.getFunctionSignatures(declaredFunctions);
-        this.callExprResolver = FunctionUtil.createBuiltinFunctionResolver(metadataProvider);
+        this.callExprResolver = createBuiltinFunctionResolver(metadataProvider);
     }
 
     @Override
@@ -53,5 +53,10 @@ public final class AqlFunctionCallResolverVisitor extends AbstractAqlSimpleExpre
                 callExpr.getSourceLocation(), metadataProvider, declaredFunctions, callExprResolver);
         callExpr.setFunctionSignature(fs);
         return super.visit(callExpr, arg);
+    }
+
+    protected BiFunction<String, Integer, FunctionSignature> createBuiltinFunctionResolver(
+            MetadataProvider metadataProvider) {
+        return FunctionUtil.createBuiltinFunctionResolver(metadataProvider);
     }
 }

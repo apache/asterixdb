@@ -19,6 +19,8 @@
 package org.apache.asterix.metadata.utils;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,12 +30,12 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -45,8 +47,6 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
  * Provider utility methods for data types
  */
 public class TypeUtil {
-
-    public static final TypeSignature ANY_TYPE_SIGNATURE = new TypeSignature(BuiltinType.ANY);
 
     private static final char TYPE_NAME_DELIMITER = '$';
 
@@ -263,7 +263,12 @@ public class TypeUtil {
     }
 
     public static boolean isDatasetInlineTypeName(Dataset dataset, DataverseName typeDataverseName, String typeName) {
-        return dataset.getDataverseName().equals(typeDataverseName) && typeName.startsWith(DATASET_INLINE_TYPE_PREFIX);
+        return isInlineTypeName(dataset.getDataverseName(), typeDataverseName, typeName, DATASET_INLINE_TYPE_PREFIX);
+    }
+
+    private static boolean isInlineTypeName(DataverseName entityDataverseName, DataverseName typeDataverseName,
+            String typeName, String inlineTypePrefix) {
+        return entityDataverseName.equals(typeDataverseName) && typeName.startsWith(inlineTypePrefix);
     }
 
     public static String createFunctionParameterTypeName(String functionName, int arity, int parameterIndex) {
@@ -276,5 +281,40 @@ public class TypeUtil {
         } // otherwise it's a return type
 
         return sb.toString();
+    }
+
+    public static boolean isFunctionInlineTypeName(Function function, DataverseName typeDataverseName,
+            String typeName) {
+        return isInlineTypeName(function.getDataverseName(), typeDataverseName, typeName, FUNCTION_INLINE_TYPE_PREFIX);
+    }
+
+    public static String getFullyQualifiedDisplayName(DataverseName dataverseName, String typeName) {
+        return dataverseName + "." + typeName;
+    }
+
+    /**
+     * Inline type names are unique within a function, so we don't need to perform duplicate elimination
+     */
+    public static List<TypeSignature> getFunctionInlineTypes(Function function) {
+        List<TypeSignature> inlineTypes = Collections.emptyList();
+        TypeSignature returnType = function.getReturnType();
+        if (returnType != null
+                && isFunctionInlineTypeName(function, returnType.getDataverseName(), returnType.getName())) {
+            inlineTypes = new ArrayList<>();
+            inlineTypes.add(returnType);
+        }
+        List<TypeSignature> parameterTypes = function.getParameterTypes();
+        if (parameterTypes != null) {
+            for (TypeSignature parameterType : parameterTypes) {
+                if (parameterType != null && isFunctionInlineTypeName(function, parameterType.getDataverseName(),
+                        parameterType.getName())) {
+                    if (inlineTypes.isEmpty()) {
+                        inlineTypes = new ArrayList<>();
+                    }
+                    inlineTypes.add(parameterType);
+                }
+            }
+        }
+        return inlineTypes;
     }
 }

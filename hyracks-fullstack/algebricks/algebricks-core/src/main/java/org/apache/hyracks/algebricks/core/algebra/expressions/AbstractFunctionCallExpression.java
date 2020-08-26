@@ -21,10 +21,12 @@ package org.apache.hyracks.algebricks.core.algebra.expressions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -54,23 +56,19 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
 
     public AbstractFunctionCallExpression(FunctionKind kind, IFunctionInfo finfo,
             List<Mutable<ILogicalExpression>> arguments) {
-        this.kind = kind;
-        this.finfo = finfo;
-        this.arguments = arguments;
+        this.kind = Objects.requireNonNull(kind);
+        this.finfo = Objects.requireNonNull(finfo);
+        this.arguments = Objects.requireNonNull(arguments);
     }
 
     public AbstractFunctionCallExpression(FunctionKind kind, IFunctionInfo finfo) {
-        this.kind = kind;
-        this.finfo = finfo;
-        this.arguments = new ArrayList<Mutable<ILogicalExpression>>();
+        this(kind, finfo, new ArrayList<>());
     }
 
     public AbstractFunctionCallExpression(FunctionKind kind, IFunctionInfo finfo,
             Mutable<ILogicalExpression>... expressions) {
         this(kind, finfo);
-        for (Mutable<ILogicalExpression> e : expressions) {
-            this.arguments.add(e);
-        }
+        Collections.addAll(arguments, expressions);
     }
 
     public void setOpaqueParameters(Object[] opaqueParameters) {
@@ -212,7 +210,7 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
 
     @Override
     public int hashCode() {
-        int h = finfo.hashCode();
+        int h = getFunctionIdentifier().hashCode();
         for (Mutable<ILogicalExpression> e : arguments) {
             h = h * 41 + e.getValue().hashCode();
         }

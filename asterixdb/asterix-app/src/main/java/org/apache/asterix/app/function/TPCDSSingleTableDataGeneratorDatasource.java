@@ -36,14 +36,12 @@ public class TPCDSSingleTableDataGeneratorDatasource extends FunctionDataSource 
 
     private final String tableName;
     private final double scalingFactor;
-    private final FunctionIdentifier functionIdentifier;
 
     TPCDSSingleTableDataGeneratorDatasource(INodeDomain domain, String tableName, double scalingFactor,
             FunctionIdentifier functionIdentifier) throws AlgebricksException {
-        super(createDataSourceId(tableName, scalingFactor), domain);
+        super(createDataSourceId(tableName, scalingFactor), functionIdentifier, domain);
         this.tableName = tableName;
         this.scalingFactor = scalingFactor;
-        this.functionIdentifier = functionIdentifier;
     }
 
     /**
@@ -65,7 +63,7 @@ public class TPCDSSingleTableDataGeneratorDatasource extends FunctionDataSource 
     @Override
     protected IDatasourceFunction createFunction(MetadataProvider metadataProvider,
             AlgebricksAbsolutePartitionConstraint locations) {
-        return new TPCDSDataGeneratorFunction(locations, tableName, scalingFactor, functionIdentifier);
+        return new TPCDSDataGeneratorFunction(locations, tableName, scalingFactor, functionId);
     }
 
     @Override

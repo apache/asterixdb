@@ -35,13 +35,11 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 public class TPCDSAllTablesDataGeneratorDatasource extends FunctionDataSource {
 
     private final double scalingFactor;
-    private final FunctionIdentifier functionIdentifier;
 
     TPCDSAllTablesDataGeneratorDatasource(INodeDomain domain, double scalingFactor,
             FunctionIdentifier functionIdentifier) throws AlgebricksException {
-        super(createDataSourceId(scalingFactor), domain);
+        super(createDataSourceId(scalingFactor), functionIdentifier, domain);
         this.scalingFactor = scalingFactor;
-        this.functionIdentifier = functionIdentifier;
     }
 
     /**
@@ -61,7 +59,7 @@ public class TPCDSAllTablesDataGeneratorDatasource extends FunctionDataSource {
     @Override
     protected IDatasourceFunction createFunction(MetadataProvider metadataProvider,
             AlgebricksAbsolutePartitionConstraint locations) {
-        return new TPCDSDataGeneratorFunction(locations, null, scalingFactor, functionIdentifier);
+        return new TPCDSDataGeneratorFunction(locations, null, scalingFactor, functionId);
     }
 
     @Override

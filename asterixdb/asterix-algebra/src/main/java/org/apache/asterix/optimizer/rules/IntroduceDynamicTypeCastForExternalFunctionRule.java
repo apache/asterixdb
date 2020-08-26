@@ -19,7 +19,6 @@
 
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.ExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
@@ -69,7 +68,7 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
             }
         }
         // if the current function is builtin function, skip the type casting
-        if (BuiltinFunctions.getBuiltinFunctionIdentifier(funcCallExpr.getFunctionIdentifier()) != null) {
+        if (BuiltinFunctions.getBuiltinFunctionInfo(funcCallExpr.getFunctionIdentifier()) != null) {
             return changed;
         }
         IAType inputType;
@@ -97,8 +96,8 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
                 checkUnknown = true;
             }
             if (castFlag || checkUnknown) {
-                AbstractFunctionCallExpression castFunc =
-                        new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE));
+                AbstractFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
+                        BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.CAST_TYPE));
                 castFunc.setSourceLocation(argExpr.getValue().getSourceLocation());
                 castFunc.getArguments().add(argExpr);
                 TypeCastUtils.setRequiredAndInputTypes(castFunc, reqArgType, inputType);

@@ -22,7 +22,7 @@
 The CREATE FUNCTION statement creates a **named** function that can then be used and reused in queries.
 The body of a function can be any query expression involving the function's parameters.
 
-    FunctionSpecification ::= "FUNCTION" FunctionOrTypeName IfNotExists ParameterList "{" Expression "}"
+    FunctionSpecification ::= (<OR> <REPLACE>)? "FUNCTION" FunctionOrTypeName IfNotExists ParameterList "{" Expression "}"
 
 The following is an example of a CREATE FUNCTION statement which is similar to our earlier DECLARE FUNCTION example.
 It differs from that example in that it results in a function that is persistently registered by name in the specified dataverse (the current dataverse being used, if not otherwise specified).
@@ -35,9 +35,19 @@ It differs from that example in that it results in a function that is persistent
          WHERE u.id = userId)[0]
      };
 
+The following is an example of CREATE FUNCTION statement that replaces an existing function.
+
+##### Example
+
+    CREATE OR REPLACE FUNCTION friendInfo(userId) {
+        (SELECT u.id, u.name
+         FROM GleambookUsers u
+         WHERE u.id = userId)[0]
+     };
+
 ### <a id="Synonyms"> Synonyms</a>
 
-    SynonymSpecification ::= "SYNONYM" QualifiedName "FOR" QualifiedName IfNotExists
+    SynonymSpecification ::= "SYNONYM" QualifiedName IfNotExists "FOR" QualifiedName 
 
 The CREATE SYNONYM statement creates a synonym for a given dataset.
 This synonym may be used used instead of the dataset name in SELECT, INSERT, UPSERT, DELETE, and LOAD statements.

@@ -19,6 +19,7 @@
 package org.apache.asterix.optimizer.rules;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionToDataSourceRewriter;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -46,7 +47,12 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         if (f == null) {
             return false;
         }
-        return BuiltinFunctions.getDatasourceTransformer(f.getFunctionIdentifier()).rewrite(opRef, context);
+        IFunctionToDataSourceRewriter transformer =
+                BuiltinFunctions.getDatasourceTransformer(f.getFunctionIdentifier());
+        if (transformer == null) {
+            return false;
+        }
+        return transformer.rewrite(opRef, context);
     }
 
     public static AbstractFunctionCallExpression getFunctionCall(Mutable<ILogicalOperator> opRef) {

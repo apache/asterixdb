@@ -116,7 +116,7 @@ Let Variable [ Name=$rank_result_expected ]
   ]
 Let Variable [ Name=$rank_result_actual ]
   :=
-  WINDOW asterix.rank-impl@-1[
+  WINDOW asterix.rank-impl[
   ]
     AS Variable [ Name=#2 ]
     (
@@ -165,7 +165,7 @@ Let Variable [ Name=$percent_rank_result_expected ]
   ]
 Let Variable [ Name=$percent_rank_result_actual ]
   :=
-  WINDOW asterix.percent-rank-impl@-1[
+  WINDOW asterix.percent-rank-impl[
   ]
     AS Variable [ Name=#3 ]
     (

@@ -321,7 +321,7 @@ public final class RewriteDistinctAggregateRule implements IAlgebraicRewriteRule
             if (regularAggForDistinct == null) {
                 throw new IllegalStateException(String.valueOf(callExpr.getFunctionIdentifier()));
             }
-            callExpr.setFunctionInfo(BuiltinFunctions.getAsterixFunctionInfo(regularAggForDistinct));
+            callExpr.setFunctionInfo(BuiltinFunctions.getBuiltinFunctionInfo(regularAggForDistinct));
 
             if (assignOp != null) {
                 callExpr.getArguments().get(0).setValue(distinctVarRef.cloneExpression());

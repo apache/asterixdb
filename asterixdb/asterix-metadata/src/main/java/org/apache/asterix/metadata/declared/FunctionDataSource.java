@@ -52,9 +52,17 @@ import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 
 public abstract class FunctionDataSource extends DataSource {
 
-    public FunctionDataSource(DataSourceId id, INodeDomain domain) throws AlgebricksException {
+    protected final FunctionIdentifier functionId;
+
+    public FunctionDataSource(DataSourceId id, FunctionIdentifier functionId, INodeDomain domain)
+            throws AlgebricksException {
         super(id, RecordUtil.FULLY_OPEN_RECORD_TYPE, null, DataSource.Type.FUNCTION, domain);
+        this.functionId = functionId;
         schemaTypes = new IAType[] { itemType };
+    }
+
+    public FunctionIdentifier getFunctionId() {
+        return functionId;
     }
 
     @Override

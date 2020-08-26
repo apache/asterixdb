@@ -20,10 +20,8 @@ package org.apache.asterix.dataflow.data.common;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.ExternalFunctionInfo;
+import org.apache.asterix.om.functions.FunctionInfo;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -35,7 +33,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstan
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 public class ExpressionTypeComputer implements IExpressionTypeComputer {
@@ -69,18 +66,7 @@ public class ExpressionTypeComputer implements IExpressionTypeComputer {
 
     private IAType getTypeForFunction(AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> mp) throws AlgebricksException {
-        FunctionIdentifier fi = expr.getFunctionIdentifier();
-        // Note: built-in functions + udfs
-        IResultTypeComputer rtc;
-        FunctionSignature signature = new FunctionSignature(fi);
-        if (BuiltinFunctions.isBuiltinCompilerFunction(signature, true)) {
-            rtc = BuiltinFunctions.getResultTypeComputer(fi);
-        } else {
-            rtc = ((ExternalFunctionInfo) expr.getFunctionInfo()).getResultTypeComputer();
-        }
-        if (rtc == null) {
-            throw new AlgebricksException("Type computer missing for " + fi);
-        }
+        IResultTypeComputer rtc = ((FunctionInfo) expr.getFunctionInfo()).getResultTypeComputer();
         return rtc.computeType(expr, env, mp);
     }
 

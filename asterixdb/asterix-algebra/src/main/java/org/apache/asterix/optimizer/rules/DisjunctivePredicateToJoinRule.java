@@ -142,7 +142,7 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
 
         ILogicalExpression cExp = new ConstantExpression(new AsterixConstantValue(list));
         Mutable<ILogicalExpression> mutCExp = new MutableObject<>(cExp);
-        IFunctionInfo scanFctInfo = BuiltinFunctions.getAsterixFunctionInfo(BuiltinFunctions.SCAN_COLLECTION);
+        IFunctionInfo scanFctInfo = BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SCAN_COLLECTION);
         UnnestingFunctionCallExpression scanExp = new UnnestingFunctionCallExpression(scanFctInfo, mutCExp);
         scanExp.setSourceLocation(sourceLoc);
         LogicalVariable scanVar = context.newVar();
@@ -151,7 +151,7 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
         unn.getInputs().add(new MutableObject<>(ets));
         context.computeAndSetTypeEnvironmentForOperator(unn);
 
-        IFunctionInfo eqFctInfo = BuiltinFunctions.getAsterixFunctionInfo(AlgebricksBuiltinFunctions.EQ);
+        IFunctionInfo eqFctInfo = BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.EQ);
         AbstractFunctionCallExpression eqExp = new ScalarFunctionCallExpression(eqFctInfo);
         eqExp.setSourceLocation(sourceLoc);
         VariableReferenceExpression scanVarRef = new VariableReferenceExpression(scanVar);

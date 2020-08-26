@@ -36,7 +36,6 @@ import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
@@ -90,8 +89,8 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
+import org.apache.asterix.om.functions.BuiltinFunctionInfo;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.FunctionInfo;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -883,7 +882,7 @@ abstract class LangExpressionToPlanTranslator
             List<Mutable<ILogicalExpression>> args, SourceLocation sourceLoc) throws CompilationException {
         AbstractFunctionCallExpression f;
         if ((f = lookupUserDefinedFunction(signature, args, sourceLoc)) == null) {
-            f = lookupBuiltinFunction(signature.getName(), signature.getArity(), args, sourceLoc);
+            f = lookupBuiltinFunction(signature, args, sourceLoc);
         }
         return f;
     }
@@ -895,24 +894,25 @@ abstract class LangExpressionToPlanTranslator
             if (function == null) {
                 return null;
             }
-            IFunctionInfo finfo = function.isExternal()
-                    ? ExternalFunctionCompilerUtil.getExternalFunctionInfo(metadataProvider, function)
-                    : FunctionUtil.getFunctionInfo(signature);
+            if (!function.isExternal()) {
+                // all non-external UDFs should've been inlined by now
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, signature);
+            }
+            IFunctionInfo finfo = ExternalFunctionCompilerUtil.getExternalFunctionInfo(metadataProvider, function);
             AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(finfo, args);
             f.setSourceLocation(sourceLoc);
             return f;
+        } catch (CompilationException e) {
+            throw e;
         } catch (AlgebricksException e) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage(), e);
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
         }
     }
 
-    private AbstractFunctionCallExpression lookupBuiltinFunction(String functionName, int arity,
-            List<Mutable<ILogicalExpression>> args, SourceLocation sourceLoc) {
+    private AbstractFunctionCallExpression lookupBuiltinFunction(FunctionSignature signature,
+            List<Mutable<ILogicalExpression>> args, SourceLocation sourceLoc) throws CompilationException {
         AbstractFunctionCallExpression f;
-        FunctionIdentifier fi = getBuiltinFunctionIdentifier(functionName, arity);
-        if (fi == null) {
-            return null;
-        }
+        FunctionIdentifier fi = signature.createFunctionIdentifier();
         if (BuiltinFunctions.isBuiltinAggregateFunction(fi)) {
             f = BuiltinFunctions.makeAggregateFunctionExpression(fi, args);
         } else if (BuiltinFunctions.isBuiltinUnnestingFunction(fi)) {
@@ -923,27 +923,15 @@ abstract class LangExpressionToPlanTranslator
         } else if (BuiltinFunctions.isWindowFunction(fi)) {
             f = BuiltinFunctions.makeWindowFunctionExpression(fi, args);
         } else {
-            f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fi), args);
+            BuiltinFunctionInfo finfo = FunctionUtil.getFunctionInfo(fi);
+            if (finfo == null) {
+                // should've been resolved earlier
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, fi);
+            }
+            f = new ScalarFunctionCallExpression(finfo, args);
         }
         f.setSourceLocation(sourceLoc);
         return f;
-    }
-
-    protected FunctionIdentifier getBuiltinFunctionIdentifier(String functionName, int arity) {
-        FunctionIdentifier fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, functionName, arity);
-        FunctionInfo afi = BuiltinFunctions.lookupFunction(fi);
-        FunctionIdentifier builtinAquafi = afi == null ? null : afi.getFunctionIdentifier();
-
-        if (builtinAquafi != null) {
-            fi = builtinAquafi;
-        } else {
-            fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, functionName, arity);
-            afi = BuiltinFunctions.lookupFunction(fi);
-            if (afi == null) {
-                return null;
-            }
-        }
-        return fi;
     }
 
     @Override

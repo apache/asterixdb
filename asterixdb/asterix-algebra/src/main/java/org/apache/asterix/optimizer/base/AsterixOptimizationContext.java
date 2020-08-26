@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.asterix.metadata.declared.DataSource;
-import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
@@ -40,7 +39,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public final class AsterixOptimizationContext extends AlgebricksOptimizationContext {
 
-    private final Int2ObjectMap<Set<DataSourceId>> dataSourceMap = new Int2ObjectOpenHashMap<>();
+    private final Int2ObjectMap<Set<DataSource>> dataSourceMap = new Int2ObjectOpenHashMap<>();
 
     public AsterixOptimizationContext(int varCounter, IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
@@ -55,15 +54,15 @@ public final class AsterixOptimizationContext extends AlgebricksOptimizationCont
 
     public void addDataSource(DataSource dataSource) {
         byte type = dataSource.getDatasourceType();
-        Set<DataSourceId> set = dataSourceMap.get(type);
+        Set<DataSource> set = dataSourceMap.get(type);
         if (set == null) {
             set = new HashSet<>();
             dataSourceMap.put(type, set);
         }
-        set.add(dataSource.getId());
+        set.add(dataSource);
     }
 
-    public Int2ObjectMap<Set<DataSourceId>> getDataSourceMap() {
+    public Int2ObjectMap<Set<DataSource>> getDataSourceMap() {
         return dataSourceMap;
     }
 }

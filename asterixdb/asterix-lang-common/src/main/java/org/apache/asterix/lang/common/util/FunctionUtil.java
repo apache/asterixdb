@@ -46,6 +46,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.om.functions.BuiltinFunctionInfo;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.TypeSignature;
@@ -55,9 +56,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class FunctionUtil {
@@ -69,21 +68,11 @@ public class FunctionUtil {
 
     private static final String FN_DATASET_NAME = BuiltinFunctions.DATASET.getName();
 
-    public static IFunctionInfo getFunctionInfo(FunctionIdentifier fi) {
-        return BuiltinFunctions.getAsterixFunctionInfo(fi);
-    }
-
-    public static IFunctionInfo getFunctionInfo(FunctionSignature fs) {
-        return getFunctionInfo(fs.createFunctionIdentifier());
-    }
-
-    public static IFunctionInfo getBuiltinFunctionInfo(String functionName, int arity) {
-        IFunctionInfo fi =
-                getFunctionInfo(new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, functionName, arity));
-        if (fi == null) {
-            fi = getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS, functionName, arity));
-        }
-        return fi;
+    /**
+     * @deprecated use {@link BuiltinFunctions#getBuiltinFunctionInfo(FunctionIdentifier)} instead
+     */
+    public static BuiltinFunctionInfo getFunctionInfo(FunctionIdentifier fi) {
+        return BuiltinFunctions.getBuiltinFunctionInfo(fi);
     }
 
     public static TypeSignature getTypeDependencyFromFunctionParameter(TypeExpression typeExpr,
@@ -174,11 +163,21 @@ public class FunctionUtil {
     public static BiFunction<String, Integer, FunctionSignature> createBuiltinFunctionResolver(
             MetadataProvider metadataProvider) {
         boolean includePrivateFunctions = getImportPrivateFunctions(metadataProvider);
+        return createBuiltinFunctionResolver(includePrivateFunctions);
+    }
+
+    public static BiFunction<String, Integer, FunctionSignature> createBuiltinFunctionResolver(
+            boolean includePrivateFunctions) {
         return (name, arity) -> {
             String builtinName = name.replace('_', '-');
-            FunctionIdentifier builtinId =
-                    BuiltinFunctions.getBuiltinCompilerFunction(builtinName, arity, includePrivateFunctions);
-            return builtinId != null ? new FunctionSignature(builtinId) : null;
+            BuiltinFunctionInfo finfo = BuiltinFunctions.resolveBuiltinFunction(builtinName, arity);
+            if (finfo == null) {
+                return null;
+            }
+            if (!includePrivateFunctions && finfo.isPrivate()) {
+                return null;
+            }
+            return new FunctionSignature(finfo.getFunctionIdentifier());
         };
     }
 
@@ -244,13 +243,11 @@ public class FunctionUtil {
     }
 
     public static List<List<Triple<DataverseName, String, String>>> getFunctionDependencies(IQueryRewriter rewriter,
-            Expression expression, MetadataProvider metadataProvider, Collection<TypeSignature> dependentTypes)
-            throws CompilationException {
+            Expression expression, MetadataProvider metadataProvider) throws CompilationException {
         Set<CallExpr> functionCalls = rewriter.getFunctionCalls(expression);
         //Get the List of used functions and used datasets
         List<Triple<DataverseName, String, String>> datasourceDependencies = new ArrayList<>();
         List<Triple<DataverseName, String, String>> functionDependencies = new ArrayList<>();
-        List<Triple<DataverseName, String, String>> typeDependencies = new ArrayList<>(dependentTypes.size());
         for (CallExpr functionCall : functionCalls) {
             FunctionSignature signature = functionCall.getFunctionSignature();
             if (isBuiltinDatasetFunction(signature)) {
@@ -258,18 +255,15 @@ public class FunctionUtil {
                         metadataProvider.getDefaultDataverseName(), functionCall.getSourceLocation(),
                         ExpressionUtils::getStringLiteral);
                 datasourceDependencies.add(new Triple<>(datasetReference.first, datasetReference.second, null));
-            } else if (!BuiltinFunctions.isBuiltinCompilerFunction(signature, false)) {
+            } else if (BuiltinFunctions.getBuiltinFunctionInfo(signature.createFunctionIdentifier()) == null) {
                 functionDependencies.add(new Triple<>(signature.getDataverseName(), signature.getName(),
                         Integer.toString(signature.getArity())));
             }
         }
-        for (TypeSignature t : dependentTypes) {
-            typeDependencies.add(new Triple<>(t.getDataverseName(), t.getName(), null));
-        }
         List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>(3);
         dependencies.add(datasourceDependencies);
         dependencies.add(functionDependencies);
-        dependencies.add(typeDependencies);
+        dependencies.add(Collections.emptyList());
         return dependencies;
     }
 

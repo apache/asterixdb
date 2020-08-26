@@ -19,6 +19,7 @@
 package org.apache.asterix.dataflow.data.common;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.FunctionInfo;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -45,7 +46,6 @@ public class PartialAggregationTypeComputer implements IPartialAggregationTypeCo
 
     private Object getTypeForFunction(AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        return BuiltinFunctions.getResultTypeComputer(expr.getFunctionIdentifier()).computeType(expr, env,
-                metadataProvider);
+        return ((FunctionInfo) expr.getFunctionInfo()).getResultTypeComputer().computeType(expr, env, metadataProvider);
     }
 }

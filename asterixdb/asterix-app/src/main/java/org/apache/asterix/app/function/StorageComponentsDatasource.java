@@ -34,7 +34,7 @@ public class StorageComponentsDatasource extends FunctionDataSource {
     private final int datasetId;
 
     public StorageComponentsDatasource(INodeDomain domain, int datasetId) throws AlgebricksException {
-        super(STORAGE_COMPONENTS_DATASOURCE_ID, domain);
+        super(STORAGE_COMPONENTS_DATASOURCE_ID, StorageComponentsRewriter.STORAGE_COMPONENTS, domain);
         this.datasetId = datasetId;
     }
 

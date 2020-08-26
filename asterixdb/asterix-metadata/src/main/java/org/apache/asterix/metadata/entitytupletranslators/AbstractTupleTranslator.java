@@ -32,6 +32,7 @@ import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableString;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ARecordType;
@@ -50,6 +51,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  */
 public abstract class AbstractTupleTranslator<T> implements IMetadataEntityTupleTranslator<T> {
 
+    @SuppressWarnings("unchecked")
+    protected final ISerializerDeserializer<ANull> nullSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
     @SuppressWarnings("unchecked")
     protected final ISerializerDeserializer<AString> stringSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);

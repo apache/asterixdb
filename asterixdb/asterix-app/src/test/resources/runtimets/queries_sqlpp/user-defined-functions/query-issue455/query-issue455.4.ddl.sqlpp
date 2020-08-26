@@ -23,4 +23,4 @@
  * Date         : 19th May 2013
  */
 
-drop function test.printName@0;
+drop function test.printName();

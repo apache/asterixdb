@@ -1,0 +1,3 @@
+{ "type": "eval", "value": 30 }
+{ "type": "meta-functions", "value": [ { "DataverseName": "externallibtest", "Name": "f", "Arity": "1", "Params": [ "a" ], "ReturnType": "", "Definition": "", "Language": "JAVA", "Kind": "SCALAR", "Dependencies": [ [  ], [  ], [  ] ], "ParamTypes": [ null ], "LibraryDataverseName": "externallibtest", "LibraryName": "testlib", "ExternalIdentifier": [ "org.apache.asterix.external.library.OpenCapitalFinderFactory" ], "NullCall": false, "Deterministic": true }, { "DataverseName": "externallibtest", "Name": "f2", "Arity": "2", "Params": [ "a", "b" ], "ReturnType": "", "Definition": "a * b", "Language": "SQLPP", "Kind": "SCALAR", "Dependencies": [ [  ], [  ], [  ] ] } ] }
+{ "type": "meta-types", "value": [  ] }

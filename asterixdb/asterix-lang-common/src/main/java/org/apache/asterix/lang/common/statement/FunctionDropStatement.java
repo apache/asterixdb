@@ -27,7 +27,7 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 public class FunctionDropStatement extends AbstractStatement {
 
     private final FunctionSignature signature;
-    private boolean ifExists;
+    private final boolean ifExists;
 
     public FunctionDropStatement(FunctionSignature signature, boolean ifExists) {
         this.signature = signature;

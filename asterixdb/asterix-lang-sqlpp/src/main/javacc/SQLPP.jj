@@ -233,6 +233,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String SETS = "SETS";
     private static final String TIES = "TIES";
     private static final String UNBOUNDED = "UNBOUNDED";
+    private static final String REPLACE = "REPLACE";
     private static final String RETURNS = "RETURNS";
 
     private static final String INT_TYPE_NAME = "int";
@@ -464,12 +465,20 @@ class SQLPPParser extends ScopeChecker implements IParser {
     }
 
     private boolean isToken(String image) {
+      return isToken(token, image);
+    }
+
+    private static boolean isToken(Token token, String image) {
       return token.image.equalsIgnoreCase(image);
     }
 
     private void expectToken(String image) throws SqlppParseException {
-      if (!isToken(image)) {
-        throw createUnexpectedTokenError();
+      expectToken(token, image);
+    }
+
+    private static void expectToken(Token token, String image) throws SqlppParseException {
+      if (!isToken(token, image)) {
+        throw createUnexpectedTokenError(token);
       }
     }
 
@@ -477,7 +486,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
       return createUnexpectedTokenError(token, null);
     }
 
-    private SqlppParseException createUnexpectedTokenError(Token t) {
+    private static SqlppParseException createUnexpectedTokenError(Token t) {
       return createUnexpectedTokenError(t, null);
     }
 
@@ -485,7 +494,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
       return createUnexpectedTokenError(token, expected);
     }
 
-    private SqlppParseException createUnexpectedTokenError(Token t, String expected) {
+    private static SqlppParseException createUnexpectedTokenError(Token t, String expected) {
       String message = "Unexpected token: " + LogRedactionUtil.userData(t.image) +
         (expected == null ? "" : ". Expected: " + LogRedactionUtil.userData(expected));
       return new SqlppParseException(getSourceLocation(t), message);
@@ -652,18 +661,36 @@ Statement CreateStatement() throws ParseException:
 {
   <CREATE> { startToken = token; }
   (
-    stmt = CreateTypeStatement(startToken)
+    stmt = CreateOrReplaceStatement(startToken)
+    | stmt = CreateTypeStatement(startToken)
     | stmt = CreateNodegroupStatement(startToken)
     | stmt = CreateDatasetStatement(startToken)
     | stmt = CreateIndexStatement(startToken)
     | stmt = CreateDataverseStatement(startToken)
-    | stmt = CreateFunctionStatement(startToken)
+    | stmt = CreateFunctionStatement(startToken, false)
     | stmt = CreateAdapterStatement(startToken)
     | stmt = CreateSynonymStatement(startToken)
     | stmt = CreateFeedStatement(startToken)
     | stmt = CreateFeedPolicyStatement(startToken)
   )
   {
+    return stmt;
+  }
+}
+
+Statement CreateOrReplaceStatement(Token startStmtToken) throws ParseException:
+{
+  Statement stmt = null;
+  Token replaceToken = null;
+}
+{
+  <OR> <IDENTIFIER> { replaceToken = token; }
+  (
+    stmt = CreateFunctionStatement(startStmtToken, true)
+  )
+  {
+    // check expected token here to make the grammar extension plugin happy
+    expectToken(replaceToken, REPLACE);
     return stmt;
   }
 }
@@ -1120,18 +1147,18 @@ CreateAdapterStatement AdapterSpecification(Token startStmtToken) throws ParseEx
   }
 }
 
-CreateFunctionStatement CreateFunctionStatement(Token startStmtToken) throws ParseException:
+CreateFunctionStatement CreateFunctionStatement(Token startStmtToken, boolean orReplace) throws ParseException:
 {
   CreateFunctionStatement stmt = null;
 }
 {
-  <FUNCTION> stmt = FunctionSpecification(startStmtToken)
+  <FUNCTION> stmt = FunctionSpecification(startStmtToken, orReplace)
   {
     return stmt;
   }
 }
 
-CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws ParseException:
+CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orReplace) throws ParseException:
 {
   FunctionSignature signature = null;
   FunctionName fctName = null;
@@ -1172,7 +1199,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
         removeCurrentScope();
         defaultDataverse = currentDataverse;
         ensureNoTypeDeclsInFunction(fctName.function, params, returnType, startStmtToken);
-        stmt = new CreateFunctionStatement(signature, params, functionBody, functionBodyExpr, ifNotExists);
+        stmt = new CreateFunctionStatement(signature, params, functionBody, functionBodyExpr, orReplace, ifNotExists);
         return addSourceLocation(stmt, startStmtToken);
       }
     )
@@ -1186,7 +1213,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
         defaultDataverse = currentDataverse;
         try {
           stmt = new CreateFunctionStatement(signature, params, returnType, libraryName.first,
-            libraryName.second.getValue(), externalIdentifier, withOptions, ifNotExists);
+            libraryName.second.getValue(), externalIdentifier, withOptions, orReplace, ifNotExists);
         } catch (AlgebricksException e) {
             throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
         }
@@ -1340,7 +1367,6 @@ CreateFeedPolicyStatement FeedPolicySpecification(Token startStmtToken) throws P
   }
 }
 
-
 CreateSynonymStatement CreateSynonymStatement(Token startStmtToken) throws ParseException:
 {
   CreateSynonymStatement stmt = null;
@@ -1417,20 +1443,38 @@ String GetPolicy() throws ParseException:
 FunctionSignature FunctionSignature() throws ParseException:
 {
   FunctionName fctName = null;
+  List<Pair<VarIdentifier,TypeExpression>> params = null;
   int arity = 0;
 }
 {
-  fctName = FunctionName() <ATT> <INTEGER_LITERAL>
-    {
-      arity = new Integer(token.image);
-      if (arity < 0 && arity != FunctionIdentifier.VARARGS) {
-        throw new SqlppParseException(getSourceLocation(token), "Invalid arity:" + arity);
-      }
+  fctName = FunctionName()
+  (
+    LOOKAHEAD(2) params = FunctionParameters() { arity = params.size(); }
+  | ( <LEFTPAREN> arity = FunctionArity() <RIGHTPAREN> )
+  | ( <ATT> arity = FunctionArity() ) // back-compat
+  )
+  {
+    return new FunctionSignature(fctName.dataverse, fctName.function, arity);
+  }
+}
 
-      // TODO use fctName.library
-      String fqFunctionName = fctName.library == null ? fctName.function : fctName.library + "#" + fctName.function;
-      return new FunctionSignature(fctName.dataverse, fqFunctionName, arity);
+int FunctionArity() throws ParseException:
+{
+  int arity;
+}
+{
+  <INTEGER_LITERAL>
+  {
+    try {
+      arity = Integer.parseInt(token.image);
+    } catch (NumberFormatException e) {
+      throw new SqlppParseException(getSourceLocation(token), "Invalid arity: " + token.image);
     }
+    if (arity < 0 && arity != FunctionIdentifier.VARARGS) {
+      throw new SqlppParseException(getSourceLocation(token), "Invalid arity: " + arity);
+    }
+    return arity;
+  }
 }
 
 Pair<List<Integer>, List<List<String>>> PrimaryKey() throws ParseException:

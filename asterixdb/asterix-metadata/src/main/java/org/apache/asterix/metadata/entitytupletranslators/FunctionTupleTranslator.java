@@ -57,12 +57,13 @@ import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Function;
-import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
@@ -120,12 +121,17 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
             paramNames.add(((AString) paramNameCursor.get()).getStringValue());
         }
 
-        List<TypeSignature> paramTypes = getParamTypes(functionRecord, arity, dataverseName);
+        List<TypeSignature> paramTypes = getParamTypes(functionRecord, dataverseName);
 
+        TypeSignature returnType;
         String returnTypeName = ((AString) functionRecord
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_RETURN_TYPE_FIELD_INDEX)).getStringValue();
-        String returnTypeDataverseNameCanonical = getString(functionRecord, FIELD_NAME_RETURN_TYPE_DATAVERSE_NAME);
-        TypeSignature returnType = getTypeSignature(returnTypeName, returnTypeDataverseNameCanonical, dataverseName);
+        if (returnTypeName.isEmpty()) {
+            returnType = null; // == any
+        } else {
+            String returnTypeDataverseNameCanonical = getString(functionRecord, FIELD_NAME_RETURN_TYPE_DATAVERSE_NAME);
+            returnType = getTypeSignature(returnTypeName, returnTypeDataverseNameCanonical, dataverseName);
+        }
 
         String definition = ((AString) functionRecord
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEFINITION_FIELD_INDEX)).getStringValue();
@@ -191,32 +197,42 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
                 dependencies);
     }
 
-    private List<TypeSignature> getParamTypes(ARecord functionRecord, int arity, DataverseName functionDataverseName) {
-        List<TypeSignature> paramTypes = new ArrayList<>(arity);
+    private List<TypeSignature> getParamTypes(ARecord functionRecord, DataverseName functionDataverseName) {
         ARecordType functionRecordType = functionRecord.getType();
         int paramTypesFieldIdx = functionRecordType.getFieldIndex(FUNCTION_ARECORD_FUNCTION_PARAMTYPES_FIELD_NAME);
-        if (paramTypesFieldIdx >= 0) {
-            IACursor cursor = ((AOrderedList) functionRecord.getValueByPos(paramTypesFieldIdx)).getCursor();
-            while (cursor.next()) {
-                ARecord paramTypeRecord = (ARecord) cursor.get();
-                String paramTypeName = getString(paramTypeRecord, FIELD_NAME_TYPE);
-                String paramTypeDataverseNameCanonical = getString(paramTypeRecord, FIELD_NAME_DATAVERSE_NAME);
-                TypeSignature paramType =
-                        getTypeSignature(paramTypeName, paramTypeDataverseNameCanonical, functionDataverseName);
-                paramTypes.add(paramType);
+        if (paramTypesFieldIdx < 0) {
+            return null;
+        }
+
+        AOrderedList paramTypeList = (AOrderedList) functionRecord.getValueByPos(paramTypesFieldIdx);
+        List<TypeSignature> paramTypes = new ArrayList<>(paramTypeList.size());
+        IACursor cursor = paramTypeList.getCursor();
+        while (cursor.next()) {
+            IAObject paramTypeObject = cursor.get();
+            TypeSignature paramType;
+            switch (paramTypeObject.getType().getTypeTag()) {
+                case NULL:
+                    paramType = null; // == any
+                    break;
+                case OBJECT:
+                    ARecord paramTypeRecord = (ARecord) paramTypeObject;
+                    String paramTypeName = getString(paramTypeRecord, FIELD_NAME_TYPE);
+                    String paramTypeDataverseNameCanonical = getString(paramTypeRecord, FIELD_NAME_DATAVERSE_NAME);
+                    paramType = getTypeSignature(paramTypeName, paramTypeDataverseNameCanonical, functionDataverseName);
+                    break;
+                default:
+                    throw new IllegalStateException(); //TODO:FIXME
             }
-        } else {
-            for (int i = 0; i < arity; i++) {
-                paramTypes.add(TypeUtil.ANY_TYPE_SIGNATURE);
-            }
+            paramTypes.add(paramType);
         }
         return paramTypes;
     }
 
     private TypeSignature getTypeSignature(String typeName, String typeDataverseNameCanonical,
             DataverseName functionDataverseName) {
+        // back-compat: handle "any"
         if (BuiltinType.ANY.getTypeName().equals(typeName)) {
-            return TypeUtil.ANY_TYPE_SIGNATURE;
+            return null; // == any
         }
         BuiltinType builtinType = BuiltinTypeMap.getBuiltinType(typeName);
         if (builtinType != null) {
@@ -335,8 +351,9 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
 
         // write field 4
         // Note: return type's dataverse name is written later in the open part
+        TypeSignature returnType = function.getReturnType();
         fieldValue.reset();
-        aString.setValue(function.getReturnType().getName());
+        aString.setValue(returnType != null ? returnType.getName() : "");
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_RETURN_TYPE_FIELD_INDEX, fieldValue);
 
@@ -429,13 +446,21 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
     }
 
     protected void writeParameterTypes(Function function) throws HyracksDataException {
+        List<TypeSignature> parameterTypes = function.getParameterTypes();
+        if (parameterTypes == null) {
+            return;
+        }
         OrderedListBuilder listBuilder = new OrderedListBuilder();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         listBuilder.reset(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
-        for (TypeSignature paramType : function.getParameterTypes()) {
+        for (TypeSignature paramType : parameterTypes) {
             itemValue.reset();
-            writeTypeRecord(paramType.getDataverseName(), paramType.getName(), function.getDataverseName(),
-                    itemValue.getDataOutput());
+            if (paramType == null) {
+                nullSerde.serialize(ANull.NULL, itemValue.getDataOutput());
+            } else {
+                writeTypeRecord(paramType.getDataverseName(), paramType.getName(), function.getDataverseName(),
+                        itemValue.getDataOutput());
+            }
             listBuilder.addItem(itemValue);
         }
         fieldValue.reset();
@@ -487,18 +512,21 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
     }
 
     protected void writeReturnTypeDataverseName(Function function) throws HyracksDataException {
-        DataverseName returnTypeDataverseName = function.getReturnType().getDataverseName();
-        boolean skipReturnTypeDataverseName =
-                returnTypeDataverseName == null || returnTypeDataverseName.equals(function.getDataverseName());
-        if (!skipReturnTypeDataverseName) {
-            fieldName.reset();
-            aString.setValue(FIELD_NAME_RETURN_TYPE_DATAVERSE_NAME);
-            stringSerde.serialize(aString, fieldName.getDataOutput());
-            fieldValue.reset();
-            aString.setValue(returnTypeDataverseName.getCanonicalForm());
-            stringSerde.serialize(aString, fieldValue.getDataOutput());
-            recordBuilder.addField(fieldName, fieldValue);
+        TypeSignature returnType = function.getReturnType();
+        if (returnType == null) {
+            return;
         }
+        DataverseName returnTypeDataverseName = returnType.getDataverseName();
+        if (returnTypeDataverseName == null || returnTypeDataverseName.equals(function.getDataverseName())) {
+            return;
+        }
+        fieldName.reset();
+        aString.setValue(FIELD_NAME_RETURN_TYPE_DATAVERSE_NAME);
+        stringSerde.serialize(aString, fieldName.getDataOutput());
+        fieldValue.reset();
+        aString.setValue(returnTypeDataverseName.getCanonicalForm());
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        recordBuilder.addField(fieldName, fieldValue);
     }
 
     protected void writeNullCall(Function function) throws HyracksDataException {

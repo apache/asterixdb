@@ -24,6 +24,11 @@
 
   <test-group name="external-library">
     <test-case FilePath="external-library">
+      <compilation-unit name="create-or-replace-function-1">
+        <output-dir compare="Text">create-or-replace-function-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
       <compilation-unit name="type_validation">
         <output-dir compare="Text">type_validation</output-dir>
       </compilation-unit>
@@ -46,7 +51,7 @@
     <test-case FilePath="external-library">
       <compilation-unit name="mysum_dropinuse">
         <output-dir compare="Text">mysum_dropinuse</output-dir>
-        <expected-error>Cannot drop library externallibtest.testlib being used by funciton externallibtest.mysum@2</expected-error>
+        <expected-error>Cannot drop library externallibtest.testlib being used by funciton externallibtest.mysum(2)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">

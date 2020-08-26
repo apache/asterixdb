@@ -163,7 +163,7 @@ public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<V
         return null;
     }
 
-    private static void printFunctionSignature(PrintWriter out, FunctionSignature fs, int arity) {
+    protected static void printFunctionSignature(PrintWriter out, FunctionSignature fs, int arity) {
         out.print(fs.toString(false));
         if (arity != FunctionIdentifier.VARARGS) {
             out.print("@");

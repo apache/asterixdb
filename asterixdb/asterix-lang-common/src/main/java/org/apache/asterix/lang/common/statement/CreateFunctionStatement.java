@@ -52,7 +52,6 @@ public class CreateFunctionStatement extends AbstractStatement {
     private final FunctionSignature signature;
     private final String functionBody;
     private final Expression functionBodyExpression;
-    private final boolean ifNotExists;
     private final List<Pair<VarIdentifier, TypeExpression>> paramList;
     private final TypeExpression returnType;
 
@@ -61,26 +60,29 @@ public class CreateFunctionStatement extends AbstractStatement {
     private final List<String> externalIdentifier;
     private final AdmObjectNode options;
 
+    private final boolean replaceIfExists;
+    private final boolean ifNotExists;
+
     public CreateFunctionStatement(FunctionSignature signature, List<Pair<VarIdentifier, TypeExpression>> paramList,
-            String functionBody, Expression functionBodyExpression, boolean ifNotExists) {
+            String functionBody, Expression functionBodyExpression, boolean replaceIfExists, boolean ifNotExists) {
         this.signature = signature;
         this.functionBody = functionBody;
         this.functionBodyExpression = functionBodyExpression;
-        this.ifNotExists = ifNotExists;
         this.paramList = requireNullTypes(paramList); // parameter type specification is not allowed for inline functions
         this.returnType = null; // return type specification is not allowed for inline functions
         this.libraryDataverseName = null;
         this.libraryName = null;
         this.externalIdentifier = null;
         this.options = null;
+        this.replaceIfExists = replaceIfExists;
+        this.ifNotExists = ifNotExists;
     }
 
     public CreateFunctionStatement(FunctionSignature signature, List<Pair<VarIdentifier, TypeExpression>> paramList,
             TypeExpression returnType, DataverseName libraryDataverseName, String libraryName,
-            List<String> externalIdentifier, RecordConstructor options, boolean ifNotExists)
+            List<String> externalIdentifier, RecordConstructor options, boolean replaceIfExists, boolean ifNotExists)
             throws CompilationException {
         this.signature = signature;
-        this.ifNotExists = ifNotExists;
         this.paramList = paramList;
         this.returnType = returnType;
         this.libraryDataverseName = libraryDataverseName;
@@ -89,6 +91,12 @@ public class CreateFunctionStatement extends AbstractStatement {
         this.options = options == null ? null : ExpressionUtils.toNode(options);
         this.functionBody = null;
         this.functionBodyExpression = null;
+        this.replaceIfExists = replaceIfExists;
+        this.ifNotExists = ifNotExists;
+    }
+
+    public boolean getReplaceIfExists() {
+        return replaceIfExists;
     }
 
     public boolean getIfNotExists() {

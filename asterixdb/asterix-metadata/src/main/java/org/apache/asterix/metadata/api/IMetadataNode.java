@@ -824,6 +824,28 @@ public interface IMetadataNode extends Remote, Serializable {
     void updateLibrary(TxnId txnId, Library library) throws AlgebricksException, RemoteException;
 
     /**
+     * update an existing function in the metadata, acquiring local locks on behalf
+     * of the given transaction id.
+     *
+     * @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param function
+     *            updated Function instance.
+     */
+    void updateFunction(TxnId txnId, Function function) throws AlgebricksException, RemoteException;
+
+    /**
+     * update an existing datatype in the metadata, acquiring local locks on behalf
+     * of the given transaction id.
+     *
+     * @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param datatype
+     *            updated Datatype instance.
+     */
+    void updateDatatype(TxnId txnId, Datatype datatype) throws AlgebricksException, RemoteException;
+
+    /**
      * Adds an extension entity under the ongoing transaction job id
      *
      * @param txnId

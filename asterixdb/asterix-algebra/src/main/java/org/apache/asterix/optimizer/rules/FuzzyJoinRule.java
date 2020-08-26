@@ -21,15 +21,26 @@ package org.apache.asterix.optimizer.rules;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.BiFunction;
 
 import org.apache.asterix.aqlplus.parser.AQLPlusParser;
 import org.apache.asterix.aqlplus.parser.ParseException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.aql.clause.JoinClause;
+import org.apache.asterix.lang.aql.clause.MetaVariableClause;
+import org.apache.asterix.lang.aql.expression.MetaVariableExpr;
+import org.apache.asterix.lang.aql.rewrites.visitor.AqlFunctionCallResolverVisitor;
+import org.apache.asterix.lang.aql.visitor.base.IAQLPlusVisitor;
 import org.apache.asterix.lang.common.base.Clause;
+import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -427,6 +438,12 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
             throw CompilationException.create(ErrorCode.COMPILATION_TRANSLATION_ERROR, e);
         }
 
+        AqlPlusFunctionCallResolverVisitor fnResolverVisitor =
+                new AqlPlusFunctionCallResolverVisitor(metadataProvider, Collections.emptyList());
+        for (Clause clause : clauses) {
+            clause.accept(fnResolverVisitor, null);
+        }
+
         // Step 4. The essential substitution with translator.
         ILogicalPlan plan;
         try {
@@ -500,5 +517,41 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
             return new ArrayList<>();
         }
         return new ArrayList<>(primaryKeys);
+    }
+
+    private static final class AqlPlusFunctionCallResolverVisitor extends AqlFunctionCallResolverVisitor
+            implements IAQLPlusVisitor<Expression, ILangExpression> {
+        private AqlPlusFunctionCallResolverVisitor(MetadataProvider metadataProvider,
+                List<FunctionDecl> declaredFunctions) {
+            super(metadataProvider, declaredFunctions);
+        }
+
+        @Override
+        protected BiFunction<String, Integer, FunctionSignature> createBuiltinFunctionResolver(
+                MetadataProvider metadataProvider) {
+            return FunctionUtil.createBuiltinFunctionResolver(true);
+        }
+
+        @Override
+        public Expression visitJoinClause(JoinClause joinClause, ILangExpression arg) throws CompilationException {
+            for (Clause clause : joinClause.getLeftClauses()) {
+                clause.accept(this, arg);
+            }
+            for (Clause clause : joinClause.getRightClauses()) {
+                clause.accept(this, arg);
+            }
+            joinClause.getWhereExpr().accept(this, arg);
+            return null;
+        }
+
+        @Override
+        public Expression visitMetaVariableClause(MetaVariableClause c, ILangExpression arg) {
+            return null;
+        }
+
+        @Override
+        public Expression visitMetaVariableExpr(MetaVariableExpr v, ILangExpression arg) {
+            return v;
+        }
     }
 }

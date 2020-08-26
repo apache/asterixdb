@@ -31,7 +31,6 @@ import java.util.Set;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.FunctionInfo;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -40,6 +39,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionCollection;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -68,7 +68,7 @@ public class NullMissingTest {
     private static final Logger LOGGER = LogManager.getLogger();
 
     // those are the functions that need IATypes of their args and use them in the function constructor
-    private static Set<FunctionInfo> functionsRequiringTypes = new HashSet<>();
+    private static Set<FunctionIdentifier> functionsRequiringTypes = new HashSet<>();
 
     @Parameters(name = "NullMissingTest {index}: {0}")
     public static Collection<Object[]> tests() {
@@ -132,7 +132,7 @@ public class NullMissingTest {
             Pair<IScalarEvaluatorFactory[], IAType[]> argumentsAndTypesPair = argEvalFactoryIterator.next();
 
             // Set the IAType if it's needed
-            if (functionsRequiringTypes.contains(new FunctionInfo(funcDesc.getIdentifier(), true))) {
+            if (functionsRequiringTypes.contains(funcDesc.getIdentifier())) {
                 funcDesc.setImmutableStates((Object[]) argumentsAndTypesPair.second);
             }
 
@@ -193,21 +193,21 @@ public class NullMissingTest {
     @BeforeClass
     public static void buildFunctionsRequiringType() {
         // Those are the functions that need IATypes of their args and use them in the function constructor
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.ARRAY_POSITION, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.ARRAY_CONTAINS, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.ARRAY_SORT, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.ARRAY_DISTINCT, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.ARRAY_EXCEPT, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.EQ, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.LT, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.GT, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.GE, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.LE, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.NEQ, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.MISSING_IF, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.NAN_IF, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.NEGINF_IF, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.NULL_IF, true));
-        functionsRequiringTypes.add(new FunctionInfo(BuiltinFunctions.POSINF_IF, true));
+        functionsRequiringTypes.add(BuiltinFunctions.ARRAY_POSITION);
+        functionsRequiringTypes.add(BuiltinFunctions.ARRAY_CONTAINS);
+        functionsRequiringTypes.add(BuiltinFunctions.ARRAY_SORT);
+        functionsRequiringTypes.add(BuiltinFunctions.ARRAY_DISTINCT);
+        functionsRequiringTypes.add(BuiltinFunctions.ARRAY_EXCEPT);
+        functionsRequiringTypes.add(BuiltinFunctions.EQ);
+        functionsRequiringTypes.add(BuiltinFunctions.LT);
+        functionsRequiringTypes.add(BuiltinFunctions.GT);
+        functionsRequiringTypes.add(BuiltinFunctions.GE);
+        functionsRequiringTypes.add(BuiltinFunctions.LE);
+        functionsRequiringTypes.add(BuiltinFunctions.NEQ);
+        functionsRequiringTypes.add(BuiltinFunctions.MISSING_IF);
+        functionsRequiringTypes.add(BuiltinFunctions.NAN_IF);
+        functionsRequiringTypes.add(BuiltinFunctions.NEGINF_IF);
+        functionsRequiringTypes.add(BuiltinFunctions.NULL_IF);
+        functionsRequiringTypes.add(BuiltinFunctions.POSINF_IF);
     }
 }

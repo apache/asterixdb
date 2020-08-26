@@ -250,7 +250,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                     IScalarEvaluatorFactory evalFactory = fDesc.createEvaluatorFactory(
                             new IScalarEvaluatorFactory[] { recordEvalFactory, fldIndexEvalFactory });
                     IFunctionInfo finfoAccess =
-                            BuiltinFunctions.getAsterixFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+                            BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
 
                     ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
                             new MutableObject<>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
@@ -275,7 +275,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             fDesc.setImmutableStates(recType, fldName);
             IScalarEvaluatorFactory evalFactory =
                     fDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { recordEvalFactory });
-            IFunctionInfo finfoAccess = BuiltinFunctions.getAsterixFunctionInfo(BuiltinFunctions.FIELD_ACCESS_NESTED);
+            IFunctionInfo finfoAccess = BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.FIELD_ACCESS_NESTED);
 
             ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
                     new MutableObject<>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),

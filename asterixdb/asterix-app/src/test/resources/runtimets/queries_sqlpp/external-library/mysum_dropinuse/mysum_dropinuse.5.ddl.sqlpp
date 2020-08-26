@@ -18,4 +18,4 @@
  */
  USE externallibtest;
 
-drop function externallibtest.mysum@2;
+drop function externallibtest.mysum(a: int32, b: int32);

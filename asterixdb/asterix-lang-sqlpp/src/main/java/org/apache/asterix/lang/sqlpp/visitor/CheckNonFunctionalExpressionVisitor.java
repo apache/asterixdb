@@ -23,10 +23,10 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.expression.CallExpr;
-import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppContainsExpressionVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
@@ -44,19 +44,26 @@ public final class CheckNonFunctionalExpressionVisitor extends AbstractSqlppCont
     @Override
     public Boolean visit(CallExpr callExpr, Void arg) throws CompilationException {
         FunctionSignature fs = callExpr.getFunctionSignature();
-        IFunctionInfo fi = FunctionUtil.getBuiltinFunctionInfo(fs.getName(), fs.getArity());
-        if (fi != null) {
-            if (!fi.isFunctional()) {
+        IFunctionInfo finfo = BuiltinFunctions.getBuiltinFunctionInfo(fs.createFunctionIdentifier());
+        if (finfo != null) {
+            if (!finfo.isFunctional()) {
                 return true;
             }
         } else {
+            Function function;
             try {
-                Function function = metadataProvider.lookupUserDefinedFunction(fs);
-                if (function != null && function.getDeterministic() != null && !function.getDeterministic()) {
-                    return true;
-                }
+                function = metadataProvider.lookupUserDefinedFunction(fs);
             } catch (AlgebricksException e) {
-                throw new CompilationException(ErrorCode.METADATA_ERROR, e, callExpr.getSourceLocation());
+                throw new CompilationException(ErrorCode.METADATA_ERROR, e, callExpr.getSourceLocation(), e.toString());
+            }
+            if (function == null || function.getDeterministic() == null) {
+                // fail if function not found because all functions must have been resolved at this point
+                // fail if function does not define deterministic property (because it's a SQL++ function
+                // and they were supposed to be inlined at this point)
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, callExpr.getSourceLocation(), fs);
+            }
+            if (!function.getDeterministic()) {
+                return true;
             }
         }
         return super.visit(callExpr, arg);

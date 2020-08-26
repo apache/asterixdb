@@ -17,4 +17,4 @@
  * under the License.
  */
 use test;
-drop function test@0 if exists;
+drop function test() if exists;

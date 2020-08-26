@@ -17,5 +17,5 @@
  * under the License.
  */
 use experiments;
-drop function test_func0@1;
+drop function test_func0(x);
 

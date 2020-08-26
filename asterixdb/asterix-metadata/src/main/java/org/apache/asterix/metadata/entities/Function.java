@@ -91,16 +91,23 @@ public class Function implements IMetadataEntity<Function> {
         return paramNames;
     }
 
+    /**
+     * @return {@code null} for non-external functions;
+     *  for external function the list may contain {@code null} which means 'any' type
+     */
     public List<TypeSignature> getParameterTypes() {
         return paramTypes;
     }
 
-    public String getFunctionBody() {
-        return body;
-    }
-
+    /**
+     * @return {@code null} for non-external functions
+     */
     public TypeSignature getReturnType() {
         return returnType;
+    }
+
+    public String getFunctionBody() {
+        return body;
     }
 
     public String getLanguage() {

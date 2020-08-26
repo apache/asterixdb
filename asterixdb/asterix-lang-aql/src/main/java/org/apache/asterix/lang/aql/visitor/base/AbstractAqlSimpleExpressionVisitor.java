@@ -50,6 +50,7 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 
@@ -212,6 +213,17 @@ public class AbstractAqlSimpleExpressionVisitor extends AbstractAqlQueryExpressi
     @Override
     public Expression visit(ListSliceExpression expression, ILangExpression arg) throws CompilationException {
         // This functionality is not supported for AQL
+        return null;
+    }
+
+    @Override
+    public Expression visit(InsertStatement insertStatement, ILangExpression arg) throws CompilationException {
+        Expression returnExpr = insertStatement.getReturnExpression();
+        if (returnExpr != null) {
+            insertStatement.setReturnExpression(visit(returnExpr, arg));
+        }
+        Query bodyQuery = insertStatement.getQuery();
+        bodyQuery.accept(this, arg);
         return null;
     }
 

@@ -446,7 +446,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     @Override
     public IFunctionInfo lookupFunction(FunctionIdentifier fid) {
-        return BuiltinFunctions.lookupFunction(fid);
+        return BuiltinFunctions.getBuiltinFunctionInfo(fid);
     }
 
     public Function lookupUserDefinedFunction(FunctionSignature signature) throws AlgebricksException {

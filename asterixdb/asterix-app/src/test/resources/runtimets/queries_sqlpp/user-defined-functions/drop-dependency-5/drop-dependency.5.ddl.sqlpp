@@ -35,4 +35,4 @@ create function f0(message, text){
   C.f1(message,text)
 };
 
-drop function f1@2;
+drop function f1(message, text);

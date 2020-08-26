@@ -39,4 +39,4 @@ create function f0(message, text){
 };
 
 use C;
-drop function f1@2;
+drop function f1(message, text);

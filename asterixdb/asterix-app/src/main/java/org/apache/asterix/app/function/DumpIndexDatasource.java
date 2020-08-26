@@ -39,7 +39,7 @@ public class DumpIndexDatasource extends FunctionDataSource {
 
     public DumpIndexDatasource(INodeDomain domain, IndexDataflowHelperFactory indexDataflowHelperFactory,
             RecordDescriptor recDesc, IBinaryComparatorFactory[] comparatorFactories) throws AlgebricksException {
-        super(DUMP_INDEX_DATASOURCE_ID, domain);
+        super(DUMP_INDEX_DATASOURCE_ID, DumpIndexRewriter.DUMP_INDEX, domain);
         this.indexDataflowHelperFactory = indexDataflowHelperFactory;
         this.recDesc = recDesc;
         this.comparatorFactories = comparatorFactories;

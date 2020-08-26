@@ -22,9 +22,8 @@ package org.apache.asterix.optimizer.rules;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.declared.DataSource;
-import org.apache.asterix.metadata.declared.DataSourceId;
+import org.apache.asterix.metadata.declared.FunctionDataSource;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.base.AsterixOptimizationContext;
@@ -53,13 +52,13 @@ public final class SetAsterixMemoryRequirementsRule extends SetMemoryRequirement
     }
 
     private boolean forceMinMemoryBudget(AsterixOptimizationContext context) {
-        Int2ObjectMap<Set<DataSourceId>> dataSourceMap = context.getDataSourceMap();
+        Int2ObjectMap<Set<DataSource>> dataSourceMap = context.getDataSourceMap();
         if (dataSourceMap.isEmpty()) {
             return false;
         }
-        for (Int2ObjectMap.Entry<Set<DataSourceId>> me : dataSourceMap.int2ObjectEntrySet()) {
+        for (Int2ObjectMap.Entry<Set<DataSource>> me : dataSourceMap.int2ObjectEntrySet()) {
             int dataSourceType = me.getIntKey();
-            Predicate<DataSourceId> dataSourceTest;
+            Predicate<DataSource> dataSourceTest;
             switch (dataSourceType) {
                 case DataSource.Type.INTERNAL_DATASET:
                     dataSourceTest = SetAsterixMemoryRequirementsRule::isMinMemoryBudgetDataset;
@@ -77,13 +76,13 @@ public final class SetAsterixMemoryRequirementsRule extends SetMemoryRequirement
         return true;
     }
 
-    private static boolean isMinMemoryBudgetDataset(DataSourceId dsId) {
-        return MetadataConstants.METADATA_DATAVERSE_NAME.equals(dsId.getDataverseName());
+    private static boolean isMinMemoryBudgetDataset(DataSource ds) {
+        return MetadataConstants.METADATA_DATAVERSE_NAME.equals(ds.getId().getDataverseName());
     }
 
-    private static boolean isMinMemoryBudgetFunction(DataSourceId dsId) {
-        return BuiltinFunctions.builtinFunctionHasProperty(
-                FunctionSignature.createFunctionIdentifier(dsId.getDataverseName(), dsId.getDatasourceName()),
+    private static boolean isMinMemoryBudgetFunction(DataSource ds) {
+        FunctionDataSource fds = (FunctionDataSource) ds;
+        return BuiltinFunctions.builtinFunctionHasProperty(fds.getFunctionId(),
                 BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
     }
 }

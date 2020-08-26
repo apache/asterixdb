@@ -723,6 +723,24 @@ public interface IMetadataManager extends IMetadataBootstrap {
     void updateLibrary(MetadataTransactionContext ctx, Library library) throws AlgebricksException;
 
     /**
+     * @param mdTxnCtx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param function
+     *            An instance of type Function that represents the function being
+     *            updated
+     */
+    void updateFunction(MetadataTransactionContext mdTxnCtx, Function function) throws AlgebricksException;
+
+    /**
+     * @param mdTxnCtx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param datatype
+     *            An instance of type Datatype that represents the datatype being
+     *            updated
+     */
+    void updateDatatype(MetadataTransactionContext mdTxnCtx, Datatype datatype) throws AlgebricksException;
+
+    /**
      * Add an extension entity to its extension dataset under the ongoing metadata
      * transaction
      *

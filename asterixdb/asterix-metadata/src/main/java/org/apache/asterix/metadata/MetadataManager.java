@@ -576,7 +576,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public Function getFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature)
             throws AlgebricksException {
         // First look in the context to see if this transaction created the
-        // requested dataset itself (but the dataset is still uncommitted).
+        // requested function itself (but the function is still uncommitted).
         Function function = ctx.getFunction(functionSignature);
         if (function != null) {
             // Don't add this dataverse to the cache, since it is still
@@ -981,6 +981,30 @@ public abstract class MetadataManager implements IMetadataManager {
         // reflect the library into the cache
         ctx.dropLibrary(library.getDataverseName(), library.getName());
         ctx.addLibrary(library);
+    }
+
+    @Override
+    public void updateFunction(MetadataTransactionContext ctx, Function function) throws AlgebricksException {
+        try {
+            metadataNode.updateFunction(ctx.getTxnId(), function);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        // reflect the function into the cache
+        ctx.dropFunction(function.getSignature());
+        ctx.addFunction(function);
+    }
+
+    @Override
+    public void updateDatatype(MetadataTransactionContext ctx, Datatype datatype) throws AlgebricksException {
+        try {
+            metadataNode.updateDatatype(ctx.getTxnId(), datatype);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        // reflect the datatype into the cache
+        ctx.dropDataDatatype(datatype.getDataverseName(), datatype.getDatatypeName());
+        ctx.addDatatype(datatype);
     }
 
     @Override

@@ -1,0 +1,3 @@
+{ "type": "eval", "value": { "country": "United States", "capital": "Washington D.C." } }
+{ "type": "meta-functions", "value": [ { "DataverseName": "externallibtest", "Name": "f", "Arity": "1", "Params": [ "a" ], "ReturnType": "", "Definition": "", "Language": "JAVA", "Kind": "SCALAR", "Dependencies": [ [  ], [  ], [  ] ], "ParamTypes": [ null ], "LibraryDataverseName": "externallibtest", "LibraryName": "testlib", "ExternalIdentifier": [ "org.apache.asterix.external.library.OpenCapitalFinderFactory" ], "NullCall": false, "Deterministic": true } ] }
+{ "type": "meta-types", "value": [  ] }

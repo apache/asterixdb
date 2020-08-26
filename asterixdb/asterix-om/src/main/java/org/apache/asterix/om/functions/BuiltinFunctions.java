@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.functions.FunctionConstants;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ABinaryTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ABooleanArrayContainsTypeComputer;
@@ -136,7 +135,6 @@ import org.apache.asterix.om.typecomputer.impl.TreatAsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryBinaryInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UniformInputTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnorderedListConstructorTypeComputer;
-import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -149,34 +147,27 @@ import org.apache.hyracks.algebricks.core.algebra.properties.UnpartitionedProper
 
 public class BuiltinFunctions {
 
-    public enum SpatialFilterKind {
-        SI
-    }
-
-    private static final FunctionInfoRepository registeredFunctions = new FunctionInfoRepository();
-    private static final Map<IFunctionInfo, ATypeHierarchy.Domain> registeredFunctionsDomain = new HashMap<>();
-
-    // it is supposed to be an identity mapping
-    private static final Map<IFunctionInfo, IFunctionInfo> builtinPublicFunctionsSet = new HashMap<>();
-    private static final Map<IFunctionInfo, IFunctionInfo> builtinPrivateFunctionsSet = new HashMap<>();
-    private static final Map<IFunctionInfo, IResultTypeComputer> funTypeComputer = new HashMap<>();
-    private static final Map<IFunctionInfo, Set<? extends BuiltinFunctionProperty>> builtinFunctionProperties =
+    private static final Map<FunctionIdentifier, BuiltinFunctionInfo> registeredFunctions = new HashMap<>();
+    private static final Map<FunctionIdentifier, Set<? extends BuiltinFunctionProperty>> builtinFunctionProperties =
             new HashMap<>();
-    private static final Set<IFunctionInfo> builtinAggregateFunctions = new HashSet<>();
-    private static final Map<IFunctionInfo, IFunctionToDataSourceRewriter> datasourceFunctions = new HashMap<>();
-    private static final Set<IFunctionInfo> similarityFunctions = new HashSet<>();
-    private static final Set<IFunctionInfo> globalAggregateFunctions = new HashSet<>();
-    private static final Map<IFunctionInfo, IFunctionInfo> aggregateToLocalAggregate = new HashMap<>();
-    private static final Map<IFunctionInfo, IFunctionInfo> aggregateToIntermediateAggregate = new HashMap<>();
-    private static final Map<IFunctionInfo, IFunctionInfo> aggregateToGlobalAggregate = new HashMap<>();
-    private static final Map<IFunctionInfo, IFunctionInfo> aggregateToSerializableAggregate = new HashMap<>();
-    private static final Map<IFunctionInfo, Boolean> builtinUnnestingFunctions = new HashMap<>();
-    private static final Map<IFunctionInfo, IFunctionInfo> scalarToAggregateFunctionMap = new HashMap<>();
-    private static final Map<IFunctionInfo, IFunctionInfo> distinctToRegularAggregateFunctionMap = new HashMap<>();
-    private static final Map<IFunctionInfo, IFunctionInfo> sqlToWindowFunctions = new HashMap<>();
-    private static final Set<IFunctionInfo> windowFunctions = new HashSet<>();
 
-    private static final Map<IFunctionInfo, SpatialFilterKind> spatialFilterFunctions = new HashMap<>();
+    private static final Map<FunctionIdentifier, IFunctionToDataSourceRewriter> datasourceFunctions = new HashMap<>();
+    private static final Map<FunctionIdentifier, Boolean> builtinUnnestingFunctions = new HashMap<>();
+
+    private static final Set<FunctionIdentifier> builtinAggregateFunctions = new HashSet<>();
+    private static final Set<FunctionIdentifier> globalAggregateFunctions = new HashSet<>();
+    private static final Map<FunctionIdentifier, FunctionIdentifier> aggregateToLocalAggregate = new HashMap<>();
+    private static final Map<FunctionIdentifier, FunctionIdentifier> aggregateToIntermediateAggregate = new HashMap<>();
+    private static final Map<FunctionIdentifier, FunctionIdentifier> aggregateToGlobalAggregate = new HashMap<>();
+    private static final Map<FunctionIdentifier, FunctionIdentifier> aggregateToSerializableAggregate = new HashMap<>();
+    private static final Map<FunctionIdentifier, FunctionIdentifier> scalarToAggregateFunctionMap = new HashMap<>();
+    private static final Map<FunctionIdentifier, FunctionIdentifier> distinctToRegularAggregateFunctionMap =
+            new HashMap<>();
+    private static final Map<FunctionIdentifier, FunctionIdentifier> sqlToWindowFunctions = new HashMap<>();
+    private static final Set<FunctionIdentifier> windowFunctions = new HashSet<>();
+
+    private static final Map<FunctionIdentifier, SpatialFilterKind> spatialFilterFunctions = new HashMap<>();
+    private static final Set<FunctionIdentifier> similarityFunctions = new HashSet<>();
 
     public static final FunctionIdentifier TYPE_OF = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "type-of", 1);
     public static final FunctionIdentifier GET_HANDLE =
@@ -1602,16 +1593,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier DECODE_DATAVERSE_NAME =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "decode-dataverse-name", 1);
 
-    public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
-        return registeredFunctions.get(fid);
-    }
-
-    public static FunctionInfo lookupFunction(FunctionIdentifier fid) {
-        return (FunctionInfo) registeredFunctions.get(fid);
-    }
-
     static {
-
         // first, take care of Algebricks builtin functions
         addFunction(IS_MISSING, BooleanOnlyTypeComputer.INSTANCE, true);
         addFunction(IS_UNKNOWN, BooleanOnlyTypeComputer.INSTANCE, true);
@@ -1692,9 +1674,9 @@ public class BuiltinFunctions {
 
         addFunction(FLOAT_CONSTRUCTOR, AFloatTypeComputer.INSTANCE, true);
         addPrivateFunction(FUZZY_EQ, BooleanFunctionTypeComputer.INSTANCE, true);
-        addPrivateFunction(GET_HANDLE, null, true);
+        addPrivateFunction(GET_HANDLE, AnyTypeComputer.INSTANCE, true);
         addPrivateFunction(GET_ITEM, NonTaggedGetItemResultType.INSTANCE, true);
-        addPrivateFunction(GET_DATA, null, true);
+        addPrivateFunction(GET_DATA, AnyTypeComputer.INSTANCE, true);
         addPrivateFunction(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE, true);
         addPrivateFunction(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addPrivateFunction(HASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
@@ -1705,8 +1687,8 @@ public class BuiltinFunctions {
         addFunction(INT64_CONSTRUCTOR, AInt64TypeComputer.INSTANCE, true);
         addFunction(LEN, AInt64TypeComputer.INSTANCE, true);
         addFunction(LINE_CONSTRUCTOR, ALineTypeComputer.INSTANCE, true);
-        addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, null, true);
-        addPrivateFunction(MAKE_FIELD_NAME_HANDLE, null, true);
+        addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, AnyTypeComputer.INSTANCE, true);
+        addPrivateFunction(MAKE_FIELD_NAME_HANDLE, AnyTypeComputer.INSTANCE, true);
 
         addPrivateFunction(NUMERIC_UNARY_MINUS, NumericUnaryTypeComputer.INSTANCE, true);
         addPrivateFunction(NUMERIC_SUBTRACT, NumericAddSubMulDivTypeComputer.INSTANCE_SUB, true);
@@ -2146,7 +2128,7 @@ public class BuiltinFunctions {
         addFunction(SPATIAL_AREA, ADoubleTypeComputer.INSTANCE, true);
         addFunction(SPATIAL_CELL, ARectangleTypeComputer.INSTANCE, true);
         addFunction(SPATIAL_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
-        addFunctionWithDomain(SPATIAL_INTERSECT, ATypeHierarchy.Domain.SPATIAL, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(SPATIAL_INTERSECT, ABooleanTypeComputer.INSTANCE, true);
         addFunction(GET_POINT_X_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
         addFunction(GET_POINT_Y_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
         addFunction(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
@@ -2235,7 +2217,7 @@ public class BuiltinFunctions {
 
         addFunction(TID, AInt64TypeComputer.INSTANCE, true);
         addFunction(TIME_CONSTRUCTOR, ATimeTypeComputer.INSTANCE, true);
-        addPrivateFunction(TYPE_OF, null, true);
+        addPrivateFunction(TYPE_OF, AnyTypeComputer.INSTANCE, true);
         addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(WORD_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE, true);
 
@@ -3084,77 +3066,65 @@ public class BuiltinFunctions {
 
     public static void addDatasourceFunction(FunctionIdentifier fi, IFunctionToDataSourceRewriter transformer,
             DataSourceFunctionProperty... properties) {
-        IFunctionInfo finfo = getAsterixFunctionInfo(fi);
-        datasourceFunctions.put(finfo, transformer);
-        registerFunctionProperties(finfo, DataSourceFunctionProperty.class, properties);
+        datasourceFunctions.put(fi, transformer);
+        registerFunctionProperties(fi, DataSourceFunctionProperty.class, properties);
     }
 
     public static IFunctionToDataSourceRewriter getDatasourceTransformer(FunctionIdentifier fi) {
-        return datasourceFunctions.getOrDefault(getAsterixFunctionInfo(fi), IFunctionToDataSourceRewriter.NOOP);
+        return datasourceFunctions.get(fi);
     }
 
-    public static boolean isBuiltinCompilerFunction(FunctionSignature signature, boolean includePrivateFunctions) {
-        return getBuiltinCompilerFunction(signature.getName(), signature.getArity(), includePrivateFunctions) != null;
+    public static BuiltinFunctionInfo getBuiltinFunctionInfo(FunctionIdentifier fi) {
+        return registeredFunctions.get(fi);
     }
 
-    public static FunctionIdentifier getBuiltinCompilerFunction(String name, int arity,
-            boolean includePrivateFunctions) {
-        FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, name, arity);
-        IFunctionInfo finfo = getAsterixFunctionInfo(fi);
-        if (builtinPublicFunctionsSet.containsKey(finfo)
-                || (includePrivateFunctions && builtinPrivateFunctionsSet.containsKey(finfo))) {
-            return fi;
+    public static BuiltinFunctionInfo resolveBuiltinFunction(String name, int arity) {
+        //TODO:optimize
+        BuiltinFunctionInfo finfo;
+        finfo = getBuiltinFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS, name, arity));
+        if (finfo != null) {
+            return finfo;
         }
-        fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, name, arity);
-        finfo = getAsterixFunctionInfo(fi);
-        return builtinPublicFunctionsSet.containsKey(finfo)
-                || (includePrivateFunctions && builtinPrivateFunctionsSet.containsKey(finfo)) ? fi : null;
+        finfo = getBuiltinFunctionInfo(
+                new FunctionIdentifier(FunctionConstants.ASTERIX_NS, name, FunctionIdentifier.VARARGS));
+        if (finfo != null) {
+            return finfo;
+        }
+        finfo = getBuiltinFunctionInfo(new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, name, arity));
+        if (finfo != null) {
+            return finfo;
+        }
+        return getBuiltinFunctionInfo(
+                new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, name, FunctionIdentifier.VARARGS));
     }
 
     public static boolean isBuiltinAggregateFunction(FunctionIdentifier fi) {
-        return builtinAggregateFunctions.contains(getAsterixFunctionInfo(fi));
+        return builtinAggregateFunctions.contains(fi);
     }
 
     public static boolean isBuiltinUnnestingFunction(FunctionIdentifier fi) {
-        return builtinUnnestingFunctions.get(getAsterixFunctionInfo(fi)) != null;
+        return builtinUnnestingFunctions.containsKey(fi);
     }
 
     public static boolean returnsUniqueValues(FunctionIdentifier fi) {
-        Boolean ruv = builtinUnnestingFunctions.get(getAsterixFunctionInfo(fi));
-        return ruv != null && ruv.booleanValue();
-    }
-
-    public static FunctionIdentifier getLocalAggregateFunction(FunctionIdentifier fi) {
-        return aggregateToLocalAggregate.get(getAsterixFunctionInfo(fi)).getFunctionIdentifier();
-    }
-
-    public static FunctionIdentifier getGlobalAggregateFunction(FunctionIdentifier fi) {
-        return aggregateToGlobalAggregate.get(getAsterixFunctionInfo(fi)).getFunctionIdentifier();
+        Boolean ruv = builtinUnnestingFunctions.get(fi);
+        return ruv != null && ruv;
     }
 
     public static FunctionIdentifier getIntermediateAggregateFunction(FunctionIdentifier fi) {
-        IFunctionInfo funcInfo = aggregateToIntermediateAggregate.get(getAsterixFunctionInfo(fi));
-        if (funcInfo == null) {
-            return null;
-        }
-        return funcInfo.getFunctionIdentifier();
-    }
-
-    public static FunctionIdentifier getBuiltinFunctionIdentifier(FunctionIdentifier fi) {
-        IFunctionInfo finfo = getAsterixFunctionInfo(fi);
-        return finfo == null ? null : finfo.getFunctionIdentifier();
+        return aggregateToIntermediateAggregate.get(fi);
     }
 
     public static AggregateFunctionCallExpression makeAggregateFunctionExpression(FunctionIdentifier fi,
             List<Mutable<ILogicalExpression>> args) {
-        IFunctionInfo finfo = getAsterixFunctionInfo(fi);
-        IFunctionInfo fiLocal = aggregateToLocalAggregate.get(finfo);
-        IFunctionInfo fiGlobal = aggregateToGlobalAggregate.get(finfo);
+        IFunctionInfo finfo = getBuiltinFunctionInfo(fi);
+        FunctionIdentifier fiLocal = aggregateToLocalAggregate.get(fi);
+        FunctionIdentifier fiGlobal = aggregateToGlobalAggregate.get(fi);
 
         if (fiLocal != null && fiGlobal != null) {
             AggregateFunctionCallExpression fun = new AggregateFunctionCallExpression(finfo, true, args);
-            fun.setStepTwoAggregate(fiGlobal);
-            fun.setStepOneAggregate(fiLocal);
+            fun.setStepTwoAggregate(getBuiltinFunctionInfo(fiGlobal));
+            fun.setStepOneAggregate(getBuiltinFunctionInfo(fiLocal));
             return fun;
         } else {
             return new AggregateFunctionCallExpression(finfo, false, args);
@@ -3162,166 +3132,151 @@ public class BuiltinFunctions {
     }
 
     public static boolean isAggregateFunctionSerializable(FunctionIdentifier fi) {
-        IFunctionInfo finfo = getAsterixFunctionInfo(fi);
-        return aggregateToSerializableAggregate.get(finfo) != null;
+        return aggregateToSerializableAggregate.containsKey(fi);
     }
 
     public static AggregateFunctionCallExpression makeSerializableAggregateFunctionExpression(FunctionIdentifier fi,
             List<Mutable<ILogicalExpression>> args) {
 
-        IFunctionInfo finfo = getAsterixFunctionInfo(fi);
-        IFunctionInfo serializableFinfo = aggregateToSerializableAggregate.get(finfo);
-        if (serializableFinfo == null) {
-            throw new IllegalStateException(
-                    "no serializable implementation for aggregate function " + serializableFinfo);
+        FunctionIdentifier serializableFi = aggregateToSerializableAggregate.get(fi);
+        if (serializableFi == null) {
+            throw new IllegalStateException("no serializable implementation for aggregate function " + fi);
         }
+        IFunctionInfo serializableFinfo = getBuiltinFunctionInfo(serializableFi);
 
-        IFunctionInfo fiLocal = aggregateToLocalAggregate.get(serializableFinfo);
-        IFunctionInfo fiGlobal = aggregateToGlobalAggregate.get(serializableFinfo);
+        FunctionIdentifier fiLocal = aggregateToLocalAggregate.get(serializableFi);
+        FunctionIdentifier fiGlobal = aggregateToGlobalAggregate.get(serializableFi);
 
         if (fiLocal != null && fiGlobal != null) {
             AggregateFunctionCallExpression fun = new AggregateFunctionCallExpression(serializableFinfo, true, args);
-            fun.setStepTwoAggregate(fiGlobal);
-            fun.setStepOneAggregate(fiLocal);
+            fun.setStepTwoAggregate(getBuiltinFunctionInfo(fiGlobal));
+            fun.setStepOneAggregate(getBuiltinFunctionInfo(fiLocal));
             return fun;
         } else {
             return new AggregateFunctionCallExpression(serializableFinfo, false, args);
         }
     }
 
-    public static IResultTypeComputer getResultTypeComputer(FunctionIdentifier fi) {
-        return funTypeComputer.get(getAsterixFunctionInfo(fi));
-    }
-
     public static FunctionIdentifier getAggregateFunction(FunctionIdentifier scalarVersionOfAggregate) {
-        IFunctionInfo finfo = scalarToAggregateFunctionMap.get(getAsterixFunctionInfo(scalarVersionOfAggregate));
-        return finfo == null ? null : finfo.getFunctionIdentifier();
+        return scalarToAggregateFunctionMap.get(scalarVersionOfAggregate);
     }
 
     public static FunctionIdentifier getAggregateFunctionForDistinct(FunctionIdentifier distinctVersionOfAggregate) {
-        IFunctionInfo finfo =
-                distinctToRegularAggregateFunctionMap.get(getAsterixFunctionInfo(distinctVersionOfAggregate));
-        return finfo == null ? null : finfo.getFunctionIdentifier();
+        return distinctToRegularAggregateFunctionMap.get(distinctVersionOfAggregate);
     }
 
     public static void addFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer, boolean isFunctional) {
-        addFunctionWithDomain(fi, ATypeHierarchy.Domain.ANY, typeComputer, isFunctional);
-    }
-
-    public static void addFunctionWithDomain(FunctionIdentifier fi, ATypeHierarchy.Domain funcDomain,
-            IResultTypeComputer typeComputer, boolean isFunctional) {
-        IFunctionInfo functionInfo = new FunctionInfo(fi, isFunctional);
-        builtinPublicFunctionsSet.put(functionInfo, functionInfo);
-        funTypeComputer.put(functionInfo, typeComputer);
-        registeredFunctions.put(fi, functionInfo);
-        registeredFunctionsDomain.put(functionInfo, funcDomain);
+        addFunction(new BuiltinFunctionInfo(fi, typeComputer, isFunctional, false));
     }
 
     public static void addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer,
             boolean isFunctional) {
-        IFunctionInfo functionInfo = new FunctionInfo(fi, isFunctional);
-        builtinPrivateFunctionsSet.put(functionInfo, functionInfo);
-        funTypeComputer.put(functionInfo, typeComputer);
-        registeredFunctions.put(fi, functionInfo);
+        addFunction(new BuiltinFunctionInfo(fi, typeComputer, isFunctional, true));
     }
 
-    private static <T extends Enum<T> & BuiltinFunctionProperty> void registerFunctionProperties(IFunctionInfo finfo,
+    private static void addFunction(BuiltinFunctionInfo functionInfo) {
+        registeredFunctions.put(functionInfo.getFunctionIdentifier(), functionInfo);
+    }
+
+    private static <T extends Enum<T> & BuiltinFunctionProperty> void registerFunctionProperties(FunctionIdentifier fid,
             Class<T> propertyClass, T[] properties) {
         if (properties == null) {
             return;
         }
         Set<T> propertySet = EnumSet.noneOf(propertyClass);
         Collections.addAll(propertySet, properties);
-        builtinFunctionProperties.put(finfo, propertySet);
+        builtinFunctionProperties.put(fid, propertySet);
     }
 
     public static boolean builtinFunctionHasProperty(FunctionIdentifier fi, BuiltinFunctionProperty property) {
-        Set<? extends BuiltinFunctionProperty> propertySet = builtinFunctionProperties.get(getAsterixFunctionInfo(fi));
+        Set<? extends BuiltinFunctionProperty> propertySet = builtinFunctionProperties.get(fi);
         return propertySet != null && propertySet.contains(property);
     }
 
     public static void addAgg(FunctionIdentifier fi) {
-        builtinAggregateFunctions.add(getAsterixFunctionInfo(fi));
+        builtinAggregateFunctions.add(fi);
     }
 
     public static void addLocalAgg(FunctionIdentifier fi, FunctionIdentifier localfi) {
-        aggregateToLocalAggregate.put(getAsterixFunctionInfo(fi), getAsterixFunctionInfo(localfi));
+        aggregateToLocalAggregate.put(fi, localfi);
     }
 
     public static void addIntermediateAgg(FunctionIdentifier fi, FunctionIdentifier globalfi) {
-        aggregateToIntermediateAggregate.put(getAsterixFunctionInfo(fi), getAsterixFunctionInfo(globalfi));
+        aggregateToIntermediateAggregate.put(fi, globalfi);
     }
 
     public static void addGlobalAgg(FunctionIdentifier fi, FunctionIdentifier globalfi) {
-        aggregateToGlobalAggregate.put(getAsterixFunctionInfo(fi), getAsterixFunctionInfo(globalfi));
-        globalAggregateFunctions.add(getAsterixFunctionInfo(globalfi));
+        aggregateToGlobalAggregate.put(fi, globalfi);
+        globalAggregateFunctions.add(globalfi);
     }
 
     public static void addUnnestFun(FunctionIdentifier fi, boolean returnsUniqueValues) {
-        builtinUnnestingFunctions.put(getAsterixFunctionInfo(fi), returnsUniqueValues);
+        builtinUnnestingFunctions.put(fi, returnsUniqueValues);
     }
 
     public static void addSerialAgg(FunctionIdentifier fi, FunctionIdentifier serialfi) {
-        aggregateToSerializableAggregate.put(getAsterixFunctionInfo(fi), getAsterixFunctionInfo(serialfi));
+        aggregateToSerializableAggregate.put(fi, serialfi);
     }
 
     public static void addScalarAgg(FunctionIdentifier fi, FunctionIdentifier scalarfi) {
-        scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(scalarfi), getAsterixFunctionInfo(fi));
+        scalarToAggregateFunctionMap.put(scalarfi, fi);
     }
 
     public static void addDistinctAgg(FunctionIdentifier distinctfi, FunctionIdentifier fi) {
-        distinctToRegularAggregateFunctionMap.put(getAsterixFunctionInfo(distinctfi), getAsterixFunctionInfo(fi));
+        distinctToRegularAggregateFunctionMap.put(distinctfi, fi);
     }
 
     public static void addWindowFunction(FunctionIdentifier sqlfi, FunctionIdentifier winfi,
             WindowFunctionProperty... properties) {
-        IFunctionInfo wininfo = getAsterixFunctionInfo(winfi);
         if (sqlfi != null) {
-            sqlToWindowFunctions.put(getAsterixFunctionInfo(sqlfi), wininfo);
+            sqlToWindowFunctions.put(sqlfi, winfi);
         }
-        windowFunctions.add(wininfo);
-        registerFunctionProperties(wininfo, WindowFunctionProperty.class, properties);
+        windowFunctions.add(winfi);
+        registerFunctionProperties(winfi, WindowFunctionProperty.class, properties);
     }
 
     public static FunctionIdentifier getWindowFunction(FunctionIdentifier sqlfi) {
-        IFunctionInfo finfo = sqlToWindowFunctions.get(getAsterixFunctionInfo(sqlfi));
-        return finfo == null ? null : finfo.getFunctionIdentifier();
+        return sqlToWindowFunctions.get(sqlfi);
     }
 
     public static boolean isWindowFunction(FunctionIdentifier winfi) {
-        return windowFunctions.contains(getAsterixFunctionInfo(winfi));
+        return windowFunctions.contains(winfi);
     }
 
     public static AbstractFunctionCallExpression makeWindowFunctionExpression(FunctionIdentifier winfi,
             List<Mutable<ILogicalExpression>> args) {
-        IFunctionInfo finfo = getAsterixFunctionInfo(winfi);
+        IFunctionInfo finfo = getBuiltinFunctionInfo(winfi);
         if (finfo == null) {
-            throw new IllegalStateException("no implementation for window function " + finfo);
+            throw new IllegalStateException("no implementation for window function " + winfi);
         }
         return new StatefulFunctionCallExpression(finfo, UnpartitionedPropertyComputer.INSTANCE, args);
     }
 
+    public enum SpatialFilterKind {
+        SI
+    }
+
     static {
-        spatialFilterFunctions.put(getAsterixFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT), SpatialFilterKind.SI);
+        spatialFilterFunctions.put(BuiltinFunctions.SPATIAL_INTERSECT, SpatialFilterKind.SI);
     }
 
     public static boolean isGlobalAggregateFunction(FunctionIdentifier fi) {
-        return globalAggregateFunctions.contains(getAsterixFunctionInfo(fi));
+        return globalAggregateFunctions.contains(fi);
     }
 
     public static boolean isSpatialFilterFunction(FunctionIdentifier fi) {
-        return spatialFilterFunctions.get(getAsterixFunctionInfo(fi)) != null;
+        return spatialFilterFunctions.get(fi) != null;
     }
 
     static {
-        similarityFunctions.add(getAsterixFunctionInfo(SIMILARITY_JACCARD));
-        similarityFunctions.add(getAsterixFunctionInfo(SIMILARITY_JACCARD_CHECK));
-        similarityFunctions.add(getAsterixFunctionInfo(EDIT_DISTANCE));
-        similarityFunctions.add(getAsterixFunctionInfo(EDIT_DISTANCE_CHECK));
-        similarityFunctions.add(getAsterixFunctionInfo(EDIT_DISTANCE_CONTAINS));
+        similarityFunctions.add(SIMILARITY_JACCARD);
+        similarityFunctions.add(SIMILARITY_JACCARD_CHECK);
+        similarityFunctions.add(EDIT_DISTANCE);
+        similarityFunctions.add(EDIT_DISTANCE_CHECK);
+        similarityFunctions.add(EDIT_DISTANCE_CONTAINS);
     }
 
     public static boolean isSimilarityFunction(FunctionIdentifier fi) {
-        return similarityFunctions.contains(getAsterixFunctionInfo(fi));
+        return similarityFunctions.contains(fi);
     }
 }

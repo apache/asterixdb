@@ -178,12 +178,19 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Inlines functions.
         inlineDeclaredUdfs(inlineUdfs);
 
-        // Inlines WITH expressions after variableCheckAndRewrite(...) so that the variable scoping for WITH
-        // expression is correct.
-        inlineWithExpressions();
-
         // Rewrites SQL++ core aggregate function names into internal names
         rewriteSpecialFunctionNames();
+
+        // Inlines WITH expressions after variableCheckAndRewrite(...) so that the variable scoping for WITH
+        // expression is correct.
+        //
+        // Must run after rewriteSpecialFunctionNames() because it needs to have FunctionInfo
+        // for all functions to avoid inlining non-deterministic expressions.
+        // (CallExprs with special function names do not have FunctionInfo)
+        //
+        // Must run after inlineDeclaredUdfs() because we only maintain deterministic modifiers for built-in
+        // and external UDFs, therefore need to inline SQL++ UDFs to check the deterministic property.
+        inlineWithExpressions();
 
         // Sets the var counter of the query.
         topStatement.setVarCounter(context.getVarCounter().get());

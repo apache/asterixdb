@@ -21,24 +21,23 @@ package org.apache.asterix.om.functions;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
-public class FunctionInfo implements IFunctionInfo {
-    private static final long serialVersionUID = 5460606629941107898L;
+public abstract class FunctionInfo implements IFunctionInfo {
+    private static final long serialVersionUID = 5460606629941107899L;
 
     private final FunctionIdentifier functionIdentifier;
+    private final transient IResultTypeComputer typeComputer;
     private final boolean isFunctional;
 
-    public FunctionInfo(String namespace, String name, int arity, boolean isFunctional) {
-        this(new FunctionIdentifier(namespace, name, arity), isFunctional);
-    }
-
-    public FunctionInfo(FunctionIdentifier functionIdentifier, boolean isFunctional) {
+    public FunctionInfo(FunctionIdentifier functionIdentifier, IResultTypeComputer typeComputer, boolean isFunctional) {
+        this.functionIdentifier = Objects.requireNonNull(functionIdentifier);
+        this.typeComputer = Objects.requireNonNull(typeComputer);
         this.isFunctional = isFunctional;
-        this.functionIdentifier = functionIdentifier;
     }
 
     @Override
@@ -49,6 +48,10 @@ public class FunctionInfo implements IFunctionInfo {
     @Override
     public boolean isFunctional() {
         return isFunctional;
+    }
+
+    public IResultTypeComputer getResultTypeComputer() {
+        return typeComputer;
     }
 
     /**
@@ -62,25 +65,7 @@ public class FunctionInfo implements IFunctionInfo {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(functionIdentifier.getNamespace(), functionIdentifier.getName(),
-                functionIdentifier.getArity());
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof FunctionInfo)) {
-            return false;
-        }
-        FunctionInfo info = (FunctionInfo) o;
-        return functionIdentifier.equals(info.getFunctionIdentifier())
-                && functionIdentifier.getArity() == info.getFunctionIdentifier().getArity();
-    }
-
-    @Override
     public String toString() {
-        return this.functionIdentifier.getNamespace() + ":" + this.functionIdentifier.getName() + "@"
-                + this.functionIdentifier.getArity();
+        return functionIdentifier.toString();
     }
-
 }

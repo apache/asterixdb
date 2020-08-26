@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.functions;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class FunctionIdentifier implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -29,18 +30,22 @@ public class FunctionIdentifier implements Serializable {
 
     public static final int VARARGS = -1;
 
-    public FunctionIdentifier(String namespace, String name) {
-        this(namespace, name, VARARGS);
-    }
-
     public FunctionIdentifier(String namespace, String name, int arity) {
         this.namespace = namespace;
         this.name = name;
         this.arity = arity;
     }
 
+    public String getNamespace() {
+        return namespace;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public int getArity() {
+        return arity;
     }
 
     @Override
@@ -50,26 +55,18 @@ public class FunctionIdentifier implements Serializable {
         }
         if (o instanceof FunctionIdentifier) {
             FunctionIdentifier ofi = (FunctionIdentifier) o;
-            return ofi.getNamespace().equals(getNamespace()) && ofi.name.equals(name);
+            return namespace.equals(ofi.namespace) && name.equals(ofi.name) && arity == ofi.arity;
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode() + namespace.hashCode();
+        return Objects.hash(namespace, name, arity);
     }
 
     @Override
     public String toString() {
-        return getNamespace() + ":" + name;
-    }
-
-    public int getArity() {
-        return arity;
-    }
-
-    public String getNamespace() {
-        return namespace;
+        return namespace + ':' + name + '#' + arity;
     }
 }

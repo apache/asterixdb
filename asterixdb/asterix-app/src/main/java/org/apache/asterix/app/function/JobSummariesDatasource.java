@@ -32,7 +32,7 @@ public class JobSummariesDatasource extends FunctionDataSource {
             createDataSourceId(JobSummariesRewriter.JOBSUMMARIES);
 
     public JobSummariesDatasource(INodeDomain domain) throws AlgebricksException {
-        super(JOB_SUMMARIES_DATASOURCE_ID, domain);
+        super(JOB_SUMMARIES_DATASOURCE_ID, JobSummariesRewriter.JOBSUMMARIES, domain);
     }
 
     @Override

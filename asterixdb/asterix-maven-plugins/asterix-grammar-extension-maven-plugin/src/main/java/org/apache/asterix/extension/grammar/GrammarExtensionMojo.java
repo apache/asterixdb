@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -324,7 +325,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
         }
         String innerBlock2String = null;
         if (baseBlocks.second != null) {
-            BufferedReader blockReader = stringToReader(baseBlocks.second);
+            LineNumberReader blockReader = stringToReader(baseBlocks.second);
             Position blockPosition = new Position();
             blockPosition.index = 0;
             blockPosition.line = blockReader.readLine();
@@ -337,7 +338,8 @@ public class GrammarExtensionMojo extends AbstractMojo {
                 blockPosition.line = blockReader.readLine();
             }
             if (blockPosition.line == null) {
-                throw new MojoExecutionException(errorMessage);
+                throw new MojoExecutionException(errorMessage + " at line " + blockReader.getLineNumber() + " of "
+                        + StringUtils.abbreviate(baseBlocks.second, 100));
             }
             int block2Open = blockPosition.line.indexOf(OPEN_BRACE);
             blockPosition.line = blockPosition.line.substring(block2Open + 1);
@@ -350,7 +352,8 @@ public class GrammarExtensionMojo extends AbstractMojo {
                 blockPosition.line = blockReader.readLine();
             }
             if (blockPosition.line == null) {
-                throw new MojoExecutionException(errorMessage);
+                throw new MojoExecutionException(errorMessage + " at line " + blockReader.getLineNumber() + " of "
+                        + StringUtils.abbreviate(baseBlocks.second, 100));
             }
             int innerBlock1Open = blockPosition.line.indexOf(OPEN_PAREN);
             writer.write("  ");
@@ -372,7 +375,8 @@ public class GrammarExtensionMojo extends AbstractMojo {
             }
             int innerBlock2Open = blockPosition.line.indexOf(OPEN_BRACE);
             if (innerBlock2Open < 0) {
-                throw new MojoExecutionException(errorMessage);
+                throw new MojoExecutionException(errorMessage + " at line " + blockReader.getLineNumber() + " of "
+                        + StringUtils.abbreviate(baseBlocks.second, 100));
             }
             blockPosition.index = innerBlock2Open;
             readBlock(blockReader, OPEN_BRACE, CLOSE_BRACE, blockPosition);
@@ -989,9 +993,9 @@ public class GrammarExtensionMojo extends AbstractMojo {
         }
     }
 
-    private BufferedReader stringToReader(String aString) {
+    private LineNumberReader stringToReader(String aString) {
         InputStream is = new ByteArrayInputStream(aString.getBytes(StandardCharsets.UTF_8));
-        return new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+        return new LineNumberReader(new InputStreamReader(is, StandardCharsets.UTF_8));
     }
 
     private File prepareOutputFile() throws MojoExecutionException {

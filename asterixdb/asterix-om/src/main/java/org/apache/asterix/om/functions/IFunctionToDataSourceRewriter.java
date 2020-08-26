@@ -24,8 +24,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 
 public interface IFunctionToDataSourceRewriter {
-    public static final IFunctionToDataSourceRewriter NOOP = (o, c) -> false;
-
     /**
      * Replace the unnest operator by a datasource operator
      *

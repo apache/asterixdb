@@ -759,7 +759,7 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
       for(VarIdentifier v: paramList){
           bodge.add(new Pair<VarIdentifier,TypeExpression>(v,null));
       }
-      return new CreateFunctionStatement(signature, bodge, functionBody, functionBodyExpr, ifNotExists);
+      return new CreateFunctionStatement(signature, bodge, functionBody, functionBodyExpr, false, ifNotExists);
     }
 }
 

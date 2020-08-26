@@ -34,7 +34,7 @@ public class DatasetResourcesDatasource extends FunctionDataSource {
     private final int datasetId;
 
     public DatasetResourcesDatasource(INodeDomain domain, int datasetId) throws AlgebricksException {
-        super(DATASET_RESOURCES_DATASOURCE_ID, domain);
+        super(DATASET_RESOURCES_DATASOURCE_ID, DatasetResourcesRewriter.DATASET_RESOURCES, domain);
         this.datasetId = datasetId;
     }
 

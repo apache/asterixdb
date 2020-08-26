@@ -30,12 +30,11 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunctionInfo {
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     private final FunctionKind kind;
     private final List<IAType> parameterTypes;
     private final IAType returnType;
-    private final transient IResultTypeComputer rtc;
     private final ExternalFunctionLanguage language;
     private final DataverseName libraryDataverseName;
     private final String libraryName;
@@ -46,11 +45,10 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
             IAType returnType, IResultTypeComputer rtc, ExternalFunctionLanguage language,
             DataverseName libraryDataverseName, String libraryName, List<String> externalIdentifier,
             Map<String, String> resources, boolean deterministic) {
-        super(fid, deterministic);
+        super(fid, rtc, deterministic);
         this.kind = kind;
         this.parameterTypes = parameterTypes;
         this.returnType = returnType;
-        this.rtc = rtc;
         this.language = language;
         this.libraryDataverseName = libraryDataverseName;
         this.libraryName = libraryName;
@@ -71,10 +69,6 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
     @Override
     public IAType getReturnType() {
         return returnType;
-    }
-
-    public IResultTypeComputer getResultTypeComputer() {
-        return rtc;
     }
 
     @Override

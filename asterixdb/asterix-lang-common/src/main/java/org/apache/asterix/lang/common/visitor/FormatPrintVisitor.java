@@ -787,7 +787,7 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
 
     @Override
     public Void visit(CreateFunctionStatement cfs, Integer step) throws CompilationException {
-        out.print(skip(step) + CREATE + " function ");
+        out.print(skip(step) + CREATE + generateOrReplace(cfs.getReplaceIfExists()) + " function ");
         out.print(generateIfNotExists(cfs.getIfNotExists()));
         out.print(this.generateFullName(cfs.getFunctionSignature().getDataverseName(),
                 cfs.getFunctionSignature().getName()));
@@ -1040,6 +1040,10 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
 
     protected String generateIfExists(boolean ifExits) {
         return ifExits ? " if exists" : "";
+    }
+
+    protected String generateOrReplace(boolean orReplace) {
+        return orReplace ? " or replace" : "";
     }
 
     protected String generateIndexTypeString(IndexType type) {

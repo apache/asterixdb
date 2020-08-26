@@ -62,6 +62,7 @@ import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.metadata.utils.InvertedIndexResourceFactoryProvider;
 import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.RTreeResourceFactoryProvider;
+import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
@@ -423,6 +424,14 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
 
         // #. finally, delete the dataset.
         MetadataManager.INSTANCE.dropDataset(mdTxnCtx.getValue(), dataverseName, datasetName);
+
+        // drop inline types
+        if (TypeUtil.isDatasetInlineTypeName(this, recordTypeDataverseName, recordTypeName)) {
+            MetadataManager.INSTANCE.dropDatatype(mdTxnCtx.getValue(), recordTypeDataverseName, recordTypeName);
+        }
+        if (hasMetaPart() && TypeUtil.isDatasetInlineTypeName(this, metaTypeDataverseName, metaTypeName)) {
+            MetadataManager.INSTANCE.dropDatatype(mdTxnCtx.getValue(), metaTypeDataverseName, metaTypeName);
+        }
 
         // Drops the associated nodegroup if it is no longer used by any other dataset.
         if (dropCorrespondingNodeGroup) {

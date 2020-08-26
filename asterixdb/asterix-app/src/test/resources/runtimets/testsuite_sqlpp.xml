@@ -11764,45 +11764,56 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="create-or-replace-function-1">
+        <output-dir compare="Text">create-or-replace-function-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-dependency-1">
         <output-dir compare="Text">drop-dependency-1</output-dir>
-        <expected-error>Cannot drop dataverse. Function B.f0@2 depends on function C.f1@2</expected-error>
+        <expected-error>Cannot drop dataverse. Function B.f0(2) depends on function C.f1(2)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-dependency-2">
         <output-dir compare="Text">drop-dependency-2</output-dir>
-        <expected-error>Cannot drop dataverse. Function B.f2@2 depends on dataset C.TweetMessages</expected-error>
+        <expected-error>Cannot drop dataverse. Function B.f2(2) depends on dataset C.TweetMessages</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-dependency-3">
         <output-dir compare="Text">drop-dependency-3</output-dir>
-        <expected-error>Cannot drop function C.f1@2 being used by function B.f0@2</expected-error>
+        <expected-error>Cannot drop function C.f1(2) being used by function B.f0(2)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-dependency-4">
         <output-dir compare="Text">drop-dependency-4</output-dir>
-        <expected-error>Cannot drop dataset C.TweetMessages being used by function B.f2@2</expected-error>
+        <expected-error>Cannot drop dataset C.TweetMessages being used by function B.f2(2)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-dependency-5">
         <output-dir compare="Text">drop-dependency-5</output-dir>
-        <expected-error>Cannot drop function C.f1@2 being used by function C.f0@2</expected-error>
+        <expected-error>Cannot drop function C.f1(2) being used by function C.f0(2)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-dependency-6">
         <output-dir compare="Text">drop-dependency-6</output-dir>
-        <expected-error>Cannot drop dataset C.TweetMessages being used by function C.f2@2</expected-error>
+        <expected-error>Cannot drop dataset C.TweetMessages being used by function C.f2(2)</expected-error>
         <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="drop-function-1">
+        <output-dir compare="Text">drop-function-1</output-dir>
+        <expected-error>ASX1081: Cannot find function with name experiments.my_sum</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12012,6 +12023,11 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf32_metadata">
         <output-dir compare="Text">udf32_metadata</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf33_overloading">
+        <output-dir compare="Text">udf33_overloading</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12475,7 +12491,7 @@
     <test-case FilePath="feeds">
       <compilation-unit name="drop-function-used-by-feed">
         <output-dir compare="Text">drop-function-used-by-feed</output-dir>
-        <expected-error>Cannot drop function experiments.test_func0@1 being used by feed connection TwitterUsers.UserFeed</expected-error>
+        <expected-error>Cannot drop function experiments.test_func0(1) being used by feed connection TwitterUsers.UserFeed</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -12487,7 +12503,7 @@
     <test-case FilePath="feeds">
       <compilation-unit name="drop-dataverse-with-function-used-by-feed">
         <output-dir compare="Text">drop-dataverse-with-function-used-by-feed</output-dir>
-        <expected-error>Cannot drop dataverse. Feed connection feeddv.UserFeed depends on function fundv.test_func0@1</expected-error>
+        <expected-error>Cannot drop dataverse. Feed connection feeddv.UserFeed depends on function fundv.test_func0(1)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

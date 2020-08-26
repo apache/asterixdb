@@ -51,8 +51,12 @@ public class FunctionSignature implements Serializable {
             return false;
         }
         FunctionSignature f = ((FunctionSignature) o);
-        return Objects.equals(dataverseName, f.dataverseName) && name.equals(f.name)
-                && (arity == f.arity || arity == FunctionIdentifier.VARARGS || f.arity == FunctionIdentifier.VARARGS);
+        return Objects.equals(dataverseName, f.dataverseName) && name.equals(f.name) && arity == f.arity;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(dataverseName, name, arity);
     }
 
     @Override
@@ -64,21 +68,27 @@ public class FunctionSignature implements Serializable {
         boolean dataverseNameExists = dataverseName != null;
         String dataverseCanonicalName = dataverseNameExists ? dataverseName.getCanonicalForm() : null;
         int len = (dataverseNameExists ? dataverseCanonicalName.length() + 1 : 0) + name.length()
-                + (includeArity ? 3 : 0);
+                + (includeArity ? 5 : 0);
         StringBuilder sb = new StringBuilder(len);
         if (dataverseNameExists) {
             sb.append(dataverseCanonicalName).append('.');
         }
         sb.append(name);
         if (includeArity) {
-            sb.append('@').append(arity);
+            sb.append('(');
+            switch (arity) {
+                case FunctionIdentifier.VARARGS:
+                    sb.append("...");
+                    break;
+                case 0:
+                    break;
+                default:
+                    sb.append(arity);
+                    break;
+            }
+            sb.append(')');
         }
         return sb.toString();
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(dataverseName, name);
     }
 
     public DataverseName getDataverseName() {
@@ -109,13 +119,9 @@ public class FunctionSignature implements Serializable {
         return createFunctionIdentifier(dataverseName, name, arity);
     }
 
-    public static FunctionIdentifier createFunctionIdentifier(DataverseName dataverseName, String functionName,
+    private static FunctionIdentifier createFunctionIdentifier(DataverseName dataverseName, String functionName,
             int arity) {
         return new FunctionIdentifier(dataverseName.getCanonicalForm(), functionName, arity);
-    }
-
-    public static FunctionIdentifier createFunctionIdentifier(DataverseName dataverseName, String functionName) {
-        return new FunctionIdentifier(dataverseName.getCanonicalForm(), functionName);
     }
 
     public static DataverseName getDataverseName(FunctionIdentifier fi) {

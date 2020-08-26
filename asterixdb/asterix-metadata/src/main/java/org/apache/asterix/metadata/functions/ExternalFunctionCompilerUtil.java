@@ -19,6 +19,7 @@
 package org.apache.asterix.metadata.functions;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -62,25 +63,24 @@ public class ExternalFunctionCompilerUtil {
 
     private static IFunctionInfo getScalarFunctionInfo(MetadataProvider metadataProvider, Function function)
             throws AlgebricksException {
-        if (function.getDeterministic() == null) {
-            throw new AsterixException(ErrorCode.METADATA_ERROR, "");
-        }
 
-        List<IAType> paramTypes = new ArrayList<>(function.getParameterTypes().size());
-        for (TypeSignature ts : function.getParameterTypes()) {
-            IAType paramType = resolveFunctionType(ts, metadataProvider);
-            paramTypes.add(paramType);
-        }
+        List<IAType> paramTypes = getParameterTypes(function, metadataProvider);
 
-        IAType returnType = resolveFunctionType(function.getReturnType(), metadataProvider);
+        IAType returnType = getType(function.getReturnType(), metadataProvider);
 
         IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, paramTypes);
 
         ExternalFunctionLanguage lang = getExternalFunctionLanguage(function.getLanguage());
 
+        Boolean deterministic = function.getDeterministic();
+        if (deterministic == null) {
+            // all external functions should store 'deterministic' property
+            throw new AsterixException(ErrorCode.METADATA_ERROR, function.getSignature().toString());
+        }
+
         return new ExternalScalarFunctionInfo(function.getSignature().createFunctionIdentifier(), paramTypes,
                 returnType, typeComputer, lang, function.getLibraryDataverseName(), function.getLibraryName(),
-                function.getExternalIdentifier(), function.getResources(), function.getDeterministic());
+                function.getExternalIdentifier(), function.getResources(), deterministic);
     }
 
     private static IFunctionInfo getUnnestFunctionInfo(MetadataProvider metadataProvider, Function function) {
@@ -95,9 +95,41 @@ public class ExternalFunctionCompilerUtil {
         return null;
     }
 
-    private static IAType resolveFunctionType(TypeSignature typeSignature, MetadataProvider metadataProvider)
+    private static List<IAType> getParameterTypes(Function function, MetadataProvider metadataProvider)
             throws AlgebricksException {
+        int arity = function.getArity();
+        if (arity == 0) {
+            return Collections.emptyList();
+        } else if (arity >= 0) {
+            List<IAType> types = new ArrayList<>(arity);
+            List<TypeSignature> typeSignatures = function.getParameterTypes();
+            if (typeSignatures != null) {
+                if (typeSignatures.size() != arity) {
+                    throw new AsterixException(ErrorCode.METADATA_ERROR, function.getSignature().toString());
+                }
+                for (TypeSignature ts : typeSignatures) {
+                    IAType paramType = getType(ts, metadataProvider);
+                    types.add(paramType);
+                }
+            } else {
+                for (int i = 0; i < arity; i++) {
+                    types.add(BuiltinType.ANY);
+                }
+            }
+            return types;
+        } else {
+            // we don't yet support variadic external functions
+            throw new AsterixException(ErrorCode.METADATA_ERROR, function.getSignature().toString());
+        }
+    }
+
+    private static IAType getType(TypeSignature typeSignature, MetadataProvider metadataProvider)
+            throws AlgebricksException {
+        if (typeSignature == null) {
+            return BuiltinType.ANY;
+        }
         String typeName = typeSignature.getName();
+        // back-compat: handle "any"
         if (BuiltinType.ANY.getTypeName().equals(typeName)) {
             return BuiltinType.ANY;
         }

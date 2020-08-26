@@ -17,4 +17,4 @@
  * under the License.
  */
 
-DROP function foo@0;
+DROP function foo();

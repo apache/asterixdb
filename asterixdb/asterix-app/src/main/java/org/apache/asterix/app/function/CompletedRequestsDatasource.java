@@ -33,7 +33,7 @@ public class CompletedRequestsDatasource extends FunctionDataSource {
             createDataSourceId(CompletedRequestsRewriter.COMPLETED_REQUESTS);
 
     public CompletedRequestsDatasource(INodeDomain domain) throws AlgebricksException {
-        super(COMPLETED_REQUESTS_DATASOURCE_ID, domain);
+        super(COMPLETED_REQUESTS_DATASOURCE_ID, CompletedRequestsRewriter.COMPLETED_REQUESTS, domain);
     }
 
     @Override

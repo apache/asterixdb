@@ -18,4 +18,3 @@
  */
 use experiments;
 drop function test_func0@1;
-

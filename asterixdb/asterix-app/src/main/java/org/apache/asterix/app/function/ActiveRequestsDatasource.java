@@ -33,7 +33,7 @@ public class ActiveRequestsDatasource extends FunctionDataSource {
             createDataSourceId(ActiveRequestsRewriter.ACTIVE_REQUESTS);
 
     public ActiveRequestsDatasource(INodeDomain domain) throws AlgebricksException {
-        super(ACTIVE_REQUESTS_DATASOURCE_ID, domain);
+        super(ACTIVE_REQUESTS_DATASOURCE_ID, ActiveRequestsRewriter.ACTIVE_REQUESTS, domain);
     }
 
     @Override

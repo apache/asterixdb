@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.om.functions.BuiltinFunctionInfo;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
@@ -43,7 +44,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -110,50 +110,41 @@ public class ExceptionTest {
 
         // First, we will go over all the functions available, get their arity and type computers to know the number
         // of arguments to pass for each type computer
-        Map<IFunctionInfo, IResultTypeComputer> funTypeComputerMap;
+        Map<FunctionIdentifier, BuiltinFunctionInfo> registeredFunctions;
         try {
-            Field field = BuiltinFunctions.class.getDeclaredField("funTypeComputer");
+            Field field = BuiltinFunctions.class.getDeclaredField("registeredFunctions");
             field.setAccessible(true);
-            funTypeComputerMap = (HashMap<IFunctionInfo, IResultTypeComputer>) field.get(null);
+            registeredFunctions = (Map<FunctionIdentifier, BuiltinFunctionInfo>) field.get(null);
         } catch (Exception ex) {
             // this should never fail
             throw new IllegalStateException();
         }
 
-        if (funTypeComputerMap != null) {
-            // Note: If a type computer handles both known and VARARGS, VARARGS will be used
-            for (HashMap.Entry<IFunctionInfo, IResultTypeComputer> entry : funTypeComputerMap.entrySet()) {
-                // Some functions have a null type computer for some reason, ignore them
-                if (entry.getValue() == null) {
-                    continue;
-                }
+        // Note: If a type computer handles both known and VARARGS, VARARGS will be used
+        for (BuiltinFunctionInfo finfo : registeredFunctions.values()) {
+            FunctionIdentifier fid = finfo.getFunctionIdentifier();
+            IResultTypeComputer typeComputer = finfo.getResultTypeComputer();
 
-                // Type computer does not exist, add it with its arity to the map
-                if (typeComputerToArgsCountMap.get(entry.getValue().getClass().getSimpleName()) == null) {
-                    typeComputerToArgsCountMap.put(entry.getValue().getClass().getSimpleName(),
-                            entry.getKey().getFunctionIdentifier().getArity());
-                    continue;
-                }
+            // Type computer does not exist, add it with its arity to the map
+            if (typeComputerToArgsCountMap.get(typeComputer.getClass().getSimpleName()) == null) {
+                typeComputerToArgsCountMap.put(typeComputer.getClass().getSimpleName(), fid.getArity());
+                continue;
+            }
 
-                // VARARGS functions, these are kept as is, put/update, no need for any comparison
-                if (entry.getKey().getFunctionIdentifier().getArity() == FunctionIdentifier.VARARGS) {
-                    typeComputerToArgsCountMap.put(entry.getValue().getClass().getSimpleName(),
-                            entry.getKey().getFunctionIdentifier().getArity());
-                    continue;
-                }
+            // VARARGS functions, these are kept as is, put/update, no need for any comparison
+            if (fid.getArity() == FunctionIdentifier.VARARGS) {
+                typeComputerToArgsCountMap.put(typeComputer.getClass().getSimpleName(), fid.getArity());
+                continue;
+            }
 
-                // We have it already, and it is of type VARARGS, we are not going to change it
-                if (typeComputerToArgsCountMap
-                        .get(entry.getValue().getClass().getSimpleName()) == FunctionIdentifier.VARARGS) {
-                    continue;
-                }
+            // We have it already, and it is of type VARARGS, we are not going to change it
+            if (typeComputerToArgsCountMap.get(typeComputer.getClass().getSimpleName()) == FunctionIdentifier.VARARGS) {
+                continue;
+            }
 
-                // We have it already, if it has larger arity than our existing one, we will update it
-                if (typeComputerToArgsCountMap.get(entry.getValue().getClass().getSimpleName()) < entry.getKey()
-                        .getFunctionIdentifier().getArity()) {
-                    typeComputerToArgsCountMap.put(entry.getValue().getClass().getSimpleName(),
-                            entry.getKey().getFunctionIdentifier().getArity());
-                }
+            // We have it already, if it has larger arity than our existing one, we will update it
+            if (typeComputerToArgsCountMap.get(typeComputer.getClass().getSimpleName()) < fid.getArity()) {
+                typeComputerToArgsCountMap.put(typeComputer.getClass().getSimpleName(), fid.getArity());
             }
         }
 
