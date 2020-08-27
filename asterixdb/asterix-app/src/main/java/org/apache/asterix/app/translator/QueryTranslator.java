@@ -199,6 +199,7 @@ import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.io.FileSplit;
@@ -272,6 +273,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
         }
         return functionDecls;
+    }
+
+    public IWarningCollector getWarningCollector() {
+        return warningCollector;
     }
 
     @Override
@@ -1580,6 +1585,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx.getValue(), dataverseName);
             if (dv == null) {
                 if (ifExists) {
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector
+                                .warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.UNKNOWN_DATAVERSE, dataverseName));
+                    }
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
                     return;
                 } else {
@@ -1864,7 +1873,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // Check if the dataverse exists
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                if (stmtTypeDrop.getIfExists()) {
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector
+                                .warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.UNKNOWN_DATAVERSE, dataverseName));
+                    }
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return;
+                } else {
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                }
             }
 
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
