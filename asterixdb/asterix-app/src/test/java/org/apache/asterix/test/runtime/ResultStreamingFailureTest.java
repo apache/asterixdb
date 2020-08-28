@@ -58,7 +58,7 @@ public class ResultStreamingFailureTest {
     public void resultStreamingFailureTest() throws Exception {
         queryAndDropConnection();
         // allow result sender to terminate and ensure no leaks
-        Span timeout = Span.start(5, TimeUnit.SECONDS);
+        Span timeout = Span.start(30, TimeUnit.SECONDS);
         while (!timeout.elapsed()) {
             String threadDump = ThreadDumpUtil.takeDumpString();
             if (!threadDump.contains(ResultPartitionReader.class.getName())) {
