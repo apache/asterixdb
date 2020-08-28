@@ -1569,8 +1569,9 @@ public class TestExecutor {
 
     private ExtractedResult executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri)
             throws Exception {
-        InputStream resultStream = executeQueryService(statement, serviceUri, outputFormat, UTF_8);
-        return ResultExtractor.extract(resultStream, UTF_8);
+        try (InputStream resultStream = executeQueryService(statement, serviceUri, outputFormat, UTF_8)) {
+            return ResultExtractor.extract(resultStream, UTF_8);
+        }
     }
 
     protected static boolean isExpected(Exception e, CompilationUnit cUnit) {
