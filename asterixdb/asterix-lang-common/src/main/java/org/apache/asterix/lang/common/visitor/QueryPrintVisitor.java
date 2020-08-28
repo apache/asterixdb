@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
@@ -291,14 +292,23 @@ public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<V
     }
 
     @Override
-    public Void visit(IndexAccessor fa, Integer step) throws CompilationException {
+    public Void visit(IndexAccessor ia, Integer step) throws CompilationException {
         out.println(skip(step) + "IndexAccessor [");
-        fa.getExpr().accept(this, step + 1);
+        ia.getExpr().accept(this, step + 1);
         out.print(skip(step + 1) + "Index: ");
-        if (fa.isAny()) {
-            out.println("ANY");
-        } else {
-            fa.getIndexExpr().accept(this, step + 1);
+        switch (ia.getIndexKind()) {
+            case ANY:
+                out.println("ANY");
+                break;
+            case STAR:
+                out.println("STAR");
+                break;
+            case ELEMENT:
+                ia.getIndexExpr().accept(this, step + 1);
+                break;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, ia.getSourceLocation(),
+                        ia.getIndexKind());
         }
         out.println(skip(step) + "]");
         return null;

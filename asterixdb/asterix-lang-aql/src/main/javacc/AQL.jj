@@ -1990,7 +1990,7 @@ Expression ValueExpr()throws ParseException:
   Expression expr = null;
   Identifier ident = null;
   AbstractAccessor fa = null;
-  Expression indexExpr = null;
+  Pair<IndexAccessor.IndexKind, Expression> index = null;
 }
 {
   expr = PrimaryExpr() ( ident = Field()
@@ -1998,10 +1998,10 @@ Expression ValueExpr()throws ParseException:
       fa = (fa == null ? new FieldAccessor(expr, ident)
                        : new FieldAccessor(fa, ident));
     }
-  | indexExpr = Index()
+  | index = Index()
     {
-      fa = (fa == null ? new IndexAccessor(expr, indexExpr)
-                       : new IndexAccessor(fa, indexExpr));
+      fa = (fa == null ? new IndexAccessor(expr, index.first, index.second)
+                       : new IndexAccessor(fa, index.first, index.second));
      }
   )*
     {
@@ -2020,8 +2020,9 @@ Identifier Field() throws ParseException:
     }
 }
 
-Expression Index() throws ParseException:
+Pair<IndexAccessor.IndexKind, Expression> Index() throws ParseException:
 {
+    IndexAccessor.IndexKind kind = null;
     Expression expr = null;
 }
 {
@@ -2035,15 +2036,18 @@ Expression Index() throws ParseException:
                 throw new ParseException("Index should be an INTEGER");
             }
         }
+        kind = IndexAccessor.IndexKind.ELEMENT;
     }
 
       | <QUES> // ANY
-
+    {
+        kind = IndexAccessor.IndexKind.ANY;
+    }
       )
 
    <RIGHTBRACKET>
     {
-      return expr;
+      return new Pair<IndexAccessor.IndexKind, Expression>(kind, expr);
     }
 }
 

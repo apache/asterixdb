@@ -736,31 +736,48 @@ abstract class LangExpressionToPlanTranslator
         // Expression pair
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> expressionPair =
                 langExprToAlgExpression(ia.getExpr(), tupSource);
+
         LogicalVariable v = context.newVar();
-        AbstractFunctionCallExpression f;
 
-        // Index expression
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> indexPair = null;
-
-        if (ia.isAny()) {
-            f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.ANY_COLLECTION_MEMBER));
-            f.getArguments().add(new MutableObject<>(expressionPair.first));
-        } else {
-            indexPair = langExprToAlgExpression(ia.getIndexExpr(), expressionPair.second);
-            f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.GET_ITEM));
-            f.getArguments().add(new MutableObject<>(expressionPair.first));
-            f.getArguments().add(new MutableObject<>(indexPair.first));
+        FunctionIdentifier fid;
+        ILogicalExpression farg0, farg1 = null;
+        Mutable<ILogicalOperator> assignInput;
+        switch (ia.getIndexKind()) {
+            case ANY:
+                fid = BuiltinFunctions.ANY_COLLECTION_MEMBER;
+                farg0 = expressionPair.first;
+                assignInput = expressionPair.second;
+                break;
+            case STAR:
+                fid = BuiltinFunctions.ARRAY_STAR;
+                farg0 = expressionPair.first;
+                assignInput = expressionPair.second;
+                break;
+            case ELEMENT:
+                Pair<ILogicalExpression, Mutable<ILogicalOperator>> indexPair =
+                        langExprToAlgExpression(ia.getIndexExpr(), expressionPair.second);
+                fid = BuiltinFunctions.GET_ITEM;
+                farg0 = expressionPair.first;
+                farg1 = indexPair.first;
+                assignInput = indexPair.second;
+                break;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, ia.getSourceLocation(),
+                        ia.getIndexKind());
         }
 
+        AbstractFunctionCallExpression f =
+                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(fid));
         f.setSourceLocation(sourceLoc);
-        AssignOperator a = new AssignOperator(v, new MutableObject<>(f));
-
-        if (ia.isAny()) {
-            a.getInputs().add(expressionPair.second);
-        } else {
-            a.getInputs().add(indexPair.second); // NOSONAR: Called only if value exists
+        f.getArguments().add(new MutableObject<>(farg0));
+        if (farg1 != null) {
+            f.getArguments().add(new MutableObject<>(farg1));
         }
+
+        AssignOperator a = new AssignOperator(v, new MutableObject<>(f));
         a.setSourceLocation(sourceLoc);
+        a.getInputs().add(assignInput);
+
         return new Pair<>(a, v);
     }
 

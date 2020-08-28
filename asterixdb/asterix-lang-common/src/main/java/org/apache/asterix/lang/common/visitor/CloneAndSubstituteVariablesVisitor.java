@@ -298,12 +298,11 @@ public class CloneAndSubstituteVariablesVisitor extends
             VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = ia.getExpr().accept(this, env);
         Expression indexExpr = null;
-        if (!ia.isAny()) {
+        if (ia.getIndexExpr() != null) {
             Pair<ILangExpression, VariableSubstitutionEnvironment> p2 = ia.getIndexExpr().accept(this, env);
             indexExpr = (Expression) p2.first;
         }
-        IndexAccessor i = new IndexAccessor((Expression) p1.first, indexExpr);
-        i.setAny(ia.isAny());
+        IndexAccessor i = new IndexAccessor((Expression) p1.first, ia.getIndexKind(), indexExpr);
         i.setSourceLocation(ia.getSourceLocation());
         i.addHints(ia.getHints());
         return new Pair<>(i, env);

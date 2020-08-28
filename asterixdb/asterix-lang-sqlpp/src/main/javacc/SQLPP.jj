@@ -566,6 +566,13 @@ class SQLPPParser extends ScopeChecker implements IParser {
           "Unexpected return type declaration for function " + fnName);
       }
     }
+
+    private void ensureIntegerLiteral(LiteralExpr expr, String errorPrefix)  throws SqlppParseException {
+        Literal lit = expr.getValue();
+        if (lit.getLiteralType() != Literal.Type.INTEGER && lit.getLiteralType() != Literal.Type.LONG) {
+            throw new SqlppParseException(expr.getSourceLocation(), errorPrefix + " should be an INTEGER");
+        }
+    }
 }
 
 PARSER_END(SQLPPParser)
@@ -3088,49 +3095,33 @@ FieldAccessor FieldAccessor(Expression inputExpr) throws ParseException:
 AbstractAccessor IndexAccessor(Expression inputExpr) throws ParseException:
 {
   Token startToken = null;
-  boolean isListSliceExpression = false;
-  AbstractAccessor resultExpression = null;
-  Expression argumentExpression1 = null;
-  Expression argumentExpression2 = null;
+  boolean star = false, slice = false;
+  Expression expr1 = null, expr2 = null;
 }
 {
   <LEFTBRACKET> { startToken = token; }
-  ( argumentExpression1 = Expression()
-    {
-        if (argumentExpression1.getKind() == Expression.Kind.LITERAL_EXPRESSION)
-        {
-            Literal lit = ((LiteralExpr)argumentExpression1).getValue();
-            if (lit.getLiteralType() != Literal.Type.INTEGER &&
-                lit.getLiteralType() != Literal.Type.LONG) {
-                throw new SqlppParseException(argumentExpression1.getSourceLocation(), "Index should be an INTEGER");
-            }
-        }
-    }
+  (
+    <MUL> { star = true; }
+    |
+    ( expr1 = Expression() ( <COLON> { slice = true; } ( expr2 = Expression() )? )? )
   )
-  (<COLON>
-  {
-    isListSliceExpression = true;
-  }
-  ( argumentExpression2 = Expression()
-    {
-      if (argumentExpression2.getKind() == Expression.Kind.LITERAL_EXPRESSION) {
-          Literal lit = ((LiteralExpr)argumentExpression2).getValue();
-          if (lit.getLiteralType() != Literal.Type.INTEGER &&
-              lit.getLiteralType() != Literal.Type.LONG) {
-                  throw new SqlppParseException(argumentExpression2.getSourceLocation(), "Index should be an INTEGER");
-          }
-      }
-    })?
-  )?
   <RIGHTBRACKET>
   {
-    if (!isListSliceExpression) {
-        resultExpression = new IndexAccessor(inputExpr, argumentExpression1);
-    } else {
-        resultExpression = new ListSliceExpression(inputExpr, argumentExpression1, argumentExpression2);
+    if (expr1 != null && expr1.getKind() == Expression.Kind.LITERAL_EXPRESSION) {
+      ensureIntegerLiteral( (LiteralExpr) expr1, "Index");
     }
-
-    return addSourceLocation(resultExpression, startToken);
+    if (expr2 != null && expr2.getKind() == Expression.Kind.LITERAL_EXPRESSION) {
+      ensureIntegerLiteral( (LiteralExpr) expr2, "Index");
+    }
+    AbstractAccessor resultAccessor;
+    if (slice) {
+      resultAccessor = new ListSliceExpression(inputExpr, expr1, expr2);
+    } else if (star) {
+      resultAccessor = new IndexAccessor(inputExpr, IndexAccessor.IndexKind.STAR, null);
+    } else {
+      resultAccessor = new IndexAccessor(inputExpr, IndexAccessor.IndexKind.ELEMENT, expr1);
+    }
+    return addSourceLocation(resultAccessor, startToken);
   }
 }
 

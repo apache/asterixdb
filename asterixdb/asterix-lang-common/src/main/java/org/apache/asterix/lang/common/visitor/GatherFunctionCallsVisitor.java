@@ -113,11 +113,9 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     @Override
     public Void visit(IndexAccessor ia, Void arg) throws CompilationException {
         ia.getExpr().accept(this, arg);
-
-        if (!ia.isAny()) {
+        if (ia.getIndexExpr() != null) {
             ia.getIndexExpr().accept(this, arg);
         }
-
         return null;
     }
 

@@ -1,0 +1,13 @@
+DataverseUse TinySocial
+TypeDecl t1 [
+  open RecordType {
+
+  }
+]
+TypeDecl t2 [
+  open RecordType {
+    id : int64,
+    compType : t1
+  }
+]
+DatasetDecl d1(t2) partitioned by [[id]]

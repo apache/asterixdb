@@ -25,23 +25,32 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class IndexAccessor extends AbstractAccessor {
-    private boolean isAny;
+
+    public enum IndexKind {
+        ELEMENT,
+        ANY,
+        STAR
+    }
+
+    private IndexKind indexKind;
+
     private Expression indexExpr;
 
-    public IndexAccessor(Expression expr, Expression indexExpr) {
+    public IndexAccessor(Expression expr, IndexKind indexKind, Expression indexExpr) {
         super(expr);
-        if (indexExpr == null) {
-            this.isAny = true;
+        if (indexKind != IndexKind.ELEMENT && indexExpr != null) {
+            throw new IllegalArgumentException(indexExpr.toString());
         }
+        this.indexKind = Objects.requireNonNull(indexKind);
         this.indexExpr = indexExpr;
     }
 
-    public boolean isAny() {
-        return isAny;
+    public IndexKind getIndexKind() {
+        return indexKind;
     }
 
-    public void setAny(boolean any) {
-        this.isAny = any;
+    public void setIndexKind(IndexKind indexKind) {
+        this.indexKind = indexKind;
     }
 
     public Expression getIndexExpr() {
@@ -64,7 +73,7 @@ public class IndexAccessor extends AbstractAccessor {
 
     @Override
     public int hashCode() {
-        return 31 * super.hashCode() + Objects.hash(indexExpr, isAny);
+        return 31 * super.hashCode() + Objects.hash(indexKind, indexExpr);
     }
 
     @Override
@@ -76,11 +85,11 @@ public class IndexAccessor extends AbstractAccessor {
             return false;
         }
         IndexAccessor target = (IndexAccessor) object;
-        return super.equals(target) && isAny == target.isAny && Objects.equals(indexExpr, target.indexExpr);
+        return super.equals(target) && indexKind == target.indexKind && Objects.equals(indexExpr, target.indexExpr);
     }
 
     @Override
     public String toString() {
-        return expr + "[" + (isAny ? "?" : indexExpr) + "]";
+        return expr + "[" + indexKind + '(' + indexExpr + ")]";
     }
 }

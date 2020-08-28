@@ -1,0 +1,549 @@
+DataverseUse TinySocial
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [t1]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val1]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val1]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val2]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val2]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val3]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val3]
+          )
+        ]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t2]
+    :
+    IndexAccessor [
+      (
+        SELECT ELEMENT [
+        Variable [ Name=$v ]
+        ]
+        FROM [          FunctionCall asterix.dataset@1[
+            LiteralExpr [STRING] [TinySocial.d1]
+          ]
+          AS Variable [ Name=$v ]
+        ]
+      )
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t3]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val1]
+          )
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val1]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val2]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val2]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val3]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val3]
+          )
+        ]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t4]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val1]
+          )
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val1]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val2]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val3]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val3]
+          )
+        ]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t5]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val1]
+          )
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val1]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [NULL]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val2]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val3]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val3]
+          )
+        ]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t6]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val1]
+          )
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val1]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [NULL]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val2]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val3]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val3]
+          )
+          (
+            LiteralExpr [STRING] [c]
+            :
+            LiteralExpr [STRING] [c_val3]
+          )
+        ]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t7]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val1]
+          )
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [LONG] [5]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [DOUBLE] [3.2]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val2]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val3]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val3]
+          )
+          (
+            LiteralExpr [STRING] [c]
+            :
+            LiteralExpr [STRING] [c_val3]
+          )
+        ]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t8]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val1]
+          )
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val1]
+          )
+        ]
+        RecordConstructor [
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val3]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val3]
+          )
+        ]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t9]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val1]
+          )
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val1]
+          )
+        ]
+        LiteralExpr [LONG] [5]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val3]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val3]
+          )
+        ]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t10]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val1]
+          )
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val1]
+          )
+        ]
+        LiteralExpr [NULL]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val3]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val3]
+          )
+        ]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t11]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val1]
+          )
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val1]
+          )
+        ]
+        LiteralExpr [MISSING]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val3]
+          )
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val3]
+          )
+        ]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t12]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [b]
+            :
+            LiteralExpr [STRING] [b_val1]
+          )
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [STRING] [a_val1]
+          )
+        ]
+        LiteralExpr [LONG] [5]
+        OrderedListConstructor [
+          LiteralExpr [LONG] [3]
+        ]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t13]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        RecordConstructor [
+        ]
+        RecordConstructor [
+        ]
+        RecordConstructor [
+        ]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t14]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        LiteralExpr [LONG] [1]
+        LiteralExpr [LONG] [2]
+        LiteralExpr [LONG] [3]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t15]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+        LiteralExpr [LONG] [1]
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t16]
+    :
+    IndexAccessor [
+      OrderedListConstructor [
+      ]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t17]
+    :
+    IndexAccessor [
+      LiteralExpr [STRING] [non_array]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t18]
+    :
+    IndexAccessor [
+      LiteralExpr [MISSING]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t19]
+    :
+    IndexAccessor [
+      LiteralExpr [NULL]
+      Index: STAR
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t20]
+    :
+    (
+      SELECT [
+      IndexAccessor [
+        FieldAccessor [
+          Variable [ Name=$d ]
+          Field=followers
+        ]
+        Index: STAR
+      ]
+      $1
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [TinySocial.d1]
+        ]
+        AS Variable [ Name=$d ]
+      ]
+    )
+  )
+]

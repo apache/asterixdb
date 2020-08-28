@@ -481,7 +481,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         if (ia.getIndexExpr() != null) {
             indexExpr = (Expression) ia.getIndexExpr().accept(this, arg);
         }
-        IndexAccessor copy = new IndexAccessor(expr, indexExpr);
+        IndexAccessor copy = new IndexAccessor(expr, ia.getIndexKind(), indexExpr);
         copy.setSourceLocation(ia.getSourceLocation());
         copy.addHints(ia.getHints());
         return copy;

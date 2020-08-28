@@ -6732,4 +6732,11 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="list">
+    <test-case FilePath="list">
+      <compilation-unit name="list-star_01">
+        <output-dir compare="AST">list-star_01</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

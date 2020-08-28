@@ -128,7 +128,7 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
             return true;
         }
 
-        if (!ia.isAny() && ia.getIndexExpr().accept(this, parentSelectBlock)) {
+        if (ia.getIndexExpr() != null && ia.getIndexExpr().accept(this, parentSelectBlock)) {
             return true;
         }
 
