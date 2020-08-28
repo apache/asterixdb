@@ -716,9 +716,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         // these two exchange ops are needed so that the parents of replicate stay the same during later optimizations.
         // This is because replicate operator has references to its parents. If any later optimizations add new parents,
         // then replicate would still point to the old ones.
-        MutableObject<ILogicalOperator> replicateOpRef = new MutableObject<>(replicateOp);
-        ExchangeOperator exchToLocalAgg = createOneToOneExchangeOp(replicateOpRef, ctx);
-        ExchangeOperator exchToForward = createOneToOneExchangeOp(replicateOpRef, ctx);
+        ExchangeOperator exchToLocalAgg = createOneToOneExchangeOp(new MutableObject<>(replicateOp), ctx);
+        ExchangeOperator exchToForward = createOneToOneExchangeOp(new MutableObject<>(replicateOp), ctx);
         MutableObject<ILogicalOperator> exchToLocalAggRef = new MutableObject<>(exchToLocalAgg);
         MutableObject<ILogicalOperator> exchToForwardRef = new MutableObject<>(exchToForward);
 

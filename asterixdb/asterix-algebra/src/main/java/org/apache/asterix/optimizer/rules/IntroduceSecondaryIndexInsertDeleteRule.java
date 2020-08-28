@@ -76,6 +76,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDelete
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -351,31 +352,40 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
                     // TokenizeOperator to tokenize [SK, PK] pairs
                     TokenizeOperator tokenUpdate = new TokenizeOperator(dataSourceIndex,
-                            primaryIndexModificationOp.getPrimaryKeyExpressions(), secondaryExpressions,
-                            tokenizeKeyVars, filterExpression, primaryIndexModificationOp.getOperation(),
-                            primaryIndexModificationOp.isBulkload(), isPartitioned, varTypes);
+                            OperatorManipulationUtil
+                                    .cloneExpressions(primaryIndexModificationOp.getPrimaryKeyExpressions()),
+                            secondaryExpressions, tokenizeKeyVars,
+                            filterExpression != null
+                                    ? new MutableObject<>(filterExpression.getValue().cloneExpression()) : null,
+                            primaryIndexModificationOp.getOperation(), primaryIndexModificationOp.isBulkload(),
+                            isPartitioned, varTypes);
                     tokenUpdate.setSourceLocation(sourceLoc);
                     tokenUpdate.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
                     context.computeAndSetTypeEnvironmentForOperator(tokenUpdate);
                     replicateOutput = tokenUpdate;
                     indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
-                            primaryIndexModificationOp.getPrimaryKeyExpressions(), tokenizeKeyExprs, filterExpression,
-                            primaryIndexModificationOp.getOperation(), primaryIndexModificationOp.isBulkload(),
-                            primaryIndexModificationOp.getAdditionalNonFilteringExpressions() == null ? 0
-                                    : primaryIndexModificationOp.getAdditionalNonFilteringExpressions().size());
-                    indexUpdate.setSourceLocation(sourceLoc);
-                    indexUpdate.setAdditionalFilteringExpressions(filteringExpressions);
-                    indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(tokenUpdate));
-                } else {
-                    // When TokenizeOperator is not needed
-                    indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
-                            primaryIndexModificationOp.getPrimaryKeyExpressions(), secondaryExpressions,
-                            filterExpression, primaryIndexModificationOp.getOperation(),
+                            OperatorManipulationUtil
+                                    .cloneExpressions(primaryIndexModificationOp.getPrimaryKeyExpressions()),
+                            tokenizeKeyExprs, filterExpression, primaryIndexModificationOp.getOperation(),
                             primaryIndexModificationOp.isBulkload(),
                             primaryIndexModificationOp.getAdditionalNonFilteringExpressions() == null ? 0
                                     : primaryIndexModificationOp.getAdditionalNonFilteringExpressions().size());
                     indexUpdate.setSourceLocation(sourceLoc);
-                    indexUpdate.setAdditionalFilteringExpressions(filteringExpressions);
+                    indexUpdate.setAdditionalFilteringExpressions(
+                            OperatorManipulationUtil.cloneExpressions(filteringExpressions));
+                    indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(tokenUpdate));
+                } else {
+                    // When TokenizeOperator is not needed
+                    indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
+                            OperatorManipulationUtil
+                                    .cloneExpressions(primaryIndexModificationOp.getPrimaryKeyExpressions()),
+                            secondaryExpressions, filterExpression, primaryIndexModificationOp.getOperation(),
+                            primaryIndexModificationOp.isBulkload(),
+                            primaryIndexModificationOp.getAdditionalNonFilteringExpressions() == null ? 0
+                                    : primaryIndexModificationOp.getAdditionalNonFilteringExpressions().size());
+                    indexUpdate.setSourceLocation(sourceLoc);
+                    indexUpdate.setAdditionalFilteringExpressions(
+                            OperatorManipulationUtil.cloneExpressions(filteringExpressions));
                     replicateOutput = indexUpdate;
                     // We add the necessary expressions for upsert
                     if (primaryIndexModificationOp.getOperation() == Kind.UPSERT) {
@@ -479,12 +489,15 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 }
                 DataSourceIndex dataSourceIndex = new DataSourceIndex(index, dataverseName, datasetName, mp);
                 indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
-                        primaryIndexModificationOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
-                        primaryIndexModificationOp.getOperation(), primaryIndexModificationOp.isBulkload(),
+                        OperatorManipulationUtil
+                                .cloneExpressions(primaryIndexModificationOp.getPrimaryKeyExpressions()),
+                        secondaryExpressions, filterExpression, primaryIndexModificationOp.getOperation(),
+                        primaryIndexModificationOp.isBulkload(),
                         primaryIndexModificationOp.getAdditionalNonFilteringExpressions() == null ? 0
                                 : primaryIndexModificationOp.getAdditionalNonFilteringExpressions().size());
                 indexUpdate.setSourceLocation(sourceLoc);
-                indexUpdate.setAdditionalFilteringExpressions(filteringExpressions);
+                indexUpdate.setAdditionalFilteringExpressions(
+                        OperatorManipulationUtil.cloneExpressions(filteringExpressions));
                 if (primaryIndexModificationOp.getOperation() == Kind.UPSERT) {
                     // set before op secondary key expressions
                     if (filteringFields != null) {

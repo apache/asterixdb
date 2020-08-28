@@ -131,9 +131,14 @@ public class IndexReplicationManager {
 
     private boolean skip(IReplicationJob job) {
         try {
-            final DatasetResourceReference indexFileRef =
-                    resourceRepository.getLocalResourceReference(job.getAnyFile());
-            return !replicationStrategy.isMatch(indexFileRef.getDatasetId());
+            final String fileToReplicate = job.getAnyFile();
+            final Optional<DatasetResourceReference> indexFileRefOpt =
+                    resourceRepository.getLocalResourceReference(fileToReplicate);
+            if (!indexFileRefOpt.isPresent()) {
+                LOGGER.warn("skipping replication of {} due to missing dataset resource reference", fileToReplicate);
+                return true;
+            }
+            return !replicationStrategy.isMatch(indexFileRefOpt.get().getDatasetId());
         } catch (HyracksDataException e) {
             throw new IllegalStateException("Couldn't find resource for " + job.getAnyFile(), e);
         }

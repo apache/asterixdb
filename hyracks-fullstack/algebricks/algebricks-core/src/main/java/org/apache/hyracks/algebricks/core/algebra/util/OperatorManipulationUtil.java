@@ -53,6 +53,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Ope
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class OperatorManipulationUtil {
 
@@ -460,5 +461,16 @@ public class OperatorManipulationUtil {
             }
         }
         return -1;
+    }
+
+    public static List<Mutable<ILogicalExpression>> createVariableReferences(List<LogicalVariable> varList,
+            SourceLocation sourceLoc) {
+        List<Mutable<ILogicalExpression>> varRefs = new ArrayList<>(varList.size());
+        for (LogicalVariable var : varList) {
+            VariableReferenceExpression varRef = new VariableReferenceExpression(var);
+            varRef.setSourceLocation(sourceLoc);
+            varRefs.add(new MutableObject<>(varRef));
+        }
+        return varRefs;
     }
 }

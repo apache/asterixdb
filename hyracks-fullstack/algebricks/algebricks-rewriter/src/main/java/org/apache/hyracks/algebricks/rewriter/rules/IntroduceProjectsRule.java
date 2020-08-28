@@ -177,6 +177,7 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
             if (liveVars.size() == projectVarsTemp.size() && liveVars.containsAll(projectVarsTemp)) {
                 // The existing project has become useless. Remove it.
                 parentOp.getInputs().get(parentInputIndex).setValue(op.getInputs().get(0).getValue());
+                modified = true;
             }
         }
 

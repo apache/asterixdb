@@ -45,21 +45,20 @@ import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDel
  * This operator node is used for secondary indexes with upsert operations.
  * It works in the following way:
  * For each incoming tuple
- * -If old secondary keys == new secondary keys
+ * -If old secondary index tuple == new secondary index tuple
  * --do nothing
  * -else
- * --If old secondary keys are null?
+ * --If any old field is null/missing?
  * ---do nothing
  * --else
- * ---delete old secondary keys
- * --If new keys are null?
+ * ---delete old secondary index tuple
+ * --If any new field is null/missing?
  * ---do nothing
  * --else
- * ---insert new keys
+ * ---insert new secondary index tuple
  */
 public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
-    private static final int NULL_MISSING_FIELD_INDEX = 0;
     private final PermutingFrameTupleReference prevValueTuple = new PermutingFrameTupleReference();
     private final int upsertIndicatorFieldIndex;
     private final IBinaryBooleanInspector upsertIndicatorInspector;
@@ -105,9 +104,9 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
                 tuple.reset(accessor, i);
                 prevValueTuple.reset(accessor, i);
 
-                boolean isNewValueNullOrMissing = isNullOrMissing(tuple);
-                boolean isOldValueNullOrMissing = isNullOrMissing(prevValueTuple);
-                if (isNewValueNullOrMissing && isOldValueNullOrMissing) {
+                boolean newTupleHasNullOrMissing = hasNullOrMissing(tuple);
+                boolean oldTupleHasNullOrMissing = hasNullOrMissing(prevValueTuple);
+                if (newTupleHasNullOrMissing && oldTupleHasNullOrMissing) {
                     // No op
                     continue;
                 }
@@ -118,13 +117,13 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
                     // which are always the same
                     continue;
                 }
-                if (!isOldValueNullOrMissing) {
-                    // We need to delete previous
+                // if all old fields are known values, then delete. skip deleting if any is null or missing
+                if (!oldTupleHasNullOrMissing) {
                     abstractModCallback.setOp(Operation.DELETE);
                     lsmAccessor.forceDelete(prevValueTuple);
                 }
-                if (isUpsert && !isNewValueNullOrMissing) {
-                    // we need to insert the new value
+                // if all new fields are known values, then insert. skip inserting if any is null or missing
+                if (isUpsert && !newTupleHasNullOrMissing) {
                     abstractModCallback.setOp(Operation.INSERT);
                     lsmAccessor.forceInsert(tuple);
                 }
@@ -138,8 +137,18 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
         FrameUtils.flushFrame(writeBuffer.getBuffer(), writer);
     }
 
-    private static boolean isNullOrMissing(PermutingFrameTupleReference tuple) {
-        return TypeTagUtil.isType(tuple, NULL_MISSING_FIELD_INDEX, ATypeTag.SERIALIZED_NULL_TYPE_TAG)
-                || TypeTagUtil.isType(tuple, NULL_MISSING_FIELD_INDEX, ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+    private boolean hasNullOrMissing(PermutingFrameTupleReference tuple) {
+        int fieldCount = tuple.getFieldCount();
+        for (int i = 0; i < fieldCount; i++) {
+            if (isNullOrMissing(tuple, i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isNullOrMissing(PermutingFrameTupleReference tuple, int fieldIdx) {
+        return TypeTagUtil.isType(tuple, fieldIdx, ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                || TypeTagUtil.isType(tuple, fieldIdx, ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
     }
 }

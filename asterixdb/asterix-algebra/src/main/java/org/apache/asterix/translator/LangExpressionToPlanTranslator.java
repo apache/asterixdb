@@ -412,22 +412,19 @@ abstract class LangExpressionToPlanTranslator
                 assign.getInputs().add(new MutableObject<>(topOp));
             }
 
-            VariableReferenceExpression resVarRef2 = new VariableReferenceExpression(resVar);
-            resVarRef2.setSourceLocation(sourceLoc);
-            Mutable<ILogicalExpression> varRef = new MutableObject<>(resVarRef2);
             ILogicalOperator leafOperator;
             switch (stmt.getKind()) {
                 case INSERT:
-                    leafOperator = translateInsert(targetDatasource, varRef, varRefsForLoading,
+                    leafOperator = translateInsert(targetDatasource, resVar, varRefsForLoading,
                             additionalFilteringExpressions, assign, stmt, resultMetadata);
                     break;
                 case UPSERT:
-                    leafOperator = translateUpsert(targetDatasource, varRef, varRefsForLoading,
+                    leafOperator = translateUpsert(targetDatasource, resVar, varRefsForLoading,
                             additionalFilteringExpressions, assign, additionalFilteringField, unnestVar, topOp, exprs,
-                            resVar, additionalFilteringAssign, stmt, resultMetadata);
+                            additionalFilteringAssign, stmt, resultMetadata);
                     break;
                 case DELETE:
-                    leafOperator = translateDelete(targetDatasource, varRef, varRefsForLoading,
+                    leafOperator = translateDelete(targetDatasource, resVar, varRefsForLoading,
                             additionalFilteringExpressions, assign, stmt);
                     break;
                 default:
@@ -442,7 +439,7 @@ abstract class LangExpressionToPlanTranslator
         return plan;
     }
 
-    protected ILogicalOperator translateDelete(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
+    protected ILogicalOperator translateDelete(DatasetDataSource targetDatasource, LogicalVariable resVar,
             List<Mutable<ILogicalExpression>> varRefsForLoading,
             List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator assign,
             ICompiledDmlStatement stmt) throws AlgebricksException {
@@ -452,8 +449,10 @@ abstract class LangExpressionToPlanTranslator
                     targetDatasource.getDataset().getDatasetName()
                             + ": delete from dataset is not supported on Datasets with Meta records");
         }
-        InsertDeleteUpsertOperator deleteOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
-                varRefsForLoading, InsertDeleteUpsertOperator.Kind.DELETE, false);
+        VariableReferenceExpression varRef = new VariableReferenceExpression(resVar);
+        varRef.setSourceLocation(stmt.getSourceLocation());
+        InsertDeleteUpsertOperator deleteOp = new InsertDeleteUpsertOperator(targetDatasource,
+                new MutableObject<>(varRef), varRefsForLoading, InsertDeleteUpsertOperator.Kind.DELETE, false);
         deleteOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
         deleteOp.getInputs().add(new MutableObject<>(assign));
         deleteOp.setSourceLocation(sourceLoc);
@@ -463,11 +462,11 @@ abstract class LangExpressionToPlanTranslator
         return leafOperator;
     }
 
-    protected ILogicalOperator translateUpsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
+    protected ILogicalOperator translateUpsert(DatasetDataSource targetDatasource, LogicalVariable resVar,
             List<Mutable<ILogicalExpression>> varRefsForLoading,
             List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator assign,
             List<String> additionalFilteringField, LogicalVariable unnestVar, ILogicalOperator topOp,
-            List<Mutable<ILogicalExpression>> exprs, LogicalVariable resVar, AssignOperator additionalFilteringAssign,
+            List<Mutable<ILogicalExpression>> exprs, AssignOperator additionalFilteringAssign,
             ICompiledDmlStatement stmt, IResultMetadata resultMetadata) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (!targetDatasource.getDataset().allow(topOp, DatasetUtil.OP_UPSERT)) {
@@ -520,8 +519,10 @@ abstract class LangExpressionToPlanTranslator
                 }
             }
             // A change feed, we don't need the assign to access PKs
-            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef, varRefsForLoading, metaExpSingletonList,
-                    InsertDeleteUpsertOperator.Kind.UPSERT, false);
+            VariableReferenceExpression varRef = new VariableReferenceExpression(resVar);
+            varRef.setSourceLocation(stmt.getSourceLocation());
+            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, new MutableObject<>(varRef), varRefsForLoading,
+                    metaExpSingletonList, InsertDeleteUpsertOperator.Kind.UPSERT, false);
             upsertOp.setUpsertIndicatorVar(context.newVar());
             upsertOp.setUpsertIndicatorVarType(BuiltinType.ABOOLEAN);
             // Create and add a new variable used for representing the original record
@@ -553,7 +554,9 @@ abstract class LangExpressionToPlanTranslator
             topOp.getInputs().set(0, new MutableObject<>(metaAndKeysAssign));
             upsertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
         } else {
-            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef, varRefsForLoading,
+            VariableReferenceExpression varRef = new VariableReferenceExpression(resVar);
+            varRef.setSourceLocation(stmt.getSourceLocation());
+            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, new MutableObject<>(varRef), varRefsForLoading,
                     InsertDeleteUpsertOperator.Kind.UPSERT, false);
             upsertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
             upsertOp.getInputs().add(new MutableObject<>(assign));
@@ -578,7 +581,7 @@ abstract class LangExpressionToPlanTranslator
         return processReturningExpression(rootOperator, upsertOp, compiledUpsert, resultMetadata);
     }
 
-    protected ILogicalOperator translateInsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
+    protected ILogicalOperator translateInsert(DatasetDataSource targetDatasource, LogicalVariable resVar,
             List<Mutable<ILogicalExpression>> varRefsForLoading,
             List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator assign,
             ICompiledDmlStatement stmt, IResultMetadata resultMetadata) throws AlgebricksException {
@@ -589,8 +592,10 @@ abstract class LangExpressionToPlanTranslator
                             + ": insert into dataset is not supported on Datasets with Meta records");
         }
         // Adds the insert operator.
-        InsertDeleteUpsertOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
-                varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, false);
+        VariableReferenceExpression varRef = new VariableReferenceExpression(resVar);
+        varRef.setSourceLocation(stmt.getSourceLocation());
+        InsertDeleteUpsertOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource,
+                new MutableObject<>(varRef), varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, false);
         insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
         insertOp.getInputs().add(new MutableObject<>(assign));
         insertOp.setSourceLocation(sourceLoc);
@@ -619,8 +624,8 @@ abstract class LangExpressionToPlanTranslator
 
         //Create an assign operator that makes the variable used by the return expression
         LogicalVariable insertedVar = context.newVar();
-        AssignOperator insertedVarAssignOperator =
-                new AssignOperator(insertedVar, new MutableObject<>(insertOp.getPayloadExpression().getValue()));
+        AssignOperator insertedVarAssignOperator = new AssignOperator(insertedVar,
+                new MutableObject<>(insertOp.getPayloadExpression().getValue().cloneExpression()));
         insertedVarAssignOperator.getInputs().add(insertOp.getInputs().get(0));
         insertedVarAssignOperator.setSourceLocation(sourceLoc);
         insertOp.getInputs().set(0, new MutableObject<>(insertedVarAssignOperator));

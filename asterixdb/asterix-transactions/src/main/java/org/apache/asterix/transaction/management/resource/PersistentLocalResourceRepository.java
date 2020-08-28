@@ -346,10 +346,11 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 .collect(Collectors.toSet());
     }
 
-    public DatasetResourceReference getLocalResourceReference(String absoluteFilePath) throws HyracksDataException {
+    public Optional<DatasetResourceReference> getLocalResourceReference(String absoluteFilePath)
+            throws HyracksDataException {
         final String localResourcePath = StoragePathUtil.getIndexFileRelativePath(absoluteFilePath);
         final LocalResource lr = get(localResourcePath);
-        return DatasetResourceReference.of(lr);
+        return lr != null ? Optional.of(DatasetResourceReference.of(lr)) : Optional.empty();
     }
 
     /**

@@ -256,6 +256,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                     }
                 } else {
                     if (expr.isFunctional() && assignCommonExpression(exprEqClass, expr)) {
+                        modified = true;
                         //re-obtain the live vars after rewriting in the method called in the if condition
                         Set<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
                         VariableUtilities.getLiveVariables(op, liveVars);

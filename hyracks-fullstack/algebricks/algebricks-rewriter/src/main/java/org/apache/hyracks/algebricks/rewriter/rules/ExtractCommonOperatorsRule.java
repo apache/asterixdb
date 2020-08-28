@@ -35,7 +35,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
@@ -48,6 +47,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.AssignPOper
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StreamProjectPOperator;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -172,7 +172,6 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
             ReplicateOperator rop = new ReplicateOperator(group.size(), materializationFlags);
             rop.setSourceLocation(candidateSourceLoc);
             rop.setPhysicalOperator(new ReplicatePOperator());
-            Mutable<ILogicalOperator> ropRef = new MutableObject<ILogicalOperator>(rop);
             AbstractLogicalOperator aopCandidate = (AbstractLogicalOperator) candidate.getValue();
             List<Mutable<ILogicalOperator>> originalCandidateParents = childrenToParents.get(candidate);
 
@@ -194,14 +193,14 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 AbstractLogicalOperator parent = (AbstractLogicalOperator) parentRef.getValue();
                 int index = parent.getInputs().indexOf(candidate);
                 if (parent.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
-                    parent.getInputs().set(index, ropRef);
+                    parent.getInputs().set(index, new MutableObject<>(rop));
                     rop.getOutputs().add(parentRef);
                 } else {
                     AbstractLogicalOperator exchange = new ExchangeOperator();
                     exchange.setPhysicalOperator(new OneToOneExchangePOperator());
                     exchange.setExecutionMode(rop.getExecutionMode());
                     MutableObject<ILogicalOperator> exchangeRef = new MutableObject<ILogicalOperator>(exchange);
-                    exchange.getInputs().add(ropRef);
+                    exchange.getInputs().add(new MutableObject<>(rop));
                     rop.getOutputs().add(exchangeRef);
                     context.computeAndSetTypeEnvironmentForOperator(exchange);
                     parent.getInputs().set(index, exchangeRef);
@@ -210,12 +209,6 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
             }
             List<LogicalVariable> liveVarsNew = new ArrayList<LogicalVariable>();
             VariableUtilities.getLiveVariables(candidate.getValue(), liveVarsNew);
-            ArrayList<Mutable<ILogicalExpression>> assignExprs = new ArrayList<Mutable<ILogicalExpression>>();
-            for (LogicalVariable liveVar : liveVarsNew) {
-                VariableReferenceExpression liveVarRef = new VariableReferenceExpression(liveVar);
-                liveVarRef.setSourceLocation(candidateSourceLoc);
-                assignExprs.add(new MutableObject<ILogicalExpression>(liveVarRef));
-            }
             for (Mutable<ILogicalOperator> ref : group) {
                 if (ref.equals(candidate)) {
                     continue;
@@ -230,6 +223,8 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
 
                 SourceLocation refSourceLoc = ref.getValue().getSourceLocation();
 
+                List<Mutable<ILogicalExpression>> assignExprs =
+                        OperatorManipulationUtil.createVariableReferences(liveVarsNew, candidateSourceLoc);
                 AbstractLogicalOperator assignOperator = new AssignOperator(liveVars, assignExprs);
                 assignOperator.setSourceLocation(refSourceLoc);
                 assignOperator.setExecutionMode(rop.getExecutionMode());
@@ -241,7 +236,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 AbstractLogicalOperator exchOp = new ExchangeOperator();
                 exchOp.setPhysicalOperator(new OneToOneExchangePOperator());
                 exchOp.setExecutionMode(rop.getExecutionMode());
-                exchOp.getInputs().add(ropRef);
+                exchOp.getInputs().add(new MutableObject<>(rop));
                 MutableObject<ILogicalOperator> exchOpRef = new MutableObject<ILogicalOperator>(exchOp);
                 rop.getOutputs().add(exchOpRef);
                 assignOperator.getInputs().add(exchOpRef);

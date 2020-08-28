@@ -103,6 +103,7 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         comparison.addOperand(itemExpr);
         comparison.addOperand(bindingVar);
         comparison.setCurrentop(true);
+        comparison.addHints(operatorExpr.getHints());
         comparison.setSourceLocation(operatorExpr.getSourceLocation());
         if (opType == OperatorType.IN) {
             comparison.addOperator(OperatorType.EQ);
