@@ -105,25 +105,29 @@ public class RunFileStream {
         runFileBuffer.reset();
     }
 
-    public void addToRunFile(ITupleAccessor accessor) throws HyracksDataException {
-        int idx = accessor.getTupleId();
-        addToRunFile(accessor, idx);
-    }
-
-    public void addToRunFile(IFrameTupleAccessor accessor, int idx) throws HyracksDataException {
-        if (!runFileAppender.append(accessor, idx)) {
+    public void addToRunFile(IFrameTupleAccessor accessor, int tupleId) throws HyracksDataException {
+        if (!runFileAppender.append(accessor, tupleId)) {
             runFileAppender.write(runFileWriter, true);
             writeCount++;
-            runFileAppender.append(accessor, idx);
+            runFileAppender.append(accessor, tupleId);
         }
         totalTupleCount++;
     }
 
-    public void startReadingRunFile(ITupleAccessor accessor) throws HyracksDataException {
-        startReadingRunFile(accessor, 0);
+    public void addToRunFile(FrameTupleCursor cursor) throws HyracksDataException {
+        if (!runFileAppender.append(cursor.getAccessor(), cursor.getTupleId())) {
+            runFileAppender.write(runFileWriter, true);
+            writeCount++;
+            runFileAppender.append(cursor.getAccessor(), cursor.getTupleId());
+        }
+        totalTupleCount++;
     }
 
-    public void startReadingRunFile(ITupleAccessor accessor, long startOffset) throws HyracksDataException {
+    public void startReadingRunFile(FrameTupleCursor cursor) throws HyracksDataException {
+        startReadingRunFile(cursor, 0);
+    }
+
+    public void startReadingRunFile(FrameTupleCursor cursor, long startOffset) throws HyracksDataException {
         if (runFileReader != null) {
             runFileReader.close();
         }
@@ -134,15 +138,14 @@ public class RunFileStream {
         runFileReader.seek(startOffset);
         previousReadPointer = 0;
         // Load first frame
-        loadNextBuffer(accessor);
+        loadNextBuffer(cursor);
     }
 
-    public boolean loadNextBuffer(ITupleAccessor accessor) throws HyracksDataException {
+    public boolean loadNextBuffer(FrameTupleCursor cursor) throws HyracksDataException {
         final long tempFrame = runFileReader.position();
         if (runFileReader.nextFrame(runFileBuffer)) {
             previousReadPointer = tempFrame;
-            accessor.reset(runFileBuffer.getBuffer());
-            accessor.next();
+            cursor.reset(runFileBuffer.getBuffer());
             readCount++;
             return true;
         }

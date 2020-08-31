@@ -21,20 +21,10 @@ package org.apache.asterix.runtime.operators.joins.interval.utils.memory;
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
-import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
 
 public class IntervalJoinUtil {
 
     private IntervalJoinUtil() {
-    }
-
-    public static void getIntervalPointable(ITupleAccessor accessor, int fieldId, TaggedValuePointable tvp,
-            AIntervalPointable ip) {
-        int start =
-                accessor.getTupleStartOffset() + accessor.getFieldSlotsLength() + accessor.getFieldStartOffset(fieldId);
-        int length = accessor.getFieldLength(fieldId);
-        tvp.set(accessor.getBuffer().array(), start, length);
-        tvp.getValue(ip);
     }
 
     public static void getIntervalPointable(IFrameTupleAccessor accessor, int tupleId, int fieldId,
@@ -62,20 +52,6 @@ public class IntervalJoinUtil {
 
     public static long getIntervalEnd(IFrameTupleAccessor accessor, int tupleId, int fieldId) {
         int start = getIntervalOffset(accessor, tupleId, fieldId);
-        long intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(accessor.getBuffer().array(), start);
-        return intervalEnd;
-    }
-
-    public static long getIntervalStart(ITupleAccessor accessor, int fieldId) {
-        int start = accessor.getTupleStartOffset() + accessor.getFieldSlotsLength()
-                + accessor.getFieldStartOffset(fieldId) + 1;
-        long intervalStart = AIntervalSerializerDeserializer.getIntervalStart(accessor.getBuffer().array(), start);
-        return intervalStart;
-    }
-
-    public static long getIntervalEnd(ITupleAccessor accessor, int fieldId) {
-        int start = accessor.getTupleStartOffset() + accessor.getFieldSlotsLength()
-                + accessor.getFieldStartOffset(fieldId) + 1;
         long intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(accessor.getBuffer().array(), start);
         return intervalEnd;
     }

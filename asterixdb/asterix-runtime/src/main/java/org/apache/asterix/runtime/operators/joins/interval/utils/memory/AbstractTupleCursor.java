@@ -16,54 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.runtime.operators.joins.interval.utils.memory;
 
-import java.nio.ByteBuffer;
-
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
-import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
-public interface ITupleAccessor extends IFrameTupleAccessor {
-    int getTupleStartOffset();
+public abstract class AbstractTupleCursor<T> implements ITupleCursor<T> {
 
-    int getTupleEndOffset();
-
-    int getTupleLength();
-
-    int getAbsFieldStartOffset(int fieldId);
-
-    int getFieldLength(int fieldId);
+    public static final int UNSET = -2;
+    public static final int INITIALIZED = -1;
+    public int tupleId = UNSET;
+    protected IFrameTupleAccessor accessor;
 
     @Override
-    int getFieldCount();
+    public void next() {
+        ++tupleId;
+    }
 
     @Override
-    int getFieldSlotsLength();
-
-    int getFieldEndOffset(int fieldId);
-
-    int getFieldStartOffset(int fieldId);
-
-    void reset(TuplePointer tuplePointer);
+    public IFrameTupleAccessor getAccessor() {
+        return accessor;
+    }
 
     @Override
-    void reset(ByteBuffer buffer);
-
-    int getTupleId();
-
-    void setTupleId(int tupleId);
-
-    void getTuplePointer(TuplePointer tp);
-
-    /**
-     * Only reset the iterator.
-     */
-    void reset();
-
-    boolean hasNext();
-
-    void next();
-
-    boolean exists();
+    public int getTupleId() {
+        return tupleId;
+    }
 }
