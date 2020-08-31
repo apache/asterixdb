@@ -26,10 +26,10 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstan
 
 public class AsterixConstantValue implements IAlgebricksConstantValue {
 
-    private IAObject object;
+    private final IAObject object;
 
     public AsterixConstantValue(IAObject object) {
-        this.setObject(object);
+        this.object = object;
     }
 
     @Override
@@ -50,10 +50,6 @@ public class AsterixConstantValue implements IAlgebricksConstantValue {
     @Override
     public boolean isTrue() {
         return object == ABoolean.TRUE;
-    }
-
-    public void setObject(IAObject object) {
-        this.object = object;
     }
 
     public IAObject getObject() {

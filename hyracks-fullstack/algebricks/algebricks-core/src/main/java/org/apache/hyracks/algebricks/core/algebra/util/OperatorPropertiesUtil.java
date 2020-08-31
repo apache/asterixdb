@@ -352,4 +352,9 @@ public class OperatorPropertiesUtil {
                 && rightChild.getExecutionMode().equals(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
         return unPartitioned ? StructuralPropertiesVector.EMPTY_PROPERTIES_VECTOR : partitionedPropertiesVector;
     }
+
+    public static boolean isMultiOutputOperator(ILogicalOperator op) {
+        LogicalOperatorTag opTag = op.getOperatorTag();
+        return opTag == LogicalOperatorTag.REPLICATE || opTag == LogicalOperatorTag.SPLIT;
+    }
 }

@@ -58,8 +58,12 @@ public class OptimizationConfUtil {
                 compilerProperties.getWindowMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_WINDOW, sourceLoc);
         int textSearchFrameLimit = getTextSearchNumFrames(compilerProperties, querySpecificConfig, sourceLoc);
         int sortNumSamples = getSortSamples(compilerProperties, querySpecificConfig, sourceLoc);
-        boolean fullParallelSort = getSortParallel(compilerProperties, querySpecificConfig);
-        boolean indexOnly = isIndexOnly(compilerProperties, querySpecificConfig);
+        boolean fullParallelSort = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_SORT_PARALLEL_KEY,
+                compilerProperties.getSortParallel());
+        boolean indexOnly = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_INDEXONLY_KEY,
+                compilerProperties.isIndexOnly());
+        boolean sanityCheck = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_INTERNAL_SANITYCHECK_KEY,
+                compilerProperties.isSanityCheck());
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -71,6 +75,7 @@ public class OptimizationConfUtil {
         physOptConf.setSortParallel(fullParallelSort);
         physOptConf.setSortSamples(sortNumSamples);
         physOptConf.setIndexOnly(indexOnly);
+        physOptConf.setSanityCheckEnabled(sanityCheck);
         return physOptConf;
     }
 
@@ -109,15 +114,6 @@ public class OptimizationConfUtil {
         return Math.max(frameLimit, minFrameLimit);
     }
 
-    private static boolean getSortParallel(CompilerProperties compilerProperties,
-            Map<String, Object> querySpecificConfig) {
-        String valueInQuery = (String) querySpecificConfig.get(CompilerProperties.COMPILER_SORT_PARALLEL_KEY);
-        if (valueInQuery != null) {
-            return OptionTypes.BOOLEAN.parse(valueInQuery);
-        }
-        return compilerProperties.getSortParallel();
-    }
-
     @SuppressWarnings("squid:S1166") // Either log or rethrow this exception
     private static int getSortSamples(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig,
             SourceLocation sourceLoc) throws AsterixException {
@@ -131,11 +127,11 @@ public class OptimizationConfUtil {
         }
     }
 
-    private static boolean isIndexOnly(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig) {
-        String valueInQuery = (String) querySpecificConfig.get(CompilerProperties.COMPILER_INDEXONLY_KEY);
+    private static boolean getBoolean(Map<String, Object> queryConfig, String queryConfigKey, boolean defaultValue) {
+        String valueInQuery = (String) queryConfig.get(queryConfigKey);
         if (valueInQuery != null) {
             return OptionTypes.BOOLEAN.parse(valueInQuery);
         }
-        return compilerProperties.isIndexOnly();
+        return defaultValue;
     }
 }

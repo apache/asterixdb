@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 
@@ -28,7 +29,15 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 public interface IPlanPrettyPrinter {
 
     /** Prints the plan rooted at the operator argument. */
-    IPlanPrettyPrinter printOperator(AbstractLogicalOperator operator) throws AlgebricksException;
+    default IPlanPrettyPrinter printOperator(AbstractLogicalOperator operator) throws AlgebricksException {
+        return printOperator(operator, true);
+    }
+
+    /** Prints given operator and optionally it's inputs */
+    IPlanPrettyPrinter printOperator(AbstractLogicalOperator operator, boolean printInputs) throws AlgebricksException;
+
+    /** Prints given expression */
+    IPlanPrettyPrinter printExpression(ILogicalExpression expression) throws AlgebricksException;
 
     /** Prints the whole logical plan. */
     IPlanPrettyPrinter printPlan(ILogicalPlan plan) throws AlgebricksException;

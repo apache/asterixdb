@@ -40,6 +40,7 @@ public class PhysicalOptimizationConfig {
     private static final String SORT_PARALLEL = "SORT_PARALLEL";
     private static final String SORT_SAMPLES = "SORT_SAMPLES";
     private static final String INDEX_ONLY = "INDEX_ONLY";
+    private static final String SANITY_CHECK = "SANITY_CHECK";
 
     private Properties properties = new Properties();
 
@@ -179,6 +180,14 @@ public class PhysicalOptimizationConfig {
 
     public boolean isIndexOnly() {
         return getBoolean(INDEX_ONLY, AlgebricksConfig.INDEX_ONLY_DEFAULT);
+    }
+
+    public void setSanityCheckEnabled(boolean sanityCheck) {
+        setBoolean(SANITY_CHECK, sanityCheck);
+    }
+
+    public boolean isSanityCheckEnabled() {
+        return getBoolean(SANITY_CHECK, AlgebricksConfig.SANITYCHECK_DEFAULT);
     }
 
     private void setInt(String property, int value) {

@@ -38,6 +38,8 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeCompu
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableEvalSizeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import org.apache.hyracks.algebricks.core.algebra.plan.PlanStabilityVerifier;
+import org.apache.hyracks.algebricks.core.algebra.plan.PlanStructureVerifier;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
@@ -89,6 +91,8 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     private final IPlanPrettyPrinter prettyPrinter;
     private final IConflictingTypeResolver conflictingTypeResovler;
     private final IWarningCollector warningCollector;
+    private final PlanStructureVerifier planStructureVerifier;
+    private final PlanStabilityVerifier planStabilityVerifier;
 
     public AlgebricksOptimizationContext(int varCounter, IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
@@ -106,6 +110,9 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
         this.prettyPrinter = prettyPrinter;
         this.conflictingTypeResovler = conflictingTypeResovler;
         this.warningCollector = warningCollector;
+        boolean isSanityCheckEnabled = physicalOptimizationConfig.isSanityCheckEnabled();
+        this.planStructureVerifier = isSanityCheckEnabled ? new PlanStructureVerifier(prettyPrinter) : null;
+        this.planStabilityVerifier = isSanityCheckEnabled ? new PlanStabilityVerifier(prettyPrinter) : null;
     }
 
     @Override
@@ -336,5 +343,15 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     @Override
     public IWarningCollector getWarningCollector() {
         return warningCollector;
+    }
+
+    @Override
+    public PlanStructureVerifier getPlanStructureVerifier() {
+        return planStructureVerifier;
+    }
+
+    @Override
+    public PlanStabilityVerifier getPlanStabilityVerifier() {
+        return planStabilityVerifier;
     }
 }

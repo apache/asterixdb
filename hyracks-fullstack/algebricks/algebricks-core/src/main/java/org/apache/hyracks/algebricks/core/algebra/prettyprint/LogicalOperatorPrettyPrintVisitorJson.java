@@ -159,8 +159,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     }
 
     @Override
-    public final IPlanPrettyPrinter printOperator(AbstractLogicalOperator op) throws AlgebricksException {
-        printOperatorImpl(op);
+    public final IPlanPrettyPrinter printOperator(AbstractLogicalOperator op, boolean printInputs)
+            throws AlgebricksException {
+        printOperatorImpl(op, printInputs);
         flushContentToWriter();
         return this;
     }
@@ -172,7 +173,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 jsonGenerator.writeStartArray();
             }
             for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-                printOperatorImpl((AbstractLogicalOperator) root.getValue());
+                printOperatorImpl((AbstractLogicalOperator) root.getValue(), true);
             }
             if (writeArrayOfRoots) {
                 jsonGenerator.writeEndArray();
@@ -182,7 +183,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         }
     }
 
-    private void printOperatorImpl(AbstractLogicalOperator op) throws AlgebricksException {
+    private void printOperatorImpl(AbstractLogicalOperator op, boolean printInputs) throws AlgebricksException {
         try {
             jsonGenerator.writeStartObject();
             op.accept(this, null);
@@ -192,14 +193,24 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 jsonGenerator.writeStringField("physical-operator", pOp.toString());
             }
             jsonGenerator.writeStringField("execution-mode", op.getExecutionMode().toString());
-            if (!op.getInputs().isEmpty()) {
+            if (printInputs && !op.getInputs().isEmpty()) {
                 jsonGenerator.writeArrayFieldStart("inputs");
                 for (Mutable<ILogicalOperator> k : op.getInputs()) {
-                    printOperatorImpl((AbstractLogicalOperator) k.getValue());
+                    printOperatorImpl((AbstractLogicalOperator) k.getValue(), printInputs);
                 }
                 jsonGenerator.writeEndArray();
             }
             jsonGenerator.writeEndObject();
+        } catch (IOException e) {
+            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+        }
+    }
+
+    @Override
+    public IPlanPrettyPrinter printExpression(ILogicalExpression expression) throws AlgebricksException {
+        try {
+            jsonGenerator.writeString(expression.accept(exprVisitor, null));
+            return this;
         } catch (IOException e) {
             throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
         }

@@ -94,18 +94,20 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     }
 
     @Override
-    public final IPlanPrettyPrinter printOperator(AbstractLogicalOperator op) throws AlgebricksException {
-        printOperatorImpl(op, 0);
+    public final IPlanPrettyPrinter printOperator(AbstractLogicalOperator op, boolean printInputs)
+            throws AlgebricksException {
+        printOperatorImpl(op, 0, printInputs);
         return this;
     }
 
     private void printPlanImpl(ILogicalPlan plan, int indent) throws AlgebricksException {
         for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-            printOperatorImpl((AbstractLogicalOperator) root.getValue(), indent);
+            printOperatorImpl((AbstractLogicalOperator) root.getValue(), indent, true);
         }
     }
 
-    private void printOperatorImpl(AbstractLogicalOperator op, int indent) throws AlgebricksException {
+    private void printOperatorImpl(AbstractLogicalOperator op, int indent, boolean printInputs)
+            throws AlgebricksException {
         op.accept(this, indent);
         IPhysicalOperator pOp = op.getPhysicalOperator();
 
@@ -117,9 +119,17 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
             appendln(buffer, " -- |" + op.getExecutionMode() + "|");
         }
 
-        for (Mutable<ILogicalOperator> i : op.getInputs()) {
-            printOperatorImpl((AbstractLogicalOperator) i.getValue(), indent + INIT_INDENT);
+        if (printInputs) {
+            for (Mutable<ILogicalOperator> i : op.getInputs()) {
+                printOperatorImpl((AbstractLogicalOperator) i.getValue(), indent + INIT_INDENT, printInputs);
+            }
         }
+    }
+
+    @Override
+    public IPlanPrettyPrinter printExpression(ILogicalExpression expression) throws AlgebricksException {
+        buffer.append(expression.accept(exprVisitor, 0));
+        return this;
     }
 
     @Override

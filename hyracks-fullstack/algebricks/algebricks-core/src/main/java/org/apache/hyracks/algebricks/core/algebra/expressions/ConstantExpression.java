@@ -19,9 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.expressions;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -31,7 +29,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 
 public final class ConstantExpression extends AbstractLogicalExpression {
-    private IAlgebricksConstantValue value;
+    private final IAlgebricksConstantValue value;
 
     public static final ConstantExpression TRUE = new ConstantExpression(new IAlgebricksConstantValue() {
 
@@ -115,18 +113,12 @@ public final class ConstantExpression extends AbstractLogicalExpression {
         }
     });
 
-    private Map<Object, IExpressionAnnotation> annotationMap = new HashMap<>();
-
     public ConstantExpression(IAlgebricksConstantValue value) {
         this.value = value;
     }
 
     public IAlgebricksConstantValue getValue() {
         return value;
-    }
-
-    public void setValue(IAlgebricksConstantValue value) {
-        this.value = value;
     }
 
     @Override
@@ -170,21 +162,13 @@ public final class ConstantExpression extends AbstractLogicalExpression {
 
     @Override
     public AbstractLogicalExpression cloneExpression() {
-        Map<Object, IExpressionAnnotation> m = new HashMap<>();
-        annotationMap.forEach((key, value1) -> m.put(key, value1.copy()));
         ConstantExpression c = new ConstantExpression(value);
-        c.annotationMap = m;
         c.setSourceLocation(sourceLoc);
         return c;
-    }
-
-    public Map<Object, IExpressionAnnotation> getAnnotations() {
-        return annotationMap;
     }
 
     @Override
     public boolean splitIntoConjuncts(List<Mutable<ILogicalExpression>> conjs) {
         return false;
     }
-
 }

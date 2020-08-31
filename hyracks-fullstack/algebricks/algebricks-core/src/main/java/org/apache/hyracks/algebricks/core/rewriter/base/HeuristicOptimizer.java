@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.Level;
 
@@ -58,6 +59,7 @@ public class HeuristicOptimizer {
         }
 
         logPlanAt("Plan Before Optimization", Level.TRACE);
+        sanityCheckBeforeOptimization(plan);
         runLogicalOptimizationSets(plan, logicalRewrites);
         computeSchemaBottomUpForPlan(plan);
         runPhysicalOptimizationSets(plan, physicalRewrites);
@@ -117,5 +119,18 @@ public class HeuristicOptimizer {
             AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Starting physical optimizations.\n");
         }
         runOptimizationSets(plan, optimizationSet);
+    }
+
+    private void sanityCheckBeforeOptimization(ILogicalPlan plan) throws AlgebricksException {
+        if (context.getPhysicalOptimizationConfig().isSanityCheckEnabled()) {
+            try {
+                for (Mutable<ILogicalOperator> opRef : plan.getRoots()) {
+                    context.getPlanStructureVerifier().verifyPlanStructure(opRef);
+                }
+            } catch (AlgebricksException e) {
+                throw AlgebricksException.create(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                        String.format("Initial plan contains illegal %s", e.getMessage()));
+            }
+        }
     }
 }

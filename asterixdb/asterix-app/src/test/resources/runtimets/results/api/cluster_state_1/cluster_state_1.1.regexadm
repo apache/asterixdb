@@ -11,6 +11,7 @@
     "compiler\.framesize" : 32768,
     "compiler\.groupmemory" : 163840,
     "compiler\.indexonly" : true,
+    "compiler\.internal\.sanitycheck" : true,
     "compiler\.joinmemory" : 262144,
     "compiler\.parallelism" : 0,
     "compiler\.sort\.parallel" : false,

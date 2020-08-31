@@ -25,6 +25,8 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSiz
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableEvalSizeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import org.apache.hyracks.algebricks.core.algebra.plan.PlanStabilityVerifier;
+import org.apache.hyracks.algebricks.core.algebra.plan.PlanStructureVerifier;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
@@ -87,4 +89,8 @@ public interface IOptimizationContext extends ITypingContext, IVariableContext {
     public INodeDomain getComputationNodeDomain();
 
     public IWarningCollector getWarningCollector();
+
+    public PlanStructureVerifier getPlanStructureVerifier();
+
+    public PlanStabilityVerifier getPlanStabilityVerifier();
 }

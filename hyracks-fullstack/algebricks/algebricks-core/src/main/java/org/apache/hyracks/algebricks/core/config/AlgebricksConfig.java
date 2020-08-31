@@ -28,4 +28,5 @@ public class AlgebricksConfig {
     public static final int SORT_SAMPLES = 100;
     public static final boolean SORT_PARALLEL = true;
     public static final boolean INDEX_ONLY_DEFAULT = true;
+    public static final boolean SANITYCHECK_DEFAULT = false;
 }
