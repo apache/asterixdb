@@ -464,9 +464,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public IResourceFactory getResourceFactory(MetadataProvider mdProvider, Index index, ARecordType recordType,
             ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties)
             throws AlgebricksException {
-        ITypeTraits[] filterTypeTraits = DatasetUtil.computeFilterTypeTraits(this, recordType);
+        ITypeTraits[] filterTypeTraits = DatasetUtil.computeFilterTypeTraits(this, recordType, metaType);
         IBinaryComparatorFactory[] filterCmpFactories = DatasetUtil.computeFilterBinaryComparatorFactories(this,
-                recordType, mdProvider.getStorageComponentProvider().getComparatorFactoryProvider());
+                recordType, metaType, mdProvider.getStorageComponentProvider().getComparatorFactoryProvider());
         IResourceFactory resourceFactory;
         switch (index.getIndexType()) {
             case BTREE:

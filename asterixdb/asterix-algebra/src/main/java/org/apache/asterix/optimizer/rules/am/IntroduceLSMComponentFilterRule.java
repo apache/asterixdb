@@ -89,21 +89,26 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
         Dataset dataset = getDataset(op, context);
+        Integer filterSourceIndicator = null;
         List<String> filterFieldName = null;
-        ARecordType recType = null;
+        ARecordType itemType = null;
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
         if (dataset != null && dataset.getDatasetType() == DatasetType.INTERNAL) {
+            filterSourceIndicator = DatasetUtil.getFilterSourceIndicator(dataset);
             filterFieldName = DatasetUtil.getFilterField(dataset);
-            IAType itemType = mp.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
-            if (itemType.getTypeTag() == ATypeTag.OBJECT) {
-                recType = (ARecordType) itemType;
+            IAType filterSourceType = filterSourceIndicator == null || filterSourceIndicator == 0
+                    ? mp.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName())
+                    : mp.findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+
+            if (filterSourceType.getTypeTag() == ATypeTag.OBJECT) {
+                itemType = (ARecordType) filterSourceType;
             }
         }
-        if (filterFieldName == null || recType == null) {
+        if (filterFieldName == null || itemType == null) {
             return false;
         }
 
-        IAType filterType = recType.getSubFieldType(filterFieldName);
+        IAType filterType = itemType.getSubFieldType(filterFieldName);
 
         typeEnvironment = context.getOutputTypeEnvironment(op);
         ILogicalExpression condExpr = ((SelectOperator) op).getCondition().getValue();
@@ -116,10 +121,11 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
 
             for (int i = 0; i < analysisCtx.getMatchedFuncExprs().size(); i++) {
                 IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(i);
-                boolean found = findMacthedExprFieldName(optFuncExpr, op, dataset, recType, datasetIndexes, context);
+                boolean found = findMacthedExprFieldName(optFuncExpr, op, dataset, itemType, datasetIndexes, context,
+                        filterSourceIndicator);
                 // the field name source should be from the dataset record, i.e. source should be == 0
                 if (found && optFuncExpr.getFieldName(0).equals(filterFieldName)
-                        && optFuncExpr.getFieldSource(0) == 0) {
+                        && optFuncExpr.getFieldSource(0) == filterSourceIndicator) {
                     optFuncExprs.add(optFuncExpr);
                 }
             }
@@ -490,8 +496,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
     }
 
     private boolean findMacthedExprFieldName(IOptimizableFuncExpr optFuncExpr, AbstractLogicalOperator op,
-            Dataset dataset, ARecordType recType, List<Index> datasetIndexes, IOptimizationContext context)
-            throws AlgebricksException {
+            Dataset dataset, ARecordType filterSourceType, List<Index> datasetIndexes, IOptimizationContext context,
+            Integer filterSourceIndicator) throws AlgebricksException {
         AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         while (descendantOp != null) {
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
@@ -503,13 +509,16 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     if (funcVarIndex == -1) {
                         continue;
                     }
-                    // TODO(ali): this SQ NPE should be investigated
-                    List<String> fieldName =
-                            getFieldNameFromSubAssignTree(optFuncExpr, descendantOp, varIndex, recType).second;
-                    if (fieldName == null) {
+                    Pair<ARecordType, List<String>> fieldNamePairs =
+                            getFieldNameFromSubAssignTree(optFuncExpr, descendantOp, varIndex, filterSourceType,
+                                    filterSourceIndicator, dataset.getPrimaryKeys().size());
+                    if (fieldNamePairs == null) {
                         return false;
                     }
-                    optFuncExpr.setFieldName(funcVarIndex, fieldName, 0);
+                    List<String> fieldName = fieldNamePairs.second;
+                    // Since we validated the filter source in getFieldNameFromSubAssignTree, we can safely set the
+                    // fieldSource to be filterSourceIndicator
+                    optFuncExpr.setFieldName(funcVarIndex, fieldName, filterSourceIndicator);
                     return true;
                 }
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
@@ -564,7 +573,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     IAType metaItemType = ((MetadataProvider) context.getMetadataProvider())
                             .findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
                     ARecordType metaRecType = (ARecordType) metaItemType;
-                    int numSecondaryKeys = KeyFieldTypeUtil.getNumSecondaryKeys(index, recType, metaRecType);
+                    int numSecondaryKeys = KeyFieldTypeUtil.getNumSecondaryKeys(index, filterSourceType, metaRecType);
                     List<String> fieldName;
                     int keySource;
                     if (varIndex >= numSecondaryKeys) {
@@ -596,7 +605,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
     }
 
     private Pair<ARecordType, List<String>> getFieldNameFromSubAssignTree(IOptimizableFuncExpr optFuncExpr,
-            AbstractLogicalOperator op, int varIndex, ARecordType recType) {
+            AbstractLogicalOperator op, int varIndex, ARecordType filterSourceType, Integer filterSourceIndicator,
+            int numOfPKeys) {
         AbstractLogicalExpression expr = null;
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator assignOp = (AssignOperator) op;
@@ -619,8 +629,12 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
             for (int varCheck = 0; varCheck < op.getInputs().size(); varCheck++) {
                 AbstractLogicalOperator nestedOp = (AbstractLogicalOperator) op.getInputs().get(varCheck).getValue();
                 if (nestedOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
-                    if (varCheck == op.getInputs().size() - 1) {
-
+                    if (nestedOp.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
+                        return null;
+                    }
+                    List<LogicalVariable> scannedVars = ((DataSourceScanOperator) nestedOp).getScanVariables();
+                    if (scannedVars.indexOf(usedVar) != filterSourceIndicator + numOfPKeys) {
+                        return null;
                     }
                 } else {
                     int nestedAssignVar = ((AssignOperator) nestedOp).getVariables().indexOf(usedVar);
@@ -630,9 +644,10 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     //get the nested info from the lower input
                     Pair<ARecordType, List<String>> lowerInfo = getFieldNameFromSubAssignTree(optFuncExpr,
                             (AbstractLogicalOperator) op.getInputs().get(varCheck).getValue(), nestedAssignVar,
-                            recType);
+                            filterSourceType, filterSourceIndicator, numOfPKeys);
                     if (lowerInfo != null) {
-                        recType = lowerInfo.first;
+                        // propagate filterSourceType in case the filter value comes from a nested attribute.
+                        filterSourceType = lowerInfo.first;
                         returnList = lowerInfo.second;
                     }
                 }
@@ -644,18 +659,18 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     return null;
                 }
                 returnList.add(fieldName);
-                return new Pair<>(recType, returnList);
+                return new Pair<>(filterSourceType, returnList);
             } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
                 Integer fieldIndex = ConstantExpressionUtil.getIntArgument(funcExpr, 1);
                 if (fieldIndex == null) {
                     return null;
                 }
-                returnList.add(recType.getFieldNames()[fieldIndex]);
-                IAType subType = recType.getFieldTypes()[fieldIndex];
+                returnList.add(filterSourceType.getFieldNames()[fieldIndex]);
+                IAType subType = filterSourceType.getFieldTypes()[fieldIndex];
                 if (subType.getTypeTag() == ATypeTag.OBJECT) {
-                    recType = (ARecordType) subType;
+                    filterSourceType = (ARecordType) subType;
                 }
-                return new Pair<>(recType, returnList);
+                return new Pair<>(filterSourceType, returnList);
             }
 
         }

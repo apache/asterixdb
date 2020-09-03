@@ -96,7 +96,8 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     protected boolean isFiltered = false;
     private final ArrayTupleReference prevTupleWithFilter = new ArrayTupleReference();
     private ArrayTupleBuilder prevRecWithPKWithFilterValue;
-    private ARecordType recordType;
+    private Integer filterSourceIndicator = null;
+    private ARecordType filterItemType;
     private int presetFieldIndex = -1;
     private ARecordPointable recPointable;
     private DataOutput prevDos;
@@ -117,8 +118,8 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     public LSMPrimaryUpsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
             IModificationOperationCallbackFactory modCallbackFactory,
-            ISearchOperationCallbackFactory searchCallbackFactory, int numOfPrimaryKeys, ARecordType recordType,
-            int filterFieldIndex, IFrameOperationCallbackFactory frameOpCallbackFactory,
+            ISearchOperationCallbackFactory searchCallbackFactory, int numOfPrimaryKeys, Integer filterSourceIndicator,
+            ARecordType filterItemType, int filterFieldIndex, IFrameOperationCallbackFactory frameOpCallbackFactory,
             IMissingWriterFactory missingWriterFactory, final boolean hasSecondaries) throws HyracksDataException {
         super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, IndexOperation.UPSERT,
                 modCallbackFactory, null);
@@ -138,8 +139,9 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         this.filterFieldIndex = numOfPrimaryKeys + (hasMeta ? 2 : 1);
         if (filterFieldIndex >= 0) {
             isFiltered = true;
-            this.recordType = recordType;
+            this.filterItemType = filterItemType;
             this.presetFieldIndex = filterFieldIndex;
+            this.filterSourceIndicator = filterSourceIndicator;
             this.recPointable = ARecordPointable.FACTORY.createPointable();
             this.prevRecWithPKWithFilterValue = new ArrayTupleBuilder(fieldPermutation.length + (hasMeta ? 1 : 0));
             this.prevDos = prevRecWithPKWithFilterValue.getDataOutput();
@@ -393,13 +395,20 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 prevDos.write(prevTuple.getFieldData(i), prevTuple.getFieldStart(i), prevTuple.getFieldLength(i));
                 prevRecWithPKWithFilterValue.addFieldEndOffset();
             }
-            recPointable.set(prevTuple.getFieldData(numOfPrimaryKeys), prevTuple.getFieldStart(numOfPrimaryKeys),
-                    prevTuple.getFieldLength(numOfPrimaryKeys));
+
+            if (filterSourceIndicator == 0) {
+                recPointable.set(prevTuple.getFieldData(numOfPrimaryKeys), prevTuple.getFieldStart(numOfPrimaryKeys),
+                        prevTuple.getFieldLength(numOfPrimaryKeys));
+            } else {
+                recPointable.set(prevTuple.getFieldData(metaFieldIndex), prevTuple.getFieldStart(metaFieldIndex),
+                        prevTuple.getFieldLength(metaFieldIndex));
+            }
             // copy the field data from prevTuple
-            byte tag = recPointable.getClosedFieldType(recordType, presetFieldIndex).getTypeTag().serialize();
+            byte tag = recPointable.getClosedFieldType(filterItemType, presetFieldIndex).getTypeTag().serialize();
             prevDos.write(tag);
-            prevDos.write(recPointable.getByteArray(), recPointable.getClosedFieldOffset(recordType, presetFieldIndex),
-                    recPointable.getClosedFieldSize(recordType, presetFieldIndex));
+            prevDos.write(recPointable.getByteArray(),
+                    recPointable.getClosedFieldOffset(filterItemType, presetFieldIndex),
+                    recPointable.getClosedFieldSize(filterItemType, presetFieldIndex));
             prevRecWithPKWithFilterValue.addFieldEndOffset();
             // prepare the tuple
             prevTupleWithFilter.reset(prevRecWithPKWithFilterValue.getFieldEndOffsets(),

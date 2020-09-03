@@ -12342,6 +12342,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
+      <compilation-unit name="change-feed-filter-on-meta-dataset">
+        <output-dir compare="Text">change-feed-filter-on-meta-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
       <compilation-unit name="change-feed-with-meta-pk-index">
         <output-dir compare="Text">change-feed-with-meta-pk-index</output-dir>
       </compilation-unit>
@@ -12533,8 +12538,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
-      <compilation-unit name="change-feed-with-filter-on-meta">
-        <output-dir compare="Text">change-feed-with-filter-on-meta</output-dir>
+      <compilation-unit name="change-feed-with-where-on-meta">
+        <output-dir compare="Text">change-feed-with-where-on-meta</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

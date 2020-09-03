@@ -37,7 +37,8 @@ public class LSMPrimaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
 
     private static final long serialVersionUID = 1L;
     protected final IFrameOperationCallbackFactory frameOpCallbackFactory;
-    protected final ARecordType recordType;
+    protected final Integer filterSourceIndicator;
+    protected final ARecordType filterItemType;
     protected final int filterIndex;
     protected ISearchOperationCallbackFactory searchOpCallbackFactory;
     protected final int numPrimaryKeys;
@@ -49,15 +50,16 @@ public class LSMPrimaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
             IMissingWriterFactory missingWriterFactory,
             IModificationOperationCallbackFactory modificationOpCallbackFactory,
             ISearchOperationCallbackFactory searchOpCallbackFactory,
-            IFrameOperationCallbackFactory frameOpCallbackFactory, int numPrimaryKeys, ARecordType recordType,
-            int filterIndex, boolean hasSecondaries) {
+            IFrameOperationCallbackFactory frameOpCallbackFactory, int numPrimaryKeys, Integer filterSourceIndicator,
+            ARecordType filterItemType, int filterIndex, boolean hasSecondaries) {
         super(spec, outRecDesc, fieldPermutation, IndexOperation.UPSERT, indexHelperFactory, null, true,
                 modificationOpCallbackFactory);
         this.frameOpCallbackFactory = frameOpCallbackFactory;
         this.searchOpCallbackFactory = searchOpCallbackFactory;
         this.numPrimaryKeys = numPrimaryKeys;
         this.missingWriterFactory = missingWriterFactory;
-        this.recordType = recordType;
+        this.filterSourceIndicator = filterSourceIndicator;
+        this.filterItemType = filterItemType;
         this.filterIndex = filterIndex;
         this.hasSecondaries = hasSecondaries;
     }
@@ -67,7 +69,7 @@ public class LSMPrimaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         RecordDescriptor intputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new LSMPrimaryUpsertOperatorNodePushable(ctx, partition, indexHelperFactory, fieldPermutation,
-                intputRecDesc, modCallbackFactory, searchOpCallbackFactory, numPrimaryKeys, recordType, filterIndex,
-                frameOpCallbackFactory, missingWriterFactory, hasSecondaries);
+                intputRecDesc, modCallbackFactory, searchOpCallbackFactory, numPrimaryKeys, filterSourceIndicator,
+                filterItemType, filterIndex, frameOpCallbackFactory, missingWriterFactory, hasSecondaries);
     }
 }

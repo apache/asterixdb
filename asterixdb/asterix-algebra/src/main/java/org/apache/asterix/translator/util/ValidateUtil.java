@@ -45,10 +45,14 @@ public class ValidateUtil {
     /**
      * Validates the field that will be used as filter for the components of an LSM index.
      *
-     * @param dataset
-     *            the dataset
      * @param recordType
      *            the record type
+     * @param metaType
+     *            the meta record type
+     * @param filterSourceIndicator
+     *            indicates where the filter attribute comes from, 0 for record, 1 for meta record.
+     *            since this method is called only when a filter field presents, filterSourceIndicator will not be null
+     *
      * @param filterField
      *            the full name of the field
      * @param sourceLoc
@@ -57,9 +61,10 @@ public class ValidateUtil {
      *             if field type can't be a filter type.
      *             if field type is nullable.
      */
-    public static void validateFilterField(ARecordType recordType, List<String> filterField, SourceLocation sourceLoc)
-            throws AlgebricksException {
-        IAType fieldType = recordType.getSubFieldType(filterField);
+    public static void validateFilterField(ARecordType recordType, ARecordType metaType, Integer filterSourceIndicator,
+            List<String> filterField, SourceLocation sourceLoc) throws AlgebricksException {
+        ARecordType itemType = filterSourceIndicator == 0 ? recordType : metaType;
+        IAType fieldType = itemType.getSubFieldType(filterField);
         if (fieldType == null) {
             throw new CompilationException(ErrorCode.COMPILATION_FIELD_NOT_FOUND, sourceLoc,
                     RecordUtil.toFullyQualifiedName(filterField));

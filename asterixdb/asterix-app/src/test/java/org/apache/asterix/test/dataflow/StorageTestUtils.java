@@ -95,7 +95,7 @@ public class StorageTestUtils {
     public static final TestDataset DATASET =
             new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
                     NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
-                            PARTITIONING_KEYS, null, null, null, false, null),
+                            PARTITIONING_KEYS, null, null, null, false, null, null),
                     null, DatasetType.INTERNAL, DATASET_ID, 0);
 
     private StorageTestUtils() {

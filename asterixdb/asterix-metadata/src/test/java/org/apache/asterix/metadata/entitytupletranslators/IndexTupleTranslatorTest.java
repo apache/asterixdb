@@ -61,7 +61,7 @@ public class IndexTupleTranslatorTest {
                     Collections.singletonList(Collections.singletonList("row_id")),
                     Collections.singletonList(Collections.singletonList("row_id")),
                     indicator == null ? null : Collections.singletonList(indicator),
-                    Collections.singletonList(BuiltinType.AINT64), false, Collections.emptyList());
+                    Collections.singletonList(BuiltinType.AINT64), false, null, null);
 
             DataverseName dvTest = DataverseName.createSinglePartName("test");
             DataverseName dvFoo = DataverseName.createSinglePartName("foo");

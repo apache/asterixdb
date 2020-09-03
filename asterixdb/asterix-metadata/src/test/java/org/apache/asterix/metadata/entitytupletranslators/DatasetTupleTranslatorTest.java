@@ -50,7 +50,7 @@ public class DatasetTupleTranslatorTest {
                     Collections.singletonList(Collections.singletonList("row_id")),
                     Collections.singletonList(Collections.singletonList("row_id")),
                     indicator == null ? null : Collections.singletonList(indicator),
-                    Collections.singletonList(BuiltinType.AINT64), false, Collections.emptyList());
+                    Collections.singletonList(BuiltinType.AINT64), false, null, null);
 
             Dataset dataset = new Dataset(DataverseName.createSinglePartName("test"), "log",
                     DataverseName.createSinglePartName("foo"), "LogType", DataverseName.createSinglePartName("CB"),

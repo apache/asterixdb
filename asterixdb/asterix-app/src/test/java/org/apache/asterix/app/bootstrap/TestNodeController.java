@@ -800,8 +800,8 @@ public class TestNodeController {
                 new LSMPrimaryUpsertOperatorNodePushable(ctx, ctx.getTaskAttemptId().getTaskId().getPartition(),
                         indexHelperFactory, primaryIndexInfo.primaryIndexInsertFieldsPermutations,
                         recordDescProvider.getInputRecordDescriptor(new ActivityId(new OperatorDescriptorId(0), 0), 0),
-                        modificationCallbackFactory, searchCallbackFactory,
-                        keyIndexes.length, recordType, -1, frameOpCallbackFactory == null
+                        modificationCallbackFactory, searchCallbackFactory, keyIndexes.length,
+                        0, recordType, -1, frameOpCallbackFactory == null
                                 ? dataset.getFrameOpCallbackFactory(mdProvider) : frameOpCallbackFactory,
                         MissingWriterFactory.INSTANCE, hasSecondaries);
         RecordDescriptor upsertOutRecDesc = getUpsertOutRecDesc(primaryIndexInfo.rDesc, dataset,

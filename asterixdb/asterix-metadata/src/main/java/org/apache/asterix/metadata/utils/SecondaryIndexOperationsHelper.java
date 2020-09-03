@@ -235,7 +235,9 @@ public abstract class SecondaryIndexOperationsHelper {
             secondaryBTreeFields[i] = i;
         }
 
-        IAType type = itemType.getSubFieldType(filterFieldName);
+        IAType type = ((InternalDatasetDetails) dataset.getDatasetDetails()).getFilterSourceIndicator() == 0
+                ? itemType.getSubFieldType(filterFieldName, itemType)
+                : metaType.getSubFieldType(filterFieldName, metaType);
         filterCmpFactories[0] = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(type, true);
         filterTypeTraits[0] = TypeTraitProvider.INSTANCE.getTypeTrait(type);
         secondaryFilterFields[0] = getNumSecondaryKeys() + numPrimaryKeys;

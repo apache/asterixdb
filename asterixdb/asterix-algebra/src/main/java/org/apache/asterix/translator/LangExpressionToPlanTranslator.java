@@ -262,6 +262,7 @@ abstract class LangExpressionToPlanTranslator
             assign.setExplicitOrderingProperty(new LocalOrderProperty(orderColumns));
         }
 
+        // Load does not support meta record now.
         List<String> additionalFilteringField = DatasetUtil.getFilterField(targetDatasource.getDataset());
         List<LogicalVariable> additionalFilteringVars;
         List<Mutable<ILogicalExpression>> additionalFilteringAssignExpressions;
@@ -365,67 +366,52 @@ abstract class LangExpressionToPlanTranslator
             topOp.getInputs().get(0).setValue(assignCollectionToSequence);
             ProjectOperator projectOperator = (ProjectOperator) topOp;
             projectOperator.getVariables().set(0, seqVar);
-            resVar = seqVar;
+
             DatasetDataSource targetDatasource =
                     validateDatasetInfo(metadataProvider, stmt.getDataverseName(), stmt.getDatasetName(), sourceLoc);
             List<Integer> keySourceIndicator =
                     ((InternalDatasetDetails) targetDatasource.getDataset().getDatasetDetails())
                             .getKeySourceIndicator();
-            ArrayList<LogicalVariable> vars = new ArrayList<>();
-            ArrayList<Mutable<ILogicalExpression>> exprs = new ArrayList<>();
+            ArrayList<LogicalVariable> pkeyVars = new ArrayList<>();
+            ArrayList<Mutable<ILogicalExpression>> pkeyExprs = new ArrayList<>();
             List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<>();
             List<List<String>> partitionKeys = targetDatasource.getDataset().getPrimaryKeys();
             int numOfPrimaryKeys = partitionKeys.size();
             for (int i = 0; i < numOfPrimaryKeys; i++) {
                 if (keySourceIndicator == null || keySourceIndicator.get(i).intValue() == 0) {
                     // record part
-                    PlanTranslationUtil.prepareVarAndExpression(partitionKeys.get(i), resVar, vars, exprs,
+                    PlanTranslationUtil.prepareVarAndExpression(partitionKeys.get(i), seqVar, pkeyVars, pkeyExprs,
                             varRefsForLoading, context, sourceLoc);
                 } else {
                     // meta part
-                    PlanTranslationUtil.prepareMetaKeyAccessExpression(partitionKeys.get(i), unnestVar, exprs, vars,
-                            varRefsForLoading, context, sourceLoc);
+                    PlanTranslationUtil.prepareMetaKeyAccessExpression(partitionKeys.get(i), unnestVar, pkeyExprs,
+                            pkeyVars, varRefsForLoading, context, sourceLoc);
                 }
             }
 
-            AssignOperator assign = new AssignOperator(vars, exprs);
-            assign.setSourceLocation(sourceLoc);
-            List<String> additionalFilteringField = DatasetUtil.getFilterField(targetDatasource.getDataset());
-            List<LogicalVariable> additionalFilteringVars;
-            List<Mutable<ILogicalExpression>> additionalFilteringAssignExpressions;
-            List<Mutable<ILogicalExpression>> additionalFilteringExpressions = null;
-            AssignOperator additionalFilteringAssign = null;
-            if (additionalFilteringField != null) {
-                additionalFilteringVars = new ArrayList<>();
-                additionalFilteringAssignExpressions = new ArrayList<>();
-                additionalFilteringExpressions = new ArrayList<>();
+            AssignOperator pkeyAssignOp = new AssignOperator(pkeyVars, pkeyExprs);
+            pkeyAssignOp.setSourceLocation(sourceLoc);
+            pkeyAssignOp.getInputs().add(new MutableObject<>(topOp));
 
-                PlanTranslationUtil.prepareVarAndExpression(additionalFilteringField, resVar, additionalFilteringVars,
-                        additionalFilteringAssignExpressions, additionalFilteringExpressions, context, sourceLoc);
+            // the filters and metas could be handled here once we have unified processing for metas in
+            // all insert/upsert/delete
 
-                additionalFilteringAssign =
-                        new AssignOperator(additionalFilteringVars, additionalFilteringAssignExpressions);
-                additionalFilteringAssign.getInputs().add(new MutableObject<>(topOp));
-                additionalFilteringAssign.setSourceLocation(sourceLoc);
-                assign.getInputs().add(new MutableObject<>(additionalFilteringAssign));
-            } else {
-                assign.getInputs().add(new MutableObject<>(topOp));
-            }
-
+            VariableReferenceExpression seqVarRef = new VariableReferenceExpression(seqVar);
+            seqVarRef.setSourceLocation(sourceLoc);
+            Mutable<ILogicalExpression> seqRef = new MutableObject<>(seqVarRef);
             ILogicalOperator leafOperator;
             switch (stmt.getKind()) {
                 case INSERT:
-                    leafOperator = translateInsert(targetDatasource, resVar, varRefsForLoading,
-                            additionalFilteringExpressions, assign, stmt, resultMetadata);
+                    leafOperator = translateInsert(targetDatasource, seqRef, varRefsForLoading, seqVar, pkeyAssignOp,
+                            stmt, resultMetadata);
                     break;
                 case UPSERT:
-                    leafOperator = translateUpsert(targetDatasource, resVar, varRefsForLoading,
-                            additionalFilteringExpressions, assign, additionalFilteringField, unnestVar, topOp, exprs,
-                            additionalFilteringAssign, stmt, resultMetadata);
+                    leafOperator = translateUpsert(targetDatasource, seqRef, varRefsForLoading, pkeyAssignOp, unnestVar,
+                            topOp, pkeyExprs, seqVar, stmt, resultMetadata);
                     break;
                 case DELETE:
-                    leafOperator = translateDelete(targetDatasource, resVar, varRefsForLoading,
-                            additionalFilteringExpressions, assign, stmt);
+                    leafOperator =
+                            translateDelete(targetDatasource, seqRef, varRefsForLoading, seqVar, pkeyAssignOp, stmt);
                     break;
                 default:
                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
@@ -439,9 +425,8 @@ abstract class LangExpressionToPlanTranslator
         return plan;
     }
 
-    protected ILogicalOperator translateDelete(DatasetDataSource targetDatasource, LogicalVariable resVar,
-            List<Mutable<ILogicalExpression>> varRefsForLoading,
-            List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator assign,
+    private ILogicalOperator translateDelete(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
+            List<Mutable<ILogicalExpression>> varRefsForLoading, LogicalVariable seqVar, ILogicalOperator pkeyAssignOp,
             ICompiledDmlStatement stmt) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (targetDatasource.getDataset().hasMetaPart()) {
@@ -449,12 +434,19 @@ abstract class LangExpressionToPlanTranslator
                     targetDatasource.getDataset().getDatasetName()
                             + ": delete from dataset is not supported on Datasets with Meta records");
         }
-        VariableReferenceExpression varRef = new VariableReferenceExpression(resVar);
-        varRef.setSourceLocation(stmt.getSourceLocation());
-        InsertDeleteUpsertOperator deleteOp = new InsertDeleteUpsertOperator(targetDatasource,
-                new MutableObject<>(varRef), varRefsForLoading, InsertDeleteUpsertOperator.Kind.DELETE, false);
-        deleteOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
-        deleteOp.getInputs().add(new MutableObject<>(assign));
+
+        List<String> filterField = DatasetUtil.getFilterField(targetDatasource.getDataset());
+        List<Mutable<ILogicalExpression>> filterExprs = null;
+
+        // currently, meta-datasets cannot be inserted.
+        if (filterField != null) {
+            filterExprs = generatedFilterExprs(pkeyAssignOp, filterField, seqVar, sourceLoc);
+        }
+
+        InsertDeleteUpsertOperator deleteOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
+                varRefsForLoading, InsertDeleteUpsertOperator.Kind.DELETE, false);
+        deleteOp.setAdditionalFilteringExpressions(filterExprs);
+        deleteOp.getInputs().add(new MutableObject<>(pkeyAssignOp));
         deleteOp.setSourceLocation(sourceLoc);
         DelegateOperator leafOperator = new DelegateOperator(new CommitOperator(true));
         leafOperator.getInputs().add(new MutableObject<>(deleteOp));
@@ -462,12 +454,11 @@ abstract class LangExpressionToPlanTranslator
         return leafOperator;
     }
 
-    protected ILogicalOperator translateUpsert(DatasetDataSource targetDatasource, LogicalVariable resVar,
-            List<Mutable<ILogicalExpression>> varRefsForLoading,
-            List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator assign,
-            List<String> additionalFilteringField, LogicalVariable unnestVar, ILogicalOperator topOp,
-            List<Mutable<ILogicalExpression>> exprs, AssignOperator additionalFilteringAssign,
-            ICompiledDmlStatement stmt, IResultMetadata resultMetadata) throws AlgebricksException {
+    private ILogicalOperator translateUpsert(DatasetDataSource targetDatasource,
+            Mutable<ILogicalExpression> payloadVarRef, List<Mutable<ILogicalExpression>> varRefsForLoading,
+            ILogicalOperator pkeyAssignOp, LogicalVariable unnestVar, ILogicalOperator topOp,
+            List<Mutable<ILogicalExpression>> pkeyExprs, LogicalVariable seqVar, ICompiledDmlStatement stmt,
+            IResultMetadata resultMetadata) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (!targetDatasource.getDataset().allow(topOp, DatasetUtil.OP_UPSERT)) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
@@ -479,15 +470,15 @@ abstract class LangExpressionToPlanTranslator
         Expression returnExpression = compiledUpsert.getReturnExpression();
         InsertDeleteUpsertOperator upsertOp;
         ILogicalOperator rootOperator;
+        List<String> filterField = DatasetUtil.getFilterField(targetDatasource.getDataset());
+
         if (targetDatasource.getDataset().hasMetaPart()) {
             if (returnExpression != null) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                         "Returning not allowed on datasets with Meta records");
             }
-            AssignOperator metaAndKeysAssign;
             List<LogicalVariable> metaAndKeysVars;
             List<Mutable<ILogicalExpression>> metaAndKeysExprs;
-            List<Mutable<ILogicalExpression>> metaExpSingletonList;
             metaAndKeysVars = new ArrayList<>();
             metaAndKeysExprs = new ArrayList<>();
             // add the meta function
@@ -499,18 +490,16 @@ abstract class LangExpressionToPlanTranslator
             metaFunction.setSourceLocation(sourceLoc);
             // create assign for the meta part
             LogicalVariable metaVar = context.newVar();
-            metaExpSingletonList = new ArrayList<>(1);
             VariableReferenceExpression metaVarRef = new VariableReferenceExpression(metaVar);
             metaVarRef.setSourceLocation(sourceLoc);
-            metaExpSingletonList.add(new MutableObject<>(metaVarRef));
             metaAndKeysVars.add(metaVar);
             metaAndKeysExprs.add(new MutableObject<>(metaFunction));
             project.getVariables().add(metaVar);
             varRefsForLoading.clear();
-            for (Mutable<ILogicalExpression> assignExpr : exprs) {
+            for (Mutable<ILogicalExpression> assignExpr : pkeyExprs) {
                 if (assignExpr.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression funcCall = (AbstractFunctionCallExpression) assignExpr.getValue();
-                    funcCall.substituteVar(resVar, unnestVar);
+                    funcCall.substituteVar(seqVar, unnestVar);
                     LogicalVariable pkVar = context.newVar();
                     metaAndKeysVars.add(pkVar);
                     metaAndKeysExprs.add(new MutableObject<>(assignExpr.getValue()));
@@ -519,58 +508,68 @@ abstract class LangExpressionToPlanTranslator
                 }
             }
             // A change feed, we don't need the assign to access PKs
-            VariableReferenceExpression varRef = new VariableReferenceExpression(resVar);
-            varRef.setSourceLocation(stmt.getSourceLocation());
-            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, new MutableObject<>(varRef), varRefsForLoading,
-                    metaExpSingletonList, InsertDeleteUpsertOperator.Kind.UPSERT, false);
+            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, payloadVarRef, varRefsForLoading,
+                    Collections.singletonList(new MutableObject<>(metaVarRef)), InsertDeleteUpsertOperator.Kind.UPSERT,
+                    false);
             upsertOp.setUpsertIndicatorVar(context.newVar());
             upsertOp.setUpsertIndicatorVarType(BuiltinType.ABOOLEAN);
             // Create and add a new variable used for representing the original record
             upsertOp.setPrevRecordVar(context.newVar());
             upsertOp.setPrevRecordType(targetDatasource.getItemType());
             upsertOp.setSourceLocation(sourceLoc);
-            if (targetDatasource.getDataset().hasMetaPart()) {
-                List<LogicalVariable> metaVars = new ArrayList<>();
-                metaVars.add(context.newVar());
-                upsertOp.setPrevAdditionalNonFilteringVars(metaVars);
-                List<Object> metaTypes = new ArrayList<>();
-                metaTypes.add(targetDatasource.getMetaItemType());
-                upsertOp.setPrevAdditionalNonFilteringTypes(metaTypes);
-            }
 
-            if (additionalFilteringField != null) {
-                upsertOp.setPrevFilterVar(context.newVar());
-                upsertOp.setPrevFilterType(
-                        ((ARecordType) targetDatasource.getItemType()).getFieldType(additionalFilteringField.get(0)));
-                additionalFilteringAssign.getInputs().clear();
-                additionalFilteringAssign.getInputs().add(assign.getInputs().get(0));
-                upsertOp.getInputs().add(new MutableObject<>(additionalFilteringAssign));
-            } else {
-                upsertOp.getInputs().add(assign.getInputs().get(0));
-            }
-            metaAndKeysAssign = new AssignOperator(metaAndKeysVars, metaAndKeysExprs);
+            List<LogicalVariable> metaVars = new ArrayList<>();
+            metaVars.add(context.newVar());
+            upsertOp.setPrevAdditionalNonFilteringVars(metaVars);
+            List<Object> metaTypes = new ArrayList<>();
+            metaTypes.add(targetDatasource.getMetaItemType());
+            upsertOp.setPrevAdditionalNonFilteringTypes(metaTypes);
+
+            // insert meta key assign before project
+            AssignOperator metaAndKeysAssign = new AssignOperator(metaAndKeysVars, metaAndKeysExprs);
             metaAndKeysAssign.getInputs().add(topOp.getInputs().get(0));
             metaAndKeysAssign.setSourceLocation(sourceLoc);
             topOp.getInputs().set(0, new MutableObject<>(metaAndKeysAssign));
-            upsertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
+
+            // insert filter assign
+            if (filterField != null) {
+                LogicalVariable filterSourceVar =
+                        DatasetUtil.getFilterSourceIndicator(targetDatasource.getDataset()) == 0 ? seqVar : metaVar;
+                ARecordType filterSourceType = DatasetUtil.getFilterSourceIndicator(targetDatasource.getDataset()) == 0
+                        ? (ARecordType) targetDatasource.getItemType()
+                        : (ARecordType) targetDatasource.getMetaItemType();
+
+                List<Mutable<ILogicalExpression>> filterExprs =
+                        generatedFilterExprs(pkeyAssignOp, filterField, filterSourceVar, sourceLoc);
+
+                upsertOp.setPrevFilterVar(context.newVar());
+                upsertOp.setPrevFilterType(filterSourceType.getFieldType(filterField.get(0)));
+                upsertOp.setAdditionalFilteringExpressions(filterExprs);
+                upsertOp.getInputs().add(pkeyAssignOp.getInputs().get(0));
+            } else {
+                upsertOp.getInputs().add(new MutableObject<>(topOp));
+                upsertOp.setAdditionalFilteringExpressions(null);
+            }
         } else {
-            VariableReferenceExpression varRef = new VariableReferenceExpression(resVar);
-            varRef.setSourceLocation(stmt.getSourceLocation());
-            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, new MutableObject<>(varRef), varRefsForLoading,
+            ARecordType recordType = (ARecordType) targetDatasource.getItemType();
+            List<Mutable<ILogicalExpression>> filterExprs = null;
+            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, payloadVarRef, varRefsForLoading,
                     InsertDeleteUpsertOperator.Kind.UPSERT, false);
-            upsertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
-            upsertOp.getInputs().add(new MutableObject<>(assign));
+
+            if (filterField != null) {
+                // add filter assign
+                filterExprs = generatedFilterExprs(pkeyAssignOp, filterField, seqVar, sourceLoc);
+                upsertOp.setPrevFilterVar(context.newVar());
+                upsertOp.setPrevFilterType(recordType.getFieldType(filterField.get(0)));
+            }
+            upsertOp.getInputs().add(new MutableObject<>(pkeyAssignOp));
+            upsertOp.setAdditionalFilteringExpressions(filterExprs);
             upsertOp.setSourceLocation(sourceLoc);
             upsertOp.setUpsertIndicatorVar(context.newVar());
             upsertOp.setUpsertIndicatorVarType(BuiltinType.ABOOLEAN);
             // Create and add a new variable used for representing the original record
-            ARecordType recordType = (ARecordType) targetDatasource.getItemType();
             upsertOp.setPrevRecordVar(context.newVar());
             upsertOp.setPrevRecordType(recordType);
-            if (additionalFilteringField != null) {
-                upsertOp.setPrevFilterVar(context.newVar());
-                upsertOp.setPrevFilterType(recordType.getFieldType(additionalFilteringField.get(0)));
-            }
         }
         DelegateOperator delegateOperator = new DelegateOperator(new CommitOperator(returnExpression == null));
         delegateOperator.getInputs().add(new MutableObject<>(upsertOp));
@@ -581,9 +580,8 @@ abstract class LangExpressionToPlanTranslator
         return processReturningExpression(rootOperator, upsertOp, compiledUpsert, resultMetadata);
     }
 
-    protected ILogicalOperator translateInsert(DatasetDataSource targetDatasource, LogicalVariable resVar,
-            List<Mutable<ILogicalExpression>> varRefsForLoading,
-            List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator assign,
+    private ILogicalOperator translateInsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
+            List<Mutable<ILogicalExpression>> varRefsForLoading, LogicalVariable seqVar, ILogicalOperator pkeyAssignOp,
             ICompiledDmlStatement stmt, IResultMetadata resultMetadata) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (targetDatasource.getDataset().hasMetaPart()) {
@@ -591,13 +589,20 @@ abstract class LangExpressionToPlanTranslator
                     targetDatasource.getDataset().getDatasetName()
                             + ": insert into dataset is not supported on Datasets with Meta records");
         }
+
+        List<String> filterField = DatasetUtil.getFilterField(targetDatasource.getDataset());
+        List<Mutable<ILogicalExpression>> filterExprs = null;
+
+        // currently, meta-datasets cannot be inserted.
+        if (filterField != null) {
+            filterExprs = generatedFilterExprs(pkeyAssignOp, filterField, seqVar, sourceLoc);
+        }
+
         // Adds the insert operator.
-        VariableReferenceExpression varRef = new VariableReferenceExpression(resVar);
-        varRef.setSourceLocation(stmt.getSourceLocation());
-        InsertDeleteUpsertOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource,
-                new MutableObject<>(varRef), varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, false);
-        insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
-        insertOp.getInputs().add(new MutableObject<>(assign));
+        InsertDeleteUpsertOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
+                varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, false);
+        insertOp.setAdditionalFilteringExpressions(filterExprs);
+        insertOp.getInputs().add(new MutableObject<>(pkeyAssignOp));
         insertOp.setSourceLocation(sourceLoc);
 
         // Adds the commit operator.
@@ -609,6 +614,21 @@ abstract class LangExpressionToPlanTranslator
 
         // Compiles the return expression.
         return processReturningExpression(rootOperator, insertOp, compiledInsert, resultMetadata);
+    }
+
+    private List<Mutable<ILogicalExpression>> generatedFilterExprs(ILogicalOperator pkeyAssignOp,
+            List<String> filterField, LogicalVariable seqVar, SourceLocation sourceLoc) {
+        List<LogicalVariable> filterVars = new ArrayList<>();
+        List<Mutable<ILogicalExpression>> filterAssignExprs = new ArrayList<>();
+        List<Mutable<ILogicalExpression>> filterExprs = new ArrayList<>();
+
+        PlanTranslationUtil.prepareVarAndExpression(filterField, seqVar, filterVars, filterAssignExprs, filterExprs,
+                context, sourceLoc);
+        AssignOperator additionalFilteringAssign = new AssignOperator(filterVars, filterAssignExprs);
+        additionalFilteringAssign.getInputs().add(pkeyAssignOp.getInputs().get(0));
+        additionalFilteringAssign.setSourceLocation(sourceLoc);
+        pkeyAssignOp.getInputs().set(0, new MutableObject<>(additionalFilteringAssign));
+        return filterExprs;
     }
 
     // Stitches the translated operators for the returning expression into the query

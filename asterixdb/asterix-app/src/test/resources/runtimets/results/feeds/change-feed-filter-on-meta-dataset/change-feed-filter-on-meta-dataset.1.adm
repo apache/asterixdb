@@ -1,0 +1,1 @@
+{ "k": { "id": 5, "name": "Ian Maxon", "exp": 15 }, "meta": { "key": "8-2", "vbucket": 8, "seq": 21, "cas": 5, "expiration": 8004, "flags": 0, "revSeq": 0, "lockTime": 163 } }

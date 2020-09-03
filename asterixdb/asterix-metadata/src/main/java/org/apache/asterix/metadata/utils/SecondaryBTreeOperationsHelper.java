@@ -27,6 +27,7 @@ import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
@@ -279,7 +280,13 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             secondaryFieldAccessEvalFactories[numSecondaryKeys] = metadataProvider.getDataFormat()
                     .getFieldAccessEvaluatorFactory(metadataProvider.getFunctionManager(), itemType, filterFieldName,
                             numPrimaryKeys, sourceLoc);
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, itemType);
+            Pair<IAType, Boolean> keyTypePair;
+            // since filter is not null, it's safe to cast to internal
+            if (((InternalDatasetDetails) dataset.getDatasetDetails()).getFilterSourceIndicator() == 0) {
+                keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, itemType);
+            } else {
+                keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, metaType);
+            }
             IAType type = keyTypePair.first;
             ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);
             secondaryRecFields[numPrimaryKeys + numSecondaryKeys] = serde;

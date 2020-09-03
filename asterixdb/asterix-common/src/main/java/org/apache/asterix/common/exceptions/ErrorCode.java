@@ -218,6 +218,7 @@ public class ErrorCode {
     public static final int UNKNOWN_ADAPTER = 1125;
     public static final int INVALID_EXTERNAL_IDENTIFIER_SIZE = 1126;
     public static final int UNSUPPORTED_ADAPTER_LANGUAGE = 1127;
+    public static final int INCONSISTENT_FILTER_INDICATOR = 1128;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;
