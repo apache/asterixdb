@@ -96,7 +96,10 @@ public class NestedLoopJoin {
     }
 
     public void cache(ByteBuffer buffer) throws HyracksDataException {
-        runFileWriter.nextFrame(buffer);
+        accessorInner.reset(buffer);
+        if (accessorInner.getTupleCount() > 0) {
+            runFileWriter.nextFrame(buffer);
+        }
     }
 
     /**
@@ -109,6 +112,10 @@ public class NestedLoopJoin {
     }
 
     public void join(ByteBuffer outerBuffer, IFrameWriter writer) throws HyracksDataException {
+        accessorOuter.reset(outerBuffer);
+        if (accessorOuter.getTupleCount() <= 0) {
+            return;
+        }
         if (outerBufferMngr.insertFrame(outerBuffer) < 0) {
             RunFileReader runFileReader = runFileWriter.createReader();
             try {

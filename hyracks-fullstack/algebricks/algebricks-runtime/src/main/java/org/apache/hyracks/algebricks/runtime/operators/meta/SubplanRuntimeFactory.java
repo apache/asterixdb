@@ -224,7 +224,9 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                 for (int t = 0; t < nTuple; t++) {
                     appendConcat(tRef.getFrameTupleAccessor(), tRef.getTupleIndex(), ta, t);
                 }
-                smthWasWritten = true;
+                if (nTuple > 0) {
+                    smthWasWritten = true;
+                }
             }
 
             @Override

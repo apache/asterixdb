@@ -112,10 +112,13 @@ public class InMemoryHashJoin {
     }
 
     public void build(ByteBuffer buffer) throws HyracksDataException {
-        buffers.add(buffer);
-        int bIndex = buffers.size() - 1;
         accessorBuild.reset(buffer);
         int tCount = accessorBuild.getTupleCount();
+        if (tCount <= 0) {
+            return;
+        }
+        buffers.add(buffer);
+        int bIndex = buffers.size() - 1;
         for (int i = 0; i < tCount; ++i) {
             int entry = tpcBuild.partition(accessorBuild, i, table.getTableSize());
             storedTuplePointer.reset(bIndex, i);

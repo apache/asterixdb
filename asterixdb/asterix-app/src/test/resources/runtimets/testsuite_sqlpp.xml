@@ -6188,6 +6188,11 @@
         <output-dir compare="Text">hash_join_record</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="join">
+      <compilation-unit name="join-with-empty-dataset">
+        <output-dir compare="Text">join-with-empty-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="list">
     <test-case FilePath="list">

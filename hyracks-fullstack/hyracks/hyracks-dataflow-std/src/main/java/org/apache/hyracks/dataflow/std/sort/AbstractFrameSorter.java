@@ -139,6 +139,9 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
     @Override
     public boolean insertFrame(ByteBuffer inputBuffer) throws HyracksDataException {
         inputTupleAccessor.reset(inputBuffer);
+        if (inputTupleAccessor.getTupleCount() <= 0) {
+            return true;
+        }
         long requiredMemory = getRequiredMemory(inputTupleAccessor);
         if (totalMemoryUsed + requiredMemory <= maxSortMemory && bufferManager.insertFrame(inputBuffer) >= 0) {
             // we have enough memory
