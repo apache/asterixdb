@@ -38,17 +38,20 @@ public class BaseRequest implements IServletRequest {
     protected final Map<String, List<String>> parameters;
     protected final InetSocketAddress remoteAddress;
     protected final HttpScheme scheme;
+    protected final InetSocketAddress localAddress;
 
     public static IServletRequest create(ChannelHandlerContext ctx, FullHttpRequest request, HttpScheme scheme) {
         QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
         Map<String, List<String>> param = decoder.parameters();
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        return new BaseRequest(request, remoteAddress, param, scheme);
+        InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
+        return new BaseRequest(request, localAddress, remoteAddress, param, scheme);
     }
 
-    protected BaseRequest(FullHttpRequest request, InetSocketAddress remoteAddress,
+    protected BaseRequest(FullHttpRequest request, InetSocketAddress localAddress, InetSocketAddress remoteAddress,
             Map<String, List<String>> parameters, HttpScheme scheme) {
         this.request = request;
+        this.localAddress = localAddress;
         this.remoteAddress = remoteAddress;
         this.parameters = parameters;
         this.scheme = scheme;
@@ -98,5 +101,10 @@ public class BaseRequest implements IServletRequest {
     @Override
     public HttpScheme getScheme() {
         return scheme;
+    }
+
+    @Override
+    public InetSocketAddress getLocalAddress() {
+        return localAddress;
     }
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.translator;
 
+import java.net.InetSocketAddress;
 import java.util.UUID;
 
 import org.apache.asterix.common.api.IClientRequest;
@@ -33,16 +34,12 @@ import org.apache.hyracks.util.NetworkUtil;
 
 public class Receptionist implements IReceptionist {
 
-    private final String node;
-
-    public Receptionist(String node) {
-        this.node = node;
-    }
-
     @Override
     public IRequestReference welcome(IServletRequest request) {
         final String uuid = UUID.randomUUID().toString();
-        final RequestReference ref = RequestReference.of(uuid, node, System.currentTimeMillis());
+        final InetSocketAddress localAddress = request.getLocalAddress();
+        final RequestReference ref =
+                RequestReference.of(uuid, NetworkUtil.toHostPort(localAddress), System.currentTimeMillis());
         ref.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
         ref.setRemoteAddr(NetworkUtil.toHostPort(request.getRemoteAddress()));
         return ref;

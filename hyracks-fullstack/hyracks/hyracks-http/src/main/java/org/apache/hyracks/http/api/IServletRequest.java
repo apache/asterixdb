@@ -96,4 +96,11 @@ public interface IServletRequest {
      * Indicates which scheme the client used making this request
      */
     HttpScheme getScheme();
+
+    /**
+     * Gets the local address of this request
+     *
+     * @return the remote address
+     */
+    InetSocketAddress getLocalAddress();
 }

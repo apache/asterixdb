@@ -175,7 +175,7 @@ public class NCApplication extends BaseNCApplication {
     }
 
     protected IReceptionistFactory getReceptionistFactory() {
-        return () -> new Receptionist(nodeId);
+        return Receptionist::new;
     }
 
     protected IConfigValidatorFactory getConfigValidatorFactory() {

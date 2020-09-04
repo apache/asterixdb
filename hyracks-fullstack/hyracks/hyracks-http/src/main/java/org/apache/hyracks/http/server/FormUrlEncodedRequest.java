@@ -44,11 +44,12 @@ public class FormUrlEncodedRequest extends BaseRequest implements IServletReques
         new QueryStringDecoder(request.uri()).parameters()
                 .forEach((name, value) -> parameters.computeIfAbsent(name, a -> new ArrayList<>()).addAll(value));
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        return new FormUrlEncodedRequest(request, remoteAddress, parameters, scheme);
+        InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
+        return new FormUrlEncodedRequest(request, localAddress, remoteAddress, parameters, scheme);
     }
 
-    private FormUrlEncodedRequest(FullHttpRequest request, InetSocketAddress remoteAddress,
-            Map<String, List<String>> parameters, HttpScheme scheme) {
-        super(request, remoteAddress, parameters, scheme);
+    private FormUrlEncodedRequest(FullHttpRequest request, InetSocketAddress localAddress,
+            InetSocketAddress remoteAddress, Map<String, List<String>> parameters, HttpScheme scheme) {
+        super(request, localAddress, remoteAddress, parameters, scheme);
     }
 }
