@@ -1,4 +1,4 @@
-DataverseUse gby-using-orderby-desc
+DataverseUse `gby-using-orderby-desc`
 TypeDecl AddressType [
   closed RecordType {
     number : integer,

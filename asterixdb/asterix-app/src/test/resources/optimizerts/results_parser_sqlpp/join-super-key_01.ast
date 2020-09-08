@@ -1,4 +1,4 @@
-DataverseUse join-super-key_1
+DataverseUse `join-super-key_1`
 TypeDecl SupplierType [
   closed RecordType {
     s_suppkey : integer,

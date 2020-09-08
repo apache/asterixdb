@@ -343,7 +343,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
         });
     }
 
-    private Expression parseExpression() throws CompilationException {
+    @Override
+    public Expression parseExpression() throws CompilationException {
         return parseImpl(new ParseFunction<Expression>() {
             @Override
             public Expression parse() throws ParseException {

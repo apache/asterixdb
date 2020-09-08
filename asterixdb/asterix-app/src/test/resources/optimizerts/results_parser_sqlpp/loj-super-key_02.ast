@@ -1,4 +1,4 @@
-DataverseUse loj-super-key_02
+DataverseUse `loj-super-key_02`
 TypeDecl SupplierType [
   closed RecordType {
     s_suppkey : integer,

@@ -291,6 +291,7 @@ class AQLParser extends ScopeChecker implements IParser {
         //st.accept(new AQLPrintVisitor(), 0);
     }
 
+    @Override
     public List<Statement> parse() throws CompilationException {
         return parseImpl(new ParseFunction<List<Statement>>() {
             @Override
@@ -300,7 +301,8 @@ class AQLParser extends ScopeChecker implements IParser {
         });
     }
 
-    private Expression parseExpression() throws CompilationException {
+    @Override
+    public Expression parseExpression() throws CompilationException {
         return parseImpl(new ParseFunction<Expression>() {
             @Override
             public Expression parse() throws ParseException {

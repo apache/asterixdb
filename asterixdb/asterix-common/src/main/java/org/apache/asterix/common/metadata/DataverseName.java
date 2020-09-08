@@ -36,14 +36,15 @@ import org.apache.commons.lang3.StringUtils;
  * <p>
  * Each dataverse name can be encoded into a single string (called a canonical form) by
  * {@link #getCanonicalForm()} and decoded back from it with {@link #createFromCanonicalForm(String)}.
- * The canonical form encoding concatenates name parts together with {@link #SEPARATOR_CHAR '.'} character.
- * The {@link #ESCAPE_CHAR '@'} character is used to escape {@link #SEPARATOR_CHAR '.'} and itself in each name part
- * prior to concatenation.
+ * The canonical form encoding concatenates name parts together with {@link #CANONICAL_FORM_SEPARATOR_CHAR '.'}
+ * character. The {@link #CANONICAL_FORM_ESCAPE_CHAR '@'} character is used to escape
+ * {@link #CANONICAL_FORM_SEPARATOR_CHAR '.'} and itself in each name part prior to concatenation.
  * <p>
  * E.g. the canonical form for a dataverse name {@code ["a", "b", "c"]} is {@code "a.b.c"}
  * <p>
- * {@link #toString()} returns a display form which is a {@link #SEPARATOR_CHAR '.'} separated concatenation
- * of name parts without escaping. In general it's impossible to reconstruct a dataverse name from its display form.
+ * {@link #toString()} returns a display form which is a {@link #CANONICAL_FORM_SEPARATOR_CHAR '.'} separated
+ * concatenation of name parts without escaping. In general it's impossible to reconstruct a dataverse name from
+ * its display form.
  * <p>
  * Notes:
  * <li>
@@ -61,11 +62,18 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
 
     private static final long serialVersionUID = 1L;
 
-    public static final char SEPARATOR_CHAR = '.';
+    public static final char CANONICAL_FORM_SEPARATOR_CHAR = '.';
 
-    private static final char ESCAPE_CHAR = '@';
+    private static final char CANONICAL_FORM_ESCAPE_CHAR = '@';
 
-    private static final char[] SEPARATOR_AND_ESCAPE_CHARS = new char[] { SEPARATOR_CHAR, ESCAPE_CHAR };
+    public static final char DISPLAY_FORM_SEPARATOR_CHAR = '.';
+
+    private static final char DISPLAY_FORM_QUOTE_CHAR = '`';
+
+    private static final char DISPLAY_FORM_ESCAPE_CHAR = '\\';
+
+    private static final char[] CANONICAL_FORM_SEPARATOR_AND_ESCAPE_CHARS =
+            new char[] { CANONICAL_FORM_SEPARATOR_CHAR, CANONICAL_FORM_ESCAPE_CHAR };
 
     private final boolean isMultiPart;
 
@@ -106,9 +114,24 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
     }
 
     /**
-     * Appends dataverse name parts into a given list
+     * Appends dataverse name parts into a given output collection
      */
     public void getParts(Collection<? super String> outParts) {
+        getPartsFromCanonicalForm(canonicalForm, isMultiPart, outParts);
+    }
+
+    /**
+     * Appends dataverse name parts into a given output collection
+     */
+    public static void getPartsFromCanonicalForm(String canonicalForm, Collection<? super String> outParts) {
+        getPartsFromCanonicalForm(canonicalForm, isMultiPartCanonicalForm(canonicalForm), outParts);
+    }
+
+    /**
+     * Appends dataverse name parts into a given output collection
+     */
+    private static void getPartsFromCanonicalForm(String canonicalForm, boolean isMultiPart,
+            Collection<? super String> outParts) {
         if (isMultiPart) {
             decodeCanonicalForm(canonicalForm, DataverseName::addPartToCollection, outParts);
         } else {
@@ -117,9 +140,7 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
     }
 
     /**
-     * Returns a display form which is a {@link #SEPARATOR_CHAR '.'} separated concatenation of name parts without
-     * escaping. In general it's impossible to reconstruct a dataverse name from its display form, so this method
-     * should not be used when roundtripability is required.
+     * Returns a display form which suitable for error messages, and is a valid SQL++ multi-part identifier.
      */
     @Override
     public String toString() {
@@ -129,19 +150,29 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
     private String getDisplayForm() {
         String result = displayForm;
         if (result == null) {
-            displayForm = result = createDisplayForm();
+            StringBuilder sb = new StringBuilder(canonicalForm.length() + 1);
+            getDisplayForm(sb);
+            displayForm = result = sb.toString();
         }
         return result;
     }
 
-    private String createDisplayForm() {
+    public void getDisplayForm(StringBuilder out) {
+        getDisplayFormFromCanonicalForm(canonicalForm, isMultiPart, out);
+    }
+
+    public static void getDisplayFormFromCanonicalForm(String canonicalForm, StringBuilder out) {
+        getDisplayFormFromCanonicalForm(canonicalForm, isMultiPartCanonicalForm(canonicalForm), out);
+    }
+
+    private static void getDisplayFormFromCanonicalForm(String canonicalForm, boolean isMultiPart, StringBuilder out) {
         if (isMultiPart) {
-            StringBuilder displayForm = new StringBuilder(canonicalForm.length() + 1);
-            decodeCanonicalForm(canonicalForm, DataverseName::addPartToDisplayForm, displayForm);
-            return displayForm.substring(0, displayForm.length() - 1); // remove last separator char
+            decodeCanonicalForm(canonicalForm, DataverseName::addPartToDisplayForm, out);
         } else {
-            return decodeSinglePartNameFromCanonicalForm(canonicalForm);
+            String singlePart = decodeSinglePartNameFromCanonicalForm(canonicalForm);
+            addPartToDisplayForm(singlePart, out);
         }
+        out.setLength(out.length() - 1); // remove last separator char
     }
 
     @Override
@@ -209,7 +240,7 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
      * Validates that the canonical form of the created dataverse name is the same as its given single name part.
      */
     public static DataverseName createBuiltinDataverseName(String singlePart) {
-        if (StringUtils.containsAny(singlePart, SEPARATOR_AND_ESCAPE_CHARS)) {
+        if (StringUtils.containsAny(singlePart, CANONICAL_FORM_SEPARATOR_AND_ESCAPE_CHARS)) {
             throw new IllegalArgumentException(singlePart);
         }
         DataverseName dataverseName = createSinglePartName(singlePart); // 1-part name
@@ -234,7 +265,7 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
         StringBuilder sb = new StringBuilder(32);
         for (int i = 0; i < partCount; i++) {
             if (i > 0) {
-                sb.append(SEPARATOR_CHAR);
+                sb.append(CANONICAL_FORM_SEPARATOR_CHAR);
             }
             encodePartIntoCanonicalForm(parts.get(fromIndex + i), sb);
         }
@@ -242,7 +273,7 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
     }
 
     private static String encodeSinglePartNamePartIntoCanonicalForm(String singlePart) {
-        if (StringUtils.indexOfAny(singlePart, SEPARATOR_AND_ESCAPE_CHARS) < 0) {
+        if (StringUtils.indexOfAny(singlePart, CANONICAL_FORM_SEPARATOR_AND_ESCAPE_CHARS) < 0) {
             // no escaping needed
             return singlePart;
         }
@@ -254,8 +285,8 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
     private static void encodePartIntoCanonicalForm(String part, StringBuilder out) {
         for (int i = 0, ln = part.length(); i < ln; i++) {
             char c = part.charAt(i);
-            if (c == SEPARATOR_CHAR || c == ESCAPE_CHAR) {
-                out.append(ESCAPE_CHAR);
+            if (c == CANONICAL_FORM_SEPARATOR_CHAR || c == CANONICAL_FORM_ESCAPE_CHAR) {
+                out.append(CANONICAL_FORM_ESCAPE_CHAR);
             }
             out.append(c);
         }
@@ -268,11 +299,11 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
         for (int i = 0; i < ln; i++) {
             char c = canonicalForm.charAt(i);
             switch (c) {
-                case SEPARATOR_CHAR:
+                case CANONICAL_FORM_SEPARATOR_CHAR:
                     partConsumer.accept(sb, partConsumerArg);
                     sb.setLength(0);
                     break;
-                case ESCAPE_CHAR:
+                case CANONICAL_FORM_ESCAPE_CHAR:
                     i++;
                     c = canonicalForm.charAt(i);
                     // fall through to 'default'
@@ -287,8 +318,8 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
     }
 
     // optimization for a single part name
-    private String decodeSinglePartNameFromCanonicalForm(String canonicalForm) {
-        if (canonicalForm.indexOf(ESCAPE_CHAR) < 0) {
+    private static String decodeSinglePartNameFromCanonicalForm(String canonicalForm) {
+        if (canonicalForm.indexOf(CANONICAL_FORM_ESCAPE_CHAR) < 0) {
             // no escaping was done
             return canonicalForm;
         }
@@ -297,9 +328,9 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
         for (int i = 0, ln = canonicalForm.length(); i < ln; i++) {
             char c = canonicalForm.charAt(i);
             switch (c) {
-                case SEPARATOR_CHAR:
+                case CANONICAL_FORM_SEPARATOR_CHAR:
                     throw new IllegalStateException(canonicalForm); // should never happen
-                case ESCAPE_CHAR:
+                case CANONICAL_FORM_ESCAPE_CHAR:
                     i++;
                     c = canonicalForm.charAt(i);
                     // fall through to 'default'
@@ -315,9 +346,9 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
         for (int i = 0, ln = canonicalForm.length(); i < ln; i++) {
             char c = canonicalForm.charAt(i);
             switch (c) {
-                case SEPARATOR_CHAR:
+                case CANONICAL_FORM_SEPARATOR_CHAR:
                     return true;
-                case ESCAPE_CHAR:
+                case CANONICAL_FORM_ESCAPE_CHAR:
                     i++;
                     break;
             }
@@ -330,6 +361,36 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
     }
 
     private static void addPartToDisplayForm(CharSequence part, StringBuilder out) {
-        out.append(part).append(SEPARATOR_CHAR);
+        boolean needQuote = false;
+        for (int i = 0, ln = part.length(); i < ln; i++) {
+            char c = part.charAt(i);
+            boolean noQuote = isLetter(c) || c == '_' || (i > 0 && (isDigit(c) || c == '$'));
+            if (!noQuote) {
+                needQuote = true;
+                break;
+            }
+        }
+        if (needQuote) {
+            out.append(DISPLAY_FORM_QUOTE_CHAR);
+        }
+        for (int i = 0, ln = part.length(); i < ln; i++) {
+            char c = part.charAt(i);
+            if (c == DISPLAY_FORM_ESCAPE_CHAR || c == DISPLAY_FORM_QUOTE_CHAR) {
+                out.append(DISPLAY_FORM_ESCAPE_CHAR);
+            }
+            out.append(c);
+        }
+        if (needQuote) {
+            out.append(DISPLAY_FORM_QUOTE_CHAR);
+        }
+        out.append(DISPLAY_FORM_SEPARATOR_CHAR);
+    }
+
+    private static boolean isLetter(char c) {
+        return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+    }
+
+    private static boolean isDigit(char c) {
+        return '0' <= c && c <= '9';
     }
 }

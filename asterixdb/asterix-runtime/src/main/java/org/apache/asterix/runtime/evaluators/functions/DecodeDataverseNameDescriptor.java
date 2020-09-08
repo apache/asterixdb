@@ -101,10 +101,8 @@ public final class DecodeDataverseNameDescriptor extends AbstractScalarFunctionD
                         strPtr.set(bytes, offset + 1, len - 1);
                         String dataverseCanonicalName = strPtr.toString();
 
-                        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
-
                         dataverseNameParts.clear();
-                        dataverseName.getParts(dataverseNameParts);
+                        DataverseName.getPartsFromCanonicalForm(dataverseCanonicalName, dataverseNameParts);
 
                         resultStorage.reset();
                         listBuilder.reset(listType);

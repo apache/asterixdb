@@ -6772,6 +6772,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="multipart-dataverse">
+      <compilation-unit name="special_chars_2">
+        <output-dir compare="Text">special_chars_2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="multipart-dataverse">
       <compilation-unit name="udf_1">
         <output-dir compare="Text">udf_1</output-dir>
       </compilation-unit>

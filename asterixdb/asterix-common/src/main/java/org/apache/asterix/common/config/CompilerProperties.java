@@ -76,7 +76,7 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_INTERNAL_SANITYCHECK(
                 BOOLEAN,
                 AlgebricksConfig.SANITYCHECK_DEFAULT,
-                "Enabling/disable compiler sanity check");
+                "Enable/disable compiler sanity check");
 
         private final IOptionType type;
         private final Object defaultValue;

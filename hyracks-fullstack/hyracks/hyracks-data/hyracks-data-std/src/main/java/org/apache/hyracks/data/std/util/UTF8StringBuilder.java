@@ -36,7 +36,7 @@ public class UTF8StringBuilder extends AbstractVarLenObjectBuilder {
         }
     }
 
-    public void appendString(String string) throws IOException {
+    public void appendString(CharSequence string) throws IOException {
         for (int i = 0; i < string.length(); i++) {
             appendChar(string.charAt(i));
         }

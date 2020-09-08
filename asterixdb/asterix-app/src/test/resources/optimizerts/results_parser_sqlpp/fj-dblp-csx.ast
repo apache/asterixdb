@@ -1,4 +1,4 @@
-DataverseUse fj-dblp-csx
+DataverseUse `fj-dblp-csx`
 TypeDecl DBLPType [
   open RecordType {
     id : integer,

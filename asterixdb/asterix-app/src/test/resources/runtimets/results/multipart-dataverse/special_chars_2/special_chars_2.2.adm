@@ -1,0 +1,6 @@
+{ "CanonicalName": "A", "DisplayName": "A", "NameParts": [ "A" ] }
+{ "CanonicalName": "B.C", "DisplayName": "B.C", "NameParts": [ "B", "C" ] }
+{ "CanonicalName": "C@.D@.E", "DisplayName": "`C.D.E`", "NameParts": [ "C.D.E" ] }
+{ "CanonicalName": "Default", "DisplayName": "Default", "NameParts": [ "Default" ] }
+{ "CanonicalName": "Metadata", "DisplayName": "Metadata", "NameParts": [ "Metadata" ] }
+{ "CanonicalName": "a-A.b_B.c$C.z@.Z", "DisplayName": "`a-A`.b_B.c$C.`z.Z`", "NameParts": [ "a-A", "b_B", "c$C", "z.Z" ] }

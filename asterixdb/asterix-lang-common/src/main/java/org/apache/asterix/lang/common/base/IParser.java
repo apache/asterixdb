@@ -30,6 +30,8 @@ public interface IParser {
 
     List<Statement> parse() throws CompilationException;
 
+    Expression parseExpression() throws CompilationException;
+
     FunctionDecl parseFunctionBody(FunctionSignature signature, List<String> paramNames) throws CompilationException;
 
     /**

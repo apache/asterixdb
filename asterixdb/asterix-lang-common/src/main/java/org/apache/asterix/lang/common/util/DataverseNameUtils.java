@@ -76,7 +76,7 @@ public class DataverseNameUtils {
         dataverseName.getParts(dataverseNameParts);
         for (int i = 0, ln = dataverseNameParts.size(); i < ln; i++) {
             if (i > 0) {
-                sb.append(DataverseName.SEPARATOR_CHAR);
+                sb.append(DataverseName.CANONICAL_FORM_SEPARATOR_CHAR);
             }
             sb.append(normalize(dataverseNameParts.get(i)));
         }

@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.apache.commons.collections4.ListUtils;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.junit.Assert;
 import org.junit.Test;
@@ -55,97 +55,114 @@ public class DataverseNameTest {
             // escape character is not allowed
             "c@d");
 
-    private static final List<Pair<String, String>> TEST_SINGLE_PART_NAME_PARAMS = Arrays.asList(
-            // <1-part-name, canonical-form>
-            new Pair<>("abc", "abc"),
-            // with escape character
-            new Pair<>("a@b", "a@@b"),
-            // with separator character
-            new Pair<>("a.b", "a@.b"),
-            // with both escape and separator characters
-            new Pair<>("a@.b", "a@@@.b"));
+    private static final List<Triple<String, String, String>> TEST_SINGLE_PART_NAME_PARAMS = Arrays.asList(
+            // <1-part-name, canonical-form, display-form>
+            new Triple<>("abz", "abz", "abz"),
+            // upper-case letters
+            new Triple<>("ABZ", "ABZ", "ABZ"),
+            // letters and digits
+            new Triple<>("aA09", "aA09", "aA09"),
+            // with canonical form escape character
+            new Triple<>("a@b", "a@@b", "`a@b`"),
+            // with canonical form separator character
+            new Triple<>("a.b", "a@.b", "`a.b`"),
+            // with canonical form escape and separator characters
+            new Triple<>("a@.b", "a@@@.b", "`a@.b`"),
+            // with display form escape character
+            new Triple<>("a\\b", "a\\b", "`a\\\\b`"));
 
-    private static final List<Pair<List<String>, String>> TEST_MULTI_PART_NAME_PARAMS = Arrays.asList(
-            // <multi-part-name, canonical-form>
-            new Pair<>(Arrays.asList("aa", "bb", "cc"), "aa.bb.cc"),
-            // with escape character
-            new Pair<>(Arrays.asList("a@a@", "@b@b", "@c@c"), "a@@a@@.@@b@@b.@@c@@c"),
-            // with separator character
-            new Pair<>(Arrays.asList("a.a.", ".b.b.", ".c.c"), "a@.a@..@.b@.b@..@.c@.c"),
-            // with both escape and separator characters
-            new Pair<>(Arrays.asList("a@a.", "@b.b@", ".c@c"), "a@@a@..@@b@.b@@.@.c@@c"),
-            // with both escape and separator characters repeated
-            new Pair<>(Arrays.asList("a@@a..", "@@b..b@@", "..c@@c"), "a@@@@a@.@..@@@@b@.@.b@@@@.@.@.c@@@@c"));
+    private static final List<Triple<List<String>, String, String>> TEST_MULTI_PART_NAME_PARAMS = Arrays.asList(
+            // <multi-part-name, canonical-form, display-form>
+            new Triple<>(Arrays.asList("aa", "bb", "cc"), "aa.bb.cc", "aa.bb.cc"),
+            // mixed case letters, digits
+            new Triple<>(Arrays.asList("az", "AZ", "a09Z"), "az.AZ.a09Z", "az.AZ.a09Z"),
+            // with canonical form escape character
+            new Triple<>(Arrays.asList("a@a@", "@b@b", "@c@c"), "a@@a@@.@@b@@b.@@c@@c", "`a@a@`.`@b@b`.`@c@c`"),
+            // with canonical form separator character
+            new Triple<>(Arrays.asList("a.a.", ".b.b.", ".c.c"), "a@.a@..@.b@.b@..@.c@.c", "`a.a.`.`.b.b.`.`.c.c`"),
+            // with canonical form escape and separator characters
+            new Triple<>(Arrays.asList("a@a.", "@b.b@", ".c@c"), "a@@a@..@@b@.b@@.@.c@@c", "`a@a.`.`@b.b@`.`.c@c`"),
+            // with canonical form escape and separator characters repeated
+            new Triple<>(Arrays.asList("a@@a..", "@@b..b@@", "..c@@c"), "a@@@@a@.@..@@@@b@.@.b@@@@.@.@.c@@@@c",
+                    "`a@@a..`.`@@b..b@@`.`..c@@c`"),
+            // with display form escape character
+            new Triple<>(Arrays.asList("a\\b", "c\\d"), "a\\b.c\\d", "`a\\\\b`.`c\\\\d`"));
 
     @Test
-    public void testBuiltinDataverseName() {
+    public void testBuiltinDataverseName() throws Exception {
         for (String p : TEST_BUILTIN_DATAVERSE_NAME_PARAMS) {
             testBuiltinDataverseNameImpl(p);
         }
     }
 
     @Test
-    public void testSinglePartName() {
-        for (Pair<String, String> p : TEST_SINGLE_PART_NAME_PARAMS) {
-            String singlePart = p.first;
-            String expectedCanonicalForm = p.second;
-            testSinglePartNameImpl(singlePart, expectedCanonicalForm);
+    public void testSinglePartName() throws Exception {
+        for (Triple<String, String, String> t : TEST_SINGLE_PART_NAME_PARAMS) {
+            String singlePart = t.first;
+            String expectedCanonicalForm = t.second;
+            String expectedDisplayForm = t.third;
+            testSinglePartNameImpl(singlePart, expectedCanonicalForm, expectedDisplayForm);
         }
     }
 
     @Test
-    public void testMultiPartName() {
+    public void testMultiPartName() throws Exception {
         // test single part names
-        for (Pair<String, String> p : TEST_SINGLE_PART_NAME_PARAMS) {
-            List<String> parts = Collections.singletonList(p.first);
-            String expectedCanonicalForm = p.second;
-            testMultiPartNameImpl(parts, expectedCanonicalForm);
+        for (Triple<String, String, String> t : TEST_SINGLE_PART_NAME_PARAMS) {
+            List<String> parts = Collections.singletonList(t.first);
+            String expectedCanonicalForm = t.second;
+            String expectedDisplayForm = t.third;
+            testMultiPartNameImpl(parts, expectedCanonicalForm, expectedDisplayForm);
         }
         // test multi part names
-        for (Pair<List<String>, String> p : TEST_MULTI_PART_NAME_PARAMS) {
-            List<String> parts = p.first;
-            String expectedCanonicalForm = p.second;
-            testMultiPartNameImpl(parts, expectedCanonicalForm);
+        for (Triple<List<String>, String, String> t : TEST_MULTI_PART_NAME_PARAMS) {
+            List<String> parts = t.first;
+            String expectedCanonicalForm = t.second;
+            String expectedDisplayForm = t.third;
+            testMultiPartNameImpl(parts, expectedCanonicalForm, expectedDisplayForm);
         }
     }
 
-    private void testBuiltinDataverseNameImpl(String singlePart) {
+    private void testBuiltinDataverseNameImpl(String singlePart) throws Exception {
         DataverseName dvBuiltin = DataverseName.createBuiltinDataverseName(singlePart);
         DataverseName dv = DataverseName.createSinglePartName(singlePart);
         Assert.assertEquals("same-builtin", dv, dvBuiltin);
-        // part = canonical-form = persistent-form for builtins
-        testSinglePartNameImpl(singlePart, singlePart);
+        // part = canonical-form = display-form for builtins
+        testSinglePartNameImpl(singlePart, singlePart, singlePart);
     }
 
-    private void testSinglePartNameImpl(String singlePart, String expectedCanonicalForm) {
+    private void testSinglePartNameImpl(String singlePart, String expectedCanonicalForm, String expectedDisplayForm)
+            throws Exception {
         List<String> parts = Collections.singletonList(singlePart);
 
         // construction using createSinglePartName()
         DataverseName dvConstr1 = DataverseName.createSinglePartName(singlePart);
-        testDataverseNameImpl(dvConstr1, parts, expectedCanonicalForm);
+        testDataverseNameImpl(dvConstr1, parts, expectedCanonicalForm, expectedDisplayForm);
 
         // construction using create(list)
         DataverseName dvConstr2 = DataverseName.create(Collections.singletonList(singlePart));
-        testDataverseNameImpl(dvConstr2, parts, expectedCanonicalForm);
+        testDataverseNameImpl(dvConstr2, parts, expectedCanonicalForm, expectedDisplayForm);
 
         // construction using create(list, from, to)
         DataverseName dvConstr3 = DataverseName.create(Arrays.asList(null, null, singlePart, null, null), 2, 3);
-        testDataverseNameImpl(dvConstr3, parts, expectedCanonicalForm);
+        testDataverseNameImpl(dvConstr3, parts, expectedCanonicalForm, expectedDisplayForm);
     }
 
-    private void testMultiPartNameImpl(List<String> parts, String expectedCanonicalForm) {
+    private void testMultiPartNameImpl(List<String> parts, String expectedCanonicalForm, String expectedDisplayForm)
+            throws Exception {
         // construction using create(list)
         DataverseName dvConstr1 = DataverseName.create(parts);
-        testDataverseNameImpl(dvConstr1, parts, expectedCanonicalForm);
+        testDataverseNameImpl(dvConstr1, parts, expectedCanonicalForm, expectedDisplayForm);
 
         // construction using create(list, from, to)
         List<String> dv2InputParts =
                 ListUtils.union(ListUtils.union(Arrays.asList(null, null), parts), Arrays.asList(null, null));
         DataverseName dvConstr2 = DataverseName.create(dv2InputParts, 2, 2 + parts.size());
-        testDataverseNameImpl(dvConstr2, parts, expectedCanonicalForm);
+        testDataverseNameImpl(dvConstr2, parts, expectedCanonicalForm, expectedDisplayForm);
     }
 
-    private void testDataverseNameImpl(DataverseName dataverseName, List<String> parts, String expectedCanonicalForm) {
+    protected void testDataverseNameImpl(DataverseName dataverseName, List<String> parts, String expectedCanonicalForm,
+            String expectedDisplayForm) throws Exception {
         boolean isMultiPart = parts.size() > 1;
         Assert.assertEquals("is-multipart", isMultiPart, dataverseName.isMultiPart());
 
@@ -156,15 +173,16 @@ public class DataverseNameTest {
         Assert.assertArrayEquals("get-parts-1", parts.toArray(), outParts.toArray());
 
         // test canonical form
-        Assert.assertEquals("canonical-form", expectedCanonicalForm, dataverseName.getCanonicalForm());
+        String canonicalForm = dataverseName.getCanonicalForm();
+        Assert.assertEquals("canonical-form", expectedCanonicalForm, canonicalForm);
         DataverseName dvFromCanonical = DataverseName.createFromCanonicalForm(expectedCanonicalForm);
         Assert.assertEquals("canonical-form-round-trip", dataverseName, dvFromCanonical);
         Assert.assertEquals("canonical-form-round-trip-cmp", 0, dataverseName.compareTo(dvFromCanonical));
         Assert.assertEquals("canonical-form-round-trip-hash", dataverseName.hashCode(), dvFromCanonical.hashCode());
 
         // test display form
-        String expectedDisplayForm = String.join(".", parts);
-        Assert.assertEquals("display-form", expectedDisplayForm, dataverseName.toString());
+        String displayForm = dataverseName.toString();
+        Assert.assertEquals("display-form", expectedDisplayForm, displayForm);
     }
 
     @Test

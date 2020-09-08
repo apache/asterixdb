@@ -1,4 +1,4 @@
-DataverseUse orders-aggreg
+DataverseUse `orders-aggreg`
 TypeDecl OrderType [
   closed RecordType {
     oid : integer,

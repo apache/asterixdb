@@ -331,6 +331,7 @@ import org.apache.asterix.runtime.evaluators.functions.CreatePolygonDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreateQueryUIDDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreateRectangleDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreateUUIDDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.DecodeDataverseDisplayNameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.DecodeDataverseNameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.DeepEqualityDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.FullTextContainsDescriptor;
@@ -1214,6 +1215,7 @@ public final class FunctionCollection implements IFunctionCollection {
 
         // Other functions
         fc.add(DecodeDataverseNameDescriptor.FACTORY);
+        fc.add(DecodeDataverseDisplayNameDescriptor.FACTORY);
         fc.add(RandomWithSeedDescriptor.FACTORY);
 
         ServiceLoader.load(IFunctionRegistrant.class).iterator().forEachRemaining(c -> c.register(fc));
