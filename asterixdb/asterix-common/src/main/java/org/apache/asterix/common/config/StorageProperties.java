@@ -66,7 +66,13 @@ public class StorageProperties extends AbstractProperties {
 
         @Override
         public Section section() {
-            return Section.NC;
+            switch (this) {
+                case STORAGE_COMPRESSION_BLOCK:
+                case STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE:
+                    return Section.COMMON;
+                default:
+                    return Section.NC;
+            }
         }
 
         @Override

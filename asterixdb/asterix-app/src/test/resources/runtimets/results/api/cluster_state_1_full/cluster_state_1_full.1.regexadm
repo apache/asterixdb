@@ -38,6 +38,8 @@
     "replication\.strategy" : "none",
     "replication\.timeout" : 30,
     "ssl\.enabled" : false,
+    "storage.compression.block" : "snappy",
+    "storage.lsm.bloomfilter.falsepositiverate" : 0.01,
     "txn\.commitprofiler\.enabled" : false,
     "txn\.commitprofiler\.reportinterval" : 5,
     "txn\.dataset\.checkpoint\.interval" : 3600,
