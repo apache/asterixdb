@@ -40,6 +40,7 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.clause.SelectClause;
@@ -81,8 +82,11 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
  */
 public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpressionScopingVisitor {
 
-    public SqlppGroupByAggregationSugarVisitor(LangRewritingContext context) {
+    private final Collection<VarIdentifier> externalVars;
+
+    public SqlppGroupByAggregationSugarVisitor(LangRewritingContext context, Collection<VarIdentifier> externalVars) {
         super(context);
+        this.externalVars = externalVars;
     }
 
     @Override
@@ -177,7 +181,7 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
 
             // Gets the final free variables.
             freeVariables.addAll(freeVariablesInGbyLets);
-            freeVariables.removeIf(SqlppVariableUtil::isExternalVariableReference);
+            removeExternalVariables(freeVariables);
 
             if (!groupbyClause.isGroupAll()) {
                 // Gets outer scope variables.
@@ -211,6 +215,12 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
             selectBlock.getSelectClause().accept(this, arg);
         }
         return null;
+    }
+
+    private void removeExternalVariables(Collection<VariableExpr> freeVariables) {
+        if (!externalVars.isEmpty()) {
+            freeVariables.removeIf(ve -> externalVars.contains(ve.getVar()));
+        }
     }
 
     static Map<VariableExpr, Identifier> createGroupVarFieldMap(List<Pair<Expression, Identifier>> fieldList) {

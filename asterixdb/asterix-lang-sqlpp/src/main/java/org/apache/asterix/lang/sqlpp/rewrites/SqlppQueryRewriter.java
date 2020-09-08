@@ -20,6 +20,7 @@ package org.apache.asterix.lang.sqlpp.rewrites;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -113,7 +114,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         this.context = context;
         this.declaredFunctions = declaredFunctions;
         this.metadataProvider = metadataProvider;
-        this.externalVars = externalVars;
+        this.externalVars = externalVars != null ? externalVars : Collections.emptyList();
         this.isLogEnabled = LOGGER.isTraceEnabled();
         logExpression("Starting AST rewrites on", "");
     }
@@ -197,7 +198,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     }
 
     protected void rewriteGroupByAggregationSugar() throws CompilationException {
-        SqlppGroupByAggregationSugarVisitor visitor = new SqlppGroupByAggregationSugarVisitor(context);
+        SqlppGroupByAggregationSugarVisitor visitor = new SqlppGroupByAggregationSugarVisitor(context, externalVars);
         rewriteTopExpr(visitor, null);
     }
 
