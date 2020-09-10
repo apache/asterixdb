@@ -597,7 +597,8 @@ public class DatasetUtil {
     public static String createNodeGroupForNewDataset(DataverseName dataverseName, String datasetName,
             long rebalanceCount, Set<String> ncNames, MetadataProvider metadataProvider) throws Exception {
         ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
-        String nodeGroup = dataverseName + "." + datasetName + (rebalanceCount == 0L ? "" : "_" + rebalanceCount);
+        String nodeGroup = dataverseName.getCanonicalForm() + "." + datasetName
+                + (rebalanceCount == 0L ? "" : "_" + rebalanceCount);
         MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
         appCtx.getMetadataLockManager().acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
         NodeGroup ng = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroup);
