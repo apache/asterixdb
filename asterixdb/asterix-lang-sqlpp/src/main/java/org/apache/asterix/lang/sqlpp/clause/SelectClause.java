@@ -68,6 +68,10 @@ public class SelectClause extends AbstractClause {
         return distinct;
     }
 
+    public void setDistinct(boolean distinct) {
+        this.distinct = distinct;
+    }
+
     @Override
     public String toString() {
         return "select " + (distinct ? "distinct " : "")

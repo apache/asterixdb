@@ -5628,6 +5628,7 @@
         <expected-error>ASX1119: Invalid argument to grouping() function</expected-error>
         <expected-error>ASX1119: Invalid argument to grouping() function</expected-error>
         <expected-error>ASX1118: Too many grouping sets in group by clause: 512. Maximum allowed: 128.</expected-error>
+        <expected-error>ASX1129: Cannot compile SELECT variable.* with GROUP BY GROUPING SETS/ROLLUP/CUBE followed by ORDER BY/LIMIT</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">

@@ -64,8 +64,16 @@ public class SelectBlock extends AbstractClause {
         return selectClause;
     }
 
+    public void setSelectClause(SelectClause selectClause) {
+        this.selectClause = selectClause;
+    }
+
     public FromClause getFromClause() {
         return fromClause;
+    }
+
+    public void setFromClause(FromClause fromClause) {
+        this.fromClause = fromClause;
     }
 
     public List<AbstractClause> getLetWhereList() {
@@ -74,6 +82,10 @@ public class SelectBlock extends AbstractClause {
 
     public GroupbyClause getGroupbyClause() {
         return groupbyClause;
+    }
+
+    public void setGroupbyClause(GroupbyClause groupbyClause) {
+        this.groupbyClause = groupbyClause;
     }
 
     public List<AbstractClause> getLetHavingListAfterGroupby() {
@@ -94,10 +106,6 @@ public class SelectBlock extends AbstractClause {
 
     public boolean hasLetHavingClausesAfterGroupby() {
         return !letHavingClausesAfterGby.isEmpty();
-    }
-
-    public void setGroupbyClause(GroupbyClause groupbyClause) {
-        this.groupbyClause = groupbyClause;
     }
 
     @Override

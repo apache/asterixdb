@@ -1,10 +1,10 @@
-distribute result [$$13]
+distribute result [$$14]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$13])
+    project ([$$14])
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$13] <- [le($$x, 2)]
+      assign [$$14] <- [le($$x, 2)]
       -- ASSIGN  |UNPARTITIONED|
         exchange
         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|

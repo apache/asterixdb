@@ -1,0 +1,179 @@
+Set compiler.groupmemory=4MB
+Set compiler.sortmemory=4MB
+DataverseUse test
+Query:
+Let Variable [ Name=$tenk_subset ]
+  :=
+  (
+    SELECT [
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=two
+    ]
+    two
+    FieldAccessor [
+      Variable [ Name=$tenk ]
+      Field=unique1
+    ]
+    unique1
+    ]
+    FROM [      FunctionCall asterix.dataset@1[
+        LiteralExpr [STRING] [test.tenk]
+      ]
+      AS Variable [ Name=$tenk ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=$tenk ]
+            Field=unique2
+          ]
+          mod
+          LiteralExpr [LONG] [2000]
+        ]
+        =
+        LiteralExpr [LONG] [0]
+      ]
+  )
+Let Variable [ Name=$tenk_sum ]
+  :=
+  (
+    SELECT ELEMENT [
+    Variable [ Name=#1 ]
+    ]
+    FROM [      (
+        SELECT [
+        *
+        ]
+        FROM [          Variable [ Name=$tenk_subset ]
+          AS Variable [ Name=$t ]
+        ]
+        Groupby
+          Variable [ Name=$two ]
+          :=
+          FieldAccessor [
+            Variable [ Name=$t ]
+            Field=two
+          ]
+          GROUP AS Variable [ Name=$g ]
+          (
+            t:=Variable [ Name=$t ]
+          )
+
+        Let Variable [ Name=$s ]
+          :=
+          FunctionCall asterix.sql-sum@1[
+            (
+              SELECT ELEMENT [
+              FieldAccessor [
+                FieldAccessor [
+                  Variable [ Name=#2 ]
+                  Field=t
+                ]
+                Field=unique1
+              ]
+              ]
+              FROM [                Variable [ Name=$g ]
+                AS Variable [ Name=#2 ]
+              ]
+            )
+          ]
+        UNION
+          SELECT [
+          *
+          ]
+          FROM [            Variable [ Name=$tenk_subset ]
+            AS Variable [ Name=$t ]
+          ]
+          Groupby
+            GROUPING SET (
+            )
+            DECOR
+            Variable [ Name=$two ]
+            :=
+            LiteralExpr [NULL]
+            GROUP AS Variable [ Name=$g ]
+            (
+              t:=Variable [ Name=$t ]
+            )
+
+          Let Variable [ Name=$s ]
+            :=
+            FunctionCall asterix.sql-sum@1[
+              (
+                SELECT ELEMENT [
+                FieldAccessor [
+                  FieldAccessor [
+                    Variable [ Name=#3 ]
+                    Field=t
+                  ]
+                  Field=unique1
+                ]
+                ]
+                FROM [                  Variable [ Name=$g ]
+                  AS Variable [ Name=#3 ]
+                ]
+              )
+            ]
+      )
+      AS Variable [ Name=#1 ]
+    ]
+    Orderby
+      FieldAccessor [
+        Variable [ Name=#1 ]
+        Field=s
+      ]
+      DESC
+
+    Limit
+      LiteralExpr [LONG] [3]
+  )
+SELECT [
+FieldAccessor [
+  Variable [ Name=$tt ]
+  Field=s
+]
+s
+FieldAccessor [
+  Variable [ Name=$tt ]
+  Field=two
+]
+two
+Variable [ Name=$gg ]
+gg
+]
+FROM [  Variable [ Name=$tenk_sum ]
+  AS Variable [ Name=$tt ]
+]
+Let Variable [ Name=$gg ]
+  :=
+  (
+    SELECT [
+    Variable [ Name=$gi ]
+    .*
+    ]
+    FROM [      FieldAccessor [
+        Variable [ Name=$tt ]
+        Field=g
+      ]
+      AS Variable [ Name=$gi ]
+    ]
+    Orderby
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=$gi ]
+          Field=t
+        ]
+        Field=unique1
+      ]
+      ASC
+
+  )
+Orderby
+  FieldAccessor [
+    Variable [ Name=$tt ]
+    Field=s
+  ]
+  DESC
+

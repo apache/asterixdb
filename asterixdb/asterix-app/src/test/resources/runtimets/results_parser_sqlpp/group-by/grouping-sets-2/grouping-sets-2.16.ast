@@ -1,0 +1,93 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=#2 ]
+]
+FROM [  (
+    SELECT [
+    Variable [ Name=$four ]
+    four
+    FunctionCall asterix.sql-sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=#3 ]
+            Field=tenk
+          ]
+          Field=two
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS Variable [ Name=#3 ]
+        ]
+      )
+    ]
+    s
+    ]
+    FROM [      FunctionCall asterix.dataset@1[
+        LiteralExpr [STRING] [test.tenk]
+      ]
+      AS Variable [ Name=$tenk ]
+    ]
+    Groupby
+      Variable [ Name=$four ]
+      :=
+      FieldAccessor [
+        Variable [ Name=$tenk ]
+        Field=four
+      ]
+      GROUP AS Variable [ Name=#1 ]
+      (
+        tenk:=Variable [ Name=$tenk ]
+      )
+
+    UNION
+      SELECT [
+      Variable [ Name=$four ]
+      four
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#4 ]
+              Field=tenk
+            ]
+            Field=two
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#4 ]
+          ]
+        )
+      ]
+      s
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        GROUPING SET (
+        )
+        DECOR
+        Variable [ Name=$four ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+  )
+  AS Variable [ Name=#2 ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=#2 ]
+    Field=four
+  ]
+  ASC
+

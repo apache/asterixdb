@@ -1,0 +1,102 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall asterix.field-access-by-name@2[
+  Variable [ Name=#4 ]
+  LiteralExpr [STRING] [$3]
+]
+]
+FROM [  (
+    SELECT [
+    Variable [ Name=$s1 ]
+    $3
+    Variable [ Name=$s1 ]
+    $2
+    ]
+    FROM [      FunctionCall asterix.dataset@1[
+        LiteralExpr [STRING] [test.tenk]
+      ]
+      AS Variable [ Name=$tenk ]
+    ]
+    Groupby
+      Variable [ Name=$four ]
+      :=
+      FieldAccessor [
+        Variable [ Name=$tenk ]
+        Field=four
+      ]
+      GROUP AS Variable [ Name=#1 ]
+      (
+        tenk:=Variable [ Name=$tenk ]
+      )
+
+    Let Variable [ Name=$s1 ]
+      :=
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#5 ]
+              Field=tenk
+            ]
+            Field=two
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#5 ]
+          ]
+        )
+      ]
+    UNION
+      SELECT [
+      Variable [ Name=$s1 ]
+      $3
+      Variable [ Name=$s1 ]
+      $2
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        Variable [ Name=$four ]
+        :=
+        FieldAccessor [
+          Variable [ Name=$tenk ]
+          Field=four
+        ]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=$s1 ]
+        :=
+        FunctionCall asterix.sql-sum@1[
+          (
+            SELECT ELEMENT [
+            FieldAccessor [
+              FieldAccessor [
+                Variable [ Name=#6 ]
+                Field=tenk
+              ]
+              Field=two
+            ]
+            ]
+            FROM [              Variable [ Name=#1 ]
+              AS Variable [ Name=#6 ]
+            ]
+          )
+        ]
+  )
+  AS Variable [ Name=#4 ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=#4 ]
+    Field=$2
+  ]
+  DESC
+

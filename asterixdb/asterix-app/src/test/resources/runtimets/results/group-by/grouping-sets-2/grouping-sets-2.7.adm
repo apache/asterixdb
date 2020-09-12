@@ -1,0 +1,7 @@
+{ "two": null, "four": null }
+{ "two": 1, "four": null }
+{ "two": 0, "four": null }
+{ "two": 1, "four": 3 }
+{ "two": 0, "four": 2 }
+{ "two": 1, "four": 1 }
+{ "two": 0, "four": 0 }

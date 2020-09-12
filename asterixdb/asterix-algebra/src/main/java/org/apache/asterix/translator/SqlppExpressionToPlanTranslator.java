@@ -857,6 +857,14 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 outFieldBindings.add(getFieldBinding(var, outFieldNames));
             }
         }
+        if (groupbyClause.hasDecorList()) {
+            for (GbyVariableExpressionPair pair : groupbyClause.getDecorPairList()) {
+                VariableExpr var = pair.getVar();
+                if (gbyKeyVars.add(var)) {
+                    outFieldBindings.add(getFieldBinding(var, outFieldNames));
+                }
+            }
+        }
         if (groupbyClause.hasGroupVar()) {
             outFieldBindings.add(getFieldBinding(groupbyClause.getGroupVar(), outFieldNames));
         }

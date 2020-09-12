@@ -39,7 +39,8 @@ public class SqlppSubstituteExpressionVisitor extends AbstractSqlppExpressionSco
 
     private final Map<Expression, Expression> exprMap = new HashMap<>();
 
-    public SqlppSubstituteExpressionVisitor(LangRewritingContext context, Map<Expression, Expression> exprMap) {
+    public SqlppSubstituteExpressionVisitor(LangRewritingContext context,
+            Map<? extends Expression, ? extends Expression> exprMap) {
         super(context);
         this.exprMap.putAll(exprMap);
     }

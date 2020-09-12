@@ -1,26 +1,26 @@
-distribute result [$$20]
+distribute result [$$21]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 2
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$20])
+      project ([$$21])
       -- STREAM_PROJECT  |PARTITIONED|
         exchange
-        -- SORT_MERGE_EXCHANGE [$$23(ASC) ]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
           limit 2
           -- STREAM_LIMIT  |PARTITIONED|
-            project ([$$23, $$20])
+            project ([$$24, $$21])
             -- STREAM_PROJECT  |PARTITIONED|
-              assign [$$20] <- [$$24.getField("lang")]
+              assign [$$21] <- [$$25.getField("lang")]
               -- ASSIGN  |PARTITIONED|
-                project ([$$23, $$24])
+                project ([$$24, $$25])
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$24] <- [$$t.getField("user")]
+                  assign [$$25] <- [$$t.getField("user")]
                   -- ASSIGN  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$23, $$t] <- test.TweetMessages condition (and(ge($$t.getField("user").getField("friends_count"), 0), le($$t.getField("user").getField("friends_count"), 150))) limit 2
+                      data-scan []<-[$$24, $$t] <- test.TweetMessages condition (and(ge($$t.getField("user").getField("friends_count"), 0), le($$t.getField("user").getField("friends_count"), 150))) limit 2
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -92,7 +92,9 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                     synchronized (UnionOperator.this) {
-                        writer.nextFrame(buffer);
+                        if (!failed) {
+                            writer.nextFrame(buffer);
+                        }
                     }
                 }
 
@@ -100,9 +102,9 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void fail() throws HyracksDataException {
                     synchronized (UnionOperator.this) {
                         if (!failed) {
+                            failed = true;
                             writer.fail();
                         }
-                        failed = true;
                     }
                 }
 

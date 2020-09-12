@@ -21,6 +21,7 @@ package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.function.BiFunction;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
@@ -87,7 +88,7 @@ public class SetOperationVisitor extends AbstractSqlppExpressionScopingVisitor {
         // Wraps the set operation part with a subquery.
         SelectExpression nestedSelectExpression = new SelectExpression(null, selectSetOperation, null, null, true);
         nestedSelectExpression.setSourceLocation(sourceLoc);
-        SelectBlock selectBlock = createSelectBlock(nestedSelectExpression, context);
+        SelectBlock selectBlock = createSelectBlock(nestedSelectExpression, false, null, null, context);
         SelectSetOperation newSelectSetOperation =
                 new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
         newSelectSetOperation.setSourceLocation(sourceLoc);
@@ -98,7 +99,9 @@ public class SetOperationVisitor extends AbstractSqlppExpressionScopingVisitor {
         return super.visit(newSelectExpression, arg);
     }
 
-    static SelectBlock createSelectBlock(Expression inputExpr, LangRewritingContext context) {
+    static <P> SelectBlock createSelectBlock(Expression inputExpr, boolean distinct,
+            BiFunction<? super VariableExpr, P, Expression> valueExprTransformer, P valueExprTransformerArg,
+            LangRewritingContext context) {
         SourceLocation sourceLoc = inputExpr.getSourceLocation();
         VariableExpr newBindingVar = new VariableExpr(context.newVariable()); // Binding variable for the subquery.
         newBindingVar.setSourceLocation(sourceLoc);
@@ -106,7 +109,9 @@ public class SetOperationVisitor extends AbstractSqlppExpressionScopingVisitor {
         newFromTerm.setSourceLocation(sourceLoc);
         FromClause newFromClause = new FromClause(new ArrayList<>(Collections.singletonList(newFromTerm)));
         newFromClause.setSourceLocation(sourceLoc);
-        SelectClause selectClause = new SelectClause(new SelectElement(newBindingVar), null, false);
+        Expression valueExpr = valueExprTransformer != null
+                ? valueExprTransformer.apply(newBindingVar, valueExprTransformerArg) : newBindingVar;
+        SelectClause selectClause = new SelectClause(new SelectElement(valueExpr), null, distinct);
         selectClause.setSourceLocation(sourceLoc);
         SelectBlock selectBlock = new SelectBlock(selectClause, newFromClause, null, null, null);
         selectBlock.setSourceLocation(sourceLoc);

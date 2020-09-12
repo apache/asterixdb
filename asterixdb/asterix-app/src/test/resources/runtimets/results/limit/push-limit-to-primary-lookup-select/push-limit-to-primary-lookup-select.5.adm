@@ -1,40 +1,40 @@
-distribute result [$$18]
+distribute result [$$19]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 5
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$18])
+      project ([$$19])
       -- STREAM_PROJECT  |PARTITIONED|
         exchange
-        -- SORT_MERGE_EXCHANGE [$$20(ASC), $$21(ASC) ]  |PARTITIONED|
-          project ([$$20, $$21, $$18])
+        -- SORT_MERGE_EXCHANGE [$$21(ASC), $$22(ASC) ]  |PARTITIONED|
+          project ([$$21, $$22, $$19])
           -- STREAM_PROJECT  |PARTITIONED|
-            assign [$$18] <- [{"shipdate": substring($$c.getField(10), 0, 4), "suppkey": gt($$19, 0)}]
+            assign [$$19] <- [{"shipdate": substring($$c.getField(10), 0, 4), "suppkey": gt($$20, 0)}]
             -- ASSIGN  |PARTITIONED|
               limit 5
               -- STREAM_LIMIT  |PARTITIONED|
-                assign [$$19] <- [$$c.getField(2)]
+                assign [$$20] <- [$$c.getField(2)]
                 -- ASSIGN  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    unnest-map [$$20, $$21, $$c] <- index-search("LineItem", 0, "test", "LineItem", FALSE, FALSE, 2, $$25, $$26, 2, $$25, $$26, TRUE, TRUE, TRUE) condition (lt($$c.getField(2), 150)) limit 5
+                    unnest-map [$$21, $$22, $$c] <- index-search("LineItem", 0, "test", "LineItem", FALSE, FALSE, 2, $$26, $$27, 2, $$26, $$27, TRUE, TRUE, TRUE) condition (lt($$c.getField(2), 150)) limit 5
                     -- BTREE_SEARCH  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        order (ASC, $$25) (ASC, $$26)
-                        -- STABLE_SORT [$$25(ASC), $$26(ASC)]  |PARTITIONED|
+                        order (ASC, $$26) (ASC, $$27)
+                        -- STABLE_SORT [$$26(ASC), $$27(ASC)]  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            project ([$$25, $$26])
+                            project ([$$26, $$27])
                             -- STREAM_PROJECT  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                unnest-map [$$24, $$25, $$26] <- index-search("idx_LineItem_suppkey", 0, "test", "LineItem", FALSE, FALSE, 0, 1, $$23, TRUE, FALSE, FALSE)
+                                unnest-map [$$25, $$26, $$27] <- index-search("idx_LineItem_suppkey", 0, "test", "LineItem", FALSE, FALSE, 0, 1, $$24, TRUE, FALSE, FALSE)
                                 -- BTREE_SEARCH  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    assign [$$23] <- [150]
+                                    assign [$$24] <- [150]
                                     -- ASSIGN  |PARTITIONED|
                                       empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

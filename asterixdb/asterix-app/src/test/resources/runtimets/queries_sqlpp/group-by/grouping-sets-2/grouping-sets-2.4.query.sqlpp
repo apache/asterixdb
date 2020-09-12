@@ -23,6 +23,6 @@
 use test;
 
 select v2, v4, grouping(v2, v4) as grp, sum(ten) as agg_sum
-  from tenk
-  group by rollup(two as v2, four as v4)
-  order by v2, v4;
+from tenk
+group by rollup(two as v2, four as v4)
+order by v2, v4;

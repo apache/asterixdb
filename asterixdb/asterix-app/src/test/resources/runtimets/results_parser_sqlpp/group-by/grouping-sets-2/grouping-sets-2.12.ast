@@ -1,0 +1,150 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall asterix.object-remove@2[
+  FunctionCall asterix.object-remove@2[
+    Variable [ Name=#4 ]
+    LiteralExpr [STRING] [$2]
+  ]
+  LiteralExpr [STRING] [$3]
+]
+]
+FROM [  (
+    SELECT [
+    Variable [ Name=$four ]
+    four
+    Variable [ Name=$s1 ]
+    $2
+    Variable [ Name=$s2 ]
+    $3
+    ]
+    FROM [      FunctionCall asterix.dataset@1[
+        LiteralExpr [STRING] [test.tenk]
+      ]
+      AS Variable [ Name=$tenk ]
+    ]
+    Groupby
+      Variable [ Name=$four ]
+      :=
+      FieldAccessor [
+        Variable [ Name=$tenk ]
+        Field=four
+      ]
+      GROUP AS Variable [ Name=#1 ]
+      (
+        tenk:=Variable [ Name=$tenk ]
+      )
+
+    Let Variable [ Name=$s1 ]
+      :=
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#5 ]
+              Field=tenk
+            ]
+            Field=two
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#5 ]
+          ]
+        )
+      ]
+    Let Variable [ Name=$s2 ]
+      :=
+      FunctionCall asterix.sql-sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#6 ]
+              Field=tenk
+            ]
+            Field=unique1
+          ]
+          ]
+          FROM [            Variable [ Name=#1 ]
+            AS Variable [ Name=#6 ]
+          ]
+        )
+      ]
+    UNION
+      SELECT [
+      Variable [ Name=$four ]
+      four
+      Variable [ Name=$s1 ]
+      $2
+      Variable [ Name=$s2 ]
+      $3
+      ]
+      FROM [        FunctionCall asterix.dataset@1[
+          LiteralExpr [STRING] [test.tenk]
+        ]
+        AS Variable [ Name=$tenk ]
+      ]
+      Groupby
+        GROUPING SET (
+        )
+        DECOR
+        Variable [ Name=$four ]
+        :=
+        LiteralExpr [NULL]
+        GROUP AS Variable [ Name=#1 ]
+        (
+          tenk:=Variable [ Name=$tenk ]
+        )
+
+      Let Variable [ Name=$s1 ]
+        :=
+        FunctionCall asterix.sql-sum@1[
+          (
+            SELECT ELEMENT [
+            FieldAccessor [
+              FieldAccessor [
+                Variable [ Name=#7 ]
+                Field=tenk
+              ]
+              Field=two
+            ]
+            ]
+            FROM [              Variable [ Name=#1 ]
+              AS Variable [ Name=#7 ]
+            ]
+          )
+        ]
+      Let Variable [ Name=$s2 ]
+        :=
+        FunctionCall asterix.sql-sum@1[
+          (
+            SELECT ELEMENT [
+            FieldAccessor [
+              FieldAccessor [
+                Variable [ Name=#8 ]
+                Field=tenk
+              ]
+              Field=unique1
+            ]
+            ]
+            FROM [              Variable [ Name=#1 ]
+              AS Variable [ Name=#8 ]
+            ]
+          )
+        ]
+  )
+  AS Variable [ Name=#4 ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=#4 ]
+    Field=$2
+  ]
+  DESC
+  FieldAccessor [
+    Variable [ Name=#4 ]
+    Field=$3
+  ]
+  DESC
+
