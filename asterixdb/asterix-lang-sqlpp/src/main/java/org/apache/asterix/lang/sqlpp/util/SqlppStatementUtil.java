@@ -34,6 +34,9 @@ public class SqlppStatementUtil {
     public static final String DROP_INDEX = "DROP INDEX ";
     public static final String ON = " ON ";
     public static final String WHERE = " WHERE ";
+    public static final String AND = " AND ";
+    public static final String OR = " OR ";
+    public static final String NOT = " NOT ";
     public static final char SEMI_COLON = ';';
     public static final char DOT = '.';
     public static final char COLON = ':';
