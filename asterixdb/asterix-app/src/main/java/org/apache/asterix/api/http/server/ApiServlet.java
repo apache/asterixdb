@@ -161,7 +161,7 @@ public class ApiServlet extends AbstractServlet {
             duration = (endTime - startTime) / 1000.00;
             out.println(HTML_STATEMENT_SEPARATOR);
             out.println("<PRE>Duration of all jobs: " + duration + " sec</PRE>");
-        } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
+        } catch (AsterixException | TokenMgrError | org.apache.asterix.lang.sqlpp.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.toString(), pe);
             ResultUtil.webUIParseExceptionHandler(out, pe, query);
         } catch (Exception e) {

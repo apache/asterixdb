@@ -114,8 +114,6 @@ public class ErrorCode {
     public static final int COMPILATION_PRIMARY_KEY_CANNOT_BE_NULLABLE = 1021;
     public static final int COMPILATION_ILLEGAL_PRIMARY_KEY_TYPE = 1022;
     public static final int COMPILATION_CANT_DROP_ACTIVE_DATASET = 1023;
-    public static final int COMPILATION_AQLPLUS_IDENTIFIER_NOT_FOUND = 1024;
-    public static final int COMPILATION_AQLPLUS_NO_SUCH_JOIN_TYPE = 1025;
     public static final int COMPILATION_FUNC_EXPRESSION_CANNOT_UTILIZE_INDEX = 1026;
     public static final int COMPILATION_DATASET_TYPE_DOES_NOT_HAVE_PRIMARY_INDEX = 1027;
     public static final int COMPILATION_UNSUPPORTED_QUERY_PARAMETER = 1028;

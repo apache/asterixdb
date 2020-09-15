@@ -48,7 +48,6 @@ import org.apache.asterix.optimizer.rules.FindDataSourcesRule;
 import org.apache.asterix.optimizer.rules.FixReplicateOperatorOutputsRule;
 import org.apache.asterix.optimizer.rules.FullTextContainsParameterCheckRule;
 import org.apache.asterix.optimizer.rules.FuzzyEqRule;
-import org.apache.asterix.optimizer.rules.FuzzyJoinRule;
 import org.apache.asterix.optimizer.rules.InjectTypeCastForFunctionArgumentsRule;
 import org.apache.asterix.optimizer.rules.InjectTypeCastForUnionRule;
 import org.apache.asterix.optimizer.rules.InlineUnnestFunctionRule;
@@ -276,20 +275,6 @@ public final class RuleCollections {
         fieldLoads.add(new InlineSubplanInputForNestedTupleSourceRule());
         fieldLoads.add(new RemoveLeftOuterUnnestForLeftOuterJoinRule());
         return fieldLoads;
-    }
-
-    public static final List<IAlgebraicRewriteRule> buildFuzzyJoinRuleCollection() {
-        List<IAlgebraicRewriteRule> fuzzy = new LinkedList<>();
-        fuzzy.add(new FuzzyJoinRule());
-        fuzzy.add(new ExtractCommonExpressionsRule());
-        fuzzy.add(new NestedSubplanToJoinRule());
-        fuzzy.add(new PushSelectIntoJoinRule());
-        fuzzy.add(new RemoveUnusedAssignAndAggregateRule());
-        fuzzy.add(new InlineSubplanInputForNestedTupleSourceRule());
-        fuzzy.add(new RemoveRedundantVariablesRule());
-        fuzzy.add(new AsterixInlineVariablesRule());
-        fuzzy.add(new RemoveUnusedAssignAndAggregateRule());
-        return fuzzy;
     }
 
     public static final List<IAlgebraicRewriteRule> buildConsolidationRuleCollection() {

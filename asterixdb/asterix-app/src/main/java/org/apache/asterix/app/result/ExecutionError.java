@@ -39,7 +39,7 @@ public class ExecutionError implements ICodedMessage {
         String msg = rootCause.getMessage();
         if (!(rootCause instanceof AlgebricksException || rootCause instanceof HyracksException
                 || rootCause instanceof TokenMgrError
-                || rootCause instanceof org.apache.asterix.aqlplus.parser.TokenMgrError)) {
+                || rootCause instanceof org.apache.asterix.lang.sqlpp.parser.TokenMgrError)) {
             msg = rootCause.getClass().getSimpleName() + (msg == null ? "" : ": " + msg);
         }
         return new ExecutionError(1, msg);

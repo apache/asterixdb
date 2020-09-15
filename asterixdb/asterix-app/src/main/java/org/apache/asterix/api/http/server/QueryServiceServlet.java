@@ -307,7 +307,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
             }
             errorCount = 0;
-        } catch (Exception | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError e) {
+        } catch (Exception | TokenMgrError | org.apache.asterix.lang.sqlpp.parser.TokenMgrError e) {
             handleExecuteStatementException(e, executionState, param);
             response.setStatus(executionState.getHttpStatus());
             requestFailed(e, responsePrinter);
@@ -424,7 +424,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
     protected void handleExecuteStatementException(Throwable t, RequestExecutionState executionState,
             QueryServiceRequestParameters param) {
-        if (t instanceof org.apache.asterix.aqlplus.parser.TokenMgrError || t instanceof TokenMgrError
+        if (t instanceof org.apache.asterix.lang.sqlpp.parser.TokenMgrError || t instanceof TokenMgrError
                 || t instanceof AlgebricksException) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("handleException: {}: {}", t.getMessage(), LogRedactionUtil.statement(param.toString()),

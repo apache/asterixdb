@@ -40,28 +40,6 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.asterix</groupId>
-        <artifactId>asterix-grammar-extension-maven-plugin</artifactId>
-        <version>${project.version}</version>
-        <configuration>
-          <base>${project.basedir}</base>
-          <gbase>../asterix-lang-aql/src/main/javacc/AQL.jj</gbase>
-          <gextension>src/main/javacc/AQLPlusExtension.jj</gextension>
-          <output>target/generated-resources/javacc/AQLPlus.jj</output>
-          <parserClassModifier>public</parserClassModifier>
-          <parserClassName>AQLPlusParser</parserClassName>
-          <packageName>org.apache.asterix.aqlplus.parser</packageName>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>grammarix</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>javacc-maven-plugin</artifactId>
         <version>2.6</version>
