@@ -75,8 +75,9 @@ public interface IMetadataProvider<S, I> {
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getDeleteRuntime(IDataSource<S> dataSource,
             IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv, List<LogicalVariable> keys,
-            LogicalVariable payLoadVar, List<LogicalVariable> additionalNonKeyFields, RecordDescriptor inputRecordDesc,
-            JobGenContext context, JobSpecification jobSpec) throws AlgebricksException;
+            LogicalVariable payLoadVar, List<LogicalVariable> additionalNonKeyFields,
+            List<LogicalVariable> additionalNonFilteringFields, RecordDescriptor inputRecordDesc, JobGenContext context,
+            JobSpecification jobSpec) throws AlgebricksException;
 
     /**
      * Creates the insert runtime of IndexInsertDeletePOperator, which models

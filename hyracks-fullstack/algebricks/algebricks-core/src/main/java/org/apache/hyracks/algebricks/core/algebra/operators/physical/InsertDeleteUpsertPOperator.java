@@ -114,7 +114,7 @@ public class InsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
                 break;
             case DELETE:
                 runtimeAndConstraints = mp.getDeleteRuntime(dataSource, propagatedSchema, typeEnv, keys, payload,
-                        additionalFilteringKeys, inputDesc, context, spec);
+                        additionalFilteringKeys, additionalNonFilteringFields, inputDesc, context, spec);
                 break;
             case UPSERT:
                 runtimeAndConstraints = mp.getUpsertRuntime(dataSource, inputSchemas[0], typeEnv, keys, payload,

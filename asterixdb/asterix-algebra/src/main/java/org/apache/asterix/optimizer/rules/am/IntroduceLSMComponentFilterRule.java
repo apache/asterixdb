@@ -123,7 +123,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                 IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(i);
                 boolean found = findMacthedExprFieldName(optFuncExpr, op, dataset, itemType, datasetIndexes, context,
                         filterSourceIndicator);
-                // the field name source should be from the dataset record, i.e. source should be == 0
+                // the field name source should be consistent with the filter source indicator
                 if (found && optFuncExpr.getFieldName(0).equals(filterFieldName)
                         && optFuncExpr.getFieldSource(0) == filterSourceIndicator) {
                     optFuncExprs.add(optFuncExpr);
@@ -572,8 +572,11 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
 
                     IAType metaItemType = ((MetadataProvider) context.getMetadataProvider())
                             .findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+                    IAType recordItemType = ((MetadataProvider) context.getMetadataProvider())
+                            .findType(dataset.getMetaItemTypeDataverseName(), dataset.getItemTypeName());
+                    ARecordType recordType = (ARecordType) recordItemType;
                     ARecordType metaRecType = (ARecordType) metaItemType;
-                    int numSecondaryKeys = KeyFieldTypeUtil.getNumSecondaryKeys(index, filterSourceType, metaRecType);
+                    int numSecondaryKeys = KeyFieldTypeUtil.getNumSecondaryKeys(index, recordType, metaRecType);
                     List<String> fieldName;
                     int keySource;
                     if (varIndex >= numSecondaryKeys) {

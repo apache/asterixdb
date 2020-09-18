@@ -425,7 +425,7 @@ abstract class LangExpressionToPlanTranslator
         return plan;
     }
 
-    private ILogicalOperator translateDelete(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
+    protected ILogicalOperator translateDelete(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
             List<Mutable<ILogicalExpression>> varRefsForLoading, LogicalVariable seqVar, ILogicalOperator pkeyAssignOp,
             ICompiledDmlStatement stmt) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
@@ -454,7 +454,7 @@ abstract class LangExpressionToPlanTranslator
         return leafOperator;
     }
 
-    private ILogicalOperator translateUpsert(DatasetDataSource targetDatasource,
+    protected ILogicalOperator translateUpsert(DatasetDataSource targetDatasource,
             Mutable<ILogicalExpression> payloadVarRef, List<Mutable<ILogicalExpression>> varRefsForLoading,
             ILogicalOperator pkeyAssignOp, LogicalVariable unnestVar, ILogicalOperator topOp,
             List<Mutable<ILogicalExpression>> pkeyExprs, LogicalVariable seqVar, ICompiledDmlStatement stmt,
@@ -580,7 +580,7 @@ abstract class LangExpressionToPlanTranslator
         return processReturningExpression(rootOperator, upsertOp, compiledUpsert, resultMetadata);
     }
 
-    private ILogicalOperator translateInsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
+    protected ILogicalOperator translateInsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
             List<Mutable<ILogicalExpression>> varRefsForLoading, LogicalVariable seqVar, ILogicalOperator pkeyAssignOp,
             ICompiledDmlStatement stmt, IResultMetadata resultMetadata) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
@@ -616,7 +616,7 @@ abstract class LangExpressionToPlanTranslator
         return processReturningExpression(rootOperator, insertOp, compiledInsert, resultMetadata);
     }
 
-    private List<Mutable<ILogicalExpression>> generatedFilterExprs(ILogicalOperator pkeyAssignOp,
+    protected List<Mutable<ILogicalExpression>> generatedFilterExprs(ILogicalOperator pkeyAssignOp,
             List<String> filterField, LogicalVariable seqVar, SourceLocation sourceLoc) {
         List<LogicalVariable> filterVars = new ArrayList<>();
         List<Mutable<ILogicalExpression>> filterAssignExprs = new ArrayList<>();

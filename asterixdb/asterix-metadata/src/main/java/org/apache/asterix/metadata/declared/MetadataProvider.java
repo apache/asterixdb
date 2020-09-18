@@ -728,9 +728,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getDeleteRuntime(
             IDataSource<DataSourceId> dataSource, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> keys, LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields,
-            RecordDescriptor inputRecordDesc, JobGenContext context, JobSpecification spec) throws AlgebricksException {
+            List<LogicalVariable> additionalNonFilteringFields, RecordDescriptor inputRecordDesc, JobGenContext context,
+            JobSpecification spec) throws AlgebricksException {
         return getInsertOrDeleteRuntime(IndexOperation.DELETE, dataSource, propagatedSchema, keys, payload,
-                additionalNonKeyFields, inputRecordDesc, context, spec, false, null);
+                additionalNonKeyFields, inputRecordDesc, context, spec, false, additionalNonFilteringFields);
     }
 
     @Override
@@ -1085,17 +1086,19 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             i++;
         }
         fieldPermutation[i++] = propagatedSchema.findVariable(payload);
-        int[] filterFields = new int[numFilterFields];
-        if (numFilterFields > 0) {
-            int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
-            fieldPermutation[i++] = idx;
-            filterFields[0] = idx;
-        }
+
         if (additionalNonFilteringFields != null) {
             for (LogicalVariable variable : additionalNonFilteringFields) {
                 int idx = propagatedSchema.findVariable(variable);
                 fieldPermutation[i++] = idx;
             }
+        }
+
+        int[] filterFields = new int[numFilterFields];
+        if (numFilterFields > 0) {
+            int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
+            fieldPermutation[i++] = idx;
+            filterFields[0] = idx;
         }
 
         Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),

@@ -29,6 +29,8 @@ import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
@@ -123,12 +125,15 @@ public class SecondaryCorrelatedRTreeOperationsHelper extends SecondaryCorrelate
         enforcedRecFields[numPrimaryKeys] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
         enforcedRecDesc = new RecordDescriptor(enforcedRecFields, enforcedTypeTraits);
         if (numFilterFields > 0) {
+            ARecordType filterItemType =
+                    ((InternalDatasetDetails) dataset.getDatasetDetails()).getFilterSourceIndicator() == 0 ? itemType
+                            : metaType;
             rtreeFields = new int[numNestedSecondaryKeyFields + numPrimaryKeys];
             for (int i = 0; i < rtreeFields.length; i++) {
                 rtreeFields[i] = i;
             }
 
-            Pair<IAType, Boolean> typePair = Index.getNonNullableKeyFieldType(filterFieldName, itemType);
+            Pair<IAType, Boolean> typePair = Index.getNonNullableKeyFieldType(filterFieldName, filterItemType);
             IAType type = typePair.first;
             ISerializerDeserializer serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(type);
             secondaryRecFields[numPrimaryKeys + numNestedSecondaryKeyFields] = serde;

@@ -277,16 +277,14 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
         }
 
         if (numFilterFields > 0) {
+            ARecordType filterItemType =
+                    ((InternalDatasetDetails) dataset.getDatasetDetails()).getFilterSourceIndicator() == 0 ? itemType
+                            : metaType;
             secondaryFieldAccessEvalFactories[numSecondaryKeys] = metadataProvider.getDataFormat()
-                    .getFieldAccessEvaluatorFactory(metadataProvider.getFunctionManager(), itemType, filterFieldName,
-                            numPrimaryKeys, sourceLoc);
+                    .getFieldAccessEvaluatorFactory(metadataProvider.getFunctionManager(), filterItemType,
+                            filterFieldName, numPrimaryKeys, sourceLoc);
             Pair<IAType, Boolean> keyTypePair;
-            // since filter is not null, it's safe to cast to internal
-            if (((InternalDatasetDetails) dataset.getDatasetDetails()).getFilterSourceIndicator() == 0) {
-                keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, itemType);
-            } else {
-                keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, metaType);
-            }
+            keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, filterItemType);
             IAType type = keyTypePair.first;
             ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);
             secondaryRecFields[numPrimaryKeys + numSecondaryKeys] = serde;
