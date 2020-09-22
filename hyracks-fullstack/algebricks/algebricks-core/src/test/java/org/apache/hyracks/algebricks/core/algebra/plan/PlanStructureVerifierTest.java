@@ -19,20 +19,31 @@
 
 package org.apache.hyracks.algebricks.core.algebra.plan;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
+import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.junit.Assert;
 import org.junit.Test;
 
-public final class PlanStructureVerifierTest extends PlanVerifierTestBase {
+public final class PlanStructureVerifierTest extends PlanVerifierTestBase implements ITypingContext {
 
-    final PlanStructureVerifier verifier = new PlanStructureVerifier(planPrinter);
+    final PlanStructureVerifier verifier = new PlanStructureVerifier(planPrinter, this);
 
     @Test
     public void testVerifySuccess() throws Exception {
@@ -241,5 +252,100 @@ public final class PlanStructureVerifierTest extends PlanVerifierTestBase {
         } catch (AlgebricksException e) {
             Assert.assertTrue(e.getMessage(), e.getMessage().contains("cycle"));
         }
+    }
+
+    @Test
+    public void testNoSchema() {
+        EmptyTupleSourceOperator ets = newETS();
+        ets.recomputeSchema();
+
+        AssignOperator op1 = newAssign(newVar(), newMutable(ConstantExpression.TRUE));
+        op1.getInputs().add(newMutable(ets));
+        op1.recomputeSchema();
+
+        op1.getInputs().clear();
+
+        AssignOperator op2 = newAssign(newVar(), newMutable(ConstantExpression.FALSE));
+        // no schema
+        op1.getInputs().add(newMutable(op2));
+
+        try {
+            verifier.verifyPlanStructure(newMutable(op1));
+            Assert.fail("Expected to catch " + AlgebricksException.class.getName());
+        } catch (AlgebricksException e) {
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains("missing schema"));
+        }
+    }
+
+    @Test
+    public void testNoTypeEnvironment() throws Exception {
+        EmptyTupleSourceOperator ets = newETS();
+        computeAndSetTypeEnvironmentForOperator(ets);
+        ets.recomputeSchema();
+
+        SelectOperator op1 = new SelectOperator(newMutable(ConstantExpression.TRUE), false, null);
+        op1.getInputs().add(newMutable(ets));
+        computeAndSetTypeEnvironmentForOperator(op1);
+        op1.recomputeSchema();
+
+        op1.getInputs().clear();
+
+        SelectOperator op2 = new SelectOperator(newMutable(ConstantExpression.FALSE), false, null);
+        op2.getInputs().add(newMutable(ets));
+        op2.recomputeSchema();
+        // no type env
+
+        op1.getInputs().add(newMutable(op2));
+
+        try {
+            verifier.verifyPlanStructure(newMutable(op1));
+            Assert.fail("Expected to catch " + AlgebricksException.class.getName());
+        } catch (AlgebricksException e) {
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains("missing output type environment"));
+        }
+    }
+
+    // ITypingContext
+
+    final Map<ILogicalOperator, IVariableTypeEnvironment> typeEnvMap = new HashMap<>();
+
+    @Override
+    public void computeAndSetTypeEnvironmentForOperator(ILogicalOperator op) throws AlgebricksException {
+        setOutputTypeEnvironment(op, op.computeOutputTypeEnvironment(this));
+    }
+
+    @Override
+    public void setOutputTypeEnvironment(ILogicalOperator op, IVariableTypeEnvironment env) {
+        typeEnvMap.put(op, env);
+    }
+
+    @Override
+    public IVariableTypeEnvironment getOutputTypeEnvironment(ILogicalOperator op) {
+        return typeEnvMap.get(op);
+    }
+
+    @Override
+    public void invalidateTypeEnvironmentForOperator(ILogicalOperator op) {
+        typeEnvMap.remove(op);
+    }
+
+    @Override
+    public IExpressionTypeComputer getExpressionTypeComputer() {
+        return null;
+    }
+
+    @Override
+    public IMissableTypeComputer getMissableTypeComputer() {
+        return null;
+    }
+
+    @Override
+    public IConflictingTypeResolver getConflictingTypeResolver() {
+        return null;
+    }
+
+    @Override
+    public IMetadataProvider<?, ?> getMetadataProvider() {
+        return null;
     }
 }

@@ -110,6 +110,7 @@ public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
         //update plan link
         extensionOperator.getInputs().add(eOp.getInputs().get(0));
         context.computeAndSetTypeEnvironmentForOperator(extensionOperator);
+        extensionOperator.recomputeSchema();
         opRef.setValue(extensionOperator);
         return true;
     }

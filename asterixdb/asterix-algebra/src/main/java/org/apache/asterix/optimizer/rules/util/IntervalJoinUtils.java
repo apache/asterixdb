@@ -247,5 +247,6 @@ public class IntervalJoinUtils {
         op.getInputs().set(branch, aoRef);
 
         context.computeAndSetTypeEnvironmentForOperator(ao);
+        ao.recomputeSchema();
     }
 }

@@ -70,10 +70,12 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
             materializeOperator.getInputs()
                     .add(new MutableObject<ILogicalOperator>(insertOp.getInputs().get(0).getValue()));
             context.computeAndSetTypeEnvironmentForOperator(materializeOperator);
+            materializeOperator.recomputeSchema();
 
             insertOp.getInputs().clear();
             insertOp.getInputs().add(new MutableObject<ILogicalOperator>(materializeOperator));
             context.computeAndSetTypeEnvironmentForOperator(insertOp);
+            insertOp.recomputeSchema();
             return true;
         } else {
             return false;

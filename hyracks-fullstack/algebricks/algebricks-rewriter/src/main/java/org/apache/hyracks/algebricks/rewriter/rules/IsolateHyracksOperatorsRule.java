@@ -27,10 +27,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
-import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class IsolateHyracksOperatorsRule implements IAlgebraicRewriteRule {
@@ -124,20 +122,17 @@ public class IsolateHyracksOperatorsRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    private final static void insertOneToOneExchange(Mutable<ILogicalOperator> i, IOptimizationContext context)
+    private static void insertOneToOneExchange(Mutable<ILogicalOperator> inOpRef, IOptimizationContext context)
             throws AlgebricksException {
+        ILogicalOperator inOp = inOpRef.getValue();
+
         ExchangeOperator e = new ExchangeOperator();
         e.setPhysicalOperator(new OneToOneExchangePOperator());
-        ILogicalOperator inOp = i.getValue();
-
-        e.getInputs().add(new MutableObject<ILogicalOperator>(inOp));
-        i.setValue(e);
-        // e.recomputeSchema();
-        OperatorPropertiesUtil.computeSchemaAndPropertiesRecIfNull(e, context);
-        ExecutionMode em = ((AbstractLogicalOperator) inOp).getExecutionMode();
-        e.setExecutionMode(em);
-        e.computeDeliveredPhysicalProperties(context);
+        e.getInputs().add(new MutableObject<>(inOp));
+        e.setExecutionMode(inOp.getExecutionMode());
         context.computeAndSetTypeEnvironmentForOperator(e);
-    }
+        e.recomputeSchema();
 
+        inOpRef.setValue(e);
+    }
 }

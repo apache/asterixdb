@@ -75,6 +75,7 @@ public class IntroduceRandomPartitioningFeedComputationRule implements IAlgebrai
         exchangeOp.setExecutionMode(em);
         exchangeOp.computeDeliveredPhysicalProperties(context);
         context.computeAndSetTypeEnvironmentForOperator(exchangeOp);
+        exchangeOp.recomputeSchema();
 
         AssignOperator assignOp = (AssignOperator) opRef.getValue();
         AssignPOperator assignPhyOp = (AssignPOperator) assignOp.getPhysicalOperator();

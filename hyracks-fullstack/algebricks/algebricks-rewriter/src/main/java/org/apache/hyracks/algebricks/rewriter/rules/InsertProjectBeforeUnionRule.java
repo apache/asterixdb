@@ -82,7 +82,9 @@ public class InsertProjectBeforeUnionRule implements IAlgebraicRewriteRule {
         projectOp.setPhysicalOperator(new StreamProjectPOperator());
         projectOp.setExecutionMode(inputOp.getExecutionMode());
         context.computeAndSetTypeEnvironmentForOperator(projectOp);
+        projectOp.recomputeSchema();
         context.computeAndSetTypeEnvironmentForOperator(inputOp);
+        inputOp.recomputeSchema();
     }
 
     private boolean isIdentical(List<LogicalVariable> finalSchema, List<LogicalVariable> inputSchema)

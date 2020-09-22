@@ -68,7 +68,9 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         Set<LogicalVariable> toPush = new LinkedHashSet<LogicalVariable>();
         toPush.addAll(pi.getVariables());
 
-        Pair<Boolean, Boolean> p = pushThroughOp(toPush, opRef2, op, context);
+        boolean recomputeSchema = op.getSchema() != null;
+
+        Pair<Boolean, Boolean> p = pushThroughOp(toPush, opRef2, op, context, recomputeSchema);
         boolean smthWasPushed = p.first;
         if (p.second) { // the original projection is redundant
             opRef.setValue(op.getInputs().get(0).getValue());
@@ -79,7 +81,8 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
     }
 
     private static Pair<Boolean, Boolean> pushThroughOp(Set<LogicalVariable> toPush, Mutable<ILogicalOperator> opRef2,
-            ILogicalOperator initialOp, IOptimizationContext context) throws AlgebricksException {
+            ILogicalOperator initialOp, IOptimizationContext context, boolean recomputeSchema)
+            throws AlgebricksException {
         List<LogicalVariable> initProjectList = new ArrayList<LogicalVariable>(toPush);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
         do {
@@ -135,6 +138,9 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
             gby.getDecorList().addAll(newDecorList);
             if (gbyChanged) {
                 context.computeAndSetTypeEnvironmentForOperator(gby);
+                if (recomputeSchema) {
+                    gby.recomputeSchema();
+                }
             }
         }
         used2.clear();
@@ -149,7 +155,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
 
         boolean smthWasPushed = false;
         for (Mutable<ILogicalOperator> c : op2.getInputs()) {
-            if (pushNeededProjections(toPush, c, context, initialOp)) {
+            if (pushNeededProjections(toPush, c, context, initialOp, recomputeSchema)) {
                 smthWasPushed = true;
             }
         }
@@ -157,7 +163,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
             AbstractOperatorWithNestedPlans n = (AbstractOperatorWithNestedPlans) op2;
             for (ILogicalPlan p : n.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                    if (pushNeededProjections(toPush, r, context, initialOp)) {
+                    if (pushNeededProjections(toPush, r, context, initialOp, recomputeSchema)) {
                         smthWasPushed = true;
                     }
                 }
@@ -168,7 +174,8 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
 
     // It does not try to push above another Projection.
     private static boolean pushNeededProjections(Set<LogicalVariable> toPush, Mutable<ILogicalOperator> opRef,
-            IOptimizationContext context, ILogicalOperator initialOp) throws AlgebricksException {
+            IOptimizationContext context, ILogicalOperator initialOp, boolean recomputeSchema)
+            throws AlgebricksException {
         Set<LogicalVariable> allP = new LinkedHashSet<LogicalVariable>();
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         VariableUtilities.getSubplanLocalLiveVariables(op, allP);
@@ -183,19 +190,19 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
             // projection would be redundant, since we would project everything
             // but we can try with the children
             boolean push = false;
-            if (pushThroughOp(toProject, opRef, initialOp, context).first) {
+            if (pushThroughOp(toProject, opRef, initialOp, context, recomputeSchema).first) {
                 push = true;
             }
             return push;
         } else {
-            return pushAllProjectionsOnTopOf(toProject, opRef, context, initialOp);
+            return pushAllProjectionsOnTopOf(toProject, opRef, context, initialOp, recomputeSchema);
         }
     }
 
     // It does not try to push above another Projection.
     private static boolean pushAllProjectionsOnTopOf(Collection<LogicalVariable> toPush,
-            Mutable<ILogicalOperator> opRef, IOptimizationContext context, ILogicalOperator initialOp)
-            throws AlgebricksException {
+            Mutable<ILogicalOperator> opRef, IOptimizationContext context, ILogicalOperator initialOp,
+            boolean recomputeSchema) throws AlgebricksException {
         if (toPush.isEmpty()) {
             return false;
         }
@@ -215,6 +222,9 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         opRef.setValue(pi2);
         pi2.setExecutionMode(op.getExecutionMode());
         context.computeAndSetTypeEnvironmentForOperator(pi2);
+        if (recomputeSchema) {
+            pi2.recomputeSchema();
+        }
         return true;
     }
 

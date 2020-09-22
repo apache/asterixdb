@@ -165,6 +165,7 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
                     projectOp.getInputs().add(new MutableObject<ILogicalOperator>(childOp));
                     op.getInputs().get(i).setValue(projectOp);
                     context.computeAndSetTypeEnvironmentForOperator(projectOp);
+                    projectOp.recomputeSchema();
                     modified = true;
                 }
             }
@@ -183,6 +184,7 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
 
         if (modified) {
             context.computeAndSetTypeEnvironmentForOperator(op);
+            op.recomputeSchema();
         }
         return modified;
     }

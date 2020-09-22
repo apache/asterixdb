@@ -185,9 +185,11 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 Mutable<ILogicalOperator> beforeExchangeRef = new MutableObject<ILogicalOperator>(beforeExchange);
                 beforeExchange.getInputs().add(candidate);
                 context.computeAndSetTypeEnvironmentForOperator(beforeExchange);
+                beforeExchange.recomputeSchema();
                 rop.getInputs().add(beforeExchangeRef);
             }
             context.computeAndSetTypeEnvironmentForOperator(rop);
+            rop.recomputeSchema();
 
             for (Mutable<ILogicalOperator> parentRef : originalCandidateParents) {
                 AbstractLogicalOperator parent = (AbstractLogicalOperator) parentRef.getValue();
@@ -203,11 +205,13 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                     exchange.getInputs().add(new MutableObject<>(rop));
                     rop.getOutputs().add(exchangeRef);
                     context.computeAndSetTypeEnvironmentForOperator(exchange);
+                    exchange.recomputeSchema();
                     parent.getInputs().set(index, exchangeRef);
                     context.computeAndSetTypeEnvironmentForOperator(parent);
+                    parent.recomputeSchema();
                 }
             }
-            List<LogicalVariable> liveVarsNew = new ArrayList<LogicalVariable>();
+            List<LogicalVariable> liveVarsNew = new ArrayList<>();
             VariableUtilities.getLiveVariables(candidate.getValue(), liveVarsNew);
             for (Mutable<ILogicalOperator> ref : group) {
                 if (ref.equals(candidate)) {
@@ -244,8 +248,11 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
 
                 // set the types
                 context.computeAndSetTypeEnvironmentForOperator(exchOp);
+                exchOp.recomputeSchema();
                 context.computeAndSetTypeEnvironmentForOperator(assignOperator);
+                assignOperator.recomputeSchema();
                 context.computeAndSetTypeEnvironmentForOperator(projectOperator);
+                projectOperator.recomputeSchema();
 
                 List<Mutable<ILogicalOperator>> parentOpList = childrenToParents.get(ref);
                 for (Mutable<ILogicalOperator> parentOpRef : parentOpList) {
@@ -265,8 +272,10 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                         exchg.getInputs().add(new MutableObject<ILogicalOperator>(childOp));
                         parentOp.getInputs().set(index, new MutableObject<ILogicalOperator>(exchg));
                         context.computeAndSetTypeEnvironmentForOperator(exchg);
+                        exchg.recomputeSchema();
                     }
                     context.computeAndSetTypeEnvironmentForOperator(parentOp);
+                    parentOp.recomputeSchema();
                 }
             }
             cleanupPlan();

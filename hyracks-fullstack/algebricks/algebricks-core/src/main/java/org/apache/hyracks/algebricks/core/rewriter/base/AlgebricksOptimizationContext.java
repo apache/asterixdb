@@ -111,7 +111,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
         this.conflictingTypeResovler = conflictingTypeResovler;
         this.warningCollector = warningCollector;
         boolean isSanityCheckEnabled = physicalOptimizationConfig.isSanityCheckEnabled();
-        this.planStructureVerifier = isSanityCheckEnabled ? new PlanStructureVerifier(prettyPrinter) : null;
+        this.planStructureVerifier = isSanityCheckEnabled ? new PlanStructureVerifier(prettyPrinter, this) : null;
         this.planStabilityVerifier = isSanityCheckEnabled ? new PlanStabilityVerifier(prettyPrinter) : null;
     }
 

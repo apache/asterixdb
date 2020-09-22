@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
+import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 
@@ -55,6 +56,10 @@ public final class PlanStructureVerifier {
 
     private static final String ERROR_MESSAGE_TEMPLATE_2 = "shared %s (%s) between %s and %s";
 
+    private static final String ERROR_MESSAGE_TEMPLATE_3 = "missing output type environment in %s";
+
+    private static final String ERROR_MESSAGE_TEMPLATE_4 = "missing schema in %s";
+
     private final ExpressionReferenceVerifierVisitor exprVisitor = new ExpressionReferenceVerifierVisitor();
 
     private final Map<Mutable<ILogicalOperator>, ILogicalOperator> opRefMap = new IdentityHashMap<>();
@@ -69,12 +74,23 @@ public final class PlanStructureVerifier {
 
     private final IPlanPrettyPrinter prettyPrinter;
 
-    public PlanStructureVerifier(IPlanPrettyPrinter prettyPrinter) {
+    private final ITypingContext typeEnvProvider;
+
+    private boolean ensureTypeEnv;
+
+    private boolean ensureSchema;
+
+    public PlanStructureVerifier(IPlanPrettyPrinter prettyPrinter, ITypingContext typeEnvProvider) {
         this.prettyPrinter = prettyPrinter;
+        this.typeEnvProvider = typeEnvProvider;
     }
 
     public void verifyPlanStructure(Mutable<ILogicalOperator> opRef) throws AlgebricksException {
         reset();
+        ILogicalOperator op = opRef.getValue();
+        // if root has type-env/schema then ensure that all children have them too
+        ensureTypeEnv = typeEnvProvider.getOutputTypeEnvironment(op) != null;
+        ensureSchema = op.getSchema() != null;
         walk(opRef);
         reset();
     }
@@ -84,6 +100,8 @@ public final class PlanStructureVerifier {
         opMap.clear();
         exprRefMap.clear();
         exprMap.clear();
+        ensureTypeEnv = false;
+        ensureSchema = false;
     }
 
     private void walk(Mutable<ILogicalOperator> opRef) throws AlgebricksException {
@@ -136,6 +154,15 @@ public final class PlanStructureVerifier {
 
         exprVisitor.setOperator(op);
         op.acceptExpressionTransform(exprVisitor);
+
+        if (ensureTypeEnv && typeEnvProvider.getOutputTypeEnvironment(op) == null) {
+            throw new AlgebricksException(
+                    String.format(ERROR_MESSAGE_TEMPLATE_3, PlanStabilityVerifier.printOperator(op, prettyPrinter)));
+        }
+        if (ensureSchema && op.getSchema() == null) {
+            throw new AlgebricksException(
+                    String.format(ERROR_MESSAGE_TEMPLATE_4, PlanStabilityVerifier.printOperator(op, prettyPrinter)));
+        }
 
         List<Mutable<ILogicalOperator>> children = op.getInputs();
         if (op instanceof AbstractOperatorWithNestedPlans) {
