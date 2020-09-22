@@ -91,11 +91,9 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
         File pythonPath = new File(pythonPathCmd);
         List<String> sitePkgs = new ArrayList<>();
         sitePkgs.add(SITE_PACKAGES);
-        String addlSitePackagesRaw =
-                ctx.getServiceContext().getAppConfig().getString((NCConfig.Option.PYTHON_ADDITIONAL_PACKAGES));
-        if (addlSitePackagesRaw != null) {
-            sitePkgs.addAll(Arrays.asList(addlSitePackagesRaw.split(File.pathSeparator)));
-        }
+        String[] addlSitePackages =
+                ctx.getServiceContext().getAppConfig().getStringArray((NCConfig.Option.PYTHON_ADDITIONAL_PACKAGES));
+        sitePkgs.addAll(Arrays.asList(addlSitePackages));
         if (cfg.getBoolean(NCConfig.Option.PYTHON_USE_BUNDLED_MSGPACK)) {
             sitePkgs.add("ipc" + File.separator + SITE_PACKAGES + File.separator);
         }

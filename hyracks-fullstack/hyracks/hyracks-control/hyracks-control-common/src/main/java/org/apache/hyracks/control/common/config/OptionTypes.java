@@ -20,7 +20,10 @@ package org.apache.hyracks.control.common.config;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.hyracks.api.config.IOptionType;
@@ -387,6 +390,13 @@ public class OptionTypes {
             node.put(fieldName, (int) value);
         }
     };
+
+    static Map<IOptionType, IOptionType> COLLECTION_TYPES;
+    static {
+        Map<IOptionType, IOptionType> collTypes = new HashMap<>();
+        collTypes.put(STRING_ARRAY, STRING);
+        COLLECTION_TYPES = Collections.unmodifiableMap(collTypes);
+    }
 
     private OptionTypes() {
     }

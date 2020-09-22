@@ -37,6 +37,7 @@ import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.api.config.SerializedOption;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
+import org.ini4j.Config;
 import org.ini4j.Ini;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -88,6 +89,9 @@ public class ConfigUtils {
 
     public static Ini loadINIFile(String configFile) throws IOException {
         Ini ini = new Ini();
+        Config conf = new Config();
+        conf.setMultiOption(true);
+        ini.setConfig(conf);
         File conffile = new File(configFile);
         if (!conffile.exists()) {
             throw new FileNotFoundException(configFile);
@@ -98,6 +102,9 @@ public class ConfigUtils {
 
     public static Ini loadINIFile(URL configURL) throws IOException {
         Ini ini = new Ini();
+        Config conf = new Config();
+        conf.setMultiOption(true);
+        ini.setConfig(conf);
         ini.load(configURL);
         return ini;
     }

@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.control.common.config;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.COLLECTION_TYPES;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Array;
@@ -340,17 +342,27 @@ public class ConfigManager implements IConfigManager, Serializable {
                 throw new HyracksException("Unknown section in ini: " + section.getName());
             }
             Map<String, IOption> optionMap = getSectionOptionMap(rootSection);
-            for (Map.Entry<String, String> iniOption : section.entrySet()) {
-                String name = iniOption.getKey();
+            for (String name : section.keySet()) {
                 final IOption option = optionMap == null ? null : optionMap.get(name);
                 if (option == null) {
                     handleUnknownOption(section, name);
                     return;
                 }
-                final String value = iniOption.getValue();
-                LOGGER.debug("setting " + option.toIniString() + " to " + value);
-                final Object parsed = option.type().parse(value);
-                invokeSetters(option, parsed, node);
+                final List<String> values = section.getAll(name);
+                if (values.size() <= 1) {
+                    LOGGER.debug("setting " + option.toIniString() + " to " + values.get(0));
+                    final Object parsed = option.type().parse(values.get(0));
+                    invokeSetters(option, parsed, node);
+                } else {
+                    if (option.type().targetType().isArray()) {
+                        Object[] val = values.stream()
+                                .map(v -> ((String) (COLLECTION_TYPES.get(option.type()).parse(v)))).toArray();
+                        invokeSetters(option, Arrays.copyOf(val, val.length, option.type().targetType()), node);
+                    } else {
+                        throw new HyracksException(
+                                "Multiple option values specified for unary option" + option.toIniString());
+                    }
+                }
             }
         }
     }
