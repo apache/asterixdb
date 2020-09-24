@@ -24,35 +24,31 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * This is a fixed-size tuple accessor class.
- * The frame structure: [4 bytes for minimum Hyracks frame count] [fixed-size tuple 1] ... [fixed-size tuple n] ...
+ * This is a frame tuple accessor class for inverted list.
+ * The frame structure: [4 bytes for minimum Hyracks frame count] [tuple 1] ... [tuple n] ...
  * [4 bytes for the tuple count in a frame]
+ *
+ * The tuples can be fixed-size or variable-size.
+ * This class is mainly used to merge two inverted lists, e.g. searching the conjunction of two keywords "abc" AND "xyz"
  */
-public class FixedSizeFrameTupleAccessor implements IFrameTupleAccessor {
+public abstract class AbstractInvertedListSearchResultFrameTupleAccessor implements IFrameTupleAccessor {
 
-    private final int frameSize;
-    private ByteBuffer buffer;
+    protected final int frameSize;
+    protected ByteBuffer buffer;
 
-    private final ITypeTraits[] fields;
-    private final int[] fieldStartOffsets;
-    private final int tupleSize;
+    protected final ITypeTraits[] fields;
 
-    public FixedSizeFrameTupleAccessor(int frameSize, ITypeTraits[] fields) {
+    protected abstract void verifyTypeTraits() throws HyracksDataException;
+
+    public AbstractInvertedListSearchResultFrameTupleAccessor(int frameSize, ITypeTraits[] fields)
+            throws HyracksDataException {
         this.frameSize = frameSize;
         this.fields = fields;
-        this.fieldStartOffsets = new int[fields.length];
-        this.fieldStartOffsets[0] = 0;
-        for (int i = 1; i < fields.length; i++) {
-            fieldStartOffsets[i] = fieldStartOffsets[i - 1] + fields[i - 1].getFixedLength();
-        }
 
-        int tmp = 0;
-        for (int i = 0; i < fields.length; i++) {
-            tmp += fields[i].getFixedLength();
-        }
-        tupleSize = tmp;
+        verifyTypeTraits();
     }
 
     @Override
@@ -66,16 +62,6 @@ public class FixedSizeFrameTupleAccessor implements IFrameTupleAccessor {
     }
 
     @Override
-    public int getFieldEndOffset(int tupleIndex, int fIdx) {
-        return getTupleStartOffset(tupleIndex) + fieldStartOffsets[fIdx] + fields[fIdx].getFixedLength();
-    }
-
-    @Override
-    public int getFieldLength(int tupleIndex, int fIdx) {
-        return fields[fIdx].getFixedLength();
-    }
-
-    @Override
     public int getTupleLength(int tupleIndex) {
         return getTupleEndOffset(tupleIndex) - getTupleStartOffset(tupleIndex);
     }
@@ -86,11 +72,6 @@ public class FixedSizeFrameTupleAccessor implements IFrameTupleAccessor {
     }
 
     @Override
-    public int getFieldStartOffset(int tupleIndex, int fIdx) {
-        return getTupleStartOffset(tupleIndex) + fieldStartOffsets[fIdx];
-    }
-
-    @Override
     public int getTupleCount() {
         return buffer != null ? buffer.getInt(FrameHelper.getTupleCountOffset(frameSize)) : 0;
     }
@@ -98,11 +79,6 @@ public class FixedSizeFrameTupleAccessor implements IFrameTupleAccessor {
     @Override
     public int getTupleEndOffset(int tupleIndex) {
         return getFieldEndOffset(tupleIndex, fields.length - 1);
-    }
-
-    @Override
-    public int getTupleStartOffset(int tupleIndex) {
-        return FixedSizeFrameTupleAppender.MINFRAME_COUNT_SIZE + tupleIndex * tupleSize;
     }
 
     @Override

@@ -20,27 +20,35 @@
 package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListTupleReference;
 
-public class FixedSizeTupleReference implements ITupleReference {
+public abstract class AbstractInvertedListTupleReference implements IInvertedListTupleReference {
 
-    private final ITypeTraits[] typeTraits;
-    private final int[] fieldStartOffsets;
-    private byte[] data;
-    private int startOff;
+    protected final ITypeTraits[] typeTraits;
+    protected final int[] fieldStartOffsets;
+    protected byte[] data;
+    protected int startOff;
 
-    public FixedSizeTupleReference(ITypeTraits[] typeTraits) {
+    // check if the type trait is fixed-size or variable-size
+    // throws an IllegalArgument exception if get unexpected traits
+    protected abstract void verifyTypeTrait() throws HyracksDataException;
+
+    public AbstractInvertedListTupleReference(ITypeTraits[] typeTraits) throws HyracksDataException {
         this.typeTraits = typeTraits;
         this.fieldStartOffsets = new int[typeTraits.length];
         this.fieldStartOffsets[0] = 0;
-        for (int i = 1; i < typeTraits.length; i++) {
-            fieldStartOffsets[i] = fieldStartOffsets[i - 1] + typeTraits[i - 1].getFixedLength();
-        }
+
+        verifyTypeTrait();
     }
 
+    protected abstract void calculateFieldStartOffsets();
+
+    @Override
     public void reset(byte[] data, int startOff) {
         this.data = data;
         this.startOff = startOff;
+        calculateFieldStartOffsets();
     }
 
     @Override
@@ -51,11 +59,6 @@ public class FixedSizeTupleReference implements ITupleReference {
     @Override
     public byte[] getFieldData(int fIdx) {
         return data;
-    }
-
-    @Override
-    public int getFieldLength(int fIdx) {
-        return typeTraits[fIdx].getFixedLength();
     }
 
     @Override

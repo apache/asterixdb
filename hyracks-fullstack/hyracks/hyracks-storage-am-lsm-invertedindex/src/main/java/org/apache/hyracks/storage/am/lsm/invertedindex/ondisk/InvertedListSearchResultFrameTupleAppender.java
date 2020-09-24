@@ -23,15 +23,21 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.apache.hyracks.api.comm.FrameHelper;
-import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListSearchResultFrameTupleAppender;
 
 /**
+ * This class is mainly to write the intermediate results in the inverted-index **search** operation.
+ * For the inverted list building phrase, please refer to IInvertedListBuilder.
+ *
  * An appender class for an inverted list. Each frame has two integer values at the beginning and at the end.
  * The first represents the number of minimum Hyracks frames in a frame. Currently, we use 1 for this value.
  * The latter represents the number of tuples in a frame. This design is required since we may need to use
  * RunFileWriter and RunFileReader class during the inverted-index-search operation.
+ *
+ * Note that this appender is not aware of the tuple element type, and the length of the tuple is given by the caller
+ * at run time.
  */
-public class FixedSizeFrameTupleAppender {
+public class InvertedListSearchResultFrameTupleAppender implements IInvertedListSearchResultFrameTupleAppender {
 
     // At the end of a frame, an integer value is written to keep the tuple count in this frame.
     public static final int TUPLE_COUNT_SIZE = 4;
@@ -40,18 +46,12 @@ public class FixedSizeFrameTupleAppender {
     public static final int MINFRAME_COUNT_SIZE = 4;
 
     private final int frameSize;
-    private final int tupleSize;
     private ByteBuffer buffer;
     private int tupleCount;
     private int tupleDataEndOffset;
 
-    public FixedSizeFrameTupleAppender(int frameSize, ITypeTraits[] fields) {
+    public InvertedListSearchResultFrameTupleAppender(int frameSize) {
         this.frameSize = frameSize;
-        int tmp = 0;
-        for (int i = 0; i < fields.length; i++) {
-            tmp += fields[i].getFixedLength();
-        }
-        tupleSize = tmp;
     }
 
     public void reset(ByteBuffer buffer) {
@@ -72,16 +72,6 @@ public class FixedSizeFrameTupleAppender {
         this.tupleDataEndOffset = tupleDataEndOffset;
     }
 
-    public boolean append(byte[] bytes, int offset) {
-        if (tupleDataEndOffset + tupleSize + TUPLE_COUNT_SIZE <= frameSize) {
-            System.arraycopy(bytes, offset, buffer.array(), tupleDataEndOffset, tupleSize);
-            tupleDataEndOffset += tupleSize;
-            tupleCount++;
-            return true;
-        }
-        return false;
-    }
-
     public boolean append(byte[] bytes, int offset, int length) {
         if (tupleDataEndOffset + length + TUPLE_COUNT_SIZE <= frameSize) {
             System.arraycopy(bytes, offset, buffer.array(), tupleDataEndOffset, length);
@@ -95,7 +85,6 @@ public class FixedSizeFrameTupleAppender {
         if (tupleDataEndOffset + 4 + TUPLE_COUNT_SIZE <= frameSize) {
             buffer.putInt(tupleDataEndOffset, fieldValue);
             tupleDataEndOffset += 4;
-            tupleCount++;
             return true;
         }
         return false;
@@ -105,7 +94,6 @@ public class FixedSizeFrameTupleAppender {
         if (tupleDataEndOffset + 8 + TUPLE_COUNT_SIZE <= frameSize) {
             buffer.putLong(tupleDataEndOffset, fieldValue);
             tupleDataEndOffset += 8;
-            tupleCount++;
             return true;
         }
         return false;
@@ -115,7 +103,6 @@ public class FixedSizeFrameTupleAppender {
         if (tupleDataEndOffset + 2 + TUPLE_COUNT_SIZE <= frameSize) {
             buffer.putLong(tupleDataEndOffset, fieldValue);
             tupleDataEndOffset += 2;
-            tupleCount++;
             return true;
         }
         return false;
@@ -125,21 +112,23 @@ public class FixedSizeFrameTupleAppender {
         if (tupleDataEndOffset + 1 + TUPLE_COUNT_SIZE <= frameSize) {
             buffer.put(tupleDataEndOffset, fieldValue);
             tupleDataEndOffset += 1;
-            tupleCount++;
             return true;
         }
         return false;
     }
 
-    // returns true if an entire tuple fits
-    // returns false otherwise
-    public boolean hasSpace() {
-        return tupleDataEndOffset + tupleSize + TUPLE_COUNT_SIZE <= frameSize;
+    public boolean hasSpace(int length) {
+        return tupleDataEndOffset + length + TUPLE_COUNT_SIZE <= frameSize;
     }
 
     public void incrementTupleCount(int count) {
-        buffer.putInt(FrameHelper.getTupleCountOffset(frameSize),
-                buffer.getInt(FrameHelper.getTupleCountOffset(frameSize)) + count);
+        int tupleCountOffset = FrameHelper.getTupleCountOffset(frameSize);
+        int currentCount = buffer.getInt(tupleCountOffset);
+        int newCount = currentCount + count;
+        buffer.putInt(tupleCountOffset, newCount);
+
+        tupleCount += count;
+        assert tupleCount == newCount;
     }
 
     public int getTupleCount() {

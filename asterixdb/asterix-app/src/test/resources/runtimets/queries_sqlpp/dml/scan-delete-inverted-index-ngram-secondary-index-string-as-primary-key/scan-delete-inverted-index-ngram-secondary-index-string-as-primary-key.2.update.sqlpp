@@ -16,23 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ * Test case Name  : scan-delete-inverted-index-ngram-secondary-index.aql
+ * Description     : This test is intended to test deletion from secondary ngram inverted index.
+ * Expected Result : Success
+ * Date            : March 31 2013
+ */
 
-package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
+use test;
 
-import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilderFactory;
 
-public class FixedSizeElementInvertedListBuilderFactory implements IInvertedListBuilderFactory {
+load  dataset DBLP using localfs ((`path`=`asterix_nc1://data/dblp-small/dblp-small-id.txt`),(`format`=`delimited-text`),(`delimiter`=`:`)) pre-sorted;
 
-    private final ITypeTraits[] invListFields;
-
-    public FixedSizeElementInvertedListBuilderFactory(ITypeTraits[] invListFields) {
-        this.invListFields = invListFields;
-    }
-
-    @Override
-    public IInvertedListBuilder create() {
-        return new FixedSizeElementInvertedListBuilder(invListFields);
-    }
-}

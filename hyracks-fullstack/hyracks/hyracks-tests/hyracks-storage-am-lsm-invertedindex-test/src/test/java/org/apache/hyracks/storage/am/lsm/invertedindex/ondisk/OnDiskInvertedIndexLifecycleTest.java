@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.common.AbstractIndexLifecycleTest;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
 import org.apache.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
+import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.fixedsize.FixedSizeElementInvertedListBuilder;
 
 public class OnDiskInvertedIndexLifecycleTest extends AbstractIndexLifecycleTest {
 

@@ -33,8 +33,8 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.tuples.ConcatenatingTupleReference;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IPartitionedInvertedIndex;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 
 /**
@@ -56,7 +56,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
     protected int numPrefixLists;
     protected boolean isFinalPartIdx;
     protected boolean needToReadNewPart;
-    List<InvertedListCursor>[] partitionCursors;
+    List<IInvertedListCursor>[] partitionCursors;
     IInvertedIndexSearchModifier searchModifier;
 
     public PartitionedTOccurrenceSearcher(IInPlaceInvertedIndex invIndex, IHyracksTaskContext ctx)
@@ -153,7 +153,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
             // Prune partition because no element in it can satisfy the occurrence threshold.
             // An opened cursor should be closed.
             if (partitionCursors[i].size() < occurrenceThreshold) {
-                for (InvertedListCursor cursor : partitionCursors[i]) {
+                for (IInvertedListCursor cursor : partitionCursors[i]) {
                     cursor.close();
                 }
                 continue;
@@ -244,7 +244,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
                 // Prune partition because no element in it can satisfy the occurrence threshold.
                 // An opened cursor should be closed.
                 if (partitionCursors[i].size() < occurrenceThreshold) {
-                    for (InvertedListCursor cursor : partitionCursors[i]) {
+                    for (IInvertedListCursor cursor : partitionCursors[i]) {
                         cursor.close();
                     }
                     continue;
@@ -301,14 +301,14 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
     }
 
     private void closeCursorsInPartitions(InvertedListPartitions parts) throws HyracksDataException {
-        List<InvertedListCursor>[] partCursors = parts.getPartitions();
+        List<IInvertedListCursor>[] partCursors = parts.getPartitions();
         short start = parts.getMinValidPartitionIndex();
         short end = parts.getMaxValidPartitionIndex();
         for (int i = start; i <= end; i++) {
             if (partCursors[i] == null) {
                 continue;
             }
-            for (InvertedListCursor cursor : partCursors[i]) {
+            for (IInvertedListCursor cursor : partCursors[i]) {
                 cursor.close();
             }
         }
@@ -331,7 +331,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
         return fullHighSearchKey;
     }
 
-    public InvertedListCursor getCachedInvertedListCursor() throws HyracksDataException {
+    public IInvertedListCursor getCachedInvertedListCursor() throws HyracksDataException {
         return invListCursorCache.getNext();
     }
 

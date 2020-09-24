@@ -17,21 +17,18 @@
  * under the License.
  */
 
-package org.apache.hyracks.storage.am.lsm.invertedindex.api;
+package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexSearchCursorInitialState;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchPredicate;
-import org.apache.hyracks.storage.common.MultiComparator;
 
 /**
  * A cursor that reads an inverted list.
  */
-public abstract class InvertedListCursor extends EnforcedIndexCursor implements Comparable<InvertedListCursor> {
+public abstract class AbstractInvertedListCursor extends EnforcedIndexCursor implements IInvertedListCursor {
 
     /**
      * Opens an inverted list cursor.
@@ -56,48 +53,6 @@ public abstract class InvertedListCursor extends EnforcedIndexCursor implements 
         }
     }
 
-    /**
-     * Sets the disk-based inverted list information such as page ids and the number of elements
-     * for the given inverted list.
-     */
     protected abstract void setInvListInfo(int startPageId, int endPageId, int startOff, int numElements)
             throws HyracksDataException;
-
-    /**
-     * Conducts any operation that is required before loading pages.
-     */
-    public abstract void prepareLoadPages() throws HyracksDataException;
-
-    /**
-     * Loads one or more pages to memory.
-     */
-    public abstract void loadPages() throws HyracksDataException;
-
-    /**
-     * Unloads currently loaded pages in the memory.
-     */
-    public abstract void unloadPages() throws HyracksDataException;
-
-    /**
-     * Gets the cardinality of elements in the cursor.
-     */
-    public abstract int size() throws HyracksDataException;
-
-    /**
-     * Checks whether the given tuple is contained in the cursor.
-     */
-    public abstract boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp)
-            throws HyracksDataException;
-
-    /**
-     * Prints all elements in the cursor (debug method).
-     */
-    @SuppressWarnings("rawtypes")
-    public abstract String printInvList(ISerializerDeserializer[] serdes) throws HyracksDataException;
-
-    /**
-     * Prints the current element in the cursor (debug method).
-     */
-    @SuppressWarnings("rawtypes")
-    public abstract String printCurrentElement(ISerializerDeserializer[] serdes) throws HyracksDataException;
 }

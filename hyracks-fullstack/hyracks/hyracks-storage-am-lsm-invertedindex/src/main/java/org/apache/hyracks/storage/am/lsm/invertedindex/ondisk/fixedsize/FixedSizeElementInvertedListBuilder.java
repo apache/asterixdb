@@ -17,20 +17,21 @@
  * under the License.
  */
 
-package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
+package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.fixedsize;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
+import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.AbstractInvertedListBuilder;
+import org.apache.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
 
-public class FixedSizeElementInvertedListBuilder implements IInvertedListBuilder {
+public class FixedSizeElementInvertedListBuilder extends AbstractInvertedListBuilder {
     private final int listElementSize;
-    private int listSize = 0;
 
-    private byte[] targetBuf;
-    private int pos;
+    public FixedSizeElementInvertedListBuilder(ITypeTraits[] invListFields) throws HyracksDataException {
+        super(invListFields);
+        InvertedIndexUtils.verifyAllFixedSizeTypeTrait(invListFields);
 
-    public FixedSizeElementInvertedListBuilder(ITypeTraits[] invListFields) {
         int tmp = 0;
         for (int i = 0; i < invListFields.length; i++) {
             tmp += invListFields[i].getFixedLength();
@@ -39,7 +40,7 @@ public class FixedSizeElementInvertedListBuilder implements IInvertedListBuilder
     }
 
     @Override
-    public boolean startNewList(ITupleReference tuple, int tokenField) {
+    public boolean startNewList(ITupleReference tuple, int numTokenFields) {
         if (pos + listElementSize > targetBuf.length) {
             return false;
         } else {
@@ -67,18 +68,7 @@ public class FixedSizeElementInvertedListBuilder implements IInvertedListBuilder
     }
 
     @Override
-    public void setTargetBuffer(byte[] targetBuf, int startPos) {
-        this.targetBuf = targetBuf;
-        this.pos = startPos;
-    }
-
-    @Override
-    public int getListSize() {
-        return listSize;
-    }
-
-    @Override
-    public int getPos() {
-        return pos;
+    public boolean isFixedSize() {
+        return true;
     }
 }

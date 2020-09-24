@@ -86,7 +86,7 @@ import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
 import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexMergeCursor;
@@ -376,7 +376,7 @@ public class LSMInvertedIndexTestUtils {
         ArrayTupleBuilder searchKeyBuilder = new ArrayTupleBuilder(tokenFieldCount);
         ArrayTupleReference searchKey = new ArrayTupleReference();
         // Cursor over inverted list from actual index.
-        InvertedListCursor actualInvListCursor = invIndexAccessor.createInvertedListCursor();
+        IInvertedListCursor actualInvListCursor = invIndexAccessor.createInvertedListCursor();
 
         // Helpers for generating a serialized inverted-list element from a CheckTuple from the expected index.
         ArrayTupleBuilder expectedBuilder = new ArrayTupleBuilder(fieldSerdes.length);

@@ -22,10 +22,10 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.search;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 
-public class InvertedListCursorFactory implements IObjectFactory<InvertedListCursor> {
+public class InvertedListCursorFactory implements IObjectFactory<IInvertedListCursor> {
 
     private final IInPlaceInvertedIndex invIndex;
     private final IHyracksTaskContext ctx;
@@ -36,7 +36,7 @@ public class InvertedListCursorFactory implements IObjectFactory<InvertedListCur
     }
 
     @Override
-    public InvertedListCursor create() throws HyracksDataException {
+    public IInvertedListCursor create() throws HyracksDataException {
         return invIndex.createInvertedListCursor(ctx);
     }
 }

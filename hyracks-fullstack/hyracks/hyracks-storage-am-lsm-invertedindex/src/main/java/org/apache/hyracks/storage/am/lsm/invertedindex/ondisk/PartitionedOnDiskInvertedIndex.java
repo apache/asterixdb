@@ -29,8 +29,8 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IPartitionedInvertedIndex;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedListPartitions;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.PartitionedTOccurrenceSearcher;
@@ -113,7 +113,7 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
                 ITupleReference btreeTuple = ctx.getBtreeCursor().getTuple();
                 short numTokens = ShortPointable.getShort(btreeTuple.getFieldData(PARTITIONING_NUM_TOKENS_FIELD),
                         btreeTuple.getFieldStart(PARTITIONING_NUM_TOKENS_FIELD));
-                InvertedListCursor invListCursor = partSearcher.getCachedInvertedListCursor();
+                IInvertedListCursor invListCursor = partSearcher.getCachedInvertedListCursor();
                 openInvertedListCursor(btreeTuple, invListCursor, ctx);
                 invListPartitions.addInvertedListCursor(invListCursor, numTokens);
                 tokenExists = true;

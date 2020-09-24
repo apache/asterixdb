@@ -32,6 +32,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * --try{
  * ---while (cursor.hasNext()){
  * ----cursor.next()
+ * ----ITupleReference tuple = cursor.getTuple()
+ * ----work with tuple...
  * ---}
  * --} finally{
  * ---cursor.close();

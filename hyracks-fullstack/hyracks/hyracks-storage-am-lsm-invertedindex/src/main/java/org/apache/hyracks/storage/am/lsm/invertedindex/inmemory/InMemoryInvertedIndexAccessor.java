@@ -30,7 +30,7 @@ import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexSearchCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.TOccurrenceSearcher;
@@ -84,12 +84,12 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
     }
 
     @Override
-    public InvertedListCursor createInvertedListCursor() {
+    public IInvertedListCursor createInvertedListCursor() {
         return index.createInvertedListCursor(ctx);
     }
 
     @Override
-    public void openInvertedListCursor(InvertedListCursor listCursor, ITupleReference searchKey)
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey)
             throws HyracksDataException {
         index.openInvertedListCursor(listCursor, searchKey, opCtx);
     }

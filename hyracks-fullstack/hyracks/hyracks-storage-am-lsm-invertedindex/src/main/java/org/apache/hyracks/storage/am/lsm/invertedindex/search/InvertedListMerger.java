@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -30,9 +31,8 @@ import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
-import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeFrameTupleAccessor;
-import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeTupleReference;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListTupleReference;
 import org.apache.hyracks.storage.common.MultiComparator;
 
 /**
@@ -54,7 +54,7 @@ public class InvertedListMerger {
     protected InvertedIndexFinalSearchResult finalSearchResult;
 
     // To Keep the status of this merge process since we only calculate one frame at a time in case of the final result
-    protected InvertedListCursor finalInvListCursor;
+    protected IInvertedListCursor finalInvListCursor;
     protected int occurrenceThreshold;
     protected int numInvertedLists;
     protected int invListIdx;
@@ -63,12 +63,18 @@ public class InvertedListMerger {
     protected int maxPrevBufIdx;
     protected int numExpectedPages;
     protected ByteBuffer prevCurrentBuffer;
-    protected FixedSizeFrameTupleAccessor resultFrameTupleAcc;
-    protected FixedSizeTupleReference resultTuple;
+    protected IFrameTupleAccessor resultFrameTupleAcc;
+    protected IInvertedListTupleReference resultTuple;
     protected boolean advanceCursor;
     protected boolean advancePrevResult;
-    protected int resultTidx;
-    protected int invListTidx;
+    // ToDo: we need those tuple indexes because when generating the intermediate result,
+    // the resultFrameTupleAcc API needs tuple index.
+    // In fact, the elements in resultFrameTupleAcc are retrieved sequentially one by one instead of accessed randomly.
+    // Maybe we can wrap the tuple index and the resultFrameTupleAcc into a new class so that we can iterate the elements
+    // in resultFrameTupleAcc and avoid having the tuple indexes here.
+    // We need to be very careful when handling those tuple indexes here.
+    protected int resultTupleIdx;
+    protected int invListTupleIdx;
     protected int invListTupleCount;
     protected ITupleReference invListTuple;
     protected int prevResultFrameTupleCount;
@@ -98,8 +104,9 @@ public class InvertedListMerger {
      *         false otherwise.
      * @throws HyracksDataException
      */
-    public boolean merge(List<InvertedListCursor> invListCursors, int occurrenceThreshold, int numPrefixLists,
+    public boolean merge(List<IInvertedListCursor> invListCursors, int occurrenceThreshold, int numPrefixLists,
             InvertedIndexFinalSearchResult finalSearchResult) throws HyracksDataException {
+
         Collections.sort(invListCursors);
         int numInvLists = invListCursors.size();
         InvertedIndexSearchResult result = null;
@@ -125,7 +132,7 @@ public class InvertedListMerger {
                 result = finalSearchResult;
                 isFinalList = true;
             }
-            InvertedListCursor invListCursor = invListCursors.get(i);
+            IInvertedListCursor invListCursor = invListCursors.get(i);
             // Track whether an exception is occurred.
             boolean finishedTryBlock = false;
             try {
@@ -219,9 +226,9 @@ public class InvertedListMerger {
      * @return true only if all processing for the final list for a partition is done.
      *         false otherwise.
      */
-    protected boolean mergeSuffixListProbe(InvertedListCursor invListCursor, InvertedIndexSearchResult prevSearchResult,
-            InvertedIndexSearchResult newSearchResult, int invListIx, int numInvLists, int occurrenceThreshold,
-            boolean isFinalList) throws HyracksDataException {
+    protected boolean mergeSuffixListProbe(IInvertedListCursor invListCursor,
+            InvertedIndexSearchResult prevSearchResult, InvertedIndexSearchResult newSearchResult, int invListIx,
+            int numInvLists, int occurrenceThreshold, boolean isFinalList) throws HyracksDataException {
         if (isProcessingFinished) {
             return true;
         }
@@ -229,8 +236,8 @@ public class InvertedListMerger {
         initMergingOneList(invListCursor, prevSearchResult, newSearchResult, isFinalList, invListIx, numInvLists,
                 occurrenceThreshold, processType.SUFFIX_LIST_PROBE);
 
-        while (resultTidx < prevResultFrameTupleCount) {
-            resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTidx));
+        while (resultTupleIdx < prevResultFrameTupleCount) {
+            resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTupleIdx));
             int count = getCount(resultTuple);
             if (invListCursor.containsKey(resultTuple, invListCmp)) {
                 // Found the same tuple again on the current list. Increases the count by one.
@@ -249,7 +256,7 @@ public class InvertedListMerger {
                     return false;
                 }
             }
-            resultTidx++;
+            resultTupleIdx++;
             checkPrevResultAndFetchNextFrame(prevSearchResult);
         }
 
@@ -263,7 +270,7 @@ public class InvertedListMerger {
      * @return true only if all processing for the final list for a partition is done.
      *         false otherwise.
      */
-    protected boolean mergeSuffixListScan(InvertedListCursor invListCursor, InvertedIndexSearchResult prevSearchResult,
+    protected boolean mergeSuffixListScan(IInvertedListCursor invListCursor, InvertedIndexSearchResult prevSearchResult,
             InvertedIndexSearchResult newSearchResult, int invListIx, int numInvLists, int occurrenceThreshold,
             boolean isFinalList) throws HyracksDataException {
         if (isProcessingFinished) {
@@ -276,9 +283,9 @@ public class InvertedListMerger {
 
         int cmp;
         int count;
-        while (invListTidx < invListTupleCount && resultTidx < prevResultFrameTupleCount) {
+        while (invListTupleIdx < invListTupleCount && resultTupleIdx < prevResultFrameTupleCount) {
             invListTuple = invListCursor.getTuple();
-            resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTidx));
+            resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTupleIdx));
             cmp = invListCmp.compare(invListTuple, resultTuple);
             if (cmp == 0) {
                 // Found the same tuple again on the current list. Increases the count by one.
@@ -316,8 +323,8 @@ public class InvertedListMerger {
 
         // append remaining elements from previous result set
         // These remaining elements can be a part of the answer if they will be found again in the remaining lists.
-        while (resultTidx < prevResultFrameTupleCount) {
-            resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTidx));
+        while (resultTupleIdx < prevResultFrameTupleCount) {
+            resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTupleIdx));
             count = getCount(resultTuple);
             if (count + numInvLists - invListIx > occurrenceThreshold) {
                 if (!newSearchResult.append(resultTuple, count)) {
@@ -326,7 +333,7 @@ public class InvertedListMerger {
                     return false;
                 }
             }
-            resultTidx++;
+            resultTupleIdx++;
             checkPrevResultAndFetchNextFrame(prevSearchResult);
         }
 
@@ -338,7 +345,7 @@ public class InvertedListMerger {
      * then generates a new result by applying UNIONALL operation on these two. This method returns true
      * only if all processing for the given final list is done. Otherwise, it returns false.
      */
-    protected boolean mergePrefixList(InvertedListCursor invListCursor, InvertedIndexSearchResult prevSearchResult,
+    protected boolean mergePrefixList(IInvertedListCursor invListCursor, InvertedIndexSearchResult prevSearchResult,
             InvertedIndexSearchResult newSearchResult, boolean isFinalList) throws HyracksDataException {
         if (isProcessingFinished) {
             return true;
@@ -350,9 +357,9 @@ public class InvertedListMerger {
         int cmp;
         int count;
         // Traverses the inverted list and the previous result at the same time.
-        while (invListTidx < invListTupleCount && resultTidx < prevResultFrameTupleCount) {
+        while (invListTupleIdx < invListTupleCount && resultTupleIdx < prevResultFrameTupleCount) {
             invListTuple = invListCursor.getTuple();
-            resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTidx));
+            resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTupleIdx));
             cmp = invListCmp.compare(invListTuple, resultTuple);
             // Found the same tuple again on the current list: count + 1. Both the result and the cursor advances.
             if (cmp == 0) {
@@ -393,29 +400,29 @@ public class InvertedListMerger {
 
         // append remaining new elements from inverted list
         //
-        while (invListTidx < invListTupleCount) {
+        while (invListTupleIdx < invListTupleCount) {
             invListTuple = invListCursor.getTuple();
             if (!newSearchResult.append(invListTuple, 1)) {
                 // For a final result, needs to pause when a frame becomes full to let the caller
                 // consume the frame. SearchResult.append() should only return false for this case.
                 return false;
             }
-            invListTidx++;
+            invListTupleIdx++;
             if (invListCursor.hasNext()) {
                 invListCursor.next();
             }
         }
 
         // append remaining elements from previous result set
-        while (resultTidx < prevResultFrameTupleCount) {
-            resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTidx));
+        while (resultTupleIdx < prevResultFrameTupleCount) {
+            resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTupleIdx));
             count = getCount(resultTuple);
             if (!newSearchResult.append(resultTuple, count)) {
                 // For a final result, needs to pause when a frame becomes full to let the caller
                 // consume the frame. SearchResult.append() should only return false for this case.
                 return false;
             }
-            resultTidx++;
+            resultTupleIdx++;
             checkPrevResultAndFetchNextFrame(prevSearchResult);
         }
 
@@ -425,7 +432,7 @@ public class InvertedListMerger {
     /**
      * Initializes necessary information for each merging operation (prefix_list) for a list.
      */
-    protected void initMergingOneList(InvertedListCursor invListCursor, InvertedIndexSearchResult prevSearchResult,
+    protected void initMergingOneList(IInvertedListCursor invListCursor, InvertedIndexSearchResult prevSearchResult,
             InvertedIndexSearchResult newSearchResult, boolean isFinalList, processType mergeOpType)
             throws HyracksDataException {
         initMergingOneList(invListCursor, prevSearchResult, newSearchResult, isFinalList, 0, 0, 0, mergeOpType);
@@ -434,7 +441,7 @@ public class InvertedListMerger {
     /**
      * Initializes necessary information for each merging operation (suffix_list_probe or suffix_list_scan) for a list.
      */
-    protected void initMergingOneList(InvertedListCursor invListCursor, InvertedIndexSearchResult prevSearchResult,
+    protected void initMergingOneList(IInvertedListCursor invListCursor, InvertedIndexSearchResult prevSearchResult,
             InvertedIndexSearchResult newSearchResult, boolean isFinalList, int invListIx, int numInvLists,
             int occurrenceThreshold, processType mergeOpType) throws HyracksDataException {
         // Each inverted list will be visited only once except the final inverted list.
@@ -455,9 +462,9 @@ public class InvertedListMerger {
             resultTuple = prevSearchResult.getTuple();
             advanceCursor = true;
             advancePrevResult = false;
-            resultTidx = 0;
+            resultTupleIdx = 0;
             resultFrameTupleAcc.reset(prevCurrentBuffer);
-            invListTidx = 0;
+            invListTupleIdx = 0;
             numInvertedLists = numInvLists;
             invListIdx = invListIx;
             prevResultFrameTupleCount = prevCurrentBuffer == null ? 0 : resultFrameTupleAcc.getTupleCount();
@@ -485,7 +492,7 @@ public class InvertedListMerger {
      *         false otherwise
      */
     protected boolean finishMergingOneList(boolean isFinalList, InvertedIndexSearchResult prevSearchResult,
-            InvertedIndexSearchResult newSearchResult, InvertedListCursor invListCursor) throws HyracksDataException {
+            InvertedIndexSearchResult newSearchResult, IInvertedListCursor invListCursor) throws HyracksDataException {
         prevSearchResult.closeResultRead(false);
         invListCursor.close();
         // Final search result can be called multiple times for partitioned occurrence searcher case
@@ -506,14 +513,14 @@ public class InvertedListMerger {
      * Also fetches next element from the inverted list cursor.
      */
     protected void advancePrevResultAndList(boolean advancePrevResult, boolean advanceCursor,
-            InvertedIndexSearchResult prevSearchResult, InvertedListCursor invListCursor) throws HyracksDataException {
+            InvertedIndexSearchResult prevSearchResult, IInvertedListCursor invListCursor) throws HyracksDataException {
         if (advancePrevResult) {
-            resultTidx++;
+            resultTupleIdx++;
             checkPrevResultAndFetchNextFrame(prevSearchResult);
         }
 
         if (advanceCursor) {
-            invListTidx++;
+            invListTupleIdx++;
             if (invListCursor.hasNext()) {
                 invListCursor.next();
             }
@@ -525,13 +532,13 @@ public class InvertedListMerger {
      */
     protected void checkPrevResultAndFetchNextFrame(InvertedIndexSearchResult prevSearchResult)
             throws HyracksDataException {
-        if (resultTidx >= prevResultFrameTupleCount) {
+        if (resultTupleIdx >= prevResultFrameTupleCount) {
             prevBufIdx++;
             if (prevBufIdx <= maxPrevBufIdx) {
                 prevCurrentBuffer = prevSearchResult.getNextFrame();
                 resultFrameTupleAcc.reset(prevCurrentBuffer);
                 prevResultFrameTupleCount = resultFrameTupleAcc.getTupleCount();
-                resultTidx = 0;
+                resultTupleIdx = 0;
             }
         }
     }
@@ -539,7 +546,7 @@ public class InvertedListMerger {
     /**
      * Gets the count of the given tuple in the previous search result.
      */
-    protected int getCount(FixedSizeTupleReference resultTuple) {
+    protected int getCount(IInvertedListTupleReference resultTuple) {
         return IntegerPointable.getInteger(resultTuple.getFieldData(0),
                 resultTuple.getFieldStart(resultTuple.getFieldCount() - 1));
     }
@@ -585,8 +592,8 @@ public class InvertedListMerger {
         resultTuple = null;
         advanceCursor = false;
         advancePrevResult = false;
-        resultTidx = 0;
-        invListTidx = 0;
+        resultTupleIdx = 0;
+        invListTupleIdx = 0;
         prevResultFrameTupleCount = 0;
         finalInvListCursor = null;
         finalSearchResult = null;

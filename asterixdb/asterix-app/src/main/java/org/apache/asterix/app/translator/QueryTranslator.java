@@ -92,7 +92,6 @@ import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
-import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
@@ -214,7 +213,6 @@ import org.apache.hyracks.algebricks.runtime.serializer.ResultSerializerFactoryP
 import org.apache.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -1105,31 +1103,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
             validateIndexKeyFields(stmtCreateIndex, keySourceIndicators, aRecordType, metaRecordType, indexFields,
                     indexFieldTypes);
-            // Checks whether a user is trying to create an inverted secondary index on a
-            // dataset
-            // with a variable-length primary key.
-            // Currently, we do not support this. Therefore, as a temporary solution, we
-            // print an
-            // error message and stop.
-            if (indexType == IndexType.SINGLE_PARTITION_WORD_INVIX
-                    || indexType == IndexType.SINGLE_PARTITION_NGRAM_INVIX
-                    || indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
-                    || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
-                List<List<String>> partitioningKeys = ds.getPrimaryKeys();
-                for (List<String> partitioningKey : partitioningKeys) {
-                    IAType keyType = aRecordType.getSubFieldType(partitioningKey);
-                    ITypeTraits typeTrait = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
-
-                    // If it is not a fixed length
-                    if (!typeTrait.isFixedLength()) {
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "The keyword or ngram index " + indexName + " cannot be created on the dataset "
-                                        + datasetName + " due to its variable-length primary key field "
-                                        + partitioningKey);
-                    }
-
-                }
-            }
 
             Index newIndex = new Index(dataverseName, datasetName, indexName, indexType, indexFields,
                     keySourceIndicators, indexFieldTypes, stmtCreateIndex.getGramLength(), overridesFieldTypes,

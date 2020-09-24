@@ -158,6 +158,7 @@ public class ErrorCode {
     public static final int ERROR_PRINTING_PLAN = 122;
     public static final int INSUFFICIENT_MEMORY = 123;
     public static final int PARSING_ERROR = 124;
+    public static final int INVALID_INVERTED_LIST_TYPE_TRAITS = 125;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

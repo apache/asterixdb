@@ -34,7 +34,7 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
@@ -148,19 +148,19 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
     }
 
     @Override
-    public InvertedListCursor createInvertedListCursor(IHyracksTaskContext ctx) {
+    public IInvertedListCursor createInvertedListCursor(IHyracksTaskContext ctx) {
         return new InMemoryInvertedListCursor(invListTypeTraits.length, tokenTypeTraits.length);
     }
 
     @Override
-    public InvertedListCursor createInvertedListRangeSearchCursor(IIndexCursorStats stats) {
+    public IInvertedListCursor createInvertedListRangeSearchCursor(IIndexCursorStats stats) {
         // An in-memory index does not have a separate inverted list.
         // Therefore, a different range-search cursor for an inverted list is not required.
         return createInvertedListCursor(null);
     }
 
     @Override
-    public void openInvertedListCursor(InvertedListCursor listCursor, ITupleReference searchKey,
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey,
             IIndexOperationContext ictx) throws HyracksDataException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
         ctx.setOperation(IndexOperation.SEARCH);

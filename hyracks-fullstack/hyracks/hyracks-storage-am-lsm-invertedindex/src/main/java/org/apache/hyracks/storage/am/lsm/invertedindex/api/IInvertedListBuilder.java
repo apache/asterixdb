@@ -30,6 +30,8 @@ public interface IInvertedListBuilder {
 
     public void setTargetBuffer(byte[] targetBuf, int startPos);
 
+    public boolean isFixedSize();
+
     public int getListSize();
 
     public int getPos();

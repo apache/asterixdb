@@ -3970,7 +3970,6 @@
     <test-case FilePath="ddl/create-index">
       <compilation-unit name="create-inverted-index-with-variable-length-primary-key">
         <output-dir compare="Text">create-inverted-index-with-variable-length-primary-key</output-dir>
-        <expected-error>ASX1079: Compilation error: The keyword or ngram index MyIndex cannot be created on the dataset MyDataset due to its variable-length primary key field [myKey] (in line 33, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4536,6 +4535,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-ngram-secondary-index-string-as-primary-key">
+        <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index-string-as-primary-key</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="dml">
       <compilation-unit name="scan-insert-inverted-index-ngram-correlated-secondary-index">
         <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index</output-dir>
       </compilation-unit>
@@ -4546,8 +4551,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-word-secondary-index-string-as-primary-key">
+        <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index-string-as-primary-key</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-insert-inverted-index-word-correlated-secondary-index">
         <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-word-correlated-secondary-index-string-as-primary-key">
+        <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index-string-as-primary-key</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -4556,13 +4571,28 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-ngram-secondary-index-nullable-string-as-primary-key">
+        <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index-nullable-string-as-primary-key</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-insert-inverted-index-ngram-correlated-secondary-index-nullable">
         <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index-nullable</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-ngram-correlated-secondary-index-nullable-string-as-primary-key">
+        <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index-nullable-string-as-primary-key</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-insert-inverted-index-word-secondary-index-nullable">
         <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-word-secondary-index-nullable-string-as-primary-key">
+        <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index-nullable-string-as-primary-key</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -4573,6 +4603,11 @@
     <test-case FilePath="dml">
       <compilation-unit name="scan-delete-inverted-index-ngram-secondary-index">
         <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-ngram-secondary-index-string-as-primary-key">
+        <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index-string-as-primary-key</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -4846,6 +4881,11 @@
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="basic-1_1_3">
         <output-dir compare="Text">basic-1_1_3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-string-as-primary-key">
+        <output-dir compare="Text">dblp-string-as-primary-key</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
@@ -45,12 +44,9 @@ public class InvertedIndexFinalSearchResult extends InvertedIndexSearchResult {
     @Override
     protected void initTypeTraits(ITypeTraits[] invListFields) {
         typeTraits = new ITypeTraits[invListFields.length];
-        int tmp = 0;
         for (int i = 0; i < invListFields.length; i++) {
             typeTraits[i] = invListFields[i];
-            tmp += invListFields[i].getFixedLength();
         }
-        invListElementSize = tmp;
     }
 
     /**
@@ -76,13 +72,13 @@ public class InvertedIndexFinalSearchResult extends InvertedIndexSearchResult {
      */
     @Override
     public boolean append(ITupleReference invListElement, int count) throws HyracksDataException {
-        // Pauses the addition of this tuple if the current page is full.
-        if (!appender.hasSpace()) {
+        int numBytesRequired = getNumBytesRequired(invListElement);
+        if (!appender.hasSpace(numBytesRequired)) {
             return false;
         }
-        // Appends the given inverted-list element.
-        if (!appender.append(invListElement.getFieldData(0), invListElement.getFieldStart(0), invListElementSize)) {
-            throw HyracksDataException.create(ErrorCode.CANNOT_ADD_ELEMENT_TO_INVERTED_INDEX_SEARCH_RESULT);
+
+        if (!appendInvertedListElement(invListElement)) {
+            return false;
         }
         appender.incrementTupleCount(1);
         numResults++;

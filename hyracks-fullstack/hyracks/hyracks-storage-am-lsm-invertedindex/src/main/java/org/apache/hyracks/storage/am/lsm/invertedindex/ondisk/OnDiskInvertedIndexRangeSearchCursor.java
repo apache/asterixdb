@@ -25,7 +25,7 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tuples.TokenKeyPairTuple;
 import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
@@ -44,7 +44,7 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
     private final IIndexAccessor btreeAccessor;
     private final OnDiskInvertedIndex invIndex;
     private final IIndexOperationContext opCtx;
-    private final InvertedListCursor invListRangeSearchCursor;
+    private final IInvertedListCursor invListRangeSearchCursor;
     private boolean isInvListCursorOpen;
 
     private final IIndexCursor btreeCursor;

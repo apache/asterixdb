@@ -708,6 +708,15 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         return ((InternalDatasetDetails) getDatasetDetails()).getPartitioningKey();
     }
 
+    /**
+     @return the array of type traits that contains the following type traits in order
+      1) the primary keys,
+      2) the query record type,
+      3) the metadata type trait if the dataset has metadata
+     */
+    // ToDo: returning such an array can be confusing because it may contain the metadata type or not.
+    // instead of returning an array, create a new class that contains 1) a type trait array for the primary keys,
+    // 2) the record type trait, and 3) an nullable meta type trait
     public ITypeTraits[] getPrimaryTypeTraits(MetadataProvider metadataProvider, ARecordType recordType,
             ARecordType metaType) throws AlgebricksException {
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();

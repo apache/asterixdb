@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.ListIterator;
 
 import org.apache.hyracks.api.comm.IFrame;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -36,9 +37,12 @@ import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.buffermanager.BufferManagerBackedVSizeFrame;
 import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
-import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeFrameTupleAccessor;
-import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeFrameTupleAppender;
-import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeTupleReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListSearchResultFrameTupleAppender;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListTupleReference;
+import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.InvertedListSearchResultFrameTupleAppender;
+import org.apache.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
 
 /**
  * Disk-based or in-memory based storage for intermediate and final results of inverted-index
@@ -50,18 +54,18 @@ public class InvertedIndexSearchResult {
     // I/O buffer's index in the buffers
     protected static final int IO_BUFFER_IDX = 0;
     protected static final String FILE_PREFIX = "InvertedIndexSearchResult";
+
     protected final IHyracksTaskContext ctx;
-    protected final FixedSizeFrameTupleAppender appender;
-    protected final FixedSizeFrameTupleAccessor accessor;
-    protected final FixedSizeTupleReference tuple;
+    protected final IInvertedListSearchResultFrameTupleAppender appender;
+    protected final IFrameTupleAccessor accessor;
+    protected final IInvertedListTupleReference tuple;
     protected final ISimpleFrameBufferManager bufferManager;
     protected ITypeTraits[] typeTraits;
-    protected int invListElementSize;
+    protected ITypeTraits[] invListFields;
 
     protected int currentWriterBufIdx;
     protected int currentReaderBufIdx;
     protected int numResults;
-    protected int numPossibleElementPerPage;
     // Read and Write I/O buffer
     protected IFrame ioBufferFrame = null;
     protected ByteBuffer ioBuffer = null;
@@ -75,14 +79,19 @@ public class InvertedIndexSearchResult {
     protected boolean isInReadMode;
     protected boolean isWriteFinished;
     protected boolean isFileOpened;
+    // Used for variable-size element in the inverted list
+    protected ITreeIndexTupleWriter tupleWriter;
+    protected byte[] tempBytes;
 
     public InvertedIndexSearchResult(ITypeTraits[] invListFields, IHyracksTaskContext ctx,
             ISimpleFrameBufferManager bufferManager) throws HyracksDataException {
+        this.invListFields = invListFields;
+        this.tupleWriter = new TypeAwareTupleWriter(invListFields);
         initTypeTraits(invListFields);
         this.ctx = ctx;
-        appender = new FixedSizeFrameTupleAppender(ctx.getInitialFrameSize(), typeTraits);
-        accessor = new FixedSizeFrameTupleAccessor(ctx.getInitialFrameSize(), typeTraits);
-        tuple = new FixedSizeTupleReference(typeTraits);
+        appender = new InvertedListSearchResultFrameTupleAppender(ctx.getInitialFrameSize());
+        accessor = InvertedIndexUtils.createInvertedListFrameTupleAccessor(ctx.getInitialFrameSize(), typeTraits);
+        tuple = InvertedIndexUtils.createInvertedListTupleReference(typeTraits);
         this.bufferManager = bufferManager;
         this.isInReadMode = false;
         this.isWriteFinished = false;
@@ -94,7 +103,7 @@ public class InvertedIndexSearchResult {
         this.currentWriterBufIdx = 0;
         this.currentReaderBufIdx = 0;
         this.numResults = 0;
-        calculateNumElementPerPage();
+        this.tempBytes = new byte[ctx.getInitialFrameSize()];
         // Allocates one frame for read/write operation.
         prepareIOBuffer();
     }
@@ -105,14 +114,31 @@ public class InvertedIndexSearchResult {
      */
     protected void initTypeTraits(ITypeTraits[] invListFields) {
         typeTraits = new ITypeTraits[invListFields.length + 1];
-        int tmp = 0;
         for (int i = 0; i < invListFields.length; i++) {
             typeTraits[i] = invListFields[i];
-            tmp += invListFields[i].getFixedLength();
         }
-        invListElementSize = tmp;
         // Integer for counting occurrences.
         typeTraits[invListFields.length] = IntegerPointable.TYPE_TRAITS;
+    }
+
+    // If all the inverted list fileds are fixed-size, then return the number of expected pages
+    // Otherwise, return -1
+    public int getExpectedNumPages(int numExpectedElements) {
+        if (InvertedIndexUtils.checkTypeTraitsAllFixed(invListFields)) {
+            int sizeElement = 0;
+            for (int i = 0; i < invListFields.length; i++) {
+                sizeElement += invListFields[i].getFixedLength();
+            }
+
+            int frameSize = ctx.getInitialFrameSize();
+            // The count of Minframe, and the count of tuples in a frame should be deducted.
+            frameSize = frameSize - InvertedListSearchResultFrameTupleAppender.MINFRAME_COUNT_SIZE
+                    - InvertedListSearchResultFrameTupleAppender.TUPLE_COUNT_SIZE;
+            int numPossibleElementPerPage = (int) Math.floor((double) frameSize / (sizeElement + ELEMENT_COUNT_SIZE));
+            return (int) Math.ceil((double) numExpectedElements / numPossibleElementPerPage);
+        } else {
+            return -1;
+        }
     }
 
     /**
@@ -127,7 +153,15 @@ public class InvertedIndexSearchResult {
         }
         // Intermediate results? disk or in-memory based
         // Allocates more buffers.
-        isInMemoryOpMode = tryAllocateBuffers(numExpectedPages);
+        if (InvertedIndexUtils.checkTypeTraitsAllFixed(typeTraits)) {
+            isInMemoryOpMode = tryAllocateBuffers(numExpectedPages);
+        } else {
+            // When one of the type traits is variable length, disable the in memory mode
+            // because the length of the inverted list is unknown, and thus may exceed the memory budget
+            // A better way to do so might be to flush to disk when out-of-memory on the fly
+            // instead of deciding the in memory mode or not before we merge the results
+            isInMemoryOpMode = false;
+        }
         if (!isInMemoryOpMode) {
             // Not enough number of buffers. Switch to the file I/O mode.
             createAndOpenFile();
@@ -136,14 +170,47 @@ public class InvertedIndexSearchResult {
         isWriteFinished = false;
     }
 
+    protected int getNumBytesRequired(ITupleReference invListElement) {
+        if (invListFields[0].isFixedLength()) {
+            return invListElement.getFieldLength(0);
+        } else {
+            return tupleWriter.bytesRequired(invListElement, 0, 1);
+        }
+    }
+
+    protected boolean appendInvertedListElement(ITupleReference invListElement) throws HyracksDataException {
+        int numBytesRequired = getNumBytesRequired(invListElement);
+
+        // Appends inverted-list element.
+        if (invListFields[0].isFixedLength()) {
+            if (!appender.append(invListElement.getFieldData(0), invListElement.getFieldStart(0),
+                    invListElement.getFieldLength(0))) {
+                throw HyracksDataException.create(ErrorCode.CANNOT_ADD_ELEMENT_TO_INVERTED_INDEX_SEARCH_RESULT);
+            }
+        } else {
+            tupleWriter.writeTupleFields(invListElement, 0, 1, tempBytes, 0);
+            if (!appender.append(tempBytes, 0, numBytesRequired)) {
+                throw HyracksDataException.create(ErrorCode.CANNOT_ADD_ELEMENT_TO_INVERTED_INDEX_SEARCH_RESULT);
+            }
+        }
+
+        return true;
+    }
+
     /**
      * Appends an element and its count to the current frame of this result. The boolean value is necessary for
-     * the final search result case since the append() of that class is overriding this method.
+     * the final search result case since the append() of that class is **overriding** this method.
+     *
+     * Note that if the the buffer is run out, then this method will automatically write to the next buffer.
+     * This is different from the append() method in the final search result which will simply return false.
      */
     public boolean append(ITupleReference invListElement, int count) throws HyracksDataException {
+
+        int numBytesRequired = getNumBytesRequired(invListElement);
         ByteBuffer currentBuffer;
         // Moves to the next page if the current page is full.
-        if (!appender.hasSpace()) {
+        // + 4 for the count
+        if (!appender.hasSpace(numBytesRequired + 4)) {
             currentWriterBufIdx++;
             if (isInMemoryOpMode) {
                 currentBuffer = buffers.get(currentWriterBufIdx);
@@ -153,10 +220,9 @@ public class InvertedIndexSearchResult {
             }
             appender.reset(currentBuffer);
         }
-        // Appends inverted-list element.
-        if (!appender.append(invListElement.getFieldData(0), invListElement.getFieldStart(0), invListElementSize)) {
-            throw HyracksDataException.create(ErrorCode.CANNOT_ADD_ELEMENT_TO_INVERTED_INDEX_SEARCH_RESULT);
-        }
+
+        appendInvertedListElement(invListElement);
+
         // Appends count.
         if (!appender.append(count)) {
             throw HyracksDataException.create(ErrorCode.CANNOT_ADD_ELEMENT_TO_INVERTED_INDEX_SEARCH_RESULT);
@@ -292,23 +358,6 @@ public class InvertedIndexSearchResult {
     }
 
     /**
-     * Gets the expected number of pages if all elements are created as a result.
-     * An assumption is that there are no common elements between the previous result and the cursor.
-     */
-    public int getExpectedNumPages(int numExpectedElements) {
-        return (int) Math.ceil((double) numExpectedElements / numPossibleElementPerPage);
-    }
-
-    // Gets the number of possible elements per page based on the inverted list element size.
-    protected void calculateNumElementPerPage() {
-        int frameSize = ctx.getInitialFrameSize();
-        // The count of Minframe, and the count of tuples in a frame should be deducted.
-        frameSize = frameSize - FixedSizeFrameTupleAppender.MINFRAME_COUNT_SIZE
-                - FixedSizeFrameTupleAppender.TUPLE_COUNT_SIZE;
-        numPossibleElementPerPage = (int) Math.floor((double) frameSize / (invListElementSize + ELEMENT_COUNT_SIZE));
-    }
-
-    /**
      * Allocates the buffer for read/write operation and initializes the buffers array that will be used keep a result.
      */
     protected void prepareIOBuffer() throws HyracksDataException {
@@ -334,12 +383,28 @@ public class InvertedIndexSearchResult {
      * Tries to allocate buffers to accommodate the results in memory.
      */
     protected boolean tryAllocateBuffers(int numExpectedPages) throws HyracksDataException {
+        assert numExpectedPages >= 0;
+
         boolean allBufferAllocated = true;
         while (buffers.size() < numExpectedPages) {
+            // Currently, the buffers (optional, needs multiple pages, for in-memory mode)
+            // and the ioBuffer (must-have, needs one page only, for disk IO, related code is in the above prepareIOBuffer())
+            // are both acquired from the same bufferManager.
+            // It may be possible that one search result acquires all the frame for its in-memory usage,
+            // and then the next search result cannot even get one frame for its disk IO usage.
+            // In this case, the second search result will exit with an out-of-memory error.
+            //
+            // To avoid the above issue, maybe we need to create **two** buffer managers, one to manage in-memory frame usage,
+            // and the other to manage on-disk frame usage to guarantee that every search result has at least one disk IO frame.
+            // Or, to make things simpler, we can let the search result manage its own disk IO frame,
+            // i.e. create the frame on its own rather than acquire from the buffer manager.
+            // In this case, we cannot reuse frames, but each search result needs only one IO frame,
+            // and the number of search result is pretty limited (e.g. one result per query keyword).
             ByteBuffer tmpBuffer = bufferManager.acquireFrame(ctx.getInitialFrameSize());
             if (tmpBuffer == null) {
                 // Budget exhausted
                 allBufferAllocated = false;
+                deallocateBuffers();
                 break;
             } else {
                 clearBuffer(tmpBuffer);
@@ -390,15 +455,15 @@ public class InvertedIndexSearchResult {
         }
     }
 
-    public FixedSizeFrameTupleAccessor getAccessor() {
+    public IFrameTupleAccessor getAccessor() {
         return accessor;
     }
 
-    public FixedSizeFrameTupleAppender getAppender() {
+    public IInvertedListSearchResultFrameTupleAppender getAppender() {
         return appender;
     }
 
-    public FixedSizeTupleReference getTuple() {
+    public IInvertedListTupleReference getTuple() {
         return tuple;
     }
 

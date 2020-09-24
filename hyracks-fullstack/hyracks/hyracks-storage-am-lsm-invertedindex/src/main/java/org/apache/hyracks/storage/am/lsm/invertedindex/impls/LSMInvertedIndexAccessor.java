@@ -34,7 +34,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 
@@ -176,12 +176,12 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     }
 
     @Override
-    public InvertedListCursor createInvertedListCursor() {
+    public IInvertedListCursor createInvertedListCursor() {
         throw new UnsupportedOperationException("Cannot create inverted list cursor on lsm inverted index.");
     }
 
     @Override
-    public void openInvertedListCursor(InvertedListCursor listCursor, ITupleReference searchKey)
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey)
             throws HyracksDataException {
         throw new UnsupportedOperationException("Cannot open inverted list cursor on lsm inverted index.");
     }

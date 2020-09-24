@@ -30,7 +30,7 @@ public interface IInPlaceInvertedIndex extends IInvertedIndex {
      *
      * @throws HyracksDataException
      */
-    InvertedListCursor createInvertedListCursor(IHyracksTaskContext ctx) throws HyracksDataException;
+    IInvertedListCursor createInvertedListCursor(IHyracksTaskContext ctx) throws HyracksDataException;
 
     /**
      * Creates an inverted-list-range-search cursor. This cursor is mainly used to conduct
@@ -38,7 +38,7 @@ public interface IInPlaceInvertedIndex extends IInvertedIndex {
      *
      * @throws HyracksDataException
      */
-    InvertedListCursor createInvertedListRangeSearchCursor(IIndexCursorStats stats) throws HyracksDataException;
+    IInvertedListCursor createInvertedListRangeSearchCursor(IIndexCursorStats stats) throws HyracksDataException;
 
     /**
      * Opens an inverted list cursor
@@ -51,6 +51,6 @@ public interface IInPlaceInvertedIndex extends IInvertedIndex {
      *            the operation context under which the cursor is to be open
      * @throws HyracksDataException
      */
-    void openInvertedListCursor(InvertedListCursor listCursor, ITupleReference searchKey, IIndexOperationContext ictx)
+    void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOperationContext ictx)
             throws HyracksDataException;
 }

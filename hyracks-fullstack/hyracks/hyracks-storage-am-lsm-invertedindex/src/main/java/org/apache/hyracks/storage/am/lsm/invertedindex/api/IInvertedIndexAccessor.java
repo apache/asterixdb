@@ -26,9 +26,9 @@ import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 
 public interface IInvertedIndexAccessor extends IIndexAccessor {
-    public InvertedListCursor createInvertedListCursor() throws HyracksDataException;
+    public IInvertedListCursor createInvertedListCursor() throws HyracksDataException;
 
-    public void openInvertedListCursor(InvertedListCursor listCursor, ITupleReference searchKey)
+    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey)
             throws HyracksDataException;
 
     public IIndexCursor createRangeSearchCursor() throws HyracksDataException;
