@@ -11815,6 +11815,11 @@
         <output-dir compare="Text">query_issue849-2</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="leftouterjoin">
+      <compilation-unit name="empty-dataset">
+        <output-dir compare="Text">empty-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-leftouterjoin">
     <test-case FilePath="index-leftouterjoin">
