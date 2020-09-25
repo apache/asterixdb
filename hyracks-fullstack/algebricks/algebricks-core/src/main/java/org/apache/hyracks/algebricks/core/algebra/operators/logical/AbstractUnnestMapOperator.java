@@ -66,6 +66,11 @@ public abstract class AbstractUnnestMapOperator extends AbstractUnnestOperator {
         return variableTypes;
     }
 
+    @Override
+    public boolean isMap() {
+        return true;
+    }
+
     /**
      * If propagateInput is true, then propagates the input variables.
      */

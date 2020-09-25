@@ -33,6 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnne
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
+import org.apache.hyracks.algebricks.data.IUnnestingPositionWriterFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.UnnestRuntimeFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -81,8 +82,10 @@ public abstract class AbstractUnnestPOperator extends AbstractScanPOperator {
         IUnnestingEvaluatorFactory unnestingFactory = expressionRuntimeProvider.createUnnestingFunctionFactory(agg,
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
         int[] projectionList = JobGenHelper.projectAllVariables(opSchema);
+        IUnnestingPositionWriterFactory positionWriterFactory =
+                unnest.hasPositionalVariable() ? context.getUnnestingPositionWriterFactory() : null;
         UnnestRuntimeFactory unnestRuntime = new UnnestRuntimeFactory(outCol, unnestingFactory, projectionList,
-                unnest.getPositionWriter(), leftOuter, context.getMissingWriterFactory());
+                positionWriterFactory, leftOuter, context.getMissingWriterFactory());
         unnestRuntime.setSourceLocation(unnest.getSourceLocation());
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
         builder.contributeMicroOperator(unnest, unnestRuntime, recDesc);

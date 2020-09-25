@@ -50,6 +50,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.base.UnnestingPositionWriterFactory;
 import org.apache.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -73,6 +74,7 @@ import org.apache.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
+import org.apache.hyracks.algebricks.data.IUnnestingPositionWriterFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
@@ -338,6 +340,11 @@ public class NonTaggedDataFormat implements IDataFormat {
     @Override
     public IMissingWriterFactory getMissingWriterFactory() {
         return MissingWriterFactory.INSTANCE;
+    }
+
+    @Override
+    public IUnnestingPositionWriterFactory getUnnestingPositionWriterFactory() {
+        return UnnestingPositionWriterFactory.INSTANCE;
     }
 
     @Override

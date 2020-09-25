@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Set;
 
 public class ListSet<E> implements Set<E> {
-    private List<E> list = new ArrayList<E>();
+    private final List<E> list = new ArrayList<E>();
 
     public ListSet() {
     }
@@ -36,17 +36,19 @@ public class ListSet<E> implements Set<E> {
 
     @Override
     public boolean add(E arg0) {
-        if (list.contains(arg0))
+        if (list.contains(arg0)) {
             return false;
+        }
         return list.add(arg0);
     }
 
     @Override
     public boolean addAll(Collection<? extends E> arg0) {
-        for (E item : arg0)
-            if (list.contains(item))
-                return false;
-        return list.addAll(arg0);
+        boolean modified = false;
+        for (E item : arg0) {
+            modified |= add(item);
+        }
+        return modified;
     }
 
     @Override

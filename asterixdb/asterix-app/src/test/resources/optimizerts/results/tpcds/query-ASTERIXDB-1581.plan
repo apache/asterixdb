@@ -16,7 +16,7 @@
                 -- STREAM_PROJECT  |LOCAL|
                   -- ASSIGN  |LOCAL|
                     -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                      -- PRE_CLUSTERED_GROUP_BY[$$159]  |LOCAL|
+                      -- PRE_CLUSTERED_GROUP_BY[$$166]  |LOCAL|
                               {
                                 -- AGGREGATE  |LOCAL|
                                   -- AGGREGATE  |LOCAL|
@@ -26,9 +26,9 @@
                         -- ONE_TO_ONE_EXCHANGE  |LOCAL|
                           -- STREAM_PROJECT  |LOCAL|
                             -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                              -- HYBRID_HASH_JOIN [$$159][$$160]  |LOCAL|
+                              -- HYBRID_HASH_JOIN [$$166][$$167]  |LOCAL|
                                 -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                                  -- PRE_CLUSTERED_GROUP_BY[$$95]  |LOCAL|
+                                  -- PRE_CLUSTERED_GROUP_BY[$$102]  |LOCAL|
                                           {
                                             -- AGGREGATE  |LOCAL|
                                               -- AGGREGATE  |LOCAL|
@@ -36,11 +36,11 @@
                                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                                           }
                                     -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                                      -- STABLE_SORT [$$95(ASC)]  |LOCAL|
+                                      -- STABLE_SORT [$$102(ASC)]  |LOCAL|
                                         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
                                           -- STREAM_PROJECT  |UNPARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-                                              -- HYBRID_HASH_JOIN [$$95][$$152]  |UNPARTITIONED|
+                                              -- HYBRID_HASH_JOIN [$$102][$$159]  |UNPARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
                                                   -- STREAM_PROJECT  |UNPARTITIONED|
                                                     -- ASSIGN  |UNPARTITIONED|
@@ -123,7 +123,7 @@
                                           -- STREAM_SELECT  |LOCAL|
                                             -- ASSIGN  |LOCAL|
                                               -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                                                -- PRE_CLUSTERED_GROUP_BY[$$161]  |LOCAL|
+                                                -- PRE_CLUSTERED_GROUP_BY[$$168]  |LOCAL|
                                                         {
                                                           -- AGGREGATE  |LOCAL|
                                                             -- AGGREGATE  |LOCAL|
@@ -131,11 +131,11 @@
                                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                         }
                                                   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                                                    -- STABLE_SORT [$$161(ASC)]  |LOCAL|
+                                                    -- STABLE_SORT [$$168(ASC)]  |LOCAL|
                                                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
                                                         -- STREAM_PROJECT  |UNPARTITIONED|
                                                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-                                                            -- HYBRID_HASH_JOIN [$$161][$$162]  |UNPARTITIONED|
+                                                            -- HYBRID_HASH_JOIN [$$168][$$169]  |UNPARTITIONED|
                                                               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
                                                                 -- REPLICATE  |UNPARTITIONED|
                                                                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|

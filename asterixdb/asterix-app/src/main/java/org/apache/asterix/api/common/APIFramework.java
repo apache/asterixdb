@@ -285,6 +285,7 @@ public class APIFramework {
         builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
         builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
         builder.setMissingWriterFactory(format.getMissingWriterFactory());
+        builder.setUnnestingPositionWriterFactory(format.getUnnestingPositionWriterFactory());
         builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
         builder.setPrinterProvider(getPrinterFactoryProvider(format, conf.fmt()));
         builder.setSerializerDeserializerProvider(format.getSerdeProvider());

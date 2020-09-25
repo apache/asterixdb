@@ -1577,7 +1577,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier TREAT_AS_INTEGER =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "treat-as-integer", 1);
     public static final FunctionIdentifier IS_NUMERIC_ADD_COMPATIBLE =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-numeric-add-compatibe", 1);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-numeric-add-compatible", 1);
 
     public static final FunctionIdentifier EXTERNAL_LOOKUP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "external-lookup", FunctionIdentifier.VARARGS);

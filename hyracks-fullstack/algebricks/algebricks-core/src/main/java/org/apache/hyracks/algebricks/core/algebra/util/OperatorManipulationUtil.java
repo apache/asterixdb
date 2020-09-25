@@ -21,6 +21,7 @@ package org.apache.hyracks.algebricks.core.algebra.util;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
@@ -463,7 +464,7 @@ public class OperatorManipulationUtil {
         return -1;
     }
 
-    public static List<Mutable<ILogicalExpression>> createVariableReferences(List<LogicalVariable> varList,
+    public static List<Mutable<ILogicalExpression>> createVariableReferences(Collection<LogicalVariable> varList,
             SourceLocation sourceLoc) {
         List<Mutable<ILogicalExpression>> varRefs = new ArrayList<>(varList.size());
         for (LogicalVariable var : varList) {

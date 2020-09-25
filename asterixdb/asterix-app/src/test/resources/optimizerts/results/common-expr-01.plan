@@ -3,13 +3,13 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- SORT_GROUP_BY[$$176, $$177]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$185, $$186]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
-            -- HASH_PARTITION_EXCHANGE [$$176, $$177]  |PARTITIONED|
-              -- SORT_GROUP_BY[$$159, $$160]  |PARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$185, $$186]  |PARTITIONED|
+              -- SORT_GROUP_BY[$$168, $$169]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -26,15 +26,15 @@
                                   -- STREAM_SELECT  |PARTITIONED|
                                     -- STREAM_PROJECT  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- PRE_CLUSTERED_GROUP_BY[$$163]  |PARTITIONED|
+                                        -- PRE_CLUSTERED_GROUP_BY[$$172]  |PARTITIONED|
                                                 {
                                                   -- AGGREGATE  |LOCAL|
                                                     -- STREAM_SELECT  |LOCAL|
                                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                 }
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- STABLE_SORT [$$163(ASC)]  |PARTITIONED|
-                                              -- HASH_PARTITION_EXCHANGE [$$163]  |PARTITIONED|
+                                            -- STABLE_SORT [$$172(ASC)]  |PARTITIONED|
+                                              -- HASH_PARTITION_EXCHANGE [$$172]  |PARTITIONED|
                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                     -- NESTED_LOOP  |PARTITIONED|

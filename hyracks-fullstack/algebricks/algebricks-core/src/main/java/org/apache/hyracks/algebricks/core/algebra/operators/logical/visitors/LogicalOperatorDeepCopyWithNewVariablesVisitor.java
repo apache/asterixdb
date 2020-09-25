@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -491,29 +492,18 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
 
     @Override
     public ILogicalOperator visitUnionOperator(UnionAllOperator op, ILogicalOperator arg) throws AlgebricksException {
-        List<Mutable<ILogicalOperator>> copiedInputs = new ArrayList<>();
-        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
-            copiedInputs.add(deepCopyOperatorReference(childRef, null));
-        }
-        List<List<LogicalVariable>> liveVarsInInputs = new ArrayList<>();
-        for (Mutable<ILogicalOperator> inputOpRef : copiedInputs) {
-            List<LogicalVariable> liveVars = new ArrayList<>();
-            VariableUtilities.getLiveVariables(inputOpRef.getValue(), liveVars);
-            liveVarsInInputs.add(liveVars);
-        }
-        List<LogicalVariable> liveVarsInLeftInput = liveVarsInInputs.get(0);
-        List<LogicalVariable> liveVarsInRightInput = liveVarsInInputs.get(1);
-        List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> copiedTriples = new ArrayList<>();
-        int index = 0;
+        List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> variableMappingsCopy =
+                new ArrayList<>(op.getVariableMappings().size());
+        UnionAllOperator opCopy = new UnionAllOperator(variableMappingsCopy);
+        deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> triple : op.getVariableMappings()) {
             LogicalVariable producedVar = deepCopyVariable(triple.third);
+            LogicalVariable newLeftVar = Objects.requireNonNull(inputVarToOutputVarMapping.get(triple.first));
+            LogicalVariable newRightVar = Objects.requireNonNull(inputVarToOutputVarMapping.get(triple.second));
             Triple<LogicalVariable, LogicalVariable, LogicalVariable> copiedTriple =
-                    new Triple<>(liveVarsInLeftInput.get(index), liveVarsInRightInput.get(index), producedVar);
-            copiedTriples.add(copiedTriple);
-            ++index;
+                    new Triple<>(newLeftVar, newRightVar, producedVar);
+            variableMappingsCopy.add(copiedTriple);
         }
-        UnionAllOperator opCopy = new UnionAllOperator(copiedTriples);
-        deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }
 
@@ -565,7 +555,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     public ILogicalOperator visitUnnestOperator(UnnestOperator op, ILogicalOperator arg) throws AlgebricksException {
         UnnestOperator opCopy = new UnnestOperator(deepCopyVariable(op.getVariable()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
-                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getPositionWriter());
+                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }
@@ -602,7 +592,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         LeftOuterUnnestOperator opCopy = new LeftOuterUnnestOperator(deepCopyVariable(op.getVariable()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
-                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getPositionWriter());
+                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

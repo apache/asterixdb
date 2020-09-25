@@ -24,10 +24,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.hyracks.algebricks.data.IUnnestingPositionWriter;
+import org.apache.hyracks.algebricks.data.IUnnestingPositionWriterFactory;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.IUnnestingPositionWriter;
 import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
@@ -46,7 +47,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     private final int outCol;
     private final IUnnestingEvaluatorFactory unnestingFactory;
     private final boolean unnestColIsProjected;
-    private final IUnnestingPositionWriter positionWriter;
+    private final IUnnestingPositionWriterFactory positionWriterFactory;
     private final boolean leftOuter;
     private final IMissingWriterFactory missingWriterFactory;
     private int outColPos;
@@ -57,7 +58,8 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     }
 
     public UnnestRuntimeFactory(int outCol, IUnnestingEvaluatorFactory unnestingFactory, int[] projectionList,
-            IUnnestingPositionWriter positionWriter, boolean leftOuter, IMissingWriterFactory missingWriterFactory) {
+            IUnnestingPositionWriterFactory positionWriterFactory, boolean leftOuter,
+            IMissingWriterFactory missingWriterFactory) {
         super(projectionList);
         this.outCol = outCol;
         this.unnestingFactory = unnestingFactory;
@@ -68,7 +70,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             }
         }
         unnestColIsProjected = outColPos >= 0;
-        this.positionWriter = positionWriter;
+        this.positionWriterFactory = positionWriterFactory;
         this.leftOuter = leftOuter;
         this.missingWriterFactory = missingWriterFactory;
     }
@@ -94,6 +96,8 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             private IPointable p = VoidPointable.FACTORY.createPointable();
             private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
             private IUnnestingEvaluator unnest = unnestingFactory.createUnnestingEvaluator(evalCtx);
+            private final IUnnestingPositionWriter positionWriter =
+                    positionWriterFactory != null ? positionWriterFactory.createUnnestingPositionWriter() : null;
 
             @Override
             public void open() throws HyracksDataException {

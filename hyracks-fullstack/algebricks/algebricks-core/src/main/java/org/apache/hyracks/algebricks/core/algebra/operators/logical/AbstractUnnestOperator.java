@@ -40,11 +40,6 @@ public abstract class AbstractUnnestOperator extends AbstractScanOperator {
     }
 
     @Override
-    public boolean isMap() {
-        return true;
-    }
-
-    @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
         return visitor.transform(expression);
     }

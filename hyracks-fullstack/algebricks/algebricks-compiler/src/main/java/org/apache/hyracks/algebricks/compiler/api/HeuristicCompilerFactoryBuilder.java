@@ -102,10 +102,11 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                                 serializerDeserializerProvider, hashFunctionFactoryProvider, hashFunctionFamilyProvider,
                                 comparatorFactoryProvider, typeTraitProvider, binaryBooleanInspectorFactory,
                                 binaryIntegerInspectorFactory, printerProvider, missingWriterFactory,
-                                normalizedKeyComputerFactoryProvider, expressionRuntimeProvider, expressionTypeComputer,
-                                oc, expressionEvalSizeComputer, partialAggregationTypeComputer,
-                                predEvaluatorFactoryProvider, physicalOptimizationConfig.getFrameSize(),
-                                clusterLocations, warningCollector, maxWarnings);
+                                unnestingPositionWriterFactory, normalizedKeyComputerFactoryProvider,
+                                expressionRuntimeProvider, expressionTypeComputer, oc, expressionEvalSizeComputer,
+                                partialAggregationTypeComputer, predEvaluatorFactoryProvider,
+                                physicalOptimizationConfig.getFrameSize(), clusterLocations, warningCollector,
+                                maxWarnings);
 
                         PlanCompiler pc = new PlanCompiler(context);
                         return pc.compilePlan(plan, jobEventListenerFactory);

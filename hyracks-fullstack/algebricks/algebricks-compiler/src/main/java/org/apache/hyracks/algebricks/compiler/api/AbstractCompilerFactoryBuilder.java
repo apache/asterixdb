@@ -42,6 +42,7 @@ import org.apache.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
+import org.apache.hyracks.algebricks.data.IUnnestingPositionWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -65,6 +66,7 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected IConflictingTypeResolver conflictingTypeResolver;
     protected IExpressionEvalSizeComputer expressionEvalSizeComputer;
     protected IMissingWriterFactory missingWriterFactory;
+    protected IUnnestingPositionWriterFactory unnestingPositionWriterFactory;
     protected INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider;
     protected IPartialAggregationTypeComputer partialAggregationTypeComputer;
     protected IMergeAggregationExpressionFactory mergeAggregationExpressionFactory;
@@ -185,6 +187,14 @@ public abstract class AbstractCompilerFactoryBuilder {
 
     public IMissingWriterFactory getMissingWriterFactory() {
         return missingWriterFactory;
+    }
+
+    public void setUnnestingPositionWriterFactory(IUnnestingPositionWriterFactory unnestingPositionWriterFactory) {
+        this.unnestingPositionWriterFactory = unnestingPositionWriterFactory;
+    }
+
+    public IUnnestingPositionWriterFactory getUnnestingPositionWriterFactory() {
+        return unnestingPositionWriterFactory;
     }
 
     public void setExpressionEvalSizeComputer(IExpressionEvalSizeComputer expressionEvalSizeComputer) {

@@ -30,7 +30,7 @@ import org.apache.asterix.optimizer.rules.AsterixConsolidateWindowOperatorsRule;
 import org.apache.asterix.optimizer.rules.AsterixExtractFunctionsFromJoinConditionRule;
 import org.apache.asterix.optimizer.rules.AsterixInlineVariablesRule;
 import org.apache.asterix.optimizer.rules.AsterixIntroduceGroupByCombinerRule;
-import org.apache.asterix.optimizer.rules.AsterixPushAssignBelowUnionAllRule;
+import org.apache.asterix.optimizer.rules.AsterixPushMapOperatorThroughUnionRule;
 import org.apache.asterix.optimizer.rules.ByNameToByIndexFieldAccessRule;
 import org.apache.asterix.optimizer.rules.CancelUnnestSingletonListRule;
 import org.apache.asterix.optimizer.rules.CancelUnnestWithNestedListifyRule;
@@ -94,6 +94,7 @@ import org.apache.asterix.optimizer.rules.am.IntroduceSelectAccessMethodRule;
 import org.apache.asterix.optimizer.rules.subplan.AsterixMoveFreeVariableOperatorOutOfSubplanRule;
 import org.apache.asterix.optimizer.rules.subplan.InlineSubplanInputForNestedTupleSourceRule;
 import org.apache.asterix.optimizer.rules.temporal.TranslateIntervalExpressionRule;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.rewriter.rules.BreakSelectIntoConjunctsRule;
@@ -127,10 +128,10 @@ import org.apache.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PushSelectIntoJoinRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PushSortDownRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PushSubplanWithAggregateDownThroughProductRule;
-import org.apache.hyracks.algebricks.rewriter.rules.PushUnnestDownThroughUnionRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ReinferAllTypesRule;
 import org.apache.hyracks.algebricks.rewriter.rules.RemoveCartesianProductWithEmptyBranchRule;
 import org.apache.hyracks.algebricks.rewriter.rules.RemoveRedundantGroupByDecorVarsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.RemoveRedundantVariablesInUnionRule;
 import org.apache.hyracks.algebricks.rewriter.rules.RemoveRedundantVariablesRule;
 import org.apache.hyracks.algebricks.rewriter.rules.RemoveRedundantWindowOperatorsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.RemoveUnnecessarySortMergeExchange;
@@ -230,6 +231,8 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new RemoveCartesianProductWithEmptyBranchRule());
         condPushDownAndJoinInference.add(new PushMapOperatorDownThroughProductRule());
         condPushDownAndJoinInference.add(new PushSubplanWithAggregateDownThroughProductRule());
+        condPushDownAndJoinInference
+                .add(new AsterixPushMapOperatorThroughUnionRule(LogicalOperatorTag.ASSIGN, LogicalOperatorTag.SELECT));
         condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
         // The following rule must run before PushAggregateIntoNestedSubplanRule
         // (before common subplans diverge due to aggregate pushdown)
@@ -291,8 +294,8 @@ public final class RuleCollections {
         consolidation.add(new CountVarToCountOneRule());
         consolidation.add(new RemoveUnusedAssignAndAggregateRule());
         consolidation.add(new RemoveRedundantGroupByDecorVarsRule());
-        //PushUnnestDownUnion => RemoveRedundantListifyRule cause these rules are correlated
-        consolidation.add(new PushUnnestDownThroughUnionRule());
+        //PushUnnestThroughUnion => RemoveRedundantListifyRule cause these rules are correlated
+        consolidation.add(new AsterixPushMapOperatorThroughUnionRule(LogicalOperatorTag.UNNEST));
         consolidation.add(new RemoveRedundantListifyRule());
         // Window operator consolidation rules
         consolidation.add(new AsterixConsolidateWindowOperatorsRule());
@@ -318,9 +321,10 @@ public final class RuleCollections {
     public static final List<IAlgebraicRewriteRule> buildPlanCleanupRuleCollection() {
         List<IAlgebraicRewriteRule> planCleanupRules = new LinkedList<>();
         planCleanupRules.add(new SwitchInnerJoinBranchRule());
-        planCleanupRules.add(new AsterixPushAssignBelowUnionAllRule());
+        planCleanupRules.add(new AsterixPushMapOperatorThroughUnionRule(LogicalOperatorTag.ASSIGN));
         planCleanupRules.add(new ExtractCommonExpressionsRule());
         planCleanupRules.add(new RemoveRedundantVariablesRule());
+        planCleanupRules.add(new RemoveRedundantVariablesInUnionRule()); // relies on RemoveUnusedAssignAndAggregateRule
         planCleanupRules.add(new PushProjectDownRule());
         planCleanupRules.add(new PushSelectDownRule());
         planCleanupRules.add(new SetClosedRecordConstructorsRule());

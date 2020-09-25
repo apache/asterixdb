@@ -16,11 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.runtime.base;
+/**
+ * Test that the index is used (open field)
+ */
 
-import java.io.DataOutput;
-import java.io.IOException;
+use test;
 
-public interface IUnnestingPositionWriter {
-    public void write(DataOutput dataOutput, long position) throws IOException;
-}
+with T as (
+  select value t1 from fbu1 t1
+  union all
+  select value t2 from fbu2 t2
+)
+select alias, name from T
+where alias >= "Von"
+order by alias;

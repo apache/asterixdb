@@ -227,7 +227,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     @Override
     public ILogicalOperator visitUnnestOperator(UnnestOperator op, Void arg) throws AlgebricksException {
         return new UnnestOperator(op.getVariable(), deepCopyExpressionRef(op.getExpressionRef()),
-                op.getPositionalVariable(), op.getPositionalVariableType(), op.getPositionWriter());
+                op.getPositionalVariable(), op.getPositionalVariableType());
     }
 
     @Override
@@ -412,7 +412,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     public ILogicalOperator visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Void arg)
             throws AlgebricksException {
         return new LeftOuterUnnestOperator(op.getVariable(), deepCopyExpressionRef(op.getExpressionRef()),
-                op.getPositionalVariable(), op.getPositionalVariableType(), op.getPositionWriter());
+                op.getPositionalVariable(), op.getPositionalVariableType());
     }
 
     @Override

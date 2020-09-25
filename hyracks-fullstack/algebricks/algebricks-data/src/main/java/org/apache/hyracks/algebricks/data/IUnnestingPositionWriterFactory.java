@@ -16,22 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.translator;
 
-import java.io.DataOutput;
-import java.io.IOException;
+package org.apache.hyracks.algebricks.data;
+
 import java.io.Serializable;
 
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.hyracks.algebricks.runtime.base.IUnnestingPositionWriter;
-
-public class PositionWriter implements IUnnestingPositionWriter, Serializable {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public void write(DataOutput dataOutput, long position) throws IOException {
-        dataOutput.writeByte(BuiltinType.AINT64.getTypeTag().serialize());
-        dataOutput.writeLong(position);
-    }
-
+@FunctionalInterface
+public interface IUnnestingPositionWriterFactory extends Serializable {
+    IUnnestingPositionWriter createUnnestingPositionWriter();
 }

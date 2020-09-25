@@ -23,20 +23,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
-import org.apache.hyracks.algebricks.runtime.base.IUnnestingPositionWriter;
 
 public abstract class AbstractUnnestNonMapOperator extends AbstractUnnestOperator {
 
     protected LogicalVariable positionalVariable;
-
-    /**
-     * Specify the writer of the positional variable
-     */
-    protected IUnnestingPositionWriter positionWriter;
 
     /**
      * Specify the type of the positional variable
@@ -48,12 +41,10 @@ public abstract class AbstractUnnestNonMapOperator extends AbstractUnnestOperato
     }
 
     public AbstractUnnestNonMapOperator(LogicalVariable variable, Mutable<ILogicalExpression> expression,
-            LogicalVariable positionalVariable, Object positionalVariableType,
-            IUnnestingPositionWriter positionWriter) {
+            LogicalVariable positionalVariable, Object positionalVariableType) {
         this(variable, expression);
         this.setPositionalVariable(positionalVariable);
         this.setPositionalVariableType(positionalVariableType);
-        this.setPositionWriter(positionWriter);
     }
 
     public LogicalVariable getVariable() {
@@ -68,12 +59,8 @@ public abstract class AbstractUnnestNonMapOperator extends AbstractUnnestOperato
         return positionalVariable;
     }
 
-    public void setPositionWriter(IUnnestingPositionWriter positionWriter) {
-        this.positionWriter = positionWriter;
-    }
-
-    public IUnnestingPositionWriter getPositionWriter() {
-        return positionalVariable != null ? positionWriter : null;
+    public boolean hasPositionalVariable() {
+        return positionalVariable != null;
     }
 
     public void setPositionalVariableType(Object positionalVariableType) {
@@ -82,6 +69,13 @@ public abstract class AbstractUnnestNonMapOperator extends AbstractUnnestOperato
 
     public Object getPositionalVariableType() {
         return positionalVariableType;
+    }
+
+    @Override
+    public boolean isMap() {
+        //TODO(dmitry): unnest with positional variable is not a 'map'
+        //need to return !hasPositionalVariable();
+        return true;
     }
 
     protected static <E> List<E> makeSingletonList(E item) {
@@ -95,8 +89,7 @@ public abstract class AbstractUnnestNonMapOperator extends AbstractUnnestOperato
         return new VariablePropagationPolicy() {
 
             @Override
-            public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
-                    throws AlgebricksException {
+            public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources) {
                 if (sources.length > 0) {
                     target.addAllVariables(sources[0]);
                 }

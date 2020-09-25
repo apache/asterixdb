@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
+import org.apache.hyracks.algebricks.data.IUnnestingPositionWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -57,7 +58,8 @@ public class JobGenContext {
     private final IPrinterFactoryProvider printerFactoryProvider;
     private final ITypeTraitProvider typeTraitProvider;
     private final IMetadataProvider<?, ?> metadataProvider;
-    private final IMissingWriterFactory nonMatchWriterFactory;
+    private final IMissingWriterFactory missingWriterFactory;
+    private final IUnnestingPositionWriterFactory unnestingPositionWriterFactory;
     private final INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider;
     private final Object appContext;
     private final IBinaryBooleanInspectorFactory booleanInspectorFactory;
@@ -81,7 +83,7 @@ public class JobGenContext {
             IBinaryComparatorFactoryProvider comparatorFactoryProvider, ITypeTraitProvider typeTraitProvider,
             IBinaryBooleanInspectorFactory booleanInspectorFactory,
             IBinaryIntegerInspectorFactory integerInspectorFactory, IPrinterFactoryProvider printerFactoryProvider,
-            IMissingWriterFactory nullWriterFactory,
+            IMissingWriterFactory missingWriterFactory, IUnnestingPositionWriterFactory unnestingPositionWriterFactory,
             INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider,
             IExpressionRuntimeProvider expressionRuntimeProvider, IExpressionTypeComputer expressionTypeComputer,
             ITypingContext typingContext, IExpressionEvalSizeComputer expressionEvalSizeComputer,
@@ -102,7 +104,8 @@ public class JobGenContext {
         this.printerFactoryProvider = printerFactoryProvider;
         this.clusterLocations = clusterLocations;
         this.normalizedKeyComputerFactoryProvider = normalizedKeyComputerFactoryProvider;
-        this.nonMatchWriterFactory = nullWriterFactory;
+        this.missingWriterFactory = missingWriterFactory;
+        this.unnestingPositionWriterFactory = unnestingPositionWriterFactory;
         this.expressionRuntimeProvider = expressionRuntimeProvider;
         this.expressionTypeComputer = expressionTypeComputer;
         this.typingContext = typingContext;
@@ -190,7 +193,11 @@ public class JobGenContext {
     }
 
     public IMissingWriterFactory getMissingWriterFactory() {
-        return nonMatchWriterFactory;
+        return missingWriterFactory;
+    }
+
+    public IUnnestingPositionWriterFactory getUnnestingPositionWriterFactory() {
+        return unnestingPositionWriterFactory;
     }
 
     public INormalizedKeyComputerFactoryProvider getNormalizedKeyComputerFactoryProvider() {

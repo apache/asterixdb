@@ -35,7 +35,7 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 public class UnionAllOperator extends AbstractLogicalOperator {
 
     // (left-var, right-var, out-var)
-    private List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap;
+    private final List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap;
 
     public UnionAllOperator(List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap) {
         this.varMap = varMap;
@@ -112,31 +112,21 @@ public class UnionAllOperator extends AbstractLogicalOperator {
             inputSchemaIdx = 1;
         }
 
-        schema = new ArrayList<>(inputSchema.size());
-        for (LogicalVariable inVar : inputSchema) {
-            LogicalVariable outVar = findOutputVar(inVar, inputSchemaIdx);
-            schema.add(outVar != null ? outVar : inVar);
-        }
-    }
-
-    private LogicalVariable findOutputVar(LogicalVariable inputVar, int inputIdx) {
+        schema = new ArrayList<>(inputSchema);
         for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : varMap) {
-            LogicalVariable testVar;
-            switch (inputIdx) {
-                case 0:
-                    testVar = t.first;
-                    break;
-                case 1:
-                    testVar = t.second;
-                    break;
-                default:
-                    throw new IllegalArgumentException(String.valueOf(inputIdx));
+            LogicalVariable inVar = inputSchemaIdx == 0 ? t.first : t.second;
+            LogicalVariable outVar = t.third;
+            boolean mappingFound = false;
+            for (int i = 0, n = schema.size(); i < n; i++) {
+                if (schema.get(i).equals(inVar)) {
+                    schema.set(i, outVar);
+                    mappingFound = true;
+                }
             }
-            if (inputVar.equals(testVar)) {
-                return t.third;
+            if (!mappingFound) {
+                schema.add(outVar);
             }
         }
-        return null;
     }
 
     @Override
