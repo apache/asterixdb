@@ -80,6 +80,7 @@
 
     <menu name="Queries">
       <item name="The SQL++ Query Language" href="sqlpp/manual.html"/>
+      <item name="Raw SQL++ Grammar" href="SQLPP.html"/>
       <item name="Builtin Functions" href="sqlpp/builtins.html"/>
     </menu>
 

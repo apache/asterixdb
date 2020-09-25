@@ -81,6 +81,18 @@
               <goal>run</goal>
             </goals>
           </execution>
+		  <execution>
+			  <id>sqlpp</id>
+			  <phase>prepare-package</phase>
+			  <configuration>
+				  <target>
+					  <copy file="${project.basedir}/../asterix-lang-sqlpp/target/site/jjdoc/SQLPP.html" tofile="${project.build.directory}/site/SQLPP.html"/>
+				  </target>
+			  </configuration>
+			  <goals>
+				  <goal>run</goal>
+			  </goals>
+		  </execution>
         </executions>
       </plugin>
       <plugin>
