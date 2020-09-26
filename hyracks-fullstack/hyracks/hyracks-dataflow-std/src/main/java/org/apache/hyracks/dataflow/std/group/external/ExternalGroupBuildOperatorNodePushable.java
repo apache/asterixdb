@@ -38,6 +38,11 @@ import org.apache.logging.log4j.Logger;
 
 public class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable
         implements IRunFileWriterGenerator {
+    /**
+     * Use a random seed to avoid hash collision with the hash exchange operator.
+     * See https://issues.apache.org/jira/browse/ASTERIXDB-2783 for more details.
+     */
+    private static final int INIT_SEED = 573275022;
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final IHyracksTaskContext ctx;
@@ -85,7 +90,7 @@ public class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSi
         state = new ExternalGroupState(ctx.getJobletContext().getJobId(), stateId);
         ISpillableTable table = spillableTableFactory.buildSpillableTable(ctx, tableSize, fileSize, keyFields,
                 comparators, firstNormalizerComputer, aggregatorFactory, inRecordDescriptor, outRecordDescriptor,
-                framesLimit, 0);
+                framesLimit, INIT_SEED);
         RunFileWriter[] runFileWriters = new RunFileWriter[table.getNumPartitions()];
         this.externalGroupBy = new ExternalHashGroupBy(this, table, runFileWriters, inRecordDescriptor);
 

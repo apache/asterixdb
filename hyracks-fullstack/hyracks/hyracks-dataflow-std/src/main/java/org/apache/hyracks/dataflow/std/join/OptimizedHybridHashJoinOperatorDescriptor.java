@@ -107,6 +107,12 @@ import org.apache.logging.log4j.Logger;
  */
 
 public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor {
+    /**
+     * Use a random seed to avoid hash collision with the hash exchange operator.
+     * See https://issues.apache.org/jira/browse/ASTERIXDB-2783 for more details.
+     */
+    private static final int INIT_SEED = 982028031;
+
     private static final int BUILD_AND_PARTITION_ACTIVITY_ID = 0;
     private static final int PARTITION_AND_JOIN_ACTIVITY_ID = 1;
 
@@ -269,10 +275,11 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         ctx.getJobletContext().getJobId(), new TaskId(getActivityId(), partition));
 
                 ITuplePartitionComputer probeHpc =
-                        new FieldHashPartitionComputerFamily(probeKeys, propHashFunctionFactories).createPartitioner(0);
+                        new FieldHashPartitionComputerFamily(probeKeys, propHashFunctionFactories)
+                                .createPartitioner(INIT_SEED);
                 ITuplePartitionComputer buildHpc =
                         new FieldHashPartitionComputerFamily(buildKeys, buildHashFunctionFactories)
-                                .createPartitioner(0);
+                                .createPartitioner(INIT_SEED);
                 boolean failed = false;
 
                 @Override

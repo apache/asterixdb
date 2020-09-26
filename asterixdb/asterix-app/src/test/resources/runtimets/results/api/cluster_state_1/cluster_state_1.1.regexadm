@@ -12,7 +12,7 @@
     "compiler\.groupmemory" : 163840,
     "compiler\.indexonly" : true,
     "compiler\.internal\.sanitycheck" : true,
-    "compiler\.joinmemory" : 262144,
+    "compiler\.joinmemory" : 786432,
     "compiler\.parallelism" : 0,
     "compiler\.sort\.parallel" : false,
     "compiler\.sort\.samples" : 100,
