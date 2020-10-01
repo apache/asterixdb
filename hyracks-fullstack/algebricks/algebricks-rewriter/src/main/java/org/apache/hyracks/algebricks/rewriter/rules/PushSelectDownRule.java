@@ -44,7 +44,7 @@ public class PushSelectDownRule implements IAlgebraicRewriteRule {
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        if (op.getOperatorTag() != LogicalOperatorTag.SELECT) {
+        if (op.getOperatorTag() != LogicalOperatorTag.SELECT || !OperatorPropertiesUtil.isMovable(op)) {
             return false;
         }
 
