@@ -189,7 +189,10 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
             if (p2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression var2 = (VariableReferenceExpression) p2;
                 LogicalVariable v2 = var2.getVariableReference();
-                if (normSet.contains(v2)) {
+                // We must additionally account for equivalent variables.
+                EquivalenceClass v2EquivalenceClass = equivalenceClasses.get(v2);
+                if ((v2EquivalenceClass != null && normSet.contains(v2EquivalenceClass.getVariableRepresentative()))
+                        || (v2EquivalenceClass == null && normSet.contains(v2))) {
                     newDistinctByList.add(p2Ref);
                 }
             } else {
