@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.active;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.ACTIVE_ENTITY_NOT_RUNNING;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -93,7 +95,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     protected ActivityState prevState;
     protected JobId jobId;
     protected volatile long statsTimestamp;
-    protected String stats;
+    protected volatile String stats;
     protected volatile boolean isFetchingStats;
     protected int numRegistered;
     protected int numDeRegistered;
@@ -292,12 +294,17 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     @Override
     public void refreshStats(long timeout) throws HyracksDataException {
         LOGGER.log(level, "refreshStats called");
+        // first check state & if we are fetching outside of the lock- in the event we are recovering it may take some
+        // time to obtain the lock...
+        ensureRunning();
+        if (isFetchingStats) {
+            LOGGER.log(level, "returning immediately since fetchingStats = " + isFetchingStats);
+            return;
+        }
         synchronized (this) {
-            if (state != ActivityState.RUNNING) {
-                LOGGER.log(level, "returning immediately since state = " + state);
-                notifySubscribers(statsUpdatedEvent);
-                return;
-            } else if (isFetchingStats) {
+            // now that we have the lock, again verify the state & ensure we are not already fetching new stats
+            ensureRunning();
+            if (isFetchingStats) {
                 LOGGER.log(level, "returning immediately since fetchingStats = " + isFetchingStats);
                 return;
             } else {
@@ -321,6 +328,12 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             throw HyracksDataException.create(e);
         }
         isFetchingStats = false;
+    }
+
+    protected void ensureRunning() throws RuntimeDataException {
+        if (state != ActivityState.RUNNING) {
+            throw new RuntimeDataException(ACTIVE_ENTITY_NOT_RUNNING, runtimeName, String.valueOf(state).toLowerCase());
+        }
     }
 
     protected synchronized void notifySubscribers(ActiveEvent event) {

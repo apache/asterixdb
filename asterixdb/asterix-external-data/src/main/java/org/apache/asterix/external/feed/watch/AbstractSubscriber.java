@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.feed.watch;
 
+import java.util.Objects;
+
 import org.apache.asterix.active.IActiveEntityEventSubscriber;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.hyracks.util.Span;
@@ -25,11 +27,19 @@ import org.apache.hyracks.util.Span;
 public abstract class AbstractSubscriber implements IActiveEntityEventSubscriber {
 
     protected final IActiveEntityEventsListener listener;
+    private final Object lockObject;
     private volatile boolean done = false;
     private volatile Exception failure = null;
 
+    public AbstractSubscriber(IActiveEntityEventsListener listener, Object lockObject) {
+        Objects.requireNonNull(lockObject);
+        this.listener = listener;
+        this.lockObject = lockObject;
+    }
+
     public AbstractSubscriber(IActiveEntityEventsListener listener) {
         this.listener = listener;
+        this.lockObject = this;
     }
 
     @Override
@@ -38,28 +48,28 @@ public abstract class AbstractSubscriber implements IActiveEntityEventSubscriber
     }
 
     public void complete(Exception failure) {
-        synchronized (listener) {
+        synchronized (lockObject) {
             if (failure != null) {
                 this.failure = failure;
             }
             done = true;
-            listener.notifyAll();
+            lockObject.notifyAll();
         }
     }
 
     @Override
     public void sync() throws InterruptedException {
-        synchronized (listener) {
+        synchronized (lockObject) {
             while (!done) {
-                listener.wait();
+                lockObject.wait();
             }
         }
     }
 
     public boolean sync(Span span) throws InterruptedException {
-        synchronized (listener) {
+        synchronized (lockObject) {
             while (!done) {
-                span.wait(listener);
+                span.wait(lockObject);
                 if (done || span.elapsed()) {
                     return done;
                 }
@@ -70,5 +80,12 @@ public abstract class AbstractSubscriber implements IActiveEntityEventSubscriber
 
     public Exception getFailure() {
         return failure;
+    }
+
+    protected void reset() {
+        synchronized (lockObject) {
+            done = false;
+            failure = null;
+        }
     }
 }
