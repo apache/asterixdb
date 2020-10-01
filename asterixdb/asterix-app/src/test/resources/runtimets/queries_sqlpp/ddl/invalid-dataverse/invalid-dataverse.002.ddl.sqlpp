@@ -17,10 +17,12 @@
  * under the License.
  */
 
+-- param max-warnings:json=1000
+
 drop dataverse realDataverse if exists;
 create dataverse realDataverse;
 use realDataverse;
 
-drop type realDataverse.myType if exists;
-create type fakeDataverse.myType as open { id: uuid, f1: int };
+drop type realDataverse.myType if exists; // success, no warning
+create type fakeDataverse.myType as open { id: uuid, f1: int }; // fails, error dataverse not found
 

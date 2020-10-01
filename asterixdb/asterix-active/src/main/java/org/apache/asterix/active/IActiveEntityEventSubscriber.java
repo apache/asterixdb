@@ -34,7 +34,7 @@ public interface IActiveEntityEventSubscriber {
     void notify(ActiveEvent event);
 
     /**
-     * Checkcs whether the subscriber is done receiving events
+     * Checks whether the subscriber is done receiving events
      *
      * @return
      */

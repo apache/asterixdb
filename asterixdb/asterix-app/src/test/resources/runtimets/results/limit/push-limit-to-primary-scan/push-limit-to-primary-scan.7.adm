@@ -1,0 +1,52 @@
+distribute result [$$180]
+-- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    aggregate [$$180] <- [agg-sql-sum($$209)]
+    -- AGGREGATE  |LOCAL|
+      aggregate [$$209] <- [agg-sql-count(1)]
+      -- AGGREGATE  |LOCAL|
+        exchange
+        -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+          union
+          -- UNION_ALL  |UNPARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+              limit 100
+              -- STREAM_LIMIT  |UNPARTITIONED|
+                project ([])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
+                  -- SORT_MERGE_EXCHANGE [$$120(ASC) ]  |PARTITIONED|
+                    limit 100
+                    -- STREAM_LIMIT  |PARTITIONED|
+                      project ([$$120])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          data-scan []<-[$$120, $$onek1] <- test.onek1 limit 100
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+              limit 10
+              -- STREAM_LIMIT  |UNPARTITIONED|
+                project ([])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
+                  -- SORT_MERGE_EXCHANGE [$$121(ASC) ]  |PARTITIONED|
+                    limit 10
+                    -- STREAM_LIMIT  |PARTITIONED|
+                      project ([$$121])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          data-scan []<-[$$121, $$onek1] <- test.onek1 limit 10
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

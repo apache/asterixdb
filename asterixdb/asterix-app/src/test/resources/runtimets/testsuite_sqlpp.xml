@@ -3997,22 +3997,35 @@
         <expected-error>Cannot drop index "ds". Drop dataset "ds" to remove this index</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="ddl">
+    <test-case FilePath="ddl" check-warnings="true">
       <compilation-unit name="invalid-dataverse">
         <output-dir compare="Text">invalid-dataverse</output-dir>
         <source-location>false</source-location>
-        <expected-error>Cannot find dataverse with name fakeDataverse (in line 20, at column 1)</expected-error>
-        <expected-error>Cannot find dataverse with name fakeDataverse (in line 25, at column 1)</expected-error>
+        <expected-warn>Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-warn>
         <expected-error>Cannot find dataverse with name fakeDataverse (in line 27, at column 1)</expected-error>
-        <expected-error>Cannot find dataverse with name fakeDataverse (in line 28, at column 1)</expected-error>
-        <expected-error>Cannot find datatype with name fakeDataverse.myType</expected-error>
-        <expected-error>Cannot find dataverse with name fakeDataverse (in line 28, at column 1)</expected-error>
+        <expected-warn>Cannot find dataverse with name fakeDataverse (in line 29, at column 1)</expected-warn>
         <expected-error>Cannot find dataverse with name fakeDataverse (in line 30, at column 1)</expected-error>
+        <expected-error>Cannot find datatype with name fakeDataverse.myType</expected-error>
+        <expected-error>Cannot find dataverse with name fakeDataverse (in line 30, at column 1)</expected-error>
+        <expected-error>Cannot find dataverse with name fakeDataverse (in line 32, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
       <compilation-unit name="dataset-and-index-same-dataverse">
         <output-dir compare="Text">dataset-and-index-same-dataverse</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl" check-warnings="true">
+      <compilation-unit name="drop_dataset_invalid_dataverse">
+        <output-dir compare="Text">drop_dataset_invalid_dataverse</output-dir>
+        <expected-error>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-error>
+        <expected-error>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-error>
+        <expected-error>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-error>
+        <expected-error>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-error>
+        <expected-error>ASX1050: Cannot find dataset with name fakeDataset1 in dataverse realDataverse (in line 22, at column 1)</expected-error>
+        <expected-warn>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-warn>
+        <expected-warn>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-warn>
+        <expected-warn>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -12726,6 +12739,11 @@
     <test-case FilePath="leftouterjoin">
       <compilation-unit name="query_issue849-2">
         <output-dir compare="Text">query_issue849-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
+      <compilation-unit name="empty-dataset">
+        <output-dir compare="Text">empty-dataset</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="leftouterjoin">

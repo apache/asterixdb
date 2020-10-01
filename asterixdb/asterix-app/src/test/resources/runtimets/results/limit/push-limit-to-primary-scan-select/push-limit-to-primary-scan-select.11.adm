@@ -1,0 +1,52 @@
+distribute result [$$202]
+-- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    aggregate [$$202] <- [agg-sql-sum($$235)]
+    -- AGGREGATE  |LOCAL|
+      aggregate [$$235] <- [agg-sql-count(1)]
+      -- AGGREGATE  |LOCAL|
+        exchange
+        -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+          union
+          -- UNION_ALL  |UNPARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+              limit 1000
+              -- STREAM_LIMIT  |UNPARTITIONED|
+                project ([])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
+                  -- SORT_MERGE_EXCHANGE [$$134(ASC) ]  |PARTITIONED|
+                    limit 1000
+                    -- STREAM_LIMIT  |PARTITIONED|
+                      project ([$$134])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          data-scan []<-[$$134, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), 1), le($$onek1.getField(2), 10))) limit 1000
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+              limit 1000
+              -- STREAM_LIMIT  |UNPARTITIONED|
+                project ([])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
+                  -- SORT_MERGE_EXCHANGE [$$135(ASC) ]  |PARTITIONED|
+                    limit 1000
+                    -- STREAM_LIMIT  |PARTITIONED|
+                      project ([$$135])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          data-scan []<-[$$135, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), -10), le($$onek1.getField(2), -1))) limit 1000
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

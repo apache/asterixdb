@@ -102,6 +102,8 @@
     <test-case FilePath="external-dataset" check-warnings="true">
       <compilation-unit name="aws/s3/no-files-returned/definition-points-to-nothing">
         <output-dir compare="Text">aws/s3/no-files-returned/definition-points-to-nothing</output-dir>
+        <source-location>false</source-location>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
         <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
       </compilation-unit>
     </test-case>

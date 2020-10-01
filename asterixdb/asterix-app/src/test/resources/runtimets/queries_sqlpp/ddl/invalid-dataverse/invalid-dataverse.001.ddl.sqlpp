@@ -17,5 +17,7 @@
  * under the License.
  */
 
-drop type fakeDataverse.myType if exists;
+-- param max-warnings:json=1000
+
+drop type fakeDataverse.myType if exists; // success, issue warning
 

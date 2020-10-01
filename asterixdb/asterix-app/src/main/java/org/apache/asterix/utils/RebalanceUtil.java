@@ -94,7 +94,7 @@ public class RebalanceUtil {
      */
     public static void rebalance(DataverseName dataverseName, String datasetName, Set<String> targetNcNames,
             MetadataProvider metadataProvider, IHyracksClientConnection hcc,
-            IDatasetRebalanceCallback datasetRebalanceCallback) throws Exception {
+            IDatasetRebalanceCallback datasetRebalanceCallback, boolean forceRebalance) throws Exception {
         Dataset sourceDataset;
         Dataset targetDataset;
         // Executes the first Metadata transaction.
@@ -113,8 +113,7 @@ public class RebalanceUtil {
 
             Set<String> sourceNodes = new HashSet<>(metadataProvider.findNodes(sourceDataset.getNodeGroupName()));
 
-            // The the source nodes are identical to the target nodes.
-            if (sourceNodes.equals(targetNcNames)) {
+            if (!forceRebalance && sourceNodes.equals(targetNcNames)) {
                 return;
             }
 

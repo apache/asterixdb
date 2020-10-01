@@ -75,7 +75,7 @@ public interface IActiveEntityEventsListener {
      * refresh the stats
      *
      * @param timeout
-     * @throws HyracksDataException
+     * @throws HyracksDataException throws ASX3118 if active entity is not currently running
      */
     void refreshStats(long timeout) throws HyracksDataException;
 

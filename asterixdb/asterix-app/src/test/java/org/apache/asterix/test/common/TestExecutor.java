@@ -1006,11 +1006,14 @@ public class TestExecutor {
         File expectedResultFile;
         switch (ctx.getType()) {
             case "ddl":
+                ExtractedResult ddlExtractedResult;
                 if (ctx.getFile().getName().endsWith("aql")) {
-                    executeAqlUpdateOrDdl(statement, OutputFormat.CLEAN_JSON);
+                    ddlExtractedResult = executeAqlUpdateOrDdl(statement, OutputFormat.CLEAN_JSON);
                 } else {
-                    executeSqlppUpdateOrDdl(statement, OutputFormat.CLEAN_JSON);
+                    ddlExtractedResult = executeSqlppUpdateOrDdl(statement, OutputFormat.CLEAN_JSON);
                 }
+
+                validateWarning(ddlExtractedResult, testCaseCtx, cUnit, testFile, expectedWarnings);
                 break;
             case "update":
                 // isDmlRecoveryTest: set IP address
@@ -1056,11 +1059,7 @@ public class TestExecutor {
                         variableCtx, ctx, expectedResultFile, actualResultFile, queryCount,
                         expectedResultFileCtxs.size(), cUnit.getParameter(), ComparisonEnum.TEXT);
 
-                if (testCaseCtx.getTestCase().isCheckWarnings()) {
-                    boolean expectedSourceLoc = testCaseCtx.isSourceLocationExpected(cUnit);
-                    validateWarnings(extractedResult.getWarnings(), cUnit.getExpectedWarn(), expectedWarnings,
-                            expectedSourceLoc);
-                }
+                validateWarning(extractedResult, testCaseCtx, cUnit, testFile, expectedWarnings);
                 break;
             case "store":
                 // This is a query that returns the expected output of a subsequent query
@@ -1606,18 +1605,19 @@ public class TestExecutor {
         }
     }
 
-    public InputStream executeSqlppUpdateOrDdl(String statement, OutputFormat outputFormat) throws Exception {
+    public ExtractedResult executeSqlppUpdateOrDdl(String statement, OutputFormat outputFormat) throws Exception {
         return executeUpdateOrDdl(statement, outputFormat, getQueryServiceUri(SQLPP));
     }
 
-    private InputStream executeAqlUpdateOrDdl(String statement, OutputFormat outputFormat) throws Exception {
+    private ExtractedResult executeAqlUpdateOrDdl(String statement, OutputFormat outputFormat) throws Exception {
         return executeUpdateOrDdl(statement, outputFormat, getQueryServiceUri(AQL));
     }
 
-    private InputStream executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri)
+    private ExtractedResult executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri)
             throws Exception {
-        InputStream resultStream = executeQueryService(statement, serviceUri, outputFormat, UTF_8);
-        return ResultExtractor.extract(resultStream, UTF_8, outputFormat).getResult();
+        try (InputStream resultStream = executeQueryService(statement, serviceUri, outputFormat, UTF_8)) {
+            return ResultExtractor.extract(resultStream, UTF_8, outputFormat);
+        }
     }
 
     protected static boolean isExpected(Exception e, CompilationUnit cUnit) {
@@ -2420,8 +2420,17 @@ public class TestExecutor {
         return extension.endsWith(AQL) ? getEndpoint(Servlets.QUERY_AQL) : getEndpoint(Servlets.QUERY_SERVICE);
     }
 
-    private void validateWarnings(List<String> actualWarnings, List<String> expectedWarn, BitSet expectedWarnings,
-            boolean expectedSourceLoc) throws Exception {
+    protected void validateWarning(ExtractedResult result, TestCaseContext testCaseCtx, CompilationUnit cUnit,
+            File testFile, BitSet expectedWarnings) throws Exception {
+        if (testCaseCtx.getTestCase().isCheckWarnings()) {
+            boolean expectedSourceLoc = testCaseCtx.isSourceLocationExpected(cUnit);
+            validateWarnings(result.getWarnings(), cUnit.getExpectedWarn(), expectedWarnings, expectedSourceLoc,
+                    testFile);
+        }
+    }
+
+    protected void validateWarnings(List<String> actualWarnings, List<String> expectedWarn, BitSet expectedWarnings,
+            boolean expectedSourceLoc, File testFile) throws Exception {
         if (actualWarnings != null) {
             for (String actualWarn : actualWarnings) {
                 OptionalInt first = IntStream.range(0, expectedWarn.size())
@@ -2444,6 +2453,7 @@ public class TestExecutor {
                 }
                 int warningIndex = first.getAsInt();
                 expectedWarnings.clear(warningIndex);
+                LOGGER.info("testFile {} issued an (expected) warning", testFile);
             }
         }
     }

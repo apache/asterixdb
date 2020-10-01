@@ -29,7 +29,17 @@ public class ActiveStatsRequestMessage extends ActiveManagerMessage {
         this.reqId = reqId;
     }
 
+    @Override
+    public boolean isWhispered() {
+        return true;
+    }
+
     public long getReqId() {
         return reqId;
+    }
+
+    @Override
+    public String toString() {
+        return "ActiveStatsRequestMessage{" + "reqId=" + reqId + '}';
     }
 }

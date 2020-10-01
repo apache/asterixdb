@@ -29,7 +29,7 @@ public class WaitForStateSubscriber extends AbstractSubscriber {
     private final Set<ActivityState> targetStates;
 
     public WaitForStateSubscriber(IActiveEntityEventsListener listener, Set<ActivityState> targetStates) {
-        super(listener);
+        super(listener, listener);
         this.targetStates = targetStates;
         listener.subscribe(this);
     }

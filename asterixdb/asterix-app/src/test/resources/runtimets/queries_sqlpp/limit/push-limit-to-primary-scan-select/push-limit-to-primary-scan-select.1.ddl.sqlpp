@@ -42,6 +42,28 @@ create type test.TweetMessageType as
   tweetid : string
 };
 
+create type onekType1 as
+ closed {
+  unique1 : bigint,
+  unique2 : bigint,
+  two : bigint,
+  four : bigint,
+  ten : bigint,
+  twenty : bigint,
+  onePercent : bigint,
+  tenPercent : bigint,
+  twentyPercent : bigint,
+  fiftyPercent : bigint,
+  unique3 : bigint,
+  evenOnePercent : bigint,
+  oddOnePercent : bigint,
+  stringu1 : string,
+  stringu2 : string,
+  string4 : string
+};
+
 create dataset DBLP1(DBLPType) primary key id;
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid;
+
+create dataset onek1(onekType1) primary key unique2;
