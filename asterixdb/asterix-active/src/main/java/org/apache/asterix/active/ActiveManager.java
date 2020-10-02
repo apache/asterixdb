@@ -38,6 +38,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -72,6 +73,11 @@ public class ActiveManager {
     }
 
     public void registerRuntime(IActiveRuntime runtime) throws HyracksDataException {
+        NodeControllerService controllerService = (NodeControllerService) serviceCtx.getControllerService();
+        if (controllerService.getNodeStatus() != NodeStatus.ACTIVE) {
+            throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.NODE_IS_NOT_ACTIVE,
+                    serviceCtx.getNodeId());
+        }
         if (shutdown) {
             throw new RuntimeDataException(ErrorCode.ACTIVE_MANAGER_SHUTDOWN);
         }

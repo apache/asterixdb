@@ -107,7 +107,11 @@ public class RebalanceApiServlet extends AbstractServlet {
             DataverseName dataverseName = ServletUtil.getDataverseName(request, "dataverseName");
             String datasetName = request.getParameter("datasetName");
             String nodes = request.getParameter("nodes");
-
+            boolean forceRebalance = true;
+            String force = request.getParameter("force");
+            if (force != null) {
+                forceRebalance = Boolean.parseBoolean(force);
+            }
             // Parses and check target nodes.
             if (nodes == null) {
                 sendResponse(response, HttpResponseStatus.BAD_REQUEST, "nodes are not given");
@@ -133,7 +137,8 @@ public class RebalanceApiServlet extends AbstractServlet {
                 return;
             }
             // Schedules a rebalance task and wait for its completion.
-            CountDownLatch terminated = scheduleRebalance(dataverseName, datasetName, targetNodes, response);
+            CountDownLatch terminated =
+                    scheduleRebalance(dataverseName, datasetName, targetNodes, response, forceRebalance);
             terminated.await();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -156,10 +161,10 @@ public class RebalanceApiServlet extends AbstractServlet {
 
     // Schedules a rebalance task.
     private synchronized CountDownLatch scheduleRebalance(DataverseName dataverseName, String datasetName,
-            String[] targetNodes, IServletResponse response) {
+            String[] targetNodes, IServletResponse response, boolean force) {
         CountDownLatch terminated = new CountDownLatch(1);
-        Future<Void> task =
-                executor.submit(() -> doRebalance(dataverseName, datasetName, targetNodes, response, terminated));
+        Future<Void> task = executor
+                .submit(() -> doRebalance(dataverseName, datasetName, targetNodes, response, terminated, force));
         rebalanceTasks.add(task);
         rebalanceFutureTerminated.add(terminated);
         return terminated;
@@ -167,7 +172,7 @@ public class RebalanceApiServlet extends AbstractServlet {
 
     // Performs the actual rebalance.
     private Void doRebalance(DataverseName dataverseName, String datasetName, String[] targetNodes,
-            IServletResponse response, CountDownLatch terminated) {
+            IServletResponse response, CountDownLatch terminated, boolean force) {
         try {
             // Sets the content type.
             HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, StandardCharsets.UTF_8);
@@ -179,11 +184,11 @@ public class RebalanceApiServlet extends AbstractServlet {
                 for (Dataset dataset : datasets) {
                     // By the time rebalanceDataset(...) is called, the dataset could have been dropped.
                     // If that's the case, rebalanceDataset(...) would be a no-op.
-                    rebalanceDataset(dataset.getDataverseName(), dataset.getDatasetName(), targetNodes);
+                    rebalanceDataset(dataset.getDataverseName(), dataset.getDatasetName(), targetNodes, force);
                 }
             } else {
                 // Rebalances a given dataset from its current locations to the target nodes.
-                rebalanceDataset(dataverseName, datasetName, targetNodes);
+                rebalanceDataset(dataverseName, datasetName, targetNodes, force);
             }
 
             // Sends response.
@@ -243,7 +248,7 @@ public class RebalanceApiServlet extends AbstractServlet {
     }
 
     // Rebalances a given dataset.
-    private void rebalanceDataset(DataverseName dataverseName, String datasetName, String[] targetNodes)
+    private void rebalanceDataset(DataverseName dataverseName, String datasetName, String[] targetNodes, boolean force)
             throws Exception {
         IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
         MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
@@ -256,7 +261,7 @@ public class RebalanceApiServlet extends AbstractServlet {
                 lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), dataverseName,
                         datasetName);
                 RebalanceUtil.rebalance(dataverseName, datasetName, new LinkedHashSet<>(Arrays.asList(targetNodes)),
-                        metadataProvider, hcc, NoOpDatasetRebalanceCallback.INSTANCE);
+                        metadataProvider, hcc, NoOpDatasetRebalanceCallback.INSTANCE, force);
             } finally {
                 activeNotificationHandler.resume(metadataProvider);
             }

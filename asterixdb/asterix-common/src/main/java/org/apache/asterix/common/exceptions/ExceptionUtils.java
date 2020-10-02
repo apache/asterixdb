@@ -21,6 +21,7 @@ package org.apache.asterix.common.exceptions;
 import java.util.function.Predicate;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IFormattedException;
 
 public class ExceptionUtils {
     public static final String INCORRECT_PARAMETER = "Incorrect parameter.\n";
@@ -84,5 +85,19 @@ public class ExceptionUtils {
             cause = nextCause;
         }
         return test.test(e);
+    }
+
+    /**
+     * Unwraps enclosed exceptions until a non-product exception is found, otherwise returns the root production
+     * exception
+     */
+    public static Throwable unwrap(Throwable e) {
+        Throwable current = e;
+        Throwable cause = e.getCause();
+        while (cause != null && cause != current && current instanceof IFormattedException) {
+            current = cause;
+            cause = current.getCause();
+        }
+        return current;
     }
 }

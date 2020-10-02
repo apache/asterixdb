@@ -120,9 +120,15 @@ public class NestedLoopJoin {
             RunFileReader runFileReader = runFileWriter.createReader();
             try {
                 runFileReader.open();
-                while (runFileReader.nextFrame(innerBuffer)) {
+                if (runFileReader.nextFrame(innerBuffer)) {
+                    do {
+                        for (int i = 0; i < outerBufferMngr.getNumFrames(); i++) {
+                            blockJoin(outerBufferMngr.getFrame(i, tempInfo), innerBuffer.getBuffer(), writer);
+                        }
+                    } while (runFileReader.nextFrame(innerBuffer));
+                } else if (isLeftOuter) {
                     for (int i = 0; i < outerBufferMngr.getNumFrames(); i++) {
-                        blockJoin(outerBufferMngr.getFrame(i, tempInfo), innerBuffer.getBuffer(), writer);
+                        appendMissing(outerBufferMngr.getFrame(i, tempInfo), writer);
                     }
                 }
             } finally {
@@ -185,6 +191,18 @@ public class NestedLoopJoin {
         FrameUtils.appendConcatToWriter(writer, appender, accessor1, tupleId1, accessor2, tupleId2);
     }
 
+    private void appendMissing(BufferInfo outerBufferInfo, IFrameWriter writer) throws HyracksDataException {
+        accessorOuter.reset(outerBufferInfo.getBuffer(), outerBufferInfo.getStartOffset(), outerBufferInfo.getLength());
+        int tupleCount = accessorOuter.getTupleCount();
+        for (int i = 0; i < tupleCount; ++i) {
+            final int[] ntFieldEndOffsets = missingTupleBuilder.getFieldEndOffsets();
+            final byte[] ntByteArray = missingTupleBuilder.getByteArray();
+            final int ntSize = missingTupleBuilder.getSize();
+            FrameUtils.appendConcatToWriter(writer, appender, accessorOuter, i, ntFieldEndOffsets, ntByteArray, 0,
+                    ntSize);
+        }
+    }
+
     public void closeCache() throws HyracksDataException {
         if (runFileWriter != null) {
             runFileWriter.close();
@@ -195,9 +213,15 @@ public class NestedLoopJoin {
         RunFileReader runFileReader = runFileWriter.createDeleteOnCloseReader();
         try {
             runFileReader.open();
-            while (runFileReader.nextFrame(innerBuffer)) {
+            if (runFileReader.nextFrame(innerBuffer)) {
+                do {
+                    for (int i = 0; i < outerBufferMngr.getNumFrames(); i++) {
+                        blockJoin(outerBufferMngr.getFrame(i, tempInfo), innerBuffer.getBuffer(), writer);
+                    }
+                } while (runFileReader.nextFrame(innerBuffer));
+            } else if (isLeftOuter) {
                 for (int i = 0; i < outerBufferMngr.getNumFrames(); i++) {
-                    blockJoin(outerBufferMngr.getFrame(i, tempInfo), innerBuffer.getBuffer(), writer);
+                    appendMissing(outerBufferMngr.getFrame(i, tempInfo), writer);
                 }
             }
         } finally {

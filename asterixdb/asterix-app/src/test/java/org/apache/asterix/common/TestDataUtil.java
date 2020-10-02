@@ -168,7 +168,7 @@ public class TestDataUtil {
                 lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), dataverseName,
                         datasetName);
                 RebalanceUtil.rebalance(dataverseName, datasetName, new LinkedHashSet<>(Arrays.asList(targetNodes)),
-                        metadataProvider, ccAppCtx.getHcc(), NoOpDatasetRebalanceCallback.INSTANCE);
+                        metadataProvider, ccAppCtx.getHcc(), NoOpDatasetRebalanceCallback.INSTANCE, false);
             } finally {
                 activeNotificationHandler.resume(metadataProvider);
             }
