@@ -45,6 +45,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -194,7 +195,7 @@ public class NCServiceExecutionIT {
         Collection<Object[]> testArgs = new ArrayList<>();
         Random random = getRandom();
         TestCaseContext.Builder b = new TestCaseContext.Builder();
-        for (TestCaseContext ctx : b.build(TESTS_DIR)) {
+        for (TestCaseContext ctx : b.build(TESTS_DIR, "testsuite_sqlpp.xml")) {
             if (!skip(ctx)) {
                 testArgs.add(new Object[] { ctx, ctx, null });
             }
@@ -250,6 +251,7 @@ public class NCServiceExecutionIT {
     }
 
     @Test
+    @Ignore
     public void test() throws Exception {
         if (tcCtx != null) {
             testExecutor.executeTest(ACTUAL_RESULTS_DIR.getPath(), tcCtx, null, false);
