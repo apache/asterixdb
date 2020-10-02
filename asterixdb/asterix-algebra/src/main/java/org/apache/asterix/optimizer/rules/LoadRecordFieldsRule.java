@@ -309,7 +309,17 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
     private static ILogicalExpression findFieldExpression(AbstractLogicalOperator op, LogicalVariable recordVar,
             Object accessKey, IVariableTypeEnvironment typeEnvironment, FieldResolver resolver)
             throws AlgebricksException {
-        for (Mutable<ILogicalOperator> child : op.getInputs()) {
+        List<Mutable<ILogicalOperator>> inputs = op.getInputs();
+        int inputIdxLimit;
+        if (op.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
+            // do not search in the right branch of a left outer join
+            inputIdxLimit = 1;
+        } else {
+            inputIdxLimit = inputs.size();
+        }
+
+        for (int inputIdx = 0; inputIdx < inputIdxLimit; inputIdx++) {
+            Mutable<ILogicalOperator> child = inputs.get(inputIdx);
             AbstractLogicalOperator opChild = (AbstractLogicalOperator) child.getValue();
             if (opChild.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
                 AssignOperator op2 = (AssignOperator) opChild;

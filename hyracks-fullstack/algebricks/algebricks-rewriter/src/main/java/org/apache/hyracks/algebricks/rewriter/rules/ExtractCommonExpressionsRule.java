@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.rewriter.rules;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -82,6 +83,9 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
     private final Map<ILogicalExpression, ExprEquivalenceClass> exprEqClassMap =
             new HashMap<ILogicalExpression, ExprEquivalenceClass>();
 
+    private final List<LogicalVariable> tmpLiveVars = new ArrayList<>();
+    private final List<LogicalVariable> tmpProducedVars = new ArrayList<>();
+
     // Set of operators for which common subexpression elimination should not be performed.
     private static final Set<LogicalOperatorTag> ignoreOps = new HashSet<LogicalOperatorTag>(6);
 
@@ -121,6 +125,31 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
             exprEqClassMap.put(rhsExpr, exprEqClass);
         }
         exprEqClass.setVariable(lhs);
+    }
+
+    // remove equivalence classes that supply given vars
+    private void pruneEquivalenceClassMap(Collection<LogicalVariable> pruneVars) throws AlgebricksException {
+        for (Iterator<Map.Entry<ILogicalExpression, ExprEquivalenceClass>> i = exprEqClassMap.entrySet().iterator(); i
+                .hasNext();) {
+            Map.Entry<ILogicalExpression, ExprEquivalenceClass> me = i.next();
+            ExprEquivalenceClass eqClass = me.getValue();
+            boolean eqClassProvidesPruneVar = false;
+            if (eqClass.variableIsSet() && pruneVars.contains(eqClass.getVariable())) {
+                eqClassProvidesPruneVar = true;
+            } else {
+                tmpProducedVars.clear();
+                VariableUtilities.getProducedVariables(eqClass.getFirstOperator(), tmpProducedVars);
+                for (LogicalVariable producedVar : tmpProducedVars) {
+                    if (pruneVars.contains(producedVar)) {
+                        eqClassProvidesPruneVar = true;
+                        break;
+                    }
+                }
+            }
+            if (eqClassProvidesPruneVar) {
+                i.remove();
+            }
+        }
     }
 
     private boolean removeCommonExpressions(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -187,6 +216,12 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                 // Update equivalence class map with original assign expression.
                 updateEquivalenceClassMap(lhs, exprRef, originalAssignExprs.get(i), op);
             }
+        } else if (op.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
+            // remove equivalence classes that provide vars that are live on the right branch of a left outer join
+            ILogicalOperator rightBranchOp = op.getInputs().get(1).getValue();
+            tmpLiveVars.clear();
+            VariableUtilities.getLiveVariables(rightBranchOp, tmpLiveVars);
+            pruneEquivalenceClassMap(tmpLiveVars);
         }
 
         // TODO: For now do not perform replacement in nested plans
