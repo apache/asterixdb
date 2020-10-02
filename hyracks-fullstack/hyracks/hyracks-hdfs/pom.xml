@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.3.5-SNAPSHOT</version>
+    <version>0.3.6-SNAPSHOT</version>
   </parent>
 
   <properties>
@@ -60,7 +60,10 @@
         <configuration>
           <failOnWarning>true</failOnWarning>
           <outputXML>true</outputXML>
-          <ignoredUnusedDeclaredDependencies>org.apache.hadoop:hadoop*::</ignoredUnusedDeclaredDependencies>
+          <ignoredDependencies>
+            <ignoredDependency>org.apache.hadoop:hadoop*::</ignoredDependency>
+            <ignoredDependency>org.apache.logging.log4j:log4j*::</ignoredDependency>
+          </ignoredDependencies>
         </configuration>
         <executions>
           <execution>
@@ -87,11 +90,6 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
-      <artifactId>hyracks-data-std</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-common</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -108,6 +106,10 @@
           <groupId>javax.servlet</groupId>
           <artifactId>servlet-api</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -118,12 +120,11 @@
           <groupId>com.sun.jersey.jersey-test-framework</groupId>
           <artifactId>jersey-test-framework-grizzly2</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-hdfs</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
@@ -132,6 +133,12 @@
       <type>test-jar</type>
       <classifier>tests</classifier>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
@@ -140,6 +147,12 @@
       <type>test-jar</type>
       <classifier>tests</classifier>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -177,19 +190,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-test-support</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hyracks</groupId>
-      <artifactId>hyracks-util</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
@@ -207,6 +209,10 @@
       <artifactId>xml-apis</artifactId>
       <version>1.0.b2</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-1.2-api</artifactId>
     </dependency>
   </dependencies>
 </project>
