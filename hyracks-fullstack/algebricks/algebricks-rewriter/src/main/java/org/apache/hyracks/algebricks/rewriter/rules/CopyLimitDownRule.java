@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.rewriter.rules;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -62,62 +63,101 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
         List<LogicalVariable> limitUsedVars = new ArrayList<>();
         VariableUtilities.getUsedVariables(limitOp, limitUsedVars);
 
-        Mutable<ILogicalOperator> safeOpRef = null;
-        Mutable<ILogicalOperator> candidateOpRef = limitOp.getInputs().get(0);
+        List<ILogicalOperator> safeOps = new ArrayList<>();
+        List<LogicalVariable> tmpCandidateProducedVars = new ArrayList<>();
+        ILogicalOperator limitInputOp = limitOp.getInputs().get(0).getValue();
 
-        List<LogicalVariable> candidateProducedVars = new ArrayList<>();
-        while (true) {
-            ILogicalOperator candidateOp = candidateOpRef.getValue();
-            LogicalOperatorTag candidateOpTag = candidateOp.getOperatorTag();
-            if (candidateOp.getInputs().size() > 1 || !candidateOp.isMap()
-                    || candidateOpTag == LogicalOperatorTag.SELECT || candidateOpTag == LogicalOperatorTag.UNNEST_MAP) {
+        findSafeOpsInSubtree(limitInputOp, limitUsedVars, safeOps, tmpCandidateProducedVars);
+        if (safeOps.isEmpty()) {
+            return false;
+        }
+
+        SourceLocation sourceLoc = limitOp.getSourceLocation();
+
+        for (ILogicalOperator safeOp : safeOps) {
+            for (Mutable<ILogicalOperator> unsafeOpRef : safeOp.getInputs()) {
+                ILogicalOperator unsafeOp = unsafeOpRef.getValue();
+                ILogicalExpression maxObjectsExpr = limitOp.getMaxObjects().getValue();
+                ILogicalExpression newMaxObjectsExpr;
+                if (limitOp.getOffset().getValue() == null) {
+                    newMaxObjectsExpr = maxObjectsExpr.cloneExpression();
+                } else {
+                    // Need to add an offset to the given limit value
+                    // since the original topmost limit will use the offset value.
+                    // We can't apply the offset multiple times.
+                    IFunctionInfo finfoAdd =
+                            context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.NUMERIC_ADD);
+                    List<Mutable<ILogicalExpression>> addArgs = new ArrayList<>(2);
+                    addArgs.add(new MutableObject<>(maxObjectsExpr.cloneExpression()));
+                    addArgs.add(new MutableObject<>(limitOp.getOffset().getValue().cloneExpression()));
+                    ScalarFunctionCallExpression maxPlusOffset = new ScalarFunctionCallExpression(finfoAdd, addArgs);
+                    maxPlusOffset.setSourceLocation(sourceLoc);
+                    newMaxObjectsExpr = maxPlusOffset;
+                }
+                LimitOperator limitCloneOp = new LimitOperator(newMaxObjectsExpr, false);
+                limitCloneOp.setSourceLocation(sourceLoc);
+                limitCloneOp.setPhysicalOperator(new StreamLimitPOperator());
+                limitCloneOp.getInputs().add(new MutableObject<>(unsafeOp));
+                limitCloneOp.setExecutionMode(unsafeOp.getExecutionMode());
+                context.computeAndSetTypeEnvironmentForOperator(limitCloneOp);
+                limitCloneOp.recomputeSchema();
+                unsafeOpRef.setValue(limitCloneOp);
+            }
+        }
+
+        context.addToDontApplySet(this, limitOp);
+
+        return true;
+    }
+
+    private boolean findSafeOpsInSubtree(ILogicalOperator candidateOp, List<LogicalVariable> limitUsedVars,
+            Collection<? super ILogicalOperator> outSafeOps, List<LogicalVariable> tmpCandidateProducedVars)
+            throws AlgebricksException {
+        ILogicalOperator safeOp = null;
+
+        while (isSafeOpCandidate(candidateOp)) {
+            tmpCandidateProducedVars.clear();
+            VariableUtilities.getProducedVariables(candidateOp, tmpCandidateProducedVars);
+            if (!OperatorPropertiesUtil.disjoint(limitUsedVars, tmpCandidateProducedVars)) {
                 break;
             }
 
-            candidateProducedVars.clear();
-            VariableUtilities.getProducedVariables(candidateOp, candidateProducedVars);
-            if (!OperatorPropertiesUtil.disjoint(limitUsedVars, candidateProducedVars)) {
-                break;
+            List<Mutable<ILogicalOperator>> candidateOpInputs = candidateOp.getInputs();
+            if (candidateOpInputs.size() > 1) {
+                boolean foundSafeOpInBranch = false;
+                for (Mutable<ILogicalOperator> inputOpRef : candidateOpInputs) {
+                    foundSafeOpInBranch |= findSafeOpsInSubtree(inputOpRef.getValue(), limitUsedVars, outSafeOps,
+                            tmpCandidateProducedVars);
+                }
+                if (!foundSafeOpInBranch) {
+                    outSafeOps.add(candidateOp);
+                }
+                return true;
             }
 
-            safeOpRef = candidateOpRef;
-            candidateOpRef = safeOpRef.getValue().getInputs().get(0);
+            safeOp = candidateOp;
+            candidateOp = candidateOpInputs.get(0).getValue();
         }
 
-        if (safeOpRef != null) {
-            ILogicalOperator safeOp = safeOpRef.getValue();
-            Mutable<ILogicalOperator> unsafeOpRef = safeOp.getInputs().get(0);
-            ILogicalOperator unsafeOp = unsafeOpRef.getValue();
-            SourceLocation sourceLoc = limitOp.getSourceLocation();
-            LimitOperator limitCloneOp = null;
-            if (limitOp.getOffset().getValue() == null) {
-                limitCloneOp = new LimitOperator(limitOp.getMaxObjects().getValue(), false);
-                limitCloneOp.setSourceLocation(sourceLoc);
-            } else {
-                // Need to add an offset to the given limit value
-                // since the original topmost limit will use the offset value.
-                // We can't apply the offset multiple times.
-                IFunctionInfo finfoAdd =
-                        context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.NUMERIC_ADD);
-                List<Mutable<ILogicalExpression>> addArgs = new ArrayList<>();
-                addArgs.add(
-                        new MutableObject<ILogicalExpression>(limitOp.getMaxObjects().getValue().cloneExpression()));
-                addArgs.add(new MutableObject<ILogicalExpression>(limitOp.getOffset().getValue().cloneExpression()));
-                ScalarFunctionCallExpression maxPlusOffset = new ScalarFunctionCallExpression(finfoAdd, addArgs);
-                maxPlusOffset.setSourceLocation(sourceLoc);
-                limitCloneOp = new LimitOperator(maxPlusOffset, false);
-                limitCloneOp.setSourceLocation(sourceLoc);
-            }
-            limitCloneOp.setPhysicalOperator(new StreamLimitPOperator());
-            limitCloneOp.getInputs().add(new MutableObject<ILogicalOperator>(unsafeOp));
-            limitCloneOp.setExecutionMode(unsafeOp.getExecutionMode());
-            OperatorPropertiesUtil.computeSchemaRecIfNull((AbstractLogicalOperator) unsafeOp);
-            limitCloneOp.recomputeSchema();
-            unsafeOpRef.setValue(limitCloneOp);
-            context.computeAndSetTypeEnvironmentForOperator(limitCloneOp);
-            context.addToDontApplySet(this, limitOp);
+        if (safeOp != null) {
+            outSafeOps.add(safeOp);
+            return true;
+        } else {
+            return false;
         }
+    }
 
-        return safeOpRef != null;
+    private static boolean isSafeOpCandidate(ILogicalOperator op) {
+        switch (op.getOperatorTag()) {
+            case UNIONALL:
+                return true;
+            // exclude following 'map' operators because they change cardinality
+            case SELECT:
+            case UNNEST:
+            case UNNEST_MAP:
+                return false;
+            default:
+                return op.getInputs().size() == 1 && op.isMap();
+        }
     }
 }

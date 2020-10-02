@@ -1,0 +1,106 @@
+distribute result [$$t]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 4
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      exchange
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        union ($$151, $$310, $$t)
+        -- UNION_ALL  |PARTITIONED|
+          exchange
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            union ($$213, $$227, $$151)
+            -- UNION_ALL  |PARTITIONED|
+              exchange
+              -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
+                project ([$$213])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$213] <- [{"two": $$183}]
+                  -- ASSIGN  |PARTITIONED|
+                    limit 4
+                    -- STREAM_LIMIT  |PARTITIONED|
+                      project ([$$183])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$183] <- [$$onek1.getField(2)]
+                        -- ASSIGN  |PARTITIONED|
+                          project ([$$onek1])
+                          -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              data-scan []<-[$$187, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), 1), le($$onek1.getField(2), 10))) limit 4
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
+              -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
+                project ([$$227])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$227] <- [{"two": $$184}]
+                  -- ASSIGN  |PARTITIONED|
+                    limit 4
+                    -- STREAM_LIMIT  |PARTITIONED|
+                      project ([$$184])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$184] <- [$$onek2.getField(2)]
+                        -- ASSIGN  |PARTITIONED|
+                          project ([$$onek2])
+                          -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              data-scan []<-[$$188, $$onek2] <- test.onek2 condition (and(ge($$onek2.getField(2), 1), le($$onek2.getField(2), 100))) limit 4
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+          exchange
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            union ($$345, $$356, $$310)
+            -- UNION_ALL  |PARTITIONED|
+              exchange
+              -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
+                project ([$$345])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$345] <- [{"two": $$185}]
+                  -- ASSIGN  |PARTITIONED|
+                    limit 4
+                    -- STREAM_LIMIT  |PARTITIONED|
+                      project ([$$185])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$185] <- [$$onek1.getField(2)]
+                        -- ASSIGN  |PARTITIONED|
+                          project ([$$onek1])
+                          -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              data-scan []<-[$$189, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), 1), le($$onek1.getField(2), 1000))) limit 4
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
+              -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
+                project ([$$356])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$356] <- [{"two": $$186}]
+                  -- ASSIGN  |PARTITIONED|
+                    limit 4
+                    -- STREAM_LIMIT  |PARTITIONED|
+                      project ([$$186])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$186] <- [$$onek2.getField(2)]
+                        -- ASSIGN  |PARTITIONED|
+                          project ([$$onek2])
+                          -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              data-scan []<-[$$190, $$onek2] <- test.onek2 condition (and(ge($$onek2.getField(2), 1), le($$onek2.getField(2), 10000))) limit 4
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
