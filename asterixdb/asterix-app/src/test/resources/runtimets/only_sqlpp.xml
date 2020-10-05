@@ -19,15 +19,5 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   <test-group name="failed">
-    <test-case FilePath="limit">
-      <compilation-unit name="push-limit-to-primary-scan">
-        <output-dir compare="Text">push-limit-to-primary-scan</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="limit">
-      <compilation-unit name="push-limit-to-primary-scan-select">
-        <output-dir compare="Text">push-limit-to-primary-scan-select</output-dir>
-      </compilation-unit>
-    </test-case>
   </test-group>
 </test-suite>
