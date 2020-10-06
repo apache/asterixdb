@@ -42,6 +42,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexPageWriteCallback;
 import org.apache.hyracks.storage.common.IResource;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
+import org.apache.hyracks.storage.common.buffercache.IRateLimiter;
+import org.apache.hyracks.storage.common.buffercache.SleepRateLimiter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -55,7 +57,22 @@ public class LSMBTreePageWriteCallbackTest extends OrderedIndexTestDriver {
 
     private final int PAGES_PER_FORCE = 16;
 
+    private int pageCounter = 0;
     private LSMIndexPageWriteCallback lastCallback = null;
+    private final IRateLimiter testLimiter = new IRateLimiter() {
+        IRateLimiter limiter = SleepRateLimiter.create(100 * 1000);
+
+        @Override
+        public void setRate(double ratePerSecond) {
+
+        }
+
+        @Override
+        public void request(int permits) throws HyracksDataException {
+            limiter.request(permits);
+            pageCounter++;
+        }
+    };
 
     private final ILSMPageWriteCallbackFactory pageWriteCallbackFactory = new ILSMPageWriteCallbackFactory() {
         private static final long serialVersionUID = 1L;
@@ -67,7 +84,7 @@ public class LSMBTreePageWriteCallbackTest extends OrderedIndexTestDriver {
 
         @Override
         public IPageWriteCallback createPageWriteCallback() throws HyracksDataException {
-            lastCallback = new LSMIndexPageWriteCallback(PAGES_PER_FORCE);
+            lastCallback = new LSMIndexPageWriteCallback(testLimiter, PAGES_PER_FORCE);
             return lastCallback;
         }
     };
@@ -134,6 +151,7 @@ public class LSMBTreePageWriteCallbackTest extends OrderedIndexTestDriver {
                     ctx.getIndex().activate();
                 }
             }
+            pageCounter = 0;
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) ctx.getIndexAccessor();
             ILSMIOOperation mergeOp = accessor.scheduleMerge(((LSMBTree) ctx.getIndex()).getDiskComponents());
             mergeOp.addCompleteListener(op -> {
@@ -141,6 +159,7 @@ public class LSMBTreePageWriteCallbackTest extends OrderedIndexTestDriver {
                     long numPages = op.getNewComponent().getComponentSize()
                             / harness.getDiskBufferCache().getPageSizeWithHeader() - 1;
                     // we skipped the metadata page for simplicity
+                    Assert.assertEquals(numPages, pageCounter);
                     Assert.assertEquals(numPages / PAGES_PER_FORCE, lastCallback.getTotalForces());
                 }
             });

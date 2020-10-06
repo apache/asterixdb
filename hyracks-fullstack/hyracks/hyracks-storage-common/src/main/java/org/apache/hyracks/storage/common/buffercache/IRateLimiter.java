@@ -19,30 +19,10 @@
 package org.apache.hyracks.storage.common.buffercache;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.common.IIndexBulkLoader;
 
-public interface IPageWriteCallback {
-    /**
-     * Initialization
-     *
-     * @param bulkLoader
-     */
-    void initialize(IIndexBulkLoader bulkLoader);
+public interface IRateLimiter {
 
-    /**
-     * Notify that a page is about to be written
-     *
-     * @param page
-     * @throws HyracksDataException
-     */
-    void beforeWrite(ICachedPage page) throws HyracksDataException;
+    void setRate(double ratePerSecond);
 
-    /**
-     * Notify that a page has been written
-     *
-     * @param page
-     * @throws HyracksDataException
-     */
-    void afterWrite(ICachedPage page) throws HyracksDataException;
-
+    void request(int permits) throws HyracksDataException;
 }

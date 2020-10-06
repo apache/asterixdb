@@ -54,7 +54,8 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE(DOUBLE, 0.01d),
         STORAGE_COMPRESSION_BLOCK(STRING, "snappy"),
         STORAGE_DISK_FORCE_BYTES(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(16, MEGABYTE)),
-        STORAGE_IO_SCHEDULER(STRING, "greedy");
+        STORAGE_IO_SCHEDULER(STRING, "greedy"),
+        STORAGE_WRITE_RATE_LIMIT(LONG_BYTE_UNIT, 0l);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -104,6 +105,8 @@ public class StorageProperties extends AbstractProperties {
                     return "The maximum acceptable false positive rate for bloom filters associated with LSM indexes";
                 case STORAGE_COMPRESSION_BLOCK:
                     return "The default compression scheme for the storage";
+                case STORAGE_WRITE_RATE_LIMIT:
+                    return "The maximum disk write rate (bytes/s) for each storage partition (disabled if the provided value <= 0)";
                 case STORAGE_DISK_FORCE_BYTES:
                     return "The number of bytes before each disk force (fsync)";
                 case STORAGE_IO_SCHEDULER:
@@ -207,6 +210,10 @@ public class StorageProperties extends AbstractProperties {
 
     protected int geSystemReservedDatasets() {
         return SYSTEM_RESERVED_DATASETS;
+    }
+
+    public long getWriteRateLimit() {
+        return accessor.getLong(Option.STORAGE_WRITE_RATE_LIMIT);
     }
 
     public int getDiskForcePages() {

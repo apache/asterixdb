@@ -33,6 +33,7 @@ import org.apache.asterix.common.api.IConfigValidator;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
 import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.api.IDiskWriteRateLimiterProvider;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IPropertiesFactory;
 import org.apache.asterix.common.api.IReceptionist;
@@ -49,6 +50,7 @@ import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
+import org.apache.asterix.common.context.DiskWriteRateLimiterProvider;
 import org.apache.asterix.common.context.GlobalVirtualBufferCache;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -153,6 +155,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private IReceptionist receptionist;
     private ICacheManager cacheManager;
     private IConfigValidator configValidator;
+    private IDiskWriteRateLimiterProvider diskWriteRateLimiterProvider;
 
     public NCAppRuntimeContext(INCServiceContext ncServiceContext, NCExtensionManager extensionManager,
             IPropertiesFactory propertiesFactory) {
@@ -287,6 +290,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         lccm.register((ILifeCycleComponent) txnSubsystem.getLockManager());
         lccm.register(txnSubsystem.getCheckpointManager());
         lccm.register(libraryManager);
+
+        diskWriteRateLimiterProvider = new DiskWriteRateLimiterProvider();
     }
 
     @Override
@@ -592,5 +597,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                     HaltCallback.INSTANCE);
         }
         return ioScheduler;
+    }
+
+    @Override
+    public IDiskWriteRateLimiterProvider getDiskWriteRateLimiterProvider() {
+        return diskWriteRateLimiterProvider;
     }
 }

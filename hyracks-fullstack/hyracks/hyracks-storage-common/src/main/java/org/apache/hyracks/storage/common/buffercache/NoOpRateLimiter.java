@@ -19,30 +19,22 @@
 package org.apache.hyracks.storage.common.buffercache;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.common.IIndexBulkLoader;
 
-public interface IPageWriteCallback {
-    /**
-     * Initialization
-     *
-     * @param bulkLoader
-     */
-    void initialize(IIndexBulkLoader bulkLoader);
+public class NoOpRateLimiter implements IRateLimiter {
 
-    /**
-     * Notify that a page is about to be written
-     *
-     * @param page
-     * @throws HyracksDataException
-     */
-    void beforeWrite(ICachedPage page) throws HyracksDataException;
+    public static final NoOpRateLimiter INSTANCE = new NoOpRateLimiter();
 
-    /**
-     * Notify that a page has been written
-     *
-     * @param page
-     * @throws HyracksDataException
-     */
-    void afterWrite(ICachedPage page) throws HyracksDataException;
+    private NoOpRateLimiter() {
+    }
+
+    @Override
+    public void setRate(double ratePerSecond) {
+        // no op
+    }
+
+    @Override
+    public void request(int tokens) throws HyracksDataException {
+        // no op
+    }
 
 }

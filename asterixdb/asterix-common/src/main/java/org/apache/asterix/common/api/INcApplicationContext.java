@@ -140,4 +140,9 @@ public interface INcApplicationContext extends IApplicationContext {
      * @return the library manager
      */
     ILibraryManager getLibraryManager();
+
+    /**
+     * @return the disk write rate limiter provider
+     */
+    IDiskWriteRateLimiterProvider getDiskWriteRateLimiterProvider();
 }

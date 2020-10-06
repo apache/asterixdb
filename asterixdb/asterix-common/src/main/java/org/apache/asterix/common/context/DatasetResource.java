@@ -28,6 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.hyracks.storage.common.buffercache.IRateLimiter;
 
 /**
  * A dataset can be in one of two states { EVICTED , LOADED }.
@@ -46,11 +47,13 @@ public class DatasetResource implements Comparable<DatasetResource> {
 
     private final Map<Integer, PrimaryIndexOperationTracker> datasetPrimaryOpTrackers;
     private final Map<Integer, ILSMComponentIdGenerator> datasetComponentIdGenerators;
+    private final Map<Integer, IRateLimiter> datasetRateLimiters;
 
     public DatasetResource(DatasetInfo datasetInfo) {
         this.datasetInfo = datasetInfo;
         this.datasetPrimaryOpTrackers = new HashMap<>();
         this.datasetComponentIdGenerators = new HashMap<>();
+        this.datasetRateLimiters = new HashMap<>();
     }
 
     public boolean isRegistered() {
@@ -124,6 +127,10 @@ public class DatasetResource implements Comparable<DatasetResource> {
         return datasetComponentIdGenerators.get(partition);
     }
 
+    public IRateLimiter getRateLimiter(int partition) {
+        return datasetRateLimiters.get(partition);
+    }
+
     public void setPrimaryIndexOperationTracker(int partition, PrimaryIndexOperationTracker opTracker) {
         if (datasetPrimaryOpTrackers.containsKey(partition)) {
             throw new IllegalStateException(
@@ -137,6 +144,13 @@ public class DatasetResource implements Comparable<DatasetResource> {
             throw new IllegalStateException("LSMComponentIdGenerator has already been set for partition " + partition);
         }
         datasetComponentIdGenerators.put(partition, idGenerator);
+    }
+
+    public void setRateLimiter(int partition, IRateLimiter rateLimiter) {
+        if (datasetRateLimiters.containsKey(partition)) {
+            throw new IllegalStateException("RateLimiter has already been set for partition " + partition);
+        }
+        datasetRateLimiters.put(partition, rateLimiter);
     }
 
     @Override

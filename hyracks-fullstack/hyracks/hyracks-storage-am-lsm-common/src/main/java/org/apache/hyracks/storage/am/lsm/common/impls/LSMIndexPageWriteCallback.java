@@ -22,15 +22,18 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
+import org.apache.hyracks.storage.common.buffercache.IRateLimiter;
 
 public class LSMIndexPageWriteCallback implements IPageWriteCallback {
 
+    private final IRateLimiter rateLimiter;
     private final int pagesPerForce;
     private IIndexBulkLoader bulkLoader;
     private long totalWrittenPages;
     private int totalForces;
 
-    public LSMIndexPageWriteCallback(int pagesPerForce) {
+    public LSMIndexPageWriteCallback(IRateLimiter rateLimiter, int pagesPerForce) {
+        this.rateLimiter = rateLimiter;
         this.pagesPerForce = pagesPerForce;
     }
 
@@ -39,10 +42,15 @@ public class LSMIndexPageWriteCallback implements IPageWriteCallback {
         this.bulkLoader = bulkLoader;
     }
 
+    public void beforeWrite(ICachedPage page) throws HyracksDataException {
+        rateLimiter.request(page.getFrameSizeMultiplier());
+    }
+
     @Override
     public void afterWrite(ICachedPage page) throws HyracksDataException {
         totalWrittenPages++;
         if (pagesPerForce > 0 && totalWrittenPages % pagesPerForce == 0) {
+            // perform a force
             bulkLoader.force();
             totalForces++;
         }

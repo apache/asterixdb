@@ -16,33 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.buffercache;
+package org.apache.asterix.common.api;
 
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.IResource;
+import org.apache.hyracks.storage.common.buffercache.IRateLimiter;
 
-public interface IPageWriteCallback {
-    /**
-     * Initialization
-     *
-     * @param bulkLoader
-     */
-    void initialize(IIndexBulkLoader bulkLoader);
-
-    /**
-     * Notify that a page is about to be written
-     *
-     * @param page
-     * @throws HyracksDataException
-     */
-    void beforeWrite(ICachedPage page) throws HyracksDataException;
-
-    /**
-     * Notify that a page has been written
-     *
-     * @param page
-     * @throws HyracksDataException
-     */
-    void afterWrite(ICachedPage page) throws HyracksDataException;
-
+public interface IDiskWriteRateLimiterProvider {
+    IRateLimiter getRateLimiter(INCServiceContext serviceCtx, IResource resource) throws HyracksDataException;
 }
