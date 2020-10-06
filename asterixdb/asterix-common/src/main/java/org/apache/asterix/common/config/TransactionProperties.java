@@ -73,6 +73,7 @@ public class TransactionProperties extends AbstractProperties {
                 POSITIVE_INTEGER,
                 10000,
                 "Interval (in milliseconds) for checking lock " + "timeout"),
+        TXN_LOCK_TABLE_SIZE(POSITIVE_INTEGER, 1024 * 1024, "The number of slots in the lock table."),
         TXN_COMMITPROFILER_ENABLED(BOOLEAN, false, "Enable output of commit profiler logs"),
         TXN_COMMITPROFILER_REPORTINTERVAL(POSITIVE_INTEGER, 5, "Interval (in seconds) to report commit profiler logs"),
         TXN_JOB_RECOVERY_MEMORYSIZE(
@@ -157,6 +158,10 @@ public class TransactionProperties extends AbstractProperties {
 
     public int getLockManagerShrinkTimer() {
         return accessor.getInt(Option.TXN_LOCK_SHRINKTIMER);
+    }
+
+    public int getLockTableSize() {
+        return accessor.getInt(Option.TXN_LOCK_TABLE_SIZE);
     }
 
     public int getTimeoutWaitThreshold() {

@@ -74,6 +74,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         WAIT(true, false),
         CONV(true, true) // convert (upgrade) a lock (e.g. from S to X)
         ;
+
         boolean wait;
         boolean modify;
 
@@ -92,9 +93,8 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             { LockAction.ERR, LockAction.WAIT, LockAction.WAIT, LockAction.WAIT, LockAction.WAIT } // X
     };
 
-    public ConcurrentLockManager(final int lockManagerShrinkTimer) throws ACIDException {
-        this(lockManagerShrinkTimer, Runtime.getRuntime().availableProcessors() * 2, 1024);
-        // TODO increase table size?
+    public ConcurrentLockManager(final int lockManagerShrinkTimer, int tableSize) throws ACIDException {
+        this(lockManagerShrinkTimer, Runtime.getRuntime().availableProcessors() * 2, tableSize);
     }
 
     public ConcurrentLockManager(final int lockManagerShrinkTimer, final int noArenas, final int tableSize)
