@@ -16,7 +16,7 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
+<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".sqlpp">
   <test-group name="query_after_restart">
     <test-case FilePath="query_after_restart">
       <compilation-unit name="dataset-with-meta-record">
