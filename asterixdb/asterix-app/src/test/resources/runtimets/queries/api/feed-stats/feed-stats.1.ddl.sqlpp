@@ -18,27 +18,27 @@
  */
 drop dataverse experiments if exists;
 create dataverse experiments;
-use dataverse experiments;
+use experiments;
 
 create type TwitterUserType as closed {
-    screen-name: string,
+    `screen-name`: string,
     lang: string,
     friends_count: int32,
     statuses_count: int32,
     name: string,
     followers_count: int32
-}
+};
 
 create type TweetMessageType as closed {
     tweetid: string,
-    tweetid-copy:string,
+    `tweetid-copy`:string,
     user: TwitterUserType,
-    sender-location: point,
-    send-time: datetime,
-    send-time-copy:datetime,
-    referred-topics: {{ string }},
-    message-text: string
-}
+    `sender-location`: point,
+    `send-time`: datetime,
+    `send-time-copy`:datetime,
+    `referred-topics`: {{ string }},
+    `message-text`: string
+};
 
 create dataset Tweets1(TweetMessageType) primary key tweetid;
 create dataset Tweets2(TweetMessageType) primary key tweetid;

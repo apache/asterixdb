@@ -1457,8 +1457,7 @@ public class TestExecutor {
     public ExtractedResult executeQuery(OutputFormat fmt, String statement, Map<String, Object> variableCtx,
             TestFileContext ctx, File expectedResultFile, File actualResultFile, MutableInt queryCount,
             int numResultFiles, List<Parameter> params, ComparisonEnum compare) throws Exception {
-        URI uri = getEndpoint(ctx.getFile().getName().endsWith("aql") ? Servlets.QUERY_AQL : Servlets.QUERY_SERVICE,
-                FilenameUtils.getExtension(ctx.getFile().getName()));
+        URI uri = getEndpoint(Servlets.QUERY_SERVICE, FilenameUtils.getExtension(ctx.getFile().getName()));
         return executeQuery(fmt, statement, variableCtx, ctx, expectedResultFile, actualResultFile, queryCount,
                 numResultFiles, params, compare, uri);
     }
@@ -2417,7 +2416,7 @@ public class TestExecutor {
     }
 
     private URI getQueryServiceUri(String extension) throws URISyntaxException {
-        return extension.endsWith(AQL) ? getEndpoint(Servlets.QUERY_AQL) : getEndpoint(Servlets.QUERY_SERVICE);
+        return getEndpoint(Servlets.QUERY_SERVICE);
     }
 
     protected void validateWarning(ExtractedResult result, TestCaseContext testCaseCtx, CompilationUnit cUnit,

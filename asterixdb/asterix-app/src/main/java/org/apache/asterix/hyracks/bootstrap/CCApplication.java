@@ -19,7 +19,6 @@
 
 package org.apache.asterix.hyracks.bootstrap;
 
-import static org.apache.asterix.algebra.base.ILangExtension.Language.AQL;
 import static org.apache.asterix.algebra.base.ILangExtension.Language.SQLPP;
 import static org.apache.asterix.api.http.server.ServletConstants.ASTERIX_APP_CONTEXT_INFO_ATTR;
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
@@ -263,8 +262,7 @@ public class CCApplication extends BaseCCApplication {
                 externalProperties.getWebInterfacePort(), config);
         webServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         webServer.addServlet(new ApiServlet(webServer.ctx(), new String[] { "/*" }, appCtx,
-                ccExtensionManager.getCompilationProvider(AQL), ccExtensionManager.getCompilationProvider(SQLPP),
-                getStatementExecutorFactory(), componentProvider));
+                ccExtensionManager.getCompilationProvider(SQLPP), getStatementExecutorFactory(), componentProvider));
         return webServer;
     }
 
@@ -285,7 +283,6 @@ public class CCApplication extends BaseCCApplication {
         addServlet(jsonAPIServer, Servlets.QUERY_STATUS);
         addServlet(jsonAPIServer, Servlets.QUERY_RESULT);
         addServlet(jsonAPIServer, Servlets.QUERY_SERVICE);
-        addServlet(jsonAPIServer, Servlets.QUERY_AQL);
         addServlet(jsonAPIServer, Servlets.RUNNING_REQUESTS);
         addServlet(jsonAPIServer, Servlets.CONNECTOR);
         addServlet(jsonAPIServer, Servlets.SHUTDOWN);
@@ -329,9 +326,6 @@ public class CCApplication extends BaseCCApplication {
                 return new QueryServiceServlet(ctx, paths, appCtx, SQLPP,
                         ccExtensionManager.getCompilationProvider(SQLPP), getStatementExecutorFactory(),
                         componentProvider, null);
-            case Servlets.QUERY_AQL:
-                return new QueryServiceServlet(ctx, paths, appCtx, AQL, ccExtensionManager.getCompilationProvider(AQL),
-                        getStatementExecutorFactory(), componentProvider, null);
             case Servlets.CONNECTOR:
                 return new ConnectorApiServlet(ctx, paths, appCtx);
             case Servlets.REBALANCE:

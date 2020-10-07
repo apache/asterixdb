@@ -16,23 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.lang.aql.visitor.base;
-
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.lang.aql.clause.DistinctClause;
-import org.apache.asterix.lang.aql.clause.ForClause;
-import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
-import org.apache.asterix.lang.aql.expression.UnionExpr;
-import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-
-public interface IAQLVisitor<R, T> extends ILangVisitor<R, T> {
-
-    R visit(FLWOGRExpression flwogreExpr, T arg) throws CompilationException;
-
-    R visit(UnionExpr u, T arg) throws CompilationException;
-
-    R visit(ForClause forClause, T arg) throws CompilationException;
-
-    R visit(DistinctClause distinctClause, T arg) throws CompilationException;
-
-}
+use experiments;
+stop feed TweetFeed;
+disconnect feed TweetFeed from dataset Tweets1;
+disconnect feed TweetFeed from dataset Tweets2;

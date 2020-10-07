@@ -47,11 +47,10 @@ import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.TxnId;
-import org.apache.asterix.lang.aql.parser.AQLParserFactory;
-import org.apache.asterix.lang.aql.parser.ParseException;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -928,14 +927,14 @@ public class AdmDataGen {
     private Map<TypeSignature, IAType> typeMap;
     private Map<TypeSignature, TypeDataGen> typeAnnotMap;
     private DataGeneratorContext dgCtx;
-    private final IParserFactory parserFactory = new AQLParserFactory();
+    private final IParserFactory parserFactory = new SqlppParserFactory();
 
     public AdmDataGen(File schemaFile, File outputDir) {
         this.schemaFile = schemaFile;
         this.outputDir = outputDir;
     }
 
-    public void init() throws IOException, ParseException, ACIDException, AlgebricksException {
+    public void init() throws IOException, ACIDException, AlgebricksException {
         FileReader aql = new FileReader(schemaFile);
         IParser parser = parserFactory.createParser(aql);
         List<Statement> statements = parser.parse();

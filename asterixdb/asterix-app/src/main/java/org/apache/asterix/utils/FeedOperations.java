@@ -29,10 +29,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
-import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
@@ -451,8 +449,7 @@ public class FeedOperations {
 
     public static Pair<JobSpecification, AlgebricksAbsolutePartitionConstraint> buildStartFeedJob(
             MetadataProvider metadataProvider, Feed feed, List<FeedConnection> feedConnections,
-            IStatementExecutor statementExecutor, IHyracksClientConnection hcc, ILangExtension.Language translatorLang)
-            throws Exception {
+            IStatementExecutor statementExecutor, IHyracksClientConnection hcc) throws Exception {
         FeedPolicyAccessor fpa = new FeedPolicyAccessor(new HashMap<>());
         Pair<JobSpecification, ITypedAdapterFactory> intakeInfo = buildFeedIntakeJobSpec(feed, metadataProvider, fpa);
         List<JobSpecification> jobsList = new ArrayList<>();
@@ -466,14 +463,10 @@ public class FeedOperations {
         metadataProvider.getConfig().put(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS, Boolean.TRUE.toString());
         metadataProvider.getConfig().put(FeedActivityDetails.COLLECT_LOCATIONS,
                 StringUtils.join(ingestionLocations, ','));
-        // TODO: Once we deprecated AQL, this extra queryTranslator can be removed.
-        IStatementExecutor translator = translatorLang == ILangExtension.Language.AQL
-                ? getSQLPPTranslator(metadataProvider, ((QueryTranslator) statementExecutor).getSessionOutput())
-                : statementExecutor;
         // Add connection job
         for (FeedConnection feedConnection : feedConnections) {
             JobSpecification connectionJob =
-                    getConnectionJob(metadataProvider, feedConnection, translator, hcc, insertFeed);
+                    getConnectionJob(metadataProvider, feedConnection, statementExecutor, hcc, insertFeed);
             jobsList.add(connectionJob);
         }
         return Pair.of(combineIntakeCollectJobs(metadataProvider, feed, intakeJob, jobsList, feedConnections,

@@ -42,7 +42,6 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.hyracks.bootstrap.CCApplication;
-import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.messaging.CCMessageBroker;
@@ -162,8 +161,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             responseMsg.setStatementProperties(statementProperties);
             responseMsg.setExecutionPlans(translator.getExecutionPlans());
             responseMsg.setWarnings(warnings);
-        } catch (AlgebricksException | HyracksException | TokenMgrError
-                | org.apache.asterix.lang.sqlpp.parser.TokenMgrError pe) {
+        } catch (AlgebricksException | HyracksException | org.apache.asterix.lang.sqlpp.parser.TokenMgrError pe) {
             // we trust that "our" exceptions are serializable and have a comprehensible error message
             GlobalConfig.ASTERIX_LOGGER.log(Level.WARN, pe.getMessage(), pe);
             responseMsg.setError(pe);

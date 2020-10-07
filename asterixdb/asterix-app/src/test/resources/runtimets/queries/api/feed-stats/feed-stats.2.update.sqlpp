@@ -16,7 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-use dataverse experiments;
-stop feed TweetFeed;
-disconnect feed TweetFeed from dataset Tweets1;
-disconnect feed TweetFeed from dataset Tweets2;
+
+use experiments;
+set `wait-for-completion-feed` "false";
+
+connect feed TweetFeed to dataset Tweets1;
+connect feed TweetFeed to dataset Tweets2;
+
+start feed TweetFeed;

@@ -69,7 +69,6 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
-import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
@@ -307,7 +306,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
             }
             errorCount = 0;
-        } catch (Exception | TokenMgrError | org.apache.asterix.lang.sqlpp.parser.TokenMgrError e) {
+        } catch (Exception | org.apache.asterix.lang.sqlpp.parser.TokenMgrError e) {
             handleExecuteStatementException(e, executionState, param);
             response.setStatus(executionState.getHttpStatus());
             requestFailed(e, responsePrinter);
@@ -424,8 +423,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
     protected void handleExecuteStatementException(Throwable t, RequestExecutionState executionState,
             QueryServiceRequestParameters param) {
-        if (t instanceof org.apache.asterix.lang.sqlpp.parser.TokenMgrError || t instanceof TokenMgrError
-                || t instanceof AlgebricksException) {
+        if (t instanceof org.apache.asterix.lang.sqlpp.parser.TokenMgrError || t instanceof AlgebricksException) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("handleException: {}: {}", t.getMessage(), LogRedactionUtil.statement(param.toString()),
                         t);

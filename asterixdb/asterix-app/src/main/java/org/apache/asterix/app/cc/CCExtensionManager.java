@@ -35,7 +35,6 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.hyracks.bootstrap.GlobalRecoveryManager;
@@ -59,7 +58,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class CCExtensionManager implements ICCExtensionManager {
 
     private final IStatementExecutorExtension statementExecutorExtension;
-    private final ILangCompilationProvider aqlCompilationProvider;
     private final ILangCompilationProvider sqlppCompilationProvider;
     private final IFunctionManager functionManager;
     private final IGlobalRecoveryExtension globalRecoveryExtension;
@@ -78,7 +76,6 @@ public class CCExtensionManager implements ICCExtensionManager {
      */
     public CCExtensionManager(List<AsterixExtension> list)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException, HyracksDataException {
-        Pair<ExtensionId, ILangCompilationProvider> aqlcp = null;
         Pair<ExtensionId, ILangCompilationProvider> sqlppcp = null;
         Pair<ExtensionId, IFunctionManager> fm = null;
         IStatementExecutorExtension see = null;
@@ -98,7 +95,6 @@ public class CCExtensionManager implements ICCExtensionManager {
                         break;
                     case LANG:
                         ILangExtension le = (ILangExtension) extension;
-                        aqlcp = ExtensionUtil.extendLangCompilationProvider(Language.AQL, aqlcp, le);
                         sqlppcp = ExtensionUtil.extendLangCompilationProvider(Language.SQLPP, sqlppcp, le);
                         fm = ExtensionUtil.extendFunctionManager(fm, le);
                         break;
@@ -113,7 +109,6 @@ public class CCExtensionManager implements ICCExtensionManager {
             }
         }
         this.statementExecutorExtension = see;
-        this.aqlCompilationProvider = aqlcp == null ? new AqlCompilationProvider() : aqlcp.second;
         this.sqlppCompilationProvider = sqlppcp == null ? new SqlppCompilationProvider() : sqlppcp.second;
         this.functionManager =
                 fm == null ? new FunctionManager(FunctionCollection.createDefaultFunctionCollection()) : fm.second;
@@ -138,8 +133,6 @@ public class CCExtensionManager implements ICCExtensionManager {
 
     public ILangCompilationProvider getCompilationProvider(Language lang) {
         switch (lang) {
-            case AQL:
-                return aqlCompilationProvider;
             case SQLPP:
                 return sqlppCompilationProvider;
             default:
