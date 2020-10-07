@@ -205,6 +205,10 @@
               <gav>org.mindrot:jbcrypt:0.4</gav>
               <url>http://www.mindrot.org/files/jBCrypt/LICENSE</url>
             </override>
+            <override>
+              <gav>org.msgpack:msgpack-core:0.8.20</gav>
+              <noticeUrl>https://raw.githubusercontent.com/msgpack/msgpack-java/0.8.20/NOTICE</noticeUrl>
+            </override>
           </overrides>
           <licenses>
             <license>

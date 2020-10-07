@@ -500,6 +500,20 @@
 
   <supplement>
     <project>
+      <groupId>org.msgpack</groupId>
+      <artifactId>msgpack-core</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedNotice>0.8.20</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>0.8.20</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreNoticeOverride>0.8.20</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <!--  jbcrypt is under an ISC-style license with no NOTICE -->
+  <!--  see the URL noted in the supplement -->
+  <supplement>
+    <project>
       <groupId>org.mindrot</groupId>
       <artifactId>jbcrypt</artifactId>
       <licenses>
@@ -508,6 +522,11 @@
           <url>http://www.mindrot.org/files/jBCrypt/LICENSE</url>
         </license>
       </licenses>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>0.4</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>0.4</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>0.4</license.ignoreLicenseOverride>
+      </properties>
     </project>
   </supplement>
 </supplementalDataModels>
