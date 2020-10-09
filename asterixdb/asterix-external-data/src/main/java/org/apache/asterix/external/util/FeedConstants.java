@@ -39,7 +39,6 @@ public class FeedConstants {
         public static final String DATAVERSE = "dataverse";
         public static final String FEED = "feed";
         public static final String DATASET = "dataset";
-        public static final String AQL = "aql";
         public static final String RUNTIME_TYPE = "runtime-type";
         public static final String PARTITION = "partition";
         public static final String INTAKE_PARTITION = "intake-partition";

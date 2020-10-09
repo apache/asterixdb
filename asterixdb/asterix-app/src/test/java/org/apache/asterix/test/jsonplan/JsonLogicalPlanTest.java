@@ -77,7 +77,6 @@ public class JsonLogicalPlanTest {
     }
 
     protected static final String SEPARATOR = File.separator;
-    private static final String EXTENSION_AQL = "aql";
     private static final String EXTENSION_SQLPP = "sqlpp";
     private static final String EXTENSION_RESULT = "plan.json";
     private static final String FILENAME_IGNORE = "ignore.txt";
@@ -133,7 +132,7 @@ public class JsonLogicalPlanTest {
                 suiteBuildPerFile(innerfile, testArgs, subdir);
             }
         }
-        if (file.isFile() && (file.getName().endsWith(EXTENSION_AQL) || file.getName().endsWith(EXTENSION_SQLPP))) {
+        if (file.isFile() && file.getName().endsWith(EXTENSION_SQLPP)) {
             String resultFileName = AsterixTestHelper.extToResExt(file.getName(), EXTENSION_RESULT);
             File actualFile = new File(PATH_ACTUAL + SEPARATOR + path + resultFileName);
             testArgs.add(new Object[] { file, actualFile });

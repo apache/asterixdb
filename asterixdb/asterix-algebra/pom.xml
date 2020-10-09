@@ -117,11 +117,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
-      <artifactId>asterix-lang-aql</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-lang-sqlpp</artifactId>
       <version>${project.version}</version>
     </dependency>

@@ -47,7 +47,6 @@ public abstract class AbstractDataset {
     public static final String FILE_PART = "part-";
     public static final String FILE_PART0 = FILE_PART + "00000";
     public static final String FILE_EXPECTED = "expected.txt";
-    public static final String AQL = "aql";
 
     public static final String PATH_RAW = "raw";
     public static final String PATH_RECORDPAIRS = "recordpairs";
@@ -72,7 +71,6 @@ public abstract class AbstractDataset {
         (new File(paths[0] + getPathDirecotry(Directory.RECORDS_S, crtCopy))).mkdir();
         (new File(paths[0] + getPathDirecotry(Directory.TOKENS, crtCopy))).mkdir();
         (new File(paths[0] + getPathDirecotry(Directory.TOKENS_R, crtCopy))).mkdir();
-        (new File(paths[0] + getPathDirecotry(Directory.TOKENS_R_AQL, crtCopy))).mkdir();
     }
 
     public abstract String getName();
@@ -121,9 +119,6 @@ public abstract class AbstractDataset {
                 break;
             case TOKENS_R:
                 path += AbstractDataset.PATH_TOKENS + "." + getSuffix(Relation.R);
-                break;
-            case TOKENS_R_AQL:
-                path += AbstractDataset.PATH_TOKENS + "." + getSuffix(Relation.R) + "." + AQL;
                 break;
             case RIDPAIRS:
                 path += AbstractDataset.PATH_RIDPAIRS;

@@ -72,7 +72,6 @@ public class OptimizerTest {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String SEPARATOR = File.separator;
-    private static final String EXTENSION_AQL = "aql";
     private static final String EXTENSION_SQLPP = "sqlpp";
     private static final String EXTENSION_RESULT = "plan";
     private static final String FILENAME_IGNORE = "ignore.txt";
@@ -132,7 +131,7 @@ public class OptimizerTest {
                 suiteBuildPerFile(innerfile, testArgs, subdir);
             }
         }
-        if (file.isFile() && (file.getName().endsWith(EXTENSION_AQL) || file.getName().endsWith(EXTENSION_SQLPP))) {
+        if (file.isFile() && file.getName().endsWith(EXTENSION_SQLPP)) {
             String resultFileName = AsterixTestHelper.extToResExt(file.getName(), EXTENSION_RESULT);
             File expectedFile = new File(PATH_EXPECTED + path + resultFileName);
             File actualFile = new File(PATH_ACTUAL + SEPARATOR + path + resultFileName);

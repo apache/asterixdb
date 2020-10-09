@@ -144,7 +144,6 @@ public class TestExecutor {
             .with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS, DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
     private static final ObjectReader RESULT_NODE_READER =
             JSON_NODE_READER.with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
-    private static final String AQL = "aql";
     private static final String SQLPP = "sqlpp";
     private static final String DEFAULT_PLAN_FORMAT = "string";
     // see
@@ -1007,12 +1006,7 @@ public class TestExecutor {
         switch (ctx.getType()) {
             case "ddl":
                 ExtractedResult ddlExtractedResult;
-                if (ctx.getFile().getName().endsWith("aql")) {
-                    ddlExtractedResult = executeAqlUpdateOrDdl(statement, OutputFormat.CLEAN_JSON);
-                } else {
-                    ddlExtractedResult = executeSqlppUpdateOrDdl(statement, OutputFormat.CLEAN_JSON);
-                }
-
+                ddlExtractedResult = executeSqlppUpdateOrDdl(statement, OutputFormat.CLEAN_JSON);
                 validateWarning(ddlExtractedResult, testCaseCtx, cUnit, testFile, expectedWarnings);
                 break;
             case "update":
@@ -1020,11 +1014,7 @@ public class TestExecutor {
                 if (isDmlRecoveryTest && statement.contains("nc1://")) {
                     statement = statement.replaceAll("nc1://", "127.0.0.1://../../../../../../asterix-app/");
                 }
-                if (ctx.getFile().getName().endsWith("aql")) {
-                    executeAqlUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit));
-                } else {
-                    executeSqlppUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit));
-                }
+                executeSqlppUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit));
                 break;
             case "pollget":
             case "pollquery":
@@ -1094,8 +1084,9 @@ public class TestExecutor {
                 runScriptAndCompareWithResult(testFile, qbcFile, qarFile, ComparisonEnum.TEXT, UTF_8, statement);
                 break;
             case "txneu": // eu represents erroneous update
+            case "errddl":
                 try {
-                    executeAqlUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit));
+                    executeSqlppUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit));
                 } catch (Exception e) {
                     // An exception is expected.
                     failed = true;
@@ -1119,18 +1110,6 @@ public class TestExecutor {
             case "sleep":
                 String[] lines = stripLineComments(statement).trim().split("\n");
                 Thread.sleep(Long.parseLong(lines[lines.length - 1].trim()));
-                break;
-            case "errddl": // a ddlquery that expects error
-                try {
-                    executeAqlUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit));
-                } catch (Exception e) {
-                    // expected error happens
-                    failed = true;
-                    LOGGER.info("testFile {} raised an (expected) exception", testFile, e.toString());
-                }
-                if (!failed) {
-                    throw new Exception("Test \"" + testFile + "\" FAILED; an exception was expected");
-                }
                 break;
             case "get":
             case "post":
@@ -1606,10 +1585,6 @@ public class TestExecutor {
 
     public ExtractedResult executeSqlppUpdateOrDdl(String statement, OutputFormat outputFormat) throws Exception {
         return executeUpdateOrDdl(statement, outputFormat, getQueryServiceUri(SQLPP));
-    }
-
-    private ExtractedResult executeAqlUpdateOrDdl(String statement, OutputFormat outputFormat) throws Exception {
-        return executeUpdateOrDdl(statement, outputFormat, getQueryServiceUri(AQL));
     }
 
     private ExtractedResult executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri)

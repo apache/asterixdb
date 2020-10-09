@@ -883,7 +883,6 @@
   <modules>
     <module>asterix-common</module>
     <module>asterix-lang-common</module>
-    <module>asterix-lang-aql</module>
     <module>asterix-lang-sqlpp</module>
     <module>asterix-algebra</module>
     <module>asterix-app</module>
