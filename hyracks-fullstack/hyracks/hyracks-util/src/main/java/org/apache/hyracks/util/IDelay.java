@@ -21,6 +21,10 @@ package org.apache.hyracks.util;
 @FunctionalInterface
 public interface IDelay {
 
+    /**
+     * @param attempt
+     * @return the delay before next attempt in milliseconds
+     */
     long calculate(long attempt);
 
 }
