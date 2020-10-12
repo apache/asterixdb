@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
+  <test-group name="external-dataset">
+    <test-case FilePath="external-dataset"  check-warnings="true">
+      <compilation-unit name="common/csv-header">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/csv-header</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/csv-no-header">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/csv-no-header</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/tsv-header">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/tsv-header</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/tsv-no-header">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/tsv-no-header</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/csv-warnings">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/csv-warnings</output-dir>
+        <expected-warn>Parsing error at data_dir/no_h_missing_fields.csv line 2 field 3: some fields are missing</expected-warn>
+        <expected-warn>Parsing error at data_dir/no_h_no_closing_q.csv line 2 field 0: malformed input record ended abruptly</expected-warn>
+        <expected-warn>Parsing error at  line 2 field 0: malformed input record ended abruptly</expected-warn>
+
+        <expected-warn>Parsing error at  line 5 field 3: invalid value</expected-warn>
+        <expected-warn>Parsing error at  line 2 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at  line 11 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at  line 3 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at  line 4 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at  line 7 field 7: invalid value</expected-warn>
+        <expected-warn>Parsing error at  line 13 field 7: invalid value</expected-warn>
+        <expected-warn>Parsing error at  line 12 field 3: invalid value</expected-warn>
+        <expected-warn>Parsing error at  line 9 field 6: a quote should be in the beginning</expected-warn>
+
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv line 5 field 3: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv line 2 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv line 11 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv line 3 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv line 4 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv line 7 field 7: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv line 13 field 7: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv line 12 field 3: invalid value</expected-warn>
+        <expected-warn>Parsing error at data_dir/h_invalid_values.csv line 9 field 6: a quote should be in the beginning</expected-warn>
+
+        <expected-warn>Parsing error at data_dir/error1_line_num.csv line 3 field 2: a quote enclosing a field needs to be followed by the delimiter</expected-warn>
+        <expected-warn>Parsing error at data_dir/error2_line_num.csv line 4 field 2: a quote enclosing a field needs to be followed by the delimiter</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/tsv-warnings">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/tsv-warnings</output-dir>
+        <expected-warn>Parsing error at data_dir/no_h_missing_fields.tsv line 2 field 3: some fields are missing</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/json-warnings">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/json-warnings</output-dir>
+        <expected-warn>Parsing error at data_dir/1.json line 3 field 0: malformed input record ended abruptly</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/jsonl">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/jsonl</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+</test-suite>

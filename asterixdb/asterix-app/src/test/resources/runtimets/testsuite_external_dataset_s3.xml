@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
+  <test-group name="aws-s3-external-dataset">
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/json/json">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/json/json</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/json/gz">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/json/gz</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/json/mixed">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/json/mixed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/csv/csv">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/csv/csv</output-dir>
+      </compilation-unit>
+    </test-case><test-case FilePath="external-dataset">
+      <compilation-unit name="common/csv/gz">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/csv/gz</output-dir>
+      </compilation-unit>
+    </test-case><test-case FilePath="external-dataset">
+      <compilation-unit name="common/csv/mixed">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/csv/mixed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/tsv/tsv">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/tsv/tsv</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/tsv/gz">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/tsv/gz</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/tsv/mixed">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/tsv/mixed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/empty-string-definition">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/empty-string-definition</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/over-1000-objects">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/over-1000-objects</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/malformed-json">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/malformed-json</output-dir>
+        <expected-error>Parsing error at malformed-data/duplicate-fields.json line 1 field field: Duplicate field 'field'</expected-error>
+        <expected-error>Parsing error at malformed-data/malformed-json.json line 1 field field: Unexpected character ('}' (code 125)): was expecting double-quote to start field name</expected-error>
+        <expected-error>Parsing error at malformed-data/malformed-json-2.json line 4 field array_f: Unexpected character (']' (code 93)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
+        <expected-error>Parsing error at malformed-data/malformed-jsonl-1.json line 3 field field2: Unrecognized token 'truee': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
+        <expected-error>Parsing error at malformed-data/malformed-jsonl-2.json line 11 field array_f: Unexpected character (']' (code 93)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/definition-does-not-exist">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/definition-does-not-exist</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/invalid-endpoint">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="serviceEndpoint" value="^invalid-endpoint^" />
+        <output-dir compare="Text">common/invalid-endpoint</output-dir>
+        <expected-error>External source error. Invalid service endpoint ^invalid-endpoint^</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/bucket-does-not-exist">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/bucket-does-not-exist</output-dir>
+        <expected-error>External source error. The specified bucket does not exist (Service: S3, Status Code: 404, Request ID: null)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/no-files-returned/definition-points-to-nothing">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/no-files-returned/definition-points-to-nothing</output-dir>
+        <source-location>false</source-location>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/no-files-returned/exclude-all-files">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/no-files-returned/exclude-all-files</output-dir>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/no-files-returned/include-no-files">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/no-files-returned/include-no-files</output-dir>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="s3-include-exclude">
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/bad-name-1">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/bad-name-1</output-dir>
+        <expected-error>Invalid format for property "exclude1"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/bad-name-2">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/bad-name-2</output-dir>
+        <expected-error>Invalid format for property "exclude#"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/bad-name-3">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/bad-name-3</output-dir>
+        <expected-error>Invalid format for property "exclude#hello"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/both">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/both</output-dir>
+        <expected-error>The parameters "include" and "exclude" cannot be provided at the same time</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/exclude-all">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/exclude-all</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/exclude-1">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/exclude-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/exclude-2">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/exclude-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/exclude-3">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/exclude-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/exclude-4">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/exclude-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/exclude-5">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/exclude-5</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/exclude-6">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/exclude-6</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-all">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-all</output-dir>
+        <expected-error>Malformed input stream</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-1">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-2">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-3">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-4">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-5">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-5</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-6">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-6</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-7">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-7</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-8">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-9">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-9</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-10">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-10</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-11">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-11</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/include-exclude/include-12">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/include-exclude/include-12</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+</test-suite>

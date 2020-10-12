@@ -92,6 +92,7 @@ import org.apache.asterix.testframework.xml.ComparisonEnum;
 import org.apache.asterix.testframework.xml.ParameterTypeEnum;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit.Parameter;
+import org.apache.asterix.testframework.xml.TestCase.CompilationUnit.Placeholder;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.asterix.translator.ExecutionPlansJsonPrintUtil;
 import org.apache.commons.io.FileUtils;
@@ -668,6 +669,12 @@ public class TestExecutor {
     }
 
     public InputStream executeQueryService(String str, OutputFormat fmt, URI uri, List<Parameter> params,
+            List<Placeholder> placeholders, boolean jsonEncoded, Charset responseCharset) throws Exception {
+        return executeQueryService(str, fmt, uri, constructQueryParameters(str, fmt, params), placeholders, jsonEncoded,
+                responseCharset, null, false);
+    }
+
+    public InputStream executeQueryService(String str, OutputFormat fmt, URI uri, List<Parameter> params,
             boolean jsonEncoded, Predicate<Integer> responseCodeValidator) throws Exception {
         return executeQueryService(str, fmt, uri, constructQueryParameters(str, fmt, params), jsonEncoded, UTF_8,
                 responseCodeValidator, false);
@@ -691,6 +698,13 @@ public class TestExecutor {
     public InputStream executeQueryService(String str, OutputFormat fmt, URI uri, List<Parameter> params,
             boolean jsonEncoded, Charset responseCharset, Predicate<Integer> responseCodeValidator, boolean cancellable)
             throws Exception {
+        return executeQueryService(str, fmt, uri, params, Collections.emptyList(), jsonEncoded, responseCharset,
+                responseCodeValidator, cancellable);
+    }
+
+    public InputStream executeQueryService(String str, OutputFormat fmt, URI uri, List<Parameter> params,
+            List<Placeholder> placeholders, boolean jsonEncoded, Charset responseCharset,
+            Predicate<Integer> responseCodeValidator, boolean cancellable) throws Exception {
 
         final List<Parameter> macroParameters = extractMacro(str);
         if (!macroParameters.isEmpty()) {
@@ -700,6 +714,10 @@ public class TestExecutor {
         final List<Parameter> additionalParams = extractParameters(str);
         for (Parameter param : additionalParams) {
             params = upsertParam(params, param.getName(), param.getType(), param.getValue());
+        }
+
+        if (!placeholders.isEmpty()) {
+            str = applyExternalDatasetSubstitution(str, placeholders);
         }
 
         HttpUriRequest method = jsonEncoded ? constructPostMethodJson(str, uri, "statement", params)
@@ -1005,8 +1023,7 @@ public class TestExecutor {
         File expectedResultFile;
         switch (ctx.getType()) {
             case "ddl":
-                ExtractedResult ddlExtractedResult;
-                ddlExtractedResult = executeSqlppUpdateOrDdl(statement, OutputFormat.CLEAN_JSON);
+                ExtractedResult ddlExtractedResult = executeSqlppUpdateOrDdl(statement, OutputFormat.CLEAN_JSON, cUnit);
                 validateWarning(ddlExtractedResult, testCaseCtx, cUnit, testFile, expectedWarnings);
                 break;
             case "update":
@@ -1125,7 +1142,7 @@ public class TestExecutor {
                         ctx.extension(), cUnit.getOutputDir().getCompare());
                 break;
             case "server": // (start <test server name> <port>
-                               // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
+                // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
                 try {
                     lines = statement.trim().split("\n");
                     String[] command = lines[lines.length - 1].trim().split(" ");
@@ -1173,9 +1190,9 @@ public class TestExecutor {
                 }
                 break;
             case "lib": // expected format <dataverse-name> <library-name>
-                            // <library-directory>
-                        // TODO: make this case work well with entity names containing spaces by
-                        // looking for \"
+                // <library-directory>
+                // TODO: make this case work well with entity names containing spaces by
+                // looking for \"
                 lines = stripAllComments(statement).trim().split("\n");
                 for (String line : lines) {
                     String[] command = line.trim().split(" ");
@@ -1587,9 +1604,22 @@ public class TestExecutor {
         return executeUpdateOrDdl(statement, outputFormat, getQueryServiceUri(SQLPP));
     }
 
+    public ExtractedResult executeSqlppUpdateOrDdl(String statement, OutputFormat outputFormat, CompilationUnit cUnit)
+            throws Exception {
+        return executeUpdateOrDdl(statement, outputFormat, getQueryServiceUri(SQLPP), cUnit);
+    }
+
     private ExtractedResult executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri)
             throws Exception {
         try (InputStream resultStream = executeQueryService(statement, serviceUri, outputFormat, UTF_8)) {
+            return ResultExtractor.extract(resultStream, UTF_8, outputFormat);
+        }
+    }
+
+    private ExtractedResult executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri,
+            CompilationUnit cUnit) throws Exception {
+        try (InputStream resultStream = executeQueryService(statement, outputFormat, serviceUri, cUnit.getParameter(),
+                cUnit.getPlaceholder(), false, UTF_8)) {
             return ResultExtractor.extract(resultStream, UTF_8, outputFormat);
         }
     }
@@ -2021,6 +2051,107 @@ public class TestExecutor {
                 throw new Exception("Unknown macro command");
         }
         return substitute;
+    }
+
+    protected String applyExternalDatasetSubstitution(String str, List<Placeholder> placeholders) {
+        for (Placeholder placeholder : placeholders) {
+            if (placeholder.getName().equals("adapter")) {
+                str = str.replace("%adapter%", placeholder.getValue());
+
+                if (placeholder.getValue().equalsIgnoreCase("S3")) {
+                    return applyS3Substitution(str, placeholders);
+                } else if (placeholder.getValue().equalsIgnoreCase("AzureBlob")) {
+                    return applyAzureSubstitution(str, placeholders);
+                } else {
+                    return str;
+                }
+            }
+        }
+
+        return str;
+    }
+
+    protected String applyS3Substitution(String str, List<Placeholder> placeholders) {
+        boolean isReplaced = false;
+        boolean hasRegion = false;
+        boolean hasServiceEndpoint = false;
+
+        for (Placeholder placeholder : placeholders) {
+            // Stop if all parameters are met
+            if (hasRegion && hasServiceEndpoint) {
+                break;
+            } else if (!hasRegion && placeholder.getName().equals("region")) {
+                hasRegion = true;
+                if (!isReplaced) {
+                    isReplaced = true;
+                    str = setS3Template(str);
+                }
+                str = str.replace(TestConstants.S3_REGION_PLACEHOLDER, placeholder.getValue());
+            } else if (!hasServiceEndpoint && placeholder.getName().equals("serviceEndpoint")) {
+                hasServiceEndpoint = true;
+                if (!isReplaced) {
+                    isReplaced = true;
+                    str = setS3Template(str);
+                }
+                str = str.replace(TestConstants.S3_SERVICE_ENDPOINT_PLACEHOLDER, placeholder.getValue());
+            }
+        }
+
+        // Use default template if no parameters are passed
+        if (!isReplaced) {
+            str = setS3TemplateDefault(str);
+        }
+
+        // Set to default if not replaced
+        if (isReplaced && !hasRegion) {
+            str = str.replace(TestConstants.S3_REGION_PLACEHOLDER, TestConstants.S3_REGION_DEFAULT);
+        }
+
+        if (isReplaced && !hasServiceEndpoint) {
+            str = str.replace(TestConstants.S3_SERVICE_ENDPOINT_PLACEHOLDER, TestConstants.S3_SERVICE_ENDPOINT_DEFAULT);
+        }
+
+        return str;
+    }
+
+    protected String setS3Template(String str) {
+        return str.replace("%template%", TestConstants.S3_TEMPLATE);
+    }
+
+    protected String setS3TemplateDefault(String str) {
+        return str.replace("%template%", TestConstants.S3_TEMPLATE_DEFAULT);
+    }
+
+    protected String applyAzureSubstitution(String str, List<Placeholder> placeholders) {
+        boolean isReplaced = false;
+        boolean hasBlobEndpoint = false;
+
+        for (Placeholder placeholder : placeholders) {
+            // Stop if all parameters are met
+            if (hasBlobEndpoint) {
+                break;
+            } else if (placeholder.getName().equals("blobEndpoint")) {
+                hasBlobEndpoint = true;
+                isReplaced = true;
+                str = setAzureTemplate(str);
+                str = str.replace(TestConstants.AZURE_BLOB_ENDPOINT_PLACEHOLDER, placeholder.getValue());
+            }
+        }
+
+        // Use default template if no parameters are passed
+        if (!isReplaced) {
+            str = setAzureTemplateDefault(str);
+        }
+
+        return str;
+    }
+
+    protected String setAzureTemplate(String str) {
+        return str.replace("%template%", TestConstants.AZURE_TEMPLATE);
+    }
+
+    protected String setAzureTemplateDefault(String str) {
+        return str.replace("%template%", TestConstants.AZURE_TEMPLATE_DEFAULT);
     }
 
     protected void fail(boolean runDiagnostics, TestCaseContext testCaseCtx, CompilationUnit cUnit,

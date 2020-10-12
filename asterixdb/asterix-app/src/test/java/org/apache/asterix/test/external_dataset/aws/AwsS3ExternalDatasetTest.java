@@ -153,7 +153,7 @@ public class AwsS3ExternalDatasetTest {
 
     @Parameters(name = "AwsS3ExternalDatasetTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        SUITE_TESTS = "testsuite_external_dataset.xml";
+        SUITE_TESTS = "testsuite_external_dataset_s3.xml";
         ONLY_TESTS = "only_external_dataset.xml";
         TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
         PREPARE_BUCKET = AwsS3ExternalDatasetTest::prepareS3Bucket;
@@ -513,7 +513,7 @@ public class AwsS3ExternalDatasetTest {
                 BitSet expectedWarnings) throws Exception {
             String[] lines;
             switch (ctx.getType()) {
-                case "s3bucket":
+                case "container":
                     // <bucket> <def> <sub-path:new_fname:src_file1,sub-path:new_fname:src_file2,sub-path:src_file3>
                     lines = TestExecutor.stripAllComments(statement).trim().split("\n");
                     String lastLine = lines[lines.length - 1];
