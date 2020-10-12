@@ -19,7 +19,11 @@
 
 package org.apache.asterix.metadata.entities;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -29,15 +33,19 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
  */
 public class NodeGroup implements IMetadataEntity<NodeGroup> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     // Enforced to be unique within an Asterix cluster.
     private final String groupName;
-    private final List<String> nodeNames;
+    private final Set<String> nodeNames;
 
     public NodeGroup(String groupName, List<String> nodeNames) {
         this.groupName = groupName;
-        this.nodeNames = nodeNames;
+        if (nodeNames != null) {
+            this.nodeNames = new TreeSet<>(nodeNames);
+        } else {
+            this.nodeNames = Collections.emptySet();
+        }
     }
 
     public String getNodeGroupName() {
@@ -45,7 +53,7 @@ public class NodeGroup implements IMetadataEntity<NodeGroup> {
     }
 
     public List<String> getNodeNames() {
-        return this.nodeNames;
+        return Collections.unmodifiableList(new ArrayList<>(nodeNames));
     }
 
     @Override
