@@ -12847,6 +12847,24 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="rightouterjoin">
+    <test-case FilePath="rightouterjoin">
+      <compilation-unit name="roj-01-core">
+        <output-dir compare="Text">roj-01-core</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="rightouterjoin">
+      <compilation-unit name="roj-02-core">
+        <output-dir compare="Text">roj-02-core</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="rightouterjoin">
+      <compilation-unit name="roj-03-negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1130: Illegal use of RIGHT OUTER JOIN</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="tinysocial">
     <test-case FilePath="tinysocial">
       <compilation-unit name="tinysocial-suite">

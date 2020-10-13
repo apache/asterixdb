@@ -17,10 +17,8 @@
  * under the License.
  */
 
-package org.apache.asterix.lang.sqlpp.optype;
+use test;
 
-public enum JoinType {
-    INNER,
-    LEFTOUTER,
-    RIGHTOUTER
-}
+SELECT t0_unique1, t1_unique1
+FROM f1(2, 4) t
+ORDER BY t0_unique1, t1_unique1;

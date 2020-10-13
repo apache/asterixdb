@@ -1,0 +1,8 @@
+{ "t3": { "unique1": 5057, "unique2": 6 } }
+{ "t3": { "unique1": 6701, "unique2": 7 } }
+{ "t3": { "unique1": 7164, "unique2": 4 }, "t2": { "unique1": 7164, "unique2": 4 } }
+{ "t3": { "unique1": 8009, "unique2": 5 }, "t2": { "unique1": 8009, "unique2": 5 } }
+{ "t3": { "unique1": 3420, "unique2": 2 }, "t1": { "unique1": 3420, "unique2": 2 }, "t2": { "unique1": 3420, "unique2": 2 } }
+{ "t3": { "unique1": 9850, "unique2": 3 }, "t1": { "unique1": 9850, "unique2": 3 }, "t2": { "unique1": 9850, "unique2": 3 } }
+{ "t3": { "unique1": 1891, "unique2": 1 }, "t1": { "unique1": 1891, "unique2": 1 }, "t0": { "unique1": 1891, "unique2": 1 }, "t2": { "unique1": 1891, "unique2": 1 } }
+{ "t3": { "unique1": 8800, "unique2": 0 }, "t1": { "unique1": 8800, "unique2": 0 }, "t0": { "unique1": 8800, "unique2": 0 }, "t2": { "unique1": 8800, "unique2": 0 } }

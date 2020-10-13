@@ -24,25 +24,17 @@ import java.util.Objects;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.sqlpp.optype.JoinType;
 
 public abstract class AbstractBinaryCorrelateClause extends AbstractClause {
 
-    private JoinType joinType;
     private Expression rightExpr;
     private VariableExpr rightVar;
     private VariableExpr rightPosVar;
 
-    public AbstractBinaryCorrelateClause(JoinType joinType, Expression rightExpr, VariableExpr rightVar,
-            VariableExpr rightPosVar) {
-        this.joinType = joinType;
+    public AbstractBinaryCorrelateClause(Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar) {
         this.rightExpr = rightExpr;
         this.rightVar = rightVar;
         this.rightPosVar = rightPosVar;
-    }
-
-    public JoinType getJoinType() {
-        return joinType;
     }
 
     public Expression getRightExpression() {
@@ -67,7 +59,7 @@ public abstract class AbstractBinaryCorrelateClause extends AbstractClause {
 
     @Override
     public int hashCode() {
-        return Objects.hash(joinType, rightExpr, rightPosVar, rightVar);
+        return Objects.hash(rightExpr, rightPosVar, rightVar);
     }
 
     @Override
@@ -79,8 +71,8 @@ public abstract class AbstractBinaryCorrelateClause extends AbstractClause {
             return false;
         }
         AbstractBinaryCorrelateClause target = (AbstractBinaryCorrelateClause) object;
-        return Objects.equals(joinType, target.joinType) && Objects.equals(rightExpr, target.rightExpr)
-                && Objects.equals(rightPosVar, target.rightPosVar) && Objects.equals(rightVar, target.rightVar);
+        return Objects.equals(rightExpr, target.rightExpr) && Objects.equals(rightPosVar, target.rightPosVar)
+                && Objects.equals(rightVar, target.rightVar);
     }
 
 }

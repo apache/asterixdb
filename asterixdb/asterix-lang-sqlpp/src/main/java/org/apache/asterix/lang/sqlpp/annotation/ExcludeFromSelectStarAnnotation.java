@@ -17,10 +17,17 @@
  * under the License.
  */
 
-package org.apache.asterix.lang.sqlpp.optype;
+package org.apache.asterix.lang.sqlpp.annotation;
 
-public enum JoinType {
-    INNER,
-    LEFTOUTER,
-    RIGHTOUTER
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractExpressionAnnotation;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
+
+public final class ExcludeFromSelectStarAnnotation extends AbstractExpressionAnnotation {
+
+    public static final ExcludeFromSelectStarAnnotation INSTANCE = new ExcludeFromSelectStarAnnotation();
+
+    @Override
+    public IExpressionAnnotation copy() {
+        return this;
+    }
 }

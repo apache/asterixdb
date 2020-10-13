@@ -17,10 +17,6 @@
  * under the License.
  */
 
-package org.apache.asterix.lang.sqlpp.optype;
+use test;
 
-public enum JoinType {
-    INNER,
-    LEFTOUTER,
-    RIGHTOUTER
-}
+load  dataset tenk using localfs ((`path`=`asterix_nc1://data/tenk.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));

@@ -18,20 +18,27 @@
  */
 package org.apache.asterix.lang.sqlpp.util;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.sqlpp.visitor.CheckSubqueryVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.DeepCopyVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppSubstituteExpressionVisitor;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 
 public class SqlppRewriteUtil {
 
@@ -75,7 +82,7 @@ public class SqlppRewriteUtil {
      *         replacement expression.
      * @throws CompilationException
      */
-    public static Expression substituteExpression(Expression expression, Map<Expression, Expression> exprMap,
+    public static Expression substituteExpression(Expression expression, Map<? extends Expression, Expression> exprMap,
             LangRewritingContext context) throws CompilationException {
         if (exprMap.isEmpty()) {
             return expression;
@@ -89,5 +96,16 @@ public class SqlppRewriteUtil {
         SqlppSubstituteExpressionVisitor visitor = new SqlppSubstituteExpressionVisitor(context, exprMap);
         wrapper.accept(visitor, wrapper);
         return wrapper.getBody();
+    }
+
+    public static Expression getFieldByName(Expression inExpr, String fieldName) {
+        LiteralExpr fieldNameExpr = new LiteralExpr(new StringLiteral(fieldName));
+        fieldNameExpr.setSourceLocation(inExpr.getSourceLocation());
+        List<Expression> argList = new ArrayList<>(2);
+        argList.add(inExpr);
+        argList.add(fieldNameExpr);
+        CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.FIELD_ACCESS_BY_NAME), argList);
+        callExpr.setSourceLocation(inExpr.getSourceLocation());
+        return callExpr;
     }
 }

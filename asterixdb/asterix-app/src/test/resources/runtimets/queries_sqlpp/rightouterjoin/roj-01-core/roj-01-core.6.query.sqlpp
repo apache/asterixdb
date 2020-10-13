@@ -17,10 +17,24 @@
  * under the License.
  */
 
-package org.apache.asterix.lang.sqlpp.optype;
+/* LEFT,RIGHT;s */
 
-public enum JoinType {
-    INNER,
-    LEFTOUTER,
-    RIGHTOUTER
-}
+use test;
+
+SELECT
+  if_missing(t0.unique1, null) AS t0_unique1,
+  if_missing(t1.unique1, null) AS t1_unique1,
+  if_missing(t2.unique1, null) AS t2_unique1
+FROM (
+  SELECT unique1, unique2 FROM tenk WHERE unique2 < 2
+) t0
+LEFT JOIN (
+  SELECT unique1, unique2 FROM tenk WHERE unique2 < 4
+) t1 ON t0.unique2 = t1.unique2
+RIGHT JOIN (
+  SELECT unique1, unique2 FROM tenk WHERE unique2 < 6
+) t2 ON t0.unique2 = t2.unique2
+ORDER BY t0_unique1, t1_unique1, t2_unique1;
+
+
+

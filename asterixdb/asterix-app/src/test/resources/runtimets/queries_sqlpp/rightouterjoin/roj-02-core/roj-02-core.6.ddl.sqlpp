@@ -17,10 +17,20 @@
  * under the License.
  */
 
-package org.apache.asterix.lang.sqlpp.optype;
+/*
+ * Test basic RIGHT OUTER JOIN cases
+ */
 
-public enum JoinType {
-    INNER,
-    LEFTOUTER,
-    RIGHTOUTER
-}
+use test;
+
+create function f1(p2, p4) {
+  SELECT
+    if_missing(t0.unique1, null) AS t0_unique1,
+    if_missing(t1.unique1, null) AS t1_unique1
+  FROM (
+    SELECT unique1, unique2 FROM tenk WHERE unique2 < p2
+  ) t0
+  RIGHT JOIN (
+    SELECT unique1, unique2 FROM tenk WHERE unique2 < p4
+  ) t1 ON t0.unique2 = t1.unique2
+};

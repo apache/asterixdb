@@ -17,10 +17,18 @@
  * under the License.
  */
 
-package org.apache.asterix.lang.sqlpp.optype;
+/*
+ * Expected result: Failure. Cannot use RIGHT JOIN if it's left branch has free variables.
+ */
 
-public enum JoinType {
-    INNER,
-    LEFTOUTER,
-    RIGHTOUTER
-}
+use test;
+
+SELECT tn, x
+FROM tenkNested1000 tn
+LET x = (
+  SELECT t0.unique1, t1.unique1
+  FROM tn.g t0
+  RIGHT JOIN (
+    SELECT unique1, unique2 FROM tenk WHERE unique2 < 4
+  ) t1 ON t0.unique2 = t1.unique2
+);

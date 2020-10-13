@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -58,6 +59,7 @@ import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.lang.sqlpp.annotation.ExcludeFromSelectStarAnnotation;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
@@ -76,6 +78,7 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
+import org.apache.asterix.lang.sqlpp.optype.UnnestType;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
@@ -494,6 +497,9 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 context.setVar(joinClause.getRightVariable(), outerUnnestVar);
             }
             return new Pair<>(currentTopOp, null);
+        } else if (joinClause.getJoinType() == JoinType.RIGHTOUTER) {
+            // Fail if RIGHT OUTER JOIN was not rewritten into LEFT OUTER JOIN
+            throw new CompilationException(ErrorCode.ILLEGAL_RIGHT_OUTER_JOIN, joinClause.getSourceLocation());
         } else {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, joinClause.getSourceLocation(),
                     String.valueOf(joinClause.getJoinType().toString()));
@@ -511,7 +517,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     public Pair<ILogicalOperator, LogicalVariable> visit(UnnestClause unnestClause,
             Mutable<ILogicalOperator> inputOpRef) throws CompilationException {
         return generateUnnestForBinaryCorrelateRightBranch(unnestClause, inputOpRef,
-                unnestClause.getJoinType() == JoinType.INNER);
+                unnestClause.getUnnestType() == UnnestType.INNER);
     }
 
     @Override
@@ -790,17 +796,22 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 recordExprs.add(ifMissingOrNullExpr);
             } else if (projection.star()) {
                 if (selectBlock.hasGroupbyClause()) {
-                    getGroupBindings(selectBlock.getGroupbyClause(), fieldBindings, fieldNames);
+                    getGroupBindings(selectBlock.getGroupbyClause(), fieldBindings, fieldNames,
+                            SqlppExpressionToPlanTranslator::includeInSelectStar);
                     if (selectBlock.hasLetHavingClausesAfterGroupby()) {
-                        getLetBindings(selectBlock.getLetHavingListAfterGroupby(), fieldBindings, fieldNames);
+                        getLetBindings(selectBlock.getLetHavingListAfterGroupby(), fieldBindings, fieldNames,
+                                SqlppExpressionToPlanTranslator::includeInSelectStar);
                     }
                 } else if (selectBlock.hasFromClause()) {
-                    getFromBindings(selectBlock.getFromClause(), fieldBindings, fieldNames);
+                    getFromBindings(selectBlock.getFromClause(), fieldBindings, fieldNames,
+                            SqlppExpressionToPlanTranslator::includeInSelectStar);
                     if (selectBlock.hasLetWhereClauses()) {
-                        getLetBindings(selectBlock.getLetWhereList(), fieldBindings, fieldNames);
+                        getLetBindings(selectBlock.getLetWhereList(), fieldBindings, fieldNames,
+                                SqlppExpressionToPlanTranslator::includeInSelectStar);
                     }
                 } else if (selectBlock.hasLetWhereClauses()) {
-                    getLetBindings(selectBlock.getLetWhereList(), fieldBindings, fieldNames);
+                    getLetBindings(selectBlock.getLetWhereList(), fieldBindings, fieldNames,
+                            SqlppExpressionToPlanTranslator::includeInSelectStar);
                 }
             } else if (projection.hasName()) {
                 fieldBindings.add(getFieldBinding(projection, fieldNames));
@@ -824,21 +835,39 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         }
     }
 
+    private static boolean includeInSelectStar(VariableExpr varExpr) {
+        boolean excludeFromSelectStar =
+                varExpr.hasHints() && varExpr.getHints().contains(ExcludeFromSelectStarAnnotation.INSTANCE);
+        return !excludeFromSelectStar;
+    }
+
     // Generates all field bindings according to the from clause.
-    private void getFromBindings(FromClause fromClause, List<FieldBinding> outFieldBindings, Set<String> outFieldNames)
-            throws CompilationException {
+    private void getFromBindings(FromClause fromClause, List<FieldBinding> outFieldBindings, Set<String> outFieldNames,
+            Predicate<VariableExpr> varTest) throws CompilationException {
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
-            outFieldBindings.add(getFieldBinding(fromTerm.getLeftVariable(), outFieldNames));
+            VariableExpr leftVar = fromTerm.getLeftVariable();
+            if (varTest == null || varTest.test(leftVar)) {
+                outFieldBindings.add(getFieldBinding(leftVar, outFieldNames));
+            }
             if (fromTerm.hasPositionalVariable()) {
-                outFieldBindings.add(getFieldBinding(fromTerm.getPositionalVariable(), outFieldNames));
+                VariableExpr leftPosVar = fromTerm.getPositionalVariable();
+                if (varTest == null || varTest.test(leftPosVar)) {
+                    outFieldBindings.add(getFieldBinding(leftPosVar, outFieldNames));
+                }
             }
             if (!fromTerm.hasCorrelateClauses()) {
                 continue;
             }
             for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
-                outFieldBindings.add(getFieldBinding(correlateClause.getRightVariable(), outFieldNames));
+                VariableExpr rightVar = correlateClause.getRightVariable();
+                if (varTest == null || varTest.test(rightVar)) {
+                    outFieldBindings.add(getFieldBinding(rightVar, outFieldNames));
+                }
                 if (correlateClause.hasPositionalVariable()) {
-                    outFieldBindings.add(getFieldBinding(correlateClause.getPositionalVariable(), outFieldNames));
+                    VariableExpr rightPosVar = correlateClause.getPositionalVariable();
+                    if (varTest == null || varTest.test(rightPosVar)) {
+                        outFieldBindings.add(getFieldBinding(rightPosVar, outFieldNames));
+                    }
                 }
             }
         }
@@ -846,25 +875,32 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
 
     // Generates all field bindings according to the from clause.
     private void getGroupBindings(GroupbyClause groupbyClause, List<FieldBinding> outFieldBindings,
-            Set<String> outFieldNames) throws CompilationException {
+            Set<String> outFieldNames, Predicate<VariableExpr> varTest) throws CompilationException {
         Set<VariableExpr> gbyKeyVars = new HashSet<>();
         List<GbyVariableExpressionPair> groupingSet = getSingleGroupingSet(groupbyClause);
         for (GbyVariableExpressionPair pair : groupingSet) {
             VariableExpr var = pair.getVar();
-            if (gbyKeyVars.add(var)) {
-                outFieldBindings.add(getFieldBinding(var, outFieldNames));
-            }
-        }
-        if (groupbyClause.hasDecorList()) {
-            for (GbyVariableExpressionPair pair : groupbyClause.getDecorPairList()) {
-                VariableExpr var = pair.getVar();
+            if (varTest == null || varTest.test(var)) {
                 if (gbyKeyVars.add(var)) {
                     outFieldBindings.add(getFieldBinding(var, outFieldNames));
                 }
             }
         }
+        if (groupbyClause.hasDecorList()) {
+            for (GbyVariableExpressionPair pair : groupbyClause.getDecorPairList()) {
+                VariableExpr var = pair.getVar();
+                if (varTest == null || varTest.test(var)) {
+                    if (gbyKeyVars.add(var)) {
+                        outFieldBindings.add(getFieldBinding(var, outFieldNames));
+                    }
+                }
+            }
+        }
         if (groupbyClause.hasGroupVar()) {
-            outFieldBindings.add(getFieldBinding(groupbyClause.getGroupVar(), outFieldNames));
+            VariableExpr var = groupbyClause.getGroupVar();
+            if (varTest == null || varTest.test(var)) {
+                outFieldBindings.add(getFieldBinding(var, outFieldNames));
+            }
         }
         if (groupbyClause.hasWithMap()) {
             // no WITH in SQLPP
@@ -875,11 +911,14 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
 
     // Generates all field bindings according to the let clause.
     private void getLetBindings(List<AbstractClause> clauses, List<FieldBinding> outFieldBindings,
-            Set<String> outFieldNames) throws CompilationException {
+            Set<String> outFieldNames, Predicate<VariableExpr> varTest) throws CompilationException {
         for (AbstractClause clause : clauses) {
             if (clause.getClauseType() == ClauseType.LET_CLAUSE) {
                 LetClause letClause = (LetClause) clause;
-                outFieldBindings.add(getFieldBinding(letClause.getVarExpr(), outFieldNames));
+                VariableExpr letVar = letClause.getVarExpr();
+                if (varTest == null || varTest.test(letVar)) {
+                    outFieldBindings.add(getFieldBinding(letVar, outFieldNames));
+                }
             }
         }
     }

@@ -72,6 +72,7 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupingSetsVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppInlineUdfsVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppListInputFunctionRewriteVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppRightJoinRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppSpecialFunctionNameRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppWindowAggregationSugarVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppWindowRewriteVisitor;
@@ -175,6 +176,9 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
         // Rewrites several variable-arg functions into their corresponding internal list-input functions.
         rewriteListInputFunctions();
+
+        // Rewrites RIGHT OUTER JOINs into LEFT OUTER JOINs if possible
+        rewriteRightJoins();
 
         // Inlines functions.
         inlineDeclaredUdfs(inlineUdfs);
@@ -294,6 +298,12 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     protected void rewriteCaseExpressions() throws CompilationException {
         // Normalizes CASE expressions and rewrites simple ones into switch-case()
         SqlppCaseExpressionVisitor visitor = new SqlppCaseExpressionVisitor();
+        rewriteTopExpr(visitor, null);
+    }
+
+    protected void rewriteRightJoins() throws CompilationException {
+        // Rewrites RIGHT OUTER JOINs into LEFT OUTER JOINs if possible
+        SqlppRightJoinRewriteVisitor visitor = new SqlppRightJoinRewriteVisitor(context, externalVars);
         rewriteTopExpr(visitor, null);
     }
 

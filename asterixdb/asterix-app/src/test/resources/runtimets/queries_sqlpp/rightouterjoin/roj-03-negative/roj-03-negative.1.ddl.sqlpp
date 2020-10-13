@@ -17,10 +17,38 @@
  * under the License.
  */
 
-package org.apache.asterix.lang.sqlpp.optype;
+/*
+ * Test basic RIGHT OUTER JOIN cases
+ */
 
-public enum JoinType {
-    INNER,
-    LEFTOUTER,
-    RIGHTOUTER
-}
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+create type tenkType as closed {
+  unique1         : integer,
+  unique2         : integer,
+  two             : integer,
+  four            : integer,
+  ten             : integer,
+  twenty          : integer,
+  hundred         : integer,
+  thousand        : integer,
+  twothousand     : integer,
+  fivethous       : integer,
+  tenthous        : integer,
+  odd100          : integer,
+  even100         : integer,
+  stringu1        : string,
+  stringu2        : string,
+  string4         : string
+};
+
+create dataset tenk(tenkType) primary key unique2;
+
+create type tenkTypeNested1000 as open {
+  thousand        : integer
+};
+
+create dataset tenkNested1000(tenkTypeNested1000) primary key thousand;

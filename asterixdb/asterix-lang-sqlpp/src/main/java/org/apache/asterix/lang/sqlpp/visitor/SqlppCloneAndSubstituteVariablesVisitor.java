@@ -170,7 +170,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         Expression conditionExpr = (Expression) nestClause.getConditionExpression().accept(this, currentEnv).first;
 
         NestClause newNestClause =
-                new NestClause(nestClause.getJoinType(), rightExpr, newRightVar, newRightPosVar, conditionExpr);
+                new NestClause(nestClause.getNestType(), rightExpr, newRightVar, newRightPosVar, conditionExpr);
         newNestClause.setSourceLocation(nestClause.getSourceLocation());
         return new Pair<>(newNestClause, currentEnv);
     }
@@ -194,7 +194,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         }
         // The condition can refer to the newRightVar and newRightPosVar.
         UnnestClause newUnnestClause =
-                new UnnestClause(unnestClause.getJoinType(), rightExpr, newRightVar, newRightPosVar);
+                new UnnestClause(unnestClause.getUnnestType(), rightExpr, newRightVar, newRightPosVar);
         newUnnestClause.setSourceLocation(unnestClause.getSourceLocation());
         return new Pair<>(newUnnestClause, currentEnv);
     }

@@ -17,10 +17,24 @@
  * under the License.
  */
 
-package org.apache.asterix.lang.sqlpp.optype;
+use test;
 
-public enum JoinType {
-    INNER,
-    LEFTOUTER,
-    RIGHTOUTER
-}
+/* RIGHT JOIN, LEFT UNNEST */
+
+use test;
+
+SELECT
+    if_missing(t0.fivethous, null) AS t0_fivethous,
+    if_missing(t0_n.unique1, null) AS t0_n_unique1,
+    if_missing(t1.fivethous, null) AS t1_fivethous,
+    if_missing(t1.unique1, null) AS t1_unique1
+FROM (
+  SELECT fivethous, g
+  FROM tenkNested5000
+  WHERE fivethous < 1
+) t0
+RIGHT JOIN (
+  SELECT fivethous, unique1 FROM tenk WHERE fivethous < 2
+) t1 ON t0.fivethous = t1.fivethous
+LEFT UNNEST t0.g AS t0_n
+ORDER BY t1_fivethous, t1_unique1, t0_n_unique1;

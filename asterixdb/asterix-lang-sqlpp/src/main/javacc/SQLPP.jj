@@ -180,6 +180,7 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
+import org.apache.asterix.lang.sqlpp.optype.UnnestType;
 import org.apache.asterix.lang.sqlpp.parser.SqlppGroupingSetsParser;
 import org.apache.asterix.lang.sqlpp.parser.SqlppGroupingSetsParser.GroupingElement;
 import org.apache.asterix.lang.sqlpp.parser.SqlppGroupingSetsParser.GroupingSet;
@@ -389,7 +390,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
             throw new CompilationException(ErrorCode.PARSE_ERROR, LogRedactionUtil.userData(getMessage(e)));
         } catch (Error e) {
             // this is here as the JavaCharStream that's below the lexer sometimes throws Errors that are not handled
-            // by the ANTLR-generated lexer or parser (e.g it does this for invalid backslash u + 4 hex digits escapes)
+            // by the generated lexer or parser (e.g it does this for invalid backslash u + 4 hex digits escapes)
             final String msg = e.getClass().getSimpleName() + (e.getMessage() != null ? ": " + e.getMessage() : "");
             throw new CompilationException(ErrorCode.PARSE_ERROR, LogRedactionUtil.userData(msg));
         } finally {
@@ -4025,18 +4026,17 @@ FromTerm FromTerm() throws ParseException :
   Expression leftExpr = null;
   VariableExpr leftVar = null;
   VariableExpr posVar = null;
+  AbstractBinaryCorrelateClause correlateClause = null;
   List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<AbstractBinaryCorrelateClause>();
 }
 {
   leftExpr = Expression() ((<AS>)? leftVar = Variable())? (<AT> posVar = Variable())?
   (
-     {JoinType joinType = JoinType.INNER; }
-     (joinType = JoinType())?
-     {
-       AbstractBinaryCorrelateClause correlateClause = null;
-     }
-     (correlateClause = JoinClause(joinType)
-      | correlateClause = UnnestClause(joinType)
+     (
+      correlateClause = JoinOrUnnestClause(JoinType.INNER, UnnestType.INNER)
+      | ( <INNER> correlateClause = JoinOrUnnestClause(JoinType.INNER, UnnestType.INNER) )
+      | ( <LEFT> ( <OUTER> )? correlateClause = JoinOrUnnestClause(JoinType.LEFTOUTER, UnnestType.LEFTOUTER) )
+      | ( <RIGHT> ( <OUTER> )? correlateClause = JoinClause(JoinType.RIGHTOUTER) )
      )
      {
         correlateClauses.add(correlateClause);
@@ -4052,6 +4052,17 @@ FromTerm FromTerm() throws ParseException :
   }
 }
 
+AbstractBinaryCorrelateClause JoinOrUnnestClause(JoinType joinType, UnnestType unnestType) throws ParseException :
+{
+  AbstractBinaryCorrelateClause correlateClause = null;
+}
+{
+  ( correlateClause = JoinClause(joinType) | correlateClause = UnnestClause(unnestType) )
+  {
+    return correlateClause;
+  }
+}
+
 JoinClause JoinClause(JoinType joinType) throws ParseException :
 {
     Token startToken = null;
@@ -4063,15 +4074,15 @@ JoinClause JoinClause(JoinType joinType) throws ParseException :
 {
   <JOIN> { startToken = token; } rightExpr = Expression() ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())? <ON> conditionExpr = Expression()
   {
-    if(rightVar==null){
-        rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
+    if (rightVar == null) {
+      rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
     }
     JoinClause joinClause = new JoinClause(joinType, rightExpr, rightVar, posVar, conditionExpr);
     return addSourceLocation(joinClause, startToken);
   }
 }
 
-UnnestClause UnnestClause(JoinType joinType) throws ParseException :
+UnnestClause UnnestClause(UnnestType unnestType) throws ParseException :
 {
     Token startToken = null;
     Expression rightExpr;
@@ -4084,20 +4095,9 @@ UnnestClause UnnestClause(JoinType joinType) throws ParseException :
     if (rightVar == null) {
       rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
     }
-    UnnestClause unnestClause = new UnnestClause(joinType, rightExpr, rightVar, posVar);
+    UnnestClause unnestClause = new UnnestClause(unnestType, rightExpr, rightVar, posVar);
     return addSourceLocation(unnestClause, startToken);
   }
-}
-
-JoinType JoinType() throws ParseException :
-{
-   JoinType joinType = JoinType.INNER;
-}
-{
-     (<INNER>|<LEFT> (<OUTER>)? {joinType = JoinType.LEFTOUTER; })
-     {
-       return joinType;
-     }
 }
 
 List<LetClause> LetClause() throws ParseException:
@@ -4575,6 +4575,7 @@ TOKEN [IGNORE_CASE]:
   | <REFRESH : "refresh">
   | <RETURN : "return">
   | <RETURNING : "returning">
+  | <RIGHT : "right">
   | <RTREE : "rtree">
   | <RUN : "run">
   | <SATISFIES : "satisfies">

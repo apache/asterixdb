@@ -19,8 +19,7 @@
 
 package org.apache.asterix.lang.sqlpp.optype;
 
-public enum JoinType {
+public enum UnnestType {
     INNER,
-    LEFTOUTER,
-    RIGHTOUTER
+    LEFTOUTER
 }

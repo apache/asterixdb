@@ -17,10 +17,20 @@
  * under the License.
  */
 
-package org.apache.asterix.lang.sqlpp.optype;
+use test;
 
-public enum JoinType {
-    INNER,
-    LEFTOUTER,
-    RIGHTOUTER
-}
+load  dataset tenk using localfs ((`path`=`asterix_nc1://data/tenk.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));
+
+insert into tenkNested1000 ((
+  select thousand, g
+  from tenk
+  where unique2 > 1
+  group by thousand group as g(unique1 as unique1, unique2 as unique2)
+));
+
+insert into tenkNested5000 ((
+  select fivethous, g
+  from tenk
+  where unique2 > 1
+  group by fivethous group as g(unique1 as unique1, unique2 as unique2)
+));

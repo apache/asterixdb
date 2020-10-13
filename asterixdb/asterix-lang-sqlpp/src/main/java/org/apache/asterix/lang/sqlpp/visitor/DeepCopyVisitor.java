@@ -124,7 +124,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         VariableExpr rightPositionVar = nestClause.getPositionalVariable() == null ? null
                 : (VariableExpr) nestClause.getPositionalVariable().accept(this, arg);
         Expression conditionExpresion = (Expression) nestClause.getConditionExpression().accept(this, arg);
-        NestClause copy = new NestClause(nestClause.getJoinType(), rightExpression, rightVar, rightPositionVar,
+        NestClause copy = new NestClause(nestClause.getNestType(), rightExpression, rightVar, rightPositionVar,
                 conditionExpresion);
         copy.setSourceLocation(nestClause.getSourceLocation());
         return copy;
@@ -136,7 +136,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         VariableExpr rightVar = (VariableExpr) unnestClause.getRightVariable().accept(this, arg);
         VariableExpr rightPositionVar = unnestClause.getPositionalVariable() == null ? null
                 : (VariableExpr) unnestClause.getPositionalVariable().accept(this, arg);
-        UnnestClause copy = new UnnestClause(unnestClause.getJoinType(), rightExpression, rightVar, rightPositionVar);
+        UnnestClause copy = new UnnestClause(unnestClause.getUnnestType(), rightExpression, rightVar, rightPositionVar);
         copy.setSourceLocation(unnestClause.getSourceLocation());
         return copy;
     }
