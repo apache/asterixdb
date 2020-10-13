@@ -58,6 +58,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -153,21 +154,22 @@ public class GlobalVirtualBufferCacheTest {
                 Assert.fail();
             }
             for (int i = 0; i < NUM_PARTITIONS; i++) {
-                Assert.assertFalse(primaryIndexes[i].getDiskComponents().isEmpty());
-                Assert.assertTrue(
-                        primaryIndexes[i].getDiskComponents().stream().anyMatch(c -> ((AbstractTreeIndex) c.getIndex())
-                                .getFileReference().getFile().length() > FILTERED_MEMORY_COMPONENT_SIZE));
+                List<ILSMDiskComponent> diskComponents = new ArrayList<>(primaryIndexes[i].getDiskComponents());
+                Assert.assertFalse(diskComponents.isEmpty());
+                Assert.assertTrue(diskComponents.stream().anyMatch(c -> ((AbstractTreeIndex) c.getIndex())
+                        .getFileReference().getFile().length() > FILTERED_MEMORY_COMPONENT_SIZE));
 
-                Assert.assertFalse(filteredPrimaryIndexes[i].getDiskComponents().isEmpty());
-                Assert.assertTrue(filteredPrimaryIndexes[i].getDiskComponents().stream()
-                        .allMatch(c -> ((AbstractTreeIndex) c.getIndex()).getFileReference().getFile()
-                                .length() <= FILTERED_MEMORY_COMPONENT_SIZE));
+                List<ILSMDiskComponent> filteredDiskComponents =
+                        new ArrayList<>(filteredPrimaryIndexes[i].getDiskComponents());
+                Assert.assertFalse(filteredDiskComponents.isEmpty());
+                Assert.assertTrue(filteredDiskComponents.stream().allMatch(c -> ((AbstractTreeIndex) c.getIndex())
+                        .getFileReference().getFile().length() <= FILTERED_MEMORY_COMPONENT_SIZE));
             }
 
             nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             nc.getTransactionManager().commitTransaction(filteredTxnCtx.getTxnId());
         } catch (Throwable e) {
-            LOGGER.error(e);
+            LOGGER.error("testFlushes failed", e);
             Assert.fail(e.getMessage());
         }
     }
