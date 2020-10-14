@@ -87,8 +87,6 @@ public abstract class SqlppRQGTestBase {
 
     protected static final char TABLE_FILE_COLUMN_SEPARATOR = '|';
 
-    protected static final Path RESULT_OUTPUT_DIR = Paths.get("target", SqlppRQGGroupingSetsIT.class.getSimpleName());
-
     protected static final String UNIQUE_1 = "unique1";
     protected static final String UNIQUE_2 = "unique2";
     protected static final String TWO = "two";
@@ -118,10 +116,11 @@ public abstract class SqlppRQGTestBase {
 
     protected static Statement stmt;
 
+    protected final Path outputDir = Paths.get("target", getClass().getSimpleName());
+
     public static void setUpBeforeClass() throws Exception {
         startAsterix();
         startPostgres();
-        FileUtils.forceMkdir(RESULT_OUTPUT_DIR.toFile());
     }
 
     public static void tearDownAfterClass() throws Exception {
@@ -330,8 +329,10 @@ public abstract class SqlppRQGTestBase {
     }
 
     protected File writeResult(ArrayNode result, int testcaseId, String resultKind, String comment) throws IOException {
+        File outDir = outputDir.toFile();
         String outFileName = String.format("%d.%s.txt", testcaseId, resultKind);
-        File outFile = new File(RESULT_OUTPUT_DIR.toFile(), outFileName);
+        FileUtils.forceMkdir(outDir);
+        File outFile = new File(outDir, outFileName);
         try (PrintWriter pw = new PrintWriter(outFile, StandardCharsets.UTF_8.name())) {
             pw.print("---");
             pw.println(comment);
