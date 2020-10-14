@@ -17,4 +17,4 @@
  * under the License.
  */
 
-DROP DATASET test IF EXISTS;
+DROP dataverse test IF EXISTS;
