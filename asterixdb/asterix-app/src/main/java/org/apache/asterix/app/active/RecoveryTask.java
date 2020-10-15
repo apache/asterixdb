@@ -109,7 +109,7 @@ public class RecoveryTask {
         Exception failure;
         do {
             synchronized (listener) {
-                while (!cancelRecovery && clusterStateManager.getState() != ClusterState.ACTIVE) {
+                while (!cancelRecovery && !canStartRecovery()) {
                     listener.wait();
                 }
                 if (cancelRecovery) {
@@ -197,5 +197,10 @@ public class RecoveryTask {
 
     protected void releasePostRecoveryLocks() {
         metadataProvider.getLocks().reset();
+    }
+
+    private boolean canStartRecovery() {
+        return clusterStateManager.getState() == ClusterState.ACTIVE
+                || clusterStateManager.getState() == ClusterState.REBALANCE_REQUIRED;
     }
 }
