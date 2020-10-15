@@ -359,6 +359,16 @@ class SQLPPParser extends ScopeChecker implements IParser {
     }
 
     @Override
+    public List<String> parseMultipartIdentifier() throws CompilationException {
+        return parseImpl(new ParseFunction<List<String>>() {
+            @Override
+            public List<String> parse() throws ParseException {
+                return SQLPPParser.this.MultipartIdentifier();
+            }
+        });
+    }
+
+    @Override
     public FunctionDecl parseFunctionBody(FunctionSignature signature, List<String> paramNames)
       throws CompilationException {
         return parseImpl(new ParseFunction<FunctionDecl>() {

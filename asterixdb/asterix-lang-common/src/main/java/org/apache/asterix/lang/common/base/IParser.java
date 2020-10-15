@@ -32,6 +32,8 @@ public interface IParser {
 
     Expression parseExpression() throws CompilationException;
 
+    List<String> parseMultipartIdentifier() throws CompilationException;
+
     FunctionDecl parseFunctionBody(FunctionSignature signature, List<String> paramNames) throws CompilationException;
 
     /**
