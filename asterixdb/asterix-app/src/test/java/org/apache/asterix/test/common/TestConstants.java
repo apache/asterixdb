@@ -41,17 +41,13 @@ public class TestConstants {
     public static final String AZURE_ACCOUNT_KEY_PLACEHOLDER = "%accountKey%";
     public static final String AZURE_AZURITE_ACCOUNT_KEY_DEFAULT =
             "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsu" + "Fq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
-    public static final String AZURE_DEFAULT_ENDPOINTS_PROTOCOL_PLACEHOLDER = "%defaultEndpointsProtocol%";
-    public static final String AZURE_DEFAULT_ENDPOINTS_PROTOCOL_DEFAULT = "http";
     public static final String AZURE_BLOB_ENDPOINT_PLACEHOLDER = "%blobEndpoint%";
     public static final String AZURE_BLOB_ENDPOINT_DEFAULT =
             "http://localhost:20000/" + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT;
-    public static final String AZURE_TEMPLATE = "(\"defaultEndpointsProtocol\"=\""
-            + AZURE_DEFAULT_ENDPOINTS_PROTOCOL_DEFAULT + "\"),\n" + "(\"accountName\"=\""
-            + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT + "\"),\n" + "(\"accountKey\"=\"" + AZURE_AZURITE_ACCOUNT_KEY_DEFAULT
-            + "\"),\n" + "(\"blobEndpoint\"=\"" + AZURE_BLOB_ENDPOINT_PLACEHOLDER + "\")";
-    public static final String AZURE_TEMPLATE_DEFAULT = "(\"defaultEndpointsProtocol\"=\""
-            + AZURE_DEFAULT_ENDPOINTS_PROTOCOL_DEFAULT + "\"),\n" + "(\"accountName\"=\""
-            + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT + "\"),\n" + "(\"accountKey\"=\"" + AZURE_AZURITE_ACCOUNT_KEY_DEFAULT
-            + "\"),\n" + "(\"blobEndpoint\"=\"" + AZURE_BLOB_ENDPOINT_DEFAULT + "\")";
+    public static final String AZURE_TEMPLATE = "(\"accountName\"=\"" + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT + "\"),\n"
+            + "(\"accountKey\"=\"" + AZURE_AZURITE_ACCOUNT_KEY_DEFAULT + "\"),\n" + "(\"blobEndpoint\"=\""
+            + AZURE_BLOB_ENDPOINT_PLACEHOLDER + "\")";
+    public static final String AZURE_TEMPLATE_DEFAULT = "(\"accountName\"=\"" + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT
+            + "\"),\n" + "(\"accountKey\"=\"" + AZURE_AZURITE_ACCOUNT_KEY_DEFAULT + "\"),\n" + "(\"blobEndpoint\"=\""
+            + AZURE_BLOB_ENDPOINT_DEFAULT + "\")";
 }

@@ -461,6 +461,10 @@
       <artifactId>auth</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-storage-blob</artifactId>
+    </dependency>
+    <dependency>
         <groupId>org.msgpack</groupId>
         <artifactId>msgpack-core</artifactId>
     </dependency>

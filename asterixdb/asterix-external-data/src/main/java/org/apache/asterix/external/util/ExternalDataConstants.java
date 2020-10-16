@@ -131,6 +131,7 @@ public class ExternalDataConstants {
     public static final String KEY_ALIAS_ADAPTER_NAME_SOCKET = "socket_adapter";
     public static final String KEY_ADAPTER_NAME_HTTP = "http_adapter";
     public static final String KEY_ADAPTER_NAME_AWS_S3 = "S3";
+    public static final String KEY_ADAPTER_NAME_AZURE_BLOB = "AZUREBLOB";
 
     /**
      * HDFS class names
@@ -289,5 +290,26 @@ public class ExternalDataConstants {
         public static final String CONTAINER_NAME_FIELD_NAME = "container";
         public static final String DEFINITION_FIELD_NAME = "definition";
         public static final String SERVICE_END_POINT_FIELD_NAME = "serviceEndpoint";
+    }
+
+    public static class AzureBlob {
+        private AzureBlob() {
+            throw new AssertionError("do not instantiate");
+        }
+
+        public static final String ACCOUNT_NAME_FIELD_NAME = "accountName";
+        public static final String ACCOUNT_KEY_FIELD_NAME = "accountKey";
+        public static final String SHARED_ACCESS_SIGNATURE_FIELD_NAME = "sharedAccessSignature";
+        public static final String CONTAINER_NAME_FIELD_NAME = "container";
+        public static final String DEFINITION_FIELD_NAME = "definition";
+        public static final String BLOB_ENDPOINT_FIELD_NAME = "blobEndpoint";
+        public static final String ENDPOINT_SUFFIX_FIELD_NAME = "endpointSuffix";
+
+        // Connection string requires PascalCase (MyFieldFormat)
+        public static final String CONNECTION_STRING_ACCOUNT_NAME = "AccountName";
+        public static final String CONNECTION_STRING_ACCOUNT_KEY = "AccountKey";
+        public static final String CONNECTION_STRING_SHARED_ACCESS_SIGNATURE = "SharedAccessSignature";
+        public static final String CONNECTION_STRING_BLOB_ENDPOINT = "BlobEndpoint";
+        public static final String CONNECTION_STRING_ENDPOINT_SUFFIX = "EndpointSuffix";
     }
 }

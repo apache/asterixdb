@@ -2058,6 +2058,11 @@ public class TestExecutor {
             if (placeholder.getName().equals("adapter")) {
                 str = str.replace("%adapter%", placeholder.getValue());
 
+                // Early terminate if there are no template place holders to replace
+                if (noTemplateRequired(str)) {
+                    return str;
+                }
+
                 if (placeholder.getValue().equalsIgnoreCase("S3")) {
                     return applyS3Substitution(str, placeholders);
                 } else if (placeholder.getValue().equalsIgnoreCase("AzureBlob")) {
@@ -2069,6 +2074,10 @@ public class TestExecutor {
         }
 
         return str;
+    }
+
+    protected boolean noTemplateRequired(String str) {
+        return !str.contains("%template%");
     }
 
     protected String applyS3Substitution(String str, List<Placeholder> placeholders) {

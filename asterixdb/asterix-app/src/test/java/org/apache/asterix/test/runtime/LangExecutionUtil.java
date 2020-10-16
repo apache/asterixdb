@@ -95,17 +95,26 @@ public class LangExecutionUtil {
     }
 
     public static Collection<Object[]> tests(String onlyFilePath, String suiteFilePath) throws Exception {
-        Collection<Object[]> testArgs = buildTestsInXml(onlyFilePath);
+        return tests(onlyFilePath, suiteFilePath, null);
+    }
+
+    public static Collection<Object[]> tests(String onlyFilePath, String suiteFilePath, String pathBase)
+            throws Exception {
+        Collection<Object[]> testArgs = buildTestsInXml(onlyFilePath, pathBase);
         if (testArgs.size() == 0) {
-            testArgs = buildTestsInXml(suiteFilePath);
+            testArgs = buildTestsInXml(suiteFilePath, pathBase);
         }
         return testArgs;
     }
 
     protected static Collection<Object[]> buildTestsInXml(String xmlfile) throws Exception {
+        return buildTestsInXml(xmlfile, null);
+    }
+
+    protected static Collection<Object[]> buildTestsInXml(String xmlfile, String pathBase) throws Exception {
         Collection<Object[]> testArgs = new ArrayList<>();
         TestCaseContext.Builder b = new TestCaseContext.Builder();
-        for (TestCaseContext ctx : b.build(new File(PATH_BASE), xmlfile)) {
+        for (TestCaseContext ctx : b.build(new File(pathBase == null ? PATH_BASE : pathBase), xmlfile)) {
             testArgs.add(new Object[] { ctx });
         }
         return testArgs;
